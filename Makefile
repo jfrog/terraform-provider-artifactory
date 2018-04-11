@@ -19,13 +19,6 @@ test:
 	@go test -v ./...
 	@go vet ./...
 
-build:
-	@mkdir -pv $(BUILDDIR)
-	@go build -o $(BUILDDIR)/terraform-provider-artifactory ./cmd/provider/main.go
-
-install:
-	@misc/scripts/install-provider
-
 .PHONY: clean build
 clean:
 	-@rm -rf ./dist/

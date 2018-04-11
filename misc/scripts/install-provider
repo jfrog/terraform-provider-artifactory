@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-go build -o ~/.terraform.d/plugins/terraform-provider-artifactory $GOPATH/src/github.com/atlassian/terraform-provider-artifactory/cmd/provider/main.go
