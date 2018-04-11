@@ -5,9 +5,6 @@ BUILDDIR := $(PROJDIR)/dist
 
 all: test build
 
-install-hooks:
-	@misc/scripts/install-hooks
-
 dep:
 	@misc/scripts/deps-ensure
 	@dep ensure -v
