@@ -93,7 +93,7 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 }
 
 func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.ReplicationConfig {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 	replicationConfig := new(artifactory.ReplicationConfig)
 
 	repo := d.GetStringRef("repo_key")

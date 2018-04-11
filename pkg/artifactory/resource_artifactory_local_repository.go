@@ -137,7 +137,7 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 }
 
 func unmarshalLocalRepository(s *schema.ResourceData) *artifactory.LocalRepository {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 
 	repo := new(artifactory.LocalRepository)
 

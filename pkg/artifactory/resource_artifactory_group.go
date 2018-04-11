@@ -57,7 +57,7 @@ func resourceArtifactoryGroup() *schema.Resource {
 }
 
 func unmarshalGroup(s *schema.ResourceData) (*artifactory.Group, error) {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 
 	group := new(artifactory.Group)
 

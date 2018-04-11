@@ -86,7 +86,7 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 }
 
 func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepository {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 	repo := new(artifactory.VirtualRepository)
 
 	repo.Key = d.GetStringRef("key")
