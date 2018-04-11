@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-type ResourceData struct{ schema.ResourceData }
+type ResourceData struct{ *schema.ResourceData }
 
 func (d *ResourceData) GetStringRef(key string) *string {
 	if v, ok := d.GetOkExists(key); ok {

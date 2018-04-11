@@ -17,6 +17,7 @@ fmt:
 
 test:
 	@go test -v ./...
+	@go vet ./...
 
 build:
 	@mkdir -pv $(BUILDDIR)

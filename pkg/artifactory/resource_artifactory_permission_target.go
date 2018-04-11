@@ -67,7 +67,7 @@ func resourceArtifactoryPermissionTargets() *schema.Resource {
 }
 
 func unmarshalPermissionTargets(s *schema.ResourceData) *artifactory.PermissionTargets {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 
 	pt := new(artifactory.PermissionTargets)
 

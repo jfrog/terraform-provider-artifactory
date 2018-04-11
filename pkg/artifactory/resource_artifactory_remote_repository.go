@@ -211,7 +211,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 }
 
 func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteRepository {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 	repo := new(artifactory.RemoteRepository)
 
 	repo.Key = d.GetStringRef("key")

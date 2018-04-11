@@ -63,7 +63,7 @@ func resourceArtifactoryUser() *schema.Resource {
 }
 
 func unmarshalUser(s *schema.ResourceData) *artifactory.User {
-	d := &ResourceData{*s}
+	d := &ResourceData{s}
 	user := new(artifactory.User)
 
 	user.Name = d.GetStringRef("name")
