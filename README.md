@@ -17,14 +17,13 @@ Enter the provider directory and build the provider
 
 ```sh
 cd $GOPATH/src/github.com/atlassian/terraform-provider-artifactory
-make build
-cd dist/
+go build
 ```
 
-To install the provider in the terraforms plugin directory
+To install the provider
 ```sh
 cd $GOPATH/src/github.com/atlassian/terraform-provider-artifactory
-make install
+go install
 ```
 
 ## Roadmap ##

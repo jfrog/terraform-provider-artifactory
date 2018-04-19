@@ -30,13 +30,12 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"package_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "generic",
 				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return old == fmt.Sprintf("%s (local file cache)", new)
 				},
@@ -44,42 +43,40 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"notes": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"includes_pattern": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Default:  "**/*",
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
 			},
 			"handle_releases": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Default:  true,
 			},
 			"handle_snapshots": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Default:  true,
 			},
 			"max_unique_snapshots": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
+				Default:  0,
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -88,48 +85,47 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
-				Computed:  true,
+				StateFunc: GetMD5Hash,
 			},
 			"proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
-			"remote_repo_checksum_policy_type": {
+			/*"remote_repo_checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-			},
+				Default:  "generate_if_absent",
+				Removed:  "since sometime",
+			},*/
 			"hard_fail": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"offline": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"blacked_out": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"store_artifacts_locally": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Default:  true,
 			},
 			"socket_timeout_millis": {
 				Type:     schema.TypeInt,
-				Computed: true,
 				Optional: true,
+				Default:  15000,
 			},
 			"local_address": {
 				Type:     schema.TypeString,
@@ -137,74 +133,64 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			},
 			"retrieval_cache_period_seconds": {
 				Type:     schema.TypeInt,
-				Computed: true,
 				Optional: true,
-			},
-			"failed_cache_period_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Default:  43200,
 			},
 			"missed_cache_period_seconds": {
 				Type:     schema.TypeInt,
-				Computed: true,
 				Optional: true,
-			},
-			"unused_artifacts_cleanup_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Default:  7200,
 			},
 			"unused_artifacts_cleanup_period_hours": {
 				Type:     schema.TypeInt,
-				Computed: true,
 				Optional: true,
+				Default:  0,
 			},
 			"fetch_jars_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"fetch_sources_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"share_configuration": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"synchronize_properties": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"block_mismatching_mime_types": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  true,
 			},
 			"property_sets": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				Optional: true,
-				Computed: true,
 			},
 			"allow_any_host_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"enable_cookie_management": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"client_tls_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 		},
 	}
@@ -226,11 +212,6 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.IncludesPattern = d.GetStringRef("includes_pattern")
 	repo.ExcludesPattern = d.GetStringRef("excludes_pattern")
 	repo.RepoLayoutRef = d.GetStringRef("repo_layout_ref")
-	repo.RemoteRepoChecksumPolicyType = d.GetStringRef("remote_repo_checksum_policy_type")
-	repo.HandleReleases = d.GetBoolRef("handle_releases")
-	repo.HandleSnapshots = d.GetBoolRef("handle_snapshots")
-	repo.MaxUniqueSnapshots = d.GetIntRef("max_unique_snapshots")
-	repo.SuppressPomConsistencyChecks = d.GetBoolRef("suppress_pom_consistency_checks")
 	repo.HardFail = d.GetBoolRef("hard_fail")
 	repo.Offline = d.GetBoolRef("offline")
 	repo.BlackedOut = d.GetBoolRef("blacked_out")
@@ -238,12 +219,8 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.SocketTimeoutMillis = d.GetIntRef("socket_timeout_millis")
 	repo.LocalAddress = d.GetStringRef("local_address")
 	repo.RetrievalCachePeriodSecs = d.GetIntRef("retrieval_cache_period_seconds")
-	repo.FailedRetrievalCachePeriodSecs = d.GetIntRef("failed_cache_period_seconds")
 	repo.MissedRetrievalCachePeriodSecs = d.GetIntRef("missed_cache_period_seconds")
-	repo.UnusedArtifactsCleanupEnabled = d.GetBoolRef("unused_artifacts_cleanup_enabled")
 	repo.UnusedArtifactsCleanupPeriodHours = d.GetIntRef("unused_artifacts_cleanup_period_hours")
-	repo.FetchJarsEagerly = d.GetBoolRef("fetch_jars_eagerly")
-	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
 	repo.ShareConfiguration = d.GetBoolRef("share_configuration")
 	repo.SynchronizeProperties = d.GetBoolRef("synchronize_properties")
 	repo.BlockMismatchingMimeTypes = d.GetBoolRef("block_mismatching_mime_types")
@@ -251,6 +228,13 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.EnableCookieManagement = d.GetBoolRef("enable_cookie_management")
 	repo.ClientTLSCertificate = d.GetStringRef("client_tls_certificate")
 	repo.PropertySets = d.GetSetRef("property_sets")
+	repo.HandleReleases = d.GetBoolRef("handle_releases")
+	repo.HandleSnapshots = d.GetBoolRef("handle_snapshots")
+	//repo.RemoteRepoChecksumPolicyType = d.GetStringRef("remote_repo_checksum_policy_type")
+	repo.MaxUniqueSnapshots = d.GetIntRef("max_unique_snapshots")
+	repo.SuppressPomConsistencyChecks = d.GetBoolRef("suppress_pom_consistency_checks")
+	repo.FetchJarsEagerly = d.GetBoolRef("fetch_jars_eagerly")
+	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
 
 	return repo
 }
@@ -264,34 +248,32 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("includes_pattern", repo.IncludesPattern)
 	d.Set("excludes_pattern", repo.ExcludesPattern)
 	d.Set("repo_layout_ref", repo.RepoLayoutRef)
-	d.Set("handle_releases", repo.HandleReleases)
-	d.Set("handle_snapshots", repo.HandleSnapshots)
-	d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots)
-	d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks)
 	d.Set("blacked_out", repo.BlackedOut)
 	d.Set("url", repo.Url)
 	d.Set("username", repo.Username)
+	d.Set("password", GetMD5Hash(*repo.Password))
 	d.Set("proxy", repo.Proxy)
-	d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
 	d.Set("hard_fail", repo.HardFail)
 	d.Set("offline", repo.Offline)
 	d.Set("store_artifacts_locally", repo.StoreArtifactsLocally)
 	d.Set("socket_timeout_millis", repo.SocketTimeoutMillis)
 	d.Set("local_address", repo.LocalAddress)
 	d.Set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs)
-	d.Set("failed_cache_period_seconds", repo.FailedRetrievalCachePeriodSecs)
 	d.Set("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)
-	d.Set("unused_artifacts_cleanup_enabled", repo.UnusedArtifactsCleanupEnabled)
 	d.Set("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
-	d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly)
-	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
 	d.Set("share_configuration", repo.ShareConfiguration)
 	d.Set("synchronize_properties", repo.SynchronizeProperties)
 	d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes)
 	d.Set("allow_any_host_auth", repo.AllowAnyHostAuth)
 	d.Set("enable_cookie_management", repo.EnableCookieManagement)
 	d.Set("client_tls_certificate", repo.ClientTLSCertificate)
-	d.Set("property_sets", repo.PropertySets)
+	d.Set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
+	d.Set("handle_releases", repo.HandleReleases)
+	d.Set("handle_snapshots", repo.HandleSnapshots)
+	//d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
+	d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots)
+	d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly)
+	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {

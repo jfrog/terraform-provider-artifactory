@@ -36,7 +36,6 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			"replications": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url": {
@@ -46,44 +45,41 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 						"socket_timeout_millis": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Computed: true,
+							Default:  15000,
 						},
 						"username": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 						"password": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
-							Computed:  true,
 							StateFunc: GetMD5Hash,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
+							Default:  true,
 						},
 						"sync_deletes": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
+							Default:  true,
 						},
 						"sync_properties": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
+							Default:  true,
 						},
 						"sync_statistics": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
+							Default:  false,
 						},
 						"path_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 					},
 				},

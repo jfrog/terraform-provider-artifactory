@@ -26,60 +26,51 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 			},
 			"package_type": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"repositories": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"notes": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"includes_pattern": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Default:  "**/*",
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
 			},
 			"debian_trivial_layout": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"artifactory_requests_can_retrieve_remote_artifacts": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"key_pair": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"pom_repository_references_cleanup_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "discard_active_reference",
 			},
 			"default_deployment_repo": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}

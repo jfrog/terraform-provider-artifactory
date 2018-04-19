@@ -35,7 +35,7 @@ func (d *ResourceData) GetSetRef(key string) *[]string {
 		arr := CastToStringArr(v.(*schema.Set).List())
 		return &arr
 	}
-	return nil
+	return new([]string)
 }
 
 func (d *ResourceData) GetListRef(key string) *[]string {
@@ -43,7 +43,7 @@ func (d *ResourceData) GetListRef(key string) *[]string {
 		arr := CastToStringArr(v.([]interface{}))
 		return &arr
 	}
-	return nil
+	return new([]string)
 }
 
 func CastToStringArr(arr []interface{}) []string {
@@ -65,6 +65,10 @@ func CastToInterfaceArr(arr []string) []interface{} {
 }
 
 func GetMD5Hash(o interface{}) string {
+	if len(o.(string)) == 0 { // Don't hash empty strings
+		return ""
+	}
+
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))

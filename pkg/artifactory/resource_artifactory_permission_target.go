@@ -47,12 +47,12 @@ func resourceArtifactoryPermissionTargets() *schema.Resource {
 			"includes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "**",
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"repositories": {
 				Type:     schema.TypeSet,
@@ -99,7 +99,10 @@ func marshalPermissionTargets(permissionTargets *artifactory.PermissionTargets, 
 	d.Set("name", permissionTargets.Name)
 	d.Set("includes_pattern", permissionTargets.IncludesPattern)
 	d.Set("excludes_pattern", permissionTargets.ExcludesPattern)
-	d.Set("repositories", permissionTargets.Repositories)
+
+	if permissionTargets.Repositories != nil {
+		d.Set("repositories", schema.NewSet(schema.HashString, CastToInterfaceArr(*permissionTargets.Repositories)))
+	}
 
 	if permissionTargets.Principals.Users != nil {
 		d.Set("users", flattenPrincipal(*permissionTargets.Principals.Users))
