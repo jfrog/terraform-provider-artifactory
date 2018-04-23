@@ -17,7 +17,7 @@ const opAcknowledgeJob = "AcknowledgeJob"
 
 // AcknowledgeJobRequest generates a "aws/request.Request" representing the
 // client's request for the AcknowledgeJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -103,7 +103,7 @@ const opAcknowledgeThirdPartyJob = "AcknowledgeThirdPartyJob"
 
 // AcknowledgeThirdPartyJobRequest generates a "aws/request.Request" representing the
 // client's request for the AcknowledgeThirdPartyJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -192,7 +192,7 @@ const opCreateCustomActionType = "CreateCustomActionType"
 
 // CreateCustomActionTypeRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCustomActionType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -276,7 +276,7 @@ const opCreatePipeline = "CreatePipeline"
 
 // CreatePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePipeline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -374,7 +374,7 @@ const opDeleteCustomActionType = "DeleteCustomActionType"
 
 // DeleteCustomActionTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCustomActionType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -459,7 +459,7 @@ const opDeletePipeline = "DeletePipeline"
 
 // DeletePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePipeline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -540,7 +540,7 @@ const opDisableStageTransition = "DisableStageTransition"
 
 // DisableStageTransitionRequest generates a "aws/request.Request" representing the
 // client's request for the DisableStageTransition operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -628,7 +628,7 @@ const opEnableStageTransition = "EnableStageTransition"
 
 // EnableStageTransitionRequest generates a "aws/request.Request" representing the
 // client's request for the EnableStageTransition operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -715,7 +715,7 @@ const opGetJobDetails = "GetJobDetails"
 
 // GetJobDetailsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobDetails operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -802,7 +802,7 @@ const opGetPipeline = "GetPipeline"
 
 // GetPipelineRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipeline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -890,7 +890,7 @@ const opGetPipelineExecution = "GetPipelineExecution"
 
 // GetPipelineExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipelineExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -978,7 +978,7 @@ const opGetPipelineState = "GetPipelineState"
 
 // GetPipelineStateRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipelineState operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1061,7 +1061,7 @@ const opGetThirdPartyJobDetails = "GetThirdPartyJobDetails"
 
 // GetThirdPartyJobDetailsRequest generates a "aws/request.Request" representing the
 // client's request for the GetThirdPartyJobDetails operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1155,7 +1155,7 @@ const opListActionTypes = "ListActionTypes"
 
 // ListActionTypesRequest generates a "aws/request.Request" representing the
 // client's request for the ListActionTypes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1239,7 +1239,7 @@ const opListPipelineExecutions = "ListPipelineExecutions"
 
 // ListPipelineExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPipelineExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1325,7 +1325,7 @@ const opListPipelines = "ListPipelines"
 
 // ListPipelinesRequest generates a "aws/request.Request" representing the
 // client's request for the ListPipelines operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1405,7 +1405,7 @@ const opPollForJobs = "PollForJobs"
 
 // PollForJobsRequest generates a "aws/request.Request" representing the
 // client's request for the PollForJobs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1492,7 +1492,7 @@ const opPollForThirdPartyJobs = "PollForThirdPartyJobs"
 
 // PollForThirdPartyJobsRequest generates a "aws/request.Request" representing the
 // client's request for the PollForThirdPartyJobs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1579,7 +1579,7 @@ const opPutActionRevision = "PutActionRevision"
 
 // PutActionRevisionRequest generates a "aws/request.Request" representing the
 // client's request for the PutActionRevision operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1667,7 +1667,7 @@ const opPutApprovalResult = "PutApprovalResult"
 
 // PutApprovalResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutApprovalResult operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1762,7 +1762,7 @@ const opPutJobFailureResult = "PutJobFailureResult"
 
 // PutJobFailureResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutJobFailureResult operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1850,7 +1850,7 @@ const opPutJobSuccessResult = "PutJobSuccessResult"
 
 // PutJobSuccessResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutJobSuccessResult operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1938,7 +1938,7 @@ const opPutThirdPartyJobFailureResult = "PutThirdPartyJobFailureResult"
 
 // PutThirdPartyJobFailureResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutThirdPartyJobFailureResult operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2029,7 +2029,7 @@ const opPutThirdPartyJobSuccessResult = "PutThirdPartyJobSuccessResult"
 
 // PutThirdPartyJobSuccessResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutThirdPartyJobSuccessResult operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2120,7 +2120,7 @@ const opRetryStageExecution = "RetryStageExecution"
 
 // RetryStageExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the RetryStageExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2215,7 +2215,7 @@ const opStartPipelineExecution = "StartPipelineExecution"
 
 // StartPipelineExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartPipelineExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2298,7 +2298,7 @@ const opUpdatePipeline = "UpdatePipeline"
 
 // UpdatePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePipeline operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5902,6 +5902,8 @@ type PipelineExecutionSummary struct {
 	// The ID of the pipeline execution.
 	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string"`
 
+	SourceRevisions []*SourceRevision `locationName:"sourceRevisions" type:"list"`
+
 	// The date and time when the pipeline execution began, in timestamp format.
 	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 
@@ -5938,6 +5940,12 @@ func (s *PipelineExecutionSummary) SetLastUpdateTime(v time.Time) *PipelineExecu
 // SetPipelineExecutionId sets the PipelineExecutionId field's value.
 func (s *PipelineExecutionSummary) SetPipelineExecutionId(v string) *PipelineExecutionSummary {
 	s.PipelineExecutionId = &v
+	return s
+}
+
+// SetSourceRevisions sets the SourceRevisions field's value.
+func (s *PipelineExecutionSummary) SetSourceRevisions(v []*SourceRevision) *PipelineExecutionSummary {
+	s.SourceRevisions = v
 	return s
 }
 
@@ -7013,6 +7021,53 @@ func (s *S3ArtifactLocation) SetBucketName(v string) *S3ArtifactLocation {
 // SetObjectKey sets the ObjectKey field's value.
 func (s *S3ArtifactLocation) SetObjectKey(v string) *S3ArtifactLocation {
 	s.ObjectKey = &v
+	return s
+}
+
+type SourceRevision struct {
+	_ struct{} `type:"structure"`
+
+	// ActionName is a required field
+	ActionName *string `locationName:"actionName" min:"1" type:"string" required:"true"`
+
+	RevisionId *string `locationName:"revisionId" min:"1" type:"string"`
+
+	RevisionSummary *string `locationName:"revisionSummary" min:"1" type:"string"`
+
+	RevisionUrl *string `locationName:"revisionUrl" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SourceRevision) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceRevision) GoString() string {
+	return s.String()
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *SourceRevision) SetActionName(v string) *SourceRevision {
+	s.ActionName = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *SourceRevision) SetRevisionId(v string) *SourceRevision {
+	s.RevisionId = &v
+	return s
+}
+
+// SetRevisionSummary sets the RevisionSummary field's value.
+func (s *SourceRevision) SetRevisionSummary(v string) *SourceRevision {
+	s.RevisionSummary = &v
+	return s
+}
+
+// SetRevisionUrl sets the RevisionUrl field's value.
+func (s *SourceRevision) SetRevisionUrl(v string) *SourceRevision {
+	s.RevisionUrl = &v
 	return s
 }
 

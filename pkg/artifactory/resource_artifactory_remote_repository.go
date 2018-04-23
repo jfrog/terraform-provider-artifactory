@@ -192,6 +192,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"pypi_registry_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 		},
 	}
 }
@@ -235,7 +240,7 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.SuppressPomConsistencyChecks = d.GetBoolRef("suppress_pom_consistency_checks")
 	repo.FetchJarsEagerly = d.GetBoolRef("fetch_jars_eagerly")
 	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
-
+	repo.PyPIRegistryUrl = d.GetStringRef("pypi_registry_url")
 	return repo
 }
 
@@ -274,6 +279,7 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots)
 	d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly)
 	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
+	d.Set("pypi_registry_url", repo.PyPIRegistryUrl)
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {

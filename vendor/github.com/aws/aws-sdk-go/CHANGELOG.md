@@ -1,3 +1,185 @@
+Release v1.13.34 (2018-04-20)
+===
+
+### Service Client Updates
+* `service/firehose`: Updates service API and documentation
+  * With this release, Amazon Kinesis Data Firehose allows you to tag your delivery streams. Tags are metadata that you can create and use to manage your delivery streams. For more information about tagging, see AWS Tagging Strategies. For technical documentation, look for the tagging operations in the Amazon Kinesis Firehose API reference.
+* `service/medialive`: Updates service API and documentation
+  * With AWS Elemental MediaLive you can now output live channels as RTMP (Real-Time Messaging Protocol) and RTMPS as the encrypted version of the protocol (Secure, over SSL/TLS). RTMP is the preferred protocol for sending live streams to popular social platforms which  means you can send live channel content to social and sharing platforms in a secure and reliable way while continuing to stream to your own website, app or network.
+
+Release v1.13.33 (2018-04-19)
+===
+
+### Service Client Updates
+* `service/ce`: Updates service API and documentation
+* `service/codepipeline`: Updates service API and documentation
+  * Added new SourceRevision structure to Execution Summary with accompanying definitions as needed in the AWS CodePipeline API Guide.
+* `service/devicefarm`: Updates service API and documentation
+  * Adding support for VPCEndpoint feature. Allows customers to be able to access their private endpoints/services running in their VPC during test automation.
+* `service/ec2`: Updates service API and documentation
+  * Added support for customers to see the time at which a Dedicated Host was allocated or released.
+* `service/rds`: Updates service API and documentation
+  * The ModifyDBCluster operation now includes an EngineVersion parameter. You can use this to upgrade the engine for a clustered database.
+* `service/secretsmanager`: Updates service documentation and examples
+  * Documentation updates
+* `service/ssm`: Updates service API and documentation
+  * Added new APIs DeleteInventory and DescribeInventoryDeletions, for customers to delete their custom inventory data.
+
+Release v1.13.32 (2018-04-10)
+===
+
+### Service Client Updates
+* `service/dms`: Updates service API and documentation
+  * Native Change Data Capture start point and task recovery support in Database Migration Service.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/glue`: Updates service API and documentation
+  * "AWS Glue now supports timeout values for ETL jobs. With this release, all new ETL jobs have a default timeout value of 48 hours. AWS Glue also now supports the ability to start a schedule or job events trigger when it is created."
+* `service/mediapackage`: Updates service API and documentation
+  * Adds a new OriginEndpoint package type CmafPackage in MediaPackage. Origin endpoints can now be configured to use the Common Media Application Format (CMAF) media streaming format. This version of CmafPackage only supports HTTP Live Streaming (HLS) manifests with fragmented MP4.
+* `service/ssm`: Updates service API and documentation
+  * Added TooManyUpdates exception for AddTagsToResource and RemoveTagsFromResource API
+* `service/workmail`: Updates service API, documentation, and paginators
+  * Amazon WorkMail adds the ability to grant users and groups with "Full Access", "Send As" and "Send on Behalf" permissions on a given mailbox.
+
+Release v1.13.31 (2018-04-09)
+===
+
+### Service Client Updates
+* `service/clouddirectory`: Updates service API and documentation
+  * Cloud Directory customers can fetch attributes within a facet on an object with the new GetObjectAttributes API and can fetch attributes from multiple facets or objects with the BatchGetObjectAttributes operation.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+Release v1.13.30 (2018-04-06)
+===
+
+### Service Client Updates
+* `service/batch`: Updates service API and documentation
+  * Support for Timeout in SubmitJob and RegisterJobDefinition
+
+Release v1.13.29 (2018-04-05)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/ssm`: Updates service documentation
+
+Release v1.13.28 (2018-04-04)
+===
+
+### Service Client Updates
+* `service/acm`: Updates service API and documentation
+  * AWS Certificate Manager has added support for AWS Certificate Manager Private Certificate Authority (CA). Customers can now request private certificates with the RequestCertificate API, and also export private certificates with the ExportCertificate API.
+* `service/acm-pca`: Adds new service
+* `service/config`: Updates service API and documentation
+* `service/fms`: Adds new service
+* `service/monitoring`: Updates service API and documentation
+  * The new GetMetricData API enables you to collect batch amounts of metric data and optionally perform math expressions on the data. With one GetMetricData call you can retrieve as many as 100 different metrics and a total of 100,800 data points.
+* `service/s3`: Updates service API and documentation
+  * ONEZONE_IA storage class stores object data in only one Availability Zone at a lower price than STANDARD_IA. This SDK release provides API support for this new storage class.
+* `service/sagemaker`: Updates service API and documentation
+  * SageMaker is now supporting many additional instance types in previously supported families for Notebooks, Training Jobs, and Endpoints. Training Jobs and Endpoints now support instances in the m5 family in addition to the previously supported instance families. For specific instance types supported please see the documentation for the SageMaker API.
+* `service/secretsmanager`: Adds new service
+  * AWS Secrets Manager enables you to easily create and manage the secrets that you use in your customer-facing apps.  Instead of embedding credentials into your source code, you can dynamically query Secrets Manager from your app whenever you need credentials.  You can automatically and frequently rotate your secrets without having to deploy updates to your apps.  All secret values are encrypted when they're at rest with AWS KMS, and while they're in transit with HTTPS and TLS.
+* `service/transcribe`: Updates service API, documentation, and paginators
+
+Release v1.13.27 (2018-04-03)
+===
+
+### Service Client Updates
+* `service/devicefarm`: Updates service API and documentation
+  * Added Private Device Management feature. Customers can now manage their private devices efficiently - view their status, set labels and apply profiles on them. Customers can also schedule automated tests and remote access sessions on individual instances in their private device fleet.
+* `service/lambda`: Updates service API and documentation
+  * added nodejs8.10 as a valid runtime
+* `service/translate`: Updates service API and documentation
+
+Release v1.13.26 (2018-04-02)
+===
+
+### Service Client Updates
+* `service/apigateway`: Updates service API and documentation
+  * Amazon API Gateway now supports resource policies for APIs making it easier to set access controls for invoking APIs.
+* `service/cloudfront`: Adds new service
+  * You can now use a new Amazon CloudFront capability called Field-Level Encryption to further enhance the security of sensitive data, such as credit card numbers or personally identifiable information (PII) like social security numbers. CloudFront's field-level encryption further encrypts sensitive data in an HTTPS form using field-specific encryption keys (which you supply) before a POST request is forwarded to your origin. This ensures that sensitive data can only be decrypted and viewed by certain components or services in your application stack. Field-level encryption is easy to setup. Simply configure the fields that have to be further encrypted by CloudFront using the public keys you specify and you can reduce attack surface for your sensitive data.
+* `service/es`: Updates service API and documentation
+  * This adds Amazon Cognito authentication support to Kibana.
+
+Release v1.13.25 (2018-03-30)
+===
+
+### Service Client Updates
+* `service/acm`: Updates service API and documentation
+  * Documentation updates for acm
+* `service/connect`: Adds new service
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+Release v1.13.24 (2018-03-29)
+===
+
+### Service Client Updates
+* `service/alexaforbusiness`: Updates service API, documentation, and paginators
+* `service/cloudformation`: Updates service API and documentation
+  * Enabling resource level permission control for StackSets APIs. Adding support for customers to use customized AdministrationRole to create security boundaries between different users.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/greengrass`: Updates service API and documentation
+  * Greengrass APIs now support creating Machine Learning resource types and configuring binary data as the input payload for Greengrass Lambda functions.
+* `service/ssm`: Updates service API
+  * This Patch Manager release supports creating patch baselines for CentOS.
+
+Release v1.13.23 (2018-03-28)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/iam`: Updates service API and documentation
+  * Add support for Longer Role Sessions. Four APIs manage max session duration: GetRole, ListRoles, CreateRole, and the new API UpdateRole. The max session duration integer attribute is measured in seconds.
+* `service/mturk-requester`: Updates service API and documentation
+* `service/sts`: Updates service API and documentation
+  * Change utilizes the Max Session Duration attribute introduced for IAM Roles and allows STS customers to request session duration up to the Max Session Duration of 12 hours from AssumeRole based APIs.
+
+Release v1.13.22 (2018-03-27)
+===
+
+### Service Client Updates
+* `service/acm`: Updates service API and documentation
+  * AWS Certificate Manager has added support for customers to disable Certificate Transparency logging on a per-certificate basis.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+Release v1.13.21 (2018-03-26)
+===
+
+### Service Client Updates
+* `service/dynamodb`: Updates service API and documentation
+  * Point-in-time recovery (PITR) provides continuous backups of your DynamoDB table data. With PITR, you do not have to worry about creating, maintaining, or scheduling backups. You enable PITR on your table and your backup is available for restore at any point in time from the moment you enable it, up to a maximum of the 35 preceding days. PITR provides continuous backups until you explicitly disable it. For more information, see the Amazon DynamoDB Developer Guide.
+
+Release v1.13.20 (2018-03-23)
+===
+
+### Service Client Updates
+* `service/rds`: Updates service documentation
+  * Documentation updates for RDS
+
+Release v1.13.19 (2018-03-22)
+===
+
+### Service Client Updates
+* `service/appstream`: Updates service API and documentation
+  * Feedback URL allows admins to provide a feedback link or a survey link for collecting user feedback while streaming sessions. When a feedback link is provided, streaming users will see a "Send Feedback" choice in their streaming session toolbar. On selecting this choice, user will be redirected to the link provided in a new browser tab. If a feedback link is not provided, users will not see the "Send Feedback" option.
+* `service/codebuild`: Updates service API and documentation
+  * Adding support for branch filtering when using webhooks with AWS CodeBuild.
+* `service/ecs`: Updates service API and documentation
+  * Amazon Elastic Container Service (ECS) now includes integrated Service Discovery using Route 53 Auto Naming. Customers can now specify a Route 53 Auto Naming service as part of an ECS service. ECS will register task IPs with Route 53, making them available via DNS in your VPC.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+### SDK Bugs
+* `aws/endpoints`: Use service metadata for fallback signing name ([#1854](https://github.com/aws/aws-sdk-go/pull/1854))
+  * Updates the SDK's endpoint resolution to fallback deriving the service's signing name from the service's modeled metadata in addition the the endpoints modeled data.
+  * Fixes [#1850](https://github.com/aws/aws-sdk-go/issues/1850)
+Release v1.13.18 (2018-03-21)
+===
+
+### Service Client Updates
+* `service/serverlessrepo`: Updates service documentation
+
 Release v1.13.17 (2018-03-20)
 ===
 
