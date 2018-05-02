@@ -17,6 +17,7 @@ func resourceArtifactoryPermissionTargets() *schema.Resource {
 				"name": {
 					Type:     schema.TypeString,
 					Required: true,
+					ForceNew: true,
 				},
 				"permissions": {
 					Type:     schema.TypeSet,
