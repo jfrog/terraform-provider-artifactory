@@ -86,7 +86,10 @@ func marshalUser(user *artifactory.User, d *schema.ResourceData) {
 	d.Set("disable_ui_access", user.DisableUIAccess)
 	d.Set("realm", user.Realm)
 	d.Set("internal_password_disabled", user.InternalPasswordDisabled)
-	d.Set("groups", schema.NewSet(schema.HashString, CastToInterfaceArr(*user.Groups)))
+
+	if user.Groups != nil {
+		d.Set("groups", schema.NewSet(schema.HashString, CastToInterfaceArr(*user.Groups)))
+	}
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
