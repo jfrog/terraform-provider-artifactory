@@ -1,3 +1,157 @@
+Release v1.13.48 (2018-05-14)
+===
+
+### Service Client Updates
+* `service/codebuild`: Updates service API and documentation
+  * Adding support for more override fields for StartBuild API, add support for idempotency token field  for StartBuild API in AWS CodeBuild.
+* `service/iot1click-devices`: Adds new service
+* `service/iot1click-projects`: Adds new service
+* `service/organizations`: Updates service documentation
+  * Documentation updates for organizations
+
+Release v1.13.47 (2018-05-10)
+===
+
+### Service Client Updates
+* `service/firehose`: Updates service API and documentation
+  * With this release, Amazon Kinesis Data Firehose can convert the format of your input data from JSON to Apache Parquet or Apache ORC before storing the data in Amazon S3. Parquet and ORC are columnar data formats that save space and enable faster queries compared to row-oriented formats like JSON.
+
+Release v1.13.46 (2018-05-10)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/gamelift`: Updates service API and documentation
+  * AutoScaling Target Tracking scaling simplification along with StartFleetActions and StopFleetActions APIs to suspend and resume automatic scaling at will.
+
+Release v1.13.45 (2018-05-10)
+===
+
+### Service Client Updates
+* `service/budgets`: Updates service API and documentation
+  * Updating the regex for the NumericValue fields.
+* `service/ec2`: Updates service API and documentation
+  * Enable support for latest flag with Get Console Output
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/rds`: Updates service API and documentation
+  * Changes to support the Aurora MySQL Backtrack feature.
+
+Release v1.13.44 (2018-05-08)
+===
+
+### Service Client Updates
+* `service/ec2`: Updates service API and documentation
+  * Enable support for specifying CPU options during instance launch.
+* `service/rds`: Updates service documentation
+  * Correction to the documentation about copying unencrypted snapshots.
+
+Release v1.13.43 (2018-05-07)
+===
+
+### Service Client Updates
+* `service/alexaforbusiness`: Updates service API
+* `service/budgets`: Updates service API and documentation
+  * "With this release, customers can use AWS Budgets to monitor how much of their Amazon EC2, Amazon RDS, Amazon Redshift, and Amazon ElastiCache instance usage is covered by reservations, and receive alerts when their coverage falls below the threshold they define."
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/es`: Updates service API, documentation, and paginators
+  * This change brings support for Reserved Instances to AWS Elasticsearch.
+* `service/s3`: Updates service API and documentation
+  * Added BytesReturned details for Progress and Stats Events for Amazon S3 Select .
+
+Release v1.13.42 (2018-05-04)
+===
+
+### Service Client Updates
+* `service/guardduty`: Updates service API, documentation, and paginators
+  * Amazon GuardDuty is adding five new API operations for creating and managing filters. For each filter, you can specify a criteria and an action. The action you specify is applied to findings that match the specified criteria.
+
+Release v1.13.41 (2018-05-03)
+===
+
+### Service Client Updates
+* `service/appsync`: Updates service API and documentation
+* `service/config`: Updates service API and documentation
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/secretsmanager`: Updates service documentation
+  * Documentation updates for secretsmanager
+
+Release v1.13.40 (2018-05-02)
+===
+
+### Service Client Updates
+* `service/acm`: Updates service documentation
+  * Documentation updates for acm
+* `service/codepipeline`: Updates service API and documentation
+  * Added support for webhooks with accompanying definitions as needed in the AWS CodePipeline API Guide.
+* `service/ec2`: Updates service API and documentation
+  * Amazon EC2 Fleet is a new feature that simplifies the provisioning of Amazon EC2 capacity across different EC2 instance types, Availability Zones, and the On-Demand, Reserved Instance, and Spot Instance purchase models. With a single API call, you can now provision capacity to achieve desired scale, performance, and cost.
+* `service/ssm`: Updates service API and documentation
+  * Added support for new parameter, DocumentVersion, for SendCommand API. Users can now specify version of SSM document to be executed on the target(s).
+
+Release v1.13.39 (2018-04-30)
+===
+
+### Service Client Updates
+* `service/alexaforbusiness`: Updates service API, documentation, and paginators
+* `service/dynamodb`: Updates service API and documentation
+  * Adds two new APIs UpdateGlobalTableSettings and DescribeGlobalTableSettings. This update introduces new constraints in the CreateGlobalTable and UpdateGlobalTable APIs . Tables must have the same write capacity units. If Global Secondary Indexes exist then they must have the same write capacity units and key schema.
+* `service/guardduty`: Updates service API and documentation
+  * You can disable the email notification when inviting GuardDuty members using the disableEmailNotification parameter in the InviteMembers operation.
+* `service/route53domains`: Updates service API and documentation
+  * This release adds a SubmittedSince attribute to the ListOperations API, so you can list operations that were submitted after a specified date and time.
+* `service/sagemaker`: Updates service API and documentation
+  * SageMaker has added support for VPC configuration for both Endpoints and Training Jobs. This allows you to connect from the instances running the Endpoint or Training Job to your VPC and any resources reachable in the VPC rather than being restricted to resources that were internet accessible.
+* `service/workspaces`: Updates service API and documentation
+  * Added new IP Access Control APIs, an API to change the state of a Workspace, and the ADMIN_MAINTENANCE WorkSpace state. With the new IP Access Control APIs, you can now create/delete IP Access Control Groups, add/delete/update rules for IP Access Control Groups, Associate/Disassociate IP Access Control Groups to/from a WorkSpaces Directory, and Describe IP Based Access Control Groups.
+
+Release v1.13.38 (2018-04-26)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/glacier`: Updates service documentation
+  * Documentation updates for Glacier to fix a broken link
+* `service/secretsmanager`: Updates service documentation
+  * Documentation updates for secretsmanager
+
+Release v1.13.37 (2018-04-25)
+===
+
+### Service Client Updates
+* `service/codedeploy`: Updates service API and documentation
+  * AWS CodeDeploy has a new exception that indicates when a GitHub token is not valid.
+* `service/rekognition`: Updates service documentation
+  * Documentation updates for Amazon Rekognition.
+* `service/xray`: Updates service API and documentation
+  * Added PutEncryptionConfig and GetEncryptionConfig APIs for managing data encryption settings. Use PutEncryptionConfig to configure X-Ray to use an AWS Key Management Service customer master key to encrypt trace data at rest.
+
+Release v1.13.36 (2018-04-24)
+===
+
+### Service Client Updates
+* `service/elasticbeanstalk`: Updates service API and documentation
+  * Support tracking Elastic Beanstalk resources in AWS Config.
+* `service/secretsmanager`: Updates service documentation
+  * Documentation updates for secretsmanager
+
+Release v1.13.35 (2018-04-23)
+===
+
+### Service Client Updates
+* `service/autoscaling-plans`: Updates service API and documentation
+* `service/iot`: Updates service API and documentation
+  * Add IotAnalyticsAction which sends message data to an AWS IoT Analytics channel
+* `service/iotanalytics`: Adds new service
+
+### SDK Enhancements
+* `aws/endpoints`: Add Get Region description to endpoints package ([#1909](https://github.com/aws/aws-sdk-go/pull/1909))
+  * Adds exposing the description field of the endpoints Region struct.
+  * Fixes [#1194](https://github.com/aws/aws-sdk-go/issues/1194)
+
+### SDK Bugs
+* Fix XML unmarshaler not correctly unmarshaling list of timestamp values ([#1894](https://github.com/aws/aws-sdk-go/pull/1894))
+  * Fixes a bug in the XML unmarshaler that would incorrectly try to unmarshal "time.Time" parameters that did not have the struct tag type on them. This would occur for nested lists like CloudWatch's GetMetricDataResponse MetricDataResults timestamp parameters.
+  * Fixes [#1892](https://github.com/aws/aws-sdk-go/issues/1892)
 Release v1.13.34 (2018-04-20)
 ===
 

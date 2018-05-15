@@ -226,7 +226,7 @@ type RemoteRepository struct {
 	VcsGitProvider                    *string                 `json:"vcsGitProvider,omitempty"`
 	VcsGitDownloadUrl                 *string                 `json:"vcsGitDownloadUrl,omitempty"`
 	ClientTLSCertificate              *string                 `json:"clientTlsCertificate,omitempty"`
-	PyPIRegistryUrl                   *string				  `json:"pyPIRegistryUrl,omitempty"`
+	PyPiRegistryUrl                   *string                 `json:"pyPiRegistryUrl,omitempty"`
 }
 
 func (r RemoteRepository) String() string {
