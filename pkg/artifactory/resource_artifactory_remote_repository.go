@@ -197,6 +197,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"bypass_head_requests": {
+				Type:	  schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -241,6 +246,7 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.FetchJarsEagerly = d.GetBoolRef("fetch_jars_eagerly")
 	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
 	repo.PyPiRegistryUrl = d.GetStringRef("pypi_registry_url")
+	repo.BypassHeadRequests = d.GetBoolRef("bypass_head_requests")
 	return repo
 }
 
@@ -280,6 +286,7 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly)
 	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
 	d.Set("pypi_registry_url", repo.PyPiRegistryUrl)
+	d.Set("bypass_head_requests", repo.BypassHeadRequests)
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
