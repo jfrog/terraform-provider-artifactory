@@ -70,6 +70,7 @@ type Metadata struct {
 	JSONVersion         string
 	TargetPrefix        string
 	Protocol            string
+	ProtocolSettings    ProtocolSettings
 	UID                 string
 	EndpointsID         string
 	ServiceID           string
@@ -77,8 +78,15 @@ type Metadata struct {
 	NoResolveEndpoint bool
 }
 
+// ProtocolSettings define how the SDK should handle requests in the context
+// of of a protocol.
+type ProtocolSettings struct {
+	HTTP2 string `json:"h2,omitempty"`
+}
+
 var serviceAliases map[string]string
 
+// Bootstrap loads SDK model customizations prior to the API model is parsed.
 func Bootstrap() error {
 	b, err := ioutil.ReadFile(filepath.Join("..", "models", "customizations", "service-aliases.json"))
 	if err != nil {
@@ -444,24 +452,26 @@ func ServiceID(a *API) string {
 
 // A tplService defines the template for the service generated code.
 var tplService = template.Must(template.New("service").Funcs(template.FuncMap{
+	"ServiceNameConstValue": ServiceName,
 	"ServiceNameValue": func(a *API) string {
-		if a.NoConstServiceNames {
-			return fmt.Sprintf("%q", a.Metadata.EndpointPrefix)
+		if !a.NoConstServiceNames {
+			return "ServiceName"
 		}
-		return "ServiceName"
+		return fmt.Sprintf("%q", ServiceName(a))
 	},
 	"EndpointsIDConstValue": func(a *API) string {
 		if a.NoConstServiceNames {
-			return fmt.Sprintf("%q", a.Metadata.EndpointPrefix)
+			return fmt.Sprintf("%q", a.Metadata.EndpointsID)
 		}
-		if a.Metadata.EndpointPrefix == a.Metadata.EndpointsID {
+		if a.Metadata.EndpointsID == ServiceName(a) {
 			return "ServiceName"
 		}
+
 		return fmt.Sprintf("%q", a.Metadata.EndpointsID)
 	},
 	"EndpointsIDValue": func(a *API) string {
 		if a.NoConstServiceNames {
-			return fmt.Sprintf("%q", a.Metadata.EndpointPrefix)
+			return fmt.Sprintf("%q", a.Metadata.EndpointsID)
 		}
 
 		return "EndpointsID"
@@ -496,9 +506,9 @@ var initRequest func(*request.Request)
 {{ if not .NoConstServiceNames -}}
 // Service information constants
 const (
-	ServiceName = "{{ .Metadata.EndpointPrefix }}" // Service endpoint prefix API calls made to.
-	EndpointsID = {{ EndpointsIDConstValue . }} // Service ID for Regions and Endpoints metadata.
-	ServiceID = "{{ ServiceID . }}" // ServiceID is a unique identifer of a specific service
+	ServiceName = "{{ ServiceNameConstValue . }}" // Name of service.
+	EndpointsID = {{ EndpointsIDConstValue . }} // ID to lookup a service endpoint with.
+	ServiceID = "{{ ServiceID . }}" // ServiceID is a unique identifer of a specific service.
 )
 {{- end }}
 
@@ -845,7 +855,7 @@ func (a *API) APIErrorsGoCode() string {
 // removeOperation removes an operation, its input/output shapes, as well as
 // any references/shapes that are unique to this operation.
 func (a *API) removeOperation(name string) {
-	fmt.Println("removing operation,", name)
+	debugLogger.Logln("removing operation,", name)
 	op := a.Operations[name]
 
 	delete(a.Operations, name)
@@ -859,7 +869,7 @@ func (a *API) removeOperation(name string) {
 // shapes. Will also remove member reference targeted shapes if those shapes do
 // not have any additional references.
 func (a *API) removeShape(s *Shape) {
-	fmt.Println("removing shape,", s.ShapeName)
+	debugLogger.Logln("removing shape,", s.ShapeName)
 
 	delete(a.Shapes, s.ShapeName)
 

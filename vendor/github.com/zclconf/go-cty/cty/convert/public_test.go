@@ -217,6 +217,17 @@ func TestConvert(t *testing.T) {
 			}),
 		},
 		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.NumberIntVal(5),
+				cty.StringVal("hello"),
+			}),
+			Type: cty.Set(cty.DynamicPseudoType),
+			Want: cty.SetVal([]cty.Value{
+				cty.StringVal("5"),
+				cty.StringVal("hello"),
+			}),
+		},
+		{
 			Value: cty.ObjectVal(map[string]cty.Value{
 				"num": cty.NumberIntVal(5),
 				"str": cty.StringVal("hello"),
@@ -311,6 +322,108 @@ func TestConvert(t *testing.T) {
 				"a": cty.StringVal("2"),
 				"b": cty.StringVal("5"),
 			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("foo value"),
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("foo value"),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("true"),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.DynamicVal,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.UnknownVal(cty.String),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.NullVal(cty.String),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.NullVal(cty.String),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.DynamicPseudoType,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+				"baz": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.EmptyObjectVal,
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+				"bar": cty.String,
+				"baz": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.Number,
+			}),
+			WantError: true, // recursive conversion from bool to number is impossible
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.UnknownVal(cty.Bool),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.Number,
+			}),
+			WantError: true, // recursive conversion from bool to number is impossible
 		},
 	}
 
