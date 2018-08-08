@@ -14,7 +14,9 @@ import (
 const remoteRepository_basic = `
 resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
 	key = "terraform-remote-test-repo-basic"
-    url = "https://central.maven.org"
+    package_type                          = "npm"
+	url                                   = "https://registry.npmjs.org/"
+	repo_layout_ref                       = "npm-default"
 }`
 
 func TestAccRemoteRepository_basic(t *testing.T) {
@@ -27,7 +29,8 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 				Config: remoteRepository_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "key", "terraform-remote-test-repo-basic"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "url", "https://central.maven.org"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "package_type", "npm"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "url", "https://registry.npmjs.org/"),
 				),
 			},
 		},
@@ -47,7 +50,6 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	includes_pattern                      = "**/*.js"
 	excludes_pattern                      = "**/*.jsx"
 	repo_layout_ref                       = "npm-default"
-	remote_repo_checksum_policy_type      = ""
 	handle_releases                       = true
 	handle_snapshots                      = true
 	max_unique_snapshots                  = 15
@@ -59,9 +61,7 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	socket_timeout_millis                 = 25000
 	local_address                         = ""
 	retrieval_cache_period_seconds        = 15
-	failed_cache_period_seconds           = 0
 	missed_cache_period_seconds           = 2500
-	unused_artifacts_cleanup_enabled      = false
 	unused_artifacts_cleanup_period_hours = 96
 	fetch_jars_eagerly                    = true
     fetch_sources_eagerly                 = true
@@ -88,14 +88,13 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "package_type", "npm"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "username", "user"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", "pass"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", GetMD5Hash("pass")),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "proxy", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "description", "desc (local file cache)"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "notes", "notes"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "includes_pattern", "**/*.js"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "excludes_pattern", "**/*.jsx"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "repo_layout_ref", "npm-default"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "remote_repo_checksum_policy_type", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "handle_releases", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "handle_snapshots", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "max_unique_snapshots", "15"),
@@ -107,9 +106,7 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "socket_timeout_millis", "25000"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "local_address", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "retrieval_cache_period_seconds", "15"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "failed_cache_period_seconds", "0"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "missed_cache_period_seconds", "2500"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "unused_artifacts_cleanup_enabled", "false"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "unused_artifacts_cleanup_period_hours", "96"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "fetch_jars_eagerly", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "fetch_sources_eagerly", "true"),
