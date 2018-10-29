@@ -91,7 +91,7 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepo
 	repo.Description = d.GetStringRef("description")
 	repo.Notes = d.GetStringRef("notes")
 	repo.KeyPair = d.GetStringRef("key_pair")
-	repo.PomRepositoryReferencesCleanupPolicy = artifactory.String(d.Get("pom_repository_references_cleanup_policy").(string))
+	repo.PomRepositoryReferencesCleanupPolicy = d.GetStringRef("pom_repository_references_cleanup_policy")
 	repo.DefaultDeploymentRepo = d.GetStringRef("default_deployment_repo")
 
 	return repo
