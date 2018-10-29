@@ -198,7 +198,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:  "",
 			},
 			"bypass_head_requests": {
-				Type:	  schema.TypeBool,
+				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},

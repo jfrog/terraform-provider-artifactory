@@ -1,7 +1,9 @@
 package artifactory
 
 import (
+	"fmt"
 	"math/rand"
+	"os"
 
 	"context"
 	"github.com/atlassian/go-artifactory/pkg/artifactory"
@@ -96,7 +98,16 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Client)
 
 	user := unmarshalUser(d)
-	user.Password = artifactory.String(generatePassword())
+
+	if user.Name == nil {
+		return fmt.Errorf("user name cannot be nil")
+	}
+
+	if pass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%s_PASSWORD", *user.Name)); ok {
+		user.Password = artifactory.String(pass)
+	} else {
+		user.Password = artifactory.String(generatePassword())
+	}
 
 	_, err := c.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
 	if err != nil {

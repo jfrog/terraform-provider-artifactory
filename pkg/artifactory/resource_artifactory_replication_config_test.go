@@ -1,15 +1,15 @@
 package artifactory
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"testing"
-	
+
+	"context"
+	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"net/http"
-	"context"
 )
 
 const replicationConfigTemplate = `
@@ -40,9 +40,9 @@ resource "artifactory_replication_config" "foo-rep" {
 
 func TestAccReplication_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck: func(){},
-		CheckDestroy:testAccCheckReplicationDestroy("artifactory_replication_config.foo"),
-		Providers: testAccProviders,
+		PreCheck:     func() {},
+		CheckDestroy: testAccCheckReplicationDestroy("artifactory_replication_config.foo"),
+		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -77,4 +77,3 @@ func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 		}
 	}
 }
-

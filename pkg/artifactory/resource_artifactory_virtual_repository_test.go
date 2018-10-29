@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"context"
+	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
-	"context"
 	"net/http"
 )
 
-const virtualRepositoryBasic=`
+const virtualRepositoryBasic = `
 resource "artifactory_virtual_repository" "foo" {
 	key          = "foo"
 	package_type = "maven"
@@ -21,9 +21,9 @@ resource "artifactory_virtual_repository" "foo" {
 
 func TestAccVirtualRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {testAccPreCheck(t)},
+		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.foo"),
-		Providers: testAccProviders,
+		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -54,9 +54,9 @@ resource "artifactory_virtual_repository" "foo" {
 
 func TestAccVirtualRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {testAccPreCheck(t)},
+		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.foo"),
-		Providers: testAccProviders,
+		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
