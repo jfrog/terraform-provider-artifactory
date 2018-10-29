@@ -93,7 +93,8 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceGroupRead(d, m)
 }
 
-func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
+func resourceGroupRead(s *schema.ResourceData, m interface{}) error {
+	d := &ResourceData{s}
 	c := m.(*artifactory.Client)
 
 	group, resp, err := c.Security.GetGroup(context.Background(), d.Id())
@@ -107,13 +108,15 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("name", group.Name)
-	d.Set("description", group.Description)
-	d.Set("auto_join", group.AutoJoin)
-	d.Set("admin_privileges", group.AdminPrivileges)
-	d.Set("realm", group.Realm)
-	d.Set("realm_attributes", group.RealmAttributes)
-	return nil
+	set := d.SetOrPropagate(&err)
+	set("name", group.Name)
+	set("description", group.Description)
+	set("auto_join", group.AutoJoin)
+	set("admin_privileges", group.AdminPrivileges)
+	set("realm", group.Realm)
+	set("realm_attributes", group.RealmAttributes)
+
+	return err
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {

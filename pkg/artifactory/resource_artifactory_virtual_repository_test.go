@@ -3,17 +3,18 @@ package artifactory
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	"context"
+	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
-	"context"
 	"net/http"
 )
 
-const virtualRepositoryBasic=`
-resource "artifactory_virtual_repository" "foo" {
-	key          = "foo"
+const virtualRepositoryBasic = `
+resource "artifactory_virtual_repository" "basic" {
+	key          = "tf-virtual-basic"
 	package_type = "maven"
 	repositories = []
 }
@@ -21,17 +22,17 @@ resource "artifactory_virtual_repository" "foo" {
 
 func TestAccVirtualRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {testAccPreCheck(t)},
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.foo"),
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.basic"),
+		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
 				Config: virtualRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "key", "foo"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "package_type", "maven"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repositories.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.basic", "key", "tf-virtual-basic"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.basic", "package_type", "maven"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.basic", "repositories.#", "0"),
 				),
 			},
 		},
@@ -39,8 +40,8 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 }
 
 const virtualRepositoryFull = `
-resource "artifactory_virtual_repository" "foo" {
-	key = "foo"
+resource "artifactory_virtual_repository" "full" {
+	key = "tf-virtual-full"
 	package_type = "maven"
 	repositories = []
 	description = "A test virtual repo"
@@ -54,22 +55,22 @@ resource "artifactory_virtual_repository" "foo" {
 
 func TestAccVirtualRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {testAccPreCheck(t)},
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.foo"),
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.full"),
+		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
 				Config: virtualRepositoryFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "key", "foo"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "package_type", "maven"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repositories.#", "0"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "description", "A test virtual repo"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "notes", "Internal description"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "excludes_pattern", "com/google/**"),
-					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "pom_repository_references_cleanup_policy", "discard_active_reference"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "key", "tf-virtual-full"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "package_type", "maven"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "repositories.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "description", "A test virtual repo"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "notes", "Internal description"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "excludes_pattern", "com/google/**"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.full", "pom_repository_references_cleanup_policy", "discard_active_reference"),
 				),
 			},
 		},
@@ -85,6 +86,8 @@ func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) erro
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
 
+		// It seems artifactory just can't keep up with high requests
+		time.Sleep(time.Duration(1 * time.Second))
 		repo, resp, err := client.Repositories.GetVirtual(context.Background(), rs.Primary.ID)
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil

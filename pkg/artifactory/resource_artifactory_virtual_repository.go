@@ -97,21 +97,27 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepo
 	return repo
 }
 
-func marshalVirtualRepository(repo *artifactory.VirtualRepository, d *schema.ResourceData) {
-	d.Set("key", repo.Key)
-	d.Set("type", repo.RClass)
-	d.Set("package_type", repo.PackageType)
-	d.Set("description", repo.Description)
-	d.Set("notes", repo.Notes)
-	d.Set("includes_pattern", repo.IncludesPattern)
-	d.Set("excludes_pattern", repo.ExcludesPattern)
-	d.Set("debian_trivial_layout", repo.DebianTrivialLayout)
-	d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
-	d.Set("key_pair", repo.KeyPair)
-	d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	d.Set("default_deployment_repo", repo.DefaultDeploymentRepo)
-	d.Set("repositories", repo.Repositories)
+func marshalVirtualRepository(repo *artifactory.VirtualRepository, s *schema.ResourceData) error {
+	d := &ResourceData{s}
 
+	var err error = nil
+	set := d.SetOrPropagate(&err)
+
+	set("key", repo.Key)
+	set("type", repo.RClass)
+	set("package_type", repo.PackageType)
+	set("description", repo.Description)
+	set("notes", repo.Notes)
+	set("includes_pattern", repo.IncludesPattern)
+	set("excludes_pattern", repo.ExcludesPattern)
+	set("debian_trivial_layout", repo.DebianTrivialLayout)
+	set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
+	set("key_pair", repo.KeyPair)
+	set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
+	set("default_deployment_repo", repo.DefaultDeploymentRepo)
+	set("repositories", repo.Repositories)
+
+	return err
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
@@ -139,8 +145,7 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	marshalVirtualRepository(repo, d)
-	return nil
+	return marshalVirtualRepository(repo, d)
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {

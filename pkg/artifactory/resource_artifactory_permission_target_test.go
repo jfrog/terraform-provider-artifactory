@@ -8,11 +8,12 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	"net/http"
 	"testing"
+	"time"
 )
 
-const permission_basic = `
-resource "artifactory_permission_targets" "terraform-test-permission-basic" {
-	name 	     = "testpermission"
+const permission_full = `
+resource "artifactory_permission_targets" "full" {
+	name 	     = "tf-permission-full"
 	repositories = ["not-restricted"]
 	users = [
 		{
@@ -25,17 +26,17 @@ resource "artifactory_permission_targets" "terraform-test-permission-basic" {
     ]
 }`
 
-func TestAccPermission_basic(t *testing.T) {
+func TestAccPermission_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_targets.terraform-test-permission-basic"),
+		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_targets.full"),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: permission_basic,
+				Config: permission_full,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_permission_targets.terraform-test-permission-basic", "name", "testpermission"),
-					resource.TestCheckResourceAttr("artifactory_permission_targets.terraform-test-permission-basic", "repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_targets.full", "name", "tf-permission-full"),
+					resource.TestCheckResourceAttr("artifactory_permission_targets.full", "repositories.#", "1"),
 				),
 			},
 		},
@@ -48,9 +49,12 @@ func testPermissionTargetCheckDestroy(id string) func(*terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
+			fmt.Printf("%v\n", s.RootModule().Resources)
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
+		// It seems artifactory just can't keep up with high requests
+		time.Sleep(time.Duration(1 * time.Second))
 		permissionTargets, resp, err := client.Security.GetPermissionTargets(context.Background(), rs.Primary.ID)
 
 		if resp.StatusCode == http.StatusNotFound {

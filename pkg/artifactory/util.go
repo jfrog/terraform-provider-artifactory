@@ -46,6 +46,16 @@ func (d *ResourceData) GetListRef(key string) *[]string {
 	return new([]string)
 }
 
+func (d *ResourceData) SetOrPropagate(err *error) func(string, interface{}) {
+	return func(key string, v interface{}) {
+		if *err != nil {
+			return
+		}
+
+		*err = d.Set(key, v)
+	}
+}
+
 func CastToStringArr(arr []interface{}) []string {
 	cpy := make([]string, 0, len(arr))
 	for _, r := range arr {

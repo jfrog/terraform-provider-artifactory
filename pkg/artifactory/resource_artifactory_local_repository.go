@@ -176,38 +176,44 @@ func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error 
 	return resourceLocalRepositoryRead(d, m)
 }
 
-func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
+func resourceLocalRepositoryRead(s *schema.ResourceData, m interface{}) error {
+	d := &ResourceData{s}
 	c := m.(*artifactory.Client)
 
 	repo, resp, err := c.Repositories.GetLocal(context.Background(), d.Id())
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
-	} else if err == nil {
-		d.Set("key", repo.Key)
-		d.Set("type", repo.RClass)
-		d.Set("package_type", repo.PackageType)
-		d.Set("description", repo.Description)
-		d.Set("notes", repo.Notes)
-		d.Set("includes_pattern", repo.IncludesPattern)
-		d.Set("excludes_pattern", repo.ExcludesPattern)
-		d.Set("repo_layout_ref", repo.RepoLayoutRef)
-		d.Set("debian_trivial_layout", repo.DebianTrivialLayout)
-		d.Set("max_unique_tags", repo.MaxUniqueTags)
-		d.Set("blacked_out", repo.BlackedOut)
-		d.Set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled)
-		d.Set("calculate_yum_metadata", repo.CalculateYumMetadata)
-		d.Set("yum_root_depth", repo.YumRootDepth)
-		d.Set("docker_api_version", repo.DockerApiVersion)
-		d.Set("enable_file_lists_indexing", repo.EnableFileListsIndexing)
-		d.Set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
-		d.Set("handle_releases", repo.HandleReleases)
-		d.Set("handle_snapshots", repo.HandleSnapshots)
-		d.Set("checksum_policy_type", repo.ChecksumPolicyType)
-		d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots)
-		d.Set("snapshot_version_behavior", repo.SnapshotVersionBehavior)
-		d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks)
+		return nil
+	} else if err != nil {
+		return err
 	}
+
+	set := d.SetOrPropagate(&err)
+
+	set("key", repo.Key)
+	set("type", repo.RClass)
+	set("package_type", repo.PackageType)
+	set("description", repo.Description)
+	set("notes", repo.Notes)
+	set("includes_pattern", repo.IncludesPattern)
+	set("excludes_pattern", repo.ExcludesPattern)
+	set("repo_layout_ref", repo.RepoLayoutRef)
+	set("debian_trivial_layout", repo.DebianTrivialLayout)
+	set("max_unique_tags", repo.MaxUniqueTags)
+	set("blacked_out", repo.BlackedOut)
+	set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled)
+	set("calculate_yum_metadata", repo.CalculateYumMetadata)
+	set("yum_root_depth", repo.YumRootDepth)
+	set("docker_api_version", repo.DockerApiVersion)
+	set("enable_file_lists_indexing", repo.EnableFileListsIndexing)
+	set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
+	set("handle_releases", repo.HandleReleases)
+	set("handle_snapshots", repo.HandleSnapshots)
+	set("checksum_policy_type", repo.ChecksumPolicyType)
+	set("max_unique_snapshots", repo.MaxUniqueSnapshots)
+	set("snapshot_version_behavior", repo.SnapshotVersionBehavior)
+	set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks)
 
 	return err
 }
