@@ -8,8 +8,8 @@ language: go
 # in the next version of Go. Don't worry! Later we declare that test runs
 # are allowed to fail on Go tip.
 go:
-  - 1.10
-  - 1.11
+  - 1.10.x
+  - 1.11.x
   - master
 
 matrix:
@@ -29,6 +29,5 @@ env:
 
 script:
   - go build -v
-  - test -z $(gofmt -s -l .)                 # Fail if a .go file hasn't been formatted with gofmt
   - go test -v -race ./...                   # Run all the tests with the race detector enabled
   - go vet ./...                             # go vet is the official Go static analyzer
