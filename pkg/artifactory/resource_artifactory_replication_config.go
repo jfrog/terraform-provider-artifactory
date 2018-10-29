@@ -157,15 +157,10 @@ func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.Replication
 	return replicationConfig
 }
 
-func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, s *schema.ResourceData) error {
-	d := &ResourceData{s}
-
-	var err error
-	set := d.SetOrPropagate(&err)
-
-	set("repo_key", replicationConfig.RepoKey)
-	set("cron_exp", replicationConfig.CronExp)
-	set("enable_event_replication", replicationConfig.EnableEventReplication)
+func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, d *schema.ResourceData) {
+	d.Set("repo_key", replicationConfig.RepoKey)
+	d.Set("cron_exp", replicationConfig.CronExp)
+	d.Set("enable_event_replication", replicationConfig.EnableEventReplication)
 
 	if replicationConfig.Replications != nil {
 		var replications []map[string]interface{}
@@ -210,9 +205,8 @@ func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, 
 
 			replications = append(replications, replication)
 		}
-		set("replications", replications)
+		d.Set("replications", replications)
 	}
-	return err
 }
 
 func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
@@ -238,7 +232,8 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	return marshalReplicationConfig(replicationConfig, d)
+	marshalReplicationConfig(replicationConfig, d)
+	return nil
 }
 
 func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {

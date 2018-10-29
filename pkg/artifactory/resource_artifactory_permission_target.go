@@ -96,29 +96,22 @@ func unmarshalPermissionTargets(s *schema.ResourceData) *artifactory.PermissionT
 	return pt
 }
 
-func marshalPermissionTargets(permissionTargets *artifactory.PermissionTargets, s *schema.ResourceData) error {
-	d := &ResourceData{s}
-
-	var err error
-	set := d.SetOrPropagate(&err)
-
-	set("name", permissionTargets.Name)
-	set("includes_pattern", permissionTargets.IncludesPattern)
-	set("excludes_pattern", permissionTargets.ExcludesPattern)
+func marshalPermissionTargets(permissionTargets *artifactory.PermissionTargets, d *schema.ResourceData) {
+	d.Set("name", permissionTargets.Name)
+	d.Set("includes_pattern", permissionTargets.IncludesPattern)
+	d.Set("excludes_pattern", permissionTargets.ExcludesPattern)
 
 	if permissionTargets.Repositories != nil {
-		set("repositories", schema.NewSet(schema.HashString, CastToInterfaceArr(*permissionTargets.Repositories)))
+		d.Set("repositories", schema.NewSet(schema.HashString, CastToInterfaceArr(*permissionTargets.Repositories)))
 	}
 
 	if permissionTargets.Principals.Users != nil {
-		set("users", flattenPrincipal(*permissionTargets.Principals.Users))
+		d.Set("users", flattenPrincipal(*permissionTargets.Principals.Users))
 	}
 
 	if permissionTargets.Principals.Groups != nil {
-		set("groups", flattenPrincipal(*permissionTargets.Principals.Groups))
+		d.Set("groups", flattenPrincipal(*permissionTargets.Principals.Groups))
 	}
-
-	return err
 }
 
 func expandPrincipal(s *schema.Set) map[string][]string {
@@ -176,7 +169,8 @@ func resourcePermissionTargetsRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	return marshalPermissionTargets(permissionTarget, d)
+	marshalPermissionTargets(permissionTarget, d)
+	return nil
 }
 
 func resourcePermissionTargetsDelete(d *schema.ResourceData, m interface{}) error {

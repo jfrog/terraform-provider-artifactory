@@ -198,7 +198,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:  "",
 			},
 			"bypass_head_requests": {
-				Type:     schema.TypeBool,
+				Type:	  schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
@@ -250,50 +250,43 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	return repo
 }
 
-func marshalRemoteRepository(repo *artifactory.RemoteRepository, s *schema.ResourceData) error {
-	d := &ResourceData{s}
-
-	var err error
-	set := d.SetOrPropagate(&err)
-
-	set("key", repo.Key)
-	set("type", repo.RClass)
-	set("package_type", repo.PackageType)
-	set("description", repo.Description)
-	set("notes", repo.Notes)
-	set("includes_pattern", repo.IncludesPattern)
-	set("excludes_pattern", repo.ExcludesPattern)
-	set("repo_layout_ref", repo.RepoLayoutRef)
-	set("blacked_out", repo.BlackedOut)
-	set("url", repo.Url)
-	set("username", repo.Username)
-	set("password", GetMD5Hash(*repo.Password))
-	set("proxy", repo.Proxy)
-	set("hard_fail", repo.HardFail)
-	set("offline", repo.Offline)
-	set("store_artifacts_locally", repo.StoreArtifactsLocally)
-	set("socket_timeout_millis", repo.SocketTimeoutMillis)
-	set("local_address", repo.LocalAddress)
-	set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs)
-	set("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)
-	set("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
-	set("share_configuration", repo.ShareConfiguration)
-	set("synchronize_properties", repo.SynchronizeProperties)
-	set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes)
-	set("allow_any_host_auth", repo.AllowAnyHostAuth)
-	set("enable_cookie_management", repo.EnableCookieManagement)
-	set("client_tls_certificate", repo.ClientTLSCertificate)
-	set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
-	set("handle_releases", repo.HandleReleases)
-	set("handle_snapshots", repo.HandleSnapshots)
-	//set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
-	set("max_unique_snapshots", repo.MaxUniqueSnapshots)
-	set("fetch_jars_eagerly", repo.FetchJarsEagerly)
-	set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
-	set("pypi_registry_url", repo.PyPiRegistryUrl)
-	set("bypass_head_requests", repo.BypassHeadRequests)
-
-	return err
+func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.ResourceData) {
+	d.Set("key", repo.Key)
+	d.Set("type", repo.RClass)
+	d.Set("package_type", repo.PackageType)
+	d.Set("description", repo.Description)
+	d.Set("notes", repo.Notes)
+	d.Set("includes_pattern", repo.IncludesPattern)
+	d.Set("excludes_pattern", repo.ExcludesPattern)
+	d.Set("repo_layout_ref", repo.RepoLayoutRef)
+	d.Set("blacked_out", repo.BlackedOut)
+	d.Set("url", repo.Url)
+	d.Set("username", repo.Username)
+	d.Set("password", GetMD5Hash(*repo.Password))
+	d.Set("proxy", repo.Proxy)
+	d.Set("hard_fail", repo.HardFail)
+	d.Set("offline", repo.Offline)
+	d.Set("store_artifacts_locally", repo.StoreArtifactsLocally)
+	d.Set("socket_timeout_millis", repo.SocketTimeoutMillis)
+	d.Set("local_address", repo.LocalAddress)
+	d.Set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs)
+	d.Set("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)
+	d.Set("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
+	d.Set("share_configuration", repo.ShareConfiguration)
+	d.Set("synchronize_properties", repo.SynchronizeProperties)
+	d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes)
+	d.Set("allow_any_host_auth", repo.AllowAnyHostAuth)
+	d.Set("enable_cookie_management", repo.EnableCookieManagement)
+	d.Set("client_tls_certificate", repo.ClientTLSCertificate)
+	d.Set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
+	d.Set("handle_releases", repo.HandleReleases)
+	d.Set("handle_snapshots", repo.HandleSnapshots)
+	//d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
+	d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots)
+	d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly)
+	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
+	d.Set("pypi_registry_url", repo.PyPiRegistryUrl)
+	d.Set("bypass_head_requests", repo.BypassHeadRequests)
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
@@ -320,7 +313,8 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	return marshalRemoteRepository(repo, d)
+	marshalRemoteRepository(repo, d)
+	return nil
 }
 
 func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {

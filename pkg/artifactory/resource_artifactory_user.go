@@ -1,9 +1,7 @@
 package artifactory
 
 import (
-	"fmt"
 	"math/rand"
-	"os"
 
 	"context"
 	"github.com/atlassian/go-artifactory/pkg/artifactory"
@@ -80,40 +78,25 @@ func unmarshalUser(s *schema.ResourceData) *artifactory.User {
 	return user
 }
 
-func marshalUser(user *artifactory.User, s *schema.ResourceData) error {
-	d := &ResourceData{s}
-
-	var err error
-	set := d.SetOrPropagate(&err)
-
-	set("name", user.Name)
-	set("email", user.Email)
-	set("admin", user.Admin)
-	set("profile_updatable", user.ProfileUpdatable)
-	set("disable_ui_access", user.DisableUIAccess)
-	set("realm", user.Realm)
-	set("internal_password_disabled", user.InternalPasswordDisabled)
+func marshalUser(user *artifactory.User, d *schema.ResourceData) {
+	d.Set("name", user.Name)
+	d.Set("email", user.Email)
+	d.Set("admin", user.Admin)
+	d.Set("profile_updatable", user.ProfileUpdatable)
+	d.Set("disable_ui_access", user.DisableUIAccess)
+	d.Set("realm", user.Realm)
+	d.Set("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		set("groups", schema.NewSet(schema.HashString, CastToInterfaceArr(*user.Groups)))
+		d.Set("groups", schema.NewSet(schema.HashString, CastToInterfaceArr(*user.Groups)))
 	}
-	return err
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Client)
 
 	user := unmarshalUser(d)
-
-	if user.Name == nil {
-		return fmt.Errorf("user name must be set")
-	}
-
-	if pass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%s_PASSWORD", *user.Name)); ok {
-		user.Password = artifactory.String(pass)
-	} else {
-		user.Password = artifactory.String(generatePassword())
-	}
+	user.Password = artifactory.String(generatePassword())
 
 	_, err := c.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
 	if err != nil {
@@ -135,7 +118,8 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	return marshalUser(user, d)
+	marshalUser(user, d)
+	return nil
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+go fmt  ./...
+
+# re-add formatted files
+for file in `git diff --cached --name-only`
+do
+	git add $file
+done
+
+go test -v -race ./...
