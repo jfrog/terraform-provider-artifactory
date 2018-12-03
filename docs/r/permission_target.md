@@ -1,6 +1,3 @@
----
-layout: default
----
 # artifactory_permission_target
 
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.

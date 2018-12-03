@@ -1,6 +1,3 @@
----
-layout: default
----
 # Artifactory Provider
 
 The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact with the

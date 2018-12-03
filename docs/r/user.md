@@ -1,6 +1,3 @@
----
-layout: default
----
 # artifactory_user
 
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
