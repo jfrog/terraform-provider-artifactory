@@ -40,7 +40,7 @@ resource "artifactory_local_repository" "pypi-libs" {
 
 The following arguments are supported:
 
-* `url`      - (Required) URL of Artifactory. This can also be set via the `ARTIFACTORY_URL` environment variable.
+* `url` - (Required) URL of Artifactory. This can also be set via the `ARTIFACTORY_URL` environment variable.
 * `username` - (Optional) Username for basic auth. Requires `password` to be set. Conflicts with `token`. This can also be set via the `ARTIFACTORY_USERNAME` environment variable.
 * `password` - (Optional) Password for basic auth. Requires `username` to be set. Conflicts with `token`. This can also be set via the `ARTIFACTORY_PASSWORD` environment variable.
-* `username` - (Optional) API key for token auth. Uses `X-JFrog-Art-Api` header. Conflicts with `username` and `password`. This can also be set via the `ARTIFACTORY_TOKEN` environment variable.
+* `token` - (Optional) API key for token auth. Uses `X-JFrog-Art-Api` header. Conflicts with `username` and `password`. This can also be set via the `ARTIFACTORY_TOKEN` environment variable.
