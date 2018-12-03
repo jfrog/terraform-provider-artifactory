@@ -2,7 +2,7 @@
 
 ## Reporting Issues
 
-This section guides you through submitting a bug report for go-artifactory. Following these guidelines helps us and the community understand your issue, reproduce the behavior, and find related issues.
+This section guides you through submitting a bug report for terraform-provider-artifactory. Following these guidelines helps us and the community understand your issue, reproduce the behavior, and find related issues.
 
 When you are creating an issue, please include as many details as possible.
 
@@ -33,7 +33,7 @@ Please raise a new issue [here][IssueTracker].
 
 ### Follow code style guidelines
 
-It is recommended you use the git hooks found in the misc directory, this will include go-fmt
+This includes running go fmt on modified files
 
 ## Merge into master
 All new feature code must be completed in a feature branch and have a corresponding Feature or Bug issue in the go-artifactory project.
@@ -58,4 +58,4 @@ go-artifactory endeavours to avoid external dependencies.
 ## Make changes to the Pipelines build
 go-stride uses Bitbucket Pipelines for it's continuous integration. The build scripts are defined in `bitbucket-pipelines.yml`.
 
-[IssueTracker]: https://github.com/atlassian/go-artifactory/issues
+[IssueTracker]: https://github.com/atlassian/terraform-provider-artifactory/issues

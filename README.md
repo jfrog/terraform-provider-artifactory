@@ -4,10 +4,8 @@
 If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it.
 
 ## Requirements ##
--	[Terraform](https://www.terraform.io/downloads.html) 0.10
--	[Go](https://golang.org/doc/install) 1.9 (to build the provider plugin)
--   [Dep](https://github.com/golang/dep/releases) 0.3.2 (for dependency management)
-
+-	[Go](https://golang.org/doc/install) 1.10+ (to build the provider plugin)
+-	[Terraform](https://www.terraform.io/downloads.html) 0.11
 
 ## Building The Provider ##
 
@@ -83,5 +81,5 @@ those contributing as an individual.
 Copyright (c) 2017 Atlassian and others. Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
 
-[CONTRIBUTING]: ./CONTRIBUTING.md
+[CONTRIBUTING]: .github/CONTRIBUTING.md
 [LICENSE]: ./LICENSE.txt
