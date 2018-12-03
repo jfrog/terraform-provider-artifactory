@@ -10,6 +10,7 @@ with the proper credentials before it can be used.
 - Available Resources
     * [Groups](r/group.md)
     * [Users](r/user.md)
+    * [Permission Targets](r/permission_target.md)
     
 
 ## Example Usage
