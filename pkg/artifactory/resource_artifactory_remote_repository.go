@@ -202,6 +202,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"enable_token_authentication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -247,6 +252,7 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
 	repo.PyPiRegistryUrl = d.GetStringRef("pypi_registry_url")
 	repo.BypassHeadRequests = d.GetBoolRef("bypass_head_requests")
+	repo.EnableTokenAuthentication = d.GetBoolRef("enable_token_authentication")
 	return repo
 }
 
@@ -287,6 +293,7 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly)
 	d.Set("pypi_registry_url", repo.PyPiRegistryUrl)
 	d.Set("bypass_head_requests", repo.BypassHeadRequests)
+	d.Set("enable_token_authentication", repo.EnableTokenAuthentication)
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {

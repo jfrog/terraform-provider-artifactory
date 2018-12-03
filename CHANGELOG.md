@@ -1,7 +1,9 @@
-## 1.5.0 (Unreleased)
-
+## 1.4.2 (December 4, 2018)
 FEATURES:
-* Added docs website
+* Added docs website [#14]
+
+BUG FIXES:
+* Added enable_token_authentication to remote repositories [#18]
 
 ## 1.4.1 (November 6, 2018)
 BREAKING CHANGES:
