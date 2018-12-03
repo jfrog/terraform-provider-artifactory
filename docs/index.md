@@ -1,3 +1,6 @@
+---
+layout: default
+---
 # Artifactory Provider
 
 The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact with the
@@ -6,6 +9,7 @@ with the proper credentials before it can be used.
 
 - Available Resources
     * [Groups](r/group.md)
+    * [Users](r/user.md)
     
 
 ## Example Usage

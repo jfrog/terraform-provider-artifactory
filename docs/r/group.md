@@ -1,3 +1,6 @@
+---
+layout: default
+---
 # artifactory_group
 
 Provides an Artifactory group resource. This can be used to create and manage Artifactory groups.
