@@ -7,9 +7,9 @@ Provides an Artifactory group resource. This can be used to create and manage Ar
 ```hcl
 # Create a new Artifactory group called terraform
 resource "artifactory_group" "test-group" {
-    name             = "terraform"
-    description      = "test group"
-    admin_privileges = false
+  name             = "terraform"
+  description      = "test group"
+  admin_privileges = false
 }
 ```
 

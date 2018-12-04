@@ -7,9 +7,9 @@ Provides an Artifactory user resource. This can be used to create and manage Art
 ```hcl
 # Create a new Artifactory user called terraform
 resource "artifactory_user" "test-user" {
-    name    = "terraform"
-    email   = "test-user@artifactory-terraform.com"
-    groups  = ["logged-in-users", "readers"]
+  name   = "terraform"
+  email  = "test-user@artifactory-terraform.com"
+  groups = ["logged-in-users", "readers"]
 }
 ```
 

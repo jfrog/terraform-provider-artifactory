@@ -8,10 +8,10 @@ with the proper credentials before it can be used.
     * [Groups](r/group.md)
     * [Users](r/user.md)
     * [Permission Targets](r/permission_target.md)
-    * Local Repositories
-    * Remote Repositories
-    * Replication Configurations
-    * Virtual Repositories
+    * [Local Repositories](r/local_repository.md)
+    * [Remote Repositories](r/remote_repository.md)
+    * [Replication Configurations](r/replication_config.md)
+    * [Virtual Repositories](r/virtual_repository.md)
     
 
 ## Example Usage

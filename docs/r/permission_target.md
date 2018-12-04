@@ -7,24 +7,20 @@ Provides an Artifactory permission target resource. This can be used to create a
 ```hcl
 # Create a new Artifactory permission target called testpermission
 resource "artifactory_permission_targets" "terraform-test-permission" {
-    name          = "testpermission"
-    repositories = ["myrepo"]
-    users = [
-        {
-            name = "test_user"
-            permissions = [
-                "r",
-                "w"
-            ]
-        }
-    ]
-    
-    groups = [
-        {
-             name        = "readers"
-             permissions = ["r"]
-        }
-    ]
+  name          = "testpermission"
+  repositories = ["myrepo"]
+  users = [
+    {
+      name = "test_user"
+      permissions = ["r", "w"]
+    }
+  ]
+  groups = [
+    {
+      name        = "readers"
+      permissions = ["r"]
+    }
+  ]
 }
 ```
 

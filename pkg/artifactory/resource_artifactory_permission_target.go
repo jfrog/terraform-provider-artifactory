@@ -17,6 +17,8 @@ func resourceArtifactoryPermissionTargets() *schema.Resource {
 				"name": {
 					Type:     schema.TypeString,
 					Required: true,
+					// Required as it is impossible to remove a principal as the absence of one does not
+					// count as a deletion
 					ForceNew: true,
 				},
 				"permissions": {
