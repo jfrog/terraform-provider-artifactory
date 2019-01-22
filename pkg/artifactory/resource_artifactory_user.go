@@ -68,14 +68,14 @@ func unmarshalUser(s *schema.ResourceData) *artifactory.User {
 	d := &ResourceData{s}
 	user := new(artifactory.User)
 
-	user.Name = d.GetStringRef("name")
-	user.Email = d.GetStringRef("email")
-	user.Admin = d.GetBoolRef("admin")
-	user.ProfileUpdatable = d.GetBoolRef("profile_updatable")
-	user.DisableUIAccess = d.GetBoolRef("disable_ui_access")
-	user.InternalPasswordDisabled = d.GetBoolRef("internal_password_disabled")
-	user.Realm = d.GetStringRef("realm")
-	user.Groups = d.GetSetRef("groups")
+	user.Name = d.getStringRef("name")
+	user.Email = d.getStringRef("email")
+	user.Admin = d.getBoolRef("admin")
+	user.ProfileUpdatable = d.getBoolRef("profile_updatable")
+	user.DisableUIAccess = d.getBoolRef("disable_ui_access")
+	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled")
+	user.Realm = d.getStringRef("realm")
+	user.Groups = d.getSetRef("groups")
 
 	return user
 }
@@ -90,7 +90,7 @@ func marshalUser(user *artifactory.User, d *schema.ResourceData) {
 	d.Set("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		d.Set("groups", schema.NewSet(schema.HashString, CastToInterfaceArr(*user.Groups)))
+		d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups)))
 	}
 }
 

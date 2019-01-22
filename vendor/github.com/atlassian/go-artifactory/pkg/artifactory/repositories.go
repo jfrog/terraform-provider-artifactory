@@ -354,7 +354,7 @@ func (s *RepositoriesService) DeleteVirtual(ctx context.Context, repo string) (*
 
 // Generic repo CRUD operations
 func (s *RepositoriesService) create(ctx context.Context, repo string, v interface{}) (*http.Response, error) {
-	path := fmt.Sprintf("/api/repositories/%s", repo)
+	path := fmt.Sprintf("/api/repositories/%v", repo)
 	req, err := s.client.NewJSONEncodedRequest("PUT", path, v)
 	if err != nil {
 		return nil, err

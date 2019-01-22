@@ -9,44 +9,44 @@ import (
 
 type ResourceData struct{ *schema.ResourceData }
 
-func (d *ResourceData) GetStringRef(key string) *string {
-	if v, ok := d.GetOkExists(key); ok {
+func (d *ResourceData) getStringRef(key string) *string {
+	if v, ok := d.GetOk(key); ok {
 		return artifactory.String(v.(string))
 	}
 	return nil
 }
 
-func (d *ResourceData) GetBoolRef(key string) *bool {
+func (d *ResourceData) getBoolRef(key string) *bool {
 	if v, ok := d.GetOkExists(key); ok {
 		return artifactory.Bool(v.(bool))
 	}
 	return nil
 }
 
-func (d *ResourceData) GetIntRef(key string) *int {
+func (d *ResourceData) getIntRef(key string) *int {
 	if v, ok := d.GetOkExists(key); ok {
 		return artifactory.Int(v.(int))
 	}
 	return nil
 }
 
-func (d *ResourceData) GetSetRef(key string) *[]string {
+func (d *ResourceData) getSetRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
-		arr := CastToStringArr(v.(*schema.Set).List())
+		arr := castToStringArr(v.(*schema.Set).List())
 		return &arr
 	}
 	return new([]string)
 }
 
-func (d *ResourceData) GetListRef(key string) *[]string {
+func (d *ResourceData) getListRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
-		arr := CastToStringArr(v.([]interface{}))
+		arr := castToStringArr(v.([]interface{}))
 		return &arr
 	}
 	return new([]string)
 }
 
-func CastToStringArr(arr []interface{}) []string {
+func castToStringArr(arr []interface{}) []string {
 	cpy := make([]string, 0, len(arr))
 	for _, r := range arr {
 		cpy = append(cpy, r.(string))
@@ -55,7 +55,7 @@ func CastToStringArr(arr []interface{}) []string {
 	return cpy
 }
 
-func CastToInterfaceArr(arr []string) []interface{} {
+func castToInterfaceArr(arr []string) []interface{} {
 	cpy := make([]interface{}, 0, len(arr))
 	for _, r := range arr {
 		cpy = append(cpy, r)
@@ -64,7 +64,7 @@ func CastToInterfaceArr(arr []string) []interface{} {
 	return cpy
 }
 
-func GetMD5Hash(o interface{}) string {
+func getMD5Hash(o interface{}) string {
 	if len(o.(string)) == 0 { // Don't hash empty strings
 		return ""
 	}
@@ -73,4 +73,8 @@ func GetMD5Hash(o interface{}) string {
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func mD5Diff(k, old, new string, d *schema.ResourceData) bool {
+	return old == new || getMD5Hash(old) == new
 }

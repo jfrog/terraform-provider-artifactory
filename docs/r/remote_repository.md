@@ -31,7 +31,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `max_unique_snapshots` - (Optional)
 * `suppress_pom_consistency_checks` - (Optional)
 * `username` - (Optional)
-* `password` - (Optional)
+* `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
 * `proxy` - (Optional)
 * `hard_fail` - (Optional)
 * `offline` - (Optional)

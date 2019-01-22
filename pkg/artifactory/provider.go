@@ -2,12 +2,15 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
+// Artifactory Provider that supports configuration via username+password or a token
+// Supported resources are repos, users, groups, replications, and permissions
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -55,20 +58,25 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("url cannot be nil")
 	}
 
-	if token, ok := d.GetOkExists("token"); ok {
-		tp := artifactory.TokenAuthTransport{
-			Token: token.(string),
-		}
-		return artifactory.NewClient(d.Get("url").(string), tp.Client())
-	} else if username, ok := d.GetOkExists("username"); !ok {
-		return nil, fmt.Errorf("error: Missing token and username. One must be set")
-	} else if password, ok := d.GetOkExists("password"); !ok {
-		return nil, fmt.Errorf("error: Basic auth used but password not set")
-	} else {
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	token := d.Get("token").(string)
+
+	var client *http.Client
+	if username != "" && password != "" {
 		tp := artifactory.BasicAuthTransport{
-			Username: username.(string),
-			Password: password.(string),
+			Username: username,
+			Password: password,
 		}
-		return artifactory.NewClient(d.Get("url").(string), tp.Client())
+		client = tp.Client()
+	} else if token != "" {
+		tp := &artifactory.TokenAuthTransport{
+			Token: token,
+		}
+		client = tp.Client()
+	} else {
+		return nil, fmt.Errorf("either [username, password] or [token] must be set to use provider")
 	}
+
+	return artifactory.NewClient(d.Get("url").(string), client)
 }

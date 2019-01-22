@@ -10,13 +10,18 @@ import (
 	"testing"
 )
 
-const permission_basic = `
-resource "artifactory_permission_targets" "terraform-test-permission-basic" {
-	name 	     = "testpermission"
-	repositories = ["not-restricted"]
+const permissionBasic = `
+resource "artifactory_local_repository" "lib-local" {
+	key 	     = "lib-local"
+	package_type = "maven"
+}
+
+resource "artifactory_permission_targets" "test-perm" {
+	name 	     = "test-perm"
+	repositories = ["${artifactory_local_repository.lib-local.key}"]
 	users = [
 		{
-			name = "test_user"
+			name = "anonymous"
 			permissions = [
 				"r",
 				"w"
@@ -28,14 +33,14 @@ resource "artifactory_permission_targets" "terraform-test-permission-basic" {
 func TestAccPermission_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_targets.terraform-test-permission-basic"),
+		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_targets.test-perm"),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: permission_basic,
+				Config: permissionBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_permission_targets.terraform-test-permission-basic", "name", "testpermission"),
-					resource.TestCheckResourceAttr("artifactory_permission_targets.terraform-test-permission-basic", "repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_targets.test-perm", "name", "test-perm"),
+					resource.TestCheckResourceAttr("artifactory_permission_targets.test-perm", "repositories.#", "1"),
 				),
 			},
 		},

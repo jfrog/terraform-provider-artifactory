@@ -80,19 +80,19 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepo
 	d := &ResourceData{s}
 	repo := new(artifactory.VirtualRepository)
 
-	repo.Key = d.GetStringRef("key")
+	repo.Key = d.getStringRef("key")
 	repo.RClass = artifactory.String("virtual")
-	repo.PackageType = d.GetStringRef("package_type")
-	repo.IncludesPattern = d.GetStringRef("includes_pattern")
-	repo.ExcludesPattern = d.GetStringRef("excludes_pattern")
-	repo.DebianTrivialLayout = d.GetBoolRef("debian_trivial_layout")
-	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.GetBoolRef("artifactory_requests_can_retrieve_remote_artifacts")
-	repo.Repositories = d.GetListRef("repositories")
-	repo.Description = d.GetStringRef("description")
-	repo.Notes = d.GetStringRef("notes")
-	repo.KeyPair = d.GetStringRef("key_pair")
-	repo.PomRepositoryReferencesCleanupPolicy = d.GetStringRef("pom_repository_references_cleanup_policy")
-	repo.DefaultDeploymentRepo = d.GetStringRef("default_deployment_repo")
+	repo.PackageType = d.getStringRef("package_type")
+	repo.IncludesPattern = d.getStringRef("includes_pattern")
+	repo.ExcludesPattern = d.getStringRef("excludes_pattern")
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout")
+	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts")
+	repo.Repositories = d.getListRef("repositories")
+	repo.Description = d.getStringRef("description")
+	repo.Notes = d.getStringRef("notes")
+	repo.KeyPair = d.getStringRef("key_pair")
+	repo.PomRepositoryReferencesCleanupPolicy = d.getStringRef("pom_repository_references_cleanup_policy")
+	repo.DefaultDeploymentRepo = d.getStringRef("default_deployment_repo")
 
 	return repo
 }

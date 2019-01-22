@@ -42,7 +42,7 @@ The following arguments are supported:
     * `url` - (Required)
     * `socket_timeout_millis` - (Optional)
     * `username` - (Optional)
-    * `password` - (Optional)
+    * `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
     * `enabled` - (Optional)
     * `sync_deletes` - (Optional)
     * `sync_properties` - (Optional)

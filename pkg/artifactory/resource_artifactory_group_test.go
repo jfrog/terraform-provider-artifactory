@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-const group_basic = `
+const groupBasic = `
 resource "artifactory_group" "test-group" {
 	name  = "terraform-group"
 }`
@@ -23,7 +23,7 @@ func TestAccGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: group_basic,
+				Config: groupBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
 				),
@@ -32,7 +32,7 @@ func TestAccGroup_basic(t *testing.T) {
 	})
 }
 
-const group_full = `
+const groupFull = `
 resource "artifactory_group" "test-group" {
 	name             = "terraform-group"
     description 	 = "Test group"
@@ -49,7 +49,7 @@ func TestAccGroup_full(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: group_full,
+				Config: groupFull,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "auto_join", "true"),

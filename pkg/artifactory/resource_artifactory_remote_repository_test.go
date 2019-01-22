@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-const remoteRepository_basic = `
+const remoteRepoBasic = `
 resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
 	key = "terraform-remote-test-repo-basic"
     package_type                          = "npm"
@@ -26,7 +26,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: remoteRepository_basic,
+				Config: remoteRepoBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "key", "terraform-remote-test-repo-basic"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "package_type", "npm"),
@@ -37,7 +37,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 	})
 }
 
-const remoteRepositoryConfig_full = `
+const remoteRepoFull = `
 resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
     key                             	  = "terraform-remote-test-repo-full"
 	package_type                          = "npm"
@@ -82,13 +82,13 @@ func TestAccRemoteRepository_full(t *testing.T) {
 		CheckDestroy: resourceRemoteRepositoryCheckDestroy("artifactory_remote_repository.terraform-remote-test-repo-full"),
 		Steps: []resource.TestStep{
 			{
-				Config: remoteRepositoryConfig_full,
+				Config: remoteRepoFull,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "key", "terraform-remote-test-repo-full"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "package_type", "npm"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "username", "user"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", GetMD5Hash("pass")),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", "pass"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "proxy", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "description", "desc (local file cache)"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "notes", "notes"),
@@ -130,7 +130,7 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
-			return fmt.Errorf("Not found %s", id)
+			return fmt.Errorf("not found %s", id)
 		}
 
 		_, resp, err := client.Repositories.GetRemote(context.Background(), rs.Primary.ID)
@@ -140,7 +140,7 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 		} else if err != nil {
 			return fmt.Errorf("error: Request failed: %s", err.Error())
 		} else {
-			return fmt.Errorf("Repository %s still exists", rs.Primary.ID)
+			return fmt.Errorf("repository %s still exists", rs.Primary.ID)
 		}
 	}
 }

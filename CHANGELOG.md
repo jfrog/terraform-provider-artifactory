@@ -1,3 +1,12 @@
+## 1.4.3 (January 22, 2019)
+BUG FIXES:
+* Fixed setting of passwords in replications and remote repository
+
+NOTES:
+* Added integration tests
+* Bumped to terraform v0.11.11
+* Cleaned up lint checks and build
+
 ## 1.4.2 (December 4, 2018)
 FEATURES:
 * Added docs website [#14]

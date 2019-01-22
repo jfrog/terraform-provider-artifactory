@@ -59,12 +59,12 @@ func unmarshalGroup(s *schema.ResourceData) (*artifactory.Group, error) {
 
 	group := new(artifactory.Group)
 
-	group.Name = d.GetStringRef("name")
-	group.Description = d.GetStringRef("description")
-	group.AutoJoin = d.GetBoolRef("auto_join")
-	group.AdminPrivileges = d.GetBoolRef("admin_privileges")
-	group.Realm = d.GetStringRef("realm")
-	group.RealmAttributes = d.GetStringRef("realm_attributes")
+	group.Name = d.getStringRef("name")
+	group.Description = d.getStringRef("description")
+	group.AutoJoin = d.getBoolRef("auto_join")
+	group.AdminPrivileges = d.getBoolRef("admin_privileges")
+	group.Realm = d.getStringRef("realm")
+	group.RealmAttributes = d.getStringRef("realm_attributes")
 
 	// Validator
 	if group.AdminPrivileges != nil && group.AutoJoin != nil && *group.AdminPrivileges && *group.AutoJoin {

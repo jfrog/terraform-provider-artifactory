@@ -1,9 +1,8 @@
 package artifactory
 
 import (
-	"fmt"
-
 	"context"
+	"fmt"
 	"github.com/atlassian/go-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
@@ -87,10 +86,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				StateFunc: GetMD5Hash,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Sensitive:        true,
+				StateFunc:        getMD5Hash,
+				DiffSuppressFunc: mD5Diff,
 			},
 			"proxy": {
 				Type:     schema.TypeString,
@@ -215,44 +215,44 @@ func unmarshalRemoteRepository(s *schema.ResourceData) *artifactory.RemoteReposi
 	d := &ResourceData{s}
 	repo := new(artifactory.RemoteRepository)
 
-	repo.Key = d.GetStringRef("key")
+	repo.Key = d.getStringRef("key")
 	repo.RClass = artifactory.String("remote")
-	repo.PackageType = d.GetStringRef("package_type")
-	repo.Url = d.GetStringRef("url")
-	repo.Proxy = d.GetStringRef("proxy")
-	repo.Username = d.GetStringRef("username")
-	repo.Password = d.GetStringRef("password")
-	repo.Description = d.GetStringRef("description")
-	repo.Notes = d.GetStringRef("notes")
-	repo.IncludesPattern = d.GetStringRef("includes_pattern")
-	repo.ExcludesPattern = d.GetStringRef("excludes_pattern")
-	repo.RepoLayoutRef = d.GetStringRef("repo_layout_ref")
-	repo.HardFail = d.GetBoolRef("hard_fail")
-	repo.Offline = d.GetBoolRef("offline")
-	repo.BlackedOut = d.GetBoolRef("blacked_out")
-	repo.StoreArtifactsLocally = d.GetBoolRef("store_artifacts_locally")
-	repo.SocketTimeoutMillis = d.GetIntRef("socket_timeout_millis")
-	repo.LocalAddress = d.GetStringRef("local_address")
-	repo.RetrievalCachePeriodSecs = d.GetIntRef("retrieval_cache_period_seconds")
-	repo.MissedRetrievalCachePeriodSecs = d.GetIntRef("missed_cache_period_seconds")
-	repo.UnusedArtifactsCleanupPeriodHours = d.GetIntRef("unused_artifacts_cleanup_period_hours")
-	repo.ShareConfiguration = d.GetBoolRef("share_configuration")
-	repo.SynchronizeProperties = d.GetBoolRef("synchronize_properties")
-	repo.BlockMismatchingMimeTypes = d.GetBoolRef("block_mismatching_mime_types")
-	repo.AllowAnyHostAuth = d.GetBoolRef("allow_any_host_auth")
-	repo.EnableCookieManagement = d.GetBoolRef("enable_cookie_management")
-	repo.ClientTLSCertificate = d.GetStringRef("client_tls_certificate")
-	repo.PropertySets = d.GetSetRef("property_sets")
-	repo.HandleReleases = d.GetBoolRef("handle_releases")
-	repo.HandleSnapshots = d.GetBoolRef("handle_snapshots")
-	//repo.RemoteRepoChecksumPolicyType = d.GetStringRef("remote_repo_checksum_policy_type")
-	repo.MaxUniqueSnapshots = d.GetIntRef("max_unique_snapshots")
-	repo.SuppressPomConsistencyChecks = d.GetBoolRef("suppress_pom_consistency_checks")
-	repo.FetchJarsEagerly = d.GetBoolRef("fetch_jars_eagerly")
-	repo.FetchSourcesEagerly = d.GetBoolRef("fetch_sources_eagerly")
-	repo.PyPiRegistryUrl = d.GetStringRef("pypi_registry_url")
-	repo.BypassHeadRequests = d.GetBoolRef("bypass_head_requests")
-	repo.EnableTokenAuthentication = d.GetBoolRef("enable_token_authentication")
+	repo.PackageType = d.getStringRef("package_type")
+	repo.Url = d.getStringRef("url")
+	repo.Proxy = d.getStringRef("proxy")
+	repo.Username = d.getStringRef("username")
+	repo.Password = d.getStringRef("password")
+	repo.Description = d.getStringRef("description")
+	repo.Notes = d.getStringRef("notes")
+	repo.IncludesPattern = d.getStringRef("includes_pattern")
+	repo.ExcludesPattern = d.getStringRef("excludes_pattern")
+	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref")
+	repo.HardFail = d.getBoolRef("hard_fail")
+	repo.Offline = d.getBoolRef("offline")
+	repo.BlackedOut = d.getBoolRef("blacked_out")
+	repo.StoreArtifactsLocally = d.getBoolRef("store_artifacts_locally")
+	repo.SocketTimeoutMillis = d.getIntRef("socket_timeout_millis")
+	repo.LocalAddress = d.getStringRef("local_address")
+	repo.RetrievalCachePeriodSecs = d.getIntRef("retrieval_cache_period_seconds")
+	repo.MissedRetrievalCachePeriodSecs = d.getIntRef("missed_cache_period_seconds")
+	repo.UnusedArtifactsCleanupPeriodHours = d.getIntRef("unused_artifacts_cleanup_period_hours")
+	repo.ShareConfiguration = d.getBoolRef("share_configuration")
+	repo.SynchronizeProperties = d.getBoolRef("synchronize_properties")
+	repo.BlockMismatchingMimeTypes = d.getBoolRef("block_mismatching_mime_types")
+	repo.AllowAnyHostAuth = d.getBoolRef("allow_any_host_auth")
+	repo.EnableCookieManagement = d.getBoolRef("enable_cookie_management")
+	repo.ClientTLSCertificate = d.getStringRef("client_tls_certificate")
+	repo.PropertySets = d.getSetRef("property_sets")
+	repo.HandleReleases = d.getBoolRef("handle_releases")
+	repo.HandleSnapshots = d.getBoolRef("handle_snapshots")
+	//repo.RemoteRepoChecksumPolicyType = d.getStringRef("remote_repo_checksum_policy_type")
+	repo.MaxUniqueSnapshots = d.getIntRef("max_unique_snapshots")
+	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks")
+	repo.FetchJarsEagerly = d.getBoolRef("fetch_jars_eagerly")
+	repo.FetchSourcesEagerly = d.getBoolRef("fetch_sources_eagerly")
+	repo.PyPiRegistryUrl = d.getStringRef("pypi_registry_url")
+	repo.BypassHeadRequests = d.getBoolRef("bypass_head_requests")
+	repo.EnableTokenAuthentication = d.getBoolRef("enable_token_authentication")
 	return repo
 }
 
@@ -268,7 +268,7 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("blacked_out", repo.BlackedOut)
 	d.Set("url", repo.Url)
 	d.Set("username", repo.Username)
-	d.Set("password", GetMD5Hash(*repo.Password))
+	d.Set("password", *repo.Password)
 	d.Set("proxy", repo.Proxy)
 	d.Set("hard_fail", repo.HardFail)
 	d.Set("offline", repo.Offline)
@@ -284,7 +284,7 @@ func marshalRemoteRepository(repo *artifactory.RemoteRepository, d *schema.Resou
 	d.Set("allow_any_host_auth", repo.AllowAnyHostAuth)
 	d.Set("enable_cookie_management", repo.EnableCookieManagement)
 	d.Set("client_tls_certificate", repo.ClientTLSCertificate)
-	d.Set("property_sets", schema.NewSet(schema.HashString, CastToInterfaceArr(*repo.PropertySets)))
+	d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets)))
 	d.Set("handle_releases", repo.HandleReleases)
 	d.Set("handle_snapshots", repo.HandleSnapshots)
 	//d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)

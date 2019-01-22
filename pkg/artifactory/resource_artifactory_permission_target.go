@@ -74,10 +74,10 @@ func unmarshalPermissionTargets(s *schema.ResourceData) *artifactory.PermissionT
 
 	pt := new(artifactory.PermissionTargets)
 
-	pt.Name = d.GetStringRef("name")
-	pt.IncludesPattern = d.GetStringRef("includes_pattern")
-	pt.ExcludesPattern = d.GetStringRef("excludes_pattern")
-	pt.Repositories = d.GetSetRef("repositories")
+	pt.Name = d.getStringRef("name")
+	pt.IncludesPattern = d.getStringRef("includes_pattern")
+	pt.ExcludesPattern = d.getStringRef("excludes_pattern")
+	pt.Repositories = d.getSetRef("repositories")
 
 	if v, ok := d.GetOkExists("users"); ok {
 		if pt.Principals == nil {
@@ -104,7 +104,7 @@ func marshalPermissionTargets(permissionTargets *artifactory.PermissionTargets, 
 	d.Set("excludes_pattern", permissionTargets.ExcludesPattern)
 
 	if permissionTargets.Repositories != nil {
-		d.Set("repositories", schema.NewSet(schema.HashString, CastToInterfaceArr(*permissionTargets.Repositories)))
+		d.Set("repositories", schema.NewSet(schema.HashString, castToInterfaceArr(*permissionTargets.Repositories)))
 	}
 
 	if permissionTargets.Principals.Users != nil {
@@ -121,7 +121,7 @@ func expandPrincipal(s *schema.Set) map[string][]string {
 
 	for _, v := range s.List() {
 		o := v.(map[string]interface{})
-		principal[o["name"].(string)] = CastToStringArr(o["permissions"].(*schema.Set).List())
+		principal[o["name"].(string)] = castToStringArr(o["permissions"].(*schema.Set).List())
 	}
 
 	return principal
@@ -133,7 +133,7 @@ func flattenPrincipal(principal map[string][]string) *schema.Set {
 	for name, perms := range principal {
 		user := map[string]interface{}{
 			"name":        name,
-			"permissions": schema.NewSet(schema.HashString, CastToInterfaceArr(perms)),
+			"permissions": schema.NewSet(schema.HashString, castToInterfaceArr(perms)),
 		}
 
 		s = append(s, user)
@@ -144,7 +144,7 @@ func flattenPrincipal(principal map[string][]string) *schema.Set {
 
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
-	return hashcode.String(p["name"].(string)) + 31*hashcode.String(hashcode.Strings(CastToStringArr(p["permissions"].(*schema.Set).List())))
+	return hashcode.String(p["name"].(string)) + 31*hashcode.String(hashcode.Strings(castToStringArr(p["permissions"].(*schema.Set).List())))
 }
 
 func resourcePermissionTargetsCreateOrReplace(d *schema.ResourceData, m interface{}) error {

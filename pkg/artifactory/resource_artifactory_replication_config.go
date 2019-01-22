@@ -53,10 +53,11 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 							Optional: true,
 						},
 						"password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-							StateFunc: GetMD5Hash,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Sensitive:        true,
+							StateFunc:        getMD5Hash,
+							DiffSuppressFunc: mD5Diff,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -93,7 +94,7 @@ func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.Replication
 	d := &ResourceData{s}
 	replicationConfig := new(artifactory.ReplicationConfig)
 
-	repo := d.GetStringRef("repo_key")
+	repo := d.getStringRef("repo_key")
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
@@ -104,8 +105,8 @@ func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.Replication
 		for i, o := range arr {
 			if i == 0 {
 				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.GetStringRef("cron_exp")
-				replicationConfig.EnableEventReplication = d.GetBoolRef("enable_event_replication")
+				replicationConfig.CronExp = d.getStringRef("cron_exp")
+				replicationConfig.EnableEventReplication = d.getBoolRef("enable_event_replication")
 			}
 
 			m := o.(map[string]interface{})
@@ -180,7 +181,7 @@ func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, 
 			}
 
 			if repo.Password != nil {
-				replication["password"] = GetMD5Hash(*repo.Password)
+				replication["password"] = *repo.Password
 			}
 
 			if repo.Enabled != nil {

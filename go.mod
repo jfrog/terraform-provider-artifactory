@@ -32,7 +32,7 @@ require (
 	github.com/hashicorp/hcl2 v0.0.0-20180801154631-77c0b55a597c // indirect
 	github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250 // indirect
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect
-	github.com/hashicorp/terraform v0.11.7
+	github.com/hashicorp/terraform v0.11.11
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348 // indirect
