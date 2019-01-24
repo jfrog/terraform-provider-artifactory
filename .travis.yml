@@ -11,6 +11,7 @@ install:
     -in scripts/artifactory.lic.enc -out scripts/artifactory.lic -d
 
 script:
+  - export GO111MODULE=on
   - make testacc
 
 matrix:
