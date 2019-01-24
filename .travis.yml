@@ -12,6 +12,7 @@ install:
 
 script:
   - export GO111MODULE=on
+  - go mod download
   - make testacc
 
 matrix:
