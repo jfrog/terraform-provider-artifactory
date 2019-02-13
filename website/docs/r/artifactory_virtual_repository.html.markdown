@@ -1,3 +1,11 @@
+---
+layout: "artifactory"
+page_title: "Artifactory: artifactory_virtual_repository"
+sidebar_current: "docs-artifactory-resource-virtual-repository"
+description: |-
+  Provides an virtual repository resource.
+---
+
 # artifactory_virtual_repository
 
 Provides an Artifactory virtual repository resource. This can be used to create and manage Artifactory virtual repositories.

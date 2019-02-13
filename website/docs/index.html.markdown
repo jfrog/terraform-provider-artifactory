@@ -1,3 +1,11 @@
+---
+layout: "artifactory"
+page_title: "Provider: Artifactory"
+sidebar_current: "docs-artifactory-index"
+description: |-
+  The Artifactory provider is used to deploy artifactory admin resources
+---
+
 # Artifactory Provider
 
 The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact with the
