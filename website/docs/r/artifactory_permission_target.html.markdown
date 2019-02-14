@@ -1,3 +1,11 @@
+---
+layout: "artifactory"
+page_title: "Artifactory: artifactory_permission_target"
+sidebar_current: "docs-artifactory-resource-permission-target"
+description: |-
+  Provides an permission target resource.
+---
+
 # artifactory_permission_target
 
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.
