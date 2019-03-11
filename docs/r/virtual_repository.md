@@ -36,6 +36,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `notes` - (Optional)
 * `includes_pattern` - (Optional)
 * `excludes_pattern` - (Optional)
+* `repo_layout_ref` - (Optional)
 * `debian_trivial_layout` - (Optional)
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional)
 * `key_pair` - (Optional)

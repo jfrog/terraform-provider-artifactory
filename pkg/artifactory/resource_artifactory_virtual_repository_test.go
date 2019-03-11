@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"context"
+	"net/http"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
 )
 
 const virtualRepositoryBasic = `
@@ -42,6 +42,7 @@ const virtualRepositoryFull = `
 resource "artifactory_virtual_repository" "foo" {
 	key = "foo"
 	package_type = "maven"
+	repo_layout_ref = "maven-1-default"
 	repositories = []
 	description = "A test virtual repo"
 	notes = "Internal description"
@@ -64,6 +65,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "key", "foo"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "package_type", "maven"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repo_layout_ref", "maven-1-default"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repositories.#", "0"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "description", "A test virtual repo"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "notes", "Internal description"),

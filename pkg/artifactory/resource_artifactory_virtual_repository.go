@@ -5,7 +5,7 @@ import (
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
-	"net/http"
+  "net/http"
 )
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
@@ -52,6 +52,11 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"repo_layout_ref": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"debian_trivial_layout": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -86,6 +91,7 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	repo.PackageType = d.getStringRef("package_type")
 	repo.IncludesPattern = d.getStringRef("includes_pattern")
 	repo.ExcludesPattern = d.getStringRef("excludes_pattern")
+	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref")
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout")
 	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts")
 	repo.Repositories = d.getListRef("repositories")
@@ -105,6 +111,7 @@ func marshalVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData
 	d.Set("notes", repo.Notes)
 	d.Set("includes_pattern", repo.IncludesPattern)
 	d.Set("excludes_pattern", repo.ExcludesPattern)
+	d.Set("repo_layout_ref", repo.RepoLayoutRef)
 	d.Set("debian_trivial_layout", repo.DebianTrivialLayout)
 	d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
 	d.Set("key_pair", repo.KeyPair)

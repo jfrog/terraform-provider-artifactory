@@ -24,7 +24,7 @@ The following arguments are supported:
 * `email` - (Required) Email for user
 * `admin` - (Optional) 
 * `profile_updatable` - (Optional) When set, this user can update his profile details (except for the password. Only an administrator can update the password).
-* `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. 
+* `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
 * `groups` - (Optional) List of groups this user is a part of
 
