@@ -6,8 +6,7 @@ import (
 
 	"context"
 	"net/http"
-
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -81,14 +80,14 @@ func TestAccVirtualRepository_full(t *testing.T) {
 
 func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
 
-		repo, resp, err := client.Repositories.GetVirtual(context.Background(), rs.Primary.ID)
+		repo, resp, err := client.V1.Repositories.GetVirtual(context.Background(), rs.Primary.ID)
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
 		} else if err != nil {

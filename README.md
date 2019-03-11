@@ -9,6 +9,13 @@ If you're building the provider, follow the instructions to [install it as a plu
 -	[Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
 -	[Terraform](https://www.terraform.io/downloads.html) 0.11
 
+## Run with Docker ##
+The provider can be used with the [dillongiacoppo/terraform-artifactory](http://hub.docker.com/r/dillongiacoppo/terraform-artifactory) docker image.
+
+```sh
+docker run -it --rm -v $(pwd):/data/src -w /data/src dillongiacoppo/terraform-artifactory:latest plan   
+```
+
 ## Building The Provider ##
 
 Clone repository to: `$GOPATH/src/github.com/atlassian/terraform-provider-artifactory`

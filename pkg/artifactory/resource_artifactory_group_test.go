@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"net/http"
@@ -64,13 +64,13 @@ func TestAccGroup_full(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		_, resp, err := client.Security.GetGroup(context.Background(), rs.Primary.ID)
+		_, resp, err := client.V1.Security.GetGroup(context.Background(), rs.Primary.ID)
 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
