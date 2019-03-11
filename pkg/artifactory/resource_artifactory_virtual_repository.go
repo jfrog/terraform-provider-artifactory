@@ -2,7 +2,8 @@ package artifactory
 
 import (
 	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
 )
@@ -76,9 +77,9 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 	}
 }
 
-func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepository {
+func unmarshalVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	d := &ResourceData{s}
-	repo := new(artifactory.VirtualRepository)
+	repo := new(v1.VirtualRepository)
 
 	repo.Key = d.getStringRef("key")
 	repo.RClass = artifactory.String("virtual")
@@ -97,9 +98,8 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepo
 	return repo
 }
 
-func marshalVirtualRepository(repo *artifactory.VirtualRepository, d *schema.ResourceData) {
+func marshalVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) {
 	d.Set("key", repo.Key)
-	d.Set("type", repo.RClass)
 	d.Set("package_type", repo.PackageType)
 	d.Set("description", repo.Description)
 	d.Set("notes", repo.Notes)
@@ -115,11 +115,11 @@ func marshalVirtualRepository(repo *artifactory.VirtualRepository, d *schema.Res
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	repo := unmarshalVirtualRepository(d)
 
-	_, err := c.Repositories.CreateVirtual(context.Background(), repo)
+	_, err := c.V1.Repositories.CreateVirtual(context.Background(), repo)
 	if err != nil {
 		return err
 	}
@@ -129,9 +129,9 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	repo, resp, err := c.Repositories.GetVirtual(context.Background(), d.Id())
+	repo, resp, err := c.V1.Repositories.GetVirtual(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -144,11 +144,11 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	repo := unmarshalVirtualRepository(d)
 
-	_, err := c.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
+	_, err := c.V1.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
 	if err != nil {
 		return err
 	}
@@ -158,10 +158,10 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 	repo := unmarshalVirtualRepository(d)
 
-	resp, err := c.Repositories.DeleteVirtual(context.Background(), *repo.Key)
+	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -170,10 +170,10 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	key := d.Id()
-	_, resp, err := c.Repositories.GetVirtual(context.Background(), key)
+	_, resp, err := c.V1.Repositories.GetVirtual(context.Background(), key)
 
 	// Cannot check for 404 because artifactory returns 400
 	if resp.StatusCode == http.StatusBadRequest {

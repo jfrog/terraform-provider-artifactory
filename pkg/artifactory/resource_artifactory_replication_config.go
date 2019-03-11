@@ -2,7 +2,8 @@ package artifactory
 
 import (
 	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
 )
@@ -90,16 +91,16 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 	}
 }
 
-func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.ReplicationConfig {
+func unpackReplicationConfig(s *schema.ResourceData) *v1.ReplicationConfig {
 	d := &ResourceData{s}
-	replicationConfig := new(artifactory.ReplicationConfig)
+	replicationConfig := new(v1.ReplicationConfig)
 
 	repo := d.getStringRef("repo_key")
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]artifactory.SingleReplicationConfig, 0, len(arr))
+		tmp := make([]v1.SingleReplicationConfig, 0, len(arr))
 		replicationConfig.Replications = &tmp
 
 		for i, o := range arr {
@@ -111,7 +112,7 @@ func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.Replication
 
 			m := o.(map[string]interface{})
 
-			var replication artifactory.SingleReplicationConfig
+			var replication v1.SingleReplicationConfig
 
 			replication.RepoKey = repo
 
@@ -158,7 +159,7 @@ func unmarshalReplicationConfig(s *schema.ResourceData) *artifactory.Replication
 	return replicationConfig
 }
 
-func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, d *schema.ResourceData) {
+func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.ResourceData) {
 	d.Set("repo_key", replicationConfig.RepoKey)
 	d.Set("cron_exp", replicationConfig.CronExp)
 	d.Set("enable_event_replication", replicationConfig.EnableEventReplication)
@@ -206,16 +207,17 @@ func marshalReplicationConfig(replicationConfig *artifactory.ReplicationConfig, 
 
 			replications = append(replications, replication)
 		}
+
 		d.Set("replications", replications)
 	}
 }
 
 func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	replicationConfig := unmarshalReplicationConfig(d)
+	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := c.Artifacts.SetRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey, replicationConfig)
+	_, err := c.V1.Artifacts.SetRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey, replicationConfig)
 	if err != nil {
 		return err
 	}
@@ -225,23 +227,23 @@ func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	replicationConfig, _, err := c.Artifacts.GetRepositoryReplicationConfig(context.Background(), d.Id())
+	replicationConfig, _, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	marshalReplicationConfig(replicationConfig, d)
+	packReplicationConfig(replicationConfig, d)
 	return nil
 }
 
 func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	replicationConfig := unmarshalReplicationConfig(d)
-	_, err := c.Artifacts.UpdateRepositoryReplicationConfig(context.Background(), d.Id(), replicationConfig)
+	replicationConfig := unpackReplicationConfig(d)
+	_, err := c.V1.Artifacts.UpdateRepositoryReplicationConfig(context.Background(), d.Id(), replicationConfig)
 	if err != nil {
 		return err
 	}
@@ -252,17 +254,17 @@ func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
-	replicationConfig := unmarshalReplicationConfig(d)
-	_, err := c.Artifacts.DeleteRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey)
+	c := m.(*artifactory.Artifactory)
+	replicationConfig := unpackReplicationConfig(d)
+	_, err := c.V1.Artifacts.DeleteRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey)
 	return err
 }
 
 func resourceReplicationConfigExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	replicationName := d.Id()
-	_, resp, err := c.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)
+	_, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)
 
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil

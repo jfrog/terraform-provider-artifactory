@@ -2,11 +2,12 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"math/rand"
 	"os"
 
 	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
 )
@@ -64,9 +65,9 @@ func resourceArtifactoryUser() *schema.Resource {
 	}
 }
 
-func unmarshalUser(s *schema.ResourceData) *artifactory.User {
+func unmarshalUser(s *schema.ResourceData) *v1.User {
 	d := &ResourceData{s}
-	user := new(artifactory.User)
+	user := new(v1.User)
 
 	user.Name = d.getStringRef("name")
 	user.Email = d.getStringRef("email")
@@ -80,7 +81,7 @@ func unmarshalUser(s *schema.ResourceData) *artifactory.User {
 	return user
 }
 
-func marshalUser(user *artifactory.User, d *schema.ResourceData) {
+func marshalUser(user *v1.User, d *schema.ResourceData) {
 	d.Set("name", user.Name)
 	d.Set("email", user.Email)
 	d.Set("admin", user.Admin)
@@ -95,7 +96,7 @@ func marshalUser(user *artifactory.User, d *schema.ResourceData) {
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	user := unmarshalUser(d)
 
@@ -109,7 +110,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		user.Password = artifactory.String(generatePassword())
 	}
 
-	_, err := c.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
+	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
 	if err != nil {
 		return err
 	}
@@ -119,9 +120,9 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	user, resp, err := c.Security.GetUser(context.Background(), d.Id())
+	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -134,10 +135,10 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	user := unmarshalUser(d)
-	_, err := c.Security.UpdateUser(context.Background(), d.Id(), user)
+	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
 	}
@@ -147,9 +148,9 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 	user := unmarshalUser(d)
-	_, resp, err := c.Security.DeleteUser(context.Background(), *user.Name)
+	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
 	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}
