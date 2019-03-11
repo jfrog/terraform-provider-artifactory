@@ -2,6 +2,9 @@
 
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
 
+Note user passwords are never returned through the API. Since they are never returned they cannot be managed by 
+terraform. Replication and remote repo passwords do get returned so they can be fully managed if encryption is disabled.
+
 ## Example Usage
 
 ```hcl
