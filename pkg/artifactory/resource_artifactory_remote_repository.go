@@ -6,6 +6,7 @@ import (
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"net/http"
 )
 
@@ -96,12 +97,17 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			/*"remote_repo_checksum_policy_type": {
+			"remote_repo_checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "generate_if_absent",
-				Removed:  "since sometime",
-			},*/
+				Default:  "generate-if-absent",
+				ValidateFunc: validation.StringInSlice([]string{
+					"generate-if-absent",
+					"fail",
+					"ignore-and-generate",
+					"pass-thru",
+				}, false),
+			},
 			"hard_fail": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -220,7 +226,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	d := &ResourceData{s}
 	repo := new(v1.RemoteRepository)
 
-	//repo.RemoteRepoChecksumPolicyType = d.getStringRef("remote_repo_checksum_policy_type")
+	repo.RemoteRepoChecksumPolicyType = d.getStringRef("remote_repo_checksum_policy_type")
 	repo.AllowAnyHostAuth = d.getBoolRef("allow_any_host_auth")
 	repo.BlackedOut = d.getBoolRef("blacked_out")
 	repo.BlockMismatchingMimeTypes = d.getBoolRef("block_mismatching_mime_types")
@@ -267,7 +273,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	hasErr := false
 	logErr := cascadingErr(&hasErr)
 
-	//d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
+	logErr(d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType))
 	logErr(d.Set("allow_any_host_auth", repo.AllowAnyHostAuth))
 	logErr(d.Set("blacked_out", repo.BlackedOut))
 	logErr(d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes))
