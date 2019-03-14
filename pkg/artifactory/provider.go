@@ -110,7 +110,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		}
 		client = tp.Client()
 	} else {
-		return nil, fmt.Errorf("either [username, password] or [apiKey] or [access_token] must be set to use provider")
+		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
 	}
 
 	return artifactory.NewClient(d.Get("url").(string), client)

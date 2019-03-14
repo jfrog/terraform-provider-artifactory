@@ -87,11 +87,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 			},
 			"password": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Sensitive:        true,
-				StateFunc:        getMD5Hash,
-				DiffSuppressFunc: mD5Diff,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				StateFunc: getMD5Hash,
 			},
 			"proxy": {
 				Type:     schema.TypeString,
@@ -291,7 +290,6 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("notes", repo.Notes))
 	logErr(d.Set("offline", repo.Offline))
 	logErr(d.Set("package_type", repo.PackageType))
-	logErr(d.Set("password", repo.Password))
 	logErr(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))
 	logErr(d.Set("proxy", repo.Proxy))
 	logErr(d.Set("pypi_registry_url", repo.PyPiRegistryUrl))
@@ -306,6 +304,10 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("url", repo.Url))
 	logErr(d.Set("username", repo.Username))
 	logErr(d.Set("xray_index", repo.XrayIndex))
+
+	if repo.Password != nil {
+		logErr(d.Set("password", getMD5Hash(*repo.Password)))
+	}
 
 	if hasErr {
 		return fmt.Errorf("failed to pack remote repo")

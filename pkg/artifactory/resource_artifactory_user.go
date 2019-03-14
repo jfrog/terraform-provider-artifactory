@@ -1,6 +1,8 @@
 package artifactory
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"math/rand"
@@ -107,7 +109,17 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	if pass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%s_PASSWORD", *user.Name)); ok {
 		user.Password = artifactory.String(pass)
 	} else {
-		user.Password = artifactory.String(generatePassword())
+		nameSum := md5.Sum([]byte(*user.Name))
+		if encPass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%x_PASSWORD_ENC", nameSum)); ok {
+			pass, err := base64.StdEncoding.DecodeString(encPass)
+
+			if err != nil {
+				return fmt.Errorf("base64 username exists but password not encoded correctly: %s", err)
+			}
+			user.Password = artifactory.String(string(pass))
+		} else {
+			user.Password = artifactory.String(generatePassword())
+		}
 	}
 
 	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)

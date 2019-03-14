@@ -54,11 +54,10 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 							Optional: true,
 						},
 						"password": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Sensitive:        true,
-							StateFunc:        getMD5Hash,
-							DiffSuppressFunc: mD5Diff,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+							StateFunc: getMD5Hash,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -182,7 +181,7 @@ func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.Re
 			}
 
 			if repo.Password != nil {
-				replication["password"] = *repo.Password
+				replication["password"] = getMD5Hash(*repo.Password)
 			}
 
 			if repo.Enabled != nil {
