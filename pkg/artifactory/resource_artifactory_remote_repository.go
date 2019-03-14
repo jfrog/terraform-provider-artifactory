@@ -3,11 +3,12 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"net/http"
 )
 
 func resourceArtifactoryRemoteRepository() *schema.Resource {
@@ -203,6 +204,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"bower_registry_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 			"bypass_head_requests": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -218,6 +224,21 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"vcs_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+			"vcs_git_provider": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+			"vcs_git_download_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
 		},
 	}
 }
@@ -230,6 +251,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.AllowAnyHostAuth = d.getBoolRef("allow_any_host_auth")
 	repo.BlackedOut = d.getBoolRef("blacked_out")
 	repo.BlockMismatchingMimeTypes = d.getBoolRef("block_mismatching_mime_types")
+	repo.BowerRegistryURL = d.getStringRef("bower_registry_url")
 	repo.BypassHeadRequests = d.getBoolRef("bypass_head_requests")
 	repo.ClientTLSCertificate = d.getStringRef("client_tls_certificate")
 	repo.Description = d.getStringRef("description")
@@ -264,6 +286,9 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.UnusedArtifactsCleanupPeriodHours = d.getIntRef("unused_artifacts_cleanup_period_hours")
 	repo.Url = d.getStringRef("url")
 	repo.Username = d.getStringRef("username")
+	repo.VcsGitDownloadUrl = d.getStringRef("vcs_git_download_url")
+	repo.VcsGitProvider = d.getStringRef("vcs_git_provider")
+	repo.VcsType = d.getStringRef("vcs_type")
 	repo.XrayIndex = d.getBoolRef("xray_index")
 
 	return repo
@@ -277,6 +302,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("allow_any_host_auth", repo.AllowAnyHostAuth))
 	logErr(d.Set("blacked_out", repo.BlackedOut))
 	logErr(d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes))
+	logErr(d.Set("bower_registry_url", repo.BowerRegistryURL))
 	logErr(d.Set("bypass_head_requests", repo.BypassHeadRequests))
 	logErr(d.Set("client_tls_certificate", repo.ClientTLSCertificate))
 	logErr(d.Set("description", repo.Description))
@@ -309,6 +335,9 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours))
 	logErr(d.Set("url", repo.Url))
 	logErr(d.Set("username", repo.Username))
+	logErr(d.Set("vcs_git_download_url", repo.VcsGitDownloadUrl))
+	logErr(d.Set("vcs_git_provider", repo.VcsGitProvider))
+	logErr(d.Set("vcs_type", repo.VcsType))
 	logErr(d.Set("xray_index", repo.XrayIndex))
 
 	if repo.Password != nil {
