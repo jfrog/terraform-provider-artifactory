@@ -67,7 +67,7 @@ func resourceArtifactoryUser() *schema.Resource {
 	}
 }
 
-func unmarshalUser(s *schema.ResourceData) *v1.User {
+func unpackUser(s *schema.ResourceData) *v1.User {
 	d := &ResourceData{s}
 	user := new(v1.User)
 
@@ -77,30 +77,37 @@ func unmarshalUser(s *schema.ResourceData) *v1.User {
 	user.ProfileUpdatable = d.getBoolRef("profile_updatable")
 	user.DisableUIAccess = d.getBoolRef("disable_ui_access")
 	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled")
-	user.Realm = d.getStringRef("realm")
 	user.Groups = d.getSetRef("groups")
 
 	return user
 }
 
-func marshalUser(user *v1.User, d *schema.ResourceData) {
-	d.Set("name", user.Name)
-	d.Set("email", user.Email)
-	d.Set("admin", user.Admin)
-	d.Set("profile_updatable", user.ProfileUpdatable)
-	d.Set("disable_ui_access", user.DisableUIAccess)
-	d.Set("realm", user.Realm)
-	d.Set("internal_password_disabled", user.InternalPasswordDisabled)
+func packUser(user *v1.User, d *schema.ResourceData) error {
+	hasErr := false
+	logErr := cascadingErr(&hasErr)
+
+	logErr(d.Set("name", user.Name))
+	logErr(d.Set("email", user.Email))
+	logErr(d.Set("admin", user.Admin))
+	logErr(d.Set("profile_updatable", user.ProfileUpdatable))
+	logErr(d.Set("disable_ui_access", user.DisableUIAccess))
+	logErr(d.Set("internal_password_disabled", user.InternalPasswordDisabled))
 
 	if user.Groups != nil {
-		d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups)))
+		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups))))
 	}
+
+	if hasErr {
+		return fmt.Errorf("failed to pack user")
+	}
+
+	return nil
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
-	user := unmarshalUser(d)
+	user := unpackUser(d)
 
 	if user.Name == nil {
 		return fmt.Errorf("user name cannot be nil")
@@ -142,14 +149,13 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	marshalUser(user, d)
-	return nil
+	return packUser(user, d)
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
-	user := unmarshalUser(d)
+	user := unpackUser(d)
 	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
@@ -161,7 +167,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
-	user := unmarshalUser(d)
+	user := unpackUser(d)
 	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
 	if resp.StatusCode == http.StatusNotFound {
 		return nil

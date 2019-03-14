@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -82,7 +83,7 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 	}
 }
 
-func unmarshalVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
+func unpackVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	d := &ResourceData{s}
 	repo := new(v1.VirtualRepository)
 
@@ -104,27 +105,35 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	return repo
 }
 
-func marshalVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) {
-	d.Set("key", repo.Key)
-	d.Set("package_type", repo.PackageType)
-	d.Set("description", repo.Description)
-	d.Set("notes", repo.Notes)
-	d.Set("includes_pattern", repo.IncludesPattern)
-	d.Set("excludes_pattern", repo.ExcludesPattern)
-	d.Set("repo_layout_ref", repo.RepoLayoutRef)
-	d.Set("debian_trivial_layout", repo.DebianTrivialLayout)
-	d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
-	d.Set("key_pair", repo.KeyPair)
-	d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	d.Set("default_deployment_repo", repo.DefaultDeploymentRepo)
-	d.Set("repositories", repo.Repositories)
+func packVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) error {
+	hasErr := false
+	logErr := cascadingErr(&hasErr)
 
+	logErr(d.Set("key", repo.Key))
+	logErr(d.Set("package_type", repo.PackageType))
+	logErr(d.Set("description", repo.Description))
+	logErr(d.Set("notes", repo.Notes))
+	logErr(d.Set("includes_pattern", repo.IncludesPattern))
+	logErr(d.Set("excludes_pattern", repo.ExcludesPattern))
+	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
+	logErr(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
+	logErr(d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts))
+	logErr(d.Set("key_pair", repo.KeyPair))
+	logErr(d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy))
+	logErr(d.Set("default_deployment_repo", repo.DefaultDeploymentRepo))
+	logErr(d.Set("repositories", repo.Repositories))
+
+	if hasErr {
+		return fmt.Errorf("failed to pack virtual repo")
+	}
+
+	return nil
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
-	repo := unmarshalVirtualRepository(d)
+	repo := unpackVirtualRepository(d)
 
 	_, err := c.V1.Repositories.CreateVirtual(context.Background(), repo)
 	if err != nil {
@@ -146,14 +155,13 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	marshalVirtualRepository(repo, d)
-	return nil
+	return packVirtualRepository(repo, d)
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
-	repo := unmarshalVirtualRepository(d)
+	repo := unpackVirtualRepository(d)
 
 	_, err := c.V1.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
 	if err != nil {
@@ -166,7 +174,7 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
-	repo := unmarshalVirtualRepository(d)
+	repo := unpackVirtualRepository(d)
 
 	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
 	if resp.StatusCode == http.StatusNotFound {

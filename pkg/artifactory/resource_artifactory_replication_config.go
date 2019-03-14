@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -158,10 +159,13 @@ func unpackReplicationConfig(s *schema.ResourceData) *v1.ReplicationConfig {
 	return replicationConfig
 }
 
-func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.ResourceData) {
-	d.Set("repo_key", replicationConfig.RepoKey)
-	d.Set("cron_exp", replicationConfig.CronExp)
-	d.Set("enable_event_replication", replicationConfig.EnableEventReplication)
+func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.ResourceData) error {
+	hasErr := false
+	logErr := cascadingErr(&hasErr)
+
+	logErr(d.Set("repo_key", replicationConfig.RepoKey))
+	logErr(d.Set("cron_exp", replicationConfig.CronExp))
+	logErr(d.Set("enable_event_replication", replicationConfig.EnableEventReplication))
 
 	if replicationConfig.Replications != nil {
 		var replications []map[string]interface{}
@@ -207,8 +211,14 @@ func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.Re
 			replications = append(replications, replication)
 		}
 
-		d.Set("replications", replications)
+		logErr(d.Set("replications", replications))
 	}
+
+	if hasErr {
+		return fmt.Errorf("failed to pack replication config")
+	}
+
+	return nil
 }
 
 func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
@@ -234,8 +244,7 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	packReplicationConfig(replicationConfig, d)
-	return nil
+	return packReplicationConfig(replicationConfig, d)
 }
 
 func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
