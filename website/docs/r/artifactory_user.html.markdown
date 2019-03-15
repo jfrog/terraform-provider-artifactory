@@ -10,8 +10,19 @@ description: |-
 
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
 
-Note user passwords are never returned through the API. Since they are never returned they cannot be managed by 
+Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by 
 terraform. Replication and remote repo passwords do get returned so they can be fully managed if encryption is disabled.
+
+The provider supports supplying user passwords for create operations through environment variables. They can be used 
+like so:
+
+```bash
+# Plaintext username and plaintext password
+export "TF_USER_testuser_PASSWORD"="testpassword"
+
+# Support special characters with MD5 username and Base64 password
+export "TF_USER_$(echo -n "testuser" | md5)_PASSWORD_ENC"="$(echo -n "testpassword" | base64)"
+```
 
 ## Example Usage
 

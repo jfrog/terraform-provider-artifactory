@@ -1,17 +1,21 @@
-## 1.5.0-alpha
+## 1.5.0
 DEPRECATIONS:
 * The `token` provider attribute has been deprecated. It has been renamed to
-  `apikey` to distinguish it from the new `access_token` parameter.
+  `api_key` to distinguish it from the new `access_token` parameter.
 * `artifactory_permission_targets` resource has been deprecated in favour of the new
   v2 API in 6.6+. The new v2 resource has been named `artifactory_permission_target`
   The old v1 permission target will be supported until the EOL of artifactory 6.5.x
 
 FEATURES:
 * Add build action permission support [#21]
+* Support supplying user passwords with special characters [#27] 
  
 BUG FIXES
 * Add xray_index field to local and remote repos [#26]
+* Add bower fields to remote repos [#29]
 
+Notes:
+* Bumped to terrafom v0.11.13
 
 ## 1.4.3 (January 22, 2019)
 BUG FIXES:
