@@ -8,6 +8,7 @@ build: fmtcheck
 	go install
 
 test: fmtcheck
+	@echo "==> Starting unit tests"
 	go test $(TEST) -timeout=30s -parallel=4
 
 artifactory:
@@ -18,6 +19,7 @@ docker:
 	@docker build -t dillongiacoppo/terraform-artifactory .
 
 testacc: fmtcheck artifactory
+	@echo "==> Starting integration tests"
 	TF_ACC=1 ARTIFACTORY_USERNAME=admin ARTIFACTORY_PASSWORD=password ARTIFACTORY_URL=http://localhost:8080/artifactory \
 	go test $(TEST) -v -parallel 20 $(TESTARGS) -timeout 120m
 	@docker stop artifactory
@@ -28,6 +30,7 @@ fmt:
 	goimports -w pkg/artifactory
 
 fmtcheck:
+	@echo "==> Checking that code complies with gofmt requirements..."
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
 .PHONY: build test testacc fmt
