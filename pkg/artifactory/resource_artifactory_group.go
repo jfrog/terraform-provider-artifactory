@@ -3,9 +3,11 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
-	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceArtifactoryGroup() *schema.Resource {
@@ -54,10 +56,10 @@ func resourceArtifactoryGroup() *schema.Resource {
 	}
 }
 
-func unmarshalGroup(s *schema.ResourceData) (*artifactory.Group, error) {
+func unmarshalGroup(s *schema.ResourceData) (*v1.Group, error) {
 	d := &ResourceData{s}
 
-	group := new(artifactory.Group)
+	group := new(v1.Group)
 
 	group.Name = d.getStringRef("name")
 	group.Description = d.getStringRef("description")
@@ -75,7 +77,7 @@ func unmarshalGroup(s *schema.ResourceData) (*artifactory.Group, error) {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	group, err := unmarshalGroup(d)
 
@@ -83,7 +85,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	_, err = c.Security.CreateOrReplaceGroup(context.Background(), *group.Name, group)
+	_, err = c.V1.Security.CreateOrReplaceGroup(context.Background(), *group.Name, group)
 
 	if err != nil {
 		return err
@@ -94,9 +96,9 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	group, resp, err := c.Security.GetGroup(context.Background(), d.Id())
+	group, resp, err := c.V1.Security.GetGroup(context.Background(), d.Id())
 
 	// If we 404 it is likely the resources was externally deleted
 	// If the ID is updated to blank, this tells Terraform the resource no longer exist
@@ -107,22 +109,27 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("name", group.Name)
-	d.Set("description", group.Description)
-	d.Set("auto_join", group.AutoJoin)
-	d.Set("admin_privileges", group.AdminPrivileges)
-	d.Set("realm", group.Realm)
-	d.Set("realm_attributes", group.RealmAttributes)
+	hasErr := false
+	logError := cascadingErr(&hasErr)
+	logError(d.Set("name", group.Name))
+	logError(d.Set("description", group.Description))
+	logError(d.Set("auto_join", group.AutoJoin))
+	logError(d.Set("admin_privileges", group.AdminPrivileges))
+	logError(d.Set("realm", group.Realm))
+	logError(d.Set("realm_attributes", group.RealmAttributes))
+	if hasErr {
+		return fmt.Errorf("failed to marshal group")
+	}
 	return nil
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 	group, err := unmarshalGroup(d)
 	if err != nil {
 		return err
 	}
-	_, err = c.Security.UpdateGroup(context.Background(), d.Id(), group)
+	_, err = c.V1.Security.UpdateGroup(context.Background(), d.Id(), group)
 	if err != nil {
 		return err
 	}
@@ -132,13 +139,13 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 	group, err := unmarshalGroup(d)
 	if err != nil {
 		return err
 	}
 
-	_, resp, err := c.Security.DeleteGroup(context.Background(), *group.Name)
+	_, resp, err := c.V1.Security.DeleteGroup(context.Background(), *group.Name)
 
 	if err != nil && resp.StatusCode == http.StatusNotFound {
 		return nil
@@ -148,10 +155,10 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	groupName := d.Id()
-	_, resp, err := c.Security.GetGroup(context.Background(), groupName)
+	_, resp, err := c.V1.Security.GetGroup(context.Background(), groupName)
 
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil

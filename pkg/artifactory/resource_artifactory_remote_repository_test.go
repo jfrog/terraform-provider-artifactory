@@ -1,14 +1,14 @@
 package artifactory
 
 import (
-	"testing"
-
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"net/http"
+	"testing"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
 )
 
 const remoteRepoBasic = `
@@ -71,7 +71,7 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	property_sets                         = ["artifactory"]
 	allow_any_host_auth                   = false
 	enable_cookie_management              = true
-
+	remote_repo_checksum_policy_type      = "ignore-and-generate"
 	client_tls_certificate				  = ""
 }`
 
@@ -88,7 +88,7 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "package_type", "npm"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "username", "user"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", "pass"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", getMD5Hash("pass")),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "proxy", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "description", "desc (local file cache)"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "notes", "notes"),
@@ -118,6 +118,7 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "allow_any_host_auth", "false"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "enable_cookie_management", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "client_tls_certificate", ""),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "remote_repo_checksum_policy_type", "ignore-and-generate"),
 				),
 			},
 		},
@@ -126,14 +127,14 @@ func TestAccRemoteRepository_full(t *testing.T) {
 
 func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("not found %s", id)
 		}
 
-		_, resp, err := client.Repositories.GetRemote(context.Background(), rs.Primary.ID)
+		_, resp, err := client.V1.Repositories.GetRemote(context.Background(), rs.Primary.ID)
 
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil

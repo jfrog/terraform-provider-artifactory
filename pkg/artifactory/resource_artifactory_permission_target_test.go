@@ -3,44 +3,164 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"testing"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
-	"testing"
 )
 
-const permissionBasic = `
-resource "artifactory_local_repository" "lib-local" {
-	key 	     = "lib-local"
-	package_type = "maven"
-}
-
-resource "artifactory_permission_targets" "test-perm" {
-	name 	     = "test-perm"
-	repositories = ["${artifactory_local_repository.lib-local.key}"]
-	users = [
-		{
-			name = "anonymous"
-			permissions = [
-				"r",
-				"w"
+const permissionNoIncludes = `
+resource "artifactory_permission_target" "test-perm" {
+	name = "test-perm"
+	repo = {
+		repositories = ["example-repo-local"]
+		actions = {
+			users = [
+				{
+					name = "anonymous"
+					permissions = ["read", "write"]
+				},
 			]
 		}
-    ]
+	}
 }`
 
-func TestAccPermission_basic(t *testing.T) {
+const permissionJustBuild = `
+resource "artifactory_permission_target" "test-perm" {
+	name = "test-perm"
+	build = {
+		repositories = ["artifactory-build-info"]
+		actions = {
+			users = [
+				{
+					name = "anonymous"
+					permissions = ["read", "write"]
+				},
+			]
+		}
+	}
+}`
+
+const permissionFull = `
+resource "artifactory_permission_target" "test-perm" {
+  name = "test-perm"
+
+  repo = {
+    includes_pattern = ["foo/**"]
+    excludes_pattern = ["bar/**"]
+    repositories     = ["example-repo-local"]
+
+    actions = {
+      users = [
+        {
+          name        = "anonymous"
+          permissions = ["read", "write"]
+        },
+      ]
+
+      groups = [
+        {
+          name        = "readers"
+          permissions = ["read"]
+        },
+      ]
+    }
+  }
+
+  build = {
+    includes_pattern = ["foo/**"]
+    excludes_pattern = ["bar/**"]
+    repositories     = ["artifactory-build-info"]
+
+    actions = {
+      users = [
+        {
+          name        = "anonymous"
+          permissions = ["read", "write"]
+        },
+      ]
+      
+      groups = [
+        {
+          name        = "readers"
+          permissions = ["read"]
+        },
+      ]
+    }
+  }
+}
+`
+
+func TestAccPermissionTarget_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_targets.test-perm"),
+		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_target.test-perm"),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: permissionBasic,
+				Config: permissionFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_permission_targets.test-perm", "name", "test-perm"),
-					resource.TestCheckResourceAttr("artifactory_permission_targets.test-perm", "repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "name", "test-perm"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.excludes_pattern.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPermissionTarget_addBuild(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testPermissionTargetCheckDestroy("artifactory_permission_target.test-perm"),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: permissionNoIncludes,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "name", "test-perm"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.includes_pattern.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.excludes_pattern.#", "0"),
+				),
+			},
+			{
+				Config: permissionJustBuild,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "name", "test-perm"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.includes_pattern.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.excludes_pattern.#", "0"),
+				),
+			},
+			{
+				Config: permissionFull,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "name", "test-perm"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "repo.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.excludes_pattern.#", "1"),
 				),
 			},
 		},
@@ -49,21 +169,20 @@ func TestAccPermission_basic(t *testing.T) {
 
 func testPermissionTargetCheckDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		permissionTargets, resp, err := client.Security.GetPermissionTargets(context.Background(), rs.Primary.ID)
-
-		if resp.StatusCode == http.StatusNotFound {
-			return nil
-		} else if err != nil {
+		exists, err := client.V2.Security.HasPermissionTarget(context.Background(), rs.Primary.ID)
+		if err != nil {
 			return fmt.Errorf("error: Request failed: %s", err.Error())
+		} else if !exists {
+			return nil
 		} else {
-			return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
+			return fmt.Errorf("error: Permission targets %s still exists", rs.Primary.ID)
 		}
 	}
 }

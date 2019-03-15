@@ -1,14 +1,14 @@
 package artifactory
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
-	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
 )
 
 const userBasic = `
@@ -68,14 +68,14 @@ func TestAccUser_full(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		user, resp, err := client.Security.GetUser(context.Background(), rs.Primary.ID)
+		user, resp, err := client.V1.Security.GetUser(context.Background(), rs.Primary.ID)
 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil

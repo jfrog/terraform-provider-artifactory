@@ -2,9 +2,12 @@ package artifactory
 
 import (
 	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
-	"github.com/hashicorp/terraform/helper/schema"
+	"fmt"
 	"net/http"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
@@ -51,6 +54,11 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"repo_layout_ref": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"debian_trivial_layout": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -76,15 +84,16 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 	}
 }
 
-func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepository {
+func unpackVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	d := &ResourceData{s}
-	repo := new(artifactory.VirtualRepository)
+	repo := new(v1.VirtualRepository)
 
 	repo.Key = d.getStringRef("key")
 	repo.RClass = artifactory.String("virtual")
 	repo.PackageType = d.getStringRef("package_type")
 	repo.IncludesPattern = d.getStringRef("includes_pattern")
 	repo.ExcludesPattern = d.getStringRef("excludes_pattern")
+	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref")
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout")
 	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts")
 	repo.Repositories = d.getListRef("repositories")
@@ -97,29 +106,37 @@ func unmarshalVirtualRepository(s *schema.ResourceData) *artifactory.VirtualRepo
 	return repo
 }
 
-func marshalVirtualRepository(repo *artifactory.VirtualRepository, d *schema.ResourceData) {
-	d.Set("key", repo.Key)
-	d.Set("type", repo.RClass)
-	d.Set("package_type", repo.PackageType)
-	d.Set("description", repo.Description)
-	d.Set("notes", repo.Notes)
-	d.Set("includes_pattern", repo.IncludesPattern)
-	d.Set("excludes_pattern", repo.ExcludesPattern)
-	d.Set("debian_trivial_layout", repo.DebianTrivialLayout)
-	d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
-	d.Set("key_pair", repo.KeyPair)
-	d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	d.Set("default_deployment_repo", repo.DefaultDeploymentRepo)
-	d.Set("repositories", repo.Repositories)
+func packVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) error {
+	hasErr := false
+	logErr := cascadingErr(&hasErr)
 
+	logErr(d.Set("key", repo.Key))
+	logErr(d.Set("package_type", repo.PackageType))
+	logErr(d.Set("description", repo.Description))
+	logErr(d.Set("notes", repo.Notes))
+	logErr(d.Set("includes_pattern", repo.IncludesPattern))
+	logErr(d.Set("excludes_pattern", repo.ExcludesPattern))
+	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
+	logErr(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
+	logErr(d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts))
+	logErr(d.Set("key_pair", repo.KeyPair))
+	logErr(d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy))
+	logErr(d.Set("default_deployment_repo", repo.DefaultDeploymentRepo))
+	logErr(d.Set("repositories", repo.Repositories))
+
+	if hasErr {
+		return fmt.Errorf("failed to pack virtual repo")
+	}
+
+	return nil
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	repo := unmarshalVirtualRepository(d)
+	repo := unpackVirtualRepository(d)
 
-	_, err := c.Repositories.CreateVirtual(context.Background(), repo)
+	_, err := c.V1.Repositories.CreateVirtual(context.Background(), repo)
 	if err != nil {
 		return err
 	}
@@ -129,9 +146,9 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	repo, resp, err := c.Repositories.GetVirtual(context.Background(), d.Id())
+	repo, resp, err := c.V1.Repositories.GetVirtual(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -139,16 +156,15 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	marshalVirtualRepository(repo, d)
-	return nil
+	return packVirtualRepository(repo, d)
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	repo := unmarshalVirtualRepository(d)
+	repo := unpackVirtualRepository(d)
 
-	_, err := c.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
+	_, err := c.V1.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
 	if err != nil {
 		return err
 	}
@@ -158,10 +174,10 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
-	repo := unmarshalVirtualRepository(d)
+	c := m.(*artifactory.Artifactory)
+	repo := unpackVirtualRepository(d)
 
-	resp, err := c.Repositories.DeleteVirtual(context.Background(), *repo.Key)
+	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -170,10 +186,10 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
 	key := d.Id()
-	_, resp, err := c.Repositories.GetVirtual(context.Background(), key)
+	_, resp, err := c.V1.Repositories.GetVirtual(context.Background(), key)
 
 	// Cannot check for 404 because artifactory returns 400
 	if resp.StatusCode == http.StatusBadRequest {

@@ -3,7 +3,9 @@ package artifactory
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"fmt"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -75,6 +77,14 @@ func getMD5Hash(o interface{}) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func mD5Diff(k, old, new string, d *schema.ResourceData) bool {
-	return old == new || getMD5Hash(old) == new
+func cascadingErr(hasErr *bool) func(error) {
+	if hasErr == nil {
+		panic("hasError cannot be nil")
+	}
+	return func(err error) {
+		if err != nil {
+			fmt.Println(err)
+			*hasErr = true
+		}
+	}
 }

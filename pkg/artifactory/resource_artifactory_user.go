@@ -1,14 +1,17 @@
 package artifactory
 
 import (
+	"context"
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 
-	"context"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
-	"net/http"
 )
 
 const randomPasswordLength = 16
@@ -64,9 +67,9 @@ func resourceArtifactoryUser() *schema.Resource {
 	}
 }
 
-func unmarshalUser(s *schema.ResourceData) *artifactory.User {
+func unpackUser(s *schema.ResourceData) *v1.User {
 	d := &ResourceData{s}
-	user := new(artifactory.User)
+	user := new(v1.User)
 
 	user.Name = d.getStringRef("name")
 	user.Email = d.getStringRef("email")
@@ -74,30 +77,37 @@ func unmarshalUser(s *schema.ResourceData) *artifactory.User {
 	user.ProfileUpdatable = d.getBoolRef("profile_updatable")
 	user.DisableUIAccess = d.getBoolRef("disable_ui_access")
 	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled")
-	user.Realm = d.getStringRef("realm")
 	user.Groups = d.getSetRef("groups")
 
 	return user
 }
 
-func marshalUser(user *artifactory.User, d *schema.ResourceData) {
-	d.Set("name", user.Name)
-	d.Set("email", user.Email)
-	d.Set("admin", user.Admin)
-	d.Set("profile_updatable", user.ProfileUpdatable)
-	d.Set("disable_ui_access", user.DisableUIAccess)
-	d.Set("realm", user.Realm)
-	d.Set("internal_password_disabled", user.InternalPasswordDisabled)
+func packUser(user *v1.User, d *schema.ResourceData) error {
+	hasErr := false
+	logErr := cascadingErr(&hasErr)
+
+	logErr(d.Set("name", user.Name))
+	logErr(d.Set("email", user.Email))
+	logErr(d.Set("admin", user.Admin))
+	logErr(d.Set("profile_updatable", user.ProfileUpdatable))
+	logErr(d.Set("disable_ui_access", user.DisableUIAccess))
+	logErr(d.Set("internal_password_disabled", user.InternalPasswordDisabled))
 
 	if user.Groups != nil {
-		d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups)))
+		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups))))
 	}
+
+	if hasErr {
+		return fmt.Errorf("failed to pack user")
+	}
+
+	return nil
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	user := unmarshalUser(d)
+	user := unpackUser(d)
 
 	if user.Name == nil {
 		return fmt.Errorf("user name cannot be nil")
@@ -106,10 +116,20 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	if pass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%s_PASSWORD", *user.Name)); ok {
 		user.Password = artifactory.String(pass)
 	} else {
-		user.Password = artifactory.String(generatePassword())
+		nameSum := md5.Sum([]byte(*user.Name))
+		if encPass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%x_PASSWORD_ENC", nameSum)); ok {
+			pass, err := base64.StdEncoding.DecodeString(encPass)
+
+			if err != nil {
+				return fmt.Errorf("base64 username exists but password not encoded correctly: %s", err)
+			}
+			user.Password = artifactory.String(string(pass))
+		} else {
+			user.Password = artifactory.String(generatePassword())
+		}
 	}
 
-	_, err := c.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
+	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
 	if err != nil {
 		return err
 	}
@@ -119,9 +139,9 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	user, resp, err := c.Security.GetUser(context.Background(), d.Id())
+	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -129,15 +149,14 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	marshalUser(user, d)
-	return nil
+	return packUser(user, d)
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
+	c := m.(*artifactory.Artifactory)
 
-	user := unmarshalUser(d)
-	_, err := c.Security.UpdateUser(context.Background(), d.Id(), user)
+	user := unpackUser(d)
+	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
 	}
@@ -147,9 +166,9 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Client)
-	user := unmarshalUser(d)
-	_, resp, err := c.Security.DeleteUser(context.Background(), *user.Name)
+	c := m.(*artifactory.Artifactory)
+	user := unpackUser(d)
+	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
 	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}

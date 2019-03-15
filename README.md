@@ -1,22 +1,21 @@
-# Terraform Provider Artifactory #
+# Terraform Provider Artifactory
 [![Build Status](https://travis-ci.org/atlassian/terraform-provider-artifactory.svg?branch=master)](https://travis-ci.org/atlassian/terraform-provider-artifactory)
 [![Go Report Card](https://goreportcard.com/badge/github.com/atlassian/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/atlassian/terraform-provider-artifactory)
-## Using the provider ##
 
-If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it.
-
-## Requirements ##
--	[Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
--	[Terraform](https://www.terraform.io/downloads.html) 0.11
-
-## Run with Docker ##
-The provider can be used with the [dillongiacoppo/terraform-artifactory](http://hub.docker.com/r/dillongiacoppo/terraform-artifactory) docker image.
+## Run with Docker
+The simplest way to use the provider is with the [dillongiacoppo/terraform-artifactory](http://hub.docker.com/r/dillongiacoppo/terraform-artifactory) docker image.
 
 ```sh
 docker run -it --rm -v $(pwd):/data/src -w /data/src dillongiacoppo/terraform-artifactory:latest plan   
 ```
 
-## Building The Provider ##
+## Build the Provider
+If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
+After placing it into your plugins directory,  run `terraform init` to initialize it.
+
+Requirements:
+- [Terraform](https://www.terraform.io/downloads.html) 0.11
+- [Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
 
 Clone repository to: `$GOPATH/src/github.com/atlassian/terraform-provider-artifactory`
 
@@ -33,8 +32,7 @@ cd $GOPATH/src/github.com/atlassian/terraform-provider-artifactory
 go install
 ```
 
-## Versioning ##
-
+## Versioning 
 In general, this project follows [semver](https://semver.org/) as closely as we
 can for tagging releases of the package. We've adopted the following versioning policy:
 
@@ -45,12 +43,10 @@ can for tagging releases of the package. We've adopted the following versioning 
 	functionality.
 * We increment the **patch version** with any backwards-compatible bug fixes.
 
-## Reporting issues ##
-
+## Reporting issues
 We believe in open contributions and the power of a strong development community. Please read our [Contributing guidelines][CONTRIBUTING] on how to contribute back and report issues to terraform-provider-artifactory.
 
-## Contributors ##
-
+## Contributors
 Pull requests, issues and comments are welcomed. For pull requests:
 
 * Add tests for new features and bug fixes
@@ -78,7 +74,7 @@ those contributing as an individual.
 * [CLA for individuals](https://na2.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=3f94fbdc-2fbe-46ac-b14c-5d152700ae5d)
 
 
-## License ##
+## License
 Copyright (c) 2017 Atlassian and others. Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
 

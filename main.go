@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/atlassian/terraform-provider-artifactory/pkg/artifactory"
 	"github.com/hashicorp/terraform/plugin"
+
+	"github.com/atlassian/terraform-provider-artifactory/pkg/artifactory"
 )
 
 func main() {

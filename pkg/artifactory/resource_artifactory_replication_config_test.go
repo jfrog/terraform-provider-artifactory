@@ -3,12 +3,13 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/pkg/artifactory"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const replicationConfigTemplate = `
@@ -58,13 +59,13 @@ func TestAccReplication_full(t *testing.T) {
 
 func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Client)
+		client := testAccProvider.Meta().(*artifactory.Artifactory)
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		replica, resp, err := client.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
+		replica, resp, err := client.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
 
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil

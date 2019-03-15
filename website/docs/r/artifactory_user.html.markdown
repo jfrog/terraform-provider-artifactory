@@ -10,6 +10,20 @@ description: |-
 
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
 
+Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by 
+terraform. Replication and remote repo passwords do get returned so they can be fully managed if encryption is disabled.
+
+The provider supports supplying user passwords for create operations through environment variables. They can be used 
+like so:
+
+```bash
+# Plaintext username and plaintext password
+export "TF_USER_testuser_PASSWORD"="testpassword"
+
+# Support special characters with MD5 username and Base64 password
+export "TF_USER_$(echo -n "testuser" | md5)_PASSWORD_ENC"="$(echo -n "testpassword" | base64)"
+```
+
 ## Example Usage
 
 ```hcl
@@ -29,7 +43,7 @@ The following arguments are supported:
 * `email` - (Required) Email for user
 * `admin` - (Optional) 
 * `profile_updatable` - (Optional) When set, this user can update his profile details (except for the password. Only an administrator can update the password).
-* `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. 
+* `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
 * `groups` - (Optional) List of groups this user is a part of
 
