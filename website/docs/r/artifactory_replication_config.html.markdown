@@ -10,6 +10,18 @@ description: |-
 
 Provides an Artifactory replication config resource. This can be used to create and manage Artifactory replications.
 
+### Passwords
+Passwords can only be used when encryption is turned off (https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption). 
+Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
+
+To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible, 
+the password diff can be disabled per resource with-- noting that this will require resources to be tainted for an update:
+```hcl
+lifecycle {
+    ignore_changes = ["password"]
+}
+``` 
+
 ## Example Usage
 
 ```hcl
