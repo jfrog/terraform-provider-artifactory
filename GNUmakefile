@@ -7,7 +7,7 @@ default: build
 build: fmtcheck
 	go install
 
-test: fmtcheck
+test:
 	@echo "==> Starting unit tests"
 	go test $(TEST) -timeout=30s -parallel=4
 
