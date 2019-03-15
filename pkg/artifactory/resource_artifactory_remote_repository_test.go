@@ -1,14 +1,14 @@
 package artifactory
 
 import (
-	"testing"
-
 	"context"
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
 )
 
 const remoteRepoBasic = `

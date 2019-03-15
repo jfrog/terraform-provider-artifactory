@@ -1,17 +1,18 @@
 package artifactory
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"math/rand"
+	"net/http"
 	"os"
 
-	"context"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
-	"net/http"
 )
 
 const randomPasswordLength = 16

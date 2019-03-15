@@ -3,10 +3,11 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const permissionNoIncludes = `

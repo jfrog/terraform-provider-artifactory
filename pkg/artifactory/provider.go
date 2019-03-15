@@ -2,9 +2,10 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
-	"net/http"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"

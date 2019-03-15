@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -74,10 +75,6 @@ func getMD5Hash(o interface{}) string {
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
 	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-func mD5Diff(_, old, new string, _ *schema.ResourceData) bool {
-	return old == new || getMD5Hash(old) == new
 }
 
 func cascadingErr(hasErr *bool) func(error) {

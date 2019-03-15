@@ -3,11 +3,12 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"net/http"
 )
 
 func resourceArtifactoryGroup() *schema.Resource {

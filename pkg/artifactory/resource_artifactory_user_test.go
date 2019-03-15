@@ -1,14 +1,14 @@
 package artifactory
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
-	"context"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"net/http"
 )
 
 const userBasic = `

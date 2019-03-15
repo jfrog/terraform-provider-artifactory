@@ -3,11 +3,12 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"net/http"
 )
 
 func resourceArtifactoryPermissionTargets() *schema.Resource {

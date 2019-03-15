@@ -3,12 +3,13 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const replicationConfigTemplate = `
