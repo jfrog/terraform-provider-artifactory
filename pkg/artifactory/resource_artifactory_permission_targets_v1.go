@@ -7,7 +7,6 @@ import (
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
-
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )

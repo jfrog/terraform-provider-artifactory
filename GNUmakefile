@@ -25,6 +25,7 @@ testacc: fmtcheck artifactory
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME)
+	goimports -w pkg/artifactory
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
