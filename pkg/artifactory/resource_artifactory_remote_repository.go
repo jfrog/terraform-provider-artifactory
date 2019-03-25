@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -239,6 +239,30 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"nuget": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"feed_context_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "api/v2",
+						},
+						"download_context_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "api/v2/package",
+						},
+						"v3_feed_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "https://api.nuget.org/v3/index.json",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -290,6 +314,14 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.VcsGitProvider = d.getStringRef("vcs_git_provider")
 	repo.VcsType = d.getStringRef("vcs_type")
 	repo.XrayIndex = d.getBoolRef("xray_index")
+	if v, ok := d.GetOk("nuget"); ok {
+		nugetConfig := v.(*schema.Set).List()[0].(map[string]interface{})
+		repo.Nuget = &v1.Nuget{
+			FeedContextPath:     &nugetConfig["feed_context_path"],
+			DownloadContextPath: &nugetConfig["download_context_path"],
+			V3FeedUrl:           &nugetConfig["v3_feed_url"],
+		}
+	}
 
 	return repo
 }
@@ -339,6 +371,15 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("vcs_git_provider", repo.VcsGitProvider))
 	logErr(d.Set("vcs_type", repo.VcsType))
 	logErr(d.Set("xray_index", repo.XrayIndex))
+	if repo.Nuget != nil {
+		logErr(d.Set("nuget", []interface{}{
+			map[string]interface{}{
+				"feed_context_path":     repo.Nuget.FeedContextPath,
+				"download_context_path": repo.Nuget.DownloadContextPath,
+				"v3_feed_url":           repo.Nuget.V3FeedUrl,
+			},
+		}))
+	}
 
 	if repo.Password != nil {
 		logErr(d.Set("password", getMD5Hash(*repo.Password)))
