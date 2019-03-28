@@ -315,7 +315,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.VcsGitProvider = d.getStringRef("vcs_git_provider")
 	repo.VcsType = d.getStringRef("vcs_type")
 	repo.XrayIndex = d.getBoolRef("xray_index")
-	if v, ok := d.GetOk("nuget"); ok {
+	if v, ok := d.GetOk("nuget"); *repo.PackageType == "nuget" && ok {
 		nugetConfig := v.([]interface{})[0].(map[string]interface{})
 		feedContextPath := nugetConfig["feed_context_path"].(string)
 		downloadContextPath := nugetConfig["download_context_path"].(string)
