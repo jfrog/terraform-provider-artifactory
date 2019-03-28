@@ -240,9 +240,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:  "",
 			},
 			"nuget": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"feed_context_path": {
@@ -315,11 +316,14 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.VcsType = d.getStringRef("vcs_type")
 	repo.XrayIndex = d.getBoolRef("xray_index")
 	if v, ok := d.GetOk("nuget"); ok {
-		nugetConfig := v.(*schema.Set).List()[0].(map[string]interface{})
+		nugetConfig := v.([]interface{})[0].(map[string]interface{})
+		feedContextPath := nugetConfig["feed_context_path"].(string)
+		downloadContextPath := nugetConfig["download_context_path"].(string)
+		v3FeedUrl := nugetConfig["v3_feed_url"].(string)
 		repo.Nuget = &v1.Nuget{
-			FeedContextPath:     &nugetConfig["feed_context_path"],
-			DownloadContextPath: &nugetConfig["download_context_path"],
-			V3FeedUrl:           &nugetConfig["v3_feed_url"],
+			FeedContextPath:     &feedContextPath,
+			DownloadContextPath: &downloadContextPath,
+			V3FeedUrl:           &v3FeedUrl,
 		}
 	}
 
@@ -373,7 +377,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("xray_index", repo.XrayIndex))
 	if repo.Nuget != nil {
 		logErr(d.Set("nuget", []interface{}{
-			map[string]interface{}{
+			map[string]*string{
 				"feed_context_path":     repo.Nuget.FeedContextPath,
 				"download_context_path": repo.Nuget.DownloadContextPath,
 				"v3_feed_url":           repo.Nuget.V3FeedUrl,
