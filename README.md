@@ -75,7 +75,7 @@ those contributing as an individual.
 
 
 ## License
-Copyright (c) 2017 Atlassian and others. Apache 2.0 licensed, see [LICENSE][LICENSE] file.
+Copyright (c) 2019 Atlassian and others. Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
 
 [CONTRIBUTING]: .github/CONTRIBUTING.md
