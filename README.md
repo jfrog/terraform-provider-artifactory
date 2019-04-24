@@ -79,4 +79,4 @@ Copyright (c) 2019 Atlassian and others. Apache 2.0 licensed, see [LICENSE][LICE
 
 
 [CONTRIBUTING]: .github/CONTRIBUTING.md
-[LICENSE]: ./LICENSE.txt
+[LICENSE]: ./LICENSE
