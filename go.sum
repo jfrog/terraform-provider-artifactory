@@ -24,6 +24,8 @@ github.com/atlassian/go-artifactory/v2 v2.1.1 h1:BAIEjTP4y5z26Pfi4PKExYP5b4iC7fc
 github.com/atlassian/go-artifactory/v2 v2.1.1/go.mod h1:jVNrVVRz2g8ZEr2EcOUJ2879eQuywCD43hytKn1D9m8=
 github.com/atlassian/go-artifactory/v2 v2.2.0 h1:nq5g+V07CjVq/B6KCPYZeaLfX/1JeXk1unVhIfJKwqQ=
 github.com/atlassian/go-artifactory/v2 v2.2.0/go.mod h1:jVNrVVRz2g8ZEr2EcOUJ2879eQuywCD43hytKn1D9m8=
+github.com/atlassian/go-artifactory/v2 v2.3.0 h1:e6E9fYrn7aWlhByWMxlUftqEjfgq1Hl3e3REIpaAcEw=
+github.com/atlassian/go-artifactory/v2 v2.3.0/go.mod h1:mMEbxu89yTyKev4mysL03aSioTEdZ8+08KuMGG7myUY=
 github.com/aws/aws-sdk-go v1.14.31 h1:amhorvKh1zNxo9YCntvA5uDmgw+pCYXOp4xO8WS1oDg=
 github.com/aws/aws-sdk-go v1.14.31/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/beevik/etree v0.0.0-20171015221209-af219c0c7ea1/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
