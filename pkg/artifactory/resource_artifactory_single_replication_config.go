@@ -37,7 +37,7 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 			},
 			"url": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"socket_timeout_millis": {
