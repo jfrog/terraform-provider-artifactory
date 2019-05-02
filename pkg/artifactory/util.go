@@ -12,7 +12,7 @@ import (
 type ResourceData struct{ *schema.ResourceData }
 
 func (d *ResourceData) getStringRef(key string) *string {
-	if v, ok := d.GetOk(key); ok {
+	if v, ok := d.GetOkExists(key); ok {
 		return artifactory.String(v.(string))
 	}
 	return nil
