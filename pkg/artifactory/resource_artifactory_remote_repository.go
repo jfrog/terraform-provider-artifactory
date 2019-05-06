@@ -240,18 +240,18 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:  "",
 			},
 			"feed_context_path": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"download_context_path": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"v3_feed_url": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"nuget": {
