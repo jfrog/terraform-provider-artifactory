@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -113,5 +114,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
 	}
 
-	return artifactory.NewClient(d.Get("url").(string), client)
+	rt, err := artifactory.NewClient(d.Get("url").(string), client)
+
+	if err != nil {
+		return nil, err
+	} else if _, resp, err := rt.V1.System.Ping(context.Background()); err != nil {
+		return nil, err
+	} else if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("failed to ping server. Got %d", resp.StatusCode)
+	}
+
+	return rt, nil
 }
