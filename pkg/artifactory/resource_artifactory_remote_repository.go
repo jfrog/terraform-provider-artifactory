@@ -240,21 +240,18 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:  "",
 			},
 			"feed_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       "api/v2",
+				Type:     schema.TypeString,
+				Optional: true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"download_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       "api/v2/package",
+				Type:     schema.TypeString,
+				Optional: true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"v3_feed_url": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       "https://api.nuget.org/v3/index.json",
+				Type:     schema.TypeString,
+				Optional: true,
 				ConflictsWith: []string{"nuget"},
 			},
 			"nuget": {
@@ -269,17 +266,14 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 						"feed_context_path": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "api/v2",
 						},
 						"download_context_path": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "api/v2/package",
 						},
 						"v3_feed_url": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "https://api.nuget.org/v3/index.json",
 						},
 					},
 				},
