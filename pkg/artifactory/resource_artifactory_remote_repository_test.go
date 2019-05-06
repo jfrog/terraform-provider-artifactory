@@ -37,6 +37,33 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 	})
 }
 
+const remoteRepoNuget = `
+resource "artifactory_remote_repository" "terraform-remote-test-repo-nuget" {
+	key               = "terraform-remote-test-repo-nuget"
+	url               = "https://www.nuget.org/"
+	repo_layout_ref   = "nuget-default"
+    package_type      = "nuget"
+	feed_context_path = "/api/notdefault"
+}`
+
+func TestAccRemoteRepository_nugetNew(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: resourceRemoteRepositoryCheckDestroy("artifactory_remote_repository.terraform-remote-test-repo-nuget"),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepoNuget,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "key", "terraform-remote-test-repo-nuget"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "v3_feed_url", ""),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "feed_context_path", "/api/notdefault"),
+				),
+			},
+		},
+	})
+}
+
 const remoteRepoFull = `
 resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
     key                             	  = "terraform-remote-test-repo-full"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 

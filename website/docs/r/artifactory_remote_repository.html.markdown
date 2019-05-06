@@ -74,6 +74,13 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `pypi_registry_url` - (Optional)
 * `bypass_head_requests` - (Optional)
 * `enable_token_authentication` - (Optional)
+* `feed_context_path` - (Optional, Nuget repos only)
+* `download_context_path` - (Optional, Nuget repos only)
+* `v3_feed_url` - (Optional, Nuget repos only)
+* `nuget` - (Optional) Deprecated since 6.9.0+ Nuget repository special configuration
+  * `feed_context_path` - (Optional)
+  * `download_context_path` - (Optional)
+  * `v3_feed_url` - (Optional)
 
 
 ## Import
