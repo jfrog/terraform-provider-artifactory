@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -239,6 +239,45 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
+			"feed_context_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"nuget"},
+			},
+			"download_context_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"nuget"},
+			},
+			"v3_feed_url": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"nuget"},
+			},
+			"nuget": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				MinItems:      1,
+				Deprecated:    "Since Artifactory 6.9.0+ (provider 1.6). Use /api/v2 endpoint",
+				ConflictsWith: []string{"feed_context_path", "download_context_path", "v3_feed_url"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"feed_context_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"download_context_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"v3_feed_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -290,6 +329,20 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.VcsGitProvider = d.getStringRef("vcs_git_provider")
 	repo.VcsType = d.getStringRef("vcs_type")
 	repo.XrayIndex = d.getBoolRef("xray_index")
+	repo.FeedContextPath = d.getStringRef("feed_context_path")
+	repo.DownloadContextPath = d.getStringRef("download_context_path")
+	repo.V3FeedUrl = d.getStringRef("v3_feed_url")
+	if v, ok := d.GetOk("nuget"); ok {
+		nugetConfig := v.([]interface{})[0].(map[string]interface{})
+		feedContextPath := nugetConfig["feed_context_path"].(string)
+		downloadContextPath := nugetConfig["download_context_path"].(string)
+		v3FeedUrl := nugetConfig["v3_feed_url"].(string)
+		repo.Nuget = &v1.Nuget{
+			FeedContextPath:     &feedContextPath,
+			DownloadContextPath: &downloadContextPath,
+			V3FeedUrl:           &v3FeedUrl,
+		}
+	}
 
 	return repo
 }
@@ -339,6 +392,18 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("vcs_git_provider", repo.VcsGitProvider))
 	logErr(d.Set("vcs_type", repo.VcsType))
 	logErr(d.Set("xray_index", repo.XrayIndex))
+	logErr(d.Set("feed_context_path", repo.FeedContextPath))
+	logErr(d.Set("download_context_path", repo.DownloadContextPath))
+	logErr(d.Set("v3_feed_url", repo.V3FeedUrl))
+	if repo.Nuget != nil {
+		logErr(d.Set("nuget", []interface{}{
+			map[string]*string{
+				"feed_context_path":     repo.Nuget.FeedContextPath,
+				"download_context_path": repo.Nuget.DownloadContextPath,
+				"v3_feed_url":           repo.Nuget.V3FeedUrl,
+			},
+		}))
+	}
 
 	if repo.Password != nil {
 		logErr(d.Set("password", getMD5Hash(*repo.Password)))
