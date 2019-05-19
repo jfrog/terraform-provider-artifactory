@@ -31,6 +31,7 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -43,10 +44,12 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"includes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
@@ -56,14 +59,17 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"handle_releases": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"handle_snapshots": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"max_unique_snapshots": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"debian_trivial_layout": {
 				Type:     schema.TypeBool,
@@ -72,22 +78,27 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"max_unique_tags": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"snapshot_version_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"blacked_out": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"property_sets": {
 				Type:     schema.TypeSet,
@@ -110,14 +121,17 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"docker_api_version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"enable_file_lists_indexing": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"xray_index": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}

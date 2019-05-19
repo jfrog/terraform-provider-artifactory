@@ -48,10 +48,12 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"includes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
@@ -60,18 +62,22 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"handle_releases": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"handle_snapshots": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"max_unique_snapshots": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -94,6 +100,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"remote_repo_checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"generate-if-absent",
 					"fail",
@@ -104,22 +111,27 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"hard_fail": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"offline": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"blacked_out": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"store_artifacts_locally": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"socket_timeout_millis": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"local_address": {
 				Type:     schema.TypeString,
@@ -128,34 +140,42 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"retrieval_cache_period_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"missed_cache_period_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"unused_artifacts_cleanup_period_hours": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"fetch_jars_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"fetch_sources_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"share_configuration": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"synchronize_properties": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"block_mismatching_mime_types": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"property_sets": {
 				Type:     schema.TypeSet,
@@ -166,46 +186,57 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"allow_any_host_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"enable_cookie_management": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"client_tls_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"pypi_registry_url": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"bower_registry_url": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"bypass_head_requests": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"enable_token_authentication": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"xray_index": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"vcs_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"vcs_git_provider": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"vcs_git_download_url": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"feed_context_path": {
 				Type:          schema.TypeString,

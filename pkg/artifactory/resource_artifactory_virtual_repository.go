@@ -74,6 +74,7 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 			"pom_repository_references_cleanup_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"default_deployment_repo": {
 				Type:     schema.TypeString,
