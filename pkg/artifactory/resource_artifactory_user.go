@@ -40,22 +40,18 @@ func resourceArtifactoryUser() *schema.Resource {
 			"admin": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"profile_updatable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"disable_ui_access": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"internal_password_disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"groups": {
 				Type:     schema.TypeSet,

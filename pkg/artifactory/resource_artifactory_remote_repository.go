@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -32,7 +32,6 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"package_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "generic",
 				ForceNew: true,
 			},
 			"description": {
@@ -49,12 +48,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"includes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "**/*",
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
@@ -63,22 +60,18 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"handle_releases": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"handle_snapshots": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"max_unique_snapshots": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -101,7 +94,6 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"remote_repo_checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "generate-if-absent",
 				ValidateFunc: validation.StringInSlice([]string{
 					"generate-if-absent",
 					"fail",
@@ -112,27 +104,22 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"hard_fail": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"offline": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"blacked_out": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"store_artifacts_locally": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"socket_timeout_millis": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  15000,
 			},
 			"local_address": {
 				Type:     schema.TypeString,
@@ -141,42 +128,34 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"retrieval_cache_period_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  43200,
 			},
 			"missed_cache_period_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  7200,
 			},
 			"unused_artifacts_cleanup_period_hours": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 			},
 			"fetch_jars_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"fetch_sources_eagerly": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"share_configuration": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"synchronize_properties": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"block_mismatching_mime_types": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"property_sets": {
 				Type:     schema.TypeSet,
@@ -187,57 +166,46 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"allow_any_host_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"enable_cookie_management": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"client_tls_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"pypi_registry_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"bower_registry_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"bypass_head_requests": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"enable_token_authentication": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"xray_index": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"vcs_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"vcs_git_provider": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"vcs_git_download_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"feed_context_path": {
 				Type:          schema.TypeString,

@@ -30,7 +30,6 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"package_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "generic",
 				ForceNew: true,
 			},
 			"description": {
@@ -44,12 +43,10 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"includes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "**/*",
 			},
 			"excludes_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
@@ -59,17 +56,14 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"handle_releases": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"handle_snapshots": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"max_unique_snapshots": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 			},
 			"debian_trivial_layout": {
 				Type:     schema.TypeBool,
@@ -78,27 +72,22 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"checksum_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "client-checksums",
 			},
 			"max_unique_tags": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 			},
 			"snapshot_version_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "non-unique",
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"blacked_out": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"property_sets": {
 				Type:     schema.TypeSet,
@@ -121,17 +110,14 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 			"docker_api_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "V2",
 			},
 			"enable_file_lists_indexing": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"xray_index": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 		},
 	}

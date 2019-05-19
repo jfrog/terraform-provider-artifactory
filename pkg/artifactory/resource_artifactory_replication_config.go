@@ -34,7 +34,6 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			"enable_event_replication": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
 			"replications": {
 				Type:     schema.TypeList,
@@ -49,7 +48,6 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 						"socket_timeout_millis": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  15000,
 						},
 						"username": {
 							Type:     schema.TypeString,
@@ -64,22 +62,18 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
 						},
 						"sync_deletes": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
 						},
 						"sync_properties": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
 						},
 						"sync_statistics": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 						"path_prefix": {
 							Type:     schema.TypeString,

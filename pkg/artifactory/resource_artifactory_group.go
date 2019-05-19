@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -35,17 +35,14 @@ func resourceArtifactoryGroup() *schema.Resource {
 			"auto_join": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"admin_privileges": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"realm": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "internal",
 				ValidateFunc: validateLowerCase,
 			},
 			"realm_attributes": {
