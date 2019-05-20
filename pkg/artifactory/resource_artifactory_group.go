@@ -61,12 +61,12 @@ func unmarshalGroup(s *schema.ResourceData) (*v1.Group, error) {
 
 	group := new(v1.Group)
 
-	group.Name = d.getStringRef("name")
-	group.Description = d.getStringRef("description")
-	group.AutoJoin = d.getBoolRef("auto_join")
-	group.AdminPrivileges = d.getBoolRef("admin_privileges")
-	group.Realm = d.getStringRef("realm")
-	group.RealmAttributes = d.getStringRef("realm_attributes")
+	group.Name = d.getStringRef("name", false)
+	group.Description = d.getStringRef("description", false)
+	group.AutoJoin = d.getBoolRef("auto_join", false)
+	group.AdminPrivileges = d.getBoolRef("admin_privileges", false)
+	group.Realm = d.getStringRef("realm", false)
+	group.RealmAttributes = d.getStringRef("realm_attributes", false)
 
 	// Validator
 	if group.AdminPrivileges != nil && group.AutoJoin != nil && *group.AdminPrivileges && *group.AutoJoin {

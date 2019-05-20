@@ -71,12 +71,12 @@ func unpackUser(s *schema.ResourceData) *v1.User {
 	d := &ResourceData{s}
 	user := new(v1.User)
 
-	user.Name = d.getStringRef("name")
-	user.Email = d.getStringRef("email")
-	user.Admin = d.getBoolRef("admin")
-	user.ProfileUpdatable = d.getBoolRef("profile_updatable")
-	user.DisableUIAccess = d.getBoolRef("disable_ui_access")
-	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled")
+	user.Name = d.getStringRef("name", false)
+	user.Email = d.getStringRef("email", false)
+	user.Admin = d.getBoolRef("admin", false)
+	user.ProfileUpdatable = d.getBoolRef("profile_updatable", false)
+	user.DisableUIAccess = d.getBoolRef("disable_ui_access", false)
+	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled", false)
 	user.Groups = d.getSetRef("groups")
 
 	return user

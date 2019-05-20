@@ -16,9 +16,9 @@ func unpackPermissionTargetV1(s *schema.ResourceData) *v1.PermissionTargets {
 
 	pt := new(v1.PermissionTargets)
 
-	pt.Name = d.getStringRef("name")
-	pt.IncludesPattern = d.getStringRef("includes_pattern")
-	pt.ExcludesPattern = d.getStringRef("excludes_pattern")
+	pt.Name = d.getStringRef("name", false)
+	pt.IncludesPattern = d.getStringRef("includes_pattern", false)
+	pt.ExcludesPattern = d.getStringRef("excludes_pattern", false)
 	pt.Repositories = d.getSetRef("repositories")
 
 	if v, ok := d.GetOkExists("users"); ok {

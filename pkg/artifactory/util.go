@@ -11,22 +11,22 @@ import (
 
 type ResourceData struct{ *schema.ResourceData }
 
-func (d *ResourceData) getStringRef(key string) *string {
-	if v, ok := d.GetOkExists(key); ok {
+func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
+	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return artifactory.String(v.(string))
 	}
 	return nil
 }
 
-func (d *ResourceData) getBoolRef(key string) *bool {
-	if v, ok := d.GetOkExists(key); ok {
+func (d *ResourceData) getBoolRef(key string, onlyIfChanged bool) *bool {
+	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return artifactory.Bool(v.(bool))
 	}
 	return nil
 }
 
-func (d *ResourceData) getIntRef(key string) *int {
-	if v, ok := d.GetOkExists(key); ok {
+func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
+	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return artifactory.Int(v.(int))
 	}
 	return nil

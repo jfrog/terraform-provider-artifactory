@@ -88,20 +88,20 @@ func unpackVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
 	d := &ResourceData{s}
 	repo := new(v1.VirtualRepository)
 
-	repo.Key = d.getStringRef("key")
+	repo.Key = d.getStringRef("key", false)
 	repo.RClass = artifactory.String("virtual")
-	repo.PackageType = d.getStringRef("package_type")
-	repo.IncludesPattern = d.getStringRef("includes_pattern")
-	repo.ExcludesPattern = d.getStringRef("excludes_pattern")
-	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref")
-	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout")
-	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts")
+	repo.PackageType = d.getStringRef("package_type", false)
+	repo.IncludesPattern = d.getStringRef("includes_pattern", false)
+	repo.ExcludesPattern = d.getStringRef("excludes_pattern", false)
+	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref", false)
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
+	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts", false)
 	repo.Repositories = d.getListRef("repositories")
-	repo.Description = d.getStringRef("description")
-	repo.Notes = d.getStringRef("notes")
-	repo.KeyPair = d.getStringRef("key_pair")
-	repo.PomRepositoryReferencesCleanupPolicy = d.getStringRef("pom_repository_references_cleanup_policy")
-	repo.DefaultDeploymentRepo = d.getStringRef("default_deployment_repo")
+	repo.Description = d.getStringRef("description", false)
+	repo.Notes = d.getStringRef("notes", false)
+	repo.KeyPair = d.getStringRef("key_pair", false)
+	repo.PomRepositoryReferencesCleanupPolicy = d.getStringRef("pom_repository_references_cleanup_policy", false)
+	repo.DefaultDeploymentRepo = d.getStringRef("default_deployment_repo", false)
 
 	return repo
 }

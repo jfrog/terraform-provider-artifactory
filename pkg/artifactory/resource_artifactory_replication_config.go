@@ -96,7 +96,7 @@ func unpackReplicationConfig(s *schema.ResourceData) *v1.ReplicationConfig {
 	d := &ResourceData{s}
 	replicationConfig := new(v1.ReplicationConfig)
 
-	repo := d.getStringRef("repo_key")
+	repo := d.getStringRef("repo_key", false)
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
@@ -107,8 +107,8 @@ func unpackReplicationConfig(s *schema.ResourceData) *v1.ReplicationConfig {
 		for i, o := range arr {
 			if i == 0 {
 				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.getStringRef("cron_exp")
-				replicationConfig.EnableEventReplication = d.getBoolRef("enable_event_replication")
+				replicationConfig.CronExp = d.getStringRef("cron_exp", false)
+				replicationConfig.EnableEventReplication = d.getBoolRef("enable_event_replication", false)
 			}
 
 			m := o.(map[string]interface{})

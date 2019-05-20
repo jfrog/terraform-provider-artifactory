@@ -229,7 +229,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 
 	pTarget := new(v2.PermissionTarget)
 
-	pTarget.Name = d.getStringRef("name")
+	pTarget.Name = d.getStringRef("name", false)
 
 	if v, ok := d.GetOk("repo"); ok {
 		pTarget.Repo = unpackPermission(v)
