@@ -87,18 +87,18 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *v1.SingleReplication
 	d := &ResourceData{s}
 	replicationConfig := new(v1.SingleReplicationConfig)
 
-	replicationConfig.RepoKey = d.getStringRef("repo_key")
-	replicationConfig.CronExp = d.getStringRef("cron_exp")
-	replicationConfig.EnableEventReplication = d.getBoolRef("enable_event_replication")
-	replicationConfig.URL = d.getStringRef("url")
-	replicationConfig.SocketTimeoutMillis = d.getIntRef("socket_timeout_millis")
-	replicationConfig.Username = d.getStringRef("username")
-	replicationConfig.Enabled = d.getBoolRef("enabled")
-	replicationConfig.SyncDeletes = d.getBoolRef("sync_deletes")
-	replicationConfig.SyncProperties = d.getBoolRef("sync_properties")
-	replicationConfig.SyncStatistics = d.getBoolRef("sync_statistics")
-	replicationConfig.PathPrefix = d.getStringRef("path_prefix")
-	replicationConfig.Password = d.getStringRef("password")
+	replicationConfig.RepoKey = d.getStringRef("repo_key", false)
+	replicationConfig.CronExp = d.getStringRef("cron_exp", false)
+	replicationConfig.EnableEventReplication = d.getBoolRef("enable_event_replication", false)
+	replicationConfig.URL = d.getStringRef("url", false)
+	replicationConfig.SocketTimeoutMillis = d.getIntRef("socket_timeout_millis", false)
+	replicationConfig.Username = d.getStringRef("username", false)
+	replicationConfig.Enabled = d.getBoolRef("enabled", false)
+	replicationConfig.SyncDeletes = d.getBoolRef("sync_deletes", false)
+	replicationConfig.SyncProperties = d.getBoolRef("sync_properties", false)
+	replicationConfig.SyncStatistics = d.getBoolRef("sync_statistics", false)
+	replicationConfig.PathPrefix = d.getStringRef("path_prefix", false)
+	replicationConfig.Password = d.getStringRef("password", false)
 
 	return replicationConfig
 }
