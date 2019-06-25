@@ -3,6 +3,7 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform/helper/resource"
 	"net/http"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
@@ -326,7 +327,19 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 	}
 
 	d.SetId(*permissionTarget.Name)
-	return resourcePermissionTargetRead(d, m)
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		c := m.(*artifactory.Artifactory)
+		exists, err := c.V2.Security.HasPermissionTarget(context.Background(), d.Id())
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))
+		}
+
+		if !exists {
+			return resource.RetryableError(fmt.Errorf("expected permission target to be created, but currently not found"))
+		}
+
+		return resource.NonRetryableError(resourcePermissionTargetRead(d, m))
+	})
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
