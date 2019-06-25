@@ -144,7 +144,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		}
 
 		if resp.StatusCode == http.StatusNotFound {
-			return resource.RetryableError(fmt.Errorf("expected permission target to be created, but currently not found"))
+			return resource.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
 		}
 
 		return resource.NonRetryableError(resourceUserRead(d, m))
