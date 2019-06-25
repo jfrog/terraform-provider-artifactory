@@ -19,6 +19,7 @@ with the proper credentials before it can be used.
     * [Local Repositories](./r/artifactory_local_repository.html.markdown)
     * [Remote Repositories](./r/artifactory_remote_repository.html.markdown)
     * [Replication Configurations](./r/artifactory_replication_config.html.markdown)
+    * [Single Replication Configurations](./r/artifactory_single_replication_config.html.markdown)
     * [Virtual Repositories](./r/artifactory_virtual_repository.html.markdown)
 
 - Deprecated Resources

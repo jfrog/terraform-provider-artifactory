@@ -59,13 +59,14 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"artifactory_local_repository":   resourceArtifactoryLocalRepository(),
-			"artifactory_remote_repository":  resourceArtifactoryRemoteRepository(),
-			"artifactory_virtual_repository": resourceArtifactoryVirtualRepository(),
-			"artifactory_group":              resourceArtifactoryGroup(),
-			"artifactory_user":               resourceArtifactoryUser(),
-			"artifactory_permission_target":  resourceArtifactoryPermissionTarget(),
-			"artifactory_replication_config": resourceArtifactoryReplicationConfig(),
+			"artifactory_local_repository":          resourceArtifactoryLocalRepository(),
+			"artifactory_remote_repository":         resourceArtifactoryRemoteRepository(),
+			"artifactory_virtual_repository":        resourceArtifactoryVirtualRepository(),
+			"artifactory_group":                     resourceArtifactoryGroup(),
+			"artifactory_user":                      resourceArtifactoryUser(),
+			"artifactory_permission_target":         resourceArtifactoryPermissionTarget(),
+			"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
+			"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 		},
