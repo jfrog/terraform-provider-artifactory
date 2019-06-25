@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"github.com/hashicorp/terraform/helper/resource"
 	"math/rand"
 	"net/http"
 	"os"
@@ -135,7 +136,19 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(*user.Name)
-	return resourceUserRead(d, m)
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		c := m.(*artifactory.Artifactory)
+		_, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
+		}
+
+		if resp.StatusCode == http.StatusNotFound {
+			return resource.RetryableError(fmt.Errorf("expected permission target to be created, but currently not found"))
+		}
+
+		return resource.NonRetryableError(resourceUserRead(d, m))
+	})
 }
 
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
