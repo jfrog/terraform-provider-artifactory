@@ -12,7 +12,10 @@ Provides an Artifactory user resource. This can be used to create and manage Art
 
 Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by 
 directly through Terraform. However, it is possible to store a "known" state for the password and make changes if it's
-updated in Terraform.
+updated in Terraform. If no password is given a random one is created otherwise that value is used. It's also worth 
+noting "removing" the password argument does not reset the password; it just removes Terraform from storing the "known"
+state.
+
 
 ## Example Usage
 
@@ -32,7 +35,7 @@ The following arguments are supported:
 
 * `name` - (Required) Username for user
 * `email` - (Required) Email for user
-* `password` - (Required) Password for the user
+* `password` - (Optional) Password for the user
 * `admin` - (Optional) 
 * `profile_updatable` - (Optional) When set, this user can update his profile details (except for the password. Only an administrator can update the password).
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges.
