@@ -65,11 +65,9 @@ func resourceArtifactoryUser() *schema.Resource {
 			"password": {
 				Type:      schema.TypeString,
 				Sensitive: true,
-				Required:  true,
+				Optional:  true,
 				StateFunc: func(value interface{}) string {
-					/* To avoid storing the value of the environment variable in the state
-					but still be able to know when the value change, we store a hash of the value.
-					*/
+					// Avoid storing the actual value in the state and instead store the hash of it
 					return hashString(value.(string))
 				},
 			},
@@ -95,7 +93,7 @@ func unpackUser(s *schema.ResourceData) *v1.User {
 	user.DisableUIAccess = d.getBoolRef("disable_ui_access", false)
 	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled", false)
 	user.Groups = d.getSetRef("groups")
-	user.Password = d.getStringRef("password", false)
+	user.Password = d.getStringRef("password", true)
 
 	return user
 }
@@ -129,6 +127,10 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 
 	if user.Name == nil {
 		return fmt.Errorf("user name cannot be nil")
+	}
+
+	if user.Password == nil {
+		user.Password = artifactory.String(generatePassword())
 	}
 
 	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
@@ -170,6 +172,10 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
 	user := unpackUser(d)
+	if user.Password != nil && len(*user.Password) == 0 {
+		user.Password = nil
+	}
+
 	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
