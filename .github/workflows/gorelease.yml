@@ -13,6 +13,12 @@ jobs:
         with:
           go-version: '1.13.x'
       -
+        name: Get github-release-notes
+        run: |
+          mkdir ghrn
+          curl -Lo ghrn/github-release-notes.tar.gz https://github.com/buchanae/github-release-notes/releases/download/0.2.0/github-release-notes-darwin-amd64-0.2.0.tar.gz
+          tar -xvzf ghrn/github-release-notes.tar.gz -C ghrn
+      -
         name: Build
         run: make
       -
@@ -23,6 +29,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v1
         with:
           version: latest
-          args: release
+          args: release --release-notes <(ghrn/github-release-notes -org atlassian -repo terraform-provider-artifactory -since-latest-release)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
