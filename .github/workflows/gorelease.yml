@@ -13,6 +13,12 @@ jobs:
         with:
           go-version: '1.13.x'
       -
+        name: Build
+        run: make
+      -
+        name: Test
+        run: make test
+      -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
