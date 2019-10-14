@@ -65,7 +65,10 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				return err
 			}
 			if d.Get("fingerprint").(string) != fingerprint {
-				d.SetNewComputed("fingerprint")
+				if err := d.SetNewComputed("fingerprint"); err != nil {
+					fmt.Println(err)
+					return err
+				}
 			}
 			return nil
 		},
@@ -142,12 +145,20 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if cert != nil {
-		d.Set("alias", *cert.CertificateAlias)
-		d.Set("fingerprint", *cert.FingerPrint)
-		d.Set("issued_by", *cert.IssuedBy)
-		d.Set("issued_on", *cert.IssuedOn)
-		d.Set("issued_to", *cert.IssuedTo)
-		d.Set("valid_until", *cert.ValidUntil)
+		hasErr := false
+		logErr := cascadingErr(&hasErr)
+
+		logErr(d.Set("alias", *cert.CertificateAlias))
+		logErr(d.Set("fingerprint", *cert.FingerPrint))
+		logErr(d.Set("issued_by", *cert.IssuedBy))
+		logErr(d.Set("issued_on", *cert.IssuedOn))
+		logErr(d.Set("issued_to", *cert.IssuedTo))
+		logErr(d.Set("valid_until", *cert.ValidUntil))
+
+		if hasErr {
+			return fmt.Errorf("failed to pack certificate")
+		}
+
 		return nil
 	}
 
