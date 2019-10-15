@@ -21,6 +21,7 @@ with the proper credentials before it can be used.
     * [Replication Configurations](./r/artifactory_replication_config.html.markdown)
     * [Single Replication Configurations](./r/artifactory_single_replication_config.html.markdown)
     * [Virtual Repositories](./r/artifactory_virtual_repository.html.markdown)
+    * [Certificates](./r/artifactory_certificate.html.markdown)
 
 - Deprecated Resources
     * [Permission Targets (V1 API)](./r/artifactory_permission_target_v1.html.markdown)
