@@ -2,17 +2,15 @@ package artifactory
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"math/rand"
 	"net/http"
-	"os"
-
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 const randomPasswordLength = 16
@@ -64,8 +62,24 @@ func resourceArtifactoryUser() *schema.Resource {
 				Set:      schema.HashString,
 				Optional: true,
 			},
+			"password": {
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Optional:  true,
+				StateFunc: func(value interface{}) string {
+					// Avoid storing the actual value in the state and instead store the hash of it
+					return hashString(value.(string))
+				},
+			},
 		},
 	}
+}
+
+// hashString do a sha256 checksum, encode it in base64 and return it as string
+// The choice of sha256 for checksum is arbitrary.
+func hashString(str string) string {
+	hash := sha256.Sum256([]byte(str))
+	return base64.StdEncoding.EncodeToString(hash[:])
 }
 
 func unpackUser(s *schema.ResourceData) *v1.User {
@@ -79,6 +93,7 @@ func unpackUser(s *schema.ResourceData) *v1.User {
 	user.DisableUIAccess = d.getBoolRef("disable_ui_access", false)
 	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled", false)
 	user.Groups = d.getSetRef("groups")
+	user.Password = d.getStringRef("password", true)
 
 	return user
 }
@@ -114,20 +129,8 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("user name cannot be nil")
 	}
 
-	if pass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%s_PASSWORD", *user.Name)); ok {
-		user.Password = artifactory.String(pass)
-	} else {
-		nameSum := md5.Sum([]byte(*user.Name))
-		if encPass, ok := os.LookupEnv(fmt.Sprintf("TF_USER_%x_PASSWORD_ENC", nameSum)); ok {
-			pass, err := base64.StdEncoding.DecodeString(encPass)
-
-			if err != nil {
-				return fmt.Errorf("base64 username exists but password not encoded correctly: %s", err)
-			}
-			user.Password = artifactory.String(string(pass))
-		} else {
-			user.Password = artifactory.String(generatePassword())
-		}
+	if user.Password == nil {
+		user.Password = artifactory.String(generatePassword())
 	}
 
 	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
@@ -169,6 +172,10 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
 	user := unpackUser(d)
+	if user.Password != nil && len(*user.Password) == 0 {
+		user.Password = nil
+	}
+
 	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
