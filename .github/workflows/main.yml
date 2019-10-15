@@ -1,4 +1,4 @@
-name: goreleaser
+name: build
 on: [push, pull_request]
 jobs:
   goreleaser:
