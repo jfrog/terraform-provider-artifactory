@@ -1,13 +1,6 @@
 # Terraform Provider Artifactory
-[![Build Status](https://travis-ci.org/atlassian/terraform-provider-artifactory.svg?branch=master)](https://travis-ci.org/atlassian/terraform-provider-artifactory)
+[![Actions Status](https://github.com/atlassian/terraform-provider-artifactory/workflows/build/badge.svg)](https://github.com/atlassian/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/atlassian/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/atlassian/terraform-provider-artifactory)
-
-## Run with Docker
-The simplest way to use the provider is with the [dillongiacoppo/terraform-artifactory](http://hub.docker.com/r/dillongiacoppo/terraform-artifactory) docker image.
-
-```sh
-docker run -it --rm -v $(pwd):/data/src -w /data/src dillongiacoppo/terraform-artifactory:latest plan   
-```
 
 ## Build the Provider
 If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
@@ -32,7 +25,7 @@ cd $GOPATH/src/github.com/atlassian/terraform-provider-artifactory
 go install
 ```
 
-## Versioning 
+## Versioning
 In general, this project follows [semver](https://semver.org/) as closely as we
 can for tagging releases of the package. We've adopted the following versioning policy:
 

@@ -1,5 +1,4 @@
 TEST?=./...
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=pkg/artifactory
 
 default: build

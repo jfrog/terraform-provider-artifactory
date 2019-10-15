@@ -38,6 +38,53 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	})
 }
 
+const virtualRepositoryUpdateBefore = `
+resource "artifactory_virtual_repository" "foo" {
+	key          = "foo"
+	description  = "Before"
+	package_type = "maven"
+	repositories = []
+}
+`
+
+const virtualRepositoryUpdateAfter = `
+resource "artifactory_virtual_repository" "foo" {
+	key          = "foo"
+	description  = "After"
+	package_type = "maven"
+	repositories = []
+}
+`
+
+func TestAccVirtualRepository_update(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVirtualRepositoryDestroy("artifactory_virtual_repository.foo"),
+		Providers:    testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryUpdateBefore,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "key", "foo"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "description", "Before"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "package_type", "maven"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repositories.#", "0"),
+				),
+			},
+			{
+				Config: virtualRepositoryUpdateAfter,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "key", "foo"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "description", "After"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "package_type", "maven"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "repositories.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 const virtualRepositoryFull = `
 resource "artifactory_virtual_repository" "foo" {
 	key = "foo"
