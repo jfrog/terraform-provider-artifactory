@@ -1,0 +1,21 @@
+language: go
+
+go:
+  - 1.11.x
+  - 1.12.x
+  - master
+
+services:
+  - docker
+
+script:
+  - 'export GO111MODULE=on'
+  - 'make'
+  - 'make test'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then openssl aes-256-cbc -K $encrypted_1d073d5eb2c7_key -iv $encrypted_1d073d5eb2c7_iv
+    -in scripts/artifactory.lic.enc -out scripts/artifactory.lic -d && make testacc; fi'
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: master
