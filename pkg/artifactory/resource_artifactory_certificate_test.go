@@ -51,7 +51,7 @@ EOF
 func TestAccCertificate_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckUserDestroy("artifactory_certificate.foobar"),
+		CheckDestroy: testAccCheckCertificateDestroy("artifactory_certificate.foobar"),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
