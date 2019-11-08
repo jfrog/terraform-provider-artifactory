@@ -2,14 +2,14 @@ package artifactory
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
-	"os"
 	"io"
-    "crypto/sha256"
-    "encoding/hex"
+	"os"
 )
 
 func datasourceArtifactoryFile() *schema.Resource {
@@ -114,12 +114,12 @@ func resourceArtifactRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		defer outFile.Close()
-		
+
 		fileInfo, _, err = c.V1.Artifacts.FileContents(context.Background(), repository, path, outFile)
 		if err != nil {
 			return err
 		}
-	} 
+	}
 
 	return packFileInfo(fileInfo, d)
 }
@@ -141,7 +141,7 @@ func SkipDownload(fileInfo *v1.FileInfo, path string) (bool, error) {
 		} else if err != nil {
 			return dontSkip, err
 		} else {
-			return dontSkip, fmt.Errorf("Local file differs from upstream version") 
+			return dontSkip, fmt.Errorf("Local file differs from upstream version")
 		}
 	} else {
 		return dontSkip, nil
@@ -149,25 +149,25 @@ func SkipDownload(fileInfo *v1.FileInfo, path string) (bool, error) {
 }
 
 func FileExists(path string) bool {
-    if _, err := os.Stat(path); err != nil {
-        if os.IsNotExist(err) {
-            return false
-        }
-    }
-    return true
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
 
 func VerifySha256Checksum(path string, expectedSha256 string) (bool, error) {
 	f, err := os.Open(path)
 	if err != nil {
-	    return false, err
+		return false, err
 	}
 	defer f.Close()
 
 	hasher := sha256.New()
 
 	if _, err := io.Copy(hasher, f); err != nil {
-	    return false, err
+		return false, err
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)) == expectedSha256, nil

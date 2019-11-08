@@ -1,12 +1,12 @@
 package artifactory
 
 import (
-	"testing"
-    "io/ioutil"
-    "os"
-	"github.com/stretchr/testify/assert"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"testing"
 )
 
 func TestSkipDownload(t *testing.T) {
@@ -48,13 +48,13 @@ func TestFileExists(t *testing.T) {
 
 	assert.Nil(t, err)
 
-    defer CloseAndRemove(tmpFile)
+	defer CloseAndRemove(tmpFile)
 
-    existingPath, _ := filepath.Abs(tmpFile.Name())
-    nonExistingPath := existingPath + "-doesnt-exist"
+	existingPath, _ := filepath.Abs(tmpFile.Name())
+	nonExistingPath := existingPath + "-doesnt-exist"
 
-   	assert.Equal(t, true, FileExists(existingPath))
-   	assert.Equal(t, false, FileExists(nonExistingPath))
+	assert.Equal(t, true, FileExists(existingPath))
+	assert.Equal(t, false, FileExists(nonExistingPath))
 }
 
 func TestVerifySha256Checksum(t *testing.T) {
