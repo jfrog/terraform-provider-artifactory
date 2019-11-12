@@ -14,14 +14,7 @@ import (
 
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
-		Create: nil,
 		Read:   dataSourceArtifactRead,
-		Update: nil,
-		Delete: nil,
-
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
