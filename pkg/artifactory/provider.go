@@ -73,7 +73,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"artifactory_file": datasourceArtifactoryFile(),
+			"artifactory_file": dataSourceArtifactoryFile(),
 		},
 
 		ConfigureFunc: providerConfigure,

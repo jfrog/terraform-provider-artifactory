@@ -12,10 +12,10 @@ import (
 	"os"
 )
 
-func datasourceArtifactoryFile() *schema.Resource {
+func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
 		Create: nil,
-		Read:   resourceArtifactRead,
+		Read:   dataSourceArtifactRead,
 		Update: nil,
 		Delete: nil,
 
@@ -89,7 +89,7 @@ func datasourceArtifactoryFile() *schema.Resource {
 	}
 }
 
-func resourceArtifactRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceArtifactRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
 	repository := d.Get("repository").(string)
