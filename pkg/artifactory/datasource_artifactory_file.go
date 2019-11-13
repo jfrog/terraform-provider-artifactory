@@ -14,7 +14,7 @@ import (
 
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceArtifactRead,
+		Read: dataSourceFileRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
@@ -71,7 +71,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 			},
 			"output_path": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"force_overwrite": {
 				Type:     schema.TypeBool,
@@ -82,7 +82,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 	}
 }
 
-func dataSourceArtifactRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*artifactory.Artifactory)
 
 	repository := d.Get("repository").(string)
@@ -164,32 +164,4 @@ func VerifySha256Checksum(path string, expectedSha256 string) (bool, error) {
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)) == expectedSha256, nil
-}
-
-func packFileInfo(fileInfo *v1.FileInfo, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
-
-	d.SetId(*fileInfo.DownloadUri)
-
-	logErr(d.Set("created", *fileInfo.Created))
-	logErr(d.Set("created_by", *fileInfo.CreatedBy))
-	logErr(d.Set("last_modified", *fileInfo.LastModified))
-	logErr(d.Set("modified_by", *fileInfo.ModifiedBy))
-	logErr(d.Set("last_updated", *fileInfo.LastUpdated))
-	logErr(d.Set("download_uri", *fileInfo.DownloadUri))
-	logErr(d.Set("mimetype", *fileInfo.MimeType))
-	logErr(d.Set("size", *fileInfo.Size))
-
-	if fileInfo.Checksums != nil {
-		logErr(d.Set("md5", *fileInfo.Checksums.Md5))
-		logErr(d.Set("sha1", *fileInfo.Checksums.Sha1))
-		logErr(d.Set("sha256", *fileInfo.Checksums.Sha256))
-	}
-
-	if hasErr {
-		return fmt.Errorf("failed to pack fileInfo")
-	}
-
-	return nil
 }
