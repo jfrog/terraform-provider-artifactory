@@ -14,7 +14,7 @@ import (
 
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceArtifactRead,
+		Read: dataSourceArtifactRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
