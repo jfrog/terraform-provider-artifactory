@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"io"
 	"os"
@@ -95,12 +94,10 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	skip, err := SkipDownload(fileInfo, outputPath)
-	if err != nil && !forceOverwrite {
-		return err
-	}
+	fileExists := FileExists(outputPath)
+	chksMatches, _ := VerifySha256Checksum(outputPath, *fileInfo.Checksums.Sha256)
 
-	if !skip {
+	if !fileExists || (!chksMatches && forceOverwrite) {
 		outFile, err := os.Create(outputPath)
 		if err != nil {
 			return err
@@ -112,33 +109,11 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
+	} else if !chksMatches {
+		return fmt.Errorf("Local file differs from upstream version")
 	}
 
 	return packFileInfo(fileInfo, d)
-}
-
-func SkipDownload(fileInfo *v1.FileInfo, path string) (bool, error) {
-	const skip = true
-	const dontSkip = false
-
-	if path == "" {
-		// no path specified, nothing to download
-		return skip, nil
-	}
-
-	if FileExists(path) {
-		chks_matches, err := VerifySha256Checksum(path, *fileInfo.Checksums.Sha256)
-
-		if chks_matches {
-			return skip, nil
-		} else if err != nil {
-			return dontSkip, err
-		} else {
-			return dontSkip, fmt.Errorf("Local file differs from upstream version")
-		}
-	} else {
-		return dontSkip, nil
-	}
 }
 
 func FileExists(path string) bool {

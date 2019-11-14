@@ -1,47 +1,12 @@
 package artifactory
 
 import (
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
-
-func TestSkipDownload(t *testing.T) {
-	const testString = "test content"
-	const expectedSha256 = "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72"
-
-	file, err := CreateTempFile(testString)
-
-	assert.Nil(t, err)
-
-	defer CloseAndRemove(file)
-
-	existingPath, _ := filepath.Abs(file.Name())
-	nonExistingPath := existingPath + "-doesnt-exist"
-
-	sha256 := expectedSha256
-	fileInfo := new(v1.FileInfo)
-	fileInfo.Checksums = new(v1.Checksums)
-	fileInfo.Checksums.Sha256 = &sha256
-
-	skip, err := SkipDownload(fileInfo, existingPath)
-	assert.Equal(t, true, skip) // file exists, checksum matches => skip
-	assert.Nil(t, err)
-
-	skip, err = SkipDownload(fileInfo, nonExistingPath)
-	assert.Equal(t, false, skip) // file doesn't exist => dont skip
-	assert.Nil(t, err)
-
-	sha256 = "6666666666666666666666666666666666666666666666666666666666666666"
-	fileInfo.Checksums.Sha256 = &sha256
-
-	skip, err = SkipDownload(fileInfo, existingPath)
-	assert.Equal(t, false, skip) // file exists, checksum doesnt match => dont skip & err
-	assert.NotNil(t, err)
-}
 
 func TestFileExists(t *testing.T) {
 	tmpFile, err := CreateTempFile("test")
