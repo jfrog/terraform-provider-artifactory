@@ -23,6 +23,10 @@ with the proper credentials before it can be used.
     * [Virtual Repositories](./r/artifactory_virtual_repository.html.markdown)
     * [Certificates](./r/artifactory_certificate.html.markdown)
 
+- Available Datasources
+    * [File](./r/artifactory_file.html.markdown)
+    * [FileInfo](./r/artifactory_fileinfo.html.markdown)
+
 - Deprecated Resources
     * [Permission Targets (V1 API)](./r/artifactory_permission_target_v1.html.markdown)
 

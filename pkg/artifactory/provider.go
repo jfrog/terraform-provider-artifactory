@@ -72,6 +72,11 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 		},
 
+		DataSourcesMap: map[string]*schema.Resource{
+			"artifactory_file":     dataSourceArtifactoryFile(),
+			"artifactory_fileinfo": dataSourceArtifactoryFileInfo(),
+		},
+
 		ConfigureFunc: providerConfigure,
 	}
 }
