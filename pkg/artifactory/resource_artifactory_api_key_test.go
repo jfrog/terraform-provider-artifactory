@@ -3,7 +3,6 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
@@ -24,7 +23,7 @@ func TestAccApiKey(t *testing.T) {
 			{
 				Config: apiKey,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_api_key", "api_key"),
+					resource.TestCheckResourceAttrSet("artifactory_api_key.foobar", "api_key"),
 				),
 			},
 		},
@@ -40,14 +39,14 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		_, resp, err := client.V1.Security.GetApiKey(context.Background())
+		key, _, err := client.V1.Security.GetApiKey(context.Background())
 
-		if resp.StatusCode == http.StatusNotFound {
-			return nil
-		} else if err != nil {
+		if err != nil {
 			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
+		} else if key.ApiKey != nil {
 			return fmt.Errorf("error: API key %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
 }
