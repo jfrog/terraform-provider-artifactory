@@ -253,6 +253,20 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"nuget"},
 			},
+			"content_synchronisation": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"nuget": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -332,6 +346,13 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.FeedContextPath = d.getStringRef("feed_context_path", true)
 	repo.DownloadContextPath = d.getStringRef("download_context_path", true)
 	repo.V3FeedUrl = d.getStringRef("v3_feed_url", true)
+	if v, ok := d.GetOk("content_synchronisation"); ok {
+		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
+		enabled := contentSynchronisationConfig["enabled"].(bool)
+		repo.ContentSynchronisation = &v1.ContentSynchronisation{
+			Enabled: &enabled,
+		}
+	}
 	if v, ok := d.GetOk("nuget"); ok {
 		nugetConfig := v.([]interface{})[0].(map[string]interface{})
 		feedContextPath := nugetConfig["feed_context_path"].(string)
@@ -395,6 +416,13 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("feed_context_path", repo.FeedContextPath))
 	logErr(d.Set("download_context_path", repo.DownloadContextPath))
 	logErr(d.Set("v3_feed_url", repo.V3FeedUrl))
+	if repo.ContentSynchronisation != nil {
+		logErr(d.Set("content_synchronisation", []interface{}{
+			map[string]*bool{
+				"enabled": repo.ContentSynchronisation.Enabled,
+			},
+		}))
+	}
 	if repo.Nuget != nil {
 		logErr(d.Set("nuget", []interface{}{
 			map[string]*string{
