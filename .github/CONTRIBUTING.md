@@ -56,6 +56,6 @@ Releasing components is completely automated. The process of releasing will begi
 go-artifactory endeavours to avoid external dependencies.
 
 ## Make changes to the Pipelines build
-go-stride uses Bitbucket Pipelines for it's continuous integration. The build scripts are defined in `bitbucket-pipelines.yml`.
+go-stride uses github actions for it's continuous integration. The build scripts are defined in `.github/workflows/main.yml`.
 
 [IssueTracker]: https://github.com/atlassian/terraform-provider-artifactory/issues
