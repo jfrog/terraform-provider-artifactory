@@ -39,11 +39,12 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 
 const remoteRepoNuget = `
 resource "artifactory_remote_repository" "terraform-remote-test-repo-nuget" {
-	key               = "terraform-remote-test-repo-nuget"
-	url               = "https://www.nuget.org/"
-	repo_layout_ref   = "nuget-default"
-    package_type      = "nuget"
-	feed_context_path = "/api/notdefault"
+	key               		   = "terraform-remote-test-repo-nuget"
+	url               		   = "https://www.nuget.org/"
+	repo_layout_ref   		   = "nuget-default"
+    package_type      		   = "nuget"
+	feed_context_path 		   = "/api/notdefault"
+	force_nuget_authentication = true
 }`
 
 func TestAccRemoteRepository_nugetNew(t *testing.T) {
@@ -58,6 +59,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "key", "terraform-remote-test-repo-nuget"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "v3_feed_url", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "feed_context_path", "/api/notdefault"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-nuget", "force_nuget_authentication", "true"),
 				),
 			},
 		},
@@ -100,6 +102,7 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	enable_cookie_management              = true
 	remote_repo_checksum_policy_type      = "ignore-and-generate"
 	client_tls_certificate				  = ""
+	force_nuget_authentication 			  = true
 }`
 
 func TestAccRemoteRepository_full(t *testing.T) {
@@ -146,6 +149,7 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "enable_cookie_management", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "client_tls_certificate", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "remote_repo_checksum_policy_type", "ignore-and-generate"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "force_nuget_authentication", "true"),
 				),
 			},
 		},

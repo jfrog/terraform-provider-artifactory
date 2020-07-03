@@ -46,6 +46,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `yum_root_depth` - (Optional) 
 * `docker_api_version` - (Optional) 
 * `enable_file_lists_indexing` - (Optional) 
+* `force_nuget_authentication` - (Optional, Nuget repos only) 
 
 ## Import
 
