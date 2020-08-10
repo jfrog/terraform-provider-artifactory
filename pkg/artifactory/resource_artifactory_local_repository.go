@@ -133,6 +133,11 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"force_nuget_authentication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -167,6 +172,7 @@ func unmarshalLocalRepository(s *schema.ResourceData) *v1.LocalRepository {
 	repo.SnapshotVersionBehavior = d.getStringRef("snapshot_version_behavior", false)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", false)
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
+	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
 
 	return repo
 }
@@ -219,6 +225,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 		logError(d.Set("snapshot_version_behavior", repo.SnapshotVersionBehavior))
 		logError(d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks))
 		logError(d.Set("xray_index", repo.XrayIndex))
+		logError(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
 
 		if hasErr {
 			return fmt.Errorf("failed to marshal group")

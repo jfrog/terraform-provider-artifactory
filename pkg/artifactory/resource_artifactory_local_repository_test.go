@@ -57,6 +57,7 @@ resource "artifactory_local_repository" "terraform-local-test-repo-full" {
 	calculate_yum_metadata          = false
 	yum_root_depth                  = 0
 	docker_api_version              = "V2"
+	force_nuget_authentication		= true
 }`
 
 func TestAccLocalRepository_full(t *testing.T) {
@@ -90,6 +91,7 @@ func TestAccLocalRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "calculate_yum_metadata", "false"),
 					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "yum_root_depth", "0"),
 					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "docker_api_version", "V2"),
+					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "force_nuget_authentication", "true"),
 				),
 			},
 		},

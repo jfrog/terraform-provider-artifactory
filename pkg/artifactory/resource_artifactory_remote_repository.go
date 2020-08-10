@@ -253,6 +253,11 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"nuget"},
 			},
+			"force_nuget_authentication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"content_synchronisation": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -346,6 +351,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.FeedContextPath = d.getStringRef("feed_context_path", true)
 	repo.DownloadContextPath = d.getStringRef("download_context_path", true)
 	repo.V3FeedUrl = d.getStringRef("v3_feed_url", true)
+	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
@@ -416,6 +422,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("feed_context_path", repo.FeedContextPath))
 	logErr(d.Set("download_context_path", repo.DownloadContextPath))
 	logErr(d.Set("v3_feed_url", repo.V3FeedUrl))
+	logErr(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
 	if repo.ContentSynchronisation != nil {
 		logErr(d.Set("content_synchronisation", []interface{}{
 			map[string]*bool{
