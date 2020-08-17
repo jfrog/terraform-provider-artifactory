@@ -41,13 +41,11 @@ resource "artifactory_replication_config" "foo-rep" {
 	cron_exp = "0 0 * * * ?"
 	enable_event_replication = true
 	
-	replications = [
-		{
-			url = "$var.artifactory_url"
-			username = "$var.artifactory_username"
-			password = "$var.artifactory_password"
-		}
-	]
+	replications {
+		url = "$var.artifactory_url"
+		username = "$var.artifactory_username"
+		password = "$var.artifactory_password"
+	}
 }
 ```
 

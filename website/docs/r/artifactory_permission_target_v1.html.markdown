@@ -19,18 +19,14 @@ Provides an Artifactory permission target resource. This can be used to create a
 resource "artifactory_permission_targets" "terraform-test-permission" {
   name          = "testpermission"
   repositories = ["myrepo"]
-  users = [
-    {
-      name = "test_user"
-      permissions = ["r", "w"]
-    }
-  ]
-  groups = [
-    {
-      name        = "readers"
-      permissions = ["r"]
-    }
-  ]
+  users {
+    name = "test_user"
+    permissions = ["r", "w"]
+  }
+  groups {
+    name        = "readers"
+    permissions = ["r"]
+  }
 }
 ```
 
