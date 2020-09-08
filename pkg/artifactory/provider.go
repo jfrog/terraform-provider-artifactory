@@ -5,11 +5,24 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
+	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
+	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
+	"github.com/jfrog/jfrog-client-go/artifactory/usage"
+	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform/version"
 )
+
+var ProviderVersion = "2.1.0"
+
+type ArtClient struct {
+	ArtOld *artifactoryold.Artifactory
+	ArtNew *artifactorynew.ArtifactoryServicesManager
+}
 
 // Artifactory Provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
@@ -33,14 +46,6 @@ func Provider() terraform.ResourceProvider {
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
-			},
-			"token": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_TOKEN", nil),
-				ConflictsWith: []string{"api_key"},
-				Deprecated:    "Since v1.5. Renamed to api_key",
 			},
 			"api_key": {
 				Type:          schema.TypeString,
@@ -93,43 +98,75 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	// Deprecated
-	token := d.Get("token").(string)
+	log.SetLogger(log.NewLogger(log.INFO, nil))
 
 	var client *http.Client
+	details := auth.NewArtifactoryDetails()
+
+	url := d.Get("url").(string)
+	if url[len(url)-1] != '/' {
+		url += "/"
+	}
+	details.SetUrl(url)
+
 	if username != "" && password != "" {
+		details.SetUser(username)
+		details.SetPassword(password)
 		tp := transport.BasicAuth{
 			Username: username,
 			Password: password,
 		}
 		client = tp.Client()
 	} else if apiKey != "" {
+		details.SetApiKey(apiKey)
 		tp := &transport.ApiKeyAuth{
 			ApiKey: apiKey,
 		}
 		client = tp.Client()
 	} else if accessToken != "" {
+		details.SetAccessToken(accessToken)
 		tp := &transport.AccessTokenAuth{
 			AccessToken: accessToken,
-		}
-		client = tp.Client()
-	} else if token != "" {
-		tp := &transport.ApiKeyAuth{
-			ApiKey: token,
 		}
 		client = tp.Client()
 	} else {
 		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
 	}
 
-	rt, err := artifactory.NewClient(d.Get("url").(string), client)
+	config, err := config.NewConfigBuilder().
+		SetServiceDetails(details).
+		SetDryRun(false).
+		Build()
 
 	if err != nil {
 		return nil, err
-	} else if _, resp, err := rt.V1.System.Ping(context.Background()); err != nil {
+	}
+
+	rtold, err := artifactoryold.NewClient(d.Get("url").(string), client)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rtnew, err := artifactorynew.New(&details, config)
+
+	if err != nil {
+		return nil, err
+	} else if _, resp, err := rtold.V1.System.Ping(context.Background()); err != nil {
 		return nil, err
 	} else if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to ping server. Got %d", resp.StatusCode)
+	} else if _, err := rtnew.Ping(); err != nil {
+		return nil, err
+	}
+
+	productid := "terraform-provider-artifactory/" + ProviderVersion
+	commandid := "Terraform/" + version.Version
+	usage.SendReportUsage(productid, commandid, rtnew)
+
+	rt := &ArtClient{
+		ArtOld: rtold,
+		ArtNew: rtnew,
 	}
 
 	return rt, nil

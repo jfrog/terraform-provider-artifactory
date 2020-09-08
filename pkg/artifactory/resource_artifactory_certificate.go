@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -116,7 +115,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 }
 
 func findCertificate(d *schema.ResourceData, m interface{}) (*v1.CertificateDetails, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	certs, _, err := c.V1.Security.GetCertificates(context.Background())
 	if err != nil {
@@ -168,7 +167,7 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	_, _, err := c.V1.Security.AddCertificate(context.Background(), d.Id(), strings.NewReader(d.Get("content").(string)))
 	if err != nil {
@@ -179,7 +178,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	_, _, err := c.V1.Security.DeleteCertificate(context.Background(), d.Id())
 	if err != nil {

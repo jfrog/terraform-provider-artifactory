@@ -132,7 +132,7 @@ func packVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) e
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unpackVirtualRepository(d)
 
@@ -146,7 +146,7 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetVirtual(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
@@ -160,7 +160,7 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unpackVirtualRepository(d)
 
@@ -174,7 +174,7 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	repo := unpackVirtualRepository(d)
 
 	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
@@ -186,7 +186,7 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	key := d.Id()
 	_, resp, err := c.V1.Repositories.GetVirtual(context.Background(), key)

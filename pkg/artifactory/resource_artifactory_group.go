@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -78,7 +77,7 @@ func unmarshalGroup(s *schema.ResourceData) (*v1.Group, error) {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	group, err := unmarshalGroup(d)
 
@@ -94,7 +93,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(*group.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*artifactory.Artifactory)
+		c := m.(*ArtClient).ArtOld
 		_, resp, err := c.V1.Security.GetGroup(context.Background(), d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing group: %s", err))
@@ -109,7 +108,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	group, resp, err := c.V1.Security.GetGroup(context.Background(), d.Id())
 
@@ -137,7 +136,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	group, err := unmarshalGroup(d)
 	if err != nil {
 		return err
@@ -152,7 +151,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	group, err := unmarshalGroup(d)
 	if err != nil {
 		return err
@@ -168,7 +167,7 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	groupName := d.Id()
 	_, resp, err := c.V1.Security.GetGroup(context.Background(), groupName)

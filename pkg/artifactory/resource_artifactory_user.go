@@ -121,7 +121,7 @@ func packUser(user *v1.User, d *schema.ResourceData) error {
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	user := unpackUser(d)
 
@@ -140,7 +140,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(*user.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*artifactory.Artifactory)
+		c := m.(*ArtClient).ArtOld
 		_, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
@@ -155,7 +155,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
@@ -169,7 +169,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	user := unpackUser(d)
 	if user.Password != nil && len(*user.Password) == 0 {
@@ -186,7 +186,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	user := unpackUser(d)
 	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
 	if resp.StatusCode == http.StatusNotFound {

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -54,7 +53,7 @@ func packApiKey(apiKey *v1.ApiKey, d *schema.ResourceData) error {
 }
 
 func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	apiKey, _, err := c.V1.Security.CreateApiKey(context.Background())
 	if err != nil {
@@ -66,7 +65,7 @@ func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	apiKey, resp, err := c.V1.Security.GetApiKey(context.Background())
 	if resp.StatusCode == http.StatusNotFound {
@@ -80,7 +79,7 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceApiKeyDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	_, resp, err := c.V1.Security.RevokeApiKey(context.Background())
 	if resp.StatusCode == http.StatusNotFound {
 		return nil

@@ -3,7 +3,6 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
@@ -157,7 +156,7 @@ func packSingleReplicationConfig(replicationConfig *v1.ReplicationConfig, d *sch
 }
 
 func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig := unpackSingleReplicationConfig(d)
 
@@ -171,7 +170,7 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig, _, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), d.Id())
 
@@ -185,7 +184,7 @@ func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig := unpackSingleReplicationConfig(d)
 	_, err := c.V1.Artifacts.UpdateSingleRepositoryReplicationConfig(context.Background(), d.Id(), replicationConfig)
@@ -199,14 +198,14 @@ func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSingleReplicationConfigDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	replicationConfig := unpackSingleReplicationConfig(d)
 	_, err := c.V1.Artifacts.DeleteRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey)
 	return err
 }
 
 func resourceSingleReplicationConfigExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationName := d.Id()
 	replicationConfig, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)

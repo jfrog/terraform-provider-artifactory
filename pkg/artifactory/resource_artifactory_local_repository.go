@@ -178,7 +178,7 @@ func unmarshalLocalRepository(s *schema.ResourceData) *v1.LocalRepository {
 }
 
 func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unmarshalLocalRepository(d)
 
@@ -192,7 +192,7 @@ func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
 
@@ -236,7 +236,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unmarshalLocalRepository(d)
 	_, err := c.V1.Repositories.UpdateLocal(context.Background(), d.Id(), repo)
@@ -250,7 +250,7 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	repo := unmarshalLocalRepository(d)
 
 	resp, err := c.V1.Repositories.DeleteLocal(context.Background(), *repo.Key)
@@ -263,7 +263,7 @@ func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	_, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
 

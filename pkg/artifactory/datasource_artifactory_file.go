@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 	"io"
 	"os"
@@ -82,7 +81,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 }
 
 func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)

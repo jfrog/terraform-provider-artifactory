@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v2 "github.com/atlassian/go-artifactory/v2/artifactory/v2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -313,7 +312,7 @@ func packPermissionTarget(permissionTarget *v2.PermissionTarget, d *schema.Resou
 }
 
 func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	if _, ok := d.GetOk("repositories"); ok {
 		return resourcePermissionTargetV1CreateOrReplace(d, m)
@@ -328,7 +327,7 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 
 	d.SetId(*permissionTarget.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*artifactory.Artifactory)
+		c := m.(*ArtClient).ArtOld
 		exists, err := c.V2.Security.HasPermissionTarget(context.Background(), d.Id())
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))
@@ -343,7 +342,7 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	if _, ok := d.GetOk("repositories"); ok {
 		return resourcePermissionTargetV1Read(d, m)
@@ -361,7 +360,7 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	if _, ok := d.GetOk("repositories"); ok {
 		return resourcePermissionTargetV1CreateOrReplace(d, m)
@@ -377,7 +376,7 @@ func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	if _, ok := d.GetOk("repositories"); ok {
 		return resourcePermissionTargetV1Delete(d, m)
@@ -393,7 +392,7 @@ func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	if _, ok := d.GetOk("repositories"); ok {
 		_, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())

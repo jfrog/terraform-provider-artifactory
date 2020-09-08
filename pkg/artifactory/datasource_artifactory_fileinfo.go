@@ -3,7 +3,6 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -70,7 +69,7 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 }
 
 func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -98,7 +97,7 @@ func hashPrincipal(o interface{}) int {
 }
 
 func resourcePermissionTargetV1CreateOrReplace(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	permissionTarget := unpackPermissionTargetV1(d)
 	_, err := c.V1.Security.CreateOrReplacePermissionTargets(context.Background(), *permissionTarget.Name, permissionTarget)
@@ -111,7 +110,7 @@ func resourcePermissionTargetV1CreateOrReplace(d *schema.ResourceData, m interfa
 }
 
 func resourcePermissionTargetV1Read(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	permissionTarget, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
@@ -125,7 +124,7 @@ func resourcePermissionTargetV1Read(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetV1Delete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	permissionTarget := unpackPermissionTargetV1(d)
 	_, resp, err := c.V1.Security.DeletePermissionTargets(context.Background(), *permissionTarget.Name)
 

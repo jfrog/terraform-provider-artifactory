@@ -223,7 +223,7 @@ func packReplicationConfig(replicationConfig *v1.ReplicationConfig, d *schema.Re
 }
 
 func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig := unpackReplicationConfig(d)
 
@@ -237,7 +237,7 @@ func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig, _, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), d.Id())
 
@@ -249,7 +249,7 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationConfig := unpackReplicationConfig(d)
 	_, err := c.V1.Artifacts.UpdateRepositoryReplicationConfig(context.Background(), d.Id(), replicationConfig)
@@ -263,14 +263,14 @@ func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	replicationConfig := unpackReplicationConfig(d)
 	_, err := c.V1.Artifacts.DeleteRepositoryReplicationConfig(context.Background(), *replicationConfig.RepoKey)
 	return err
 }
 
 func resourceReplicationConfigExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	replicationName := d.Id()
 	_, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)

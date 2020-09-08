@@ -451,7 +451,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unpackRemoteRepo(d)
 	_, err := c.V1.Repositories.CreateRemote(context.Background(), repo)
@@ -464,7 +464,7 @@ func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetRemote(context.Background(), d.Id())
 	if resp.StatusCode == http.StatusNotFound {
@@ -478,7 +478,7 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	repo := unpackRemoteRepo(d)
 
@@ -492,7 +492,7 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 	repo := unpackRemoteRepo(d)
 
 	resp, err := c.V1.Repositories.DeleteRemote(context.Background(), *repo.Key)
@@ -505,7 +505,7 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*artifactory.Artifactory)
+	c := m.(*ArtClient).ArtOld
 
 	key := d.Id()
 	_, resp, err := c.V1.Repositories.GetRemote(context.Background(), key)
