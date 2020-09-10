@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_user"
-sidebar_current: "docs-artifactory-resource-user"
-description: |-
-  Provides an user resource.
----
-
-# artifactory_user
+# Artifactory User Resource
 
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
 

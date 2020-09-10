@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_api_key"
-sidebar_current: "docs-artifactory-resource-api-key"
-description: |-
-  Provides an API key resource.
----
-
-# artifactory_api_key
+# Artifactory API Key Resource
 
 Provides an Artifactory API key resource. This can be used to create and manage Artifactory API keys.
 

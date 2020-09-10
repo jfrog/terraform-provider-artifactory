@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_single_replication_config"
-sidebar_current: "docs-artifactory-resource-single-replication-config"
-description: |-
-  Provides a single replication config resource.
----
-
-# artifactory_single_replication_config
+# Artifactory Single Replication Config Resource
 
 Provides an Artifactory single replication config resource. This can be used to create and manage a single Artifactory
 replication. Primarily used when pull replication is needed.

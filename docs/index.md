@@ -1,11 +1,3 @@
----
-layout: "artifactory"
-page_title: "Provider: Artifactory"
-sidebar_current: "docs-artifactory-index"
-description: |-
-  The Artifactory provider is used to deploy artifactory admin resources
----
-
 # Artifactory Provider
 
 The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact with the
@@ -13,22 +5,22 @@ resources supported by Artifactory. The provider needs to be configured
 with the proper credentials before it can be used.
 
 - Available Resources
-    * [Groups](./r/artifactory_group.html.markdown)
-    * [Users](./r/artifactory_user.html.markdown)
-    * [Permission Target](./r/artifactory_permission_target.html.markdown)
-    * [Local Repositories](./r/artifactory_local_repository.html.markdown)
-    * [Remote Repositories](./r/artifactory_remote_repository.html.markdown)
-    * [Replication Configurations](./r/artifactory_replication_config.html.markdown)
-    * [Single Replication Configurations](./r/artifactory_single_replication_config.html.markdown)
-    * [Virtual Repositories](./r/artifactory_virtual_repository.html.markdown)
-    * [Certificates](./r/artifactory_certificate.html.markdown)
+    * [Groups](./resources/artifactory_group.md)
+    * [Users](./resources/artifactory_user.md)
+    * [Permission Target](./resources/artifactory_permission_target.md)
+    * [Local Repositories](./resources/artifactory_local_repository.md)
+    * [Remote Repositories](./resources/artifactory_remote_repository.md)
+    * [Replication Configurations](./resources/artifactory_replication_config.md)
+    * [Single Replication Configurations](./resources/artifactory_single_replication_config.md)
+    * [Virtual Repositories](./resources/artifactory_virtual_repository.md)
+    * [Certificates](./resources/artifactory_certificate.md)
 
 - Available Datasources
-    * [File](./r/artifactory_file.html.markdown)
-    * [FileInfo](./r/artifactory_fileinfo.html.markdown)
+    * [File](./data-sources/artifactory_file.md)
+    * [FileInfo](./data-sources/artifactory_fileinfo.md)
 
 - Deprecated Resources
-    * [Permission Targets (V1 API)](./r/artifactory_permission_target_v1.html.markdown)
+    * [Permission Targets (V1 API)](./resources/artifactory_permission_target_v1.md)
 
 ## Example Usage
 ```hcl

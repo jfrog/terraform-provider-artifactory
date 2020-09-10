@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_local_repository"
-sidebar_current: "docs-artifactory-resource-local-repository"
-description: |-
-  Provides an local repositroy resource.
----
-
-# artifactory_local_repository
+# Artifactory Local Repository Resource
 
 Provides an Artifactory local repository resource. This can be used to create and manage Artifactory local repositories.
 

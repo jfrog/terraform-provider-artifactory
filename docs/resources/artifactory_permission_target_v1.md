@@ -1,14 +1,6 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_permission_targets"
-sidebar_current: "docs-artifactory-resource-permission-targets-v1"
-description: |-
-  Provides an permission target resource.
----
+# Artifactory Permission Targets Resource
 
-# artifactory_permission_targets
-
-**Deprecated since Artifactory 6.6.0. Use [V2](./artifactory_permission_target.html.markdown)**
+**Deprecated since Artifactory 6.6.0. Use [V2](./artifactory_permission_target.md)**
 
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.
 

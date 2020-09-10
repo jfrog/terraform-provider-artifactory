@@ -1,23 +1,14 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_file"
-sidebar_current: "docs-artifactory-datasource-file"
-description: |-
-  Provides a file datasource.
----
+# Artifactory File Info Data Source
 
-# artifactory_file
-
-Provides an Artifactory file datasource. This can be used to download a file from a given Artifactory repository.
+Provides an Artifactory fileinfo datasource. This can be used to read metadata of files stored in Artifactory repositories.
 
 ## Example Usage
 
 ```hcl
 # 
-data "artifactory_file" "my-file" {
+data "artifactory_fileinfo" "my-file" {
    repository = "repo-key"
-   path = "/path/to/the/artifact.zip"
-   output_path = "tmp/artifact.zip"
+   path = "/path/to/the/artifact.zip" 
 }
 ```
 
@@ -27,8 +18,6 @@ The following arguments are supported:
 
 * `repository` - (Required) Name of the repository where the file is stored.
 * `path` - (Required) The path to the file within the repository.
-* `output_path` - (Required) The local path the file should be downloaded to.
-* `force_overwrite` - (Optional) If set to true, an existing file in the output_path will be overwritten. Default: false
 
 ## Attribute Reference
 

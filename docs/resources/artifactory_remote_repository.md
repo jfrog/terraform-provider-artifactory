@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_remote_repository"
-sidebar_current: "docs-artifactory-resource-remote-repository"
-description: |-
-  Provides an remote repository resource.
----
-
-# artifactory_remote_repository
+# Artifactory Remote Repository Resource
 
 Provides an Artifactory remote repository resource. This can be used to create and manage Artifactory remote repositories.
 

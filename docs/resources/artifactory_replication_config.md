@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_replication_config"
-sidebar_current: "docs-artifactory-resource-replication-config"
-description: |-
-  Provides an replication config resource.
----
-
-# artifactory_replication_config
+# Artifactory Replication Config Resource
 
 Provides an Artifactory replication config resource. This can be used to create and manage Artifactory replications.
 

@@ -1,12 +1,4 @@
----
-layout: "artifactory"
-page_title: "Artifactory: artifactory_certificate"
-sidebar_current: "docs-artifactory-resource-certificate"
-description: |-
-  Provides a certificate resource.
----
-
-# artifactory_certificate
+# Artifactory Certificate Resource
 
 Provides an Artifactory certificate resource. This can be used to create and manage Artifactory certificates which can be used as client authentication against remote repositories.
 
