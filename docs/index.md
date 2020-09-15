@@ -24,11 +24,11 @@ with the proper credentials before it can be used.
 
 ## Example Usage
 ```hcl
-# Required for [Terraform 0.13](https://www.terraform.io/upgrade-guides/0-13.html)
+# Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
 terraform {
   required_providers {
     artifactory = {
-      source  = "terraform.example.com/atlassian/artifactory"
+      source  = "registry.terraform.io/jfrog/artifactory"
       version = "2.0.0"
     }
   }
@@ -52,6 +52,7 @@ resource "artifactory_local_repository" "pypi-libs" {
 
 ## Authentication
 The Artifactory provider supports multiple means of authentication. The following methods are supported:
+
     * Basic Auth
     * Bearer Token
     * JFrog API Key Header
