@@ -4,24 +4,6 @@ The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact w
 resources supported by Artifactory. The provider needs to be configured
 with the proper credentials before it can be used.
 
-- Available Resources
-    * [Groups](./resources/artifactory_group.md)
-    * [Users](./resources/artifactory_user.md)
-    * [Permission Target](./resources/artifactory_permission_target.md)
-    * [Local Repositories](./resources/artifactory_local_repository.md)
-    * [Remote Repositories](./resources/artifactory_remote_repository.md)
-    * [Replication Configurations](./resources/artifactory_replication_config.md)
-    * [Single Replication Configurations](./resources/artifactory_single_replication_config.md)
-    * [Virtual Repositories](./resources/artifactory_virtual_repository.md)
-    * [Certificates](./resources/artifactory_certificate.md)
-
-- Available Datasources
-    * [File](./data-sources/artifactory_file.md)
-    * [FileInfo](./data-sources/artifactory_fileinfo.md)
-
-- Deprecated Resources
-    * [Permission Targets (V1 API)](./resources/artifactory_permission_target_v1.md)
-
 ## Example Usage
 ```hcl
 # Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)

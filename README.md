@@ -3,7 +3,7 @@
 [![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/build/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jfrog/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/jfrog/terraform-provider-artifactory)
 
-To use this provider in your Terraform module, follow the documentation [here](docs/index.md).
+To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
 
 ## Build the Provider
 If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
