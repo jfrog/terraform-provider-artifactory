@@ -4,6 +4,9 @@ The [Artifactory](https://jfrog.com/artifactory/) provider is used to interact w
 resources supported by Artifactory. The provider needs to be configured
 with the proper credentials before it can be used.
 
+Links to documentation for specific resources can be found in the table of
+contents to the left.
+
 ## Example Usage
 ```hcl
 # Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
