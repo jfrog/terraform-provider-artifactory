@@ -1,6 +1,6 @@
 # Terraform Provider Artifactory
 
-[![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/build/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
+[![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/release/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jfrog/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/jfrog/terraform-provider-artifactory)
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
