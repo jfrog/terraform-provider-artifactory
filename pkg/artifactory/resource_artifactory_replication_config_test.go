@@ -22,13 +22,11 @@ resource "artifactory_replication_config" "lib-local" {
 	cron_exp = "0 0 * * * ?"
 	enable_event_replication = true
 	
-	replications = [
-		{
-			url = "%s"
-			username = "%s"
-			password = "%s"
-		}
-	]
+	replications {
+		url = "%s"
+		username = "%s"
+		password = "%s"
+	}
 }
 `
 

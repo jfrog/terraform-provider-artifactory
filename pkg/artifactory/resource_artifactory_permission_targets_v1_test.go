@@ -14,15 +14,13 @@ const permissionV1Basic = `
 resource "artifactory_permission_target" "test-perm" {
 	name 	     = "test-perm"
 	repositories = ["example-repo-local"]
-	users = [
-		{
-			name = "anonymous"
-			permissions = [
-				"r",
-				"w"
-			]
-		}
-    ]
+	users {
+		name = "anonymous"
+		permissions = [
+			"r",
+			"w"
+		]
+	}
 }`
 
 func TestAccPermissionV1_basic(t *testing.T) {
