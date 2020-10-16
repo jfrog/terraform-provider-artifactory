@@ -74,6 +74,7 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
 			"artifactory_certificate":               resourceArtifactoryCertificate(),
 			"artifactory_api_key":                   resourceArtifactoryApiKey(),
+			"artifactory_access_token":              resourceArtifactoryAccessToken(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 		},
