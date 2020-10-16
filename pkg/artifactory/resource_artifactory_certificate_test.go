@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -71,7 +70,8 @@ func TestAccCertificate_full(t *testing.T) {
 
 func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Artifactory)
+		apis := testAccProvider.Meta().(*ArtClient)
+		client := apis.ArtOld
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
