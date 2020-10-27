@@ -182,31 +182,35 @@ func resourceAccessTokenRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAccessTokenDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	// convert end date relative to duration in seconds
-	endDateRelative := d.Get("end_date_relative").(string)
-	if endDateRelative == "" {
-		log.Printf("[DEBUG] Token is not revoked. It will expire at " + d.Get("end_date").(string))
-		return nil
-	}
-
-	duration, err := time.ParseDuration(endDateRelative)
-	if err != nil {
-		return fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", endDateRelative)
-	}
+	client := m.(*ArtClient).ArtOld
 
 	// Artifactory only allows you to revoke a token if the there is no expiry.
 	// Otherwise, Artifactory will ensure the token is revoked at the expiry time.
 	// https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-ViewingandRevokingTokens
 	// https://www.jfrog.com/jira/browse/RTFACT-15293
 
+	// If relative end date is empty, then a fixed end date was set
+	// Therefore, Artifactory will expire the token automatically
+	endDateRelative := d.Get("end_date_relative").(string)
+	if endDateRelative == "" {
+		log.Printf("[DEBUG] Token is not revoked. It will expire at " + d.Get("end_date").(string))
+		return nil
+	}
+
+	// Convert end date relative to duration in seconds
+	duration, err := time.ParseDuration(endDateRelative)
+	if err != nil {
+		return fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", endDateRelative)
+	}
+
+	// If the token has no duration, it does not expire.
+	// Therefore revoke the token.
 	if duration.Seconds() == 0 {
 		log.Printf("[DEBUG] Revoking token")
 		revokeOptions := v1.AccessTokenRevokeOptions{}
 		revokeOptions.Token = d.Get("access_token").(string)
 
-		_, resp, err := c.V1.Security.RevokeToken(context.Background(), revokeOptions)
+		_, resp, err := client.V1.Security.RevokeToken(context.Background(), revokeOptions)
 
 		if resp.StatusCode == http.StatusNotFound {
 			log.Printf("[DEBUG] Token Revoked")
@@ -215,6 +219,7 @@ func resourceAccessTokenDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// If the duration is set, Artifactory will automatically revoke the token.
 	log.Printf("[DEBUG] Token is not revoked. It will expire at " + d.Get("end_date").(string))
 
 	return nil
@@ -289,7 +294,7 @@ func checkGroupExists(client *artifactoryold.Artifactory, name string) (bool, er
 	return true, nil
 }
 
-// inspired by azure ad implementation
+// Inspired by azure ad implementation
 func getDate(d *schema.ResourceData) (*time.Time, *int, error) {
 	var endDate time.Time
 	now := time.Now()

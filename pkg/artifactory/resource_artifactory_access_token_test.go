@@ -16,9 +16,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 )
 
-// We need to create users to test Access Tokens
-// Administrators have different behaviours to non-administratros
-
 const audienceBad = `
 resource "artifactory_user" "existinguser" {
 	name  = "existinguser"
@@ -424,7 +421,7 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 		if err != nil {
 			return err
 		} else if _, resp, err := rtold.V1.System.Ping(context.Background()); err != nil {
-			if resp.StatusCode == 401 {
+			if resp.StatusCode == http.StatusUnauthorized {
 				return nil
 			}
 			return fmt.Errorf("failed to ping server. Got %s", err)

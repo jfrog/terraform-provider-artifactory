@@ -64,7 +64,7 @@ resource "artifactory_access_token" "admin" {
 ### Creates a token with an audience
 ```hcl
 resource "artifactory_access_token" "audience" {
-  username          = "admin"
+  username          = "audience"
   end_date_relative = "1m"
 
   audience = "jfrt@*"
@@ -72,31 +72,70 @@ resource "artifactory_access_token" "audience" {
 }
 ```
 
-### Creates a token with an audience
+### Creates a token with a fixed end date
 ```hcl
-resource "artifactory_access_token" "audience" {
-  username          = "admin"
-  end_date_relative = "1m"
+resource "artifactory_access_token" "fixeddate" {
+  username = "fixeddate"
+  end_date = "2018-01-01T01:02:03Z"
 
-  audience    = "jfrt@*"
-  refreshable = true
+  groups = [
+      "readers",
+  ]
 }
 ```
 
-### Creates a token with a fixed end date
-```hcl
-resource "artifactory_access_token" "audience" {
-  username = "admin"
-  end_date = "2018-01-01T01:02:03Z"
+### Rotate token after it expires
+This example will generate a token that will expire in 1 hour.
 
-  audience    = "jfrt@*"
-  refreshable = true
+If `terraform apply` is run before 1 hour, nothing changes.
+One an hour has passed, `terraform apply` will generate a new token.
+
+```hcl
+resource "time_rotating" "now_plus_1_hours" {
+  rotation_hours = "1"
+}
+
+resource "artifactory_access_token" "rotating" {
+  username = "rotating"
+
+  # the end_date is set to now + 1 hours
+  end_date = time_rotating.now_plus_1_hour.rotation_rfc3339
+
+  groups = [
+      "readers",
+  ]
+}
+```
+
+### Rotate token each terraform apply
+This example will generate a token that will expire in 1 hour.
+
+If `terraform apply` is run before 1 hour, a new token is generated with an expiry of 1 hour.
+
+```hcl
+resource "time_rotating" "now_plus_1_hours" {
+  triggers = {
+    "key" = timestamp()
+  }
+
+  rotation_hours = "1"
+}
+
+resource "artifactory_access_token" "rotating" {
+  username = "rotating"
+
+  # the end_date is set to now + 1 hours
+  end_date = time_rotating.now_plus_1_hour.rotation_rfc3339
+
+  groups = [
+      "readers",
+  ]
 }
 ```
 
 ## Attribute Reference
 
-The following attributes are exported:
+The following arguments are supported:
 
 * `username` - (Required) The username or subject for the token. A non-admin can only specify their own username. Admins can specify any existing username, or a new name for a temporary token. Temporary tokens require `groups` to be set.
 
@@ -106,7 +145,6 @@ The following attributes are exported:
 
     * `end_date_relative` - (Optional) A relative duration for which the token is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are "s", "m", "h".
 
-
 * `groups` - (Optional) List of groups. The token is granted access based on the permissions of the groups. Specify `["*"]` for all groups that the user belongs to. `groups` cannot be specified with `admin_token`.
 * `admin_token` - (Optional) Specify the `instance_id` in this block to grant this token admin privileges. This can only be created when the authenticated user is an admin. `admin_token` cannot be specified with `groups`.
 * `refreshable` - (Optional) Is this token refreshable? Defaults to `false`
@@ -115,13 +153,12 @@ The following attributes are exported:
   Refreshable must be `true` to set the `audience`. 
     
     For instructions to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).
-    
 
-**Note:** Changing **any** field forces a new resource to be created.
+**Notes:**
+- Changing **any** field forces a new resource to be created.
+- Although you can create a refreshable token, by setting `refreshable` to true, the resource does **not** implement a token refresh on subsequent executions of Terraform.
 
-
-
-### Additional Outputs
+The following additional attributes are exported:
 
 * `access_token` - Returns the access token to authenciate to Artifactory
 * `refresh_token` - Returns the refresh token when `refreshable` is true, or an empty string when `refreshable` is false
