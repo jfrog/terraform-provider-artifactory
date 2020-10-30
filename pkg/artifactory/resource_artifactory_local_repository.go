@@ -118,6 +118,10 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"block_pushing_schema_1": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"docker_api_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -161,6 +165,7 @@ func unmarshalLocalRepository(s *schema.ResourceData) *v1.LocalRepository {
 	repo.BlackedOut = d.getBoolRef("blacked_out", false)
 	repo.CalculateYumMetadata = d.getBoolRef("calculate_yum_metadata", false)
 	repo.YumRootDepth = d.getIntRef("yum_root_depth", false)
+	repo.BlockPushingSchema1 = d.getBoolRef("block_pushing_schema1", false)
 	repo.ArchiveBrowsingEnabled = d.getBoolRef("archive_browsing_enabled", false)
 	repo.DockerApiVersion = d.getStringRef("docker_api_verision", false)
 	repo.EnableFileListsIndexing = d.getBoolRef("enable_file_lists_indexing", false)
@@ -215,6 +220,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 		logError(d.Set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled))
 		logError(d.Set("calculate_yum_metadata", repo.CalculateYumMetadata))
 		logError(d.Set("yum_root_depth", repo.YumRootDepth))
+		logError(d.Set("block_pushing_schema1", repo.BlockPushingSchema1))
 		logError(d.Set("docker_api_version", repo.DockerApiVersion))
 		logError(d.Set("enable_file_lists_indexing", repo.EnableFileListsIndexing))
 		logError(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))

@@ -108,6 +108,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 					"pass-thru",
 				}, false),
 			},
+			"block_pushing_schema_1": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"hard_fail": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -333,6 +337,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.Password = d.getStringRef("password", true)
 	repo.PropertySets = d.getSetRef("property_sets")
 	repo.Proxy = d.getStringRef("proxy", true)
+	repo.BlockPushingSchema1 = d.getBoolRef("block_pushing_schema1", false)
 	repo.PyPiRegistryUrl = d.getStringRef("pypi_registry_url", true)
 	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref", true)
 	repo.RetrievalCachePeriodSecs = d.getIntRef("retrieval_cache_period_seconds", true)
@@ -404,6 +409,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("package_type", repo.PackageType))
 	logErr(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))
 	logErr(d.Set("proxy", repo.Proxy))
+	logErr(d.Set("block_pushing_schema1", repo.BlockPushingSchema1))
 	logErr(d.Set("pypi_registry_url", repo.PyPiRegistryUrl))
 	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
 	logErr(d.Set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs))
