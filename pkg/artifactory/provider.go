@@ -11,17 +11,21 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/hashicorp/terraform/version"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
+	artifactoryauth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
+	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/jfrog/jfrog-client-go/xray"
+	xrayauth "github.com/jfrog/jfrog-client-go/xray/auth"
 )
 
 var ProviderVersion = "2.1.0"
 
 type ArtClient struct {
-	ArtOld *artifactoryold.Artifactory
-	ArtNew *artifactorynew.ArtifactoryServicesManager
+	ArtOld     *artifactoryold.Artifactory
+	ArtNew     *artifactorynew.ArtifactoryServicesManager
+	XrayClient *xray.XrayServicesManager
 }
 
 // Artifactory Provider that supports configuration via username+password or a token
@@ -33,6 +37,11 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", nil),
+			},
+			"xray_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("XRAY_URL", nil),
 			},
 			"username": {
 				Type:          schema.TypeString,
@@ -75,6 +84,7 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_certificate":               resourceArtifactoryCertificate(),
 			"artifactory_api_key":                   resourceArtifactoryApiKey(),
 			"artifactory_access_token":              resourceArtifactoryAccessToken(),
+			"artifactory_watch":                     resourceArtifactoryWatch(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 		},
@@ -102,7 +112,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.SetLogger(log.NewLogger(log.INFO, nil))
 
 	var client *http.Client
-	details := auth.NewArtifactoryDetails()
+	details := artifactoryauth.NewArtifactoryDetails()
 
 	url := d.Get("url").(string)
 	if url[len(url)-1] != '/' {
@@ -165,10 +175,59 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	commandid := "Terraform/" + version.Version
 	usage.SendReportUsage(productid, commandid, rtnew)
 
+	var xrayClient *xray.XrayServicesManager
+	if d.Get("xray_url") != nil && d.Get("xray_url").(string) != "" {
+		xrayClient, err = createXrayClient(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	rt := &ArtClient{
-		ArtOld: rtold,
-		ArtNew: rtnew,
+		ArtOld:     rtold,
+		ArtNew:     &rtnew,
+		XrayClient: xrayClient,
 	}
 
 	return rt, nil
+}
+
+func createXrayClient(d *schema.ResourceData) (*xray.XrayServicesManager, error) {
+	details := xrayauth.NewXrayDetails()
+
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	apiKey := d.Get("api_key").(string)
+	accessToken := d.Get("access_token").(string)
+
+	url := d.Get("xray_url").(string)
+	if url[len(url)-1] != '/' {
+		url += "/"
+	}
+	details.SetUrl(url)
+
+	if username != "" && password != "" {
+		details.SetUser(username)
+		details.SetPassword(password)
+	} else if apiKey != "" {
+		details.SetApiKey(apiKey)
+	} else if accessToken != "" {
+		details.SetAccessToken(accessToken)
+	} else {
+		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
+	}
+
+	config, err := config.NewConfigBuilder().
+		SetServiceDetails(details).
+		SetDryRun(false).
+		Build()
+
+	if err != nil {
+		return nil, err
+	}
+
+	cd := auth.ServiceDetails(details)
+	xrayClient, err := xray.New(&cd, config)
+
+	return xrayClient, nil
 }
