@@ -3,8 +3,9 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform/helper/resource"
 	"net/http"
+
+	"github.com/hashicorp/terraform/helper/resource"
 
 	v2 "github.com/atlassian/go-artifactory/v2/artifactory/v2"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -62,6 +63,7 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 							v2.PERM_WRITE,
 							v2.PERM_DELETE,
 							v2.PERM_MANAGE,
+							v2.PERM_MANAGE_XRAY_METADATA,
 						}, false),
 					},
 					Set:      schema.HashString,
