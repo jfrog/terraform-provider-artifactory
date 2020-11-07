@@ -63,7 +63,8 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 							v2.PERM_WRITE,
 							v2.PERM_DELETE,
 							v2.PERM_MANAGE,
-							v2.PERM_MANAGE_XRAY_METADATA,
+							// v2.PERM_MANAGE_XRAY_METADATA,
+							"managedXrayMeta",
 						}, false),
 					},
 					Set:      schema.HashString,
@@ -139,7 +140,7 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 			"includes_pattern": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Default:       "**",
+				Default:       "",
 				Deprecated:    "Since Artifactory 6.6.0+ (provider 1.5). Use /api/v2 endpoint",
 				ConflictsWith: []string{"repo", "build"},
 			},
