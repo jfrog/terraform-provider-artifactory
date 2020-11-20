@@ -8,6 +8,7 @@ state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usages
 ### Create a new Artifactory Access Token for an existing user
+
 ```hcl
 resource "artifactory_access_token" "exising_user" {
   username          = "existing-user"
@@ -15,14 +16,34 @@ resource "artifactory_access_token" "exising_user" {
 }
 ```
 
-### Creates a new token for groups
+Note: This assumes that the user `existing-user` has already been created in Artifactory by different means, i.e. manually or in a separate terraform apply.
+
+### Create a new Artifactory User and Access token
 ```hcl
+resource "artifactory_user" "new_user" {
+  name   = "new_user"
+  email  = "new_user@somewhere.com"
+
+  groups = [
+    "readers",
+  ]
+}
+
 resource "artifactory_access_token" "new_user" {
-  username          = "new-user"
+  username          = artifactory_user.new_user.name
+  end_date_relative = "5m"
+}
+```
+
+### Creates a new token for groups
+This creates a transient user called `temporary-user`.
+```hcl
+resource "artifactory_access_token" "temporary_user" {
+  username          = "temporary-user"
   end_date_relative = "1h"
 
   groups = [
-      "readers",
+    "readers",
   ]
 }
 ```
@@ -44,7 +65,7 @@ resource "artifactory_access_token" "refreshable" {
   refreshable = true
 
   groups = [
-      "readers",
+    "readers",
   ]
 }
 ```
@@ -79,7 +100,7 @@ resource "artifactory_access_token" "fixeddate" {
   end_date = "2018-01-01T01:02:03Z"
 
   groups = [
-      "readers",
+    "readers",
   ]
 }
 ```
@@ -102,7 +123,7 @@ resource "artifactory_access_token" "rotating" {
   end_date = time_rotating.now_plus_1_hour.rotation_rfc3339
 
   groups = [
-      "readers",
+    "readers",
   ]
 }
 ```
@@ -128,7 +149,7 @@ resource "artifactory_access_token" "rotating" {
   end_date = time_rotating.now_plus_1_hour.rotation_rfc3339
 
   groups = [
-      "readers",
+    "readers",
   ]
 }
 ```
