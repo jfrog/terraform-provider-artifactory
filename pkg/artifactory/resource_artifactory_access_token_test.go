@@ -340,7 +340,7 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      missingGroup,
-				ExpectError: regexp.MustCompile("Group must exist in artifactory"),
+				ExpectError: regexp.MustCompile("group must exist in artifactory"),
 			},
 		},
 	})

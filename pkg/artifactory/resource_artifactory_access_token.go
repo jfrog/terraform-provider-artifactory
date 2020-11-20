@@ -134,7 +134,10 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	tokenOptions.ExpiresIn = expiresIn
-	d.Set("end_date", date.Format(time.RFC3339))
+	err = d.Set("end_date", date.Format(time.RFC3339))
+	if err != nil {
+		return err
+	}
 
 	refreshable := resourceData.Get("refreshable").(bool)
 	audience := d.Get("audience").(string)
@@ -145,7 +148,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	tokenOptions.Username = resourceData.getStringRef("username", false)
 
 	username := resourceData.Get("username").(string)
-	userExists, err := checkUserExists(client, username)
+	userExists, _ := checkUserExists(client, username)
 
 	if !userExists && len(resourceData.Get("groups").([]interface{})) == 0 {
 		return fmt.Errorf("you must specify at least 1 group when creating a token for a non-existant user - %s, or correct the username", username)
@@ -156,28 +159,38 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = unpackAdminToken(d, client, &tokenOptions)
+	err = unpackAdminToken(d, &tokenOptions)
 	if err != nil {
 		return err
 	}
 
-	AccessToken, _, err := client.V1.Security.CreateToken(context.Background(), &tokenOptions)
+	accessToken, _, err := client.V1.Security.CreateToken(context.Background(), &tokenOptions)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(hashcode.String(*AccessToken.AccessToken)))
-	d.Set("access_token", *AccessToken.AccessToken)
+	d.SetId(strconv.Itoa(hashcode.String(*accessToken.AccessToken)))
+
+	err = d.Set("access_token", *accessToken.AccessToken)
+	if err != nil {
+		return err
+	}
+
+	refreshToken := ""
 	if refreshable {
-		d.Set("refresh_token", *AccessToken.RefreshToken)
-	} else {
-		d.Set("refresh_token", "")
+		refreshToken = *accessToken.RefreshToken
 	}
 
+	err = d.Set("refresh_token", refreshToken)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func resourceAccessTokenRead(d *schema.ResourceData, m interface{}) error {
+	// Terraform requires that the read function is always implemented.
+	// However, Artifactory does not have an API to read a token.
 	return nil
 }
 
@@ -212,6 +225,10 @@ func resourceAccessTokenDelete(d *schema.ResourceData, m interface{}) error {
 
 		_, resp, err := client.V1.Security.RevokeToken(context.Background(), revokeOptions)
 
+		if err != nil {
+			return err
+		}
+
 		if resp.StatusCode == http.StatusNotFound {
 			log.Printf("[DEBUG] Token Revoked")
 			return nil
@@ -244,7 +261,7 @@ func unpackGroups(d *schema.ResourceData, client *artifactoryold.Artifactory, to
 	return nil
 }
 
-func unpackAdminToken(d *schema.ResourceData, client *artifactoryold.Artifactory, tokenOptions *v1.AccessTokenOptions) error {
+func unpackAdminToken(d *schema.ResourceData, tokenOptions *v1.AccessTokenOptions) error {
 	if adminToken, ok := d.GetOk("admin_token"); ok {
 		set := adminToken.(*schema.Set)
 		val := set.List()[0].(map[string]interface{})
@@ -261,14 +278,19 @@ func unpackAdminToken(d *schema.ResourceData, client *artifactoryold.Artifactory
 func checkUserExists(client *artifactoryold.Artifactory, name string) (bool, error) {
 	_, resp, err := client.V1.Security.GetUser(context.Background(), name)
 
+	// If there is an error, it possible the user does not exist.
 	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			return false, errors.New("User must exist in artifactory")
-		}
-		// If we cannot search for Users, the current user is not an admin
-		// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
-		if resp.StatusCode == http.StatusForbidden {
-			return true, nil
+		if resp != nil {
+			// Check if the user does not exist in artifactory
+			if resp.StatusCode == http.StatusNotFound {
+				return false, errors.New("user must exist in artifactory")
+			}
+
+			// If we cannot search for Users, the current user is not an admin
+			// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
+			if resp.StatusCode == http.StatusForbidden {
+				return true, nil
+			}
 		}
 		return false, err
 	}
@@ -279,15 +301,21 @@ func checkUserExists(client *artifactoryold.Artifactory, name string) (bool, err
 func checkGroupExists(client *artifactoryold.Artifactory, name string) (bool, error) {
 	_, resp, err := client.V1.Security.GetGroup(context.Background(), name)
 
+	// If there is an error, it possible the group does not exist.
 	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			return false, errors.New("Group must exist in artifactory")
+		if resp != nil {
+			// Check if the group does not exist in artifactory
+			if resp.StatusCode == http.StatusNotFound {
+				return false, errors.New("group must exist in artifactory")
+			}
+
+			// If we cannot search for groups, the current user is not an admin and they can only specify groups they belong to.
+			// Therefore, we return true and rely on Artifactory to error if the user has specified a wrong group.
+			if resp.StatusCode == http.StatusForbidden {
+				return true, nil
+			}
 		}
-		// If we cannot search for groups, the current user is not an admin
-		// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
-		if resp.StatusCode == http.StatusForbidden {
-			return true, nil
-		}
+
 		return false, err
 	}
 
