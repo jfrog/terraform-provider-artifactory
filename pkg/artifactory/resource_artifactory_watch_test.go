@@ -176,10 +176,11 @@ resource "artifactory_local_repository" "example" {
 
 resource "artifactory_watch" "watch" {
 	name        = "named-local-repo"
-	description = "all repositories"
+	description = "local repo"
 
 	repository {
 		name = artifactory_local_repository.example.key
+		repo_type = "local"
         package_types = ["Generic"]
         paths = ["path/*"]
         mime_types = ["application/zip"]
@@ -220,12 +221,89 @@ func TestAccWatch_namedLocalRepository(t *testing.T) {
 				Config: namedLocalRepository,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_watch.watch", "name", "named-local-repo"),
-					resource.TestCheckResourceAttr("artifactory_watch.watch", "description", "all repositories"),
+					resource.TestCheckResourceAttr("artifactory_watch.watch", "description", "local repo"),
 
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository_paths.\d+.include_patterns.\d+`, []string{"path1/**"}),
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository_paths.\d+.exclude_patterns.\d+`, []string{"path1/ignore/**"}),
 
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.name`, []string{"local-repo"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.package_types.\d+`, []string{"Generic"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.paths.\d+`, []string{"path/*"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.mime_types.\d+`, []string{"application/zip"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.property.\d+.key`, []string{"field1", "field2"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.property.\d+.value`, []string{"value 1", "value 2"}),
+				),
+			},
+		},
+	})
+}
+
+const namedRemoteRepository = `
+resource "artifactory_remote_repository" "example" {
+	key             = "remote-repo"
+    package_type    = "npm"
+	url             = "https://registry.npmjs.org/"
+	repo_layout_ref = "npm-default"
+	xray_index      = true
+
+	content_synchronisation {
+		enabled = false
+	}
+}
+
+resource "artifactory_watch" "watch" {
+	name        = "named-remote-repo"
+	description = "remote repo"
+
+	repository {
+		name = artifactory_remote_repository.example.key
+		repo_type = "remote"
+        package_types = ["Generic"]
+        paths = ["path/*"]
+        mime_types = ["application/zip"]
+
+        property {
+            key = "field1"
+            value = "value 1"
+        }
+        property {
+            key = "field2"
+            value = "value 2"
+        }
+	}
+
+	repository_paths {
+        include_patterns = [
+            "path1/**"
+        ]
+        exclude_patterns = [
+            "path1/ignore/**"
+        ]
+	}
+
+	policy {
+		name = "policy1"
+		type = "security"
+	}
+}
+`
+
+func TestAccWatch_namedRemoteRepository(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckCreatePolicy(t) },
+		CheckDestroy: testAccCheckWatchDestroy("artifactory_watch.watch"),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: namedRemoteRepository,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_watch.watch", "name", "named-remote-repo"),
+					resource.TestCheckResourceAttr("artifactory_watch.watch", "description", "remote repo"),
+
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository_paths.\d+.include_patterns.\d+`, []string{"path1/**"}),
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository_paths.\d+.exclude_patterns.\d+`, []string{"path1/ignore/**"}),
+
+					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.name`, []string{"remote-repo"}),
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.package_types.\d+`, []string{"Generic"}),
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.paths.\d+`, []string{"path/*"}),
 					testAccCheckWatchAttributes("artifactory_watch.watch", `repository.\d+.mime_types.\d+`, []string{"application/zip"}),

@@ -9,6 +9,7 @@ import (
 
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	xrayutils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
 
@@ -54,6 +55,15 @@ func resourceArtifactoryWatch() *schema.Resource {
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
+	}
+	singleRepoSchema["repo_type"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		ValidateFunc: validation.StringInSlice([]string{
+			"remote",
+			"local",
+		}, false),
 	}
 	singleRepoSchema["bin_mgr_id"] = &schema.Schema{
 		Type:     schema.TypeString,
@@ -417,11 +427,13 @@ func unpackRepository(repositoriesRaw []interface{}, artClient *artifactoryold.A
 			watchRepo := xrayutils.WatchRepository{}
 			repository := repositoryRaw.(map[string]interface{})
 			name := repository["name"].(string)
+			binMgrID := repository["bin_mgr_id"].(string)
+			repoType := repository["repo_type"].(string)
 
 			// GetLocal will retrieve any repo type by name.
 			repo, _, err := artClient.V1.Repositories.GetLocal(context.Background(), name)
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting %s repo %s %v", repoType, name, err)
 			}
 
 			// A watch requires the repo to have xray indexing on.
@@ -431,9 +443,18 @@ func unpackRepository(repositoriesRaw []interface{}, artClient *artifactoryold.A
 				}
 			}
 
-			binMgrID := repository["bin_mgr_id"].(string)
+			if *repo.RClass != repoType {
+				return fmt.Errorf("found repo %s with %s type, but %s was specified", name, *repo.RClass, repoType)
+			}
+
 			watchRepo.Name = name
 			watchRepo.BinMgrID = binMgrID
+			switch repoType {
+			case "remote":
+				watchRepo.RepoType = xrayutils.WatchRepositoryRemote
+			case "local":
+				watchRepo.RepoType = xrayutils.WatchRepositoryLocal
+			}
 
 			packageTypes := castToStringArr(repository["package_types"].(*schema.Set).List())
 			sort.Strings(packageTypes)
@@ -541,6 +562,7 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 
 			packedRepo["name"] = repo.Name
 			packedRepo["bin_mgr_id"] = repo.BinMgrID
+			packedRepo["repo_type"] = repo.RepoType
 
 			repositories = append(repositories, packedRepo)
 		}
