@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/schema"
 	xrayutils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 )
@@ -305,6 +306,37 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 	params.Active = d.Get("active").(bool)
 
 	policiesRaw := d.Get("policy").([]interface{})
+	allRepositoriesRaw := d.Get("all_repositories").([]interface{})
+	repositoriesRaw := d.Get("repository").([]interface{})
+	allBuildsRaw := d.Get("all_builds").([]interface{})
+	buildsRaw := d.Get("build").([]interface{})
+
+	noPolicies := len(policiesRaw) == 0
+	noResourcesToWatch := len(allRepositoriesRaw) == 0 && len(repositoriesRaw) == 0 && len(allBuildsRaw) == 0 && len(buildsRaw) == 0
+	if (noResourcesToWatch || noPolicies) && params.Active {
+		return nil, fmt.Errorf("`active` can only be true when at least 1 `policy` is defined and at least one of `all_repositories`, `repository`, `all_builds`, or `build` is defined")
+	}
+
+	err := unpackPolicies(policiesRaw, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	unpackRepositoryPaths(d.Get("repository_paths"), &params)
+	unpackAllRepositories(allRepositoriesRaw, &params)
+
+	err = unpackRepository(repositoriesRaw, artClient, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	unpackAllBuilds(allBuildsRaw, &params)
+	unpackBuild(buildsRaw, &params)
+
+	return &params, nil
+}
+
+func unpackPolicies(policiesRaw []interface{}, params *xrayutils.WatchParams) error {
 	if len(policiesRaw) > 0 {
 		params.Policies = make([]xrayutils.AssignedPolicy, 0)
 
@@ -315,28 +347,35 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 			assignedPolicy.Type = policy["type"].(string)
 
 			if strings.ToLower(assignedPolicy.Type) != "security" && strings.ToLower(assignedPolicy.Type) != "license" {
-				return nil, fmt.Errorf("policy type %s must be security or license", assignedPolicy.Type)
+				return fmt.Errorf("policy type %s must be security or license", assignedPolicy.Type)
 			}
 
 			params.Policies = append(params.Policies, assignedPolicy)
 		}
 	}
 
-	if d.Get("repository_paths") != nil {
-		repositoryPathsRaw := d.Get("repository_paths").(*schema.Set).List()
-		if len(repositoryPathsRaw) == 1 {
-			repositoryPaths := repositoryPathsRaw[0].(map[string]interface{})
-			includePatterns := castToStringArr(repositoryPaths["include_patterns"].(*schema.Set).List())
-			sort.Strings(includePatterns)
-			excludePatterns := castToStringArr(repositoryPaths["exclude_patterns"].(*schema.Set).List())
-			sort.Strings(excludePatterns)
+	return nil
+}
 
-			params.Repositories.IncludePatterns = includePatterns
-			params.Repositories.ExcludePatterns = excludePatterns
-		}
+func unpackRepositoryPaths(repositoryPaths interface{}, params *xrayutils.WatchParams) {
+	if repositoryPaths == nil {
+		return
 	}
 
-	allRepositoriesRaw := d.Get("all_repositories").([]interface{})
+	repositoryPathsRaw := repositoryPaths.(*schema.Set).List()
+	if len(repositoryPathsRaw) == 1 {
+		repositoryPaths := repositoryPathsRaw[0].(map[string]interface{})
+		includePatterns := castToStringArr(repositoryPaths["include_patterns"].(*schema.Set).List())
+		sort.Strings(includePatterns)
+		excludePatterns := castToStringArr(repositoryPaths["exclude_patterns"].(*schema.Set).List())
+		sort.Strings(excludePatterns)
+
+		params.Repositories.IncludePatterns = includePatterns
+		params.Repositories.ExcludePatterns = excludePatterns
+	}
+}
+
+func unpackAllRepositories(allRepositoriesRaw []interface{}, params *xrayutils.WatchParams) {
 	if len(allRepositoriesRaw) == 1 {
 		params.Repositories.Type = xrayutils.WatchRepositoriesAll
 
@@ -365,8 +404,9 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 			}
 		}
 	}
+}
 
-	repositoriesRaw := d.Get("repository").([]interface{})
+func unpackRepository(repositoriesRaw []interface{}, artClient *artifactoryold.Artifactory, params *xrayutils.WatchParams) error {
 	if len(repositoriesRaw) > 0 {
 		params.Repositories.Type = xrayutils.WatchRepositoriesByName
 		// There can be 1 to M repositories
@@ -378,17 +418,16 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 			repository := repositoryRaw.(map[string]interface{})
 			name := repository["name"].(string)
 
-			localRepo, _, _ := artClient.V1.Repositories.GetLocal(context.Background(), name)
-			if localRepo != nil {
-				if *localRepo.XrayIndex == false {
-					return nil, fmt.Errorf("repo %s must have xray indexing on", name)
-				}
+			// GetLocal will retrieve any repo type by name.
+			repo, _, err := artClient.V1.Repositories.GetLocal(context.Background(), name)
+			if err != nil {
+				return err
 			}
 
-			remoteRepo, _, _ := artClient.V1.Repositories.GetRemote(context.Background(), name)
-			if remoteRepo != nil {
-				if *remoteRepo.XrayIndex == false {
-					return nil, fmt.Errorf("repo %s must have xray indexing on", name)
+			// A watch requires the repo to have xray indexing on.
+			if repo != nil {
+				if *repo.XrayIndex == false {
+					return fmt.Errorf("repo %s must have xray indexing on", name)
 				}
 			}
 
@@ -418,7 +457,10 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 		}
 	}
 
-	allBuildsRaw := d.Get("all_builds").([]interface{})
+	return nil
+}
+
+func unpackAllBuilds(allBuildsRaw []interface{}, params *xrayutils.WatchParams) {
 	if len(allBuildsRaw) == 1 {
 		params.Builds.Type = xrayutils.WatchBuildAll
 		allBuilds := allBuildsRaw[0].(map[string]interface{})
@@ -434,8 +476,9 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 
 		params.Builds.All.ExcludePatterns = excludePatterns
 	}
+}
 
-	buildsRaw := d.Get("build").([]interface{})
+func unpackBuild(buildsRaw []interface{}, params *xrayutils.WatchParams) {
 	if len(buildsRaw) > 0 {
 		params.Builds.Type = xrayutils.WatchBuildByName
 		params.Builds.ByNames = make(map[string]xrayutils.WatchBuildsByNameParams, 0)
@@ -453,14 +496,6 @@ func unpackWatch(d *schema.ResourceData, m interface{}) (*xrayutils.WatchParams,
 			params.Builds.ByNames[name] = buildParams
 		}
 	}
-
-	noResourcesToWatch := len(buildsRaw) == 0 && len(repositoriesRaw) == 0 && len(allBuildsRaw) == 0 && len(allRepositoriesRaw) == 0
-	noPolicies := len(policiesRaw) == 0
-	if (noResourcesToWatch || noPolicies) && params.Active {
-		return nil, fmt.Errorf("`active` can only be true when at least 1 `policy` is defined and at least one of `all_repositories`, `repository`, `all_builds`, or `build` is defined")
-	}
-
-	return &params, nil
 }
 
 func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
@@ -472,27 +507,11 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 	logErrors(d.Set("description", watch.Description))
 	logErrors(d.Set("active", watch.Active))
 
-	policies := make([]interface{}, 0)
-
-	for _, policy := range watch.Policies {
-		packedPolicy := make(map[string]interface{})
-
-		packedPolicy["name"] = policy.Name
-		packedPolicy["type"] = policy.Type
-
-		policies = append(policies, packedPolicy)
-	}
+	policies := packPolicies(watch.Policies)
 
 	logErrors(d.Set("policy", policies))
 
-	repositoryPaths := make(map[string]interface{})
-	if len(watch.Repositories.IncludePatterns) > 0 {
-		repositoryPaths["include_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.IncludePatterns))
-	}
-
-	if len(watch.Repositories.ExcludePatterns) > 0 {
-		repositoryPaths["exclude_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.ExcludePatterns))
-	}
+	repositoryPaths := packPatternFilters(watch.Repositories.IncludePatterns, watch.Repositories.ExcludePatterns)
 
 	if len(repositoryPaths) > 0 {
 		logErrors(d.Set("repository_paths", []interface{}{repositoryPaths}))
@@ -501,39 +520,12 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 	switch watch.Repositories.Type {
 
 	case xrayutils.WatchRepositoriesAll:
-		allRepositories := make(map[string]interface{})
-		if len(watch.Repositories.All.Filters.MimeTypes) > 0 {
-			allRepositories["mime_types"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.All.Filters.MimeTypes))
-		} else {
-			allRepositories["mime_types"] = schema.NewSet(schema.HashString, []interface{}{})
-		}
-
-		if len(watch.Repositories.All.Filters.Names) > 0 {
-			allRepositories["names"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.All.Filters.Names))
-		} else {
-			allRepositories["names"] = schema.NewSet(schema.HashString, []interface{}{})
-		}
-		if len(watch.Repositories.All.Filters.PackageTypes) > 0 {
-			allRepositories["package_types"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.All.Filters.PackageTypes))
-		} else {
-			allRepositories["package_types"] = schema.NewSet(schema.HashString, []interface{}{})
-		}
-		if len(watch.Repositories.All.Filters.Paths) > 0 {
-			allRepositories["paths"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Repositories.All.Filters.Paths))
-		} else {
-			allRepositories["paths"] = schema.NewSet(schema.HashString, []interface{}{})
-		}
-		if len(watch.Repositories.All.Filters.Properties) > 0 {
-			properties := make([]interface{}, 0)
-
-			for propKey, propVal := range watch.Repositories.All.Filters.Properties {
-				property := map[string]string{}
-				property["key"] = propKey
-				property["value"] = propVal
-				properties = append(properties, property)
-			}
-			allRepositories["property"] = properties
-		}
+		data := make(map[string][]string)
+		data["mime_types"] = watch.Repositories.All.Filters.MimeTypes
+		data["names"] = watch.Repositories.All.Filters.Names
+		data["package_types"] = watch.Repositories.All.Filters.PackageTypes
+		data["paths"] = watch.Repositories.All.Filters.Paths
+		allRepositories := packFilters(data, watch.Repositories.All.Filters.Properties)
 
 		logErrors(d.Set("all_repositories", []interface{}{allRepositories}))
 
@@ -541,31 +533,14 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 		repositories := make([]interface{}, 0)
 
 		for _, repo := range watch.Repositories.Repositories {
-			packedRepo := make(map[string]interface{})
+			data := make(map[string][]string)
+			data["mime_types"] = repo.Filters.MimeTypes
+			data["package_types"] = repo.Filters.PackageTypes
+			data["paths"] = repo.Filters.Paths
+			packedRepo := packFilters(data, repo.Filters.Properties)
 
 			packedRepo["name"] = repo.Name
 			packedRepo["bin_mgr_id"] = repo.BinMgrID
-
-			if len(repo.Filters.MimeTypes) > 0 {
-				packedRepo["mime_types"] = schema.NewSet(schema.HashString, castToInterfaceArr(repo.Filters.MimeTypes))
-			}
-			if len(repo.Filters.PackageTypes) > 0 {
-				packedRepo["package_types"] = schema.NewSet(schema.HashString, castToInterfaceArr(repo.Filters.PackageTypes))
-			}
-			if len(repo.Filters.Paths) > 0 {
-				packedRepo["paths"] = schema.NewSet(schema.HashString, castToInterfaceArr(repo.Filters.Paths))
-			}
-			if len(repo.Filters.Properties) > 0 {
-				properties := make([]interface{}, 0)
-
-				for propKey, propVal := range repo.Filters.Properties {
-					property := map[string]string{}
-					property["key"] = propKey
-					property["value"] = propVal
-					properties = append(properties, property)
-				}
-				packedRepo["property"] = properties
-			}
 
 			repositories = append(repositories, packedRepo)
 		}
@@ -576,17 +551,9 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 	switch watch.Builds.Type {
 
 	case xrayutils.WatchBuildAll:
-		allBuilds := make(map[string]interface{})
+		allBuilds := packPatternFilters(watch.Builds.All.IncludePatterns, watch.Builds.All.ExcludePatterns)
 
 		allBuilds["bin_mgr_id"] = watch.Builds.All.BinMgrID
-
-		if len(watch.Builds.All.IncludePatterns) > 0 {
-			allBuilds["include_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Builds.All.IncludePatterns))
-		}
-
-		if len(watch.Builds.All.ExcludePatterns) > 0 {
-			allBuilds["exclude_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(watch.Builds.All.ExcludePatterns))
-		}
 
 		logErrors(d.Set("all_builds", []interface{}{allBuilds}))
 
@@ -609,4 +576,57 @@ func packWatch(watch *xrayutils.WatchParams, d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func packPolicies(policies []xrayutils.AssignedPolicy) []interface{} {
+	packedPolicies := make([]interface{}, 0)
+
+	for _, policy := range policies {
+		packedPolicy := make(map[string]interface{})
+
+		packedPolicy["name"] = policy.Name
+		packedPolicy["type"] = policy.Type
+
+		packedPolicies = append(packedPolicies, packedPolicy)
+	}
+
+	return packedPolicies
+}
+
+func packFilters(data map[string][]string, properties map[string]string) map[string]interface{} {
+	packedFilters := make(map[string]interface{})
+
+	for k, v := range data {
+		if len(v) > 0 {
+			packedFilters[k] = schema.NewSet(schema.HashString, castToInterfaceArr(v))
+		} else {
+			packedFilters[k] = schema.NewSet(schema.HashString, []interface{}{})
+		}
+	}
+
+	propertyList := make([]interface{}, 0)
+
+	for propKey, propVal := range properties {
+		property := map[string]string{}
+		property["key"] = propKey
+		property["value"] = propVal
+		propertyList = append(propertyList, property)
+	}
+	packedFilters["property"] = propertyList
+
+	return packedFilters
+}
+
+func packPatternFilters(includePatterns []string, excludePatterns []string) map[string]interface{} {
+	packedPatternFilters := make(map[string]interface{})
+
+	if len(includePatterns) > 0 {
+		packedPatternFilters["include_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(includePatterns))
+	}
+
+	if len(excludePatterns) > 0 {
+		packedPatternFilters["exclude_patterns"] = schema.NewSet(schema.HashString, castToInterfaceArr(excludePatterns))
+	}
+
+	return packedPatternFilters
 }

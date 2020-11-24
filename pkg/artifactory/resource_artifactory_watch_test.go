@@ -78,6 +78,8 @@ resource "artifactory_watch" "watch" {
 	name        = "basic-watch"
 	description = "basic watch"
 
+	all_repositories {}
+
 	policy {
 		name = "example"
 		type = "bad"
