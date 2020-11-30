@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -13,80 +12,72 @@ import (
 const permissionNoIncludes = `
 resource "artifactory_permission_target" "test-perm" {
 	name = "test-perm"
-	repo = {
+	repo {
 		repositories = ["example-repo-local"]
-		actions = {
-			users = [
-				{
-					name = "anonymous"
-					permissions = ["read", "write"]
-				},
-			]
+		actions {
+			users {
+			  name = "anonymous"
+			  permissions = ["read", "write"]
+			}
 		}
 	}
-}`
+}
+`
 
 const permissionJustBuild = `
 resource "artifactory_permission_target" "test-perm" {
 	name = "test-perm"
-	build = {
+	build {
+		includes_pattern = ["**"]
 		repositories = ["artifactory-build-info"]
-		actions = {
-			users = [
-				{
-					name = "anonymous"
-					permissions = ["read", "write"]
-				},
-			]
+		actions {
+			users {
+				name = "anonymous"
+				permissions = ["read", "write"]
+			}
 		}
 	}
-}`
+}
+`
 
 const permissionFull = `
 resource "artifactory_permission_target" "test-perm" {
   name = "test-perm"
 
-  repo = {
+  repo {
     includes_pattern = ["foo/**"]
     excludes_pattern = ["bar/**"]
     repositories     = ["example-repo-local"]
 
-    actions = {
-      users = [
-        {
-          name        = "anonymous"
-          permissions = ["read", "write"]
-        },
-      ]
+    actions {
+      users {
+		name        = "anonymous"
+		permissions = ["read", "write"]
+	  }
 
-      groups = [
-        {
-          name        = "readers"
-          permissions = ["read"]
-        },
-      ]
+      groups {
+        name        = "readers"
+        permissions = ["read"]
+      }
     }
   }
 
-  build = {
+  build {
     includes_pattern = ["foo/**"]
     excludes_pattern = ["bar/**"]
     repositories     = ["artifactory-build-info"]
 
-    actions = {
-      users = [
-        {
-          name        = "anonymous"
-          permissions = ["read", "write"]
-        },
-      ]
+    actions {
+      users {
+        name        = "anonymous"
+        permissions = ["read", "write"]
+      }
       
-      groups = [
-        {
-          name        = "readers"
-          permissions = ["read"]
-        },
-      ]
+      
+      groups {
+        name        = "readers"
+        permissions = ["read"]
+      }
     }
   }
 }
@@ -143,7 +134,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.users.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.actions.0.groups.#", "0"),
 					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.repositories.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.includes_pattern.#", "0"),
+					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_permission_target.test-perm", "build.0.excludes_pattern.#", "0"),
 				),
 			},
@@ -169,7 +160,9 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 
 func testPermissionTargetCheckDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Artifactory)
+		apis := testAccProvider.Meta().(*ArtClient)
+		client := apis.ArtOld
+
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {

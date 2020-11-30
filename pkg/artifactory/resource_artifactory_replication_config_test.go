@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -23,13 +22,11 @@ resource "artifactory_replication_config" "lib-local" {
 	cron_exp = "0 0 * * * ?"
 	enable_event_replication = true
 	
-	replications = [
-		{
-			url = "%s"
-			username = "%s"
-			password = "%s"
-		}
-	]
+	replications {
+		url = "%s"
+		username = "%s"
+		password = "%s"
+	}
 }
 `
 
@@ -59,7 +56,9 @@ func TestAccReplication_full(t *testing.T) {
 
 func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*artifactory.Artifactory)
+		apis := testAccProvider.Meta().(*ArtClient)
+		client := apis.ArtOld
+
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
