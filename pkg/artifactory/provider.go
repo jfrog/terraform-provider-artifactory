@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	url "net/url"
+	"net/url"
 
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"

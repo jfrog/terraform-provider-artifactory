@@ -213,7 +213,7 @@ func resourceWatchCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).XrayClient
 
 	if client == nil {
-		return fmt.Errorf("you must specify the xray_url in the provider to manage a watch")
+		return fmt.Errorf("xray client is nil. please configure xray settings in provider")
 	}
 
 	params, err := unpackWatch(d, m)
@@ -235,7 +235,7 @@ func resourceWatchRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).XrayClient
 
 	if client == nil {
-		return fmt.Errorf("you must specify the xray_url in the provider to manage a watch")
+		return fmt.Errorf("xray client is nil. please configure xray settings in provider")
 	}
 
 	watch, resp, err := client.GetWatch(d.Id())
@@ -254,7 +254,7 @@ func resourceWatchUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).XrayClient
 
 	if client == nil {
-		return fmt.Errorf("you must specify the xray_url in the provider to manage a watch")
+		return fmt.Errorf("xray client is nil. please configure xray settings in provider")
 	}
 
 	params, err := unpackWatch(d, m)
@@ -275,7 +275,7 @@ func resourceWatchDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).XrayClient
 
 	if client == nil {
-		return fmt.Errorf("you must specify the xray_url in the provider to manage a watch")
+		return fmt.Errorf("xray client is nil. please configure xray settings in provider")
 	}
 
 	name := d.Get("name").(string)
@@ -292,11 +292,10 @@ func resourceWatchExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	client := m.(*ArtClient).XrayClient
 
 	if client == nil {
-		return false, fmt.Errorf("you must specify the xray_url in the provider to manage a watch")
+		return false, fmt.Errorf("xray client is nil. please configure xray settings in provider")
 	}
 
-	watchName := d.Id()
-	_, resp, err := client.GetWatch(watchName)
+	_, resp, err := client.GetWatch(d.Id())
 
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil
@@ -375,8 +374,10 @@ func unpackRepositoryPaths(repositoryPaths interface{}, params *xrayutils.WatchP
 	repositoryPathsRaw := repositoryPaths.(*schema.Set).List()
 	if len(repositoryPathsRaw) == 1 {
 		repositoryPaths := repositoryPathsRaw[0].(map[string]interface{})
+
 		includePatterns := castToStringArr(repositoryPaths["include_patterns"].(*schema.Set).List())
 		sort.Strings(includePatterns)
+
 		excludePatterns := castToStringArr(repositoryPaths["exclude_patterns"].(*schema.Set).List())
 		sort.Strings(excludePatterns)
 
@@ -391,13 +392,16 @@ func unpackAllRepositories(allRepositoriesRaw []interface{}, params *xrayutils.W
 
 		if allRepositoriesRaw[0] != nil {
 			allRepositories := allRepositoriesRaw[0].(map[string]interface{})
+
 			names := castToStringArr(allRepositories["names"].(*schema.Set).List())
 			sort.Strings(names)
 
 			packageTypes := castToStringArr(allRepositories["package_types"].(*schema.Set).List())
 			sort.Strings(packageTypes)
+
 			paths := castToStringArr(allRepositories["paths"].(*schema.Set).List())
 			sort.Strings(paths)
+
 			mimeTypes := castToStringArr(allRepositories["mime_types"].(*schema.Set).List())
 			sort.Strings(mimeTypes)
 
@@ -458,8 +462,10 @@ func unpackRepository(repositoriesRaw []interface{}, artClient *artifactoryold.A
 
 			packageTypes := castToStringArr(repository["package_types"].(*schema.Set).List())
 			sort.Strings(packageTypes)
+
 			paths := castToStringArr(repository["paths"].(*schema.Set).List())
 			sort.Strings(paths)
+
 			mimeTypes := castToStringArr(repository["mime_types"].(*schema.Set).List())
 			sort.Strings(mimeTypes)
 
