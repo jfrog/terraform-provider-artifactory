@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	url "net/url"
 
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
@@ -200,11 +201,20 @@ func createXrayClient(d *schema.ResourceData) (*xray.XrayServicesManager, error)
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	url := d.Get("xray_url").(string)
-	if url[len(url)-1] != '/' {
-		url += "/"
+	xrayURL := d.Get("xray_url").(string)
+	if xrayURL == "" {
+		return nil, fmt.Errorf("xray_url must have a value")
 	}
-	details.SetUrl(url)
+
+	_, err := url.Parse(xrayURL)
+	if err != nil {
+		return nil, err
+	}
+
+	if xrayURL[len(xrayURL)-1] != '/' {
+		xrayURL += "/"
+	}
+	details.SetUrl(xrayURL)
 
 	if username != "" && password != "" {
 		details.SetUser(username)
