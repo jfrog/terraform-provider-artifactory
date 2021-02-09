@@ -7,9 +7,8 @@ import (
 
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/hashicorp/terraform/version"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
@@ -27,7 +26,7 @@ type ArtClient struct {
 // Artifactory Provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() terraform.ResourceProvider {
-	return &schema.Provider{
+	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
 				Type:        schema.TypeString,
@@ -83,13 +82,21 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_file":     dataSourceArtifactoryFile(),
 			"artifactory_fileinfo": dataSourceArtifactoryFileInfo(),
 		},
-
-		ConfigureFunc: providerConfigure,
 	}
+
+	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		terraformVersion := p.TerraformVersion
+		if terraformVersion == "" {
+			terraformVersion = "0.11+compatible"
+		}
+		return providerConfigure(d, terraformVersion)
+	}
+
+	return p
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	if d.Get("url") == nil {
 		return nil, fmt.Errorf("url cannot be nil")
 	}
@@ -162,7 +169,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	productid := "terraform-provider-artifactory/" + ProviderVersion
-	commandid := "Terraform/" + version.Version
+	commandid := "Terraform/" + terraformVersion
 	usage.SendReportUsage(productid, commandid, rtnew)
 
 	rt := &ArtClient{

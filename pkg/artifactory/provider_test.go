@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -42,7 +42,7 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal("either ARTIFACTORY_USERNAME/ARTIFACTORY_PASSWORD or ARTIFACTORY_APIKEY  or ARTIFACTORY_ACCESS_TOKEN must be set for acceptance test")
 	}
 
-	err := testAccProvider.Configure(terraform.NewResourceConfig(nil))
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
