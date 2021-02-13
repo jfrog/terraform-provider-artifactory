@@ -14,6 +14,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	xray "github.com/xero-oss/go-xray/xray"
 )
 
 var ProviderVersion = "2.1.0"
@@ -21,6 +22,7 @@ var ProviderVersion = "2.1.0"
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
 	ArtNew *artifactorynew.ArtifactoryServicesManager
+	Xray   *xray.Xray
 }
 
 // Artifactory Provider that supports configuration via username+password or a token
@@ -76,6 +78,9 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_access_token":              resourceArtifactoryAccessToken(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
+			// Xray resources
+			"xray_policy":                           resourceXrayPolicy(),
+			"xray_watch":                            resourceXrayWatch(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -168,6 +173,15 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
+	rtxray, err := xray.NewClient(d.Get("url").(string), client)
+	if err != nil {
+		return nil, err
+	} else if _, resp, err := rtxray.V1.System.Ping(context.Background()); err != nil {
+		return nil, err
+	} else if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("failed to ping server. Got %d", resp.StatusCode)
+	}
+
 	productid := "terraform-provider-artifactory/" + ProviderVersion
 	commandid := "Terraform/" + terraformVersion
 	usage.SendReportUsage(productid, commandid, rtnew)
@@ -175,6 +189,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	rt := &ArtClient{
 		ArtOld: rtold,
 		ArtNew: rtnew,
+		Xray:   rtxray,
 	}
 
 	return rt, nil
