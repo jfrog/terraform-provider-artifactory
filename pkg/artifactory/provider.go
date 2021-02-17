@@ -174,7 +174,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	rt := &ArtClient{
 		ArtOld: rtold,
-		ArtNew: &rtnew,
+		ArtNew: rtnew,
 	}
 
 	return rt, nil
