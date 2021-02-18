@@ -9,9 +9,13 @@ import (
 	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 )
+
+var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 const randomPasswordLength = 16
 
@@ -130,7 +134,8 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if user.Password == nil {
-		user.Password = artifactory.String(generatePassword())
+		warning.Println("No password supplied. One will be generated and this can fail as your RT password policy can't be known here")
+		user.Password = artifactory.String(generatePassword(16))
 	}
 
 	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
@@ -196,12 +201,34 @@ func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-// generatePassword used as default func to generate user passwords
-func generatePassword() string {
-	letters := []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]byte, randomPasswordLength)
-	for i := range b {
-		b[i] = letters[rand.Int63()%int64(len(letters))]
+// generatePassword used as default func to generate user passwords. It's possible for this to be incompatible with what
+// rt will allow, but there is no way to know what rules are in place
+func generatePassword(length int) string {
+	randSelect := func(str string, count int) string {
+		strLen := len(str)
+		result := make([]byte, count)
+		for i := range result {
+			result[i] = str[rand.Intn(strLen)]
+		}
+		return string(result)
 	}
-	return string(b)
+	up := func(count int) string {
+		return randSelect("ABCDEFGHIJKLMNOPQRSTUVWXYZ", count)
+	}
+	low := func(count int) string {
+		return randSelect("abcdefghijklmnopqrstuvwxyz", count)
+	}
+	dig := func(count int) string {
+		return randSelect("0123456789", count)
+	}
+	spec := func(count int) string {
+		return randSelect("!@#$%^&*()-_+=[]{}|<>?/~'\"", count)
+	}
+	lowLen := length / 2
+	runes := []rune(low(lowLen-1) + up(length-lowLen-1) + spec(1) + dig(1))
+
+	rand.Shuffle(len(runes), func(i, j int) {
+		runes[i], runes[j] = runes[j], runes[i]
+	})
+	return string(runes)
 }
