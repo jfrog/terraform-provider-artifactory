@@ -12,17 +12,30 @@ provider "artifactory" {
   username = "admin"
   password = "password"
 }
-
-resource "artifactory_user" "test-user" {
-  name     = "terraform"
+resource "random_id" randid {
+  count = 4
+  byte_length = 2
+}
+resource  random_password randpass {
+  count = 10
+  length = 16
+  min_lower = 5
+  min_upper = 5
+  min_numeric = 1
+  min_special = 1
+}
+resource "artifactory_user" "user" {
+  count = length(random_password.randpass)
+  name     = "terraform${count.index}"
   email    = "test-user@artifactory-terraform.com"
   groups   = ["readers"]
-  password = "password1"
-}
-resource "artifactory_user" "test-user2" {
-  name     = "terraform1"
-  email    = "test-user@artifactory-terraform.com"
-  groups   = ["readers"]
-  password = "password1"
+  password = random_password.randpass[count.index].result
 }
 
+resource "artifactory_remote_repository" "conan-remote" {
+  key = "conan-remote"
+  package_type = "conan"
+  url = "https://conan.bintray.com"
+  repo_layout_ref = "conan-default"
+  notes = "managed by terraform"
+}
