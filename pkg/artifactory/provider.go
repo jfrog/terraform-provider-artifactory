@@ -3,8 +3,6 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -14,6 +12,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 var ProviderVersion = "2.1.0"
@@ -97,8 +98,8 @@ func Provider() terraform.ResourceProvider {
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	if d.Get("url") == nil {
-		return nil, fmt.Errorf("url cannot be nil")
+	if key, ok := d.GetOk("url"); key == nil || key == "" || !ok {
+		return nil, fmt.Errorf("you must supply a URL")
 	}
 
 	username := d.Get("username").(string)
@@ -110,12 +111,19 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	var client *http.Client
 	details := auth.NewArtifactoryDetails()
-
-	url := d.Get("url").(string)
-	if url[len(url)-1] != '/' {
-		url += "/"
+	u, err := url.ParseRequestURI(d.Get("url").(string))
+	if err != nil {
+		return nil, err
 	}
-	details.SetUrl(url)
+
+
+	if !strings.HasSuffix(u.String(), "/") {
+		u, err = url.ParseRequestURI(u.String() + "/")
+		if err != nil {
+			return nil, err
+		}
+	}
+	details.SetUrl(u.String())
 
 	if username != "" && password != "" {
 		details.SetUser(username)
@@ -141,7 +149,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
 	}
 
-	config, err := config.NewConfigBuilder().
+	cfg, err := config.NewConfigBuilder().
 		SetServiceDetails(details).
 		SetDryRun(false).
 		Build()
@@ -156,7 +164,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtnew, err := artifactorynew.New(&details, config)
+	rtnew, err := artifactorynew.New(&details, cfg)
 
 	if err != nil {
 		return nil, err
