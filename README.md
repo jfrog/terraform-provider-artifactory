@@ -5,6 +5,29 @@
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
 
+## Important note:
+
+This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions.
+You can determine which license you have by accessing the following URL
+`${host}/artifactory/api/system/licenses/`
+
+You can either access it via api, or web browser - it does require admin level credentials, but it's one of the few
+APIs that will work without a license (side node: you can also install your license here with a `POST`)
+```bash
+curl -sL ${host}/artifactory/api/system/licenses/ | jq .
+{
+  "type" : "Enterprise Plus Trial",
+  "validThrough" : "Jan 29, 2022",
+  "licensedTo" : "JFrog Ltd"
+}
+
+```
+The following 3 license types (`jq .type`) do **NOT** support APIs:
+- Community Edition for C/C++
+- JCR Edition
+- OSS
+
+
 ## Build the Provider
 If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
 After placing it into your plugins directory,  run `terraform init` to initialize it.
