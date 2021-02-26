@@ -1,2 +1,10 @@
 terraform-provider-artifactory
 dist/
+vendor/
+.idea/
+.github/
+.modules/
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+lib/

@@ -1,10 +1,7 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -12,9 +9,12 @@ import (
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
+	auth2 "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	xray "github.com/xero-oss/go-xray/xray"
+	"github.com/xero-oss/go-xray/xray"
+	"net/http"
+	"net/url"
 )
 
 var ProviderVersion = "2.1.0"
@@ -79,8 +79,8 @@ func Provider() terraform.ResourceProvider {
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 			// Xray resources
-			"xray_policy":                           resourceXrayPolicy(),
-			"xray_watch":                            resourceXrayWatch(),
+			"artifactory_xray_policy": resourceXrayPolicy(),
+			"artifactory_xray_watch":  resourceXrayWatch(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -102,51 +102,28 @@ func Provider() terraform.ResourceProvider {
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	if d.Get("url") == nil {
-		return nil, fmt.Errorf("url cannot be nil")
-	}
 
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
-	apiKey := d.Get("api_key").(string)
-	accessToken := d.Get("access_token").(string)
+	if key, ok := d.GetOk("url"); key == nil || key == "" || !ok {
+		return nil, fmt.Errorf("you must supply a URL")
+	}
 
 	log.SetLogger(log.NewLogger(log.INFO, nil))
 
-	var client *http.Client
-	details := auth.NewArtifactoryDetails()
+	u, err := url.ParseRequestURI(d.Get("url").(string))
 
-	url := d.Get("url").(string)
-	if url[len(url)-1] != '/' {
-		url += "/"
+	if err != nil {
+		return nil, err
 	}
-	details.SetUrl(url)
+	baseUrl := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	artifactoryEndpoint := fmt.Sprintf("%s/artifactory/", baseUrl)
 
-	if username != "" && password != "" {
-		details.SetUser(username)
-		details.SetPassword(password)
-		tp := transport.BasicAuth{
-			Username: username,
-			Password: password,
-		}
-		client = tp.Client()
-	} else if apiKey != "" {
-		details.SetApiKey(apiKey)
-		tp := &transport.ApiKeyAuth{
-			ApiKey: apiKey,
-		}
-		client = tp.Client()
-	} else if accessToken != "" {
-		details.SetAccessToken(accessToken)
-		tp := &transport.AccessTokenAuth{
-			AccessToken: accessToken,
-		}
-		client = tp.Client()
-	} else {
-		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
+	client, details, err := buildClient(d)
+	details.SetUrl(artifactoryEndpoint)
+	if err != nil {
+		return nil, err
 	}
 
-	config, err := config.NewConfigBuilder().
+	cfg, err := config.NewConfigBuilder().
 		SetServiceDetails(details).
 		SetDryRun(false).
 		Build()
@@ -155,42 +132,69 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtold, err := artifactoryold.NewClient(d.Get("url").(string), client)
+	rtOld, err := artifactoryold.NewClient(artifactoryEndpoint, client)
 
 	if err != nil {
 		return nil, err
 	}
 
-	rtnew, err := artifactorynew.New(&details, config)
+	rtNew, err := artifactorynew.New(&details, cfg)
 
 	if err != nil {
 		return nil, err
-	} else if _, resp, err := rtold.V1.System.Ping(context.Background()); err != nil {
-		return nil, err
-	} else if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to ping server. Got %d", resp.StatusCode)
-	} else if _, err := rtnew.Ping(); err != nil {
+	} else if _, err := rtNew.Ping(); err != nil {
 		return nil, err
 	}
 
-	rtxray, err := xray.NewClient(d.Get("url").(string), client)
+	rtXray, err := xray.NewClient(fmt.Sprintf("%s/xray/",baseUrl), client)
 	if err != nil {
 		return nil, err
-	} else if _, resp, err := rtxray.V1.System.Ping(context.Background()); err != nil {
-		return nil, err
-	} else if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to ping server. Got %d", resp.StatusCode)
 	}
 
-	productid := "terraform-provider-artifactory/" + ProviderVersion
-	commandid := "Terraform/" + terraformVersion
-	usage.SendReportUsage(productid, commandid, rtnew)
+	productId := "terraform-provider-artifactory/" + ProviderVersion
+	commandId := "Terraform/" + terraformVersion
+	if err = usage.SendReportUsage(productId, commandId, rtNew); err != nil{
+		return nil, err
+	}
 
 	rt := &ArtClient{
-		ArtOld: rtold,
-		ArtNew: rtnew,
-		Xray:   rtxray,
+		ArtOld: rtOld,
+		ArtNew: rtNew,
+		Xray:   rtXray,
 	}
 
 	return rt, nil
+}
+
+func buildClient(d *schema.ResourceData) (*http.Client, auth2.ServiceDetails, error) {
+	details := auth.NewArtifactoryDetails()
+
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	apiKey := d.Get("api_key").(string)
+	accessToken := d.Get("access_token").(string)
+
+	if username != "" && password != "" {
+		details.SetUser(username)
+		details.SetPassword(password)
+		tp := transport.BasicAuth{
+			Username: username,
+			Password: password,
+		}
+		return tp.Client(), details, nil
+	} else if apiKey != "" {
+		details.SetApiKey(apiKey)
+		tp := &transport.ApiKeyAuth{
+			ApiKey: apiKey,
+		}
+		return tp.Client(), details, nil
+	} else if accessToken != "" {
+		details.SetAccessToken(accessToken)
+		tp := &transport.AccessTokenAuth{
+			AccessToken: accessToken,
+		}
+		return tp.Client(), details, nil
+	} else {
+		return nil, nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
+	}
 }
