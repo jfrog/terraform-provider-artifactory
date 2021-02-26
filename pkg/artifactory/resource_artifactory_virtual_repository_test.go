@@ -96,6 +96,7 @@ resource "artifactory_virtual_repository" "foo" {
     excludes_pattern = "com/google/**"
 	artifactory_requests_can_retrieve_remote_artifacts = true
 	pom_repository_references_cleanup_policy = "discard_active_reference"
+	force_nuget_authentication	= true
 }
 `
 
@@ -118,6 +119,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "excludes_pattern", "com/google/**"),
 					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "pom_repository_references_cleanup_policy", "discard_active_reference"),
+					resource.TestCheckResourceAttr("artifactory_virtual_repository.foo", "force_nuget_authentication", "true"),
 				),
 			},
 		},

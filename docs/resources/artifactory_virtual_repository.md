@@ -42,6 +42,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `key_pair` - (Optional)
 * `pom_repository_references_cleanup_policy` - (Optional)
 * `default_deployment_repo` - (Optional)
+* `force_nuget_authentication` - (Optional, Nuget repos only) 
 
 ## Import
 
