@@ -17,8 +17,6 @@ import (
 
 var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-const randomPasswordLength = 16
-
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceUserCreate,
