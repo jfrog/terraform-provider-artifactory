@@ -18,6 +18,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build
 
 
 # Build the final image
-FROM hashicorp/terraform:0.12.29
+FROM hashicorp/terraform:0.13
 
 COPY --from=builder /src/terraform-provider-artifactory /root/.terraform.d/plugins/

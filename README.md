@@ -50,6 +50,70 @@ To install the provider
 cd $GOPATH/src/github.com/jfrog/terraform-provider-artifactory
 go install
 ```
+## Testing
+How to run the tests isn't obvious.
+First, you need a running instance of artifactory. Included with this repo is a functioning `docker-compose.yml`
+that will fire up the whole stack for you. Run it as:
+
+```bash
+docker-compose --env-file .env up -d
+```
+Then, you have to set some environment variables as this is how the acceptance tests pick up their config
+```bash
+ARTIFACTORY_URL=http://localhost:8082
+ARTIFACTORY_USERNAME=admin
+ARTIFACTORY_PASSWORD=password
+TF_ACC=FOO
+```
+a crucial, and very much hidden, env var to set is
+`TF_ACC=FOO` - you can literally set `TF_ACC` to anything you want, so long as it's set. The acceptance tests use
+terraform testing libraries that, if this flag isn't set, will skip all tests.
+
+You can then run the tests as
+`go test -v ./pkg/...`
+**DO NOT** remove the `-v` - terraform testing needs this (don't ask me why). This will recursively run all tests, including
+acceptance tests. 
+
+## Debugging
+Debugging a terraform provider is not straightforward. Terraform forks your provider as a separate process and then 
+connects to it via RPC. Normally, when debugging, you would start the process to debug directly. However, with the 
+terraform + go architecture, this isn't possible. So, you need to run terraform as you normally would and attach to the
+provider process by getting it's pid. This would be really tricky considering how fast the process can come up and be down.
+So, you need to actually halt the provider and have it wait for your debugger to attach. 
+
+Having said all that, here are the steps:
+1. Install [delve](https://github.com/go-delve/delve)
+2. Add a snippet of go code to the [provider initializer](pkg/artifactory/provider.go) `providerConfigure`, where in you install a busy sleep loop:
+```go
+	debug := true
+	for debug {
+		time.Sleep(time.Second) // set breakpoint here
+	}
+``` 
+and set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`,
+thus breaking the sleep loop and allow you to continue. 
+2. Compile the provider with debug symbology (`go build -gcflags "all=-N -l"`)
+3. Install the provider (change as needed for your version)
+```bash 
+mkdir -p .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64 \
+    && mv terraform-provider-artifactory .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64
+```
+4. Run your provider: `terraform init && terraform plan` - it will start in this busy sleep loop.
+5. In a separate shell, find the `PID` of the provider that got forked 
+`pgrep terraform-provider-artifactory`
+6. Then, attach the debugger to that pid: `dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $pid`
+A 1-liner for this whole process is: 
+`dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $(pgrep terraform-provider-artifactory)`
+7. In intellij, setup a remote go debugging session (the default port is `2345`, but make sure it's set.) And click the `debug` button
+8. Your editor should immediately break at the breakpoint from step 2. At this point, in the watch window, edit the `debug` 
+value and set it to false, and allow the debugger to continue. Be ready for your debugging as this will release the provider 
+and continue executing normally.
+
+You will need to repeat steps 4-8 everytime you want to debug
+
+
+
+
 
 ## Versioning
 In general, this project follows [semver](https://semver.org/) as closely as we
@@ -89,3 +153,4 @@ Copyright (c) 2020 JFrog.
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
 [LICENSE]: ./LICENSE
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jfrog/terraform)
