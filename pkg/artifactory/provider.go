@@ -118,10 +118,10 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	artifactoryEndpoint := fmt.Sprintf("%s/artifactory/", baseUrl)
 
 	client, details, err := buildClient(d)
-	details.SetUrl(artifactoryEndpoint)
 	if err != nil {
 		return nil, err
 	}
+	details.SetUrl(artifactoryEndpoint)
 
 	cfg, err := config.NewConfigBuilder().
 		SetServiceDetails(details).

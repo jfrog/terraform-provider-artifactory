@@ -192,11 +192,14 @@ func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 	user := unpackUser(d)
 	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
-	if resp.StatusCode == http.StatusNotFound {
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
 
-	return err
+	return fmt.Errorf("user %s not deleted. Status code: %d",*user.Name, resp.StatusCode)
 }
 
 // generatePassword used as default func to generate user passwords. It's possible for this to be incompatible with what
