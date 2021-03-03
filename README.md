@@ -56,7 +56,7 @@ First, you need a running instance of artifactory. Included with this repo is a 
 that will fire up the whole stack for you. Run it as:
 
 ```bash
-docker-compose --env-file .env up -d
+docker-compose up -d
 ```
 Then, you have to set some environment variables as this is how the acceptance tests pick up their config
 ```bash
