@@ -2,6 +2,7 @@
 
 [![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/release/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jfrog/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/jfrog/terraform-provider-artifactory)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jfrog/terraform)
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
 
@@ -153,4 +154,3 @@ Copyright (c) 2020 JFrog.
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
 [LICENSE]: ./LICENSE
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jfrog/terraform)
