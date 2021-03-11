@@ -7,6 +7,28 @@ with the proper credentials before it can be used.
 Links to documentation for specific resources can be found in the table of
 contents to the left.
 
+This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions.
+You can determine which license you have by accessing the following URL
+`${host}/artifactory/api/system/licenses/`
+
+You can either access it via api, or web browser - it does require admin level credentials, but it's one of the few
+APIs that will work without a license (side node: you can also install your license here with a `POST`)
+
+```bash
+curl -sL ${host}/artifactory/api/system/licenses/ | jq .
+{
+  "type" : "Enterprise Plus Trial",
+  "validThrough" : "Jan 29, 2022",
+  "licensedTo" : "JFrog Ltd"
+}
+
+```
+
+The following 3 license types (`jq .type`) do **NOT** support APIs:
+- Community Edition for C/C++
+- JCR Edition
+- OSS
+
 ## Example Usage
 ```hcl
 # Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
@@ -14,7 +36,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.0.0"
+      version = "2.2.7"
     }
   }
 }
