@@ -86,6 +86,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"repo_layout_ref": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"handle_releases": {
 				Type:     schema.TypeBool,
@@ -124,6 +125,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"remote_repo_checksum_policy_type": {
 				Type:     schema.TypeString,
@@ -289,8 +291,8 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 			"content_synchronisation": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
