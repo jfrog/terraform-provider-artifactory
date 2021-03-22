@@ -453,8 +453,10 @@ func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("type", *policy.Type); err != nil {
 		return err
 	}
-	if err := d.Set("description", *policy.Description); err != nil {
-		return err
+	if policy.Description != nil {
+		if err := d.Set("description", *policy.Description); err != nil {
+			return err
+		}
 	}
 	if err := d.Set("author", *policy.Author); err != nil {
 		return err
