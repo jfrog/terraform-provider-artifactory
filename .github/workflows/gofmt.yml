@@ -1,12 +1,11 @@
-name: "go fmt"
-on:
-  pull_request:
-    branches:
-      - master
-
+name: reviewdog
+on: [pull_request]
 jobs:
-  go_fmt:
+  golangci-lint:
+    name: runner / golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check code formatting using gofmt
-        uses: Jerome1337/gofmt-action@v1.0.4
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1
