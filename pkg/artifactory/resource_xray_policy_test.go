@@ -12,9 +12,9 @@ import (
 )
 
 func TestAccPolicy_basic(t *testing.T) {
-	policyName   := "terraform-test-policy"
-	policyDesc   := "policy created by xray acceptance tests"
-	ruleName     := "test-security-rule"
+	policyName := "terraform-test-policy"
+	policyDesc := "policy created by xray acceptance tests"
+	ruleName := "test-security-rule"
 	resourceName := "xray_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -42,10 +42,10 @@ func TestAccPolicy_basic(t *testing.T) {
 }
 
 func TestAccPolicy_cvssRange(t *testing.T) {
-	policyName   := "terraform-test-policy"
-	policyDesc   := "policy created by xray acceptance tests"
-	ruleName     := "test-security-rule"
-	rangeTo    := 4
+	policyName := "terraform-test-policy"
+	policyDesc := "policy created by xray acceptance tests"
+	ruleName := "test-security-rule"
+	rangeTo := 4
 	updatedRangeTo := 2
 	resourceName := "xray_policy.test"
 
@@ -132,9 +132,9 @@ func TestAccPolicy_allActions(t *testing.T) {
 }
 
 func TestAccPolicy_licenseCriteria(t *testing.T) {
-	policyName   := "terraform-test-policy"
-	policyDesc   := "policy created by xray acceptance tests"
-	ruleName     := "test-security-rule"
+	policyName := "terraform-test-policy"
+	policyDesc := "policy created by xray acceptance tests"
+	ruleName := "test-security-rule"
 	allowedLicense := "BSD-4-Clause"
 	bannedLicense1 := "0BSD"
 	bannedLicense2 := "diffmark"
@@ -217,7 +217,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 		if resp.StatusCode == http.StatusNotFound {
 			continue
-		} else if resp.StatusCode == http.StatusInternalServerError && err.Error() == fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID){
+		} else if resp.StatusCode == http.StatusInternalServerError && err.Error() == fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
 			continue
 		} else if err != nil {
 			return fmt.Errorf("error: Request failed: %s", err.Error())
@@ -280,7 +280,7 @@ resource "xray_policy" "test" {
 }
 
 func testAccXrayPolicy_allActions(name, description, ruleName, email string) string {
-// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
+	// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
 	name  = "%s"
