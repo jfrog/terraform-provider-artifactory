@@ -1,0 +1,12 @@
+name: "go fmt"
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  go_fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check code formatting using gofmt
+        uses: Jerome1337/gofmt-action@v1.0.4
