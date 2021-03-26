@@ -74,6 +74,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
   * `feed_context_path` - (Optional)
   * `download_context_path` - (Optional)
   * `v3_feed_url` - (Optional)
+* `propagate_query_params` - (Optional, Generic repos only)
 
 
 ## Import
