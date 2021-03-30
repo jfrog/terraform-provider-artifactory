@@ -8,9 +8,9 @@ terraform {
   }
 }
 provider "artifactory" {
-  url = "http://localhost:8082"
+  url = "https://christianb-test-rt.jfrog.tech/"
   username = "admin"
-  password = "password"
+  password = "4F7A76EA-EE51-4110-8A47-812698536AFe"
 }
 resource "random_id" randid {
   count = 4
@@ -31,20 +31,16 @@ resource "artifactory_user" "user" {
   groups   = ["readers"]
   password = random_password.randpass[count.index].result
 }
-
-resource "artifactory_remote_repository" "conan-remote" {
-  key = "conan-remote"
-  package_type = "conan"
-  url = "https://conan.bintray.com"
-  repo_layout_ref = "conan-default"
-  notes = "managed by terraform"
+resource "artifactory_local_repository" "npm-local" {
+  key             = "npm-local"
+  package_type    = "npm"
+  repo_layout_ref = "npm-default"
+  xray_index      = true
 }
-
 resource "artifactory_xray_policy" "test" {
-  name  = "test-policy-name"
+  name  = "test-policy-name-severity"
   description = "test policy description"
   type = "security"
-
   rules {
     name = "rule-name"
     priority = 1
@@ -59,17 +55,23 @@ resource "artifactory_xray_policy" "test" {
     }
   }
 }
-
 resource "artifactory_xray_watch" "test" {
-  name = "test-watch-name"
-  description = "test watch description"
+  name  = "watch-npm-local-repo"
+  description = "apply a severity-based policy to the npm local repo"
   resources {
-    type = "all-repos"
-    name = "All Repositories"
+    type = "repository"
+    name = artifactory_local_repository.npm-local.key
+    bin_mgr_id = "example-com-artifactory-instance"
+    filters {
+      type = "package-type"
+      value = "npm"
+    }
   }
   assigned_policies {
     name = artifactory_xray_policy.test.name
     type = "security"
   }
-  watch_recipients = ["test@example.com"]
+  depends_on = [
+    artifactory_local_repository.npm-local
+  ]
 }
