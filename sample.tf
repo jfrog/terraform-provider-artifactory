@@ -8,9 +8,9 @@ terraform {
   }
 }
 provider "artifactory" {
-  url = "https://christianb-test-rt.jfrog.tech/"
+  url = "http://localhost:8082/"
   username = "admin"
-  password = "4F7A76EA-EE51-4110-8A47-812698536AFe"
+  password = "password"
 }
 resource "random_id" randid {
   count = 4
