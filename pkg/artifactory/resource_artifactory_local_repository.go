@@ -32,6 +32,7 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
+				ValidateFunc: repoTypeValidator,
 			},
 			"description": {
 				Type:     schema.TypeString,

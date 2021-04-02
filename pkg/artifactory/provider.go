@@ -5,6 +5,7 @@ import (
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
@@ -16,6 +17,34 @@ import (
 	"net/http"
 	"net/url"
 )
+var repoTypeValidator = validation.StringInSlice([]string{
+	"alpine",
+	"bower",
+	"chef",
+	"cocoapods",
+	"composer",
+	"cran",
+	"debian",
+	"docker",
+	"gems",
+	"generic",
+	"go",
+	"gradle",
+	"helm",
+	"ivy",
+	"maven",
+	"npm",
+	"conda",
+	"nuget",
+	"opkg",
+	"p2",
+	"puppet",
+	"pypi",
+	"rpm",
+	"sbt",
+	"vcs",
+	"yum",
+}, false)
 
 var ProviderVersion = "2.1.0"
 
