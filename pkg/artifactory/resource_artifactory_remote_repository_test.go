@@ -102,7 +102,6 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	enable_cookie_management              = true
 	remote_repo_checksum_policy_type      = "ignore-and-generate"
 	client_tls_certificate				  = ""
-	force_nuget_authentication 			  = true
 }`
 
 func TestAccRemoteRepository_full(t *testing.T) {
@@ -148,8 +147,6 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "enable_cookie_management", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "client_tls_certificate", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "remote_repo_checksum_policy_type", "ignore-and-generate"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "force_nuget_authentication", "true"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "propagate_query_params", "true"),
 				),
 			},
 		},
