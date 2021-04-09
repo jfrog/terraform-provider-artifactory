@@ -42,7 +42,8 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-nuget" {
 	key               		   = "terraform-remote-test-repo-nuget"
 	url               		   = "https://www.nuget.org/"
 	repo_layout_ref   		   = "nuget-default"
-    package_type      		   = "nuget"
+	package_type      		   = "nuget"
+ 	download_context_path		   = "Download"
 	feed_context_path 		   = "/api/notdefault"
 	force_nuget_authentication = true
 }`
