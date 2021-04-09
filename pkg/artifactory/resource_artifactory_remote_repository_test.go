@@ -73,7 +73,6 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	package_type                          = "npm"
 	url                                   = "https://registry.npmjs.org/"
 	username                              = "user"
-	password                              = "pass"
     proxy                                 = ""
 	description                           = "desc"
 	notes                                 = "notes"
@@ -119,7 +118,6 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "package_type", "npm"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "username", "user"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", getMD5Hash("pass")),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "proxy", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "description", "desc (local file cache)"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "notes", "notes"),
