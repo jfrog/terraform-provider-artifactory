@@ -253,8 +253,8 @@ func expandCVSSRange(l []interface{}) *v1.PolicyCVSSRange {
 
 	m := l[0].(map[string]interface{})
 	cvssrange := &v1.PolicyCVSSRange{
-		From:   xray.Int(m["from"].(int)),
-		To: xray.Int(m["to"].(int)),
+		From: xray.Int(m["from"].(int)),
+		To:   xray.Int(m["to"].(int)),
 	}
 	return cvssrange
 }
@@ -275,7 +275,7 @@ func expandActions(l []interface{}) *v1.PolicyRuleActions {
 	if len(l) == 0 {
 		return nil
 	}
-	
+
 	actions := new(v1.PolicyRuleActions)
 	m := l[0].(map[string]interface{}) // We made this a list of one to make schema validation easier
 
@@ -333,10 +333,10 @@ func flattenRules(rules []v1.PolicyRule) []interface{} {
 
 	for i, rule := range rules {
 		m := map[string]interface{}{
-			"name": *rule.Name,
+			"name":     *rule.Name,
 			"priority": *rule.Priority,
 			"criteria": flattenCriteria(rule.Criteria),
-			"actions": flattenActions(rule.Actions),
+			"actions":  flattenActions(rule.Actions),
 		}
 		l[i] = m
 	}
@@ -373,10 +373,10 @@ func flattenCVSSRange(cvss *v1.PolicyCVSSRange) []interface{} {
 	if cvss == nil {
 		return []interface{}{}
 	}
-	
+
 	m := map[string]interface{}{
 		"from": *cvss.From,
-		"to": *cvss.To,
+		"to":   *cvss.To,
 	}
 	return []interface{}{m}
 }

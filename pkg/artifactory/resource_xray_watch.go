@@ -93,8 +93,8 @@ func resourceXrayWatch() *schema.Resource {
 			},
 
 			"watch_recipients": {
-				Type:          schema.TypeList,
-				Optional:      true,
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

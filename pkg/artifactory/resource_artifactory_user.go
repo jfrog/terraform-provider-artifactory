@@ -199,7 +199,7 @@ func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("user %s not deleted. Status code: %d",*user.Name, resp.StatusCode)
+	return fmt.Errorf("user %s not deleted. Status code: %d", *user.Name, resp.StatusCode)
 }
 
 // generatePassword used as default func to generate user passwords. It's possible for this to be incompatible with what

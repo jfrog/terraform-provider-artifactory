@@ -175,7 +175,7 @@ func testAccCheckWatchDestroy(s *terraform.State) error {
 		} else {
 			continue
 		}
-		
+
 	}
 
 	return nil
@@ -285,7 +285,7 @@ resource "xray_watch" "test" {
 		type = "security"
 	}
 }
-`,policyName, name, description, repoName, binMgrId, filterValue)
+`, policyName, name, description, repoName, binMgrId, filterValue)
 }
 
 func testAccXrayWatch_builds(name, description, policyName, binMgrId string) string {

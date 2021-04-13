@@ -179,14 +179,14 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtXray, err := xray.NewClient(fmt.Sprintf("%s/xray/",baseUrl), client)
+	rtXray, err := xray.NewClient(fmt.Sprintf("%s/xray/", baseUrl), client)
 	if err != nil {
 		return nil, err
 	}
 
 	productId := "terraform-provider-artifactory/" + ProviderVersion
 	commandId := "Terraform/" + terraformVersion
-	if err = usage.SendReportUsage(productId, commandId, rtNew); err != nil{
+	if err = usage.SendReportUsage(productId, commandId, rtNew); err != nil {
 		return nil, err
 	}
 
