@@ -62,6 +62,7 @@ resource "artifactory_xray_watch" "test" {
     type = "repository"
     name = artifactory_local_repository.npm-local.key
     bin_mgr_id = "example-com-artifactory-instance"
+    repo_type = "local"
     filters {
       type = "package-type"
       value = "npm"

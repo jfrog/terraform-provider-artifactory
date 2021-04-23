@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/jasonwbarnett/go-xray/xray"
 	v2 "github.com/jasonwbarnett/go-xray/xray/v2"
 )
@@ -52,6 +53,15 @@ func resourceXrayWatch() *schema.Resource {
 						"bin_mgr_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"repo_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"local",
+								"remote",
+							}, false),
 						},
 						"filters": {
 							Type:     schema.TypeList,
@@ -146,6 +156,9 @@ func expandProjectResource(rawCfg interface{}) *v2.WatchProjectResource {
 	if v, ok := cfg["bin_mgr_id"]; ok {
 		resource.BinaryManagerId = xray.String(v.(string))
 	}
+	if v, ok := cfg["repo_type"]; ok {
+		resource.RepoType = xray.String(v.(string))
+	}
 	if v, ok := cfg["name"]; ok {
 		resource.Name = xray.String(v.(string))
 	}
@@ -200,6 +213,9 @@ func flattenProjectResources(resources *v2.WatchProjectResources) []interface{} 
 		}
 		if res.BinaryManagerId != nil {
 			m["bin_mgr_id"] = res.BinaryManagerId
+		}
+		if res.RepoType != nil {
+			m["repo_type"] = res.RepoType
 		}
 		m["filters"] = flattenFilters(res.Filters)
 		l = append(l, m)
