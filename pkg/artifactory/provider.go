@@ -7,16 +7,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/jasonwbarnett/go-xray/xray"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/usage"
 	auth2 "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/jasonwbarnett/go-xray/xray"
 	"net/http"
 	"net/url"
 )
+
 var repoTypeValidator = validation.StringInSlice([]string{
 	"alpine",
 	"bower",

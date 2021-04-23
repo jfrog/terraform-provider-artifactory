@@ -28,10 +28,10 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				ForceNew: true,
 			},
 			"package_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
 				ValidateFunc: repoTypeValidator,
 			},
 			"description": {
