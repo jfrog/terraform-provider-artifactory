@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/xero-oss/go-xray/xray"
-	v2 "github.com/xero-oss/go-xray/xray/v2"
+	"github.com/jasonwbarnett/go-xray/xray"
+	v2 "github.com/jasonwbarnett/go-xray/xray/v2"
 )
 
 func resourceXrayWatch() *schema.Resource {

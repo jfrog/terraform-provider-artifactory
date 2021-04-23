@@ -13,7 +13,7 @@ import (
 	auth2 "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"github.com/xero-oss/go-xray/xray"
+	"github.com/jasonwbarnett/go-xray/xray"
 	"net/http"
 	"net/url"
 )
