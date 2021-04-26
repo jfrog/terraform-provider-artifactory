@@ -27,7 +27,7 @@ func TestAccWatch_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", watchName),
 					resource.TestCheckResourceAttr(resourceName, "description", watchDesc),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "all-repos"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.type", "all-repos"),
 					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.type", "security"),
 				),
@@ -70,9 +70,9 @@ func TestAccWatch_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", watchName),
 					resource.TestCheckResourceAttr(resourceName, "description", watchDesc),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.filters.0.type", "package-type"),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.filters.0.value", filterValue),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "repository"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.filters.0.type", "package-type"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.filters.0.value", filterValue),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.type", "repository"),
 				),
 			},
 			{
@@ -85,9 +85,9 @@ func TestAccWatch_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", watchName),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDesc),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.filters.0.type", "package-type"),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.filters.0.value", updatedValue),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "repository"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.filters.0.type", "package-type"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.filters.0.value", updatedValue),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.type", "repository"),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccWatch_builds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", watchName),
 					resource.TestCheckResourceAttr(resourceName, "description", watchDesc),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "all-builds"),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.type", "all-builds"),
 					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.type", "security"),
 				),

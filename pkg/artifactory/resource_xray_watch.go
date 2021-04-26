@@ -37,7 +37,7 @@ func resourceXrayWatch() *schema.Resource {
 				Optional: true,
 			},
 
-			"resources": {
+			"resource": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -110,7 +110,65 @@ func resourceXrayWatch() *schema.Resource {
 				},
 			},
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    xrayWatchSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: xrayWatchInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 	}
+}
+
+func xrayWatchSchemaV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"resource": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"bin_mgr_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"filters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func xrayWatchInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	rawState["resource"] = rawState["resources"]
+	delete(rawState, "resource")
+
+	return rawState, nil
 }
 
 func expandWatch(d *schema.ResourceData) *v2.Watch {
@@ -128,7 +186,7 @@ func expandWatch(d *schema.ResourceData) *v2.Watch {
 	watch.GeneralData = gd
 
 	pr := &v2.WatchProjectResources{}
-	if v, ok := d.GetOk("resources"); ok {
+	if v, ok := d.GetOk("resource"); ok {
 		r := &[]v2.WatchProjectResource{}
 		for _, res := range v.([]interface{}) {
 			*r = append(*r, *expandProjectResource(res))
@@ -288,7 +346,7 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("active", watch.GeneralData.Active); err != nil {
 		return err
 	}
-	if err := d.Set("resources", flattenProjectResources(watch.ProjectResources)); err != nil {
+	if err := d.Set("resource", flattenProjectResources(watch.ProjectResources)); err != nil {
 		return err
 	}
 	if err := d.Set("assigned_policies", flattenAssignedPolicies(watch.AssignedPolicies)); err != nil {

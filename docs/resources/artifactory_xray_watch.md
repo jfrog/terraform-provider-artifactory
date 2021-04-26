@@ -9,7 +9,7 @@ Provides a Xray watch resource.
 resource "xray_watch" "example" {
   name  = "watch-name"
   description = "watching all repositories"
-  resources {
+  resource {
     type = "all-repos"
     name = "All Repositories"
   }
@@ -27,12 +27,12 @@ The following arguments are supported:
 * `name` - (Required) Name of the watch (must be unique)
 * `description` - (Optional) Description of the watch
 * `active` - (Optional) Whether or not the watch will be active
-* `resources` - (Required) Nested argument describing the resources to be watched. Defined below.
+* `resource` - (Required) Nested argument describing the resource to be watched. Defined below.
 * `assigned_policies` - (Required) Nested argument describing policies that will be applied. Defined below.
 
-### resources
+### resource
 
-The top-level `resources` block contains a list of one or more resource objects that each support the following:
+The top-level `resource` block contains a list of one or more resource objects that each support the following:
 
 * `type` - (Required) Type of resource to be watched
 * `name` - (Required) A name describing the resource

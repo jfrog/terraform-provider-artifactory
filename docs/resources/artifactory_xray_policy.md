@@ -24,7 +24,7 @@ resource "xray_policy" "example" {
 resource "xray_watch" "example" {
   name  = "watch-name"
   description = "watching all repositories"
-  resources {
+  resource {
     type = "all-repos"
     name = "All Repositories"
   }

@@ -68,7 +68,7 @@ resource "artifactory_xray_watch" "test" {
   name        = "watch-npm-local-repo"
   description = "apply a severity-based policy to the npm local repo"
 
-  resources {
+  resource {
     type       = "repository"
     name       = artifactory_local_repository.npm-local.key
     bin_mgr_id = "example-com-artifactory-instance"
@@ -79,7 +79,7 @@ resource "artifactory_xray_watch" "test" {
     }
   }
 
-  resources {
+  resource {
     type       = "repository"
     name       = artifactory_remote_repository.npm-remote.key
     bin_mgr_id = "default"
