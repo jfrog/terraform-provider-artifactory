@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/xero-oss/go-xray/xray"
+	"github.com/jasonwbarnett/go-xray/xray"
 )
 
 func TestAccPolicy_basic(t *testing.T) {

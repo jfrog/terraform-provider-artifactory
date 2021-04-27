@@ -30,10 +30,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				ForceNew: true,
 			},
 			"package_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "generic",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "generic",
 				ValidateFunc: repoTypeValidator,
 			},
 			"description": {
