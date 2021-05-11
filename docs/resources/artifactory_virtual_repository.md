@@ -29,9 +29,9 @@ resource "artifactory_virtual_repository" "foo" {
 
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
-* `key` - (Optional)
-* `package_type` - (Optional)
-* `repositories` - (Optional)
+* `key` - (Required)
+* `package_type` - (Required)
+* `repositories` - (Required)
 * `description` - (Optional)
 * `notes` - (Optional)
 * `includes_pattern` - (Optional)
