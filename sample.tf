@@ -45,6 +45,15 @@ resource "artifactory_remote_repository" "npm-remote" {
   xray_index   = true
 }
 
+resource "artifactory_remote_repository" "icts-p-icts-alpine-generic-remote" {
+  key                    = "icts-p-icts-alpine-generic-remote"
+  description            = "alpine Repos"
+  package_type           = "generic"
+  repo_layout_ref        = "simple-default"
+  url                    = "http://dl-cdn.alpinelinux.org/alpine"
+  propagate_query_params = true
+}
+
 resource "artifactory_xray_policy" "test" {
   name        = "test-policy-name-severity"
   description = "test policy description"

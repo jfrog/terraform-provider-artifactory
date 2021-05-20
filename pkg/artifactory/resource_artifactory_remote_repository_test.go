@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -41,7 +42,8 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-nuget" {
 	key               		   = "terraform-remote-test-repo-nuget"
 	url               		   = "https://www.nuget.org/"
 	repo_layout_ref   		   = "nuget-default"
-    package_type      		   = "nuget"
+	package_type      		   = "nuget"
+ 	download_context_path		   = "Download"
 	feed_context_path 		   = "/api/notdefault"
 	force_nuget_authentication = true
 }`
@@ -71,7 +73,6 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	package_type                          = "npm"
 	url                                   = "https://registry.npmjs.org/"
 	username                              = "user"
-	password                              = "pass"
     proxy                                 = ""
 	description                           = "desc"
 	notes                                 = "notes"
@@ -101,7 +102,6 @@ resource "artifactory_remote_repository" "terraform-remote-test-repo-full" {
 	enable_cookie_management              = true
 	remote_repo_checksum_policy_type      = "ignore-and-generate"
 	client_tls_certificate				  = ""
-	force_nuget_authentication 			  = true
 }`
 
 func TestAccRemoteRepository_full(t *testing.T) {
@@ -117,7 +117,6 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "package_type", "npm"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "username", "user"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "password", getMD5Hash("pass")),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "proxy", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "description", "desc (local file cache)"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "notes", "notes"),
@@ -148,7 +147,6 @@ func TestAccRemoteRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "enable_cookie_management", "true"),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "client_tls_certificate", ""),
 					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "remote_repo_checksum_policy_type", "ignore-and-generate"),
-					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-full", "force_nuget_authentication", "true"),
 				),
 			},
 		},
@@ -176,4 +174,53 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 			return fmt.Errorf("repository %s still exists", rs.Primary.ID)
 		}
 	}
+}
+
+const remoteNpmRepoBasicWithPropagate = `
+resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
+	key                     = "terraform-remote-test-repo-basic"
+        package_type            = "npm"
+	url                     = "https://registry.npmjs.org/"
+	repo_layout_ref         = "npm-default"
+	propagate_query_params  = true
+}`
+
+func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      remoteNpmRepoBasicWithPropagate,
+				ExpectError: regexp.MustCompile(`Cannot use propagate_query_params with repository type npm. This parameter can be used only with generic repositories.`),
+			},
+		},
+	})
+}
+
+const remoteGenericRepoBasicWithPropagate = `
+resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
+	key                     = "terraform-remote-test-repo-basic"
+        package_type            = "generic"
+	url                     = "https://registry.npmjs.org/"
+	repo_layout_ref         = "simple-default"
+	propagate_query_params  = true
+}`
+
+func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: resourceRemoteRepositoryCheckDestroy("artifactory_remote_repository.terraform-remote-test-repo-basic"),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteGenericRepoBasicWithPropagate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "key", "terraform-remote-test-repo-basic"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "package_type", "generic"),
+					resource.TestCheckResourceAttr("artifactory_remote_repository.terraform-remote-test-repo-basic", "propagate_query_params", "true"),
+				),
+			},
+		},
+	})
 }

@@ -300,11 +300,16 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 					},
 				},
 			},
+			"propagate_query_params": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
+func unpackRemoteRepo(s *schema.ResourceData) (*v1.RemoteRepository, error) {
 	d := &ResourceData{s}
 	repo := new(v1.RemoteRepository)
 
@@ -356,6 +361,7 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 	repo.DownloadContextPath = d.getStringRef("download_context_path", true)
 	repo.V3FeedUrl = d.getStringRef("v3_feed_url", true)
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
+	repo.PropagateQueryParams = d.getBoolRef("propagate_query_params", true)
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
@@ -374,8 +380,11 @@ func unpackRemoteRepo(s *schema.ResourceData) *v1.RemoteRepository {
 			V3FeedUrl:           &v3FeedUrl,
 		}
 	}
+	if repo.PackageType != nil && *repo.PackageType != "generic" && repo.PropagateQueryParams != nil && *repo.PropagateQueryParams == true {
+		return nil, fmt.Errorf("Cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories.", *repo.PackageType)
+	}
 
-	return repo
+	return repo, nil
 }
 
 func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
@@ -427,6 +436,7 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("download_context_path", repo.DownloadContextPath))
 	logErr(d.Set("v3_feed_url", repo.V3FeedUrl))
 	logErr(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
+	logErr(d.Set("propagate_query_params", repo.PropagateQueryParams))
 	if repo.ContentSynchronisation != nil {
 		logErr(d.Set("content_synchronisation", []interface{}{
 			map[string]*bool{
@@ -457,8 +467,11 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
-	repo := unpackRemoteRepo(d)
-	_, err := c.V1.Repositories.CreateRemote(context.Background(), repo)
+	repo, err := unpackRemoteRepo(d)
+	if err != nil {
+		return err
+	}
+	_, err = c.V1.Repositories.CreateRemote(context.Background(), repo)
 	if err != nil {
 		return err
 	}
@@ -484,9 +497,11 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
-	repo := unpackRemoteRepo(d)
-
-	_, err := c.V1.Repositories.UpdateRemote(context.Background(), d.Id(), repo)
+	repo, err := unpackRemoteRepo(d)
+	if err != nil {
+		return err
+	}
+	_, err = c.V1.Repositories.UpdateRemote(context.Background(), d.Id(), repo)
 	if err != nil {
 		return err
 	}
@@ -497,8 +512,10 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
-	repo := unpackRemoteRepo(d)
-
+	repo, err := unpackRemoteRepo(d)
+	if err != nil {
+		return err
+	}
 	resp, err := c.V1.Repositories.DeleteRemote(context.Background(), *repo.Key)
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
