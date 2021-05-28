@@ -55,7 +55,7 @@ var ProviderVersion = "2.1.0"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
-	ArtNew *artifactorynew.ArtifactoryServicesManager
+	ArtNew artifactorynew.ArtifactoryServicesManager
 	Xray   *xray.Xray
 }
 
@@ -172,7 +172,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtNew, err := artifactorynew.New(&details, cfg)
+	rtNew, err := artifactorynew.New(cfg)
 
 	if err != nil {
 		return nil, err
