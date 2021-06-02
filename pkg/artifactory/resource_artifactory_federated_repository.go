@@ -201,6 +201,9 @@ func resourceFederatedRepositoryRead(d *schema.ResourceData, m interface{}) erro
 		hasErr := false
 		logError := cascadingErr(&hasErr)
 
+		if hasErr {
+			return fmt.Errorf("failed to marshal group")
+		}
 		logError(d.Set("key", repo.Key))
 		logError(d.Set("package_type", repo.PackageType))
 		logError(d.Set("description", repo.Description))
@@ -226,9 +229,6 @@ func resourceFederatedRepositoryRead(d *schema.ResourceData, m interface{}) erro
 		logError(d.Set("xray_index", repo.XrayIndex))
 		logError(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
 
-		if hasErr {
-			return fmt.Errorf("failed to marshal group")
-		}
 	}
 
 	return err
