@@ -180,7 +180,6 @@ func unmarshalFederatedRepository(s *schema.ResourceData) *v1.FederatedRepositor
 
 func resourceFederatedRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
-	fmt.Println("Hello")
 	repo := unmarshalFederatedRepository(d)
 
 	_, err := c.V1.Repositories.CreateFederated(context.Background(), repo)
@@ -194,7 +193,6 @@ func resourceFederatedRepositoryCreate(d *schema.ResourceData, m interface{}) er
 
 func resourceFederatedRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
-	fmt.Println("Hello")
 	repo, resp, err := c.V1.Repositories.GetFederated(context.Background(), d.Id())
 
 	if resp.StatusCode == http.StatusNotFound {
