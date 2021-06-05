@@ -112,6 +112,7 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_api_key":                   resourceArtifactoryApiKey(),
 			"artifactory_access_token":              resourceArtifactoryAccessToken(),
 			"artifactory_general_security":          resourceArtifactoryGeneralSecurity(),
+			"artifactory_oauth_settings":            resourceArtifactoryOauthSettings(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 			// Xray resources
