@@ -2,6 +2,9 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -14,8 +17,6 @@ import (
 	auth2 "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"net/url"
 )
 
 var repoTypeValidator = validation.StringInSlice([]string{
@@ -110,6 +111,7 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_certificate":               resourceArtifactoryCertificate(),
 			"artifactory_api_key":                   resourceArtifactoryApiKey(),
 			"artifactory_access_token":              resourceArtifactoryAccessToken(),
+			"artifactory_general_security":          resourceArtifactoryGeneralSecurity(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 			// Xray resources
