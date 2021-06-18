@@ -3,9 +3,10 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"net/http"
+
+	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceArtifactorySingleReplicationConfig() *schema.Resource {
