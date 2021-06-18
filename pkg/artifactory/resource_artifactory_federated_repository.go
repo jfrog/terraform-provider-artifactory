@@ -8,6 +8,7 @@ import (
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/jasonwbarnett/go-xray/xray"
 )
 
 func resourceArtifactoryFederatedRepository() *schema.Resource {
@@ -33,6 +34,22 @@ func resourceArtifactoryFederatedRepository() *schema.Resource {
 				ForceNew:     true,
 				Computed:     true,
 				ValidateFunc: repoTypeValidator,
+			},
+			"members": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -143,6 +160,23 @@ func resourceArtifactoryFederatedRepository() *schema.Resource {
 	}
 }
 
+func expandMembers(members []interface{}) *[]v1.Member {
+	membersResult := make([]v1.Member, 0, len(members))
+
+	for _, raw := range members {
+		member := new(v1.Member)
+		data := raw.(map[string]interface{})
+		member.URL = xray.String(data["url"].(string))
+		if v, ok := data["enabled"]; ok {
+			member.Enabled = xray.Bool(v.(bool))
+		}
+
+		membersResult = append(membersResult, *member)
+	}
+
+	return &membersResult
+}
+
 func unmarshalFederatedRepository(s *schema.ResourceData) *v1.FederatedRepository {
 	d := &ResourceData{s}
 
@@ -152,6 +186,7 @@ func unmarshalFederatedRepository(s *schema.ResourceData) *v1.FederatedRepositor
 
 	repo.Key = d.getStringRef("key", false)
 	repo.PackageType = d.getStringRef("package_type", false)
+	repo.Members = expandMembers(s.Get("members").([]interface{}))
 	repo.Description = d.getStringRef("description", false)
 	repo.Notes = d.getStringRef("notes", false)
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
@@ -206,6 +241,7 @@ func resourceFederatedRepositoryRead(d *schema.ResourceData, m interface{}) erro
 		}
 		logError(d.Set("key", repo.Key))
 		logError(d.Set("package_type", repo.PackageType))
+		logError(d.Set("members", repo.Members))
 		logError(d.Set("description", repo.Description))
 		logError(d.Set("notes", repo.Notes))
 		logError(d.Set("includes_pattern", repo.IncludesPattern))
