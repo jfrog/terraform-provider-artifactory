@@ -83,7 +83,8 @@ func resourceArtifactoryOauthSettings() *schema.Resource {
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Default:  true,
 						},
 						"type": {
 							Type:     schema.TypeString,

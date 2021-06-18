@@ -34,7 +34,7 @@ The following arguments are supported:
 * `persist_users`                   - (Optional) Enable the creation of local Artifactory users.  Default value is `false`.
 * `allow_user_to_access_profile`    - (Optional) Allow persisted users to access their profile.  Default value is `false`.
 * `oauth_provider`                  - (Required) OAuth provider settings block. Multiple blocks can be defined, at least one is required.
-    * `enabled`                     - (Required) Enable the Artifactory OAuth provider.
+    * `enabled`                     - (Optional) Enable the Artifactory OAuth provider.  Default value is `true`.
     * `name`                        - (Required) Name of the Artifactory OAuth provider.
     * `type`                        - (Required) Type of OAuth provider. (e.g., `github`, `google`, `cloudfoundry`, or `openId`)
     * `client_id`                   - (Required) OAuth client ID configured on the IdP.

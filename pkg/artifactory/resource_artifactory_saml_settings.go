@@ -71,6 +71,7 @@ func resourceArtifactorySamlSettings() *schema.Resource {
 			"no_auto_user_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"service_provider_name": {
 				Type:     schema.TypeString,
@@ -79,18 +80,22 @@ func resourceArtifactorySamlSettings() *schema.Resource {
 			"allow_user_to_access_profile": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 			"auto_redirect": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"sync_groups": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"verify_audience_restriction": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 		},
 	}
