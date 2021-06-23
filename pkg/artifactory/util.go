@@ -88,3 +88,15 @@ func cascadingErr(hasErr *bool) func(error) {
 		}
 	}
 }
+
+func sendConfigurationPatch(content []byte, m interface{}) error {
+	c := m.(*ArtClient).ArtNew
+
+	serviceDetails := c.GetConfig().GetServiceDetails()
+	httpClientDetails := serviceDetails.CreateHttpClientDetails()
+	httpClientDetails.Headers["Content-Type"] = "application/yaml"
+
+	_, _, err := c.Client().SendPatch(fmt.Sprintf("%sapi/system/configuration", serviceDetails.GetUrl()), content, &httpClientDetails)
+
+	return err
+}
