@@ -2,6 +2,9 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -14,8 +17,9 @@ import (
 	auth2 "github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"net/http"
-	"net/url"
+
+	jfrogxray "github.com/jfrog/jfrog-client-go/xray"
+	jfrogxrayauth "github.com/jfrog/jfrog-client-go/xray/auth"
 )
 
 var repoTypeValidator = validation.StringInSlice([]string{
@@ -54,9 +58,10 @@ var repoTypeValidator = validation.StringInSlice([]string{
 var ProviderVersion = "2.1.0"
 
 type ArtClient struct {
-	ArtOld *artifactoryold.Artifactory
-	ArtNew *artifactorynew.ArtifactoryServicesManager
-	Xray   *xray.Xray
+	ArtOld    *artifactoryold.Artifactory
+	ArtNew    *artifactorynew.ArtifactoryServicesManager
+	Xray      *xray.Xray
+	JfrogXray *jfrogxray.XrayServicesManager
 }
 
 // Artifactory Provider that supports configuration via username+password or a token
@@ -172,7 +177,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtNew, err := artifactorynew.New(&details, cfg)
+	rtNew, err := artifactorynew.New(cfg)
 
 	if err != nil {
 		return nil, err
@@ -180,7 +185,14 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	rtXray, err := xray.NewClient(fmt.Sprintf("%s/xray/", baseUrl), client)
+	xrayUrl := fmt.Sprintf("%s/xray/", baseUrl)
+
+	rtXray, err := xray.NewClient(xrayUrl, client)
+	if err != nil {
+		return nil, err
+	}
+
+	rtJfrogXray, err := createJfrogXrayClient(d, xrayUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -192,9 +204,10 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 
 	rt := &ArtClient{
-		ArtOld: rtOld,
-		ArtNew: rtNew,
-		Xray:   rtXray,
+		ArtOld:    rtOld,
+		ArtNew:    &rtNew,
+		Xray:      rtXray,
+		JfrogXray: rtJfrogXray,
 	}
 
 	return rt, nil
@@ -231,4 +244,51 @@ func buildClient(d *schema.ResourceData) (*http.Client, auth2.ServiceDetails, er
 	} else {
 		return nil, nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
 	}
+}
+
+func createJfrogXrayClient(d *schema.ResourceData, xrayURL string) (*jfrogxray.XrayServicesManager, error) {
+	details := jfrogxrayauth.NewXrayDetails()
+
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	apiKey := d.Get("api_key").(string)
+
+	if len(xrayURL) <= 0 {
+		return nil, fmt.Errorf("xray URL must not be empty")
+	}
+
+	_, err := url.Parse(xrayURL)
+	if err != nil {
+		return nil, err
+	}
+
+	if xrayURL[len(xrayURL)-1] != '/' {
+		xrayURL += "/"
+	}
+	details.SetUrl(xrayURL)
+
+	if username != "" && password != "" {
+		details.SetUser(username)
+		details.SetPassword(password)
+	} else if apiKey != "" {
+		details.SetApiKey(apiKey)
+	} else {
+		return nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
+	}
+
+	config, err := config.NewConfigBuilder().
+		SetServiceDetails(details).
+		SetDryRun(false).
+		Build()
+
+	if err != nil {
+		return nil, err
+	}
+
+	xrayClient, err := jfrogxray.New(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return xrayClient, nil
 }
