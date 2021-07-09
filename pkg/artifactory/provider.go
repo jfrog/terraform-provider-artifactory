@@ -246,26 +246,14 @@ func buildClient(d *schema.ResourceData) (*http.Client, auth2.ServiceDetails, er
 	}
 }
 
-func createJfrogXrayClient(d *schema.ResourceData, xrayURL string) (*jfrogxray.XrayServicesManager, error) {
+func createJfrogXrayClient(d *schema.ResourceData, xrayUrl string) (*jfrogxray.XrayServicesManager, error) {
 	details := jfrogxrayauth.NewXrayDetails()
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	apiKey := d.Get("api_key").(string)
 
-	if len(xrayURL) <= 0 {
-		return nil, fmt.Errorf("xray URL must not be empty")
-	}
-
-	_, err := url.Parse(xrayURL)
-	if err != nil {
-		return nil, err
-	}
-
-	if xrayURL[len(xrayURL)-1] != '/' {
-		xrayURL += "/"
-	}
-	details.SetUrl(xrayURL)
+	details.SetUrl(xrayUrl)
 
 	if username != "" && password != "" {
 		details.SetUser(username)
