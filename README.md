@@ -30,31 +30,18 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 
 
 ## Build the Provider
-If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
-After placing it into your plugins directory,  run `terraform init` to initialize it.
+Simply run `make install` - this will compile the provider and install it to `~/.terraform.d`. When running this, it will
+take the current tag and bump it 1 minor version. It does not actually create a new tag (that is `make release`). 
+If you wish to use the locally installed provider, make sure your TF script refers to the new version number 
 
 Requirements:
-- [Terraform](https://www.terraform.io/downloads.html) 0.11
-- [Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
+- [Terraform](https://www.terraform.io/downloads.html) 0.13
+- [Go](https://golang.org/doc/install) 1.15+ (to build the provider plugin)
 
-Clone repository to: `$GOPATH/src/github.com/jfrog/terraform-provider-artifactory`
-
-Enter the provider directory and build the provider
-
-```sh
-cd $GOPATH/src/github.com/jfrog/terraform-provider-artifactory
-go build
-```
-
-To install the provider
-```sh
-cd $GOPATH/src/github.com/jfrog/terraform-provider-artifactory
-go install
-```
 ## Testing
 How to run the tests isn't obvious.
-First, you need a running instance of artifactory. Included with this repo is a functioning `docker-compose.yml`
-that will fire up the whole stack for you. Run it as:
+First, you need a running instance of the jfrog platform (RT and XR). Included with this repo is a mostly functioning `docker-compose.yml`
+that will fire up the whole stack for you. Currently it requires Linux (ubuntu) to work properly:
 
 ```bash
 docker-compose up -d
