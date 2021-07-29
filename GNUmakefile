@@ -36,7 +36,7 @@ testacc: fmtcheck artifactory
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME)
-	command -v goimports &> /dev/null || (go get golang.org/x/tools/cmd/goimports && goimports -w pkg/artifactory)
+	(command -v goimports &> /dev/null || go get golang.org/x/tools/cmd/goimports) && goimports -w pkg/artifactory
 
 fmtcheck:
 	@echo "==> Checking that code complies with gofmt requirements..."
