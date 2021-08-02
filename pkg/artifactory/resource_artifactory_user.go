@@ -162,6 +162,11 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
+
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourceUserRead")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil

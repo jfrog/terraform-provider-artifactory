@@ -138,6 +138,11 @@ func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) erro
 		}
 
 		repo, resp, err := client.V1.Repositories.GetVirtual(context.Background(), rs.Primary.ID)
+
+		if resp == nil {
+			return fmt.Errorf("no response returned in testAccCheckVirtualRepositoryDestroy")
+		}
+
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
 		} else if err != nil {

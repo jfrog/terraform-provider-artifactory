@@ -71,20 +71,22 @@ So, you need to actually halt the provider and have it wait for your debugger to
 
 Having said all that, here are the steps:
 1. Install [delve](https://github.com/go-delve/delve)
-2. Add a snippet of go code to the [provider initializer](pkg/artifactory/provider.go) `providerConfigure`, where in you install a busy sleep loop:
+2. Keep in mind that terraform will 
+   parallel process if it can, and it will start new instances of the TF provider process when running apply between the plan and confirmation
+   Add a snippet of go code to the close to where you need to break where in you install a busy sleep loop:
 ```go
 	debug := true
 	for debug {
 		time.Sleep(time.Second) // set breakpoint here
 	}
 ``` 
-and set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`,
+Then set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`,
 thus breaking the sleep loop and allow you to continue. 
 2. Compile the provider with debug symbology (`go build -gcflags "all=-N -l"`)
 3. Install the provider (change as needed for your version)
 ```bash 
-mkdir -p .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64 \
-    && mv terraform-provider-artifactory .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64
+# this will bump your version by 1 so it doesn't download from TF. Make sure you update any test scripts accordingly
+make install 
 ```
 4. Run your provider: `terraform init && terraform plan` - it will start in this busy sleep loop.
 5. In a separate shell, find the `PID` of the provider that got forked 

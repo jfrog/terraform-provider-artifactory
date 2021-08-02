@@ -52,6 +52,10 @@ func testPermissionTargetV1CheckDestroy(id string) func(*terraform.State) error 
 
 		permissionTargets, resp, err := client.V1.Security.GetPermissionTargets(context.Background(), rs.Primary.ID)
 
+		if resp == nil {
+			return fmt.Errorf("no response returned in testPermissionTargetV1CheckDestroy")
+		}
+
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
 		} else if err != nil {

@@ -66,6 +66,10 @@ func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 
 		replica, resp, err := client.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
 
+		if resp == nil {
+			return fmt.Errorf("no response returned in testAccCheckReplicationDestroy")
+		}
+
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
 		} else if err != nil {

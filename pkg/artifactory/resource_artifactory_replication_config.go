@@ -275,6 +275,10 @@ func resourceReplicationConfigExists(d *schema.ResourceData, m interface{}) (boo
 	replicationName := d.Id()
 	_, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)
 
+	if resp == nil {
+		return false, fmt.Errorf("no response returned in resourceReplicationConfigExists")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil
 	} else if err != nil {

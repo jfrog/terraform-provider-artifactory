@@ -23,7 +23,7 @@ func TestAccPolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayPolicy_basic(policyName, policyDesc, ruleName),
+				Config: testAccXrayPolicyBasic(policyName, policyDesc, ruleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -55,7 +55,7 @@ func TestAccPolicy_cvssRange(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayPolicy_cvssRange(policyName, policyDesc, ruleName, rangeTo),
+				Config: testAccXrayPolicyCVSSRange(policyName, policyDesc, ruleName, rangeTo),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -70,7 +70,7 @@ func TestAccPolicy_cvssRange(t *testing.T) {
 				ImportStateVerify: false,
 			},
 			{
-				Config: testAccXrayPolicy_cvssRange(policyName, policyDesc, ruleName, updatedRangeTo),
+				Config: testAccXrayPolicyCVSSRange(policyName, policyDesc, ruleName, updatedRangeTo),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -99,7 +99,7 @@ func TestAccPolicy_allActions(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayPolicy_allActions(policyName, policyDesc, ruleName, actionMail),
+				Config: testAccXrayPolicyAllActions(policyName, policyDesc, ruleName, actionMail),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -116,7 +116,7 @@ func TestAccPolicy_allActions(t *testing.T) {
 				ImportStateVerify: false,
 			},
 			{
-				Config: testAccXrayPolicy_allActions(policyName, updatedDesc, updatedRuleName, updatedMail),
+				Config: testAccXrayPolicyAllActions(policyName, updatedDesc, updatedRuleName, updatedMail),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDesc),
@@ -146,7 +146,7 @@ func TestAccPolicy_licenseCriteria(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayPolicy_license(policyName, policyDesc, ruleName, allowedLicense),
+				Config: testAccXrayPolicyLicense(policyName, policyDesc, ruleName, allowedLicense),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -161,7 +161,7 @@ func TestAccPolicy_licenseCriteria(t *testing.T) {
 				ImportStateVerify: false,
 			},
 			{
-				Config: testAccXrayPolicy_licenseBanned(policyName, policyDesc, ruleName, bannedLicense1, bannedLicense2),
+				Config: testAccXrayPolicyLicenseBanned(policyName, policyDesc, ruleName, bannedLicense1, bannedLicense2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", policyName),
 					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
@@ -214,13 +214,15 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 		}
 
 		policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
-
-		if resp.StatusCode == http.StatusNotFound {
-			continue
-		} else if resp.StatusCode == http.StatusInternalServerError && err.Error() == fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
-			continue
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
+		if resp == nil {
+			return fmt.Errorf("no response returned in testAccCheckPolicyDestroy")
+		}
+		if err != nil {
+			if resp.StatusCode == http.StatusInternalServerError &&
+				err.Error() != fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
+				return fmt.Errorf("error: Request failed: %s", err.Error())
+			}
+			return err
 		} else {
 			return fmt.Errorf("error: Policy %s still exists %s", rs.Primary.ID, *policy.Name)
 		}
@@ -228,7 +230,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccXrayPolicy_basic(name, description, ruleName string) string {
+func testAccXrayPolicyBasic(name, description, ruleName string) string {
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
 	name  = "%s"
@@ -252,7 +254,7 @@ resource "xray_policy" "test" {
 `, name, description, ruleName)
 }
 
-func testAccXrayPolicy_cvssRange(name, description, ruleName string, rangeTo int) string {
+func testAccXrayPolicyCVSSRange(name, description, ruleName string, rangeTo int) string {
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
 	name  = "%s"
@@ -279,7 +281,7 @@ resource "xray_policy" "test" {
 `, name, description, ruleName, rangeTo)
 }
 
-func testAccXrayPolicy_allActions(name, description, ruleName, email string) string {
+func testAccXrayPolicyAllActions(name, description, ruleName, email string) string {
 	// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
@@ -307,7 +309,7 @@ resource "xray_policy" "test" {
 `, name, description, ruleName, email)
 }
 
-func testAccXrayPolicy_license(name, description, ruleName, allowedLicense string) string {
+func testAccXrayPolicyLicense(name, description, ruleName, allowedLicense string) string {
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
 	name = "%s"
@@ -332,7 +334,7 @@ resource "xray_policy" "test" {
 `, name, description, ruleName, allowedLicense)
 }
 
-func testAccXrayPolicy_licenseBanned(name, description, ruleName, bannedLicense1, bannedLicense2 string) string {
+func testAccXrayPolicyLicenseBanned(name, description, ruleName, bannedLicense1, bannedLicense2 string) string {
 	return fmt.Sprintf(`
 resource "xray_policy" "test" {
 	name = "%s"
@@ -355,25 +357,4 @@ resource "xray_policy" "test" {
 	}
 }
 `, name, description, ruleName, bannedLicense1, bannedLicense2)
-}
-
-func testAccXrayPolicy_missingBlockDownloads(name, description, ruleName string) string {
-	return fmt.Sprintf(`
-resource "xray_policy" "test" {
-	name  = "%s"
-	description = "%s"
-	type = "security"
-
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-			min_severity = "High"
-		}
-		actions {
-			fail_build = true
-		}
-	}
-}
-`, name, description, ruleName)
 }

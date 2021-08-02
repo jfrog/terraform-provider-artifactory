@@ -196,6 +196,9 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
+	if resp != nil {
+		return fmt.Errorf("no response returned during resourceLocalRepositoryRead")
+	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
@@ -256,6 +259,10 @@ func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error 
 
 	resp, err := c.V1.Repositories.DeleteLocal(context.Background(), *repo.Key)
 
+	if resp != nil {
+		return fmt.Errorf("no response returned during resourceLocalRepositoryDelete")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}
@@ -267,6 +274,11 @@ func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool,
 	c := m.(*ArtClient).ArtOld
 
 	_, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
+
+	if resp != nil {
+		// technically we don't know the stat if this error occurs, and thus it shouldn't be false
+		return false, fmt.Errorf("no response returned during resourceLocalRepositoryRead")
+	}
 
 	// Cannot check for 404 because artifactory returns 400
 	if resp.StatusCode == http.StatusBadRequest {

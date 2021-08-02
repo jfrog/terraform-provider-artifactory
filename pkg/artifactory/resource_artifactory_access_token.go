@@ -188,7 +188,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAccessTokenRead(d *schema.ResourceData, m interface{}) error {
+func resourceAccessTokenRead(_ *schema.ResourceData, _ interface{}) error {
 	// Terraform requires that the read function is always implemented.
 	// However, Artifactory does not have an API to read a token.
 	return nil

@@ -7,18 +7,19 @@ default: build
 
 install:
 	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		(test -f terraform-provider-artifactory || go build) && \
-		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64
+		(test -f terraform-provider-artifactory || go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'") && \
+		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		terraform init
 
 release:
 	@git tag ${NEXT_VERSION} && git push --mirror
 	@echo "Pushed ${NEXT_VERSION}"
 
 build: fmtcheck
-	go build
+	go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'"
 
 debug:
-	go build -gcflags "all=-N -l" && make install
+	go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'" && make install
 
 test:
 	@echo "==> Starting unit tests"
@@ -27,7 +28,7 @@ test:
 attach:
 	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-artifactory)
 
-testacc: fmtcheck artifactory
+acceptance: fmtcheck
 	@echo "Currently not working"
 	#TF_ACC=1 ARTIFACTORY_USERNAME=admin ARTIFACTORY_PASSWORD=password ARTIFACTORY_URL=http://localhost:8080/artifactory \
 #	go test $(TEST) -v -parallel 20 $(TESTARGS) -timeout 120m

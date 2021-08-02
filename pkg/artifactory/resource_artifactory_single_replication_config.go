@@ -211,6 +211,10 @@ func resourceSingleReplicationConfigExists(d *schema.ResourceData, m interface{}
 	replicationName := d.Id()
 	replicationConfig, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)
 
+	if resp == nil {
+		return false, fmt.Errorf("no response returned in resourceSingleReplicationConfigExists")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil
 	} else if err != nil {

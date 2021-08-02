@@ -157,6 +157,11 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetVirtual(context.Background(), d.Id())
+
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourceVirtualRepositoryRead")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -186,6 +191,11 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 	repo := unpackVirtualRepository(d)
 
 	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
+
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourceVirtualRepositoryDelete")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -198,6 +208,11 @@ func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (boo
 
 	key := d.Id()
 	_, resp, err := c.V1.Repositories.GetVirtual(context.Background(), key)
+
+	if resp == nil {
+		// this really should be nil, err because we truly have no idea what the state is
+		return false, fmt.Errorf("no response returned in resourceVirtualRepositoryExists")
+	}
 
 	// Cannot check for 404 because artifactory returns 400
 	if resp.StatusCode == http.StatusBadRequest {

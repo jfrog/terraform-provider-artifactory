@@ -417,16 +417,18 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 		if err != nil {
 			return err
 		}
-
+		_, resp, err := rtold.V1.System.Ping(context.Background())
 		if err != nil {
 			return err
-		} else if _, resp, err := rtold.V1.System.Ping(context.Background()); err != nil {
-			if resp.StatusCode == http.StatusUnauthorized {
-				return nil
-			}
-			return fmt.Errorf("failed to ping server. Got %s", err)
 		}
 
+		if resp == nil {
+			return fmt.Errorf("no response object returned from call testAccCheckAccessTokenDestroy")
+		}
+
+		if resp.StatusCode == http.StatusUnauthorized {
+			return nil
+		}
 		return nil
 	}
 }

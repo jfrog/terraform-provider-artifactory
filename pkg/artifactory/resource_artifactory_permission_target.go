@@ -13,9 +13,9 @@ import (
 )
 
 func resourceArtifactoryPermissionTargets() *schema.Resource {
-	resource := resourceArtifactoryPermissionTarget()
-	resource.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
-	return resource
+	target := resourceArtifactoryPermissionTarget()
+	target.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
+	return target
 }
 
 func resourceArtifactoryPermissionTarget() *schema.Resource {
@@ -352,6 +352,9 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	permissionTarget, resp, err := c.V2.Security.GetPermissionTarget(context.Background(), d.Id())
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourcePermissionTargetRead")
+	}
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -387,7 +390,9 @@ func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error
 
 	permissionTarget := unpackPermissionTarget(d)
 	resp, err := c.V2.Security.DeletePermissionTarget(context.Background(), *permissionTarget.Name)
-
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourcePermissionTargetDelete")
+	}
 	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}
@@ -399,6 +404,10 @@ func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool
 
 	if _, ok := d.GetOk("repositories"); ok {
 		_, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())
+
+		if resp == nil {
+			return false, fmt.Errorf("no response returned in resourcePermissionTargetExists")
+		}
 
 		if resp.StatusCode == http.StatusNotFound {
 			return false, nil

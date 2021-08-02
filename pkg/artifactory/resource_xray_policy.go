@@ -431,7 +431,7 @@ func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Unexpected status code when creating resource: %d", resp.StatusCode)
+		return fmt.Errorf("unexpected status code when creating resource: %d", resp.StatusCode)
 	}
 
 	d.SetId(*policy.Name)
@@ -442,6 +442,11 @@ func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
 	policy, resp, err := c.V1.Policies.GetPolicy(context.Background(), d.Id())
+
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourceXrayPolicyRead")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("[WARN] Xray policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -493,6 +498,11 @@ func resourceXrayPolicyDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
 	resp, err := c.V1.Policies.DeletePolicy(context.Background(), d.Id())
+
+	if resp == nil {
+		return fmt.Errorf("no response returned in resourceXrayPolicyDelete")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}

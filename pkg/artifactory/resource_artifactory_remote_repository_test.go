@@ -166,6 +166,10 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 
 		_, resp, err := client.V1.Repositories.GetRemote(context.Background(), rs.Primary.ID)
 
+		if resp == nil {
+			return fmt.Errorf("no response returned in resourceRemoteRepositoryCheckDestroy")
+		}
+
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
 		} else if err != nil {

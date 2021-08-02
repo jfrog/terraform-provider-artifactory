@@ -49,10 +49,9 @@ var repoTypeValidator = validation.StringInSlice([]string{
 	"sbt",
 	"vagrant",
 	"vcs",
-	"yum",
 }, false)
 
-var ProviderVersion = "2.1.0"
+var Version = "2.2.16"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
@@ -60,21 +59,23 @@ type ArtClient struct {
 	Xray   *xray.Xray
 }
 
-// Artifactory Provider that supports configuration via username+password or a token
+// Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() terraform.ResourceProvider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", nil),
+				Type:         schema.TypeString,
+				Optional:     true,
+				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", nil),
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 			"password": {
 				Type:          schema.TypeString,
@@ -82,6 +83,7 @@ func Provider() terraform.ResourceProvider {
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 			"api_key": {
 				Type:          schema.TypeString,
@@ -89,13 +91,14 @@ func Provider() terraform.ResourceProvider {
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
 				ConflictsWith: []string{"username", "access_token", "password"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 			"access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
-				ConflictsWith: []string{"username", "api_key", "password"},
+				ConflictsWith: []string{ "api_key", "password"},
 			},
 		},
 
@@ -186,7 +189,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	productId := "terraform-provider-artifactory/" + ProviderVersion
+	productId := "terraform-provider-artifactory/" + Version
 	commandId := "Terraform/" + terraformVersion
 	if err = usage.SendReportUsage(productId, commandId, rtNew); err != nil {
 		return nil, err
