@@ -114,15 +114,13 @@ func resourcePermissionTargetV1Read(d *schema.ResourceData, m interface{}) error
 
 	permissionTarget, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())
 
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourcePermissionTargetV1Read")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packPermissionTargetV1(permissionTarget, d)
@@ -131,15 +129,7 @@ func resourcePermissionTargetV1Read(d *schema.ResourceData, m interface{}) error
 func resourcePermissionTargetV1Delete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 	permissionTarget := unpackPermissionTargetV1(d)
-	_, resp, err := c.V1.Security.DeletePermissionTargets(context.Background(), *permissionTarget.Name)
-
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourcePermissionTargetV1Delete")
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
+	_, _, err := c.V1.Security.DeletePermissionTargets(context.Background(), *permissionTarget.Name)
 
 	return err
 }

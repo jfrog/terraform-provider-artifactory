@@ -196,47 +196,48 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
-	if resp != nil {
-		return fmt.Errorf("no response returned during resourceLocalRepositoryRead")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
-	} else if err == nil {
-		hasErr := false
-		logError := cascadingErr(&hasErr)
-
-		logError(d.Set("key", repo.Key))
-		logError(d.Set("package_type", repo.PackageType))
-		logError(d.Set("description", repo.Description))
-		logError(d.Set("notes", repo.Notes))
-		logError(d.Set("includes_pattern", repo.IncludesPattern))
-		logError(d.Set("excludes_pattern", repo.ExcludesPattern))
-		logError(d.Set("repo_layout_ref", repo.RepoLayoutRef))
-		logError(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
-		logError(d.Set("max_unique_tags", repo.MaxUniqueTags))
-		logError(d.Set("blacked_out", repo.BlackedOut))
-		logError(d.Set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled))
-		logError(d.Set("calculate_yum_metadata", repo.CalculateYumMetadata))
-		logError(d.Set("yum_root_depth", repo.YumRootDepth))
-		logError(d.Set("docker_api_version", repo.DockerApiVersion))
-		logError(d.Set("enable_file_lists_indexing", repo.EnableFileListsIndexing))
-		logError(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))
-		logError(d.Set("handle_releases", repo.HandleReleases))
-		logError(d.Set("handle_snapshots", repo.HandleSnapshots))
-		logError(d.Set("checksum_policy_type", repo.ChecksumPolicyType))
-		logError(d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots))
-		logError(d.Set("snapshot_version_behavior", repo.SnapshotVersionBehavior))
-		logError(d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks))
-		logError(d.Set("xray_index", repo.XrayIndex))
-		logError(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
-
-		if hasErr {
-			return fmt.Errorf("failed to marshal group")
-		}
+		return err
 	}
 
-	return err
+	hasErr := false
+	logError := cascadingErr(&hasErr)
+
+	logError(d.Set("key", repo.Key))
+	logError(d.Set("package_type", repo.PackageType))
+	logError(d.Set("description", repo.Description))
+	logError(d.Set("notes", repo.Notes))
+	logError(d.Set("includes_pattern", repo.IncludesPattern))
+	logError(d.Set("excludes_pattern", repo.ExcludesPattern))
+	logError(d.Set("repo_layout_ref", repo.RepoLayoutRef))
+	logError(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
+	logError(d.Set("max_unique_tags", repo.MaxUniqueTags))
+	logError(d.Set("blacked_out", repo.BlackedOut))
+	logError(d.Set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled))
+	logError(d.Set("calculate_yum_metadata", repo.CalculateYumMetadata))
+	logError(d.Set("yum_root_depth", repo.YumRootDepth))
+	logError(d.Set("docker_api_version", repo.DockerApiVersion))
+	logError(d.Set("enable_file_lists_indexing", repo.EnableFileListsIndexing))
+	logError(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))
+	logError(d.Set("handle_releases", repo.HandleReleases))
+	logError(d.Set("handle_snapshots", repo.HandleSnapshots))
+	logError(d.Set("checksum_policy_type", repo.ChecksumPolicyType))
+	logError(d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots))
+	logError(d.Set("snapshot_version_behavior", repo.SnapshotVersionBehavior))
+	logError(d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks))
+	logError(d.Set("xray_index", repo.XrayIndex))
+	logError(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
+
+	if hasErr {
+		return fmt.Errorf("failed saving state for local repos")
+	}
+
+	return nil
 }
 
 func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
@@ -259,8 +260,8 @@ func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error 
 
 	resp, err := c.V1.Repositories.DeleteLocal(context.Background(), *repo.Key)
 
-	if resp != nil {
-		return fmt.Errorf("no response returned during resourceLocalRepositoryDelete")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -275,9 +276,8 @@ func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool,
 
 	_, resp, err := c.V1.Repositories.GetLocal(context.Background(), d.Id())
 
-	if resp != nil {
-		// technically we don't know the stat if this error occurs, and thus it shouldn't be false
-		return false, fmt.Errorf("no response returned during resourceLocalRepositoryRead")
+	if err != nil {
+		return false, err
 	}
 
 	// Cannot check for 404 because artifactory returns 400

@@ -154,35 +154,29 @@ func testAccCheckWatchDestroy(s *terraform.State) error {
 		if rs.Type == "xray_watch" {
 			watch, resp, err := conn.V2.Watches.GetWatch(context.Background(), rs.Primary.ID)
 
-			if resp == nil {
-				return fmt.Errorf("no response returned in testAccCheckWatchDestroy")
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				continue
 			}
 
-			if resp.StatusCode == http.StatusNotFound {
-				continue
-			} else if err != nil {
-				return fmt.Errorf("error: Request failed: %s", err.Error())
-			} else {
-				return fmt.Errorf("error: Watch %s still exists %s", rs.Primary.ID, *watch.GeneralData.Name)
-			}
-		} else if rs.Type == "xray_policy" {
-			policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
-			if resp == nil {
-				return fmt.Errorf("no response returned in testAccCheckWatchDestroy xray_policy")
-			}
 			if err != nil {
-				if resp.StatusCode == http.StatusInternalServerError &&
+				return err
+			}
+
+			return fmt.Errorf("error: Watch %s still exists %s", rs.Primary.ID, *watch.GeneralData.Name)
+
+		}
+		if rs.Type == "xray_policy" {
+			policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
+
+			if err != nil {
+				if resp != nil && resp.StatusCode == http.StatusInternalServerError &&
 					err.Error() != fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
-					return fmt.Errorf("error: Request failed: %s", err.Error())
+					continue
 				}
 				return err
-			} else {
-				return fmt.Errorf("error: Policy %s still exists %s", rs.Primary.ID, *policy.Name)
 			}
-		} else {
-			continue
+			return fmt.Errorf("error: Policy %s still exists %s", rs.Primary.ID, *policy.Name)
 		}
-
 	}
 
 	return nil

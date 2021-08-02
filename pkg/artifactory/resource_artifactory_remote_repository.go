@@ -484,7 +484,9 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetRemote(context.Background(), d.Id())
-
+	if err != nil {
+		return err
+	}
 	if resp != nil {
 		return fmt.Errorf("no response returned during resourceRemoteRepositoryRead")
 	}
@@ -492,8 +494,6 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packRemoteRepo(repo, d)
@@ -523,11 +523,11 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 	}
 	resp, err := c.V1.Repositories.DeleteRemote(context.Background(), *repo.Key)
 
-	if resp != nil {
-		return fmt.Errorf("no response returned during resourceRemoteRepositoryDelete")
+	if err != nil {
+		return err
 	}
 
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
@@ -540,9 +540,8 @@ func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool
 
 	key := d.Id()
 	_, resp, err := c.V1.Repositories.GetRemote(context.Background(), key)
-
-	if resp != nil {
-		return false, fmt.Errorf("no response returned during resourceLocalRepositoryRead")
+	if err != nil {
+		return false, err
 	}
 
 	// Cannot check for 404 because artifactory returns 400

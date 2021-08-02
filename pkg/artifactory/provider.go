@@ -51,7 +51,7 @@ var repoTypeValidator = validation.StringInSlice([]string{
 	"vcs",
 }, false)
 
-var Version = "2.2.16"
+const Version = "2.2.16"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory

@@ -209,21 +209,20 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*xray.Xray)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "xray_policy" {
-			continue
-		}
+		if rs.Type == "xray_policy" {
 
-		policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
-		if resp == nil {
-			return fmt.Errorf("no response returned in testAccCheckPolicyDestroy")
-		}
-		if err != nil {
-			if resp.StatusCode == http.StatusInternalServerError &&
-				err.Error() != fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
-				return fmt.Errorf("error: Request failed: %s", err.Error())
+			policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
+
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				continue
 			}
-			return err
-		} else {
+			if err != nil {
+				if resp != nil && resp.StatusCode == http.StatusInternalServerError &&
+					err.Error() == fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
+					continue
+				}
+				return err
+			}
 			return fmt.Errorf("error: Policy %s still exists %s", rs.Primary.ID, *policy.Name)
 		}
 	}

@@ -139,16 +139,13 @@ func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) erro
 
 		repo, resp, err := client.V1.Repositories.GetVirtual(context.Background(), rs.Primary.ID)
 
-		if resp == nil {
-			return fmt.Errorf("no response returned in testAccCheckVirtualRepositoryDestroy")
+		if err != nil {
+			return err
 		}
 
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed %s", err.Error())
-		} else {
-			return fmt.Errorf("error: Repository %s still exists %s", rs.Primary.ID, repo)
 		}
+		return fmt.Errorf("error: Repository %s still exists %s", rs.Primary.ID, repo)
 	}
 }

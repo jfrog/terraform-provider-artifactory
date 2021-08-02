@@ -106,18 +106,16 @@ func resourceLocalRepositoryCheckDestroy(id string) func(*terraform.State) error
 		}
 
 		_, resp, err := client.V1.Repositories.GetLocal(context.Background(), rs.Primary.ID)
-
-		if resp == nil {
-			return fmt.Errorf("no response returned in resourceLocalRepositoryCheckDestroy")
+		if err != nil {
+			return fmt.Errorf("error: Request failed: %s", err.Error())
 		}
 
 		// this branching logic can be cleaned
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
-			return fmt.Errorf("error: Local repo %s still exists", rs.Primary.ID)
 		}
+
+		return fmt.Errorf("local should not exist repo err %s: %d", rs.Primary.ID, resp.StatusCode)
+
 	}
 }

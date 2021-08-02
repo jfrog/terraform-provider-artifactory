@@ -163,12 +163,11 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	_, resp, err := c.V1.Security.DeleteGroup(context.Background(), *group.Name)
-
-	if resp == nil {
-		return fmt.Errorf("no response returned while deleting group")
+	if err != nil {
+		return err
 	}
 
-	if err != nil && resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}
 
@@ -180,9 +179,8 @@ func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
 
 	groupName := d.Id()
 	_, resp, err := c.V1.Security.GetGroup(context.Background(), groupName)
-
-	if resp == nil {
-		return false,fmt.Errorf("no response returned while checking if group exists")
+	if err != nil {
+		return false, err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {

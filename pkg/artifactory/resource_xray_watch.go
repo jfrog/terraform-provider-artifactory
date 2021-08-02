@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -276,16 +275,14 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 
 	watch, resp, err := c.V2.Watches.GetWatch(context.Background(), d.Id())
 
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourceXrayWatchRead")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("[WARN] Xray watch (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	if err := d.Set("description", watch.GeneralData.Description); err != nil {
@@ -320,15 +317,8 @@ func resourceXrayWatchUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
-	resp, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
+	_, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
 
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourceXrayWatchDelete")
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
 
 	return err
 }

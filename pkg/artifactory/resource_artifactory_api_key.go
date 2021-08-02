@@ -60,16 +60,13 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	apiKey, resp, err := c.V1.Security.GetApiKey(context.Background())
-
-	if resp == nil {
-		return fmt.Errorf("no response returned while resourceApiKeyRead")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packApiKey(apiKey, d)
@@ -77,15 +74,7 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceApiKeyDelete(_ *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
-	_, resp, err := c.V1.Security.RevokeApiKey(context.Background())
-
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourceApiKeyDelete")
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
+	_, _, err := c.V1.Security.RevokeApiKey(context.Background())
 
 	return err
 }

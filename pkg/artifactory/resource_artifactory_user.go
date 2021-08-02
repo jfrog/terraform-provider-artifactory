@@ -163,15 +163,13 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 
 	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
 
-	if resp == nil {
-		return fmt.Errorf("no response returned in resourceUserRead")
+	if err != nil {
+		return err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packUser(user, d)

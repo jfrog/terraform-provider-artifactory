@@ -78,16 +78,13 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 
 		user, resp, err := client.V1.Security.GetUser(context.Background(), rs.Primary.ID)
 
-		if resp == nil {
-			return fmt.Errorf("no response returned in testAccCheckUserDestroy")
+		if err != nil {
+			return err
 		}
 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
-			return fmt.Errorf("error: User %s still exists %s", rs.Primary.ID, user)
 		}
+		return fmt.Errorf("error: User %s still exists %s", rs.Primary.ID, user)
 	}
 }

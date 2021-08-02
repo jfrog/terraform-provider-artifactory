@@ -71,13 +71,10 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 		}
 
 		_, resp, err := client.V1.Security.GetGroup(context.Background(), rs.Primary.ID)
-
-		if resp == nil {
-			return fmt.Errorf("no response returned in testAccCheckGroupDestroy")
-		}
 		if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
+			return err
 		}
+
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
 		} else {

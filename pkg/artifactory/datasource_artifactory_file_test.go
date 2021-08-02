@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -47,10 +46,6 @@ func CreateTempFile(content string) (f *os.File, err error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if file == nil {
-		return file, fmt.Errorf("no file returned when creating temp file")
 	}
 
 	if content != "" {
