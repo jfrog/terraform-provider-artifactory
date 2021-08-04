@@ -487,7 +487,7 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if resp != nil {
+	if resp == nil {
 		return fmt.Errorf("no response returned during resourceRemoteRepositoryRead")
 	}
 
