@@ -58,6 +58,7 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Optional: true,
 			},
 		},
 	}
