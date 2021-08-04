@@ -41,6 +41,17 @@ resource "artifactory_group" "test-group" {
 	realm_attributes = "Some attribute"
 }`
 
+const groupUserUpdate1 = `
+resource "artifactory_group" "test-group" {
+	name             = "terraform-group"
+    description 	 = "Test group"
+	auto_join        = true
+	admin_privileges = false
+	realm            = "test"
+	realm_attributes = "Some attribute"
+	users_names = ["anonymous]
+}`
+
 func TestAccGroup_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -55,6 +66,18 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "admin_privileges", "false"),
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm", "test"),
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names", "[]"),
+				),
+			},
+			{
+				Config: groupUserUpdate1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "auto_join", "true"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "admin_privileges", "false"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm", "test"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names", "[]"),
 				),
 			},
 		},
