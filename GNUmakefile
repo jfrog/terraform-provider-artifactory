@@ -29,9 +29,9 @@ attach:
 	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-artifactory)
 
 acceptance: fmtcheck
-	@echo "Currently not working"
-	#TF_ACC=1 ARTIFACTORY_USERNAME=admin ARTIFACTORY_PASSWORD=password ARTIFACTORY_URL=http://localhost:8080/artifactory \
-#	go test $(TEST) -v -parallel 20 $(TESTARGS) -timeout 120m
+	TF_ACC=1
+	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
+		&& go test -v -parallel 1 ./pkg/... timeout 120m
 
 
 fmt:
