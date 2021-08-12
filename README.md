@@ -40,12 +40,11 @@ Requirements:
 
 ## Testing
 How to run the tests isn't obvious.
-First, you need a running instance of the jfrog platform (RT and XR). Included with this repo is a mostly functioning `docker-compose.yml`
-that will fire up the whole stack for you. Currently it requires Linux (ubuntu) to work properly:
+First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local
+version. You can ask for an instance to test against in as part of your PR or by messaging the maintainer in gitter
 
-```bash
-docker-compose up -d
-```
+Once you have that done you must set the following properties
+
 Then, you have to set some environment variables as this is how the acceptance tests pick up their config
 ```bash
 ARTIFACTORY_URL=http://localhost:8082

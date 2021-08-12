@@ -154,7 +154,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 			return fmt.Errorf("no response found")
 		}
 		if response.StatusCode() >= http.StatusBadRequest {
-			panic(fmt.Errorf("request failure %d: %s\n", response.StatusCode(), string(response.Body()[:])))
+			return fmt.Errorf("request failure %d: %s\n", response.StatusCode(), string(response.Body()[:]))
 		}
 		return nil
 	}).
