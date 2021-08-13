@@ -2,21 +2,16 @@ package artifactory
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jasonwbarnett/go-xray/xray"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
-	"github.com/jfrog/jfrog-client-go/artifactory/usage"
-	auth2 "github.com/jfrog/jfrog-client-go/auth"
-	"github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/utils/log"
+	"net/http"
+	"net/url"
 )
 
 var repoTypeValidator = validation.StringInSlice([]string{
@@ -57,6 +52,7 @@ type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
 	ArtNew artifactorynew.ArtifactoryServicesManager
 	Xray   *xray.Xray
+	Resty  *resty.Client
 }
 
 // Provider Artifactory provider that supports configuration via username+password or a token
@@ -153,59 +149,17 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 	baseUrl := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
-	artifactoryEndpoint := fmt.Sprintf("%s/artifactory/", baseUrl)
-
-	client, details, err := buildClient(d)
-	if err != nil {
-		return nil, err
-	}
-	details.SetUrl(artifactoryEndpoint)
-
-	cfg, err := config.NewConfigBuilder().
-		SetServiceDetails(details).
-		SetDryRun(false).
-		Build()
-
-	if err != nil {
-		return nil, err
-	}
-
-	rtOld, err := artifactoryold.NewClient(artifactoryEndpoint, client)
-
-	if err != nil {
-		return nil, err
-	}
-
-	rtNew, err := artifactorynew.New(cfg)
-
-	if err != nil {
-		return nil, err
-	} else if _, err := rtNew.Ping(); err != nil {
-		return nil, err
-	}
-
-	rtXray, err := xray.NewClient(fmt.Sprintf("%s/xray/", baseUrl), client)
-	if err != nil {
-		return nil, err
-	}
-
-	productId := "terraform-provider-artifactory/" + Version
-	commandId := "Terraform/" + terraformVersion
-	if err = usage.SendReportUsage(productId, commandId, rtNew); err != nil {
-		return nil, err
-	}
-
-	rt := &ArtClient{
-		ArtOld: rtOld,
-		ArtNew: rtNew,
-		Xray:   rtXray,
-	}
-
-	return rt, nil
-}
-
-func buildClient(d *schema.ResourceData) (*http.Client, auth2.ServiceDetails, error) {
-	details := auth.NewArtifactoryDetails()
+	restyBase := resty.New().SetHostURL(baseUrl).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
+		if response == nil {
+			return fmt.Errorf("no response found")
+		}
+		if response.StatusCode() >= http.StatusBadRequest {
+			return fmt.Errorf("request failure %d: %s\n", response.StatusCode(), string(response.Body()[:]))
+		}
+		return nil
+	}).
+	SetHeader("content-type", "application/json").
+	SetHeader("user-agent", "jfrog/terraform-provider-artifactory:" +terraformVersion)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -213,26 +167,39 @@ func buildClient(d *schema.ResourceData) (*http.Client, auth2.ServiceDetails, er
 	accessToken := d.Get("access_token").(string)
 
 	if username != "" && password != "" {
-		details.SetUser(username)
-		details.SetPassword(password)
-		tp := transport.BasicAuth{
-			Username: username,
-			Password: password,
-		}
-		return tp.Client(), details, nil
-	} else if apiKey != "" {
-		details.SetApiKey(apiKey)
-		tp := &transport.ApiKeyAuth{
-			ApiKey: apiKey,
-		}
-		return tp.Client(), details, nil
-	} else if accessToken != "" {
-		details.SetAccessToken(accessToken)
-		tp := &transport.AccessTokenAuth{
-			AccessToken: accessToken,
-		}
-		return tp.Client(), details, nil
-	} else {
-		return nil, nil, fmt.Errorf("either [username, password] or [api_key] or [access_token] must be set to use provider")
+		restyBase = restyBase.SetBasicAuth(username, password)
 	}
+	if apiKey != "" {
+		restyBase = restyBase.SetHeader("X-JFrog-Art-Api", apiKey)
+	}
+	if accessToken != "" {
+		restyBase = restyBase.SetAuthToken(accessToken)
+	}
+	type Feature struct{
+		FeatureId string `json:"featureId"`
+	}
+	type UsageStruct struct {
+		ProductId    string `json:"productId"`
+		Features   []Feature `json:"features"`
+	}
+	_,err = restyBase.R().SetBody(UsageStruct{
+		"terraform-provider-artifactory/" + Version,
+		[]Feature{
+			{FeatureId: "Terraform/" + terraformVersion},
+		},
+	}).Post("artifactory/api/system/usage")
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to report usage %s", err)
+	}
+
+	rt := &ArtClient{
+		ArtOld: nil,
+		ArtNew: nil,
+		Xray:   nil,
+		Resty: restyBase,
+	}
+
+	return rt, nil
+
 }

@@ -61,12 +61,11 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	apiKey, resp, err := c.V1.Security.GetApiKey(context.Background())
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
 	}
 
 	return packApiKey(apiKey, d)
