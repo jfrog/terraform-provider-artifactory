@@ -12,7 +12,7 @@ variable "supported_repo_types" {
   default = [
     "alpine",
     "bower",
-    "cargo", // xray refuses to watch these
+    "cargo", // xray refuses to watch these. They also require a mandatory field we can't currently support
     "chef",
     "cocoapods",
     "composer",
