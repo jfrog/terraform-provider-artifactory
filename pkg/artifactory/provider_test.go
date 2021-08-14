@@ -35,10 +35,10 @@ func testAccPreCheck(t *testing.T) {
 
 	username := os.Getenv("ARTIFACTORY_USERNAME")
 	password := os.Getenv("ARTIFACTORY_PASSWORD")
-	apiKey := os.Getenv("ARTIFACTORY_APIKEY")
+	api := os.Getenv("ARTIFACTORY_APIKEY")
 	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
 
-	if (username == "" || password == "") && apiKey == "" && accessToken == "" {
+	if (username == "" || password == "") && api == "" && accessToken == "" {
 		t.Fatal("either ARTIFACTORY_USERNAME/ARTIFACTORY_PASSWORD or ARTIFACTORY_APIKEY  or ARTIFACTORY_ACCESS_TOKEN must be set for acceptance test")
 	}
 

@@ -105,7 +105,7 @@ func TestAccAllRepoTypesLocal(t *testing.T) {
 	var allRepos = []string{
 		"alpine",
 		"bower",
-		"cargo",
+		//"cargo",// not supported
 		"chef",
 		"cocoapods",
 		"composer",

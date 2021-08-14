@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jasonwbarnett/go-xray/xray"
-	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
+	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
@@ -17,7 +17,7 @@ import (
 var repoTypeValidator = validation.StringInSlice([]string{
 	"alpine",
 	"bower",
-	"cargo",
+	//"cargo", // not supported
 	"chef",
 	"cocoapods",
 	"composer",
@@ -50,7 +50,7 @@ const Version = "2.2.16"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
-	ArtNew artifactorynew.ArtifactoryServicesManager
+	ArtNew *jfroghttpclient.JfrogHttpClient
 	Xray   *xray.Xray
 	Resty  *resty.Client
 }
@@ -63,13 +63,17 @@ func Provider() terraform.ResourceProvider {
 			"url": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", nil),
+				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", func() (interface{}, error) {
+					return "http://localhost:8082",nil
+				}),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
+				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", func() (interface{}, error) {
+					return "admin",nil
+				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
@@ -77,7 +81,9 @@ func Provider() terraform.ResourceProvider {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
+				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", func() (interface{}, error) {
+					return "password",nil
+				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
@@ -94,7 +100,7 @@ func Provider() terraform.ResourceProvider {
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
-				ConflictsWith: []string{ "api_key", "password"},
+				ConflictsWith: []string{"api_key", "password"},
 			},
 		},
 
@@ -134,8 +140,7 @@ func Provider() terraform.ResourceProvider {
 	return p
 }
 
-// Creates the client for artifactory, will prefer token auth over basic auth if both set
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func buildResty(d *schema.ResourceData, terraformVersion string) (*resty.Client, error) {
 
 	if key, ok := d.GetOk("url"); key == nil || key == "" || !ok {
 		return nil, fmt.Errorf("you must supply a URL")
@@ -159,7 +164,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil
 	}).
 	SetHeader("content-type", "application/json").
-	SetHeader("user-agent", "jfrog/terraform-provider-artifactory:" +terraformVersion)
+	SetHeader("accept", "*/*").
+	SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -175,14 +181,42 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if accessToken != "" {
 		restyBase = restyBase.SetAuthToken(accessToken)
 	}
-	type Feature struct{
+	restyBase.DisableWarn = true
+	return restyBase, nil
+}
+
+// Creates the client for artifactory, will prefer token auth over basic auth if both set
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+	restyBase, err := buildResty(d, terraformVersion)
+	if err != nil {
+		return nil, err
+	}
+	_, err = sendUsageRepo(err, restyBase, terraformVersion)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rt := &ArtClient{
+		ArtOld: nil,
+		ArtNew: nil,
+		Xray:   nil,
+		Resty:  restyBase,
+	}
+
+	return rt, nil
+
+}
+
+func sendUsageRepo(err error, restyBase *resty.Client, terraformVersion string) (interface{}, error) {
+	type Feature struct {
 		FeatureId string `json:"featureId"`
 	}
 	type UsageStruct struct {
-		ProductId    string `json:"productId"`
-		Features   []Feature `json:"features"`
+		ProductId string    `json:"productId"`
+		Features  []Feature `json:"features"`
 	}
-	_,err = restyBase.R().SetBody(UsageStruct{
+	_, err = restyBase.R().SetBody(UsageStruct{
 		"terraform-provider-artifactory/" + Version,
 		[]Feature{
 			{FeatureId: "Terraform/" + terraformVersion},
@@ -192,14 +226,5 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, fmt.Errorf("unable to report usage %s", err)
 	}
-
-	rt := &ArtClient{
-		ArtOld: nil,
-		ArtNew: nil,
-		Xray:   nil,
-		Resty: restyBase,
-	}
-
-	return rt, nil
-
+	return nil, nil
 }
