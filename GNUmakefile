@@ -1,6 +1,5 @@
 TEST?=./...
-PKG_NAME=pkg/artifactory
-VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+PKG_NAME=pkg/artifactoVERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 
 default: build
@@ -11,6 +10,9 @@ install:
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
+clean:
+	rm -fR .terraform.d/ .terraform terraform.tfstate*
+
 release:
 	@git tag ${NEXT_VERSION} && git push --mirror
 	@echo "Pushed ${NEXT_VERSION}"
@@ -18,8 +20,12 @@ release:
 build: fmtcheck
 	go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'"
 
-debug:
-	go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'" && make install
+debug_install:
+	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'") && \
+		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		terraform init
+
 
 test:
 	@echo "==> Starting unit tests"

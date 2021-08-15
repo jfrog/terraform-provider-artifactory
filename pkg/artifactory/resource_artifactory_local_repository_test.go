@@ -1,8 +1,8 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"testing"
 
@@ -10,112 +10,147 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-const localRepositoryBasic = `
-resource "artifactory_local_repository" "terraform-local-test-repo-basic" {
-	key 	     = "terraform-local-test-repo-basic"
-	package_type = "docker"
-}`
-
 func TestAccLocalRepository_basic(t *testing.T) {
+	name := fmt.Sprintf("terraform-local-test-repo-basic%d", rand.Int())
+	resourceName := fmt.Sprintf("artifactory_local_repository.%s",name)
+	localRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_local_repository" "%s" {
+			key 	     = "%s"
+			package_type = "docker"
+		}
+	`,name,name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy("artifactory_local_repository.terraform-local-test-repo-basic"),
+		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-basic", "key", "terraform-local-test-repo-basic"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-basic", "package_type", "docker"),
+					resource.TestCheckResourceAttr(resourceName, "key", name ),
+					resource.TestCheckResourceAttr(resourceName, "package_type", "docker"),
 				),
 			},
 		},
 	})
 }
 
-const localRepositoryConfigFull = `
-resource "artifactory_local_repository" "terraform-local-test-repo-full" {
-    key                             = "terraform-local-test-repo-full"
-    package_type                    = "npm"
-	description                     = "Test repo for terraform-provider-artifactory"
-	notes                           = "Test repo for terraform-provider-artifactory"
-	includes_pattern                = "**/*"
-	excludes_pattern                = "**/*.tgz"
-	repo_layout_ref                 = "npm-default"
-	handle_releases                 = true
-	handle_snapshots                = true
-	max_unique_snapshots            = 25
-	debian_trivial_layout           = false
-	checksum_policy_type            = "client-checksums"
-	max_unique_tags                 = 100
-	snapshot_version_behavior       = "unique"
-	suppress_pom_consistency_checks = true
-	blacked_out                     = false
-	property_sets                   = [ "artifactory" ]
-	archive_browsing_enabled        = false
-	calculate_yum_metadata          = false
-	yum_root_depth                  = 0
-	docker_api_version              = "V2"
-}`
+func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("terraform-local-test-%d-full", rand.Int())
+	resourceName := fmt.Sprintf("artifactory_local_repository.%s",name)
+	const localRepositoryConfigFull = `
+		resource "artifactory_local_repository" "%s" {
+			key                             = "%s"
+			package_type                    = "%s"
+			description                     = "Test repo for %s"
+			notes                           = "Test repo for %s"
+			includes_pattern                = "**/*"
+			excludes_pattern                = "**/*.tgz"
+			repo_layout_ref                 = "npm-default"
+			handle_releases                 = true
+			handle_snapshots                = true
+			max_unique_snapshots            = 25
+			debian_trivial_layout           = false
+			checksum_policy_type            = "client-checksums"
+			max_unique_tags                 = 100
+			snapshot_version_behavior       = "unique"
+			suppress_pom_consistency_checks = true
+			blacked_out                     = false
+			property_sets                   = [ "artifactory" ]
+			archive_browsing_enabled        = false
+			calculate_yum_metadata          = false
+			yum_root_depth                  = 0
+			docker_api_version              = "V2"
+		}
+	`
 
-func TestAccLocalRepository_full(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy("artifactory_local_repository.terraform-local-test-repo-full"),
+	cfg := fmt.Sprintf(localRepositoryConfigFull, name, name, repoType, name, name)
+	return t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
-				Config: localRepositoryConfigFull,
+				Config: cfg,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "key", "terraform-local-test-repo-full"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "package_type", "npm"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "description", "Test repo for terraform-provider-artifactory"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "notes", "Test repo for terraform-provider-artifactory"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "includes_pattern", "**/*"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "excludes_pattern", "**/*.tgz"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "repo_layout_ref", "npm-default"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "handle_releases", "true"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "handle_snapshots", "true"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "max_unique_snapshots", "25"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "debian_trivial_layout", "false"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "checksum_policy_type", "client-checksums"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "max_unique_tags", "100"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "snapshot_version_behavior", "unique"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "suppress_pom_consistency_checks", "true"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "blacked_out", "false"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "property_sets.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "property_sets.214975871", "artifactory"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "archive_browsing_enabled", "false"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "calculate_yum_metadata", "false"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "yum_root_depth", "0"),
-					resource.TestCheckResourceAttr("artifactory_local_repository.terraform-local-test-repo-full", "docker_api_version", "V2"),
+					resource.TestCheckResourceAttr(resourceName, "key", name),
+					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "includes_pattern", "**/*"),
+					resource.TestCheckResourceAttr(resourceName, "excludes_pattern", "**/*.tgz"),
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", "npm-default"),
+					resource.TestCheckResourceAttr(resourceName, "handle_releases", "true"),
+					resource.TestCheckResourceAttr(resourceName, "handle_snapshots", "true"),
+					resource.TestCheckResourceAttr(resourceName, "max_unique_snapshots", "25"),
+					resource.TestCheckResourceAttr(resourceName, "debian_trivial_layout", "false"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_policy_type", "client-checksums"),
+					resource.TestCheckResourceAttr(resourceName, "max_unique_tags", "100"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_version_behavior", "unique"),
+					resource.TestCheckResourceAttr(resourceName, "suppress_pom_consistency_checks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blacked_out", "false"),
+					resource.TestCheckResourceAttr(resourceName, "property_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "property_sets.214975871", "artifactory"),
+					resource.TestCheckResourceAttr(resourceName, "archive_browsing_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "calculate_yum_metadata", "false"),
+					resource.TestCheckResourceAttr(resourceName, "yum_root_depth", "0"),
+					resource.TestCheckResourceAttr(resourceName, "docker_api_version", "V2"),
 				),
 			},
 		},
-	})
+	}
+}
+
+func TestAccAllRepoTypesLocal(t *testing.T) {
+	var allRepos = []string{
+		"alpine",
+		"bower",
+		"cargo",
+		"chef",
+		"cocoapods",
+		"composer",
+		"conan",
+		"conda",
+		"cran",
+		"debian",
+		"docker",
+		"gems",
+		"generic",
+		"gitlfs",
+		"go",
+		"gradle",
+		"helm",
+		"ivy",
+		"maven",
+		"npm",
+		"nuget",
+		"opkg",
+		"p2",
+		"puppet",
+		"pypi",
+		"rpm",
+		"sbt",
+		"vagrant",
+		"vcs",
+	}
+	for _, repo := range allRepos {
+		resource.Test(mkTestCase(repo, t))
+	}
 }
 
 func resourceLocalRepositoryCheckDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.ArtOld
+		client := testAccProvider.Meta().(*ArtClient).Resty
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-
-		_, resp, err := client.V1.Repositories.GetLocal(context.Background(), rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		}
-
-		// this branching logic can be cleaned
-		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
+		resp, err := client.R().SetHeader("accept", "*/*").
+			Delete("/artifactory/api/repositories/" + rs.Primary.ID)
+		if err != nil && resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
 			return nil
 		}
-
-		return fmt.Errorf("local should not exist repo err %s: %d", rs.Primary.ID, resp.StatusCode)
-
+		return fmt.Errorf("local should not exist repo err %s: %d", rs.Primary.ID, resp.StatusCode())
 	}
 }

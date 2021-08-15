@@ -12,7 +12,7 @@ variable "supported_repo_types" {
   default = [
     "alpine",
     "bower",
-    "cargo",
+    "cargo", // xray refuses to watch these
     "chef",
     "cocoapods",
     "composer",
@@ -35,47 +35,24 @@ variable "supported_repo_types" {
     "p2",
     "puppet",
     "pypi",
+    // type 'yum' is not to be supported, as this is really of type 'rpm'. When 'yum' is used on create, RT will
+    // respond with 'rpm' and thus confuse TF into think there has been a state change.
     "rpm",
     "sbt",
     "vagrant",
     "vcs",
   ]
 }
-provider "artifactory" {
-}
-resource "random_id" "randid" {
-  count = 4
-  byte_length = 2
-}
-resource "random_password" "randpass" {
-  count = 10
-  length = 16
-  min_lower = 5
-  min_upper = 5
-  min_numeric = 1
-  min_special = 1
-}
-resource "artifactory_group" "somegroup" {
-  name = "somegroup"
-  description = "Hello description"
-  auto_join = true
-  admin_privileges = false
-}
-resource "artifactory_user" "user" {
-  count = length(random_password.randpass)
-  name = "terraform${count.index}"
-  email = "test-user@artifactory-terraform.com"
-  groups = ["readers", artifactory_group.somegroup.name]
-  password = random_password.randpass[count.index].result
-}
-
 resource "artifactory_local_repository" "local" {
   count = length(var.supported_repo_types)
   key = "${var.supported_repo_types[count.index]}-local"
   package_type = var.supported_repo_types[count.index]
-  xray_index = true
+  xray_index = false
+  description = "hello ${var.supported_repo_types[count.index]}-local"
 }
-
+provider "artifactory" {
+//  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
+}
 resource "artifactory_remote_repository" "npm-remote" {
   key = "npm-remote"
   package_type = "npm"
