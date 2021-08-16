@@ -49,7 +49,7 @@ resource "artifactory_group" "test-group" {
 	admin_privileges = false
 	realm            = "test"
 	realm_attributes = "Some attribute"
-	users_names = ["anonymous", "admin"]
+	users_names = ["anonymous"]
 }`
 
 const groupUserUpdate2 = `
