@@ -168,7 +168,9 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = c.UpdateGroup(groupParams)
+	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
+	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
+	err = c.CreateGroup(groupParams)
 	if err != nil {
 		return err
 	}

@@ -94,19 +94,23 @@ func TestAccGroup_full(t *testing.T) {
 			{
 				Config: groupUserUpdate1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1386592683", "anonymous"),
 				),
 			},
 			{
 				Config: groupUserUpdate2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.3672628397", "admin"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1386592683", "anonymous"),
 				),
 			},
 			{
 				Config: groupUserUpdate3,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.3672628397", "admin"),
 				),
 			},
 		},
