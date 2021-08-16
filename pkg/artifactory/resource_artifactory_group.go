@@ -54,10 +54,8 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Optional: true,
 			},
 			"users_names": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
 		},
@@ -93,7 +91,7 @@ func groupParams(s *schema.ResourceData) (artifactory.GroupParams, error) {
 		group.RealmAttributes = *realmAttributes
 	}
 
-	if usersNames := d.getSetRef("user_names"); usersNames != nil {
+	if usersNames := d.getSetRef("users_names"); usersNames != nil {
 		group.UsersNames = *usersNames
 	}
 
@@ -102,7 +100,7 @@ func groupParams(s *schema.ResourceData) (artifactory.GroupParams, error) {
 		return artifactory.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
 	}
 
-	return artifactory.GroupParams{GroupDetails: group, ReplaceIfExists: false, IncludeUsers: true}, nil
+	return artifactory.GroupParams{GroupDetails: group, ReplaceIfExists: true, IncludeUsers: true}, nil
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
@@ -157,7 +155,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	logError(d.Set("admin_privileges", group.AdminPrivileges))
 	logError(d.Set("realm", group.Realm))
 	logError(d.Set("realm_attributes", group.RealmAttributes))
-	logError(d.Set("users_names", group.UsersNames))
+	logError(d.Set("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames))))
 	if hasErr {
 		return fmt.Errorf("failed to marshal group")
 	}
