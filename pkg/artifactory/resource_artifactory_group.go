@@ -147,6 +147,13 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// If we 404 it is likely the resources was externally deleted
+	// If the ID is updated to blank, this tells Terraform the resource no longer exist
+	if group == nil {
+		d.SetId("")
+		return nil
+	}
+
 	hasErr := false
 	logError := cascadingErr(&hasErr)
 	logError(d.Set("name", group.Name))

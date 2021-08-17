@@ -1,13 +1,12 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	artifactory "github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 const groupBasic = `
@@ -120,18 +119,18 @@ func TestAccGroup_full(t *testing.T) {
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.ArtOld
+		client := apis.ArtNew
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		_, resp, err := client.V1.Security.GetGroup(context.Background(), rs.Primary.ID)
-		if resp.StatusCode == http.StatusNotFound {
-			return nil
-		}
+		group, err := client.GetGroup(artifactory.GroupParams{GroupDetails: artifactory.Group{Name: rs.Primary.ID}})
 		if err != nil {
 			return err
+		}
+		if group == nil {
+			return nil
 		}
 
 		return fmt.Errorf("error: Group %s still exists", rs.Primary.ID)
