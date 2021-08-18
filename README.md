@@ -6,7 +6,7 @@
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
 
-## Important note:
+## License requirements:
 
 This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions.
 You can determine which license you have by accessing the following URL
@@ -27,6 +27,34 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 - Community Edition for C/C++
 - JCR Edition
 - OSS
+
+## Limitations of functionality
+The current way a repository is created is essentially through a union of fields of certain repo types. 
+It's important to note that, the official documentation is used only for inspiration as the documentation is quite wrong.
+Support for some features has been achieved entirely through reverse engineering.
+
+### Local repository limitations
+[Local repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-LocalRepository)
+does not support (directly), repository specific fields in all cases. It's basically a union of
+- Base repo params
+- Maven
+- Gradle
+- Debian
+- Docker (v1)
+- RPM
+
+### Remote repository limitations
+[Remote repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-RemoteRepository) 
+does not support (directly), repository specific fields in all cases. It's basically a union of
+- base remote repo params
+- bower support
+- maven
+- gradle
+- Docker (v1)
+- VCS
+- Pypi
+- Nuget 
+Query params may be forwarded, but this field doesn't exist in the documentation
 
 
 ## Build the Provider
