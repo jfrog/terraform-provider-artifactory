@@ -11,6 +11,9 @@ install:
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
+clean:
+	rm -fR .terraform.d/ .terraform terraform.tfstate*
+
 release:
 	@git tag ${NEXT_VERSION} && git push --mirror
 	@echo "Pushed ${NEXT_VERSION}"
@@ -18,8 +21,12 @@ release:
 build: fmtcheck
 	go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'"
 
-debug:
-	go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'" && make install
+debug_install:
+	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'") && \
+		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		terraform init
+
 
 test:
 	@echo "==> Starting unit tests"
