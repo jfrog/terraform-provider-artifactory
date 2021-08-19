@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryCertificate() *schema.Resource {
@@ -58,20 +58,22 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(d *schema.ResourceDiff, v interface{}) error {
-			fingerprint, err := calculateFingerPrint(d.Get("content").(string))
-			if err != nil {
-				return err
-			}
-			if d.Get("fingerprint").(string) != fingerprint {
-				if err := d.SetNewComputed("fingerprint"); err != nil {
-					fmt.Println(err)
-					return err
-				}
-			}
-			return nil
-		},
+		CustomizeDiff: calculateFingerprint,
 	}
+}
+
+func calculateFingerprint(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	fingerprint, err := calculateFingerPrint(d.Get("content").(string))
+	if err != nil {
+		return err
+	}
+	if d.Get("fingerprint").(string) != fingerprint {
+		if err := d.SetNewComputed("fingerprint"); err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func formatFingerPrint(f []byte) string {
