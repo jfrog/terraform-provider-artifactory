@@ -7,9 +7,8 @@ import (
 
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jasonwbarnett/go-xray/xray"
 	artifactorynew "github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/utils/log"
@@ -58,7 +57,7 @@ type ArtClient struct {
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
