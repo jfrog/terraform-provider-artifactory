@@ -28,8 +28,8 @@ func TestAccUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_user.foobar", "name", "the.dude"),
 					resource.TestCheckResourceAttr("artifactory_user.foobar", "email", "the.dude@domain.com"),
-					resource.TestCheckResourceAttr("artifactory_user.foobar", "admin", "false"),
-					resource.TestCheckResourceAttr("artifactory_user.foobar", "profile_updatable", "true"),
+					resource.TestCheckNoResourceAttr("artifactory_user.foobar", "admin"),
+					resource.TestCheckNoResourceAttr("artifactory_user.foobar", "profile_updatable"),
 				),
 			},
 		},
