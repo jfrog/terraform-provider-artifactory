@@ -7,8 +7,7 @@ import (
 	"strconv"
 
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryApiKey() *schema.Resource {
@@ -52,7 +51,7 @@ func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(hashcode.String(*apiKey.ApiKey)))
+	d.SetId(strconv.Itoa(schema.HashString(*apiKey.ApiKey)))
 	return resourceApiKeyRead(d, m)
 }
 

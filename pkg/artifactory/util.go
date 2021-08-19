@@ -1,12 +1,13 @@
 package artifactory
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -101,6 +102,17 @@ func getMD5Hash(o interface{}) string {
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+// hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
+func HashStrings(strings []string) string {
+	var buf bytes.Buffer
+
+	for _, s := range strings {
+		buf.WriteString(fmt.Sprintf("%s-", s))
+	}
+
+	return fmt.Sprintf("%d", schema.HashString(buf.String()))
 }
 
 func cascadingErr(hasErr *bool) func(error) {
