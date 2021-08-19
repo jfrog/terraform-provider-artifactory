@@ -9,6 +9,7 @@ require (
 	github.com/jfrog/jfrog-client-go v0.23.1
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/tools v0.1.5 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 go 1.15
