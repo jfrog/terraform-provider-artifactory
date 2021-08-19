@@ -102,38 +102,8 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 }
 
 func TestAccAllRepoTypesLocal(t *testing.T) {
-	var allRepos = []string{
-		"alpine",
-		"bower",
-		//"cargo",// not supported
-		"chef",
-		"cocoapods",
-		"composer",
-		"conan",
-		"conda",
-		"cran",
-		"debian",
-		"docker",
-		"gems",
-		"generic",
-		"gitlfs",
-		"go",
-		"gradle",
-		"helm",
-		"ivy",
-		"maven",
-		"npm",
-		"nuget",
-		"opkg",
-		"p2",
-		"puppet",
-		"pypi",
-		"rpm",
-		"sbt",
-		"vagrant",
-		"vcs",
-	}
-	for _, repo := range allRepos {
+
+	for _, repo := range repoTypesSupported {
 		resource.Test(mkTestCase(repo, t))
 	}
 }

@@ -14,37 +14,7 @@ import (
 	"net/url"
 )
 
-var repoTypeValidator = validation.StringInSlice([]string{
-	"alpine",
-	"bower",
-	//"cargo", // not supported
-	"chef",
-	"cocoapods",
-	"composer",
-	"conan",
-	"conda",
-	"cran",
-	"debian",
-	"docker",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"gradle",
-	"helm",
-	"ivy",
-	"maven",
-	"npm",
-	"nuget",
-	"opkg",
-	"p2",
-	"puppet",
-	"pypi",
-	"rpm",
-	"sbt",
-	"vagrant",
-	"vcs",
-}, false)
+
 
 const Version = "2.2.16"
 
