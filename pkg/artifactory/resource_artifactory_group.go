@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryGroup() *schema.Resource {
@@ -107,7 +107,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("expected group to be created, but currently not found"))
 		}
 
-		return resource.NonRetryableError(resourceGroupRead(d, m))
+		return nil
 	})
 }
 

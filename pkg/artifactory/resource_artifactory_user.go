@@ -12,8 +12,8 @@ import (
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -154,7 +154,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
 		}
 
-		return resource.NonRetryableError(resourceUserRead(d, m))
+		return nil
 	})
 }
 
