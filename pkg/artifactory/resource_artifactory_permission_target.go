@@ -13,9 +13,9 @@ import (
 )
 
 func resourceArtifactoryPermissionTargets() *schema.Resource {
-	resource := resourceArtifactoryPermissionTarget()
-	resource.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
-	return resource
+	target := resourceArtifactoryPermissionTarget()
+	target.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
+	return target
 }
 
 func resourceArtifactoryPermissionTarget() *schema.Resource {
@@ -352,11 +352,12 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	permissionTarget, resp, err := c.V2.Security.GetPermissionTarget(context.Background(), d.Id())
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packPermissionTarget(permissionTarget, d)
@@ -386,11 +387,7 @@ func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error
 	}
 
 	permissionTarget := unpackPermissionTarget(d)
-	resp, err := c.V2.Security.DeletePermissionTarget(context.Background(), *permissionTarget.Name)
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
+	_, err := c.V2.Security.DeletePermissionTarget(context.Background(), *permissionTarget.Name)
 	return err
 }
 
@@ -400,11 +397,15 @@ func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool
 	if _, ok := d.GetOk("repositories"); ok {
 		_, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())
 
+		if err != nil {
+			return false, err
+		}
+
 		if resp.StatusCode == http.StatusNotFound {
 			return false, nil
-		} else if err != nil {
-			return false, fmt.Errorf("error: Request failed: %s", err.Error())
 		}
+		// what about every other non-404 status code? Without knowing how this client works with 5-- errors,
+		// I guess we leave this alone
 		return true, nil
 	}
 

@@ -204,7 +204,7 @@ func flattenProjectResources(resources *v2.WatchProjectResources) []interface{} 
 		return []interface{}{}
 	}
 
-	l := []interface{}{}
+	var l []interface{}
 	for _, res := range *resources.Resources {
 		m := make(map[string]interface{})
 		m["type"] = res.Type
@@ -229,7 +229,7 @@ func flattenFilters(filters *[]v2.WatchFilter) []interface{} {
 		return []interface{}{}
 	}
 
-	l := []interface{}{}
+	var l []interface{}
 	for _, f := range *filters {
 		m := make(map[string]interface{})
 		m["type"] = f.Type
@@ -245,7 +245,7 @@ func flattenAssignedPolicies(policies *[]v2.WatchAssignedPolicy) []interface{} {
 		return []interface{}{}
 	}
 
-	l := []interface{}{}
+	var l []interface{}
 	for _, p := range *policies {
 		m := make(map[string]interface{})
 		m["name"] = p.Name
@@ -274,12 +274,15 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
 	watch, resp, err := c.V2.Watches.GetWatch(context.Background(), d.Id())
+
+	if err != nil {
+		return err
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("[WARN] Xray watch (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	if err := d.Set("description", watch.GeneralData.Description); err != nil {
@@ -314,10 +317,8 @@ func resourceXrayWatchUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
-	resp, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
+	_, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
+
 
 	return err
 }

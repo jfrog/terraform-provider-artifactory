@@ -44,14 +44,21 @@ func TestVerifySha256Checksum(t *testing.T) {
 func CreateTempFile(content string) (f *os.File, err error) {
 	file, err := ioutil.TempFile(os.TempDir(), "terraform-provider-artifactory-")
 
+	if err != nil {
+		return nil, err
+	}
+
 	if content != "" {
-		file.WriteString(content)
+		_, err := file.WriteString(content)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return file, err
 }
 
 func CloseAndRemove(f *os.File) {
-	f.Close()
-	os.Remove(f.Name())
+	_ = f.Close()
+	_ = os.Remove(f.Name())
 }

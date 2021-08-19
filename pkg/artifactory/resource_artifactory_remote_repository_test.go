@@ -166,13 +166,15 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 
 		_, resp, err := client.V1.Repositories.GetRemote(context.Background(), rs.Primary.ID)
 
+		if err != nil {
+			return err
+		}
+
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
-			return fmt.Errorf("repository %s still exists", rs.Primary.ID)
 		}
+		// this doesn't mean it still exists!!!
+		return fmt.Errorf("repository %s still exists", rs.Primary.ID)
 	}
 }
 

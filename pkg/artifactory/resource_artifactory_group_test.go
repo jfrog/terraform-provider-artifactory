@@ -71,11 +71,12 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 		}
 
 		_, resp, err := client.V1.Security.GetGroup(context.Background(), rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
 		} else {
 			return fmt.Errorf("error: Group %s still exists", rs.Primary.ID)
 		}

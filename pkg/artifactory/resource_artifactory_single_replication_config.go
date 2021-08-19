@@ -211,11 +211,13 @@ func resourceSingleReplicationConfigExists(d *schema.ResourceData, m interface{}
 	replicationName := d.Id()
 	replicationConfig, resp, err := c.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), replicationName)
 
+	if err != nil {
+		return false, err
+	}
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil
-	} else if err != nil {
-		return false, err
-	} else if len(*replicationConfig.Replications) > 1 {
+	}
+	if len(*replicationConfig.Replications) > 1 {
 		return false, fmt.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
 	}
 

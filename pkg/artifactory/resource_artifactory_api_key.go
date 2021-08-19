@@ -31,14 +31,6 @@ func resourceArtifactoryApiKey() *schema.Resource {
 	}
 }
 
-func unpackApiKey(s *schema.ResourceData) *v1.ApiKey {
-	d := &ResourceData{s}
-	apiKey := new(v1.ApiKey)
-	apiKey.ApiKey = d.getStringRef("api_key", false)
-
-	return apiKey
-}
-
 func packApiKey(apiKey *v1.ApiKey, d *schema.ResourceData) error {
 	hasErr := false
 	logErr := cascadingErr(&hasErr)
@@ -68,22 +60,20 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	apiKey, resp, err := c.V1.Security.GetApiKey(context.Background())
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	} else if err != nil {
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
 	return packApiKey(apiKey, d)
 }
 
-func resourceApiKeyDelete(d *schema.ResourceData, m interface{}) error {
+func resourceApiKeyDelete(_ *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
-	_, resp, err := c.V1.Security.RevokeApiKey(context.Background())
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
+	_, _, err := c.V1.Security.RevokeApiKey(context.Background())
 
 	return err
 }

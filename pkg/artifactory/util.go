@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -17,12 +16,25 @@ func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
 	}
 	return nil
 }
+func (d *ResourceData) getString(key string, onlyIfChanged bool) string {
+	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
+		return v.(string)
+	}
+	return ""
+}
 
 func (d *ResourceData) getBoolRef(key string, onlyIfChanged bool) *bool {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return artifactory.Bool(v.(bool))
 	}
 	return nil
+}
+
+func (d *ResourceData) getBool(key string, onlyIfChanged bool) bool {
+	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
+		return v.(bool)
+	}
+	return false
 }
 
 func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
@@ -32,6 +44,13 @@ func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
 	return nil
 }
 
+func (d *ResourceData) getInt(key string, onlyIfChanged bool) int {
+	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
+		return v.(int)
+	}
+	return 0
+}
+
 func (d *ResourceData) getSetRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
 		arr := castToStringArr(v.(*schema.Set).List())
@@ -39,7 +58,13 @@ func (d *ResourceData) getSetRef(key string) *[]string {
 	}
 	return new([]string)
 }
-
+func (d *ResourceData) getSet(key string) []string {
+	if v, ok := d.GetOkExists(key); ok {
+		arr := castToStringArr(v.(*schema.Set).List())
+		return arr
+	}
+	return nil
+}
 func (d *ResourceData) getListRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
 		arr := castToStringArr(v.([]interface{}))

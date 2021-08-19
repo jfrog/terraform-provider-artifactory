@@ -188,7 +188,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAccessTokenRead(d *schema.ResourceData, m interface{}) error {
+func resourceAccessTokenRead(_ *schema.ResourceData, _ interface{}) error {
 	// Terraform requires that the read function is always implemented.
 	// However, Artifactory does not have an API to read a token.
 	return nil
@@ -277,25 +277,23 @@ func unpackAdminToken(d *schema.ResourceData, tokenOptions *v1.AccessTokenOption
 
 func checkUserExists(client *artifactoryold.Artifactory, name string) (bool, error) {
 	_, resp, err := client.V1.Security.GetUser(context.Background(), name)
-
-	// If there is an error, it possible the user does not exist.
 	if err != nil {
-		if resp != nil {
-			// Check if the user does not exist in artifactory
-			if resp.StatusCode == http.StatusNotFound {
-				return false, errors.New("user must exist in artifactory")
-			}
-
-			// If we cannot search for Users, the current user is not an admin
-			// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
-			if resp.StatusCode == http.StatusForbidden {
-				return true, nil
-			}
-		}
 		return false, err
 	}
+	// If there is an error, it possible the user does not exist.
+	if resp != nil {
+		// Check if the user does not exist in artifactory
+		if resp.StatusCode == http.StatusNotFound {
+			return false, errors.New("user must exist in artifactory")
+		}
 
-	return true, nil
+		// If we cannot search for Users, the current user is not an admin
+		// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
+		if resp.StatusCode == http.StatusForbidden {
+			return true, nil
+		}
+	}
+	return false, err
 }
 
 func checkGroupExists(client *artifactoryold.Artifactory, name string) (bool, error) {

@@ -65,12 +65,13 @@ func testAccCheckSingleReplicationDestroy(id string) func(*terraform.State) erro
 
 		replica, resp, err := client.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
 
+		if err != nil {
+			return err
+		}
+
 		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
-			return fmt.Errorf("error: Replication %s still exists", replica)
 		}
+		return fmt.Errorf("error: Replication %s still exists", replica)
 	}
 }

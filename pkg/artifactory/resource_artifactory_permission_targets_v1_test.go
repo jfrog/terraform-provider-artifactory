@@ -52,12 +52,13 @@ func testPermissionTargetV1CheckDestroy(id string) func(*terraform.State) error 
 
 		permissionTargets, resp, err := client.V1.Security.GetPermissionTargets(context.Background(), rs.Primary.ID)
 
+		if err != nil {
+			return err
+		}
+
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("error: Request failed: %s", err.Error())
-		} else {
-			return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
 		}
+			return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
 	}
 }

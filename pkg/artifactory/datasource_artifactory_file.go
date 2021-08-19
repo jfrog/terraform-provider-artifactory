@@ -103,14 +103,16 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
-		defer outFile.Close()
+		defer func(outFile *os.File) {
+			_ = outFile.Close()
+		}(outFile)
 
 		fileInfo, _, err = c.V1.Artifacts.FileContents(context.Background(), repository, path, outFile)
 		if err != nil {
 			return err
 		}
 	} else if !chksMatches {
-		return fmt.Errorf("Local file differs from upstream version")
+		return fmt.Errorf("local file differs from upstream version")
 	}
 
 	return packFileInfo(fileInfo, d)
@@ -130,7 +132,9 @@ func VerifySha256Checksum(path string, expectedSha256 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	hasher := sha256.New()
 

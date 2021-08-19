@@ -30,35 +30,21 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 
 
 ## Build the Provider
-If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin).
-After placing it into your plugins directory,  run `terraform init` to initialize it.
+Simply run `make install` - this will compile the provider and install it to `~/.terraform.d`. When running this, it will
+take the current tag and bump it 1 minor version. It does not actually create a new tag (that is `make release`). 
+If you wish to use the locally installed provider, make sure your TF script refers to the new version number 
 
 Requirements:
-- [Terraform](https://www.terraform.io/downloads.html) 0.11
-- [Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
+- [Terraform](https://www.terraform.io/downloads.html) 0.13
+- [Go](https://golang.org/doc/install) 1.15+ (to build the provider plugin)
 
-Clone repository to: `$GOPATH/src/github.com/jfrog/terraform-provider-artifactory`
-
-Enter the provider directory and build the provider
-
-```sh
-cd $GOPATH/src/github.com/jfrog/terraform-provider-artifactory
-go build
-```
-
-To install the provider
-```sh
-cd $GOPATH/src/github.com/jfrog/terraform-provider-artifactory
-go install
-```
 ## Testing
 How to run the tests isn't obvious.
-First, you need a running instance of artifactory. Included with this repo is a functioning `docker-compose.yml`
-that will fire up the whole stack for you. Run it as:
+First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local
+version. You can ask for an instance to test against in as part of your PR or by messaging the maintainer in gitter
 
-```bash
-docker-compose up -d
-```
+Once you have that done you must set the following properties
+
 Then, you have to set some environment variables as this is how the acceptance tests pick up their config
 ```bash
 ARTIFACTORY_URL=http://localhost:8082
@@ -84,20 +70,22 @@ So, you need to actually halt the provider and have it wait for your debugger to
 
 Having said all that, here are the steps:
 1. Install [delve](https://github.com/go-delve/delve)
-2. Add a snippet of go code to the [provider initializer](pkg/artifactory/provider.go) `providerConfigure`, where in you install a busy sleep loop:
+2. Keep in mind that terraform will 
+   parallel process if it can, and it will start new instances of the TF provider process when running apply between the plan and confirmation
+   Add a snippet of go code to the close to where you need to break where in you install a busy sleep loop:
 ```go
 	debug := true
 	for debug {
 		time.Sleep(time.Second) // set breakpoint here
 	}
 ``` 
-and set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`,
+Then set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`,
 thus breaking the sleep loop and allow you to continue. 
 2. Compile the provider with debug symbology (`go build -gcflags "all=-N -l"`)
 3. Install the provider (change as needed for your version)
 ```bash 
-mkdir -p .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64 \
-    && mv terraform-provider-artifactory .terraform/plugins/registry.terraform.io/jfrog/artifactory/2.2.5/darwin_amd64
+# this will bump your version by 1 so it doesn't download from TF. Make sure you update any test scripts accordingly
+make install 
 ```
 4. Run your provider: `terraform init && terraform plan` - it will start in this busy sleep loop.
 5. In a separate shell, find the `PID` of the provider that got forked 

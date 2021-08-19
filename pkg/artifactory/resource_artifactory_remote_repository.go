@@ -381,7 +381,7 @@ func unpackRemoteRepo(s *schema.ResourceData) (*v1.RemoteRepository, error) {
 		}
 	}
 	if repo.PackageType != nil && *repo.PackageType != "generic" && repo.PropagateQueryParams != nil && *repo.PropagateQueryParams == true {
-		return nil, fmt.Errorf("Cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories.", *repo.PackageType)
+		return nil, fmt.Errorf("cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories", *repo.PackageType)
 	}
 
 	return repo, nil
@@ -484,11 +484,16 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).ArtOld
 
 	repo, resp, err := c.V1.Repositories.GetRemote(context.Background(), d.Id())
+	if err != nil {
+		return err
+	}
+	if resp == nil {
+		return fmt.Errorf("no response returned during resourceRemoteRepositoryRead")
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	return packRemoteRepo(repo, d)
@@ -517,6 +522,11 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 	resp, err := c.V1.Repositories.DeleteRemote(context.Background(), *repo.Key)
+
+	if err != nil {
+		return err
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
@@ -530,6 +540,9 @@ func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool
 
 	key := d.Id()
 	_, resp, err := c.V1.Repositories.GetRemote(context.Background(), key)
+	if err != nil {
+		return false, err
+	}
 
 	// Cannot check for 404 because artifactory returns 400
 	if resp.StatusCode == http.StatusBadRequest {
