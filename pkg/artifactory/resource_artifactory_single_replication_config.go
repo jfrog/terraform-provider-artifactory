@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactorySingleReplicationConfig() *schema.Resource {
