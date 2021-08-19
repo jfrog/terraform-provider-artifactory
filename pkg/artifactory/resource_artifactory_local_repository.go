@@ -2,9 +2,10 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"net/http"
 )
 
 func resourceArtifactoryLocalRepository() *schema.Resource {
@@ -154,30 +155,30 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	repo := MessyRepo{}
 
 	repo.Rclass = "local"
-	repo.Key = d.getString("key",false)
-	repo.PackageType = d.getString("package_type",false)
-	repo.Description = d.getString("description",false)
-	repo.Notes = d.getString("notes",false)
-	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout",false)
-	repo.IncludesPattern = d.getString("includes_pattern",false)
-	repo.ExcludesPattern = d.getString("excludes_pattern",false)
-	repo.RepoLayoutRef = d.getString("repo_layout_ref",false)
-	repo.MaxUniqueTags = d.getInt("max_unique_tags",false)
+	repo.Key = d.getString("key", false)
+	repo.PackageType = d.getString("package_type", false)
+	repo.Description = d.getString("description", false)
+	repo.Notes = d.getString("notes", false)
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
+	repo.IncludesPattern = d.getString("includes_pattern", false)
+	repo.ExcludesPattern = d.getString("excludes_pattern", false)
+	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
+	repo.MaxUniqueTags = d.getInt("max_unique_tags", false)
 	repo.BlackedOut = d.getBoolRef("blacked_out", false)
 	repo.CalculateYumMetadata = d.getBoolRef("calculate_yum_metadata", false)
-	repo.YumRootDepth = d.getInt("yum_root_depth",false)
+	repo.YumRootDepth = d.getInt("yum_root_depth", false)
 	repo.ArchiveBrowsingEnabled = d.getBoolRef("archive_browsing_enabled", false)
-	repo.DockerApiVersion = d.getString("docker_api_verision",false)
+	repo.DockerApiVersion = d.getString("docker_api_verision", false)
 	repo.EnableFileListsIndexing = d.getBoolRef("enable_file_lists_indexing", false)
 	repo.PropertySets = d.getSet("property_sets")
 	repo.HandleReleases = d.getBoolRef("handle_releases", false)
 	repo.HandleSnapshots = d.getBoolRef("handle_snapshots", false)
-	repo.ChecksumPolicyType = d.getString("checksum_policy_type",false)
-	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots",false)
-	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior",false)
+	repo.ChecksumPolicyType = d.getString("checksum_policy_type", false)
+	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots", false)
+	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior", false)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", false)
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
-	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication",false)
+	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
 	return repo
 }
@@ -209,7 +210,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 
 	resp, err := client.R().SetResult(&repo).Get("/artifactory/api/repositories/" + d.Id())
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound{
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}

@@ -319,6 +319,5 @@ func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
 
 	_, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
 
-
 	return err
 }

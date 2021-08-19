@@ -59,6 +59,6 @@ func testPermissionTargetV1CheckDestroy(id string) func(*terraform.State) error 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
 		}
-			return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
+		return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
 	}
 }
