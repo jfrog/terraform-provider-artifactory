@@ -1,8 +1,11 @@
 package artifactory
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"gopkg.in/yaml.v2"
@@ -33,10 +36,10 @@ type SamlSettings struct {
 
 func resourceArtifactorySamlSettings() *schema.Resource {
 	return &schema.Resource{
-		Update: resourceSamlSettingsUpdate,
-		Create: resourceSamlSettingsUpdate,
-		Delete: resourceSamlSettingsDelete,
-		Read:   resourceSamlSettingsRead,
+		UpdateContext: resourceSamlSettingsUpdate,
+		CreateContext: resourceSamlSettingsUpdate,
+		DeleteContext: resourceSamlSettingsDelete,
+		ReadContext:   resourceSamlSettingsRead,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -101,7 +104,7 @@ func resourceArtifactorySamlSettings() *schema.Resource {
 	}
 }
 
-func resourceSamlSettingsRead(d *schema.ResourceData, m interface{}) error {
+func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*ArtClient).ArtNew
 	serviceDetails := c.GetConfig().GetServiceDetails()
 	httpClientDetails := serviceDetails.CreateHttpClientDetails()
@@ -110,38 +113,47 @@ func resourceSamlSettingsRead(d *schema.ResourceData, m interface{}) error {
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/saml/config", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read, if you are using the SaaS offering of Artifactory this feature is not supported")
 	}
 
 	err = json.Unmarshal(body, &samlSettings)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal SAML SSO settings during Read")
+		return diag.Errorf("failed to unmarshal saml settings during Read")
 	}
 
 	s := SamlSecurity{SamlSettingsWrapper{Settings: samlSettings}}
 
-	return packSamlSecurity(&s, d)
+	packDiag := packSamlSecurity(&s, d)
+	if packDiag != nil {
+		return packDiag
+	}
+
+	return diag.Diagnostics{{
+		Severity: diag.Warning,
+		Summary:  "the saml settings resource uses undocumented API endpoints",
+		Detail:   "the saml settings resource uses Artifactory endpoints that are undocumented and do not exist in the SaaS version",
+	}}
 }
 
-func resourceSamlSettingsUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceSamlSettingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	unpacked := unpackSamlSecurity(d)
 	content, err := yaml.Marshal(&unpacked)
 
 	if err != nil {
-		return fmt.Errorf("failed to marshal SAML SSO settings during Update")
+		return diag.Errorf("failed to marshal saml settings during Update")
 	}
 
 	err = sendConfigurationPatch(content, m)
 	if err != nil {
-		return fmt.Errorf("failed to send PATCH request to Artifactory during Update")
+		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
 
 	// we should only have one saml settings resource, using same id
 	d.SetId("saml_settings")
-	return resourceSamlSettingsRead(d, m)
+	return resourceSamlSettingsRead(ctx, d, m)
 }
 
-func resourceSamlSettingsDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSamlSettingsDelete(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var content = `
 security:
   samlSettings: ~
@@ -149,7 +161,7 @@ security:
 
 	err := sendConfigurationPatch([]byte(content), m)
 	if err != nil {
-		return fmt.Errorf("failed to send PATCH request to Artifactory during Delete")
+		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}
 
 	return nil
@@ -178,7 +190,7 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 	return &security
 }
 
-func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) error {
+func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
 	hasErr := false
 	logErr := cascadingErr(&hasErr)
 
@@ -196,7 +208,7 @@ func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) error {
 	logErr(d.Set("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction))
 
 	if hasErr {
-		return fmt.Errorf("failed to pack SAML SSO settings")
+		return diag.Errorf("failed to pack saml settings")
 	}
 
 	return nil
