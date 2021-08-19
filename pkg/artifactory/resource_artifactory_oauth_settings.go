@@ -130,7 +130,7 @@ func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m in
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/oauth", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read, if you are using the SaaS offering of Artifactory this feature is not supported")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read.  If you are using the SaaS offering of Artifactory this feature is not supported")
 	}
 
 	err = json.Unmarshal(body, &oauthSettings)
@@ -253,7 +253,7 @@ func packOauthSecurity(s *OauthSecurity, d *schema.ResourceData) diag.Diagnostic
 	}
 
 	if hasErr {
-		return diag.Errorf("failed to pack OAuth SSO settings")
+		return diag.Errorf("failed to pack oauth settings")
 	}
 	return nil
 }

@@ -113,7 +113,7 @@ func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m inter
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/saml/config", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read, if you are using the SaaS offering of Artifactory this feature is not supported")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read.  If you are using the SaaS offering of Artifactory this feature is not supported")
 	}
 
 	err = json.Unmarshal(body, &samlSettings)

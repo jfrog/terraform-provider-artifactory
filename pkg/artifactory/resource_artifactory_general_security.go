@@ -49,7 +49,7 @@ func resourceGeneralSecurityRead(ctx context.Context, d *schema.ResourceData, m 
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/securityconfig", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read, if you are using the SaaS offering of Artifactory this feature is not supported")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read.  If you are using the SaaS offering of Artifactory this feature is not supported")
 	}
 
 	err = json.Unmarshal(body, &generalSettings)
