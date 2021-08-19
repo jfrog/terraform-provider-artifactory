@@ -130,7 +130,7 @@ func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m in
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/oauth", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read.  If you are using the SaaS offering of Artifactory this feature is not supported")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read")
 	}
 
 	err = json.Unmarshal(body, &oauthSettings)
@@ -157,8 +157,8 @@ func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m in
 
 	return diag.Diagnostics{{
 		Severity: diag.Warning,
-		Summary:  "the oauth settings resource uses undocumented API endpoints",
-		Detail:   "the oauth settings resource uses Artifactory endpoints that are undocumented and do not exist in the SaaS version",
+		Summary:  "Usage of Undocumented Artifactory API Endpoints",
+		Detail:   "The artifactory_oauth_settings resource uses endpoints that are undocumented and may not work with SaaS environments, or may change without notice.",
 	}}
 }
 

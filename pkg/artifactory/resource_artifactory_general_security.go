@@ -49,7 +49,7 @@ func resourceGeneralSecurityRead(ctx context.Context, d *schema.ResourceData, m 
 
 	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/securityconfig", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read.  If you are using the SaaS offering of Artifactory this feature is not supported")
+		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read")
 	}
 
 	err = json.Unmarshal(body, &generalSettings)
@@ -66,8 +66,8 @@ func resourceGeneralSecurityRead(ctx context.Context, d *schema.ResourceData, m 
 
 	return diag.Diagnostics{{
 		Severity: diag.Warning,
-		Summary:  "the general security resource uses undocumented API endpoints",
-		Detail:   "the general security resource uses Artifactory endpoints that are undocumented and do not exist in the SaaS version",
+		Summary:  "Usage of Undocumented Artifactory API Endpoints",
+		Detail:   "The artifactory_general_security resource uses endpoints that are undocumented and may not work with SaaS environments, or may change without notice.",
 	}}
 }
 
