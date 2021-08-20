@@ -86,6 +86,56 @@ func TestAccVirtualRepository_update(t *testing.T) {
 		},
 	})
 }
+func TestAllPackageTypes(t *testing.T) {
+	for _, repo := range repoTypesSupported {
+		// NuGet Repository configuration is missing mandatory field downloadContextPath
+		if repo != "nuget" { // this requires special testing
+			resource.Test(mkVirtualTestCase(repo, t))
+		}
+	}
+}
+
+func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.TestCase) {
+	id := rand.Int()
+	name := fmt.Sprintf("%s%d", repo, id)
+	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	const virtualRepositoryFull = `
+		resource "artifactory_virtual_repository" "%s" {
+			key = "%s"
+			package_type = "%s"
+			repo_layout_ref = "maven-1-default"
+			repositories = []
+			description = "A test virtual repo"
+			notes = "Internal description"
+			includes_pattern = "com/atlassian/**,cloud/atlassian/**"
+			excludes_pattern = "com/google/**"
+			artifactory_requests_can_retrieve_remote_artifacts = true
+			pom_repository_references_cleanup_policy = "discard_active_reference"
+		}
+	`
+	return t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(virtualRepositoryFull, name, name, repo),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repo),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "maven-1-default"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "description", "A test virtual repo"),
+					resource.TestCheckResourceAttr(fqrn, "notes", "Internal description"),
+					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
+					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "com/google/**"),
+					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
+				),
+			},
+		},
+	}
+}
 
 func TestNugetPackageCreationFull(t *testing.T) {
 	id := rand.Int()
