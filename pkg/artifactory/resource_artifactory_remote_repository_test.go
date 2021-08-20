@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -36,8 +37,8 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 
 func TestAccRemoteRepository_basic(t *testing.T) {
 	id := rand.Int()
-	name := fmt.Sprintf("terraform-remote-test-repo-basic%d",id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s",name)
+	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	const remoteRepoBasic = `
 		resource "artifactory_remote_repository" "%s" {
 			key 				  = "%s"
@@ -52,7 +53,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(remoteRepoBasic,name,name),
+				Config: fmt.Sprintf(remoteRepoBasic, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
@@ -62,8 +63,6 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 		},
 	})
 }
-
-
 
 func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	const remoteRepoNuget = `
@@ -78,15 +77,15 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 		}
 	`
 	id := rand.Int()
-	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d",id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s",name)
+	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(remoteRepoNuget,name,name),
+				Config: fmt.Sprintf(remoteRepoNuget, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", ""),
@@ -98,16 +97,17 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	})
 }
 
-func TestAllRemoteRepoTypes(t *testing.T){
+func TestAllRemoteRepoTypes(t *testing.T) {
 	//
 	for _, repo := range repoTypesSupported {
-		// NuGet Repository configuration is missing mandatory field downloadContextPath
 		if repo != "nuget" { // this requires special testing
-			resource.Test(mkRemoteRepoTestCase(repo, t))
+			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+				// NuGet Repository configuration is missing mandatory field downloadContextPath
+				resource.Test(mkRemoteRepoTestCase(repo, t))
+			})
 		}
 	}
 }
-
 
 func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	const remoteRepoFull = `
@@ -148,15 +148,15 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 		}
 	`
 	id := rand.Int()
-	name := fmt.Sprintf("terraform-remote-test-repo-full%d",id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s",name)
-	return t,resource.TestCase{
+	name := fmt.Sprintf("terraform-remote-test-repo-full%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(remoteRepoFull,name,name,repoType),
+				Config: fmt.Sprintf(remoteRepoFull, name, name, repoType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", repoType),
@@ -218,8 +218,6 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 	}
 }
 
-
-
 func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
 	const remoteNpmRepoBasicWithPropagate = `
 		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
@@ -258,15 +256,15 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 		}
 	`
 	id := rand.Int()
-	name := fmt.Sprintf("terraform-remote-test-repo-basic%d",id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s",name)
+	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate,name,name),
+				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),

@@ -16,7 +16,7 @@ import (
 
 
 
-const Version = "2.2.16"
+var Version = "2.2.16"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory

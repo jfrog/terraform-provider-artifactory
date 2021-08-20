@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -88,9 +89,11 @@ func TestAccVirtualRepository_update(t *testing.T) {
 }
 func TestAllPackageTypes(t *testing.T) {
 	for _, repo := range repoTypesSupported {
-		// NuGet Repository configuration is missing mandatory field downloadContextPath
 		if repo != "nuget" { // this requires special testing
-			resource.Test(mkVirtualTestCase(repo, t))
+			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+				// NuGet Repository configuration is missing mandatory field downloadContextPath
+				resource.Test(mkVirtualTestCase(repo, t))
+			})
 		}
 	}
 }
