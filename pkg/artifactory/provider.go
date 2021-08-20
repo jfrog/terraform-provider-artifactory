@@ -14,38 +14,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-var repoTypeValidator = validation.StringInSlice([]string{
-	"alpine",
-	"bower",
-	"cargo",
-	"chef",
-	"cocoapods",
-	"composer",
-	"conan",
-	"conda",
-	"cran",
-	"debian",
-	"docker",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"gradle",
-	"helm",
-	"ivy",
-	"maven",
-	"npm",
-	"nuget",
-	"opkg",
-	"p2",
-	"puppet",
-	"pypi",
-	"rpm",
-	"sbt",
-	"vagrant",
-	"vcs",
-}, false)
-
 const Version = "2.2.16"
 
 type ArtClient struct {
@@ -61,23 +29,29 @@ func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", nil),
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", func() (interface{}, error) {
+					return "http://localhost:8082", nil
+				}),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", func() (interface{}, error) {
+					return "admin", nil
+				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 			"password": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", func() (interface{}, error) {
+					return "password", nil
+				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
@@ -137,8 +111,7 @@ func Provider() *schema.Provider {
 	return p
 }
 
-// Creates the client for artifactory, will prefer token auth over basic auth if both set
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func buildResty(d *schema.ResourceData, terraformVersion string) (*resty.Client, error) {
 
 	if key, ok := d.GetOk("url"); key == nil || key == "" || !ok {
 		return nil, fmt.Errorf("you must supply a URL")
@@ -162,7 +135,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil
 	}).
 		SetHeader("content-type", "application/json").
-		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+terraformVersion)
+		SetHeader("accept", "*/*").
+		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -178,6 +152,33 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if accessToken != "" {
 		restyBase = restyBase.SetAuthToken(accessToken)
 	}
+	restyBase.DisableWarn = true
+	return restyBase, nil
+}
+
+// Creates the client for artifactory, will prefer token auth over basic auth if both set
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+	restyBase, err := buildResty(d, terraformVersion)
+	if err != nil {
+		return nil, err
+	}
+	_, err = sendUsageRepo(err, restyBase, terraformVersion)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rt := &ArtClient{
+		ArtOld: nil,
+		ArtNew: nil,
+		Xray:   nil,
+		Resty:  restyBase,
+	}
+
+	return rt, nil
+}
+
+func sendUsageRepo(err error, restyBase *resty.Client, terraformVersion string) (interface{}, error) {
 	type Feature struct {
 		FeatureId string `json:"featureId"`
 	}
@@ -195,14 +196,5 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, fmt.Errorf("unable to report usage %s", err)
 	}
-
-	rt := &ArtClient{
-		ArtOld: nil,
-		ArtNew: nil,
-		Xray:   nil,
-		Resty:  restyBase,
-	}
-
-	return rt, nil
-
+	return nil, nil
 }

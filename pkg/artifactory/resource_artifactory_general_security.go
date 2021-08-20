@@ -42,6 +42,7 @@ func resourceArtifactoryGeneralSecurity() *schema.Resource {
 
 func resourceGeneralSecurityRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*ArtClient).ArtNew
+
 	serviceDetails := c.GetConfig().GetServiceDetails()
 	httpClientDetails := serviceDetails.CreateHttpClientDetails()
 

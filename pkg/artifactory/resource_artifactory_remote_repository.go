@@ -1,15 +1,25 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+type MessyRemoteRepo struct {
+	services.RemoteRepositoryBaseParams
+	services.BowerRemoteRepositoryParams
+	services.CommonMavenGradleRemoteRepositoryParams
+	services.DockerRemoteRepositoryParams
+	services.VcsRemoteRepositoryParams
+	services.PypiRemoteRepositoryParams
+	services.NugetRemoteRepositoryParams
+	PropagateQueryParams bool `json:"propagateQueryParams"`
+}
 
 func resourceArtifactoryRemoteRepository() *schema.Resource {
 	return &schema.Resource{
@@ -25,9 +35,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
 				Type:         schema.TypeString,
@@ -73,9 +84,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"max_unique_snapshots": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"suppress_pom_consistency_checks": {
 				Type:     schema.TypeBool,
@@ -83,8 +95,9 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -133,28 +146,36 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"socket_timeout_millis": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"local_address": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"retrieval_cache_period_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
+				DefaultFunc: func() (interface{}, error) {
+					return 7200, nil
+				},
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"missed_cache_period_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"unused_artifacts_cleanup_period_hours": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"fetch_jars_eagerly": {
 				Type:     schema.TypeBool,
@@ -243,25 +264,31 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"feed_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"nuget"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"download_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"nuget"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"v3_feed_url": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"nuget"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"force_nuget_authentication": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
+			//"metadataRetrievalTimeoutSecs": {
+			//	Type: schema.TypeInt,
+			//	Optional: true,
+			//	Computed: true,
+			//	Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
+			//	DefaultFunc: func() (interface{}, error) {
+			//		return 60, nil
+			//	},
+			//},
 			"content_synchronisation": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -276,118 +303,86 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 					},
 				},
 			},
-			"nuget": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				MinItems:      1,
-				Deprecated:    "Since Artifactory 6.9.0+ (provider 1.6). Use /api/v2 endpoint",
-				ConflictsWith: []string{"feed_context_path", "download_context_path", "v3_feed_url"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"feed_context_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"download_context_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"v3_feed_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
 			"propagate_query_params": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				DefaultFunc: func() (interface{}, error) {
+					return false, nil
+				},
 			},
 		},
 	}
 }
 
-func unpackRemoteRepo(s *schema.ResourceData) (*v1.RemoteRepository, error) {
+func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 	d := &ResourceData{s}
-	repo := new(v1.RemoteRepository)
+	repo := MessyRemoteRepo{}
 
-	repo.Key = d.getStringRef("key", false)
-	repo.RClass = artifactory.String("remote")
+	repo.Key = d.getString("key", false)
+	repo.Rclass = "remote"
 
-	repo.RemoteRepoChecksumPolicyType = d.getStringRef("remote_repo_checksum_policy_type", true)
+	repo.RemoteRepoChecksumPolicyType = d.getString("remote_repo_checksum_policy_type", true)
 	repo.AllowAnyHostAuth = d.getBoolRef("allow_any_host_auth", true)
 	repo.BlackedOut = d.getBoolRef("blacked_out", true)
 	repo.BlockMismatchingMimeTypes = d.getBoolRef("block_mismatching_mime_types", true)
-	repo.BowerRegistryURL = d.getStringRef("bower_registry_url", true)
+	repo.BowerRegistryUrl = d.getString("bower_registry_url", true)
 	repo.BypassHeadRequests = d.getBoolRef("bypass_head_requests", true)
-	repo.ClientTLSCertificate = d.getStringRef("client_tls_certificate", true)
-	repo.Description = d.getStringRef("description", true)
+	repo.ClientTlsCertificate = d.getString("client_tls_certificate", true)
+	repo.Description = d.getString("description", true)
 	repo.EnableCookieManagement = d.getBoolRef("enable_cookie_management", true)
 	repo.EnableTokenAuthentication = d.getBoolRef("enable_token_authentication", true)
-	repo.ExcludesPattern = d.getStringRef("excludes_pattern", true)
+	repo.ExcludesPattern = d.getString("excludes_pattern", true)
 	repo.FetchJarsEagerly = d.getBoolRef("fetch_jars_eagerly", true)
 	repo.FetchSourcesEagerly = d.getBoolRef("fetch_sources_eagerly", true)
 	repo.HandleReleases = d.getBoolRef("handle_releases", true)
 	repo.HandleSnapshots = d.getBoolRef("handle_snapshots", true)
 	repo.HardFail = d.getBoolRef("hard_fail", true)
-	repo.IncludesPattern = d.getStringRef("includes_pattern", true)
-	repo.LocalAddress = d.getStringRef("local_address", true)
-	repo.MaxUniqueSnapshots = d.getIntRef("max_unique_snapshots", true)
-	repo.MissedRetrievalCachePeriodSecs = d.getIntRef("missed_cache_period_seconds", true)
-	repo.Notes = d.getStringRef("notes", true)
+	repo.IncludesPattern = d.getString("includes_pattern", true)
+	repo.LocalAddress = d.getString("local_address", true)
+	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots", true)
+	repo.MissedRetrievalCachePeriodSecs = d.getInt("missed_cache_period_seconds", true)
+	repo.Notes = d.getString("notes", true)
 	repo.Offline = d.getBoolRef("offline", true)
-	repo.PackageType = d.getStringRef("package_type", true)
-	repo.Password = d.getStringRef("password", true)
-	repo.PropertySets = d.getSetRef("property_sets")
-	repo.Proxy = d.getStringRef("proxy", true)
-	repo.PyPiRegistryUrl = d.getStringRef("pypi_registry_url", true)
-	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref", true)
-	repo.RetrievalCachePeriodSecs = d.getIntRef("retrieval_cache_period_seconds", true)
+	repo.PackageType = d.getString("package_type", true)
+	repo.Password = d.getString("password", true)
+	repo.PropertySets = d.getSet("property_sets")
+	repo.Proxy = d.getString("proxy", true)
+	repo.PypiRegistryUrl = d.getString("pypi_registry_url", true)
+	repo.RepoLayoutRef = d.getString("repo_layout_ref", true)
+	repo.RetrievalCachePeriodSecs = d.getInt("retrieval_cache_period_seconds", true)
 	repo.ShareConfiguration = d.getBoolRef("share_configuration", true)
-	repo.SocketTimeoutMillis = d.getIntRef("socket_timeout_millis", true)
+	repo.SocketTimeoutMillis = d.getInt("socket_timeout_millis", true)
 	repo.StoreArtifactsLocally = d.getBoolRef("store_artifacts_locally", true)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", true)
 	repo.SynchronizeProperties = d.getBoolRef("synchronize_properties", true)
-	repo.UnusedArtifactsCleanupPeriodHours = d.getIntRef("unused_artifacts_cleanup_period_hours", true)
-	repo.Url = d.getStringRef("url", true)
-	repo.Username = d.getStringRef("username", true)
-	repo.VcsGitDownloadUrl = d.getStringRef("vcs_git_download_url", true)
-	repo.VcsGitProvider = d.getStringRef("vcs_git_provider", true)
-	repo.VcsType = d.getStringRef("vcs_type", true)
+	repo.UnusedArtifactsCleanupPeriodHours = d.getInt("unused_artifacts_cleanup_period_hours", true)
+	repo.Url = d.getString("url", true)
+	repo.Username = d.getString("username", true)
+	repo.VcsGitDownloadUrl = d.getString("vcs_git_download_url", true)
+	repo.VcsGitProvider = d.getString("vcs_git_provider", true)
+	repo.VcsType = d.getString("vcs_type", true)
 	repo.XrayIndex = d.getBoolRef("xray_index", true)
-	repo.FeedContextPath = d.getStringRef("feed_context_path", true)
-	repo.DownloadContextPath = d.getStringRef("download_context_path", true)
-	repo.V3FeedUrl = d.getStringRef("v3_feed_url", true)
+	repo.FeedContextPath = d.getString("feed_context_path", true)
+	repo.DownloadContextPath = d.getString("download_context_path", true)
+	repo.V3FeedUrl = d.getString("v3_feed_url", true)
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
-	repo.PropagateQueryParams = d.getBoolRef("propagate_query_params", true)
+	repo.PropagateQueryParams = d.getBool("propagate_query_params", true)
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
-		repo.ContentSynchronisation = &v1.ContentSynchronisation{
-			Enabled: &enabled,
+		repo.ContentSynchronisation = &services.ContentSynchronisation{
+			Enabled: enabled,
 		}
 	}
-	if v, ok := d.GetOk("nuget"); ok {
-		nugetConfig := v.([]interface{})[0].(map[string]interface{})
-		feedContextPath := nugetConfig["feed_context_path"].(string)
-		downloadContextPath := nugetConfig["download_context_path"].(string)
-		v3FeedUrl := nugetConfig["v3_feed_url"].(string)
-		repo.Nuget = &v1.Nuget{
-			FeedContextPath:     &feedContextPath,
-			DownloadContextPath: &downloadContextPath,
-			V3FeedUrl:           &v3FeedUrl,
-		}
-	}
-	if repo.PackageType != nil && *repo.PackageType != "generic" && repo.PropagateQueryParams != nil && *repo.PropagateQueryParams == true {
-		return nil, fmt.Errorf("cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories", *repo.PackageType)
+	if repo.PackageType != "" && repo.PackageType != "generic" && repo.PropagateQueryParams == true {
+		return MessyRemoteRepo{}, fmt.Errorf("cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories", repo.PackageType)
 	}
 
 	return repo, nil
 }
 
-func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
+func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
 	hasErr := false
 	logErr := cascadingErr(&hasErr)
 
@@ -395,9 +390,9 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("allow_any_host_auth", repo.AllowAnyHostAuth))
 	logErr(d.Set("blacked_out", repo.BlackedOut))
 	logErr(d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes))
-	logErr(d.Set("bower_registry_url", repo.BowerRegistryURL))
+	logErr(d.Set("bower_registry_url", repo.BowerRegistryUrl))
 	logErr(d.Set("bypass_head_requests", repo.BypassHeadRequests))
-	logErr(d.Set("client_tls_certificate", repo.ClientTLSCertificate))
+	logErr(d.Set("client_tls_certificate", repo.ClientTlsCertificate))
 	logErr(d.Set("description", repo.Description))
 	logErr(d.Set("enable_cookie_management", repo.EnableCookieManagement))
 	logErr(d.Set("enable_token_authentication", repo.EnableTokenAuthentication))
@@ -415,9 +410,9 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("notes", repo.Notes))
 	logErr(d.Set("offline", repo.Offline))
 	logErr(d.Set("package_type", repo.PackageType))
-	logErr(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(*repo.PropertySets))))
+	logErr(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(repo.PropertySets))))
 	logErr(d.Set("proxy", repo.Proxy))
-	logErr(d.Set("pypi_registry_url", repo.PyPiRegistryUrl))
+	logErr(d.Set("pypi_registry_url", repo.PypiRegistryUrl))
 	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
 	logErr(d.Set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs))
 	logErr(d.Set("share_configuration", repo.ShareConfiguration))
@@ -439,23 +434,14 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 	logErr(d.Set("propagate_query_params", repo.PropagateQueryParams))
 	if repo.ContentSynchronisation != nil {
 		logErr(d.Set("content_synchronisation", []interface{}{
-			map[string]*bool{
+			map[string]bool{
 				"enabled": repo.ContentSynchronisation.Enabled,
 			},
 		}))
 	}
-	if repo.Nuget != nil {
-		logErr(d.Set("nuget", []interface{}{
-			map[string]*string{
-				"feed_context_path":     repo.Nuget.FeedContextPath,
-				"download_context_path": repo.Nuget.DownloadContextPath,
-				"v3_feed_url":           repo.Nuget.V3FeedUrl,
-			},
-		}))
-	}
 
-	if repo.Password != nil {
-		logErr(d.Set("password", getMD5Hash(*repo.Password)))
+	if repo.Password != "" {
+		logErr(d.Set("password", getMD5Hash(repo.Password)))
 	}
 
 	if hasErr {
@@ -465,69 +451,69 @@ func packRemoteRepo(repo *v1.RemoteRepository, d *schema.ResourceData) error {
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
 	repo, err := unpackRemoteRepo(d)
 	if err != nil {
 		return err
 	}
-	_, err = c.V1.Repositories.CreateRemote(context.Background(), repo)
+
+	_, err = client.R().SetBody(repo).Put("artifactory/api/repositories/" + repo.Key)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*repo.Key)
+	d.SetId(repo.Key)
 	return resourceRemoteRepositoryRead(d, m)
 }
 
 func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	repo, resp, err := c.V1.Repositories.GetRemote(context.Background(), d.Id())
+	client := m.(*ArtClient).Resty
+	repo := MessyRemoteRepo{}
+	resp, err := client.R().SetResult(&repo).Get("artifactory/api/repositories/" + d.Id())
 	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	if resp == nil {
 		return fmt.Errorf("no response returned during resourceRemoteRepositoryRead")
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
-
 	return packRemoteRepo(repo, d)
 }
 
 func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
 	repo, err := unpackRemoteRepo(d)
 	if err != nil {
 		return err
 	}
-	_, err = c.V1.Repositories.UpdateRemote(context.Background(), d.Id(), repo)
+	_, err = client.R().SetBody(repo).Post("artifactory/api/repositories/" + repo.Key)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*repo.Key)
+	d.SetId(repo.Key)
 	return resourceRemoteRepositoryRead(d, m)
 }
 
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 	repo, err := unpackRemoteRepo(d)
 	if err != nil {
 		return err
 	}
-	resp, err := c.V1.Repositories.DeleteRemote(context.Background(), *repo.Key)
+	resp, err := client.R().Delete("artifactory/api/repositories/" + repo.Key)
 
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp.StatusCode() == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
@@ -536,18 +522,10 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
-	key := d.Id()
-	_, resp, err := c.V1.Repositories.GetRemote(context.Background(), key)
-	if err != nil {
-		return false, err
-	}
+	_, err := client.R().Head("artifactory/api/repositories/" + d.Id())
 
-	// Cannot check for 404 because artifactory returns 400
-	if resp.StatusCode == http.StatusBadRequest {
-		return false, nil
-	}
-
-	return true, err
+	// as long as we don't have an error, it's good
+	return err == nil, err
 }

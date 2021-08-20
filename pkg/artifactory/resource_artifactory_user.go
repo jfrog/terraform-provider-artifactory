@@ -1,19 +1,20 @@
 package artifactory
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -24,6 +25,7 @@ func resourceArtifactoryUser() *schema.Resource {
 		Read:   resourceUserRead,
 		Update: resourceUserUpdate,
 		Delete: resourceUserDelete,
+		Exists: userExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -31,13 +33,15 @@ func resourceArtifactoryUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateIsEmail,
 			},
 			"admin": {
 				Type:     schema.TypeBool,
@@ -68,40 +72,64 @@ func resourceArtifactoryUser() *schema.Resource {
 			"password": {
 				Type:      schema.TypeString,
 				Sensitive: true,
-				Optional:  true,
-				StateFunc: func(value interface{}) string {
+				Required:  true,
+				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
+					validationOn, _ := strconv.ParseBool(os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
+					if validationOn {
+						validate := composeValidators(containsDigit, containsLower, containsUpper, minLength)
+						ses, err := validate(tfValue, key)
+						if err != nil {
+							return ses, append(err,
+								fmt.Errorf("if your organization has custom password rules, you may override "+
+									"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),
+							)
+						}
+					}
+					return nil, nil
+				},
+				StateFunc: func(str interface{}) string {
 					// Avoid storing the actual value in the state and instead store the hash of it
-					return hashString(value.(string))
+					value, ok := str.(string)
+					if !ok {
+						panic(fmt.Errorf("'str' is not a string %s", str))
+					}
+					hash := sha256.Sum256([]byte(value))
+					return base64.StdEncoding.EncodeToString(hash[:])
 				},
 			},
 		},
 	}
 }
 
-// hashString do a sha256 checksum, encode it in base64 and return it as string
-// The choice of sha256 for checksum is arbitrary.
-func hashString(str string) string {
-	hash := sha256.Sum256([]byte(str))
-	return base64.StdEncoding.EncodeToString(hash[:])
+func userExists(data *schema.ResourceData, config interface{}) (bool, error) {
+	client := config.(*ArtClient).Resty
+	d := &ResourceData{data}
+	userName := d.getString("name", false)
+	if userName == "" {
+		return false, fmt.Errorf("no usersname supplied")
+	}
+	_, err := client.R().Head("artifactory/api/security/users/" + userName)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
-func unpackUser(s *schema.ResourceData) *v1.User {
+func unpackUser(s *schema.ResourceData) services.User {
 	d := &ResourceData{s}
-	user := new(v1.User)
-
-	user.Name = d.getStringRef("name", false)
-	user.Email = d.getStringRef("email", false)
-	user.Admin = d.getBoolRef("admin", false)
-	user.ProfileUpdatable = d.getBoolRef("profile_updatable", false)
-	user.DisableUIAccess = d.getBoolRef("disable_ui_access", false)
-	user.InternalPasswordDisabled = d.getBoolRef("internal_password_disabled", false)
-	user.Groups = d.getSetRef("groups")
-	user.Password = d.getStringRef("password", true)
-
-	return user
+	return services.User{
+		Name:                     d.getString("name", false),
+		Email:                    d.getString("email", false),
+		Password:                 d.getString("password", true),
+		Admin:                    d.getBool("admin", false),
+		ProfileUpdatable:         d.getBool("profile_updatable", false),
+		DisableUIAccess:          d.getBool("disable_ui_access", false),
+		InternalPasswordDisabled: d.getBool("internal_password_disabled", false),
+		Groups:                   d.getSet("groups"),
+	}
 }
 
-func packUser(user *v1.User, d *schema.ResourceData) error {
+func packUser(user services.User, d *schema.ResourceData) error {
 	hasErr := false
 	logErr := cascadingErr(&hasErr)
 
@@ -113,7 +141,7 @@ func packUser(user *v1.User, d *schema.ResourceData) error {
 	logErr(d.Set("internal_password_disabled", user.InternalPasswordDisabled))
 
 	if user.Groups != nil {
-		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(*user.Groups))))
+		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups))))
 	}
 
 	if hasErr {
@@ -124,116 +152,78 @@ func packUser(user *v1.User, d *schema.ResourceData) error {
 }
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
 	user := unpackUser(d)
 
-	if user.Name == nil {
-		return fmt.Errorf("user name cannot be nil")
+	if user.Name == "" {
+		return fmt.Errorf("user name cannot be empty")
 	}
 
-	if user.Password == nil {
-		warning.Println("No password supplied. One will be generated and this can fail as your RT password policy can't be known here")
-		user.Password = artifactory.String(generatePassword(16))
+	if user.Password == "" {
+		return fmt.Errorf("no password supplied. Please use any of the terraform random password generators")
 	}
-
-	_, err := c.V1.Security.CreateOrReplaceUser(context.Background(), *user.Name, user)
+	_, err := client.R().SetBody(user).Put("artifactory/api/security/users/" + user.Name)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*user.Name)
+	d.SetId(user.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*ArtClient).ArtOld
-		_, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
-		if err != nil {
+		result := &services.User{}
+		resp, e := client.R().SetResult(result).Get("artifactory/api/security/users/" + user.Name)
+
+		if e != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				return resource.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
+			}
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
 
-		if resp.StatusCode == http.StatusNotFound {
-			return resource.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
-		}
-
 		return nil
 	})
 }
 
-func resourceUserRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
+	client := m.(*ArtClient).Resty
+	d := &ResourceData{rd}
 
-	user, resp, err := c.V1.Security.GetUser(context.Background(), d.Id())
+	userName := d.getString("name", false)
+	user := &services.User{}
+	resp, err := client.R().SetResult(user).Get("artifactory/api/security/users/" + userName)
 
 	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
-
-	return packUser(user, d)
+	return packUser(*user, rd)
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
 	user := unpackUser(d)
-	if user.Password != nil && len(*user.Password) == 0 {
-		user.Password = nil
-	}
+	_, err := client.R().SetBody(user).Post("artifactory/api/security/users/" + user.Name)
 
-	_, err := c.V1.Security.UpdateUser(context.Background(), d.Id(), user)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*user.Name)
+	d.SetId(user.Name)
 	return resourceUserRead(d, m)
 }
 
-func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-	user := unpackUser(d)
-	_, resp, err := c.V1.Security.DeleteUser(context.Background(), *user.Name)
+func resourceUserDelete(rd *schema.ResourceData, m interface{}) error {
+	client := m.(*ArtClient).Resty
+	d := &ResourceData{rd}
+	userName := d.getString("name", false)
+
+	_, err := client.R().Delete("artifactory/api/security/users/" + userName)
 	if err != nil {
-		return err
+		return fmt.Errorf("user %s not deleted. %s", userName, err)
 	}
-	if resp.StatusCode == http.StatusOK {
-		return nil
-	}
-
-	return fmt.Errorf("user %s not deleted. Status code: %d", *user.Name, resp.StatusCode)
-}
-
-// generatePassword used as default func to generate user passwords. It's possible for this to be incompatible with what
-// rt will allow, but there is no way to know what rules are in place
-func generatePassword(length int) string {
-	randSelect := func(str string, count int) string {
-		strLen := len(str)
-		result := make([]byte, count)
-		for i := range result {
-			result[i] = str[rand.Intn(strLen)]
-		}
-		return string(result)
-	}
-	up := func(count int) string {
-		return randSelect("ABCDEFGHIJKLMNOPQRSTUVWXYZ", count)
-	}
-	low := func(count int) string {
-		return randSelect("abcdefghijklmnopqrstuvwxyz", count)
-	}
-	dig := func(count int) string {
-		return randSelect("0123456789", count)
-	}
-	spec := func(count int) string {
-		return randSelect("!@#$%^&*()-_+=[]{}|<>?/~'\"", count)
-	}
-	lowLen := length / 2
-	runes := []rune(low(lowLen-1) + up(length-lowLen-1) + spec(1) + dig(1))
-
-	rand.Shuffle(len(runes), func(i, j int) {
-		runes[i], runes[j] = runes[j], runes[i]
-	})
-	return string(runes)
+	return nil
 }
