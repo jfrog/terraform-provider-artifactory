@@ -141,7 +141,7 @@ func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error 
 	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack virtual repo")
+		return fmt.Errorf("failed to pack virtual repo %q", errors)
 	}
 
 	return nil

@@ -34,9 +34,9 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
@@ -83,9 +83,9 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"max_unique_snapshots": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"suppress_pom_consistency_checks": {
@@ -94,8 +94,8 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
@@ -145,9 +145,9 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"socket_timeout_millis": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"local_address": {
@@ -155,25 +155,25 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 			},
 			"retrieval_cache_period_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 				Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
 				DefaultFunc: func() (interface{}, error) {
-					return 7200,nil
+					return 7200, nil
 				},
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"missed_cache_period_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"unused_artifacts_cleanup_period_hours": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"fetch_jars_eagerly": {
@@ -263,16 +263,16 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Computed: true,
 			},
 			"feed_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"download_context_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"v3_feed_url": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"force_nuget_authentication": {
 				Type:     schema.TypeBool,
@@ -307,7 +307,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DefaultFunc: func() (interface{}, error) {
-					return false,nil
+					return false, nil
 				},
 			},
 		},
@@ -382,69 +382,68 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 }
 
 func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
+	setValue := set(d)
 
-	logErr(d.Set("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType))
-	logErr(d.Set("allow_any_host_auth", repo.AllowAnyHostAuth))
-	logErr(d.Set("blacked_out", repo.BlackedOut))
-	logErr(d.Set("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes))
-	logErr(d.Set("bower_registry_url", repo.BowerRegistryUrl))
-	logErr(d.Set("bypass_head_requests", repo.BypassHeadRequests))
-	logErr(d.Set("client_tls_certificate", repo.ClientTlsCertificate))
-	logErr(d.Set("description", repo.Description))
-	logErr(d.Set("enable_cookie_management", repo.EnableCookieManagement))
-	logErr(d.Set("enable_token_authentication", repo.EnableTokenAuthentication))
-	logErr(d.Set("excludes_pattern", repo.ExcludesPattern))
-	logErr(d.Set("fetch_jars_eagerly", repo.FetchJarsEagerly))
-	logErr(d.Set("fetch_sources_eagerly", repo.FetchSourcesEagerly))
-	logErr(d.Set("handle_releases", repo.HandleReleases))
-	logErr(d.Set("handle_snapshots", repo.HandleSnapshots))
-	logErr(d.Set("hard_fail", repo.HardFail))
-	logErr(d.Set("includes_pattern", repo.IncludesPattern))
-	logErr(d.Set("key", repo.Key))
-	logErr(d.Set("local_address", repo.LocalAddress))
-	logErr(d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots))
-	logErr(d.Set("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs))
-	logErr(d.Set("notes", repo.Notes))
-	logErr(d.Set("offline", repo.Offline))
-	logErr(d.Set("package_type", repo.PackageType))
-	logErr(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(repo.PropertySets))))
-	logErr(d.Set("proxy", repo.Proxy))
-	logErr(d.Set("pypi_registry_url", repo.PypiRegistryUrl))
-	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
-	logErr(d.Set("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs))
-	logErr(d.Set("share_configuration", repo.ShareConfiguration))
-	logErr(d.Set("socket_timeout_millis", repo.SocketTimeoutMillis))
-	logErr(d.Set("store_artifacts_locally", repo.StoreArtifactsLocally))
-	logErr(d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks))
-	logErr(d.Set("synchronize_properties", repo.SynchronizeProperties))
-	logErr(d.Set("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours))
-	logErr(d.Set("url", repo.Url))
-	logErr(d.Set("username", repo.Username))
-	logErr(d.Set("vcs_git_download_url", repo.VcsGitDownloadUrl))
-	logErr(d.Set("vcs_git_provider", repo.VcsGitProvider))
-	logErr(d.Set("vcs_type", repo.VcsType))
-	logErr(d.Set("xray_index", repo.XrayIndex))
-	logErr(d.Set("feed_context_path", repo.FeedContextPath))
-	logErr(d.Set("download_context_path", repo.DownloadContextPath))
-	logErr(d.Set("v3_feed_url", repo.V3FeedUrl))
-	logErr(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
-	logErr(d.Set("propagate_query_params", repo.PropagateQueryParams))
+	setValue("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
+	setValue("allow_any_host_auth", repo.AllowAnyHostAuth)
+	setValue("blacked_out", repo.BlackedOut)
+	setValue("block_mismatching_mime_types", repo.BlockMismatchingMimeTypes)
+	setValue("bower_registry_url", repo.BowerRegistryUrl)
+	setValue("bypass_head_requests", repo.BypassHeadRequests)
+	setValue("client_tls_certificate", repo.ClientTlsCertificate)
+	setValue("description", repo.Description)
+	setValue("enable_cookie_management", repo.EnableCookieManagement)
+	setValue("enable_token_authentication", repo.EnableTokenAuthentication)
+	setValue("excludes_pattern", repo.ExcludesPattern)
+	setValue("fetch_jars_eagerly", repo.FetchJarsEagerly)
+	setValue("fetch_sources_eagerly", repo.FetchSourcesEagerly)
+	setValue("handle_releases", repo.HandleReleases)
+	setValue("handle_snapshots", repo.HandleSnapshots)
+	setValue("hard_fail", repo.HardFail)
+	setValue("includes_pattern", repo.IncludesPattern)
+	setValue("key", repo.Key)
+	setValue("local_address", repo.LocalAddress)
+	setValue("max_unique_snapshots", repo.MaxUniqueSnapshots)
+	setValue("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)
+	setValue("notes", repo.Notes)
+	setValue("offline", repo.Offline)
+	setValue("package_type", repo.PackageType)
+	setValue("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(repo.PropertySets)))
+	setValue("proxy", repo.Proxy)
+	setValue("pypi_registry_url", repo.PypiRegistryUrl)
+	setValue("repo_layout_ref", repo.RepoLayoutRef)
+	setValue("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs)
+	setValue("share_configuration", repo.ShareConfiguration)
+	setValue("socket_timeout_millis", repo.SocketTimeoutMillis)
+	setValue("store_artifacts_locally", repo.StoreArtifactsLocally)
+	setValue("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks)
+	setValue("synchronize_properties", repo.SynchronizeProperties)
+	setValue("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
+	setValue("url", repo.Url)
+	setValue("username", repo.Username)
+	setValue("vcs_git_download_url", repo.VcsGitDownloadUrl)
+	setValue("vcs_git_provider", repo.VcsGitProvider)
+	setValue("vcs_type", repo.VcsType)
+	setValue("xray_index", repo.XrayIndex)
+	setValue("feed_context_path", repo.FeedContextPath)
+	setValue("download_context_path", repo.DownloadContextPath)
+	setValue("v3_feed_url", repo.V3FeedUrl)
+	setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
+	errors := setValue("propagate_query_params", repo.PropagateQueryParams)
 	if repo.ContentSynchronisation != nil {
-		logErr(d.Set("content_synchronisation", []interface{}{
+		setValue("content_synchronisation", []interface{}{
 			map[string]bool{
 				"enabled": repo.ContentSynchronisation.Enabled,
 			},
-		}))
+		})
 	}
 
 	if repo.Password != "" {
-		logErr(d.Set("password", getMD5Hash(repo.Password)))
+		errors = setValue("password", getMD5Hash(repo.Password))
 	}
 
-	if hasErr {
-		return fmt.Errorf("failed to pack remote repo")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack remote repo %q", errors)
 	}
 	return nil
 }
