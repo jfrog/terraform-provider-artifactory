@@ -502,11 +502,8 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).Resty
-	repo, err := unpackRemoteRepo(d)
-	if err != nil {
-		return err
-	}
-	resp, err := client.R().Delete("artifactory/api/repositories/" + repo.Key)
+
+	resp, err := client.R().Delete("artifactory/api/repositories/" + d.Id())
 
 	if err != nil {
 		return err
