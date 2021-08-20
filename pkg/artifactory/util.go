@@ -65,6 +65,13 @@ func (d *ResourceData) getSet(key string) []string {
 	}
 	return nil
 }
+func (d *ResourceData) getList(key string) []string {
+	if v, ok := d.GetOkExists(key); ok {
+		arr := castToStringArr(v.([]interface{}))
+		return arr
+	}
+	return []string{}
+}
 func (d *ResourceData) getListRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
 		arr := castToStringArr(v.([]interface{}))
@@ -100,6 +107,16 @@ func getMD5Hash(o interface{}) string {
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func set(d *schema.ResourceData)  func (key string, value interface{}) []error{
+	var errors []error
+	return func(key string, value interface{}) []error {
+		if err := d.Set(key,value); err != nil {
+			errors = append(errors,err)
+		}
+		return errors
+	}
 }
 
 func cascadingErr(hasErr *bool) func(error) {
