@@ -1,15 +1,13 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	artifactory "github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 func resourceArtifactoryGroup() *schema.Resource {
@@ -26,10 +24,10 @@ func resourceArtifactoryGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc:  validation.StringIsNotEmpty,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -55,54 +53,77 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"users_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 		},
 	}
 }
 
-func unmarshalGroup(s *schema.ResourceData) (*v1.Group, error) {
+func groupParams(s *schema.ResourceData) (artifactory.GroupParams, error) {
 	d := &ResourceData{s}
 
-	group := new(v1.Group)
+	group := artifactory.Group{}
 
-	group.Name = d.getStringRef("name", false)
-	group.Description = d.getStringRef("description", false)
-	group.AutoJoin = d.getBoolRef("auto_join", false)
-	group.AdminPrivileges = d.getBoolRef("admin_privileges", false)
-	group.Realm = d.getStringRef("realm", false)
-	group.RealmAttributes = d.getStringRef("realm_attributes", false)
-
-	// Validator
-	if group.AdminPrivileges != nil && group.AutoJoin != nil && *group.AdminPrivileges && *group.AutoJoin {
-		return nil, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
+	if name := d.getStringRef("name", false); name != nil {
+		group.Name = *name
 	}
 
-	return group, nil
+	if description := d.getStringRef("description", false); description != nil {
+		group.Description = *description
+	}
+
+	if autoJoin := d.getBoolRef("auto_join", false); autoJoin != nil {
+		group.AutoJoin = *autoJoin
+	}
+
+	if adminPrivileges := d.getBoolRef("admin_privileges", false); adminPrivileges != nil {
+		group.AdminPrivileges = *adminPrivileges
+	}
+
+	if realm := d.getStringRef("realm", false); realm != nil {
+		group.Realm = *realm
+	}
+
+	if realmAttributes := d.getStringRef("realm_attributes", false); realmAttributes != nil {
+		group.RealmAttributes = *realmAttributes
+	}
+
+	if usersNames := d.getSetRef("users_names"); usersNames != nil {
+		group.UsersNames = *usersNames
+	}
+
+	// Validator
+	if group.AdminPrivileges && group.AutoJoin {
+		return artifactory.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
+	}
+
+	return artifactory.GroupParams{GroupDetails: group, ReplaceIfExists: true, IncludeUsers: true}, nil
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	c := m.(*ArtClient).ArtNew
 
-	group, err := unmarshalGroup(d)
-
+	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.V1.Security.CreateOrReplaceGroup(context.Background(), *group.Name, group)
-
+	err = c.CreateGroup(groupParams)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*group.Name)
+	d.SetId(groupParams.GroupDetails.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*ArtClient).ArtOld
-		_, resp, err := c.V1.Security.GetGroup(context.Background(), d.Id())
+		exists, err := resourceGroupExists(d, m)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing group: %s", err))
 		}
 
-		if resp.StatusCode == http.StatusNotFound {
+		if !exists {
 			return resource.RetryableError(fmt.Errorf("expected group to be created, but currently not found"))
 		}
 
@@ -110,20 +131,27 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	})
 }
 
-func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+func resourceGroupGet(d *schema.ResourceData, m interface{}) (*artifactory.Group, error) {
+	c := m.(*ArtClient).ArtNew
 
-	group, resp, err := c.V1.Security.GetGroup(context.Background(), d.Id())
-	if resp == nil {
-		return fmt.Errorf("no response returned during resourceGroupRead")
+	params := artifactory.NewGroupParams()
+	params.GroupDetails.Name = d.Id()
+	params.IncludeUsers = true
+
+	return c.GetGroup(params)
+}
+
+func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
+	group, err := resourceGroupGet(d, m)
+	if err != nil {
+		return err
 	}
+
 	// If we 404 it is likely the resources was externally deleted
 	// If the ID is updated to blank, this tells Terraform the resource no longer exist
-	if resp.StatusCode == http.StatusNotFound {
+	if group == nil {
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	hasErr := false
@@ -134,6 +162,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	logError(d.Set("admin_privileges", group.AdminPrivileges))
 	logError(d.Set("realm", group.Realm))
 	logError(d.Set("realm_attributes", group.RealmAttributes))
+	logError(d.Set("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames))))
 	if hasErr {
 		return fmt.Errorf("failed to marshal group")
 	}
@@ -141,53 +170,37 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-	group, err := unmarshalGroup(d)
+	c := m.(*ArtClient).ArtNew
+	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-	_, err = c.V1.Security.UpdateGroup(context.Background(), d.Id(), group)
+	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
+	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
+	err = c.CreateGroup(groupParams)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*group.Name)
+	d.SetId(groupParams.GroupDetails.Name)
 	return resourceGroupRead(d, m)
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-	group, err := unmarshalGroup(d)
+	c := m.(*ArtClient).ArtNew
+	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
 
-	_, resp, err := c.V1.Security.DeleteGroup(context.Background(), *group.Name)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
-
-	return err
+	return c.DeleteGroup(groupParams.GroupDetails.Name)
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*ArtClient).ArtOld
-
-	groupName := d.Id()
-	_, resp, err := c.V1.Security.GetGroup(context.Background(), groupName)
+	group, err := resourceGroupGet(d, m)
 	if err != nil {
 		return false, err
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return (group != nil), nil
 }
