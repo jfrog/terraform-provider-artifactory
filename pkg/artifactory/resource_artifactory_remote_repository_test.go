@@ -206,7 +206,7 @@ func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) erro
 		if !ok {
 			return fmt.Errorf("not found %s", id)
 		}
-		resp, err := client.R().Head("artifactory/api/repositories/" + rs.Primary.ID)
+		resp, err := client.R().Head(repositoriesEndpoint+ rs.Primary.ID)
 
 		if err != nil {
 			if resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {

@@ -120,7 +120,7 @@ func resourceLocalRepositoryCheckDestroy(id string) func(*terraform.State) error
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 		resp, err := client.R().SetHeader("accept", "*/*").
-			Delete("/artifactory/api/repositories/" + rs.Primary.ID)
+			Delete(repositoriesEndpoint + rs.Primary.ID)
 		if err != nil && resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
 			return nil
 		}

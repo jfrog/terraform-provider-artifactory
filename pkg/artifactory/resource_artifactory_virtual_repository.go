@@ -151,7 +151,7 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 	client := m.(*ArtClient).Resty
 	repo := unpackVirtualRepository(d)
 
-	_, err := client.R().SetBody(repo).Put("/artifactory/api/repositories/" + repo.Key)
+	_, err := client.R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Resty
 	repo := MessyVirtualRepo{}
-	resp, err := c.R().SetResult(&repo).Get("artifactory/api/repositories/" + d.Id())
+	resp, err := c.R().SetResult(&repo).Get(repositoriesEndpoint+ d.Id())
 
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
@@ -180,7 +180,7 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 
 	repo := unpackVirtualRepository(d)
 
-	_, err := c.R().SetBody(repo).Post("artifactory/api/repositories/" + d.Id())
+	_, err := c.R().SetBody(repo).Post(repositoriesEndpoint+ d.Id())
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).Resty
 
-	resp, err := client.R().Delete("artifactory/api/repositories/" + d.Id())
+	resp, err := client.R().Delete(repositoriesEndpoint+ d.Id())
 
 	if err != nil && (resp != nil && resp.StatusCode() == http.StatusNotFound) {
 		d.SetId("")
@@ -202,7 +202,7 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*ArtClient).Resty.R().Head("artifactory/api/repositories/" + d.Id())
+	_, err := m.(*ArtClient).Resty.R().Head(repositoriesEndpoint+ d.Id())
 
 	return err == nil, err
 }

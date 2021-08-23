@@ -230,7 +230,7 @@ func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) erro
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
 
-		resp, err := client.R().Head("artifactory/api/repositories/" + rs.Primary.ID)
+		resp, err := client.R().Head(repositoriesEndpoint + rs.Primary.ID)
 
 		if err != nil {
 

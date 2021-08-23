@@ -456,7 +456,7 @@ func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	_, err = client.R().SetBody(repo).Put("artifactory/api/repositories/" + repo.Key)
+	_, err = client.R().SetBody(repo).Put(repositoriesEndpoint+ repo.Key)
 	if err != nil {
 		return err
 	}
@@ -468,7 +468,7 @@ func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error
 func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).Resty
 	repo := MessyRemoteRepo{}
-	resp, err := client.R().SetResult(&repo).Get("artifactory/api/repositories/" + d.Id())
+	resp, err := client.R().SetResult(&repo).Get(repositoriesEndpoint+ d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -490,7 +490,7 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	_, err = client.R().SetBody(repo).Post("artifactory/api/repositories/" + repo.Key)
+	_, err = client.R().SetBody(repo).Post(repositoriesEndpoint+ repo.Key)
 	if err != nil {
 		return err
 	}
@@ -502,7 +502,7 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).Resty
 
-	resp, err := client.R().Delete("artifactory/api/repositories/" + d.Id())
+	resp, err := client.R().Delete(repositoriesEndpoint+ d.Id())
 
 	if err != nil {
 		return err
@@ -519,7 +519,7 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	client := m.(*ArtClient).Resty
 
-	_, err := client.R().Head("artifactory/api/repositories/" + d.Id())
+	_, err := client.R().Head(repositoriesEndpoint+ d.Id())
 
 	// as long as we don't have an error, it's good
 	return err == nil, err
