@@ -17,6 +17,7 @@ func validateLowerCase(value interface{}, key string) (ws []string, es []error) 
 	}
 	return
 }
+
 var repoTypesSupported = []string{
 	"alpine",
 	"bower",

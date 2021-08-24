@@ -188,7 +188,7 @@ func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error 
 
 	repo := unmarshalLocalRepository(d)
 
-	_, err := client.R().SetBody(repo).Put("/artifactory/api/repositories/" + repo.Key)
+	_, err := client.R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 
 	if err != nil {
 		return err
@@ -205,7 +205,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no id given")
 	}
 
-	resp, err := client.R().SetResult(&repo).Get("/artifactory/api/repositories/" + d.Id())
+	resp, err := client.R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode() == http.StatusNotFound{
@@ -259,7 +259,7 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 	repo := unmarshalLocalRepository(d)
 
 	_, err := client.R().SetBody(repo).SetHeader("accept", "text/plain").
-		Post("/artifactory/api/repositories/" + d.Id())
+		Post(repositoriesEndpoint + d.Id())
 
 	if err != nil {
 		return err
@@ -271,14 +271,14 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*ArtClient).Resty
 
-	_, err := client.R().SetHeader("accept", "*/*").Delete("/artifactory/api/repositories/" + d.Id())
+	_, err := client.R().SetHeader("accept", "*/*").Delete(repositoriesEndpoint + d.Id())
 	return err
 }
 
 func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	client := m.(*ArtClient).Resty
 
-	_, err := client.R().Head("/artifactory/api/repositories/" + d.Id())
+	_, err := client.R().Head(repositoriesEndpoint + d.Id())
 	// artifactory returns 400 instead of 404. but regardless, it's an error
 	return err == nil, err
 }
