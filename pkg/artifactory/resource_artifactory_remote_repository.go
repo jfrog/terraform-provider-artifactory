@@ -382,7 +382,7 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 }
 
 func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
-	setValue := set(d)
+	setValue := mkLens(d)
 
 	setValue("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
 	setValue("allow_any_host_auth", repo.AllowAnyHostAuth)

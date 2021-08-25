@@ -2,19 +2,41 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	artifactory "github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
-const groupBasic = `
-resource "artifactory_group" "test-group" {
-	name  = "terraform-group"
-}`
+func TestNoAdminAndAutoSameTime(t *testing.T) {
+	const groupBasic = `
+		resource "artifactory_group" "test-group" {
+			name  = "terraform-group"
+			auto_join = true
+			admin_privileges = true
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: groupBasic,
+				ExpectError: regexp.MustCompile(`.*admin privs on auto_join groups is not allowed.*`),
+			},
+		},
+	})
+}
 
 func TestAccGroup_basic(t *testing.T) {
+	const groupBasic = `
+		resource "artifactory_group" "test-group" {
+			name  = "terraform-group"
+		}
+	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
@@ -30,50 +52,53 @@ func TestAccGroup_basic(t *testing.T) {
 	})
 }
 
-const groupFull = `
-resource "artifactory_group" "test-group" {
-	name             = "terraform-group"
-    description 	 = "Test group"
-	auto_join        = true
-	admin_privileges = false
-	realm            = "test"
-	realm_attributes = "Some attribute"
-}`
 
-const groupUserUpdate1 = `
-resource "artifactory_group" "test-group" {
-	name             = "terraform-group"
-    description 	 = "Test group"
-	auto_join        = true
-	admin_privileges = false
-	realm            = "test"
-	realm_attributes = "Some attribute"
-	users_names = ["anonymous"]
-}`
-
-const groupUserUpdate2 = `
-resource "artifactory_group" "test-group" {
-	name             = "terraform-group"
-    description 	 = "Test group"
-	auto_join        = true
-	admin_privileges = false
-	realm            = "test"
-	realm_attributes = "Some attribute"
-	users_names = ["anonymous", "admin"]
-}`
-
-const groupUserUpdate3 = `
-resource "artifactory_group" "test-group" {
-	name             = "terraform-group"
-    description 	 = "Test group"
-	auto_join        = true
-	admin_privileges = false
-	realm            = "test"
-	realm_attributes = "Some attribute"
-	users_names = ["admin"]
-}`
 
 func TestAccGroup_full(t *testing.T) {
+	const groupFull = `
+		resource "artifactory_group" "test-group" {
+			name             = "terraform-group"
+			description 	 = "Test group"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+		}
+	`
+	const groupUserUpdate1 = `
+		resource "artifactory_group" "test-group" {
+			name             = "terraform-group"
+			description 	 = "Test group"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			users_names = ["anonymous"]
+		}
+	`
+	const groupUserUpdate2 = `
+		resource "artifactory_group" "test-group" {
+			name             = "terraform-group"
+			description 	 = "Test group"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			users_names = ["anonymous", "admin"]
+		}
+	`
+
+	const groupUserUpdate3 = `
+		resource "artifactory_group" "test-group" {
+			name             = "terraform-group"
+			description 	 = "Test group"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			users_names = ["admin"]
+		}
+	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
@@ -118,19 +143,18 @@ func TestAccGroup_full(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.ArtNew
+		client := testAccProvider.Meta().(*ArtClient).Resty
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		group, err := client.GetGroup(artifactory.GroupParams{GroupDetails: artifactory.Group{Name: rs.Primary.ID}})
+		resp,err := client.R().Head(groupsEndpoint + rs.Primary.ID)
 		if err != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				return nil
+			}
 			return err
-		}
-		if group == nil {
-			return nil
 		}
 
 		return fmt.Errorf("error: Group %s still exists", rs.Primary.ID)

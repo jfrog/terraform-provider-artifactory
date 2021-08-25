@@ -7,8 +7,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	artifactory "github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
+
+const groupsEndpoint = "artifactory/api/security/groups/"
+
+var autoJoinAdminValidate = func() func(i interface{}, k string) ([]string, []error) {
+	autoJoin, admin := false, false
+
+	return func(value interface{}, key string) ([]string, []error) {
+		switch key {
+		case "auto_join":
+			autoJoin = value.(bool)
+		case "admin_privileges":
+			admin = value.(bool)
+		}
+		if autoJoin && admin {
+			return nil, []error{fmt.Errorf("admin privs on auto_join groups is not allowed")}
+		}
+		return nil, nil
+	}
+}()
 
 func resourceArtifactoryGroup() *schema.Resource {
 	return &schema.Resource{
@@ -34,14 +53,16 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Optional: true,
 			},
 			"auto_join": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: autoJoinAdminValidate,
 			},
 			"admin_privileges": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: autoJoinAdminValidate,
 			},
 			"realm": {
 				Type:         schema.TypeString,
@@ -62,56 +83,43 @@ func resourceArtifactoryGroup() *schema.Resource {
 	}
 }
 
-func groupParams(s *schema.ResourceData) (artifactory.GroupParams, error) {
+func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 	d := &ResourceData{s}
 
-	group := artifactory.Group{}
-
-	if name := d.getStringRef("name", false); name != nil {
-		group.Name = *name
+	group := services.Group{
+		Name:            d.getString("name", false),
+		Description:     d.getString("description", false),
+		AutoJoin:        d.getBool("auto_join", false),
+		AdminPrivileges: d.getBool("admin_privileges", false),
+		Realm:           d.getString("realm", false),
+		RealmAttributes: d.getString("realm_attributes", false),
 	}
-
-	if description := d.getStringRef("description", false); description != nil {
-		group.Description = *description
-	}
-
-	if autoJoin := d.getBoolRef("auto_join", false); autoJoin != nil {
-		group.AutoJoin = *autoJoin
-	}
-
-	if adminPrivileges := d.getBoolRef("admin_privileges", false); adminPrivileges != nil {
-		group.AdminPrivileges = *adminPrivileges
-	}
-
-	if realm := d.getStringRef("realm", false); realm != nil {
-		group.Realm = *realm
-	}
-
-	if realmAttributes := d.getStringRef("realm_attributes", false); realmAttributes != nil {
-		group.RealmAttributes = *realmAttributes
-	}
-
 	if usersNames := d.getSetRef("users_names"); usersNames != nil {
 		group.UsersNames = *usersNames
 	}
 
 	// Validator
 	if group.AdminPrivileges && group.AutoJoin {
-		return artifactory.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
+		return services.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
 	}
 
-	return artifactory.GroupParams{GroupDetails: group, ReplaceIfExists: true, IncludeUsers: true}, nil
+	return services.GroupParams{
+			GroupDetails:    group,
+			ReplaceIfExists: true,
+			IncludeUsers:    true,
+		},
+		nil
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtNew
+	client := m.(*ArtClient).Resty
 
 	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
+	_, err = client.R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
 
-	err = c.CreateGroup(groupParams)
 	if err != nil {
 		return err
 	}
@@ -131,53 +139,54 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	})
 }
 
-func resourceGroupGet(d *schema.ResourceData, m interface{}) (*artifactory.Group, error) {
-	c := m.(*ArtClient).ArtNew
+func resourceGroupGet(d *schema.ResourceData, m interface{}) (*services.Group, error) {
+	client := m.(*ArtClient).Resty
 
-	params := artifactory.NewGroupParams()
+	params := services.GroupParams{}
 	params.GroupDetails.Name = d.Id()
 	params.IncludeUsers = true
 
-	return c.GetGroup(params)
+	group := services.Group{}
+	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.GroupDetails.Name, params.IncludeUsers)
+	_, err := client.R().SetResult(&group).Get(url)
+	return &group, err
 }
 
 func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	group, err := resourceGroupGet(d, m)
 	if err != nil {
+		// If we 404 it is likely the resources was externally deleted
+		// If the ID is updated to blank, this tells Terraform the resource no longer exist
+		if group == nil {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
-	// If we 404 it is likely the resources was externally deleted
-	// If the ID is updated to blank, this tells Terraform the resource no longer exist
-	if group == nil {
-		d.SetId("")
-		return nil
-	}
-
-	hasErr := false
-	logError := cascadingErr(&hasErr)
-	logError(d.Set("name", group.Name))
-	logError(d.Set("description", group.Description))
-	logError(d.Set("auto_join", group.AutoJoin))
-	logError(d.Set("admin_privileges", group.AdminPrivileges))
-	logError(d.Set("realm", group.Realm))
-	logError(d.Set("realm_attributes", group.RealmAttributes))
-	logError(d.Set("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames))))
-	if hasErr {
-		return fmt.Errorf("failed to marshal group")
+	setValue := mkLens(d)
+	setValue("name", group.Name)
+	setValue("description", group.Description)
+	setValue("auto_join", group.AutoJoin)
+	setValue("admin_privileges", group.AdminPrivileges)
+	setValue("realm", group.Realm)
+	setValue("realm_attributes", group.RealmAttributes)
+	errors := setValue("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames)))
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed saving state for groups %q", errors)
 	}
 	return nil
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtNew
 	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
 	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
-	err = c.CreateGroup(groupParams)
+
+	_, err = m.(*ArtClient).Resty.R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + d.Id())
 	if err != nil {
 		return err
 	}
@@ -187,20 +196,11 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtNew
-	groupParams, err := groupParams(d)
-	if err != nil {
-		return err
-	}
-
-	return c.DeleteGroup(groupParams.GroupDetails.Name)
+	_, err := m.(*ArtClient).Resty.R().Delete(groupsEndpoint + d.Id())
+	return err
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	group, err := resourceGroupGet(d, m)
-	if err != nil {
-		return false, err
-	}
-
-	return (group != nil), nil
+	_, err := m.(*ArtClient).Resty.R().Head(groupsEndpoint + d.Id())
+	return err == nil, err
 }

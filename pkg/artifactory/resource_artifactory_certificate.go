@@ -48,7 +48,6 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"file"},
 				ValidateFunc: validation.All(
 					validation.StringIsNotEmpty,
 					func(value interface{}, key string) ([]string, []error) {
@@ -61,7 +60,7 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Sensitive:     true,
 				Optional:      true,
-				ConflictsWith: []string{"content"},
+				ExactlyOneOf: []string{"content", "file"},
 				ValidateFunc: func(value interface{}, key string) ([]string, []error) {
 
 					if _, err := os.Stat(value.(string)); err != nil {
@@ -100,7 +99,7 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(d *schema.ResourceDiff, v interface{}) error {
+		CustomizeDiff: func(d *schema.ResourceDiff, _ interface{}) error {
 			content, err := getContentFromDiff(d)
 			fingerprint, err := calculateFingerPrint(content)
 			if err != nil {
@@ -188,7 +187,7 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if cert != nil {
-		setValue := set(d)
+		setValue := mkLens(d)
 
 		setValue("alias", (*cert).CertificateAlias)
 		setValue("fingerprint", (*cert).FingerPrint)

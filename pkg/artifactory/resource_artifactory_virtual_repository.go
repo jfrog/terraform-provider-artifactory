@@ -123,7 +123,7 @@ func unpackVirtualRepository(s *schema.ResourceData) MessyVirtualRepo {
 }
 
 func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error {
-	setValue := set(d)
+	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
 	setValue("package_type", repo.PackageType)
