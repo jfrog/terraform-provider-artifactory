@@ -109,7 +109,7 @@ func getMD5Hash(o interface{}) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func set(d *schema.ResourceData)  func (key string, value interface{}) []error{
+func mkLens(d *schema.ResourceData)  func (key string, value interface{}) []error{
 	var errors []error
 	return func(key string, value interface{}) []error {
 		if err := d.Set(key,value); err != nil {

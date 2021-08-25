@@ -11,6 +11,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+func TestHasFileAndContentFails(t *testing.T){
+	const conflictsResource = `
+		resource "artifactory_certificate" "fail" {
+			alias   = "fail"
+			file = "/this/doesnt/exist.pem"
+			content = "PEM DATA"
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      conflictsResource,
+				ExpectError: regexp.MustCompile(`.*only one of .* can be specified, but .* were specified.*`),
+			},
+		},
+	})
+}
 func TestAccCertWithFileMissing(t *testing.T){
 	const certWithMissingFile = `
 		resource "artifactory_certificate" "fail" {

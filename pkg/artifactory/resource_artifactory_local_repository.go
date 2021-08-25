@@ -217,7 +217,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setValue := set(d)
+	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
 	// type 'yum' is not to be supported, as this is really of type 'rpm'. When 'yum' is used on create, RT will
