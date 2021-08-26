@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/gorhill/cronexpr"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"net/mail"
 	"regexp"
@@ -16,6 +17,14 @@ func validateLowerCase(value interface{}, key string) (ws []string, es []error) 
 		es = append(es, fmt.Errorf("%s should be lowercase", key))
 	}
 	return
+}
+
+func validateCron(value interface{}, key string) (ws []string, es []error) {
+	_, err := cronexpr.Parse(value.(string))
+	if err != nil {
+		return nil, []error{err}
+	}
+	return nil,nil
 }
 
 var repoTypesSupported = []string{
@@ -118,16 +127,4 @@ func minLength(i interface{}, k string) ([]string, []error) {
 	}
 	return nil, []error{e}
 }
-func composeValidators(funcs ...func(i interface{}, k string) ([]string, []error)) func(i interface{}, k string) ([]string, []error) {
-	return func(i interface{}, k string) ([]string, []error) {
-		var errors []error
-		var strs []string
-		for _, f := range funcs {
-			someStrings, ers := f(i, k)
-			errors = append(errors, ers...)
-			strs = append(strs, someStrings...)
-		}
-		return strs, errors
-	}
 
-}

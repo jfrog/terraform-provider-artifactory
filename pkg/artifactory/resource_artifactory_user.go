@@ -73,13 +73,11 @@ func resourceArtifactoryUser() *schema.Resource {
 				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
 					validationOn, _ := strconv.ParseBool( os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
 					if validationOn  {
-						validate := composeValidators(containsDigit, containsLower, containsUpper, minLength)
+						validate := validation.All(containsDigit, containsLower, containsUpper, minLength)
 						ses, err := validate(tfValue, key)
 						if err != nil {
-							return ses,append(err,
-								fmt.Errorf("if your organization has custom password rules, you may override " +
-									"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),
-							)
+							return append(ses,"if your organization has custom password rules, you may override " +
+								"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),append(err)
 						}
 					}
 					return nil, nil

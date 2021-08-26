@@ -1,36 +1,95 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-const replicationConfigTemplate = `
-resource "artifactory_local_repository" "lib-local" {
-	key = "lib-local"
-	package_type = "maven"
+func TestInvalidCronFails(t *testing.T){
+	const invalidCron = `
+		resource "artifactory_local_repository" "lib-local" {
+			key = "lib-local"
+			package_type = "maven"
+		}
+		
+		resource "artifactory_replication_config" "lib-local" {
+			repo_key = "${artifactory_local_repository.lib-local.key}"
+			cron_exp = "0 0 blah foo boo ?"
+			enable_event_replication = true
+			
+			replications {
+				url = "http://localhost:8080"
+				username = "%s"
+				password = "%s"
+			}
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      invalidCron,
+				ExpectError: regexp.MustCompile(`.*syntax error in day-of-month field.*`),
+			},
+		},
+	})
 }
 
-resource "artifactory_replication_config" "lib-local" {
-	repo_key = "${artifactory_local_repository.lib-local.key}"
-	cron_exp = "0 0 * * * ?"
-	enable_event_replication = true
-	
-	replications {
-		url = "%s"
-		username = "%s"
-		password = "%s"
-	}
+func TestInvalidReplicationUrlFails(t *testing.T){
+	const invalidCron = `
+		resource "artifactory_local_repository" "lib-local" {
+			key = "lib-local"
+			package_type = "maven"
+		}
+		
+		resource "artifactory_replication_config" "lib-local" {
+			repo_key = "${artifactory_local_repository.lib-local.key}"
+			cron_exp = "0 0 * * * ?"
+			enable_event_replication = true
+			
+			replications {
+				url = "not a URL"
+				username = "%s"
+				password = "%s"
+			}
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      invalidCron,
+				ExpectError: regexp.MustCompile(`.*expected "replications.0.url" to have a host, got not a URL.*`),
+			},
+		},
+	})
 }
-`
 
 func TestAccReplication_full(t *testing.T) {
+	const replicationConfigTemplate = `
+		resource "artifactory_local_repository" "lib-local" {
+			key = "lib-local"
+			package_type = "maven"
+		}
+		
+		resource "artifactory_replication_config" "lib-local" {
+			repo_key = "${artifactory_local_repository.lib-local.key}"
+			cron_exp = "0 0 * * * ?"
+			enable_event_replication = true
+			
+			replications {
+				url = "%s"
+				username = "%s"
+				password = "%s"
+			}
+		}
+	`
+
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccCheckReplicationDestroy("artifactory_replication_config.lib-local"),
 		Providers:    testAccProviders,
@@ -56,23 +115,15 @@ func TestAccReplication_full(t *testing.T) {
 
 func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.ArtOld
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-
-		replica, resp, err := client.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
-
-		if err != nil {
-			return err
+		exists, _ := repConfigExists(rs.Primary.ID, testAccProvider.Meta())
+		if exists {
+			return fmt.Errorf("error: Replication %s still exists", id)
 		}
-
-		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
-			return nil
-		}
-		return fmt.Errorf("error: Replication %s still exists", replica)
+		return nil
 	}
 }
