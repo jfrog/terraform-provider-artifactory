@@ -74,7 +74,7 @@ func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := c.R().SetResult(&fileInfo).Get(fmt.Sprintf("/api/storage/%s/%s", repository, path))
+	_, err := c.R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}
