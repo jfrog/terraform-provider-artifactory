@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
@@ -56,7 +55,7 @@ func TestAccCertWithFile(t *testing.T){
 			file = "${path.cwd}/samples/cert.pem" // for this to work the CWD must be the repo root
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -119,7 +118,7 @@ func TestAccCertificate_full(t *testing.T) {
 		EOF
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	subbed := fmt.Sprintf(certificateFull,name,name)

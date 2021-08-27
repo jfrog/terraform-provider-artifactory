@@ -2,8 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"math/rand"
-	"net/http"
 	"strings"
 	"testing"
 
@@ -12,7 +10,7 @@ import (
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryBasic = `
@@ -24,7 +22,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -41,7 +39,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRepository_update(t *testing.T) {
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryUpdateBefore = `
@@ -62,7 +60,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -99,7 +97,7 @@ func TestAllPackageTypes(t *testing.T) {
 }
 
 func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.TestCase) {
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("%s%d", repo, id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -118,7 +116,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.Test
 	`
 	return t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -141,7 +139,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.Test
 }
 
 func TestNugetPackageCreationFull(t *testing.T) {
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -161,7 +159,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -179,7 +177,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 
 }
 func TestAccVirtualRepository_full(t *testing.T) {
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -198,7 +196,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckVirtualRepositoryDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -220,26 +218,18 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualRepositoryDestroy(id string) func(*terraform.State) error {
+func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
 
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
-
-		resp, err := client.R().Head(repositoriesEndpoint + rs.Primary.ID)
-
-		if err != nil {
-
-			if resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
-				return nil
-			}
-			return err
+		exists, _ := repoExists(rs.Primary.ID,testAccProvider.Meta())
+		if exists{
+			return fmt.Errorf("error: Repository %s still exists", rs.Primary.ID)
 		}
-
-		return fmt.Errorf("error: Repository %s still exists", rs.Primary.ID)
+		return nil
 	}
 }

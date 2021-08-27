@@ -505,12 +505,11 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 	resp, err := client.R().Delete(repositoriesEndpoint+ d.Id())
 
 	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
-	}
-
-	if resp.StatusCode() == http.StatusNotFound {
-		d.SetId("")
-		return nil
 	}
 
 	return err

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"math/rand"
+	"time"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -106,14 +108,46 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	return hex.EncodeToString(hasher.Sum(nil))
+	encodeToString := hex.EncodeToString(hasher.Sum(nil))
+	return encodeToString
 }
 
-func mkLens(d *schema.ResourceData)  func (key string, value interface{}) []error{
+var randomInt = func() func() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Int
+}()
+
+func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
+	result := map[string]*schema.Schema{}
+	for _, schma := range schemata {
+		for k, v := range schma {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+func repoExists(id string, m interface{}) (bool, error) {
+	client := m.(*ArtClient).Resty
+
+	_, err := client.R().Head(repositoriesEndpoint+ id)
+
+	return err == nil, err
+}
+
+
+
+func mkNames(name, resource string) (int, string, string) {
+	id := randomInt()
+	n := fmt.Sprintf("%s%d", name, id)
+	return id, fmt.Sprintf("%s.%s", resource, n), n
+}
+
+func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error {
 	var errors []error
 	return func(key string, value interface{}) []error {
-		if err := d.Set(key,value); err != nil {
-			errors = append(errors,err)
+		if err := d.Set(key, value); err != nil {
+			errors = append(errors, err)
 		}
 		return errors
 	}
