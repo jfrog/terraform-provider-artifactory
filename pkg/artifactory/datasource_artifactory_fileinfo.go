@@ -1,10 +1,7 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -16,6 +13,7 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: repoKeyValidator,
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -70,12 +68,13 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 }
 
 func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	c := m.(*ArtClient).Resty
 
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 
-	fileInfo, _, err := c.V1.Artifacts.FileInfo(context.Background(), repository, path)
+	fileInfo := FileInfo{}
+	_, err := c.R().SetResult(&fileInfo).Get(fmt.Sprintf("/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}
@@ -83,29 +82,32 @@ func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
 	return packFileInfo(fileInfo, d)
 }
 
-func packFileInfo(fileInfo *v1.FileInfo, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
+func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) error {
+	setValue := mkLens(d)
 
-	d.SetId(*fileInfo.DownloadUri)
+	d.SetId(fileInfo.DownloadUri)
 
-	logErr(d.Set("created", *fileInfo.Created))
-	logErr(d.Set("created_by", *fileInfo.CreatedBy))
-	logErr(d.Set("last_modified", *fileInfo.LastModified))
-	logErr(d.Set("modified_by", *fileInfo.ModifiedBy))
-	logErr(d.Set("last_updated", *fileInfo.LastUpdated))
-	logErr(d.Set("download_uri", *fileInfo.DownloadUri))
-	logErr(d.Set("mimetype", *fileInfo.MimeType))
-	logErr(d.Set("size", *fileInfo.Size))
+	setValue("created", fileInfo.Created)
+	setValue("created_by", fileInfo.CreatedBy)
+	setValue("last_modified", fileInfo.LastModified)
+	setValue("modified_by", fileInfo.ModifiedBy)
+	setValue("last_updated", fileInfo.LastUpdated)
+	setValue("download_uri", fileInfo.DownloadUri)
+	setValue("mimetype", fileInfo.MimeType)
+	errors := setValue("size", fileInfo.Size)
 
-	if fileInfo.Checksums != nil {
-		logErr(d.Set("md5", *fileInfo.Checksums.Md5))
-		logErr(d.Set("sha1", *fileInfo.Checksums.Sha1))
-		logErr(d.Set("sha256", *fileInfo.Checksums.Sha256))
+	if fileInfo.Checksums.Md5 != "" {
+		errors = setValue("md5", fileInfo.Checksums.Md5)
+	}
+	if fileInfo.Checksums.Sha1 != "" {
+		errors = setValue("sha1", fileInfo.Checksums.Sha1)
+	}
+	if fileInfo.Checksums.Sha256 != "" {
+		errors = setValue("sha256", fileInfo.Checksums.Sha256)
 	}
 
-	if hasErr {
-		return fmt.Errorf("failed to pack fileInfo")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack fileInfo %q", errors)
 	}
 
 	return nil
