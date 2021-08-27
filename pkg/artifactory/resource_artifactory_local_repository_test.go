@@ -3,12 +3,10 @@ package artifactory
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccLocalRepository_basic(t *testing.T) {
@@ -22,7 +20,7 @@ func TestAccLocalRepository_basic(t *testing.T) {
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
+		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +67,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
+		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -111,19 +109,3 @@ func TestAccAllRepoTypesLocal(t *testing.T) {
 	}
 }
 
-func resourceLocalRepositoryCheckDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
-		rs, ok := s.RootModule().Resources[id]
-
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
-		resp, err := client.R().SetHeader("accept", "*/*").
-			Delete(repositoriesEndpoint + rs.Primary.ID)
-		if err != nil && resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
-			return nil
-		}
-		return fmt.Errorf("local should not exist repo err %s: %d", rs.Primary.ID, resp.StatusCode())
-	}
-}

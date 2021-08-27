@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"testing"
 
@@ -19,7 +18,7 @@ func TestAccUser_basic(t *testing.T) {
 			groups  = [ "readers" ]
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -52,9 +51,7 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id := rand.Int()
-	name := fmt.Sprintf("foobar-%d", id)
-	FQRN := fmt.Sprintf("artifactory_user.%s", name)
+	id, FQRN, name := mkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckUserDestroy(FQRN),

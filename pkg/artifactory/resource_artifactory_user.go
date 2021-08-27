@@ -8,13 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 )
 
-var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
@@ -125,22 +123,22 @@ func unpackUser(s *schema.ResourceData) services.User {
 }
 
 func packUser(user services.User, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
 
-	logErr(d.Set("name", user.Name))
-	logErr(d.Set("email", user.Email))
-	logErr(d.Set("admin", user.Admin))
-	logErr(d.Set("profile_updatable", user.ProfileUpdatable))
-	logErr(d.Set("disable_ui_access", user.DisableUIAccess))
-	logErr(d.Set("internal_password_disabled", user.InternalPasswordDisabled))
+	setValue := mkLens(d)
+
+	setValue("name", user.Name)
+	setValue("email", user.Email)
+	setValue("admin", user.Admin)
+	setValue("profile_updatable", user.ProfileUpdatable)
+	setValue("disable_ui_access", user.DisableUIAccess)
+	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups))))
+		errors = setValue("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups)))
 	}
 
-	if hasErr {
-		return fmt.Errorf("failed to pack user")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack user %q", errors)
 	}
 
 	return nil

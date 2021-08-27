@@ -41,7 +41,7 @@ func TestInvalidCronFails(t *testing.T){
 }
 
 func TestInvalidReplicationUrlFails(t *testing.T){
-	const invalidCron = `
+	const invalidUrl = `
 		resource "artifactory_local_repository" "lib-local" {
 			key = "lib-local"
 			package_type = "maven"
@@ -63,7 +63,7 @@ func TestInvalidReplicationUrlFails(t *testing.T){
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      invalidCron,
+				Config:      invalidUrl,
 				ExpectError: regexp.MustCompile(`.*expected "replications.0.url" to have a host, got not a URL.*`),
 			},
 		},

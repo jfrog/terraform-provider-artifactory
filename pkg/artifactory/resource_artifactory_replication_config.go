@@ -15,6 +15,81 @@ type ReplicationConfig struct {
 	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
 }
 
+var replicationSchemaCommon = map[string]*schema.Schema{
+	"repo_key": {
+		Type:     schema.TypeString,
+		Required: true,
+	},
+	"cron_exp": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validateCron,
+	},
+	"enable_event_replication": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+}
+
+var repMultipleSchema = map[string]*schema.Schema{
+	"replications": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: replicationSchema,
+		},
+	},
+}
+var replicationSchema = map[string]*schema.Schema{
+	"url": {
+		Type:     schema.TypeString,
+		Optional: true,
+		ForceNew: true,
+		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+	},
+	"socket_timeout_millis": {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+		ValidateFunc: validation.IntAtLeast(0),
+	},
+	"username": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"password": {
+		Type:      schema.TypeString,
+		Optional:  true,
+		Sensitive: true,
+		StateFunc: getMD5Hash,
+	},
+	"enabled": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_deletes": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_properties": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_statistics": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"path_prefix": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+}
+
 func resourceArtifactoryReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceReplicationConfigCreate,
@@ -27,76 +102,7 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"repo_key": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"cron_exp": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateCron,
-			},
-			"enable_event_replication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"replications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"url": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-						},
-						"socket_timeout_millis": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-							StateFunc: getMD5Hash,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"sync_deletes": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"sync_properties": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"sync_statistics": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"path_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-		},
+		Schema: mergeSchema(replicationSchemaCommon,repMultipleSchema),
 	}
 }
 
