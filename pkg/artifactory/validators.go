@@ -5,6 +5,7 @@ import (
 	"github.com/gorhill/cronexpr"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"net/mail"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -24,7 +25,7 @@ func validateCron(value interface{}, key string) (ws []string, es []error) {
 	if err != nil {
 		return nil, []error{err}
 	}
-	return nil,nil
+	return nil, nil
 }
 
 var repoTypesSupported = []string{
@@ -60,39 +61,13 @@ var repoTypesSupported = []string{
 }
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
 
-func toString(i interface{}, key string) (result string, err error) {
-	result, ok := i.(string)
-	if !ok {
-		return "", fmt.Errorf("expected type of %q to be string", key)
+
+func validateIsEmail(address interface{}, _ string) ([]string, []error) {
+	_, err := mail.ParseAddress(address.(string))
+	if err != nil {
+		return nil, []error{fmt.Errorf("%s is not a valid address: %s", address, err)}
 	}
-	return result, nil
-}
-func validateIsEmail(i interface{}, k string) ([]string, []error) {
-	addr, e := toString(i, k)
-	if e == nil {
-		_, err := mail.ParseAddress(addr)
-		if err != nil {
-			return nil, []error{fmt.Errorf("%s is not a valid address: %s", addr, err)}
-		}
-		return nil, nil
-	}
-	return nil, []error{e}
-}
-func match(regex, str, msg string) []error {
-	matches, _ := regexp.MatchString(regex, str)
-	if !matches {
-		return []error{fmt.Errorf(msg)}
-	}
-	return nil
-}
-func containsLower(i interface{}, k string) ([]string, []error) {
-	str, e := toString(i, k)
-	if e == nil {
-		return nil, match("[a-z]+", str,
-			fmt.Sprintf("password must contain at least 1 lower case char. It was: %s", str),
-		)
-	}
-	return nil, []error{e}
+	return nil, nil
 }
 
 var repoKeyValidator = validation.All(
@@ -100,31 +75,25 @@ var repoKeyValidator = validation.All(
 	validation.StringDoesNotContainAny(" !@#$%^&*()_+={}[]:;<>,./?~`|\\"),
 )
 
-func containsUpper(i interface{}, k string) ([]string, []error) {
-	str, e := toString(i, k)
-	if e == nil {
-		return nil, match("[A-Z]+", str,
-			fmt.Sprintf("password must contain at least 1 upper case char. It was: %s", str),
-		)
+func fileExist(value interface{}, _ string) ([]string, []error) {
+	if _, err := os.Stat(value.(string)); err != nil {
+		return nil, []error{err}
 	}
-	return nil, []error{e}
-}
-func containsDigit(i interface{}, k string) ([]string, []error) {
-	str, e := toString(i, k)
-	if e == nil {
-		return nil, match("[0-9]+", str,
-			fmt.Sprintf("password must contain at least 1 digit case char. It was: %s", str),
-		)
-	}
-	return nil, []error{e}
-}
-func minLength(i interface{}, k string) ([]string, []error) {
-	str, e := toString(i, k)
-	if e == nil {
-		if len(str) < 8 {
-			return nil, []error{fmt.Errorf("password must be atleast 8 characters long")}
-		}
-	}
-	return nil, []error{e}
+	return nil, nil
 }
 
+var defaultPassValidation = validation.All(
+	validation.StringMatch(regexp.MustCompile("[0-9]+"), "password must contain at least 1 digit case char"),
+	validation.StringMatch(regexp.MustCompile("[a-z]+"), "password must contain at least 1 lower case char"),
+	validation.StringMatch(regexp.MustCompile("[A-Z]+"), "password must contain at least 1 upper case char"),
+	minLength(8),
+)
+
+func minLength(length int) func(i interface{}, k string) ([]string, []error) {
+	return func(value interface{}, k string) ([]string, []error) {
+		if len(value.(string)) < length {
+			return nil, []error{fmt.Errorf("password must be atleast %d characters long",length)}
+		}
+		return nil, nil
+	}
+}
