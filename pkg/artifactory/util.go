@@ -1,12 +1,14 @@
 package artifactory
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"math/rand"
+	"text/template"
 	"time"
 )
 
@@ -136,6 +138,14 @@ func repoExists(id string, m interface{}) (bool, error) {
 }
 
 
+func executeTemplate(name, temp string, fields interface{} ) string {
+	var tpl bytes.Buffer
+	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl,fields); err != nil {
+		panic(err)
+	}
+
+	return tpl.String()
+}
 
 func mkNames(name, resource string) (int, string, string) {
 	id := randomInt()
