@@ -3,11 +3,12 @@ package artifactory
 import (
 	"fmt"
 	"github.com/gorhill/cronexpr"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validateLowerCase(value interface{}, key string) (ws []string, es []error) {

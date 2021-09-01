@@ -13,8 +13,7 @@ import (
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryAccessToken() *schema.Resource {
@@ -169,7 +168,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(hashcode.String(*accessToken.AccessToken)))
+	d.SetId(strconv.Itoa(schema.HashString(*accessToken.AccessToken)))
 
 	err = d.Set("access_token", *accessToken.AccessToken)
 	if err != nil {

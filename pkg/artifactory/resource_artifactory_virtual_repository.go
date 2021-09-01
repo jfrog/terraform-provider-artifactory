@@ -2,9 +2,10 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {

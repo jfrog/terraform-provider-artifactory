@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jasonwbarnett/go-xray/xray"
 	v2 "github.com/jasonwbarnett/go-xray/xray/v2"
 )
@@ -318,7 +318,6 @@ func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
 	_, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
-
 
 	return err
 }

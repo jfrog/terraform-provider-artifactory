@@ -4,13 +4,15 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 	"os"
+
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 
@@ -171,7 +173,8 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 			}
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
-		return resource.NonRetryableError(resourceUserRead(d, m))
+
+		return nil
 	})
 }
 
@@ -181,7 +184,7 @@ func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
 
 	userName := d.getString("name", false)
 	user := &services.User{}
-	resp, err := client.R().SetResult(user).Get("artifactory/api/security/users/"+ userName)
+	resp, err := client.R().SetResult(user).Get("artifactory/api/security/users/" + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {

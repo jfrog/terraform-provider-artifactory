@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jasonwbarnett/go-xray/xray"
 	v1 "github.com/jasonwbarnett/go-xray/xray/v1"
 )
@@ -72,15 +72,13 @@ func resourceXrayPolicy() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									// Security criteria
 									"min_severity": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"rules.criteria.0.allow_unknown", "rules.criteria.0.banned_licenses", "rules.criteria.0.allowed_licenses", "rules.criteria.0.cvss_range"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"cvss_range": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										ConflictsWith: []string{"rules.criteria.0.allow_unknown", "rules.criteria.0.banned_licenses", "rules.criteria.0.allowed_licenses", "rules.criteria.0.min_severity"},
-										MaxItems:      1,
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"from": {
@@ -96,22 +94,19 @@ func resourceXrayPolicy() *schema.Resource {
 									},
 									// License Criteria
 									"allow_unknown": {
-										Type:          schema.TypeBool,
-										Optional:      true,
-										ConflictsWith: []string{"rules.criteria.0.min_severity", "rules.criteria.0.cvss_range"},
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 									"banned_licenses": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										ConflictsWith: []string{"rules.criteria.0.min_severity", "rules.criteria.0.cvss_range"},
+										Type:     schema.TypeList,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"allowed_licenses": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										ConflictsWith: []string{"rules.criteria.0.min_severity", "rules.criteria.0.cvss_range"},
+										Type:     schema.TypeList,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -175,7 +170,7 @@ func resourceXrayPolicy() *schema.Resource {
 	}
 }
 
-func expandPolicy(d *schema.ResourceData) *v1.Policy {
+func expandPolicy(d *schema.ResourceData) (*v1.Policy, error) {
 	policy := new(v1.Policy)
 
 	policy.Name = xray.String(d.Get("name").(string))
@@ -188,13 +183,13 @@ func expandPolicy(d *schema.ResourceData) *v1.Policy {
 	if v, ok := d.GetOk("author"); ok {
 		policy.Author = xray.String(v.(string))
 	}
-	policyRules := expandRules(d.Get("rules").([]interface{}))
+	policyRules, err := expandRules(d.Get("rules").([]interface{}), policy.Type)
 	policy.Rules = &policyRules
 
-	return policy
+	return policy, err
 }
 
-func expandRules(configured []interface{}) []v1.PolicyRule {
+func expandRules(configured []interface{}, policyType *string) (policyRules []v1.PolicyRule, err error) {
 	rules := make([]v1.PolicyRule, 0, len(configured))
 
 	for _, raw := range configured {
@@ -203,19 +198,19 @@ func expandRules(configured []interface{}) []v1.PolicyRule {
 		rule.Name = xray.String(data["name"].(string))
 		rule.Priority = xray.Int(data["priority"].(int))
 
-		rule.Criteria = expandCriteria(data["criteria"].([]interface{}))
+		rule.Criteria, err = expandCriteria(data["criteria"].([]interface{}), policyType)
 		if v, ok := data["actions"]; ok {
 			rule.Actions = expandActions(v.([]interface{}))
 		}
 		rules = append(rules, *rule)
 	}
 
-	return rules
+	return rules, err
 }
 
-func expandCriteria(l []interface{}) *v1.PolicyRuleCriteria {
+func expandCriteria(l []interface{}, policyType *string) (*v1.PolicyRuleCriteria, error) {
 	if len(l) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]interface{}) // We made this a list of one to make schema validation easier
@@ -229,12 +224,23 @@ func expandCriteria(l []interface{}) *v1.PolicyRuleCriteria {
 	banned := expandLicenses(m["banned_licenses"].([]interface{}))
 	allowed := expandLicenses(m["allowed_licenses"].([]interface{}))
 
+	licenseType := "license"
+	securityType := "security"
+
 	if *minSev == "" && cvss == nil {
+		if *policyType == securityType {
+			return nil, fmt.Errorf("allow_unknown, banned_licenses, and allowed_licenses are not supported with security policies")
+		}
+
 		// If these are both the default values, we must be using license criteria
 		criteria.AllowUnkown = allowUnk // "Unkown" is a typo in xray-oss
 		criteria.BannedLicenses = banned
 		criteria.AllowedLicenses = allowed
 	} else {
+		if *policyType == licenseType {
+			return nil, fmt.Errorf("min_severity and cvvs_range are not supported with license policies")
+		}
+
 		// This is also picky about not allowing empty values to be set
 		if cvss == nil {
 			criteria.MinimumSeverity = minSev
@@ -243,7 +249,7 @@ func expandCriteria(l []interface{}) *v1.PolicyRuleCriteria {
 		}
 	}
 
-	return criteria
+	return criteria, nil
 }
 
 func expandCVSSRange(l []interface{}) *v1.PolicyCVSSRange {
@@ -425,7 +431,10 @@ func flattenBlockDownload(bd *v1.BlockDownloadSettings) []interface{} {
 func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
-	policy := expandPolicy(d)
+	policy, err := expandPolicy(d)
+	if err != nil {
+		return err
+	}
 	resp, err := c.V1.Policies.CreatePolicy(context.Background(), policy)
 	if err != nil {
 		return err
@@ -481,8 +490,11 @@ func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
 func resourceXrayPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Xray
 
-	policy := expandPolicy(d)
-	_, err := c.V1.Policies.UpdatePolicy(context.Background(), d.Id(), policy)
+	policy, err := expandPolicy(d)
+	if err != nil {
+		return err
+	}
+	_, err = c.V1.Policies.UpdatePolicy(context.Background(), d.Id(), policy)
 	if err != nil {
 		return err
 	}

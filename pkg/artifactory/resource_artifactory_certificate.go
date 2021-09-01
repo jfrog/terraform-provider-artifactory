@@ -1,17 +1,18 @@
 package artifactory
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const endpoint = "artifactory/api/system/security/certificates/"
@@ -52,7 +53,10 @@ func resourceArtifactoryCertificate() *schema.Resource {
 					validation.StringIsNotEmpty,
 					func(value interface{}, key string) ([]string, []error) {
 						_, err := extractCertificate(value.(string))
-						return nil, []error{err}
+						if err != nil {
+							return nil, []error{err}
+						}
+						return nil, nil
 					},
 				),
 			},
@@ -62,19 +66,19 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				Optional:      true,
 				ExactlyOneOf: []string{"content", "file"},
 				ValidateFunc: func(value interface{}, key string) ([]string, []error) {
-
+					var errors []error
 					if _, err := os.Stat(value.(string)); err != nil {
-						return nil, []error{err}
+						return nil, append(errors,err)
 					}
 					data, err := ioutil.ReadFile(value.(string))
 					if err != nil {
-						return nil, []error{err}
+						return nil, append(errors,err)
 					}
 					_, err = extractCertificate(string(data))
 					if err != nil {
-						return nil, nil
+						return nil, append(errors,err)
 					}
-					return nil, []error{err}
+					return nil, nil
 				},
 			},
 			"fingerprint": {
@@ -99,21 +103,23 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(d *schema.ResourceDiff, _ interface{}) error {
-			content, err := getContentFromDiff(d)
-			fingerprint, err := calculateFingerPrint(content)
-			if err != nil {
-				return err
-			}
-			if d.Get("fingerprint").(string) != fingerprint {
-				if err = d.SetNewComputed("fingerprint"); err != nil {
-					fmt.Println(err)
-					return err
-				}
-			}
-			return nil
-		},
+		CustomizeDiff: calculateFingerprint,
 	}
+}
+
+func calculateFingerprint(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	content, err := getContentFromDiff(d)
+	fingerprint, err := calculateFingerPrint(content)
+	if err != nil {
+		return err
+	}
+	if d.Get("fingerprint").(string) != fingerprint {
+		if err = d.SetNewComputed("fingerprint"); err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func formatFingerPrint(f []byte) string {

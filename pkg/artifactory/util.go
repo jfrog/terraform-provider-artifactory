@@ -1,11 +1,13 @@
 package artifactory
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
 	"time"
 )
@@ -108,8 +110,7 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	encodeToString := hex.EncodeToString(hasher.Sum(nil))
-	return encodeToString
+	return  hex.EncodeToString(hasher.Sum(nil))
 }
 
 var randomInt = func() func() int {
@@ -153,6 +154,16 @@ func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error 
 	}
 }
 
+// HashStrings hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
+func HashStrings(strings []string) string {
+	var buf bytes.Buffer
+
+	for _, s := range strings {
+		buf.WriteString(fmt.Sprintf("%s-", s))
+	}
+
+	return fmt.Sprintf("%d", schema.HashString(buf.String()))
+}
 func cascadingErr(hasErr *bool) func(error) {
 	if hasErr == nil {
 		panic("hasError cannot be nil")
@@ -163,4 +174,13 @@ func cascadingErr(hasErr *bool) func(error) {
 			*hasErr = true
 		}
 	}
+}
+
+func sendConfigurationPatch(content []byte, m interface{}) error {
+
+	_, err := m.(*ArtClient).Resty.R().SetBody(content).
+		SetHeader("Content-Type", "application/yaml").
+		Patch("artifactory/api/system/configuration")
+
+	return err
 }

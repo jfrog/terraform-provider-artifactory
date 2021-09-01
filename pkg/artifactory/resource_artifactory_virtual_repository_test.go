@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -96,7 +96,7 @@ func TestAllPackageTypes(t *testing.T) {
 	}
 }
 
-func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.TestCase) {
+func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase) {
 	id := randomInt()
 	name := fmt.Sprintf("%s%d", repo, id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)

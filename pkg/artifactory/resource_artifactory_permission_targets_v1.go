@@ -6,8 +6,7 @@ import (
 	"net/http"
 
 	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func unpackPermissionTargetV1(s *schema.ResourceData) *v1.PermissionTargets {
@@ -93,7 +92,7 @@ func flattenPrincipal(principal map[string][]string) *schema.Set {
 
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
-	return hashcode.String(p["name"].(string)) + 31*hashcode.String(hashcode.Strings(castToStringArr(p["permissions"].(*schema.Set).List())))
+	return schema.HashString(p["name"].(string)) + 31*schema.HashString(HashStrings(castToStringArr(p["permissions"].(*schema.Set).List())))
 }
 
 func resourcePermissionTargetV1CreateOrReplace(d *schema.ResourceData, m interface{}) error {

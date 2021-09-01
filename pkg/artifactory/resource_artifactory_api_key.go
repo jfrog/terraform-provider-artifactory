@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ApiKey struct {
@@ -57,7 +56,7 @@ func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if apiKey, ok := data["apiKey"]; ok {
-		d.SetId(strconv.Itoa(hashcode.String(apiKey)))
+		d.SetId(strconv.Itoa(schema.HashString(apiKey)))
 		return resourceApiKeyRead(d, m)
 	}
 	return fmt.Errorf("received no error when creating apikey, but also got no apikey")

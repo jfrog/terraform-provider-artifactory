@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const permissionV1Basic = `
@@ -59,6 +59,6 @@ func testPermissionTargetV1CheckDestroy(id string) func(*terraform.State) error 
 		if resp.StatusCode == http.StatusNotFound {
 			return nil
 		}
-			return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
+		return fmt.Errorf("error: Permission targets %s still exists %s", rs.Primary.ID, permissionTargets)
 	}
 }
