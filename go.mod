@@ -3,6 +3,7 @@ module github.com/jfrog/terraform-provider-artifactory
 require (
 	github.com/atlassian/go-artifactory/v2 v2.5.0
 	github.com/go-resty/resty/v2 v2.4.0
+	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
 	github.com/jasonwbarnett/go-xray v0.1.4
 	github.com/jfrog/jfrog-client-go v0.23.1

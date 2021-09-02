@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -56,32 +55,29 @@ func TestAccSamlSettings_full(t *testing.T) {
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		apis := testAccProvider.Meta().(*ArtClient)
-		c := apis.ArtNew
-
-		serviceDetails := c.GetConfig().GetServiceDetails()
-		httpClientDetails := serviceDetails.CreateHttpClientDetails()
+		c := apis.Resty
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
+		samlSettings := SamlSettings{}
 
-		_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/saml/config", serviceDetails.GetUrl()), false, &httpClientDetails)
+		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
 		}
-
-		samlSettings := SamlSettings{}
-		err = json.Unmarshal(body, &samlSettings)
-		if err != nil {
-			return fmt.Errorf("error: failed to unmarshal SAML settings")
-		} else if samlSettings.AllowUserToAccessProfile != false {
+		if samlSettings.AllowUserToAccessProfile != false {
 			return fmt.Errorf("error: SAML SSO setting, allow user to access profile, is still enabled")
-		} else if samlSettings.SyncGroups != false {
+		}
+		if samlSettings.SyncGroups != false {
 			return fmt.Errorf("error: SAML SSO setting, sync groups, is still enabled")
-		} else if samlSettings.NoAutoUserCreation != false {
+		}
+		if samlSettings.NoAutoUserCreation != false {
 			return fmt.Errorf("error: SAML SSO setting, no auto user creation, is still enabled")
-		} else if samlSettings.EnableIntegration != false {
+		}
+		if samlSettings.EnableIntegration != false {
+
 			return fmt.Errorf("error: SAML SSO integration is still enabled")
 		}
 

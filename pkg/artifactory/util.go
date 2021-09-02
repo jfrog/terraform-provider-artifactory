@@ -8,6 +8,8 @@ import (
 
 	"github.com/atlassian/go-artifactory/v2/artifactory"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"math/rand"
+	"time"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -67,6 +69,13 @@ func (d *ResourceData) getSet(key string) []string {
 	}
 	return nil
 }
+func (d *ResourceData) getList(key string) []string {
+	if v, ok := d.GetOkExists(key); ok {
+		arr := castToStringArr(v.([]interface{}))
+		return arr
+	}
+	return []string{}
+}
 func (d *ResourceData) getListRef(key string) *[]string {
 	if v, ok := d.GetOkExists(key); ok {
 		arr := castToStringArr(v.([]interface{}))
@@ -101,10 +110,49 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	return hex.EncodeToString(hasher.Sum(nil))
+	return  hex.EncodeToString(hasher.Sum(nil))
 }
 
-// hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
+var randomInt = func() func() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Int
+}()
+
+func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
+	result := map[string]*schema.Schema{}
+	for _, schma := range schemata {
+		for k, v := range schma {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+func repoExists(id string, m interface{}) (bool, error) {
+	client := m.(*ArtClient).Resty
+
+	_, err := client.R().Head(repositoriesEndpoint+ id)
+
+	return err == nil, err
+}
+
+func mkNames(name, resource string) (int, string, string) {
+	id := randomInt()
+	n := fmt.Sprintf("%s%d", name, id)
+	return id, fmt.Sprintf("%s.%s", resource, n), n
+}
+
+func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error {
+	var errors []error
+	return func(key string, value interface{}) []error {
+		if err := d.Set(key, value); err != nil {
+			errors = append(errors, err)
+		}
+		return errors
+	}
+}
+
+// HashStrings hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
 func HashStrings(strings []string) string {
 	var buf bytes.Buffer
 
@@ -128,13 +176,9 @@ func cascadingErr(hasErr *bool) func(error) {
 }
 
 func sendConfigurationPatch(content []byte, m interface{}) error {
-	c := m.(*ArtClient).ArtNew
-
-	serviceDetails := c.GetConfig().GetServiceDetails()
-	httpClientDetails := serviceDetails.CreateHttpClientDetails()
-	httpClientDetails.Headers["Content-Type"] = "application/yaml"
-
-	_, _, err := c.Client().SendPatch(fmt.Sprintf("%sapi/system/configuration", serviceDetails.GetUrl()), content, &httpClientDetails)
+	_, err := m.(*ArtClient).Resty.R().SetBody(content).
+		SetHeader("Content-Type", "application/yaml").
+		Patch("artifactory/api/system/configuration")
 
 	return err
 }

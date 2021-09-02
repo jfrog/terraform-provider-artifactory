@@ -4,11 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"log"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 	"os"
-
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"strconv"
 
@@ -17,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var warning = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
@@ -74,15 +71,12 @@ func resourceArtifactoryUser() *schema.Resource {
 				Sensitive: true,
 				Required:  true,
 				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
-					validationOn, _ := strconv.ParseBool(os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
-					if validationOn {
-						validate := composeValidators(containsDigit, containsLower, containsUpper, minLength)
-						ses, err := validate(tfValue, key)
+					validationOn, _ := strconv.ParseBool( os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
+					if validationOn  {
+						ses, err := defaultPassValidation(tfValue, key)
 						if err != nil {
-							return ses, append(err,
-								fmt.Errorf("if your organization has custom password rules, you may override "+
-									"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),
-							)
+							return append(ses,"if your organization has custom password rules, you may override " +
+								"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),append(err)
 						}
 					}
 					return nil, nil
@@ -130,22 +124,22 @@ func unpackUser(s *schema.ResourceData) services.User {
 }
 
 func packUser(user services.User, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
 
-	logErr(d.Set("name", user.Name))
-	logErr(d.Set("email", user.Email))
-	logErr(d.Set("admin", user.Admin))
-	logErr(d.Set("profile_updatable", user.ProfileUpdatable))
-	logErr(d.Set("disable_ui_access", user.DisableUIAccess))
-	logErr(d.Set("internal_password_disabled", user.InternalPasswordDisabled))
+	setValue := mkLens(d)
+
+	setValue("name", user.Name)
+	setValue("email", user.Email)
+	setValue("admin", user.Admin)
+	setValue("profile_updatable", user.ProfileUpdatable)
+	setValue("disable_ui_access", user.DisableUIAccess)
+	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		logErr(d.Set("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups))))
+		errors = setValue("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups)))
 	}
 
-	if hasErr {
-		return fmt.Errorf("failed to pack user")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack user %q", errors)
 	}
 
 	return nil

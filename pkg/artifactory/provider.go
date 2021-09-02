@@ -14,7 +14,8 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-const Version = "2.2.16"
+var Version = "2.2.16"
+const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type ArtClient struct {
 	ArtOld *artifactoryold.Artifactory
@@ -162,7 +163,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	_, err = sendUsageRepo(err, restyBase, terraformVersion)
+	_, err = sendUsageRepo(restyBase, terraformVersion)
 
 	if err != nil {
 		return nil, err
@@ -178,7 +179,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	return rt, nil
 }
 
-func sendUsageRepo(err error, restyBase *resty.Client, terraformVersion string) (interface{}, error) {
+func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{}, error) {
 	type Feature struct {
 		FeatureId string `json:"featureId"`
 	}
@@ -186,9 +187,10 @@ func sendUsageRepo(err error, restyBase *resty.Client, terraformVersion string) 
 		ProductId string    `json:"productId"`
 		Features  []Feature `json:"features"`
 	}
-	_, err = restyBase.R().SetBody(UsageStruct{
+	_, err := restyBase.R().SetBody(UsageStruct{
 		"terraform-provider-artifactory/" + Version,
 		[]Feature{
+			{FeatureId: "Partner/ACC-007450"},
 			{FeatureId: "Terraform/" + terraformVersion},
 		},
 	}).Post("artifactory/api/system/usage")

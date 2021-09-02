@@ -3,11 +3,10 @@ package artifactory
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccLocalRepository_basic(t *testing.T) {
@@ -21,7 +20,7 @@ func TestAccLocalRepository_basic(t *testing.T) {
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
+		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +67,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceLocalRepositoryCheckDestroy(resourceName),
+		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -104,23 +103,9 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 func TestAccAllRepoTypesLocal(t *testing.T) {
 
 	for _, repo := range repoTypesSupported {
-		resource.Test(mkTestCase(repo, t))
+		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+			resource.Test(mkTestCase(repo, t))
+		})
 	}
 }
 
-func resourceLocalRepositoryCheckDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
-		rs, ok := s.RootModule().Resources[id]
-
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
-		resp, err := client.R().SetHeader("accept", "*/*").
-			Delete("/artifactory/api/repositories/" + rs.Primary.ID)
-		if err != nil && resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
-			return nil
-		}
-		return fmt.Errorf("local should not exist repo err %s: %d", rs.Primary.ID, resp.StatusCode())
-	}
-}

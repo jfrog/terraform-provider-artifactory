@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -10,6 +9,26 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+type FileInfo struct {
+	Repo                   string             `json:"repo,omitempty"`
+	Path                   string             `json:"path,omitempty"`
+	Created                string             `json:"created,omitempty"`
+	CreatedBy              string             `json:"createdBy,omitempty"`
+	LastModified           string             `json:"lastModified,omitempty"`
+	ModifiedBy             string             `json:"modifiedBy,omitempty"`
+	LastUpdated            string             `json:"lastUpdated,omitempty"`
+	DownloadUri            string             `json:"downloadUri,omitempty"`
+	MimeType               string             `json:"mimeType,omitempty"`
+	Size                   int                `json:"size,string,omitempty"`
+	Checksums              Checksums          `json:"checksums,omitempty"`
+	OriginalChecksums      Checksums          `json:"originalChecksums,omitempty"`
+	Uri                    string             `json:"uri,omitempty"`
+}
+type Checksums struct {
+	Md5                    string             `json:"md5,omitempty"`
+	Sha1                   string             `json:"sha1,omitempty"`
+	Sha256                 string             `json:"sha256,omitempty"`
+}
 
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
@@ -71,6 +90,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 			"output_path": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: fileExist,
 			},
 			"force_overwrite": {
 				Type:     schema.TypeBool,
@@ -82,21 +102,23 @@ func dataSourceArtifactoryFile() *schema.Resource {
 }
 
 func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	client := m.(*ArtClient).Resty
 
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
-
-	fileInfo, _, err := c.V1.Artifacts.FileInfo(context.Background(), repository, path)
+	fileInfo := FileInfo{}
+	_,err := client.R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}
 
 	fileExists := FileExists(outputPath)
-	chksMatches, _ := VerifySha256Checksum(outputPath, *fileInfo.Checksums.Sha256)
-
+	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	if !chksMatches {
+		return fmt.Errorf("local file differs from upstream version")
+	}
 	if !fileExists || (!chksMatches && forceOverwrite) {
 		outFile, err := os.Create(outputPath)
 		if err != nil {
@@ -107,12 +129,10 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 			_ = outFile.Close()
 		}(outFile)
 
-		fileInfo, _, err = c.V1.Artifacts.FileContents(context.Background(), repository, path, outFile)
+		_, err = client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 		if err != nil {
 			return err
 		}
-	} else if !chksMatches {
-		return fmt.Errorf("local file differs from upstream version")
 	}
 
 	return packFileInfo(fileInfo, d)

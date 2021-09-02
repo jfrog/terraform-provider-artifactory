@@ -1,20 +1,23 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+type ApiKey struct {
+	ApiKey string `json:"apiKey"`
+}
+
+const apiKeyEndpoint = "artifactory/api/security/apiKey"
 
 func resourceArtifactoryApiKey() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceApiKeyCreate,
 		Read:   resourceApiKeyRead,
-		Delete: resourceApiKeyDelete,
+		Delete: apiKeyRevoke,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,49 +33,51 @@ func resourceArtifactoryApiKey() *schema.Resource {
 	}
 }
 
-func packApiKey(apiKey *v1.ApiKey, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
+func packApiKey(apiKey string, d *schema.ResourceData) error {
 
-	logErr(d.Set("api_key", apiKey.ApiKey))
+	setValue := mkLens(d)
 
-	if hasErr {
-		return fmt.Errorf("failed to pack api key")
+	errors := setValue("api_key", apiKey)
+
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack api key %q", errors)
 	}
 
 	return nil
 }
 
 func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	c := m.(*ArtClient).Resty
+	data := make(map[string]string)
 
-	apiKey, _, err := c.V1.Security.CreateApiKey(context.Background())
+	_, err := c.R().SetResult(&data).Post(apiKeyEndpoint)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(schema.HashString(*apiKey.ApiKey)))
-	return resourceApiKeyRead(d, m)
+	if apiKey, ok := data["apiKey"]; ok {
+		d.SetId(strconv.Itoa(schema.HashString(apiKey)))
+		return resourceApiKeyRead(d, m)
+	}
+	return fmt.Errorf("received no error when creating apikey, but also got no apikey")
 }
 
 func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	apiKey, resp, err := c.V1.Security.GetApiKey(context.Background())
+	client := m.(*ArtClient).Resty
+	data := make(map[string]string)
+	_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)
 	if err != nil {
-		if resp != nil && resp.StatusCode == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
-
-	return packApiKey(apiKey, d)
+	key := data["apiKey"]
+	if key == "" {
+		d.SetId("")
+		return nil
+	}
+	return packApiKey(key, d)
 }
 
-func resourceApiKeyDelete(_ *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-	_, _, err := c.V1.Security.RevokeApiKey(context.Background())
-
+func apiKeyRevoke(_ *schema.ResourceData, m interface{}) error {
+	_, err := m.(*ArtClient).Resty.R().Delete(apiKeyEndpoint)
 	return err
 }

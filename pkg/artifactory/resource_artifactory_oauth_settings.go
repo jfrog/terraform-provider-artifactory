@@ -2,8 +2,6 @@ package artifactory
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -122,20 +120,13 @@ func resourceArtifactoryOauthSettings() *schema.Resource {
 }
 
 func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*ArtClient).ArtNew
-	serviceDetails := c.GetConfig().GetServiceDetails()
-	httpClientDetails := serviceDetails.CreateHttpClientDetails()
+	c := m.(*ArtClient).Resty
 
 	oauthSettings := OauthSettings{}
+	 _, err := c.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
 
-	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/oauth", serviceDetails.GetUrl()), false, &httpClientDetails)
 	if err != nil {
 		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read")
-	}
-
-	err = json.Unmarshal(body, &oauthSettings)
-	if err != nil {
-		return diag.Errorf("failed to unmarshal oauth settings during Read")
 	}
 
 	s := OauthSecurity{OauthSettingsWrapper{Settings: oauthSettings}}
@@ -195,12 +186,13 @@ security:
 
 func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
 	d := &ResourceData{s}
-	security := *new(OauthSecurity)
+
+	security := new(OauthSecurity)
 
 	settings := OauthSettings{
-		EnableIntegration:        *d.getBoolRef("enable", false),
-		PersistUsers:             *d.getBoolRef("persist_users", false),
-		AllowUserToAccessProfile: *d.getBoolRef("allow_user_to_access_profile", false),
+		EnableIntegration:        d.getBool("enable", false),
+		PersistUsers:             d.getBool("persist_users", false),
+		AllowUserToAccessProfile: d.getBool("allow_user_to_access_profile", false),
 	}
 
 	if v, ok := d.GetOkExists("oauth_provider"); ok {
@@ -224,7 +216,7 @@ func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
 		settings.OauthProvidersSettings = oauthProviderSettings
 		security.Oauth.Settings = settings
 	}
-	return &security
+	return security
 }
 
 func packOauthSecurity(s *OauthSecurity, d *schema.ResourceData) diag.Diagnostics {

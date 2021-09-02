@@ -1,77 +1,97 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const singleReplicationConfigTemplate = `
-resource "artifactory_local_repository" "lib-local" {
-	key = "lib-local"
-	package_type = "maven"
-}
 
-resource "artifactory_single_replication_config" "lib-local" {
-	repo_key = "${artifactory_local_repository.lib-local.key}"
-	cron_exp = "0 0 * * * ?"
-	enable_event_replication = true
-	url = "%s"
-	username = "%s"
-	password = "%s"
+func mkTclForRepConfg(name, cron, url string) string{
+	const tcl = `
+		resource "artifactory_local_repository" "%s" {
+			key = "%s"
+			package_type = "maven"
+		}
+		
+		resource "artifactory_single_replication_config" "%s" {
+			repo_key = "${artifactory_local_repository.%s.key}"
+			cron_exp = "%s" 
+			enable_event_replication = true
+			url = "%s"
+			username = "%s"
+			password = "%s"
+		}
+	`
+	return fmt.Sprintf(tcl,
+		name,
+		name,
+		name,
+		name,
+		cron,
+		url,
+		os.Getenv("ARTIFACTORY_USERNAME"),
+		os.Getenv("ARTIFACTORY_PASSWORD"),
+	)
 }
-`
+func TestInvalidCronSingleReplication(t *testing.T) {
 
-func TestAccSingleReplication_full(t *testing.T) {
+	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	var failCron = mkTclForRepConfg(name, "0 0 * * * !!",os.Getenv("ARTIFACTORY_URL"))
+
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccCheckSingleReplicationDestroy("artifactory_single_replication_config.lib-local"),
+		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(
-					singleReplicationConfigTemplate,
-					os.Getenv("ARTIFACTORY_URL"),
-					os.Getenv("ARTIFACTORY_USERNAME"),
-					os.Getenv("ARTIFACTORY_PASSWORD"),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "repo_key", "lib-local"),
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "cron_exp", "0 0 * * * ?"),
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "username", os.Getenv("ARTIFACTORY_USERNAME")),
-					resource.TestCheckResourceAttr("artifactory_single_replication_config.lib-local", "password", os.Getenv("ARTIFACTORY_PASSWORD")),
-				),
+				Config:      failCron,
+				ExpectError: regexp.MustCompile(`.*syntax error in year field: '!!'.*`),
 			},
 		},
 	})
 }
 
-func testAccCheckSingleReplicationDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.ArtOld
+func TestInvalidUrlSingleReplication(t *testing.T) {
 
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
+	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	var failCron = mkTclForRepConfg(name, "0 0 * * * ?","bad_url")
 
-		replica, resp, err := client.V1.Artifacts.GetRepositoryReplicationConfig(context.Background(), rs.Primary.ID)
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      failCron,
+				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got bad_url.*`),
+			},
+		},
+	})
+}
 
-		if err != nil {
-			return err
-		}
+func TestAccSingleReplication_full(t *testing.T) {
+	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	config := mkTclForRepConfg(name,"0 0 * * * ?",os.Getenv("ARTIFACTORY_URL"))
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
+		Providers:    testAccProviders,
 
-		if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
-			return nil
-		}
-		return fmt.Errorf("error: Replication %s still exists", replica)
-	}
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "password", getMD5Hash(os.Getenv("ARTIFACTORY_PASSWORD"))),
+				),
+			},
+		},
+	})
 }

@@ -2,9 +2,6 @@ package artifactory
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,20 +102,12 @@ func resourceArtifactorySamlSettings() *schema.Resource {
 }
 
 func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*ArtClient).ArtNew
-	serviceDetails := c.GetConfig().GetServiceDetails()
-	httpClientDetails := serviceDetails.CreateHttpClientDetails()
+	c := m.(*ArtClient).Resty
 
 	samlSettings := SamlSettings{}
-
-	_, body, _, err := c.Client().SendGet(fmt.Sprintf("%sapi/saml/config", serviceDetails.GetUrl()), false, &httpClientDetails)
+	_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 	if err != nil {
 		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
-	}
-
-	err = json.Unmarshal(body, &samlSettings)
-	if err != nil {
-		return diag.Errorf("failed to unmarshal saml settings during Read")
 	}
 
 	s := SamlSecurity{SamlSettingsWrapper{Settings: samlSettings}}
@@ -172,18 +161,18 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 	security := *new(SamlSecurity)
 
 	settings := SamlSettings{
-		EnableIntegration:         *d.getBoolRef("enable", false),
-		Certificate:               *d.getStringRef("certificate", false),
-		EmailAttribute:            *d.getStringRef("email_attribute", false),
-		GroupAttribute:            *d.getStringRef("group_attribute", false),
-		LoginUrl:                  *d.getStringRef("login_url", false),
-		LogoutUrl:                 *d.getStringRef("logout_url", false),
-		NoAutoUserCreation:        *d.getBoolRef("no_auto_user_creation", false),
-		ServiceProviderName:       *d.getStringRef("service_provider_name", false),
-		AllowUserToAccessProfile:  *d.getBoolRef("allow_user_to_access_profile", false),
-		AutoRedirect:              *d.getBoolRef("auto_redirect", false),
-		SyncGroups:                *d.getBoolRef("sync_groups", false),
-		VerifyAudienceRestriction: *d.getBoolRef("verify_audience_restriction", false),
+		EnableIntegration:         d.getBool("enable", false),
+		Certificate:               d.getString("certificate", false),
+		EmailAttribute:            d.getString("email_attribute", false),
+		GroupAttribute:            d.getString("group_attribute", false),
+		LoginUrl:                  d.getString("login_url", false),
+		LogoutUrl:                 d.getString("logout_url", false),
+		NoAutoUserCreation:        d.getBool("no_auto_user_creation", false),
+		ServiceProviderName:       d.getString("service_provider_name", false),
+		AllowUserToAccessProfile:  d.getBool("allow_user_to_access_profile", false),
+		AutoRedirect:              d.getBool("auto_redirect", false),
+		SyncGroups:                d.getBool("sync_groups", false),
+		VerifyAudienceRestriction: d.getBool("verify_audience_restriction", false),
 	}
 
 	security.Saml.Settings = settings
@@ -191,24 +180,23 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 }
 
 func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
+	setValue := mkLens(d)
 
-	logErr(d.Set("enable", s.Saml.Settings.EnableIntegration))
-	logErr(d.Set("certificate", s.Saml.Settings.Certificate))
-	logErr(d.Set("email_attribute", s.Saml.Settings.EmailAttribute))
-	logErr(d.Set("group_attribute", s.Saml.Settings.GroupAttribute))
-	logErr(d.Set("login_url", s.Saml.Settings.LoginUrl))
-	logErr(d.Set("logout_url", s.Saml.Settings.LogoutUrl))
-	logErr(d.Set("no_auto_user_creation", s.Saml.Settings.NoAutoUserCreation))
-	logErr(d.Set("service_provider_name", s.Saml.Settings.ServiceProviderName))
-	logErr(d.Set("allow_user_to_access_profile", s.Saml.Settings.AllowUserToAccessProfile))
-	logErr(d.Set("auto_redirect", s.Saml.Settings.AutoRedirect))
-	logErr(d.Set("sync_groups", s.Saml.Settings.SyncGroups))
-	logErr(d.Set("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction))
+	setValue("enable", s.Saml.Settings.EnableIntegration)
+	setValue("certificate", s.Saml.Settings.Certificate)
+	setValue("email_attribute", s.Saml.Settings.EmailAttribute)
+	setValue("group_attribute", s.Saml.Settings.GroupAttribute)
+	setValue("login_url", s.Saml.Settings.LoginUrl)
+	setValue("logout_url", s.Saml.Settings.LogoutUrl)
+	setValue("no_auto_user_creation", s.Saml.Settings.NoAutoUserCreation)
+	setValue("service_provider_name", s.Saml.Settings.ServiceProviderName)
+	setValue("allow_user_to_access_profile", s.Saml.Settings.AllowUserToAccessProfile)
+	setValue("auto_redirect", s.Saml.Settings.AutoRedirect)
+	setValue("sync_groups", s.Saml.Settings.SyncGroups)
+	errors := setValue("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction)
 
-	if hasErr {
-		return diag.Errorf("failed to pack saml settings")
+	if errors != nil && len(errors) > 0 {
+		return diag.Errorf("failed to pack saml settings %q",errors)
 	}
 
 	return nil

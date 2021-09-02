@@ -3,12 +3,11 @@ package artifactory
 import (
 	"fmt"
 	"math/rand"
-	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestKeyHasSpecialCharsFails(t *testing.T) {
@@ -48,7 +47,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,12 +74,12 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 			force_nuget_authentication = true
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -99,9 +98,11 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 func TestAllRemoteRepoTypes(t *testing.T) {
 	//
 	for _, repo := range repoTypesSupported {
-		// NuGet Repository configuration is missing mandatory field downloadContextPath
 		if repo != "nuget" { // this requires special testing
-			resource.Test(mkRemoteRepoTestCase(repo, t))
+			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+				// NuGet Repository configuration is missing mandatory field downloadContextPath
+				resource.Test(mkRemoteRepoTestCase(repo, t))
+			})
 		}
 	}
 }
@@ -144,13 +145,13 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 			client_tls_certificate				  = ""
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-full%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoFull, name, name, repoType),
@@ -195,26 +196,6 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 	}
 }
 
-func resourceRemoteRepositoryCheckDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
-		rs, ok := s.RootModule().Resources[id]
-
-		if !ok {
-			return fmt.Errorf("not found %s", id)
-		}
-		resp, err := client.R().Head("artifactory/api/repositories/" + rs.Primary.ID)
-
-		if err != nil {
-			if resp != nil && (resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusBadRequest) {
-				return nil
-			}
-			return err
-		}
-		return nil
-	}
-}
-
 func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
 	const remoteNpmRepoBasicWithPropagate = `
 		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
@@ -252,12 +233,12 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 
 		}
 	`
-	id := rand.Int()
+	id := randomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: resourceRemoteRepositoryCheckDestroy(fqrn),
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
