@@ -71,7 +71,7 @@ The nested `criteria` block is a list of one item, supporting the following:
 
 The nested `cvss_range` block is a list of one object that contains the following attributes:
 
-* `to` - (Required) The end of the range of CVS scores (from 1-10) to flag.
+* `to` - (Required) The end of the range of CVS scores (from 1-10) to flag. 
 * `from` - (Required) The beginning of the range of CVS scores (from 1-10) to flag.
 
 ##### License criteria
