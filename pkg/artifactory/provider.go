@@ -15,6 +15,7 @@ import (
 )
 
 var Version = "2.2.16"
+
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type ArtClient struct {

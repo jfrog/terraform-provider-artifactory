@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
@@ -49,9 +50,9 @@ var replicationSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 	},
 	"socket_timeout_millis": {
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 	},
 	"username": {
@@ -102,7 +103,7 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon,repMultipleSchema),
+		Schema: mergeSchema(replicationSchemaCommon, repMultipleSchema),
 	}
 }
 
@@ -236,9 +237,9 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}
-	if len(replications) > 0{
+	if len(replications) > 0 {
 		repConfig.EnableEventReplication = replications[0].EnableEventReplication
-		repConfig.CronExp  = replications[0].CronExp
+		repConfig.CronExp = replications[0].CronExp
 	}
 	return packReplicationConfig(&repConfig, d)
 }
@@ -268,5 +269,5 @@ func repConfigExists(id string, m interface{}) (bool, error) {
 }
 
 func resourceReplicationConfigExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return repConfigExists(d.Id(),m)
+	return repConfigExists(d.Id(), m)
 }

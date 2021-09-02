@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -11,8 +12,8 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: repoKeyValidator,
 			},
 			"path": {

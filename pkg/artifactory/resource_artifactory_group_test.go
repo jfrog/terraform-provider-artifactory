@@ -147,7 +147,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		resp,err := client.R().Head(groupsEndpoint + rs.Primary.ID)
+		resp, err := client.R().Head(groupsEndpoint + rs.Primary.ID)
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
 				return nil

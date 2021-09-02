@@ -2,11 +2,12 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/gorhill/cronexpr"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gorhill/cronexpr"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -62,7 +63,6 @@ var repoTypesSupported = []string{
 }
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
 
-
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
@@ -93,7 +93,7 @@ var defaultPassValidation = validation.All(
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {
 		if len(value.(string)) < length {
-			return nil, []error{fmt.Errorf("password must be atleast %d characters long",length)}
+			return nil, []error{fmt.Errorf("password must be atleast %d characters long", length)}
 		}
 		return nil, nil
 	}

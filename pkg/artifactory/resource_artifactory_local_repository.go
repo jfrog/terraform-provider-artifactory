@@ -209,7 +209,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	resp, err := client.R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
 		if resp != nil {
-			if resp.StatusCode() == http.StatusNotFound{
+			if resp.StatusCode() == http.StatusNotFound {
 				d.SetId("")
 				return nil
 			}
@@ -248,7 +248,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed saving state for local repos %q",errors)
+		return fmt.Errorf("failed saving state for local repos %q", errors)
 	}
 
 	return nil

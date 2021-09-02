@@ -108,4 +108,3 @@ func TestAccAllRepoTypesLocal(t *testing.T) {
 		})
 	}
 }
-

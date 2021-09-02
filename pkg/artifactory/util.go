@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
 	"time"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -110,7 +111,7 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	return  hex.EncodeToString(hasher.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 var randomInt = func() func() int {
@@ -131,7 +132,7 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 func repoExists(id string, m interface{}) (bool, error) {
 	client := m.(*ArtClient).Resty
 
-	_, err := client.R().Head(repositoriesEndpoint+ id)
+	_, err := client.R().Head(repositoriesEndpoint + id)
 
 	return err == nil, err
 }

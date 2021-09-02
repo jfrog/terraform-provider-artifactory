@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-
-
 func TestAccApiKey(t *testing.T) {
 	const apiKey = `
 		resource "artifactory_api_key" "foobar" {}
@@ -46,7 +44,7 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 		if err != nil {
 			return err
 		}
-		if _,ok = data["apiKey"]; ok {
+		if _, ok = data["apiKey"]; ok {
 			return fmt.Errorf("error: API key %s still exists", rs.Primary.ID)
 		}
 		return nil

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestHasFileAndContentFails(t *testing.T){
+func TestHasFileAndContentFails(t *testing.T) {
 	const conflictsResource = `
 		resource "artifactory_certificate" "fail" {
 			alias   = "fail"
@@ -19,7 +19,7 @@ func TestHasFileAndContentFails(t *testing.T){
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      conflictsResource,
@@ -28,7 +28,7 @@ func TestHasFileAndContentFails(t *testing.T){
 		},
 	})
 }
-func TestAccCertWithFileMissing(t *testing.T){
+func TestAccCertWithFileMissing(t *testing.T) {
 	const certWithMissingFile = `
 		resource "artifactory_certificate" "fail" {
 			alias   = "fail"
@@ -41,14 +41,14 @@ func TestAccCertWithFileMissing(t *testing.T){
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: certWithMissingFile,
+				Config:      certWithMissingFile,
 				ExpectError: regexp.MustCompile(`.*stat /this/doesnt/exist.pem: no such file or directory.*`),
 			},
 		},
 	})
 }
 
-func TestAccCertWithFile(t *testing.T){
+func TestAccCertWithFile(t *testing.T) {
 	const certWithFile = `
 		resource "artifactory_certificate" "%s" {
 			alias   = "%s"
@@ -64,7 +64,7 @@ func TestAccCertWithFile(t *testing.T){
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(certWithFile,name,name),
+				Config: fmt.Sprintf(certWithFile, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "alias", name),
 					resource.TestCheckResourceAttr(fqrn, "fingerprint", "ED:67:0B:D2:84:C2:93:6D:56:6F:A7:4D:5A:CC:B7:AF:8A:C0:1D:2A:7C:F3:4A:57:31:83:22:30:44:5F:63:9D"),
@@ -77,7 +77,6 @@ func TestAccCertWithFile(t *testing.T){
 		},
 	})
 }
-
 
 func TestAccCertificate_full(t *testing.T) {
 	const certificateFull = `
@@ -121,7 +120,7 @@ func TestAccCertificate_full(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
-	subbed := fmt.Sprintf(certificateFull,name,name)
+	subbed := fmt.Sprintf(certificateFull, name, name)
 	cleansed := strings.Replace(subbed, "\t", "", -1)
 
 	resource.Test(t, resource.TestCase{

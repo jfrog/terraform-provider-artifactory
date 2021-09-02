@@ -123,7 +123,7 @@ func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m in
 	c := m.(*ArtClient).Resty
 
 	oauthSettings := OauthSettings{}
-	 _, err := c.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
+	_, err := c.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
 
 	if err != nil {
 		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read")

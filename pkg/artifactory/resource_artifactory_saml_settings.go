@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -196,7 +197,7 @@ func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics 
 	errors := setValue("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction)
 
 	if errors != nil && len(errors) > 0 {
-		return diag.Errorf("failed to pack saml settings %q",errors)
+		return diag.Errorf("failed to pack saml settings %q", errors)
 	}
 
 	return nil

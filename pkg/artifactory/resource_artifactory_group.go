@@ -54,15 +54,15 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Optional: true,
 			},
 			"auto_join": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 				//ValidateFunc: autoJoinAdminValidate,
 			},
 			"admin_privileges": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 				//ValidateFunc: autoJoinAdminValidate,
 			},
 			"realm": {

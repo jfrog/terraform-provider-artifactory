@@ -2,9 +2,11 @@ package artifactory
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
+
 const replicationEndpoint = "artifactory/api/replications/"
 
 func resourceArtifactorySingleReplicationConfig() *schema.Resource {
@@ -19,7 +21,7 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon,replicationSchema),
+		Schema: mergeSchema(replicationSchemaCommon, replicationSchema),
 	}
 }
 
@@ -50,7 +52,6 @@ func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.Resour
 	setValue("cron_exp", config.CronExp)
 	setValue("enable_event_replication", config.EnableEventReplication)
 
-
 	setValue("url", config.URL)
 	setValue("socket_timeout_millis", config.SocketTimeoutMillis)
 	setValue("username", config.Username)
@@ -63,7 +64,7 @@ func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.Resour
 	errors := setValue("path_prefix", config.PathPrefix)
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack replication config %q",errors)
+		return fmt.Errorf("failed to pack replication config %q", errors)
 	}
 
 	return nil
@@ -74,7 +75,7 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 
 	replicationConfig := unpackSingleReplicationConfig(d)
 
-	_,err := client.R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := client.R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
 	if err != nil {
 		return err
 	}

@@ -4,9 +4,10 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 	"os"
+
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"strconv"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
-
 
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
@@ -71,12 +71,12 @@ func resourceArtifactoryUser() *schema.Resource {
 				Sensitive: true,
 				Required:  true,
 				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
-					validationOn, _ := strconv.ParseBool( os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
-					if validationOn  {
+					validationOn, _ := strconv.ParseBool(os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
+					if validationOn {
 						ses, err := defaultPassValidation(tfValue, key)
 						if err != nil {
-							return append(ses,"if your organization has custom password rules, you may override " +
-								"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"),append(err)
+							return append(ses, "if your organization has custom password rules, you may override "+
+								"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"), append(err)
 						}
 					}
 					return nil, nil
