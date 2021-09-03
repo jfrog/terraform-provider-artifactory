@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -201,6 +202,10 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*ArtClient).Resty.R().Head(groupsEndpoint + d.Id())
+	return groupExists(m.(*ArtClient).Resty,d.Id())
+}
+
+func groupExists(client *resty.Client, groupName string) (bool, error) {
+	_, err := client.R().Head(groupsEndpoint + groupName)
 	return err == nil, err
 }

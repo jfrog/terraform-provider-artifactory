@@ -9,14 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jasonwbarnett/go-xray/xray"
 	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 	"net/url"
 )
 
-
-
 var Version = "2.2.16"
+
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type ArtClient struct {
@@ -32,28 +30,28 @@ func Provider() terraform.ResourceProvider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", func() (interface{}, error) {
-					return "http://localhost:8082",nil
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", func() (interface{}, error) {
+					return "http://localhost:8082", nil
 				}),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", func() (interface{}, error) {
-					return "admin",nil
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", func() (interface{}, error) {
+					return "admin", nil
 				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 			"password": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", func() (interface{}, error) {
-					return "password",nil
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", func() (interface{}, error) {
+					return "password", nil
 				}),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
@@ -111,15 +109,9 @@ func Provider() terraform.ResourceProvider {
 	return p
 }
 
-func buildResty(d *schema.ResourceData, terraformVersion string) (*resty.Client, error) {
+func buildResty(URL string) (*resty.Client, error) {
 
-	if key, ok := d.GetOk("url"); key == nil || key == "" || !ok {
-		return nil, fmt.Errorf("you must supply a URL")
-	}
-
-	log.SetLogger(log.NewLogger(log.INFO, nil))
-
-	u, err := url.ParseRequestURI(d.Get("url").(string))
+	u, err := url.ParseRequestURI(URL)
 
 	if err != nil {
 		return nil, err
@@ -134,31 +126,45 @@ func buildResty(d *schema.ResourceData, terraformVersion string) (*resty.Client,
 		}
 		return nil
 	}).
-	SetHeader("content-type", "application/json").
-	SetHeader("accept", "*/*").
-	SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version)
+		SetHeader("content-type", "application/json").
+		SetHeader("accept", "*/*").
+		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version)
+	restyBase.DisableWarn = true
+	return restyBase, nil
 
+}
+
+func addAuthToResty(client *resty.Client, username, password, apiKey, accessToken string) (*resty.Client, error) {
+
+	if username != "" && password != "" {
+		return client.SetBasicAuth(username, password), nil
+	}
+	if apiKey != "" {
+		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
+	}
+	if accessToken != "" {
+		return client.SetAuthToken(accessToken), nil
+	}
+	return nil, fmt.Errorf("no authentication details supplied")
+}
+
+// Creates the client for artifactory, will prefer token auth over basic auth if both set
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+	URL, ok := d.GetOk("url")
+	if URL == nil || URL == "" || !ok {
+		return nil, fmt.Errorf("you must supply a URL")
+	}
+
+	restyBase, err := buildResty(URL.(string))
+	if err != nil {
+		return nil, err
+	}
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	if username != "" && password != "" {
-		restyBase = restyBase.SetBasicAuth(username, password)
-	}
-	if apiKey != "" {
-		restyBase = restyBase.SetHeader("X-JFrog-Art-Api", apiKey)
-	}
-	if accessToken != "" {
-		restyBase = restyBase.SetAuthToken(accessToken)
-	}
-	restyBase.DisableWarn = true
-	return restyBase, nil
-}
-
-// Creates the client for artifactory, will prefer token auth over basic auth if both set
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	restyBase, err := buildResty(d, terraformVersion)
+	restyBase, err = addAuthToResty(restyBase, username, password, apiKey, accessToken)
 	if err != nil {
 		return nil, err
 	}
