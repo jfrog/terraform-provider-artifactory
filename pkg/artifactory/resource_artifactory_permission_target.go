@@ -181,9 +181,15 @@ func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetPa
 
 		// Handle optionals
 		if v, ok := permissionData["includes_pattern"]; ok {
-			// It is not possible to set default values for sets. Therefore we should send the empty set,
-			// so artifactory remote does not default to ** after creation.
+			// It is not possible to set default values for sets. Because the data type between moving from
+			// atlassian to jfrog went from a *[]string to a []string, and both have json attributes of 'on empty omit'
+			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
+			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
+			// it responds with "[**]" which messes us the test. This hack seems to line them up
 			tmp := castToStringArr(v.(*schema.Set).List())
+			if len(tmp) == 0 {
+				tmp = []string{""}
+			}
 			permission.IncludePatterns = tmp
 		}
 		if v, ok := permissionData["excludes_pattern"]; ok {
