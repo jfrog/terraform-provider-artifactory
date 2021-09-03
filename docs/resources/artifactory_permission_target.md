@@ -1,6 +1,8 @@
 # Artifactory Permission Target Resource
 
-**Requires Artifactory >= 6.6.0. If using a lower version see [here](./artifactory_permission_target_v1.md)**
+**Requires Artifactory >= 6.6.0.** 
+
+***permissions target V1 is no longer supported***
 
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.
 
@@ -40,6 +42,18 @@ resource "artifactory_permission_target" "test-perm" {
       }
     }
   }
+  
+  release_bundle {
+    includes_pattern = ["**"]
+    repositories     = ["example-repo-local"]
+
+    actions {
+      users {
+        name        = "anonymous"
+        permissions = ["read", "write"]
+      }
+    }
+  }
 }
 ```
 
@@ -56,7 +70,9 @@ The following arguments are supported:
         * `users` - (Optional) Users this permission target applies for. 
         * `groups` - (Optional) Groups this permission applies for. 
 * `build` - (Optional) As for repo but for artifactory-build-info permssions.
+* `release_bundle` - (Optional)
 
+Please see the docs [here](https://www.jfrog.com/confluence/display/JFROG/Security+Configuration+JSON#SecurityConfigurationJSON-application/vnd.org.jfrog.artifactory.security.PermissionTarget+json)
 ## Import
 
 Permission targets can be imported using their name, e.g.

@@ -3,14 +3,14 @@ package artifactory
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
+
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
 const (
 	PERM_READ     = "read"
@@ -21,9 +21,9 @@ const (
 
 	PERMISSION_SCHEMA = "application/vnd.org.jfrog.artifactory.security.PermissionTargetV2+json"
 )
+
 func resourceArtifactoryPermissionTargets() *schema.Resource {
 	target := resourceArtifactoryPermissionTarget()
-	target.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
 	return target
 }
 
@@ -61,23 +61,25 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 	}
 
 	principalSchema := schema.Schema{
-		Type:          schema.TypeList,
-		Optional:      true,
-		MaxItems:      1,
-		MinItems:      1,
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"includes_pattern": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
-					Optional: true,
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [""] if nothing is supplied`,
 				},
 				"excludes_pattern": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
-					Optional: true,
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [] if nothing is supplied`,
 				},
 				"repositories": {
 					Type:     schema.TypeSet,
@@ -100,6 +102,8 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 			},
 		},
 	}
+	buildSchema := principalSchema
+	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
 
 	return &schema.Resource{
 		Create: resourcePermissionTargetCreate,
@@ -118,8 +122,8 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"repo":  &principalSchema,
-			"build": &principalSchema,
+			"repo":           &principalSchema,
+			"build":          &buildSchema,
 			"release_bundle": &principalSchema,
 		},
 	}
@@ -289,7 +293,7 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 	d.SetId(permissionTarget.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 
-		exists, err := resourcePermissionTargetExists(d,m)
+		exists, err := resourcePermissionTargetExists(d, m)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))
 		}
@@ -320,7 +324,6 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	c := m.(*ArtClient).Resty
 
-
 	permissionTarget := unpackPermissionTarget(d)
 
 	if _, err := c.R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
@@ -337,9 +340,8 @@ func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error
 	return err
 }
 
-
 func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return permTargetExists(d.Id(),m)
+	return permTargetExists(d.Id(), m)
 }
 
 func permTargetExists(id string, m interface{}) (bool, error) {

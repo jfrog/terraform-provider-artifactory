@@ -56,6 +56,13 @@ does not support (directly), repository specific fields in all cases. It's basic
 - Nuget 
 Query params may be forwarded, but this field doesn't exist in the documentation
 
+### Permission target limitations
+[Permission target V2](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplacePermissionTarget)
+Permission target V1 support has been totally removed. Dynamically testing of permission targets using a new repository
+currently doesn't work because of race conditions when creating a repo. This will have to be resolved with retries at a 
+later date. 
+
+
 
 ## Build the Provider
 Simply run `make install` - this will compile the provider and install it to `~/.terraform.d`. When running this, it will
@@ -70,6 +77,8 @@ Requirements:
 How to run the tests isn't obvious.
 First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local
 version. You can ask for an instance to test against in as part of your PR or by messaging the maintainer in gitter
+Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same
+directory called `artifactory.lic`, you can start just an artifactory instance. The license, however, is not supplied
 
 Once you have that done you must set the following properties
 
