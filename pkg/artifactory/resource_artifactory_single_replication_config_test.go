@@ -88,7 +88,12 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
-					resource.TestCheckResourceAttr(fqrn, "password", getMD5Hash(os.Getenv("ARTIFACTORY_PASSWORD"))),
+					// artifactory is sending us back a scrambled password and because we can't compute it, we can't
+					// store it's state. I am going to leave this test broken specifically to draw attention to this
+					// because local state will never match remote state and TF will have issues
+					// we send: password
+					// we get back: JE2fNsEThvb1buiH7h7S2RDsGWSdp2EcuG9Pky5AFyRMwE4UzG
+					resource.TestCheckResourceAttr(fqrn, "password", os.Getenv("ARTIFACTORY_PASSWORD")),
 				),
 			},
 		},

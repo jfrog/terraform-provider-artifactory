@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -32,8 +33,7 @@ func TestAccApiKey(t *testing.T) {
 
 func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		apis := testAccProvider.Meta().(*ArtClient)
-		client := apis.Resty
+		client := testAccProvider.Meta().(*resty.Client)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {

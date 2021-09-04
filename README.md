@@ -173,7 +173,6 @@ and is willing to have it used in distributions and derivative works
 [Sign the CLA](https://cla-assistant.io/jfrog/terraform-provider-artifactory)
 
 ## License
-Copyright (c) 2019 Atlassian and others.  
 Copyright (c) 2020 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.

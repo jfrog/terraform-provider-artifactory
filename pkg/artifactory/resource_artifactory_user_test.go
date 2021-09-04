@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"net/http"
 	"testing"
 
@@ -73,7 +74,7 @@ func TestAccUser_full(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
+		client := testAccProvider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 

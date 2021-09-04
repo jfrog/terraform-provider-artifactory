@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"io/ioutil"
 	"os"
@@ -160,7 +161,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 }
 
 func findCertificate(alias string, m interface{}) (*CertificateDetails, error) {
-	c := m.(*ArtClient).Resty
+	c := m.(*resty.Client)
 	certificates := new([]CertificateDetails)
 	_, err := c.R().SetResult(certificates).Get(endpoint)
 
@@ -249,14 +250,12 @@ func getContentFromData(d *schema.ResourceData) (string, error) {
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
-
 	content, err := getContentFromData(d)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.R().SetBody(content).SetHeader("content-type", "text/plain").Post(endpoint + d.Id())
+	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(endpoint + d.Id())
 
 	if err != nil {
 		return err
@@ -266,8 +265,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
-	_, err := c.R().Delete(endpoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(endpoint + d.Id())
 	if err != nil {
 		return err
 	}

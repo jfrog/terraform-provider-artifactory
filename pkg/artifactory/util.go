@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"math/rand"
 	"text/template"
@@ -16,7 +16,8 @@ type ResourceData struct{ *schema.ResourceData }
 
 func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
 	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.String(v.(string))
+		thing := v.(string)
+		return &thing
 	}
 	return nil
 }
@@ -29,7 +30,8 @@ func (d *ResourceData) getString(key string, onlyIfChanged bool) string {
 
 func (d *ResourceData) getBoolRef(key string, onlyIfChanged bool) *bool {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.Bool(v.(bool))
+		thing := v.(bool)
+		return &thing
 	}
 	return nil
 }
@@ -43,7 +45,8 @@ func (d *ResourceData) getBool(key string, onlyIfChanged bool) bool {
 
 func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.Int(v.(int))
+		thing := v.(int)
+		return &thing
 	}
 	return nil
 }
@@ -130,9 +133,7 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 }
 
 func repoExists(id string, m interface{}) (bool, error) {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().Head(repositoriesEndpoint+ id)
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint+ id)
 
 	return err == nil, err
 }

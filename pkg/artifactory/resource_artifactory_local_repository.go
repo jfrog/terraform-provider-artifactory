@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
@@ -23,6 +24,7 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
 				Type:         schema.TypeString,
@@ -184,11 +186,9 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 
 func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 
-	client := m.(*ArtClient).Resty
-
 	repo := unmarshalLocalRepository(d)
 
-	_, err := client.R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
+	_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 
 	if err != nil {
 		return err
@@ -198,14 +198,13 @@ func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
 
 	repo := MessyRepo{}
 	if d.Id() == "" {
 		return fmt.Errorf("no id given")
 	}
 
-	resp, err := client.R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode() == http.StatusNotFound{
@@ -254,11 +253,9 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	repo := unmarshalLocalRepository(d)
 
-	_, err := client.R().SetBody(repo).SetHeader("accept", "text/plain").
+	_, err := m.(*resty.Client).R().SetBody(repo).SetHeader("accept", "text/plain").
 		Post(repositoriesEndpoint + d.Id())
 
 	if err != nil {
@@ -269,16 +266,12 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().SetHeader("accept", "*/*").Delete(repositoriesEndpoint + d.Id())
+	_, err := m.(*resty.Client).R().SetHeader("Accept", "*/*").Delete(repositoriesEndpoint + d.Id())
 	return err
 }
 
 func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().Head(repositoriesEndpoint + d.Id())
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
 	// artifactory returns 400 instead of 404. but regardless, it's an error
 	return err == nil, err
 }

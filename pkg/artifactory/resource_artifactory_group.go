@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -12,24 +13,25 @@ import (
 
 const groupsEndpoint = "artifactory/api/security/groups/"
 
-var autoJoinAdminValidate = func() func(i interface{}, k string) ([]string, []error) {
-	autoJoin, admin := false, false
 
-	return func(value interface{}, key string) ([]string, []error) {
-		switch key {
-		case "auto_join":
-			autoJoin = value.(bool)
-		case "admin_privileges":
-			admin = value.(bool)
-		}
-		if autoJoin && admin {
-			return nil, []error{fmt.Errorf("admin privs on auto_join groups is not allowed")}
-		}
-		return nil, nil
-	}
-}()
 
 func resourceArtifactoryGroup() *schema.Resource {
+	var autoJoinAdminValidate = func() func(i interface{}, k string) ([]string, []error) {
+		autoJoin, admin := false, false
+
+		return func(value interface{}, key string) ([]string, []error) {
+			switch key {
+			case "auto_join":
+				autoJoin = value.(bool)
+			case "admin_privileges":
+				admin = value.(bool)
+			}
+			if autoJoin && admin {
+				return nil, []error{fmt.Errorf("admin privs on auto_join groups is not allowed")}
+			}
+			return nil, nil
+		}
+	}()
 	return &schema.Resource{
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
@@ -112,13 +114,11 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	groupParams, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-	_, err = client.R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
+	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
 
 	if err != nil {
 		return err
@@ -140,15 +140,13 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupGet(d *schema.ResourceData, m interface{}) (*services.Group, error) {
-	client := m.(*ArtClient).Resty
-
 	params := services.GroupParams{}
 	params.GroupDetails.Name = d.Id()
 	params.IncludeUsers = true
 
 	group := services.Group{}
 	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.GroupDetails.Name, params.IncludeUsers)
-	_, err := client.R().SetResult(&group).Get(url)
+	_, err := m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
 
@@ -186,7 +184,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
 	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
 
-	_, err = m.(*ArtClient).Resty.R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + d.Id())
+	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + d.Id())
 	if err != nil {
 		return err
 	}
@@ -196,11 +194,15 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*ArtClient).Resty.R().Delete(groupsEndpoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(groupsEndpoint + d.Id())
 	return err
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*ArtClient).Resty.R().Head(groupsEndpoint + d.Id())
+	return groupExists(m.(*resty.Client),d.Id())
+}
+
+func groupExists(client *resty.Client, groupName string) (bool, error) {
+	_, err := client.R().Head(groupsEndpoint + groupName)
 	return err == nil, err
 }

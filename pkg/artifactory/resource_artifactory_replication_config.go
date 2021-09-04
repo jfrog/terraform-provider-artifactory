@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
@@ -210,11 +211,9 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 }
 
 func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := client.R().SetBody(replicationConfig).Put("artifactory/api/replications/multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put("artifactory/api/replications/multiple/" + replicationConfig.RepoKey)
 	if err != nil {
 		return err
 	}
@@ -224,7 +223,7 @@ func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
+	c := m.(*resty.Client)
 	var replications []utils.ReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
@@ -244,11 +243,9 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := client.R().SetBody(replicationConfig).Post("/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post("/api/replications/" + d.Id())
 	if err != nil {
 		return err
 	}
@@ -259,11 +256,11 @@ func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceReplicationConfigDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*ArtClient).Resty.R().Delete("artifactory/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().Delete("artifactory/api/replications/" + d.Id())
 	return err
 }
 func repConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*ArtClient).Resty.R().Head("artifactory/api/replications/" + id)
+	_, err := m.(*resty.Client).R().Head("artifactory/api/replications/" + id)
 	return err == nil, err
 }
 
