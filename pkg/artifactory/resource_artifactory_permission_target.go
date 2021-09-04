@@ -1,47 +1,33 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-
-	v2 "github.com/atlassian/go-artifactory/v2/artifactory/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
+const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
+const (
+	PERM_READ     = "read"
+	PERM_WRITE    = "write"
+	PERM_ANNOTATE = "annotate"
+	PERM_DELETE   = "delete"
+	PERM_MANAGE   = "manage"
+
+	PERMISSION_SCHEMA = "application/vnd.org.jfrog.artifactory.security.PermissionTargetV2+json"
+)
+
 func resourceArtifactoryPermissionTargets() *schema.Resource {
 	target := resourceArtifactoryPermissionTarget()
-	target.DeprecationMessage = "Since v1.5. Use artifactory_permission_target"
 	return target
 }
 
 func resourceArtifactoryPermissionTarget() *schema.Resource {
-	principalSchemaV1 := schema.Schema{
-		Type:          schema.TypeSet,
-		Optional:      true,
-		Deprecated:    "Since Artifactory 6.6.0+. Use /api/v2 endpoint",
-		ConflictsWith: []string{"repo", "build"},
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-					// Required as it is impossible to remove a principal as the absence of one does not
-					// count as a deletion
-					ForceNew: true,
-				},
-				"permissions": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
-					Required: true,
-				},
-			},
-		},
-	}
 
 	actionSchema := schema.Schema{
 		Type:     schema.TypeSet,
@@ -58,11 +44,11 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 						ValidateFunc: validation.StringInSlice([]string{
-							v2.PERM_READ,
-							v2.PERM_ANNOTATE,
-							v2.PERM_WRITE,
-							v2.PERM_DELETE,
-							v2.PERM_MANAGE,
+							PERM_READ,
+							PERM_ANNOTATE,
+							PERM_WRITE,
+							PERM_DELETE,
+							PERM_MANAGE,
 							// v2.PERM_MANAGE_XRAY_METADATA,
 							"managedXrayMeta",
 						}, false),
@@ -75,24 +61,25 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 	}
 
 	principalSchema := schema.Schema{
-		Type:          schema.TypeList,
-		ConflictsWith: []string{"repositories"},
-		Optional:      true,
-		MaxItems:      1,
-		MinItems:      1,
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"includes_pattern": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
-					Optional: true,
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [""] if nothing is supplied`,
 				},
 				"excludes_pattern": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
-					Optional: true,
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [] if nothing is supplied`,
 				},
 				"repositories": {
 					Type:     schema.TypeSet,
@@ -115,6 +102,8 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 			},
 		},
 	}
+	buildSchema := principalSchema
+	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
 
 	return &schema.Resource{
 		Create: resourcePermissionTargetCreate,
@@ -133,44 +122,22 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"repo":  &principalSchema,
-			"build": &principalSchema,
-
-			// Legacy V1 Fields
-			"includes_pattern": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       "",
-				Deprecated:    "Since Artifactory 6.6.0+ (provider 1.5). Use /api/v2 endpoint",
-				ConflictsWith: []string{"repo", "build"},
-			},
-			"excludes_pattern": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       "",
-				Deprecated:    "Since Artifactory 6.6.0+ (provider 1.5). Use /api/v2 endpoint",
-				ConflictsWith: []string{"repo", "build"},
-			},
-			"repositories": {
-				Type:          schema.TypeSet,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-				Optional:      true,
-				Deprecated:    "Since Artifactory 6.6.0+ (provider 1.5). Use /api/v2 endpoint",
-				ConflictsWith: []string{"repo", "build"},
-			},
-			"users":  &principalSchemaV1,
-			"groups": &principalSchemaV1,
+			"repo":           &principalSchema,
+			"build":          &buildSchema,
+			"release_bundle": &principalSchema,
 		},
 	}
 }
-
-func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
+func hashPrincipal(o interface{}) int {
+	p := o.(map[string]interface{})
+	return hashcode.String(p["name"].(string)) + 31*hashcode.String(hashcode.Strings(castToStringArr(p["permissions"].(*schema.Set).List())))
+}
+func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetParams {
 	d := &ResourceData{s}
 
-	unpackPermission := func(rawPermissionData interface{}) *v2.Permission {
-		unpackEntity := func(rawEntityData interface{}) *v2.Entity {
-			unpackPermMap := func(rawPermSet interface{}) *map[string][]string {
+	unpackPermission := func(rawPermissionData interface{}) *services.PermissionTargetSection {
+		unpackEntity := func(rawEntityData interface{}) *services.Actions {
+			unpackPermMap := func(rawPermSet interface{}) map[string][]string {
 				permList := rawPermSet.(*schema.Set).List()
 				if len(permList) == 0 {
 					return nil
@@ -182,7 +149,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 
 					permissions[id["name"].(string)] = castToStringArr(id["permissions"].(*schema.Set).List())
 				}
-				return &permissions
+				return permissions
 			}
 
 			entityDataList := rawEntityData.([]interface{})
@@ -191,7 +158,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 			}
 
 			entityData := entityDataList[0].(map[string]interface{})
-			return &v2.Entity{
+			return &services.Actions{
 				Users:  unpackPermMap(entityData["users"]),
 				Groups: unpackPermMap(entityData["groups"]),
 			}
@@ -204,24 +171,30 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 		// It is safe to unpack the zeroth element immediately since permission targets have min size of 1
 		permissionData := rawPermissionData.([]interface{})[0].(map[string]interface{})
 
-		permission := new(v2.Permission)
+		permission := new(services.PermissionTargetSection)
 
 		// This will always exist
 		{
 			tmp := castToStringArr(permissionData["repositories"].(*schema.Set).List())
-			permission.Repositories = &tmp
+			permission.Repositories = tmp
 		}
 
 		// Handle optionals
 		if v, ok := permissionData["includes_pattern"]; ok {
-			// It is not possible to set default values for sets. Therefore we should send the empty set,
-			// so artifactory remote does not default to ** after creation.
+			// It is not possible to set default values for sets. Because the data type between moving from
+			// atlassian to jfrog went from a *[]string to a []string, and both have json attributes of 'on empty omit'
+			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
+			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
+			// it responds with "[**]" which messes us the test. This hack seems to line them up
 			tmp := castToStringArr(v.(*schema.Set).List())
-			permission.IncludePatterns = &tmp
+			if len(tmp) == 0 {
+				tmp = []string{""}
+			}
+			permission.IncludePatterns = tmp
 		}
 		if v, ok := permissionData["excludes_pattern"]; ok {
 			tmp := castToStringArr(v.(*schema.Set).List())
-			permission.ExcludePatterns = &tmp
+			permission.ExcludePatterns = tmp
 		}
 		if v, ok := permissionData["actions"]; ok {
 			permission.Actions = unpackEntity(v)
@@ -230,9 +203,9 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 		return permission
 	}
 
-	pTarget := new(v2.PermissionTarget)
+	pTarget := new(services.PermissionTargetParams)
 
-	pTarget.Name = d.getStringRef("name", false)
+	pTarget.Name = d.getString("name", false)
 
 	if v, ok := d.GetOk("repo"); ok {
 		pTarget.Repo = unpackPermission(v)
@@ -245,8 +218,8 @@ func unpackPermissionTarget(s *schema.ResourceData) *v2.PermissionTarget {
 	return pTarget
 }
 
-func packPermissionTarget(permissionTarget *v2.PermissionTarget, d *schema.ResourceData) error {
-	packPermission := func(p *v2.Permission) []interface{} {
+func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *schema.ResourceData) error {
+	packPermission := func(p *services.PermissionTargetSection) []interface{} {
 		packPermMap := func(e map[string][]string) []interface{} {
 			perm := make([]interface{}, len(e))
 
@@ -266,26 +239,26 @@ func packPermissionTarget(permissionTarget *v2.PermissionTarget, d *schema.Resou
 
 		if p != nil {
 			if p.IncludePatterns != nil {
-				s["includes_pattern"] = schema.NewSet(schema.HashString, castToInterfaceArr(*p.IncludePatterns))
+				s["includes_pattern"] = schema.NewSet(schema.HashString, castToInterfaceArr(p.IncludePatterns))
 			}
 
 			if p.ExcludePatterns != nil {
-				s["excludes_pattern"] = schema.NewSet(schema.HashString, castToInterfaceArr(*p.ExcludePatterns))
+				s["excludes_pattern"] = schema.NewSet(schema.HashString, castToInterfaceArr(p.ExcludePatterns))
 			}
 
 			if p.Repositories != nil {
-				s["repositories"] = schema.NewSet(schema.HashString, castToInterfaceArr(*p.Repositories))
+				s["repositories"] = schema.NewSet(schema.HashString, castToInterfaceArr(p.Repositories))
 			}
 
 			if p.Actions != nil {
 				perms := make(map[string]interface{})
 
 				if p.Actions.Users != nil {
-					perms["users"] = schema.NewSet(hashPrincipal, packPermMap(*p.Actions.Users))
+					perms["users"] = schema.NewSet(hashPrincipal, packPermMap(p.Actions.Users))
 				}
 
 				if p.Actions.Groups != nil {
-					perms["groups"] = schema.NewSet(hashPrincipal, packPermMap(*p.Actions.Groups))
+					perms["groups"] = schema.NewSet(hashPrincipal, packPermMap(p.Actions.Groups))
 				}
 
 				if len(perms) > 0 {
@@ -315,23 +288,18 @@ func packPermissionTarget(permissionTarget *v2.PermissionTarget, d *schema.Resou
 }
 
 func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	if _, ok := d.GetOk("repositories"); ok {
-		return resourcePermissionTargetV1CreateOrReplace(d, m)
-	}
+	c := m.(*ArtClient).Resty
 
 	permissionTarget := unpackPermissionTarget(d)
 
-	_, err := c.V2.Security.CreatePermissionTarget(context.Background(), *permissionTarget.Name, permissionTarget)
-	if err != nil {
+	if _, err := c.R().SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
 		return err
 	}
 
-	d.SetId(*permissionTarget.Name)
+	d.SetId(permissionTarget.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		c := m.(*ArtClient).ArtOld
-		exists, err := c.V2.Security.HasPermissionTarget(context.Background(), d.Id())
+
+		exists, err := resourcePermissionTargetExists(d, m)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))
 		}
@@ -345,69 +313,45 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	if _, ok := d.GetOk("repositories"); ok {
-		return resourcePermissionTargetV1Read(d, m)
-	}
-
-	permissionTarget, resp, err := c.V2.Security.GetPermissionTarget(context.Background(), d.Id())
+	c := m.(*ArtClient).Resty
+	permissionTarget := new(services.PermissionTargetParams)
+	resp, err := c.R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
 	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return err
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
 	}
 
 	return packPermissionTarget(permissionTarget, d)
 }
 
 func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	if _, ok := d.GetOk("repositories"); ok {
-		return resourcePermissionTargetV1CreateOrReplace(d, m)
-	}
+	c := m.(*ArtClient).Resty
 
 	permissionTarget := unpackPermissionTarget(d)
-	if _, err := c.V2.Security.UpdatePermissionTarget(context.Background(), d.Id(), permissionTarget); err != nil {
+
+	if _, err := c.R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
 		return err
 	}
 
-	d.SetId(*permissionTarget.Name)
+	d.SetId(permissionTarget.Name)
 	return resourcePermissionTargetRead(d, m)
 }
 
 func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+	_, err := m.(*ArtClient).Resty.R().Delete(permissionsEndPoint + d.Id())
 
-	if _, ok := d.GetOk("repositories"); ok {
-		return resourcePermissionTargetV1Delete(d, m)
-	}
-
-	permissionTarget := unpackPermissionTarget(d)
-	_, err := c.V2.Security.DeletePermissionTarget(context.Background(), *permissionTarget.Name)
 	return err
 }
 
 func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*ArtClient).ArtOld
+	return permTargetExists(d.Id(), m)
+}
 
-	if _, ok := d.GetOk("repositories"); ok {
-		_, resp, err := c.V1.Security.GetPermissionTargets(context.Background(), d.Id())
+func permTargetExists(id string, m interface{}) (bool, error) {
+	_, err := m.(*ArtClient).Resty.R().Head(permissionsEndPoint + id)
 
-		if err != nil {
-			return false, err
-		}
-
-		if resp.StatusCode == http.StatusNotFound {
-			return false, nil
-		}
-		// what about every other non-404 status code? Without knowing how this client works with 5-- errors,
-		// I guess we leave this alone
-		return true, nil
-	}
-
-	return c.V2.Security.HasPermissionTarget(context.Background(), d.Id())
+	return err == nil, err
 }

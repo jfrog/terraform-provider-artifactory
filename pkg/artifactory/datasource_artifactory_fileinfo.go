@@ -13,7 +13,6 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: repoKeyValidator,
 			},
 			"path": {
 				Type:     schema.TypeString,

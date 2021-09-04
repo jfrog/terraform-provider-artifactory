@@ -52,7 +52,10 @@ func resourceArtifactoryCertificate() *schema.Resource {
 					validation.StringIsNotEmpty,
 					func(value interface{}, key string) ([]string, []error) {
 						_, err := extractCertificate(value.(string))
-						return nil, []error{err}
+						if err != nil {
+							return nil, []error{err}
+						}
+						return nil, nil
 					},
 				),
 			},
@@ -62,19 +65,19 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				Optional:      true,
 				ExactlyOneOf: []string{"content", "file"},
 				ValidateFunc: func(value interface{}, key string) ([]string, []error) {
-
+					var errors []error
 					if _, err := os.Stat(value.(string)); err != nil {
-						return nil, []error{err}
+						return nil, append(errors,err)
 					}
 					data, err := ioutil.ReadFile(value.(string))
 					if err != nil {
-						return nil, []error{err}
+						return nil, append(errors,err)
 					}
 					_, err = extractCertificate(string(data))
 					if err != nil {
-						return nil, nil
+						return nil, append(errors,err)
 					}
-					return nil, []error{err}
+					return nil, nil
 				},
 			},
 			"fingerprint": {

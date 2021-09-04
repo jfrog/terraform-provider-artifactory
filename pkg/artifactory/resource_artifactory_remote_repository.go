@@ -37,7 +37,6 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
 				Type:         schema.TypeString,

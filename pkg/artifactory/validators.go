@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"net/mail"
 	"os"
@@ -88,6 +89,17 @@ var defaultPassValidation = validation.All(
 	validation.StringMatch(regexp.MustCompile("[A-Z]+"), "password must contain at least 1 upper case char"),
 	minLength(8),
 )
+
+var sliceIs = func (slice ... interface{}) schema.SchemaValidateFunc{
+	return func (value interface{}, _ string) ([]string, []error){
+		for _, e := range slice {
+			if e == value {
+				return nil, nil
+			}
+		}
+		return nil, []error{fmt.Errorf("value %s not found in %q",value, slice)}
+	}
+}
 
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {
