@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"io"
 	"os"
 
@@ -102,14 +103,12 @@ func dataSourceArtifactoryFile() *schema.Resource {
 }
 
 func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
 	fileInfo := FileInfo{}
-	_,err := client.R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
+	_,err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}
@@ -129,7 +128,7 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 			_ = outFile.Close()
 		}(outFile)
 
-		_, err = client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+		_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 		if err != nil {
 			return err
 		}

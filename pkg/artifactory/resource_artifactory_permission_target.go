@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -288,11 +289,9 @@ func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *
 }
 
 func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
-
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := c.R().SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
 		return err
 	}
 
@@ -313,9 +312,8 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
 	permissionTarget := new(services.PermissionTargetParams)
-	resp, err := c.R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -328,11 +326,9 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
-
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := c.R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
+	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
 		return err
 	}
 
@@ -341,7 +337,7 @@ func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*ArtClient).Resty.R().Delete(permissionsEndPoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(permissionsEndPoint + d.Id())
 
 	return err
 }
@@ -351,7 +347,7 @@ func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool
 }
 
 func permTargetExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*ArtClient).Resty.R().Head(permissionsEndPoint + id)
+	_, err := m.(*resty.Client).R().Head(permissionsEndPoint + id)
 
 	return err == nil, err
 }

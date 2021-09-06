@@ -108,7 +108,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.Test
 			repositories = []
 			description = "A test virtual repo"
 			notes = "Internal description"
-			includes_pattern = "com/atlassian/**,cloud/atlassian/**"
+			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
 			excludes_pattern = "com/google/**"
 			artifactory_requests_can_retrieve_remote_artifacts = true
 			pom_repository_references_cleanup_policy = "discard_active_reference"
@@ -129,7 +129,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (resource.TestT, resource.Test
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "description", "A test virtual repo"),
 					resource.TestCheckResourceAttr(fqrn, "notes", "Internal description"),
-					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
+					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/jfrog/**,cloud/jfrog/**"),
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "com/google/**"),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
 				),
@@ -150,7 +150,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 			repositories = []
 			description = "A test virtual repo"
 			notes = "Internal description"
-			includes_pattern = "com/atlassian/**,cloud/atlassian/**"
+			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
 			excludes_pattern = "com/google/**"
 			artifactory_requests_can_retrieve_remote_artifacts = true
 			pom_repository_references_cleanup_policy = "discard_active_reference"
@@ -188,7 +188,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 			repositories = []
 			description = "A test virtual repo"
 			notes = "Internal description"
-			includes_pattern = "com/atlassian/**,cloud/atlassian/**"
+			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
 			excludes_pattern = "com/google/**"
 			artifactory_requests_can_retrieve_remote_artifacts = true
 			pom_repository_references_cleanup_policy = "discard_active_reference"
@@ -209,7 +209,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "description", "A test virtual repo"),
 					resource.TestCheckResourceAttr(fqrn, "notes", "Internal description"),
-					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/atlassian/**,cloud/atlassian/**"),
+					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/jfrog/**,cloud/jfrog/**"),
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "com/google/**"),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
 				),

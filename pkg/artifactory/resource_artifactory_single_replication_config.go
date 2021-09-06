@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
@@ -54,7 +55,10 @@ func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.Resour
 	setValue("url", config.URL)
 	setValue("socket_timeout_millis", config.SocketTimeoutMillis)
 	setValue("username", config.Username)
-	setValue("password", getMD5Hash(config.Password))
+	// the password coming back from artifactory is already scrambled, and I don't know in what form.
+	// password -> JE2fNsEThvb1buiH7h7S2RDsGWSdp2EcuG9Pky5AFyRMwE4UzG
+	// Because it comes back scrambled, we can't/shouldn't touch it.
+	setValue("password", config.Password)
 	setValue("enabled", config.Enabled)
 	setValue("sync_deletes", config.SyncDeletes)
 	setValue("sync_properties", config.SyncProperties)
@@ -70,11 +74,9 @@ func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.Resour
 }
 
 func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	replicationConfig := unpackSingleReplicationConfig(d)
-
-	_,err := client.R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	// The password is sent clear
+	_,err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
 	if err != nil {
 		return err
 	}
@@ -84,10 +86,9 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
 	replications := new([]utils.ReplicationBody)
-	_, err := client.R().SetResult(replications).Get(replicationEndpoint + d.Id())
-
+	_, err := m.(*resty.Client).R().SetResult(replications).Get(replicationEndpoint + d.Id())
+	// password comes back scrambled
 	if err != nil {
 		return err
 	}
@@ -98,10 +99,8 @@ func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	replicationConfig := unpackSingleReplicationConfig(d)
-	_, err := client.R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
 	if err != nil {
 		return err
 	}

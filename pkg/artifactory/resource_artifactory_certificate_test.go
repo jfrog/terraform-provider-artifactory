@@ -52,7 +52,7 @@ func TestAccCertWithFile(t *testing.T){
 	const certWithFile = `
 		resource "artifactory_certificate" "%s" {
 			alias   = "%s"
-			file = "${path.cwd}/samples/cert.pem" // for this to work the CWD must be the repo root
+			file = "${path.cwd}/../../samples/cert.pem" 
 		}
 	`
 	id := randomInt()

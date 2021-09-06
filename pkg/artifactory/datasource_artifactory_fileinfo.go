@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -67,13 +68,11 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 }
 
 func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
-
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := c.R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
+	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}

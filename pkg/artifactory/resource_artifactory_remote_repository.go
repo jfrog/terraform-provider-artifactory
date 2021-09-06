@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 
@@ -34,9 +35,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
 				Type:         schema.TypeString,
@@ -448,14 +450,12 @@ func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
 }
 
 func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	repo, err := unpackRemoteRepo(d)
 	if err != nil {
 		return err
 	}
 
-	_, err = client.R().SetBody(repo).Put(repositoriesEndpoint+ repo.Key)
+	_, err = m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 	if err != nil {
 		return err
 	}
@@ -465,9 +465,8 @@ func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
 	repo := MessyRemoteRepo{}
-	resp, err := client.R().SetResult(&repo).Get(repositoriesEndpoint+ d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -483,13 +482,11 @@ func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	repo, err := unpackRemoteRepo(d)
 	if err != nil {
 		return err
 	}
-	_, err = client.R().SetBody(repo).Post(repositoriesEndpoint+ repo.Key)
+	_, err = m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + repo.Key)
 	if err != nil {
 		return err
 	}
@@ -499,9 +496,7 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
-	resp, err := client.R().Delete(repositoriesEndpoint+ d.Id())
+	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -515,9 +510,7 @@ func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().Head(repositoriesEndpoint+ d.Id())
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
 
 	// as long as we don't have an error, it's good
 	return err == nil, err

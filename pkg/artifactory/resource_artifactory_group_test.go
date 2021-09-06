@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"net/http"
 	"regexp"
 	"testing"
@@ -143,7 +144,8 @@ func TestAccGroup_full(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArtClient).Resty
+		client := testAccProvider.Meta().(*resty.Client)
+
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)

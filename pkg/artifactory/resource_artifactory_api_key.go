@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -48,10 +49,9 @@ func packApiKey(apiKey string, d *schema.ResourceData) error {
 }
 
 func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Resty
 	data := make(map[string]string)
 
-	_, err := c.R().SetResult(&data).Post(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().SetResult(&data).Post(apiKeyEndpoint)
 	if err != nil {
 		return err
 	}
@@ -64,9 +64,8 @@ func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
 	data := make(map[string]string)
-	_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().SetResult(&data).Get(apiKeyEndpoint)
 	if err != nil {
 		return err
 	}
@@ -79,6 +78,6 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func apiKeyRevoke(_ *schema.ResourceData, m interface{}) error {
-	_, err := m.(*ArtClient).Resty.R().Delete(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().Delete(apiKeyEndpoint)
 	return err
 }

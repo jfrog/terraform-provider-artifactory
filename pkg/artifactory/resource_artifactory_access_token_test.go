@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,30 +8,29 @@ import (
 	"testing"
 	"time"
 
-	artifactoryold "github.com/atlassian/go-artifactory/v2/artifactory"
-	"github.com/atlassian/go-artifactory/v2/artifactory/transport"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jfrog/jfrog-client-go/artifactory/auth"
 )
 
-const audienceBad = `
-resource "artifactory_user" "existinguser" {
-	name  = "existinguser"
-    email = "existinguser@a.com"
-	admin = false
-	groups = ["readers"]
-}
 
-resource "artifactory_access_token" "foobar" {
-	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
-	audience = "bad"
-	refreshable = true
-}
-`
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
+	const audienceBad = `
+		resource "artifactory_user" "existinguser" {
+			name  = "existinguser"
+			email = "existinguser@a.com"
+			admin = false
+			groups = ["readers"]
+			password = "Passsword1"
+		}
+		
+		resource "artifactory_access_token" "foobar" {
+			end_date_relative = "1s"
+			username = artifactory_user.existinguser.name
+			audience = "bad"
+			refreshable = true
+		}
+	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
@@ -46,23 +44,25 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 	})
 }
 
-const audienceGood = `
-resource "artifactory_user" "existinguser" {
-	name  = "existinguser"
-    email = "existinguser@a.com"
-	admin = false
-	groups = ["readers"]
-}
 
-resource "artifactory_access_token" "foobar" {
-	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
-	audience = "jfrt@*"
-	refreshable = true
-}
-`
 
 func TestAccAccessTokenAudienceGood(t *testing.T) {
+	const audienceGood = `
+		resource "artifactory_user" "existinguser" {
+			name  = "existinguser"
+			email = "existinguser@a.com"
+			admin = false
+			groups = ["readers"]
+			password = "Passsword1"
+		}
+		
+		resource "artifactory_access_token" "foobar" {
+			end_date_relative = "1s"
+			username = artifactory_user.existinguser.name
+			audience = "jfrt@*"
+			refreshable = true
+		}
+	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
@@ -90,6 +90,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -130,6 +131,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -166,6 +168,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -196,6 +199,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -228,6 +232,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -321,6 +326,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -352,6 +358,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
+	password = "Passsword1"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -400,29 +407,21 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 		// Create a new client to auth to Artifactory
 		// We want to check that the token cannot authenticate
 		url := os.Getenv("ARTIFACTORY_URL")
-		var client *http.Client
-		details := auth.NewArtifactoryDetails()
 
-		details.SetUrl(url)
-
-		accessToken := rs.Primary.Attributes["access_token"]
-		details.SetAccessToken(accessToken)
-		tp := &transport.AccessTokenAuth{
-			AccessToken: accessToken,
-		}
-		client = tp.Client()
-
-		rtold, err := artifactoryold.NewClient(url, client)
-
+		resty, err := buildResty(url)
 		if err != nil {
 			return err
 		}
-
-		if _, resp, err := rtold.V1.System.Ping(context.Background()); err != nil {
+		accessToken := rs.Primary.Attributes["access_token"]
+		resty, err = addAuthToResty(resty, "", "", accessToken, "")
+		if err != nil {
+			return err
+		}
+		if resp, err := resty.R().Get("artifactory/api/system/ping"); err != nil {
 			if resp == nil {
 				return fmt.Errorf("no response returned for testAccCheckAccessTokenDestroy")
 			}
-			if resp.StatusCode == http.StatusUnauthorized {
+			if resp.StatusCode() == http.StatusForbidden {
 				return nil
 			}
 			return fmt.Errorf("failed to ping server. Got %s", err)
