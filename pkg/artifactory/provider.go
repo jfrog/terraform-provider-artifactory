@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jasonwbarnett/go-xray/xray"
-	"github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	"net/http"
 	"net/url"
 )
@@ -18,7 +17,6 @@ const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type ArtClient struct {
 
-	ArtNew *jfroghttpclient.JfrogHttpClient
 	Xray   *xray.Xray
 	Resty  *resty.Client
 }

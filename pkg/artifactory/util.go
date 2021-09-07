@@ -5,10 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
-	"text/template"
 	"time"
 )
 
@@ -16,8 +16,7 @@ type ResourceData struct{ *schema.ResourceData }
 
 func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
 	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		thing := v.(string)
-		return &thing
+		return artifactory.String(v.(string))
 	}
 	return nil
 }
@@ -30,8 +29,7 @@ func (d *ResourceData) getString(key string, onlyIfChanged bool) string {
 
 func (d *ResourceData) getBoolRef(key string, onlyIfChanged bool) *bool {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		thing := v.(bool)
-		return &thing
+		return artifactory.Bool(v.(bool))
 	}
 	return nil
 }
@@ -45,8 +43,7 @@ func (d *ResourceData) getBool(key string, onlyIfChanged bool) bool {
 
 func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		thing := v.(int)
-		return &thing
+		return artifactory.Int(v.(int))
 	}
 	return nil
 }
@@ -113,8 +110,7 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	encodeToString := hex.EncodeToString(hasher.Sum(nil))
-	return encodeToString
+	return  hex.EncodeToString(hasher.Sum(nil))
 }
 
 var randomInt = func() func() int {
@@ -133,20 +129,14 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 }
 
 func repoExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint+ id)
+	client := m.(*ArtClient).Resty
+
+	_, err := client.R().Head(repositoriesEndpoint+ id)
 
 	return err == nil, err
 }
 
 
-func executeTemplate(name, temp string, fields interface{} ) string {
-	var tpl bytes.Buffer
-	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl,fields); err != nil {
-		panic(err)
-	}
-
-	return tpl.String()
-}
 
 func mkNames(name, resource string) (int, string, string) {
 	id := randomInt()
@@ -164,6 +154,16 @@ func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error 
 	}
 }
 
+// HashStrings hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
+func HashStrings(strings []string) string {
+	var buf bytes.Buffer
+
+	for _, s := range strings {
+		buf.WriteString(fmt.Sprintf("%s-", s))
+	}
+
+	return fmt.Sprintf("%d", schema.HashString(buf.String()))
+}
 func cascadingErr(hasErr *bool) func(error) {
 	if hasErr == nil {
 		panic("hasError cannot be nil")
@@ -175,3 +175,20 @@ func cascadingErr(hasErr *bool) func(error) {
 		}
 	}
 }
+
+func sendConfigurationPatch(content []byte, m interface{}) error {
+
+	_, err := m.(*ArtClient).Resty.R().SetBody(content).
+		SetHeader("Content-Type", "application/yaml").
+		Patch("artifactory/api/system/configuration")
+
+	return err
+}
+
+func BoolPtr(v bool) *bool { return &v }
+
+func IntPtr(v int) *int { return &v }
+
+func Int64Ptr(v int64) *int64 { return &v }
+
+func StringPtr(v string) *string { return &v }
