@@ -5,6 +5,22 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jfrog/terraform)
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
+## Release notes for 2.3.1
+With the major version release of 2.3.1, all remnants of the original atlassian code have been pitched. A real effort 
+was made to sustain backward compatibility. For a variety of reasons, this was not possible. In some cases it simply
+couldn't be supported.
+
+In this release, all the rest clients were replaced with a single client: [Resty](https://github.com/go-resty/resty).
+The last major release before this major bump was 2.2.15, and it had no less than 4 different clients in use. In some
+cases, the jfrog-client-go code could have worked, but in others cases it was fundamentally incompatible with the way
+terraform needed to operate as the jfrog go client directly interpreted results as being errored or not (using non-standard
+error codes). In addition, the objective of this release is *not* to upgrade to new APIs, but to simply get rid of all the clients
+and get the tests passing. Since several of the V1 apis that this TF provider uses are not available in the jf-go client 
+this gave further reason to go it alone.
+
+The end result is much more transparent code and complete portability. The final approach taken was to use resty for all
+the calls and to manage authentication, but to use the jfg client for payload structure. In the case of xray, this was 
+not possible, and the original structure code was preserved. 
 
 ## License requirements:
 
