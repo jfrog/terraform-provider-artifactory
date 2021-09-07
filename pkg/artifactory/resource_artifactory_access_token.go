@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/go-resty/resty/v2"
 	"github.com/google/go-querystring/query"
 	"log"
 	"net/http"

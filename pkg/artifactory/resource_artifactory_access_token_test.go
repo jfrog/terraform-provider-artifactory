@@ -421,7 +421,7 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 			if resp == nil {
 				return fmt.Errorf("no response returned for testAccCheckAccessTokenDestroy")
 			}
-			if resp.StatusCode() == http.StatusForbidden {
+			if resp.StatusCode() == http.StatusUnauthorized {
 				return nil
 			}
 			return fmt.Errorf("failed to ping server. Got %s", err)

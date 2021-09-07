@@ -14,24 +14,7 @@ import (
 const groupsEndpoint = "artifactory/api/security/groups/"
 
 
-
 func resourceArtifactoryGroup() *schema.Resource {
-	var autoJoinAdminValidate = func() func(i interface{}, k string) ([]string, []error) {
-		autoJoin, admin := false, false
-
-		return func(value interface{}, key string) ([]string, []error) {
-			switch key {
-			case "auto_join":
-				autoJoin = value.(bool)
-			case "admin_privileges":
-				admin = value.(bool)
-			}
-			if autoJoin && admin {
-				return nil, []error{fmt.Errorf("admin privs on auto_join groups is not allowed")}
-			}
-			return nil, nil
-		}
-	}()
 	return &schema.Resource{
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
@@ -58,13 +41,11 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: autoJoinAdminValidate,
 			},
 			"admin_privileges": {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: autoJoinAdminValidate,
 			},
 			"realm": {
 				Type:         schema.TypeString,
