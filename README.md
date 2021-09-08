@@ -5,8 +5,24 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jfrog/terraform)
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
+## Release notes for 2.3.1
+With the major version release of 2.3.1, all remnants of the original atlassian code have been pitched. A real effort 
+was made to sustain backward compatibility. For a variety of reasons, this was not possible. In some cases it simply
+couldn't be supported.
 
-## Important note:
+In this release, all the rest clients were replaced with a single client: [Resty](https://github.com/go-resty/resty).
+The last major release before this major bump was 2.2.15, and it had no less than 4 different clients in use. In some
+cases, the jfrog-client-go code could have worked, but in others cases it was fundamentally incompatible with the way
+terraform needed to operate as the jfrog go client directly interpreted results as being errored or not (using non-standard
+error codes). In addition, the objective of this release is *not* to upgrade to new APIs, but to simply get rid of all the clients
+and get the tests passing. Since several of the V1 apis that this TF provider uses are not available in the jf-go client 
+this gave further reason to go it alone.
+
+The end result is much more transparent code and complete portability. The final approach taken was to use resty for all
+the calls and to manage authentication, but to use the jfg client for payload structure. In the case of xray, this was 
+not possible, and the original structure code was preserved. 
+
+## License requirements:
 
 This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions.
 You can determine which license you have by accessing the following URL
@@ -28,6 +44,41 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 - JCR Edition
 - OSS
 
+## Limitations of functionality
+The current way a repository is created is essentially through a union of fields of certain repo types. 
+It's important to note that, the official documentation is used only for inspiration as the documentation is quite wrong.
+Support for some features has been achieved entirely through reverse engineering.
+
+### Local repository limitations
+[Local repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-LocalRepository)
+does not support (directly), repository specific fields in all cases. It's basically a union of
+- Base repo params
+- Maven
+- Gradle
+- Debian
+- Docker (v1)
+- RPM
+
+### Remote repository limitations
+[Remote repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-RemoteRepository) 
+does not support (directly), repository specific fields in all cases. It's basically a union of
+- base remote repo params
+- bower support
+- maven
+- gradle
+- Docker (v1)
+- VCS
+- Pypi
+- Nuget 
+Query params may be forwarded, but this field doesn't exist in the documentation
+
+### Permission target limitations
+[Permission target V2](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplacePermissionTarget)
+Permission target V1 support has been totally removed. Dynamically testing of permission targets using a new repository
+currently doesn't work because of race conditions when creating a repo. This will have to be resolved with retries at a 
+later date. 
+
+
 
 ## Build the Provider
 Simply run `make install` - this will compile the provider and install it to `~/.terraform.d`. When running this, it will
@@ -42,6 +93,8 @@ Requirements:
 How to run the tests isn't obvious.
 First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local
 version. You can ask for an instance to test against in as part of your PR or by messaging the maintainer in gitter
+Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same
+directory called `artifactory.lic`, you can start just an artifactory instance. The license, however, is not supplied
 
 Once you have that done you must set the following properties
 
@@ -136,7 +189,6 @@ and is willing to have it used in distributions and derivative works
 [Sign the CLA](https://cla-assistant.io/jfrog/terraform-provider-artifactory)
 
 ## License
-Copyright (c) 2019 Atlassian and others.  
 Copyright (c) 2020 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.

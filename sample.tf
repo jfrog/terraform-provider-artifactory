@@ -12,7 +12,7 @@ variable "supported_repo_types" {
   default = [
     "alpine",
     "bower",
-    "cargo", // xray refuses to watch these
+    "cargo", // xray refuses to watch these. They also require a mandatory field we can't currently support
     "chef",
     "cocoapods",
     "composer",
@@ -45,7 +45,7 @@ variable "supported_repo_types" {
 }
 resource "artifactory_local_repository" "local" {
   count = length(var.supported_repo_types)
-  key = "${var.supported_repo_types[count.index]}-local"
+  key =
   package_type = var.supported_repo_types[count.index]
   xray_index = false
   description = "hello ${var.supported_repo_types[count.index]}-local"

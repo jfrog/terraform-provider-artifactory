@@ -1,13 +1,12 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/atlassian/go-artifactory/v2/artifactory"
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
@@ -90,130 +89,116 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 	}
 }
 
-func unpackVirtualRepository(s *schema.ResourceData) *v1.VirtualRepository {
-	d := &ResourceData{s}
-	repo := new(v1.VirtualRepository)
+type MessyVirtualRepo struct {
+	services.VirtualRepositoryBaseParams
+	services.DebianVirtualRepositoryParams
+	services.MavenVirtualRepositoryParams
+	services.NugetVirtualRepositoryParams
+}
 
-	repo.Key = d.getStringRef("key", false)
-	repo.RClass = artifactory.String("virtual")
-	repo.PackageType = d.getStringRef("package_type", false)
-	repo.IncludesPattern = d.getStringRef("includes_pattern", false)
-	repo.ExcludesPattern = d.getStringRef("excludes_pattern", false)
-	repo.RepoLayoutRef = d.getStringRef("repo_layout_ref", false)
+func (repo MessyVirtualRepo) Id() string {
+	return repo.Key
+}
+func unpackVirtualRepository(s *schema.ResourceData) MessyVirtualRepo {
+	d := &ResourceData{s}
+	repo := MessyVirtualRepo{}
+
+	repo.Key = d.getString("key", false)
+	repo.Rclass = "virtual"
+	repo.PackageType = d.getString("package_type", false)
+	repo.IncludesPattern = d.getString("includes_pattern", false)
+	repo.ExcludesPattern = d.getString("excludes_pattern", false)
+	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
 	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts", false)
-	repo.Repositories = d.getListRef("repositories")
-	repo.Description = d.getStringRef("description", false)
-	repo.Notes = d.getStringRef("notes", false)
-	repo.KeyPair = d.getStringRef("key_pair", false)
-	repo.PomRepositoryReferencesCleanupPolicy = d.getStringRef("pom_repository_references_cleanup_policy", false)
-	repo.DefaultDeploymentRepo = d.getStringRef("default_deployment_repo", false)
+	repo.Repositories = d.getList("repositories")
+	repo.Description = d.getString("description", false)
+	repo.Notes = d.getString("notes", false)
+	repo.KeyPair = d.getString("key_pair", false)
+	repo.PomRepositoryReferencesCleanupPolicy = d.getString("pom_repository_references_cleanup_policy", false)
+	repo.DefaultDeploymentRepo = d.getString("default_deployment_repo", false)
+	// because this doesn't apply to all repo types, RT isn't required to honor what you tell it.
+	// So, saying the type is "maven" but then setting this to 'true' doesn't make sense, and RT doesn't seem to care what you tell it
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
 
 	return repo
 }
 
-func packVirtualRepository(repo *v1.VirtualRepository, d *schema.ResourceData) error {
-	hasErr := false
-	logErr := cascadingErr(&hasErr)
+func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error {
+	setValue := mkLens(d)
 
-	logErr(d.Set("key", repo.Key))
-	logErr(d.Set("package_type", repo.PackageType))
-	logErr(d.Set("description", repo.Description))
-	logErr(d.Set("notes", repo.Notes))
-	logErr(d.Set("includes_pattern", repo.IncludesPattern))
-	logErr(d.Set("excludes_pattern", repo.ExcludesPattern))
-	logErr(d.Set("repo_layout_ref", repo.RepoLayoutRef))
-	logErr(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
-	logErr(d.Set("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts))
-	logErr(d.Set("key_pair", repo.KeyPair))
-	logErr(d.Set("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy))
-	logErr(d.Set("default_deployment_repo", repo.DefaultDeploymentRepo))
-	logErr(d.Set("repositories", repo.Repositories))
-	logErr(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
+	setValue("key", repo.Key)
+	setValue("package_type", repo.PackageType)
+	setValue("description", repo.Description)
+	setValue("notes", repo.Notes)
+	setValue("includes_pattern", repo.IncludesPattern)
+	setValue("excludes_pattern", repo.ExcludesPattern)
+	setValue("repo_layout_ref", repo.RepoLayoutRef)
+	setValue("debian_trivial_layout", repo.DebianTrivialLayout)
+	setValue("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
+	setValue("key_pair", repo.KeyPair)
+	setValue("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
+	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
+	setValue("repositories", repo.Repositories)
+	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
-	if hasErr {
-		return fmt.Errorf("failed to pack virtual repo")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack virtual repo %q", errors)
 	}
 
 	return nil
 }
 
 func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
 	repo := unpackVirtualRepository(d)
 
-	_, err := c.V1.Repositories.CreateVirtual(context.Background(), repo)
+	_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
+
 	if err != nil {
 		return err
 	}
-
-	d.SetId(*repo.Key)
+	d.SetId(repo.Key)
 	return resourceVirtualRepositoryRead(d, m)
 }
 
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	repo, resp, err := c.V1.Repositories.GetVirtual(context.Background(), d.Id())
+	repo := MessyVirtualRepo{}
+	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 
 	if err != nil {
+		if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
-
 	return packVirtualRepository(repo, d)
 }
 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
 	repo := unpackVirtualRepository(d)
 
-	_, err := c.V1.Repositories.UpdateVirtual(context.Background(), d.Id(), repo)
+	_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*repo.Key)
+	d.SetId(repo.Key)
 	return resourceVirtualRepositoryRead(d, m)
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-	repo := unpackVirtualRepository(d)
+	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 
-	resp, err := c.V1.Repositories.DeleteVirtual(context.Background(), *repo.Key)
-
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
+	if err != nil && (resp != nil && resp.StatusCode() == http.StatusNotFound) {
 		d.SetId("")
 		return nil
 	}
-	return nil
+	return err
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	c := m.(*ArtClient).ArtOld
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
 
-	key := d.Id()
-	_, resp, err := c.V1.Repositories.GetVirtual(context.Background(), key)
-
-	if err != nil {
-		return false, err
-	}
-	// Cannot check for 404 because artifactory returns 400
-	if resp.StatusCode == http.StatusBadRequest {
-		return false, nil
-	}
-
-	return true, nil
+	return err == nil, err
 }

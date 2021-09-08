@@ -1,14 +1,14 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jasonwbarnett/go-xray/xray"
+	"github.com/go-resty/resty/v2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccWatch_basic(t *testing.T) {
@@ -148,17 +148,16 @@ func testAccCheckWatchDoesntExist(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckWatchDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*xray.Xray)
+	client := testAccProvider.Meta().(*resty.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "xray_watch" {
-			watch, resp, err := conn.V2.Watches.GetWatch(context.Background(), rs.Primary.ID)
-
-			if resp != nil && resp.StatusCode == http.StatusNotFound {
-				continue
-			}
-
+			watch := Watch{}
+			resp, err := client.R().SetResult(&watch).Get("xray/api/v2/watches/" + rs.Primary.ID)
 			if err != nil {
+				if resp != nil && resp.StatusCode() == http.StatusNotFound {
+					continue
+				}
 				return err
 			}
 
@@ -166,10 +165,10 @@ func testAccCheckWatchDestroy(s *terraform.State) error {
 
 		}
 		if rs.Type == "xray_policy" {
-			policy, resp, err := conn.V1.Policies.GetPolicy(context.Background(), rs.Primary.ID)
+			policy, resp, err := getPolicy(rs.Primary.ID, client)
 
 			if err != nil {
-				if resp != nil && resp.StatusCode == http.StatusInternalServerError &&
+				if resp != nil && resp.StatusCode() == http.StatusInternalServerError &&
 					err.Error() != fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
 					continue
 				}

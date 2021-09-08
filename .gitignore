@@ -8,3 +8,4 @@ vendor/
 terraform.tfstate
 terraform.tfstate.backup
 lib/
+*.lic

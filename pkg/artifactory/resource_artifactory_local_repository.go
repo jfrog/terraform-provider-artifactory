@@ -2,9 +2,13 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
+
+	"github.com/go-resty/resty/v2"
+
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 func resourceArtifactoryLocalRepository() *schema.Resource {
@@ -20,9 +24,10 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
 				Type:         schema.TypeString,
@@ -154,43 +159,39 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	repo := MessyRepo{}
 
 	repo.Rclass = "local"
-	repo.Key = d.getString("key",false)
-	repo.PackageType = d.getString("package_type",false)
-	repo.Description = d.getString("description",false)
-	repo.Notes = d.getString("notes",false)
-	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout",false)
-	repo.IncludesPattern = d.getString("includes_pattern",false)
-	repo.ExcludesPattern = d.getString("excludes_pattern",false)
-	repo.RepoLayoutRef = d.getString("repo_layout_ref",false)
-	repo.MaxUniqueTags = d.getInt("max_unique_tags",false)
+	repo.Key = d.getString("key", false)
+	repo.PackageType = d.getString("package_type", false)
+	repo.Description = d.getString("description", false)
+	repo.Notes = d.getString("notes", false)
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
+	repo.IncludesPattern = d.getString("includes_pattern", false)
+	repo.ExcludesPattern = d.getString("excludes_pattern", false)
+	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
+	repo.MaxUniqueTags = d.getInt("max_unique_tags", false)
 	repo.BlackedOut = d.getBoolRef("blacked_out", false)
 	repo.CalculateYumMetadata = d.getBoolRef("calculate_yum_metadata", false)
-	repo.YumRootDepth = d.getInt("yum_root_depth",false)
+	repo.YumRootDepth = d.getInt("yum_root_depth", false)
 	repo.ArchiveBrowsingEnabled = d.getBoolRef("archive_browsing_enabled", false)
-	repo.DockerApiVersion = d.getString("docker_api_verision",false)
+	repo.DockerApiVersion = d.getString("docker_api_verision", false)
 	repo.EnableFileListsIndexing = d.getBoolRef("enable_file_lists_indexing", false)
 	repo.PropertySets = d.getSet("property_sets")
 	repo.HandleReleases = d.getBoolRef("handle_releases", false)
 	repo.HandleSnapshots = d.getBoolRef("handle_snapshots", false)
-	repo.ChecksumPolicyType = d.getString("checksum_policy_type",false)
-	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots",false)
-	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior",false)
+	repo.ChecksumPolicyType = d.getString("checksum_policy_type", false)
+	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots", false)
+	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior", false)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", false)
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
-	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication",false)
+	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
 	return repo
 }
 
 func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 
-	client := m.(*ArtClient).Resty
-
 	repo := unmarshalLocalRepository(d)
 
-	_, err := client.R().SetBody(repo).
-		SetHeader("accept", "text/plain").
-		SetBody(repo).Put("/artifactory/api/repositories/" + repo.Key)
+	_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 
 	if err != nil {
 		return err
@@ -200,66 +201,65 @@ func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
 
 	repo := MessyRepo{}
 	if d.Id() == "" {
 		return fmt.Errorf("no id given")
 	}
 
-	resp, err := client.R().SetResult(&repo).Get("/artifactory/api/repositories/" + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound{
-			d.SetId("")
-			return nil
+		if resp != nil {
+			if resp.StatusCode() == http.StatusNotFound {
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("error: id: %s %s %s", d.Id(), err, string(resp.Body()[:]))
 		}
-		return fmt.Errorf("error: id: %s %s %s", d.Id(), err, string(resp.Body()[:]))
+		return err
 	}
 
-	hasErr := false
-	logError := cascadingErr(&hasErr)
+	setValue := mkLens(d)
 
-	logError(d.Set("key", repo.Key))
+	setValue("key", repo.Key)
 	// type 'yum' is not to be supported, as this is really of type 'rpm'. When 'yum' is used on create, RT will
 	// respond with 'rpm' and thus confuse TF into think there has been a state change.
-	logError(d.Set("package_type", repo.PackageType))
-	logError(d.Set("description", repo.Description))
-	logError(d.Set("notes", repo.Notes))
-	logError(d.Set("includes_pattern", repo.IncludesPattern))
-	logError(d.Set("excludes_pattern", repo.ExcludesPattern))
-	logError(d.Set("repo_layout_ref", repo.RepoLayoutRef))
-	logError(d.Set("debian_trivial_layout", repo.DebianTrivialLayout))
-	logError(d.Set("max_unique_tags", repo.MaxUniqueTags))
-	logError(d.Set("blacked_out", repo.BlackedOut))
-	logError(d.Set("archive_browsing_enabled", repo.ArchiveBrowsingEnabled))
-	logError(d.Set("calculate_yum_metadata", repo.CalculateYumMetadata))
-	logError(d.Set("yum_root_depth", repo.YumRootDepth))
-	logError(d.Set("docker_api_version", repo.DockerApiVersion))
-	logError(d.Set("enable_file_lists_indexing", repo.EnableFileListsIndexing))
-	logError(d.Set("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(repo.PropertySets))))
-	logError(d.Set("handle_releases", repo.HandleReleases))
-	logError(d.Set("handle_snapshots", repo.HandleSnapshots))
-	logError(d.Set("checksum_policy_type", repo.ChecksumPolicyType))
-	logError(d.Set("max_unique_snapshots", repo.MaxUniqueSnapshots))
-	logError(d.Set("snapshot_version_behavior", repo.SnapshotVersionBehavior))
-	logError(d.Set("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks))
-	logError(d.Set("xray_index", repo.XrayIndex))
-	logError(d.Set("force_nuget_authentication", repo.ForceNugetAuthentication))
+	setValue("package_type", repo.PackageType)
+	setValue("description", repo.Description)
+	setValue("notes", repo.Notes)
+	setValue("includes_pattern", repo.IncludesPattern)
+	setValue("excludes_pattern", repo.ExcludesPattern)
+	setValue("repo_layout_ref", repo.RepoLayoutRef)
+	setValue("debian_trivial_layout", repo.DebianTrivialLayout)
+	setValue("max_unique_tags", repo.MaxUniqueTags)
+	setValue("blacked_out", repo.BlackedOut)
+	setValue("archive_browsing_enabled", repo.ArchiveBrowsingEnabled)
+	setValue("calculate_yum_metadata", repo.CalculateYumMetadata)
+	setValue("yum_root_depth", repo.YumRootDepth)
+	setValue("docker_api_version", repo.DockerApiVersion)
+	setValue("enable_file_lists_indexing", repo.EnableFileListsIndexing)
+	setValue("property_sets", schema.NewSet(schema.HashString, castToInterfaceArr(repo.PropertySets)))
+	setValue("handle_releases", repo.HandleReleases)
+	setValue("handle_snapshots", repo.HandleSnapshots)
+	setValue("checksum_policy_type", repo.ChecksumPolicyType)
+	setValue("max_unique_snapshots", repo.MaxUniqueSnapshots)
+	setValue("snapshot_version_behavior", repo.SnapshotVersionBehavior)
+	setValue("suppress_pom_consistency_checks", repo.SuppressPomConsistencyChecks)
+	setValue("xray_index", repo.XrayIndex)
+	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
-	if hasErr {
-		return fmt.Errorf("failed saving state for local repos")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed saving state for local repos %q", errors)
 	}
 
 	return nil
 }
 
 func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
 	repo := unmarshalLocalRepository(d)
 
-	_, err := client.R().SetBody(repo).SetHeader("accept", "text/plain").
-		Post("/artifactory/api/repositories/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(repo).SetHeader("accept", "text/plain").
+		Post(repositoriesEndpoint + d.Id())
 
 	if err != nil {
 		return err
@@ -269,16 +269,12 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().SetHeader("accept", "*/*").Delete("/artifactory/api/repositories/" + d.Id())
+	_, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 	return err
 }
 
 func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().Head("/artifactory/api/repositories/" + d.Id())
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
 	// artifactory returns 400 instead of 404. but regardless, it's an error
 	return err == nil, err
 }

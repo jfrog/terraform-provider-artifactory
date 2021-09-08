@@ -1,15 +1,64 @@
 package artifactory
 
 import (
-	"context"
 	"log"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/jasonwbarnett/go-xray/xray"
-	v2 "github.com/jasonwbarnett/go-xray/xray/v2"
+	"github.com/go-resty/resty/v2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+// WatchGeneralData this struct and all the others below it line up identically with the
+// structs from the V2 go client from jfrog with one fatal exception: None of these nested types is exported
+// and it's totally inconsistent with the rest of the code.
+// Option are: move this code into the terraform space, as is, or beg the jfrog-go-client
+// team to captial case those variables. I ticket will be filed, but I am not hopeful.
+type WatchGeneralData struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Active      *bool   `json:"active,omitempty"`
+}
+
+type WatchFilterValue struct {
+	Key   *string `json:"key,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+// WatchFilterValueWrapper is a wrapper around WatchFilterValue which handles the API returning both a string and an object for the watch filter value
+type WatchFilterValueWrapper struct {
+	WatchFilterValue
+	IsPropertyFilter bool `json:”-”`
+}
+
+type WatchFilter struct {
+	Type  *string                  `json:"type,omitempty"`
+	Value *WatchFilterValueWrapper `json:"value,omitempty"`
+}
+
+type WatchProjectResource struct {
+	Type            *string        `json:"type,omitempty"`
+	RepoType        *string        `json:"repo_type,omitempty"`
+	BinaryManagerId *string        `json:"bin_mgr_id,omitempty"`
+	Name            *string        `json:"name,omitempty"`
+	Filters         *[]WatchFilter `json:"filters,omitempty"`
+}
+
+type WatchProjectResources struct {
+	Resources *[]WatchProjectResource `json:"resources,omitempty"`
+}
+
+type WatchAssignedPolicy struct {
+	Name *string `json:"name,omitempty"`
+	Type *string `json:"type,omitempty"`
+}
+
+type Watch struct {
+	GeneralData      *WatchGeneralData      `json:"general_data,omitempty"`
+	ProjectResources *WatchProjectResources `json:"project_resources,omitempty"`
+	AssignedPolicies *[]WatchAssignedPolicy `json:"assigned_policies,omitempty"`
+}
 
 func resourceXrayWatch() *schema.Resource {
 	return &schema.Resource{
@@ -113,23 +162,23 @@ func resourceXrayWatch() *schema.Resource {
 	}
 }
 
-func expandWatch(d *schema.ResourceData) *v2.Watch {
-	watch := new(v2.Watch)
+func expandWatch(d *schema.ResourceData) *Watch {
+	watch := new(Watch)
 
-	gd := &v2.WatchGeneralData{
-		Name: xray.String(d.Get("name").(string)),
+	gd := &WatchGeneralData{
+		Name: StringPtr(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("description"); ok {
-		gd.Description = xray.String(v.(string))
+		gd.Description = StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("active"); ok {
-		gd.Active = xray.Bool(v.(bool))
+		gd.Active = BoolPtr(v.(bool))
 	}
 	watch.GeneralData = gd
 
-	pr := &v2.WatchProjectResources{}
+	pr := &WatchProjectResources{}
 	if v, ok := d.GetOk("resources"); ok {
-		r := &[]v2.WatchProjectResource{}
+		r := &[]WatchProjectResource{}
 		for _, res := range v.([]interface{}) {
 			*r = append(*r, *expandProjectResource(res))
 		}
@@ -137,7 +186,7 @@ func expandWatch(d *schema.ResourceData) *v2.Watch {
 	}
 	watch.ProjectResources = pr
 
-	ap := &[]v2.WatchAssignedPolicy{}
+	ap := &[]WatchAssignedPolicy{}
 	if v, ok := d.GetOk("assigned_policies"); ok {
 		for _, pol := range v.([]interface{}) {
 			*ap = append(*ap, *expandAssignedPolicy(pol))
@@ -148,19 +197,19 @@ func expandWatch(d *schema.ResourceData) *v2.Watch {
 	return watch
 }
 
-func expandProjectResource(rawCfg interface{}) *v2.WatchProjectResource {
-	resource := new(v2.WatchProjectResource)
+func expandProjectResource(rawCfg interface{}) *WatchProjectResource {
+	resource := new(WatchProjectResource)
 
 	cfg := rawCfg.(map[string]interface{})
-	resource.Type = xray.String(cfg["type"].(string))
+	resource.Type = StringPtr(cfg["type"].(string))
 	if v, ok := cfg["bin_mgr_id"]; ok {
-		resource.BinaryManagerId = xray.String(v.(string))
+		resource.BinaryManagerId = StringPtr(v.(string))
 	}
 	if v, ok := cfg["repo_type"]; ok {
-		resource.RepoType = xray.String(v.(string))
+		resource.RepoType = StringPtr(v.(string))
 	}
 	if v, ok := cfg["name"]; ok {
-		resource.Name = xray.String(v.(string))
+		resource.Name = StringPtr(v.(string))
 	}
 	if v, ok := cfg["filters"]; ok {
 		resourceFilters := expandFilters(v.([]interface{}))
@@ -170,16 +219,16 @@ func expandProjectResource(rawCfg interface{}) *v2.WatchProjectResource {
 	return resource
 }
 
-func expandFilters(l []interface{}) []v2.WatchFilter {
-	filters := make([]v2.WatchFilter, 0, len(l))
+func expandFilters(l []interface{}) []WatchFilter {
+	filters := make([]WatchFilter, 0, len(l))
 
 	for _, raw := range l {
-		filter := new(v2.WatchFilter)
+		filter := new(WatchFilter)
 		f := raw.(map[string]interface{})
-		filter.Type = xray.String(f["type"].(string))
-		valueWrapper := new(v2.WatchFilterValueWrapper)
-		fv := new(v2.WatchFilterValue)
-		fv.Value = xray.String(f["value"].(string))
+		filter.Type = StringPtr(f["type"].(string))
+		valueWrapper := new(WatchFilterValueWrapper)
+		fv := new(WatchFilterValue)
+		fv.Value = StringPtr(f["value"].(string))
 		valueWrapper.WatchFilterValue = *fv
 		filter.Value = valueWrapper
 
@@ -189,17 +238,17 @@ func expandFilters(l []interface{}) []v2.WatchFilter {
 	return filters
 }
 
-func expandAssignedPolicy(rawCfg interface{}) *v2.WatchAssignedPolicy {
-	policy := new(v2.WatchAssignedPolicy)
+func expandAssignedPolicy(rawCfg interface{}) *WatchAssignedPolicy {
+	policy := new(WatchAssignedPolicy)
 
 	cfg := rawCfg.(map[string]interface{})
-	policy.Name = xray.String(cfg["name"].(string))
-	policy.Type = xray.String(cfg["type"].(string))
+	policy.Name = StringPtr(cfg["name"].(string))
+	policy.Type = StringPtr(cfg["type"].(string))
 
 	return policy
 }
 
-func flattenProjectResources(resources *v2.WatchProjectResources) []interface{} {
+func flattenProjectResources(resources *WatchProjectResources) []interface{} {
 	if resources == nil || resources.Resources == nil {
 		return []interface{}{}
 	}
@@ -224,7 +273,7 @@ func flattenProjectResources(resources *v2.WatchProjectResources) []interface{} 
 	return l
 }
 
-func flattenFilters(filters *[]v2.WatchFilter) []interface{} {
+func flattenFilters(filters *[]WatchFilter) []interface{} {
 	if filters == nil {
 		return []interface{}{}
 	}
@@ -240,7 +289,7 @@ func flattenFilters(filters *[]v2.WatchFilter) []interface{} {
 	return l
 }
 
-func flattenAssignedPolicies(policies *[]v2.WatchAssignedPolicy) []interface{} {
+func flattenAssignedPolicies(policies *[]WatchAssignedPolicy) []interface{} {
 	if policies == nil {
 		return []interface{}{}
 	}
@@ -257,11 +306,9 @@ func flattenAssignedPolicies(policies *[]v2.WatchAssignedPolicy) []interface{} {
 }
 
 func resourceXrayWatchCreate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Xray
 
 	watch := expandWatch(d)
-
-	_, err := c.V2.Watches.CreateWatch(context.Background(), watch)
+	_, err := m.(*resty.Client).R().SetBody(&watch).Post("xray/api/v2/watches")
 	if err != nil {
 		return err
 	}
@@ -271,18 +318,16 @@ func resourceXrayWatchCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Xray
-
-	watch, resp, err := c.V2.Watches.GetWatch(context.Background(), d.Id())
-
+	watch := Watch{}
+	resp, err := m.(*resty.Client).R().SetResult(&watch).Get("xray/api/v2/watches/" + d.Id())
 	if err != nil {
-		return err
-	}
 
-	if resp.StatusCode == http.StatusNotFound {
-		log.Printf("[WARN] Xray watch (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			log.Printf("[WARN] Xray watch (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
 	}
 
 	if err := d.Set("description", watch.GeneralData.Description); err != nil {
@@ -302,10 +347,8 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceXrayWatchUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Xray
-
 	watch := expandWatch(d)
-	_, err := c.V2.Watches.UpdateWatch(context.Background(), d.Id(), watch)
+	_, err := m.(*resty.Client).R().SetBody(&watch).Put("xray/api/v2/watches/" + d.Id())
 	if err != nil {
 		return err
 	}
@@ -315,10 +358,6 @@ func resourceXrayWatchUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).Xray
-
-	_, err := c.V2.Watches.DeleteWatch(context.Background(), d.Id())
-
-
+	_, err := m.(*resty.Client).R().Delete("xray/api/v2/watches/" + d.Id())
 	return err
 }

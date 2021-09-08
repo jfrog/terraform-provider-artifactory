@@ -7,11 +7,27 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
-	v1 "github.com/atlassian/go-artifactory/v2/artifactory/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+const endpoint = "artifactory/api/system/security/certificates/"
+
+// CertificateDetails this type doesn't even exist in the new go client. In fact, the whole API call doesn't
+type CertificateDetails struct {
+	CertificateAlias string `json:"certificateAlias,omitempty"`
+	IssuedTo         string `json:"issuedTo,omitempty"`
+	IssuedBy         string `json:"issuedby,omitempty"`
+	IssuedOn         string `json:"issuedOn,omitempty"`
+	ValidUntil       string `json:"validUntil,omitempty"`
+	FingerPrint      string `json:"fingerPrint,omitempty"`
+}
 
 func resourceArtifactoryCertificate() *schema.Resource {
 	return &schema.Resource{
@@ -33,8 +49,39 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 			"content": {
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
+				ValidateFunc: validation.All(
+					validation.StringIsNotEmpty,
+					func(value interface{}, key string) ([]string, []error) {
+						_, err := extractCertificate(value.(string))
+						if err != nil {
+							return nil, []error{err}
+						}
+						return nil, nil
+					},
+				),
+			},
+			"file": {
+				Type:         schema.TypeString,
+				Sensitive:    true,
+				Optional:     true,
+				ExactlyOneOf: []string{"content", "file"},
+				ValidateFunc: func(value interface{}, key string) ([]string, []error) {
+					var errors []error
+					if _, err := os.Stat(value.(string)); err != nil {
+						return nil, append(errors, err)
+					}
+					data, err := ioutil.ReadFile(value.(string))
+					if err != nil {
+						return nil, append(errors, err)
+					}
+					_, err = extractCertificate(string(data))
+					if err != nil {
+						return nil, append(errors, err)
+					}
+					return nil, nil
+				},
 			},
 			"fingerprint": {
 				Type:     schema.TypeString,
@@ -58,20 +105,23 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(d *schema.ResourceDiff, v interface{}) error {
-			fingerprint, err := calculateFingerPrint(d.Get("content").(string))
-			if err != nil {
-				return err
-			}
-			if d.Get("fingerprint").(string) != fingerprint {
-				if err := d.SetNewComputed("fingerprint"); err != nil {
-					fmt.Println(err)
-					return err
-				}
-			}
-			return nil
-		},
+		CustomizeDiff: calculateFingerprint,
 	}
+}
+
+func calculateFingerprint(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	content, err := getContentFromDiff(d)
+	fingerprint, err := calculateFingerPrint(content)
+	if err != nil {
+		return err
+	}
+	if d.Get("fingerprint").(string) != fingerprint {
+		if err = d.SetNewComputed("fingerprint"); err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func formatFingerPrint(f []byte) string {
@@ -114,17 +164,18 @@ func calculateFingerPrint(pemData string) (string, error) {
 	return formatFingerPrint(fingerprint[:]), nil
 }
 
-func findCertificate(d *schema.ResourceData, m interface{}) (*v1.CertificateDetails, error) {
-	c := m.(*ArtClient).ArtOld
+func findCertificate(alias string, m interface{}) (*CertificateDetails, error) {
+	c := m.(*resty.Client)
+	certificates := new([]CertificateDetails)
+	_, err := c.R().SetResult(certificates).Get(endpoint)
 
-	certs, _, err := c.V1.Security.GetCertificates(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	// No way other than to loop through each certificate
-	for _, cert := range *certs {
-		if *cert.CertificateAlias == d.Id() {
+	for _, cert := range *certificates {
+		if cert.CertificateAlias == alias {
 			return &cert, nil
 		}
 	}
@@ -138,24 +189,23 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
-	cert, err := findCertificate(d, m)
+	cert, err := findCertificate(d.Id(), m)
 	if err != nil {
 		return err
 	}
 
 	if cert != nil {
-		hasErr := false
-		logErr := cascadingErr(&hasErr)
+		setValue := mkLens(d)
 
-		logErr(d.Set("alias", *cert.CertificateAlias))
-		logErr(d.Set("fingerprint", *cert.FingerPrint))
-		logErr(d.Set("issued_by", *cert.IssuedBy))
-		logErr(d.Set("issued_on", *cert.IssuedOn))
-		logErr(d.Set("issued_to", *cert.IssuedTo))
-		logErr(d.Set("valid_until", *cert.ValidUntil))
+		setValue("alias", (*cert).CertificateAlias)
+		setValue("fingerprint", (*cert).FingerPrint)
+		setValue("issued_by", (*cert).IssuedBy)
+		setValue("issued_on", (*cert).IssuedOn)
+		setValue("issued_to", (*cert).IssuedTo)
+		errors := setValue("valid_until", (*cert).ValidUntil)
 
-		if hasErr {
-			return fmt.Errorf("failed to pack certificate")
+		if errors != nil && len(errors) > 0 {
+			return fmt.Errorf("failed to pack certificate %q", errors)
 		}
 
 		return nil
@@ -166,10 +216,50 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
+func getContentFromDiff(d *schema.ResourceDiff) (string, error) {
+	content, contentExists := d.GetOkExists("content")
+	file, fileExists := d.GetOkExists("file")
 
-	_, _, err := c.V1.Security.AddCertificate(context.Background(), d.Id(), strings.NewReader(d.Get("content").(string)))
+	if contentExists == fileExists {
+		return "", fmt.Errorf("you must define 'content' as the contents of the pem file, OR set 'file' to the path of your pem file ")
+	}
+
+	if contentExists {
+		return content.(string), nil
+	}
+	if fileExists {
+		data, err := ioutil.ReadFile(file.(string))
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	}
+	return "", fmt.Errorf("mmm, couldn't get content or file. You need either a content or a file")
+}
+
+func getContentFromData(d *schema.ResourceData) (string, error) {
+
+	if content, ok := d.GetOkExists("content"); ok {
+		return content.(string), nil
+	}
+	if file, ok := d.GetOkExists("file"); ok {
+		data, err := ioutil.ReadFile(file.(string))
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	}
+	return "", fmt.Errorf("mmm, couldn't get content or file. You need either a content or a file")
+}
+
+func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
+	content, err := getContentFromData(d)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(endpoint + d.Id())
+
 	if err != nil {
 		return err
 	}
@@ -178,9 +268,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
-	c := m.(*ArtClient).ArtOld
-
-	_, _, err := c.V1.Security.DeleteCertificate(context.Background(), d.Id())
+	_, err := m.(*resty.Client).R().Delete(endpoint + d.Id())
 	if err != nil {
 		return err
 	}
@@ -191,14 +279,6 @@ func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	cert, err := findCertificate(d, m)
-	if err != nil {
-		return false, err
-	}
-
-	if cert != nil {
-		return true, nil
-	}
-
-	return false, nil
+	cert, err := findCertificate(d.Id(), m)
+	return err == nil && cert != nil, err
 }
