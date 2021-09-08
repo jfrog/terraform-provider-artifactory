@@ -2,10 +2,11 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"net/http"
 )
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
@@ -162,7 +163,7 @@ func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) erro
 
 func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	repo := MessyVirtualRepo{}
-	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint+ d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
@@ -177,7 +178,7 @@ func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error 
 func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
 	repo := unpackVirtualRepository(d)
 
-	_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint+ d.Id())
+	_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
 	if err != nil {
 		return err
 	}
@@ -187,7 +188,7 @@ func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint+ d.Id())
+	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && resp.StatusCode() == http.StatusNotFound) {
 		d.SetId("")
@@ -197,7 +198,7 @@ func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint+ d.Id())
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
 
 	return err == nil, err
 }

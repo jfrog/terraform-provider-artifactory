@@ -5,11 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
 	"text/template"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -110,7 +111,7 @@ func getMD5Hash(o interface{}) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(o.(string)))
 	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	return  hex.EncodeToString(hasher.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 var randomInt = func() func() int {
@@ -129,15 +130,14 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 }
 
 func repoExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint+ id)
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + id)
 
 	return err == nil, err
 }
 
-
-func executeTemplate(name, temp string, fields interface{} ) string {
+func executeTemplate(name, temp string, fields interface{}) string {
 	var tpl bytes.Buffer
-	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl,fields); err != nil {
+	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
 		panic(err)
 	}
 

@@ -2,17 +2,17 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"net/http"
-	"net/url"
 )
 
 var Version = "2.2.16"
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
-
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
@@ -166,7 +166,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-
 
 	return restyBase, nil
 

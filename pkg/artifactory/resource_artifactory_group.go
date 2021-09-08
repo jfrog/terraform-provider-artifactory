@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+
 	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,7 +14,6 @@ import (
 )
 
 const groupsEndpoint = "artifactory/api/security/groups/"
-
 
 func resourceArtifactoryGroup() *schema.Resource {
 	return &schema.Resource{
@@ -39,14 +39,14 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Optional: true,
 			},
 			"auto_join": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			"admin_privileges": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			"realm": {
 				Type:         schema.TypeString,
@@ -181,7 +181,7 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return groupExists(m.(*resty.Client),d.Id())
+	return groupExists(m.(*resty.Client), d.Id())
 }
 
 func groupExists(client *resty.Client, groupName string) (bool, error) {

@@ -3,16 +3,17 @@ package artifactory
 import (
 	"errors"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/google/go-querystring/query"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/google/go-querystring/query"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AccessTokenRevokeOptions jfrog client go has no v1 code and moving to v2 would be a lot of work.

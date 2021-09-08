@@ -4,31 +4,33 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"io"
 	"os"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
 type FileInfo struct {
-	Repo                   string             `json:"repo,omitempty"`
-	Path                   string             `json:"path,omitempty"`
-	Created                string             `json:"created,omitempty"`
-	CreatedBy              string             `json:"createdBy,omitempty"`
-	LastModified           string             `json:"lastModified,omitempty"`
-	ModifiedBy             string             `json:"modifiedBy,omitempty"`
-	LastUpdated            string             `json:"lastUpdated,omitempty"`
-	DownloadUri            string             `json:"downloadUri,omitempty"`
-	MimeType               string             `json:"mimeType,omitempty"`
-	Size                   int                `json:"size,string,omitempty"`
-	Checksums              Checksums          `json:"checksums,omitempty"`
-	OriginalChecksums      Checksums          `json:"originalChecksums,omitempty"`
-	Uri                    string             `json:"uri,omitempty"`
+	Repo              string    `json:"repo,omitempty"`
+	Path              string    `json:"path,omitempty"`
+	Created           string    `json:"created,omitempty"`
+	CreatedBy         string    `json:"createdBy,omitempty"`
+	LastModified      string    `json:"lastModified,omitempty"`
+	ModifiedBy        string    `json:"modifiedBy,omitempty"`
+	LastUpdated       string    `json:"lastUpdated,omitempty"`
+	DownloadUri       string    `json:"downloadUri,omitempty"`
+	MimeType          string    `json:"mimeType,omitempty"`
+	Size              int       `json:"size,string,omitempty"`
+	Checksums         Checksums `json:"checksums,omitempty"`
+	OriginalChecksums Checksums `json:"originalChecksums,omitempty"`
+	Uri               string    `json:"uri,omitempty"`
 }
 type Checksums struct {
-	Md5                    string             `json:"md5,omitempty"`
-	Sha1                   string             `json:"sha1,omitempty"`
-	Sha256                 string             `json:"sha256,omitempty"`
+	Md5    string `json:"md5,omitempty"`
+	Sha1   string `json:"sha1,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
 }
 
 func dataSourceArtifactoryFile() *schema.Resource {
@@ -89,8 +91,8 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Computed: true,
 			},
 			"output_path": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: fileExist,
 			},
 			"force_overwrite": {
@@ -108,7 +110,7 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
 	fileInfo := FileInfo{}
-	_,err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
+	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 	if err != nil {
 		return err
 	}

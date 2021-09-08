@@ -2,10 +2,11 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"net/http"
 	"regexp"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -248,7 +249,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "xray_policy" {
 
-			policy, resp, err := getPolicy(rs.Primary.ID,testAccProvider.Meta().(*resty.Client))
+			policy, resp, err := getPolicy(rs.Primary.ID, testAccProvider.Meta().(*resty.Client))
 
 			if err != nil {
 				if resp != nil {

@@ -2,14 +2,14 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"net/http"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
 
 func TestAccGroup_basic(t *testing.T) {
 	const groupBasic = `
@@ -128,7 +128,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		resp,err := client.R().Head(groupsEndpoint + rs.Primary.ID)
+		resp, err := client.R().Head(groupsEndpoint + rs.Primary.ID)
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
 				return nil

@@ -2,10 +2,11 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -273,7 +274,7 @@ func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *
 
 	setValue := mkLens(d)
 
-	errors  := setValue("name", permissionTarget.Name)
+	errors := setValue("name", permissionTarget.Name)
 	if permissionTarget.Repo != nil {
 		errors = setValue("repo", packPermission(permissionTarget.Repo))
 	}

@@ -1,13 +1,15 @@
 package artifactory
 
 import (
-	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
 // WatchGeneralData this struct and all the others below it line up identically with the
 // structs from the V2 go client from jfrog with one fatal exception: None of these nested types is exported
 // and it's totally inconsistent with the rest of the code.
@@ -57,6 +59,7 @@ type Watch struct {
 	ProjectResources *WatchProjectResources `json:"project_resources,omitempty"`
 	AssignedPolicies *[]WatchAssignedPolicy `json:"assigned_policies,omitempty"`
 }
+
 func resourceXrayWatch() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceXrayWatchCreate,
@@ -326,8 +329,6 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-
-
 
 	if err := d.Set("description", watch.GeneralData.Description); err != nil {
 		return err

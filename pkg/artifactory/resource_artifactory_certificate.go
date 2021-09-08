@@ -7,11 +7,12 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"io/ioutil"
 	"os"
 	"strings"
+
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -47,9 +48,9 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"content": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 				ValidateFunc: validation.All(
 					validation.StringIsNotEmpty,
 					func(value interface{}, key string) ([]string, []error) {
@@ -62,22 +63,22 @@ func resourceArtifactoryCertificate() *schema.Resource {
 				),
 			},
 			"file": {
-				Type:          schema.TypeString,
-				Sensitive:     true,
-				Optional:      true,
+				Type:         schema.TypeString,
+				Sensitive:    true,
+				Optional:     true,
 				ExactlyOneOf: []string{"content", "file"},
 				ValidateFunc: func(value interface{}, key string) ([]string, []error) {
 					var errors []error
 					if _, err := os.Stat(value.(string)); err != nil {
-						return nil, append(errors,err)
+						return nil, append(errors, err)
 					}
 					data, err := ioutil.ReadFile(value.(string))
 					if err != nil {
-						return nil, append(errors,err)
+						return nil, append(errors, err)
 					}
 					_, err = extractCertificate(string(data))
 					if err != nil {
-						return nil, append(errors,err)
+						return nil, append(errors, err)
 					}
 					return nil, nil
 				},
@@ -218,7 +219,6 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 func getContentFromDiff(d *schema.ResourceDiff) (string, error) {
 	content, contentExists := d.GetOkExists("content")
 	file, fileExists := d.GetOkExists("file")
-
 
 	if contentExists == fileExists {
 		return "", fmt.Errorf("you must define 'content' as the contents of the pem file, OR set 'file' to the path of your pem file ")

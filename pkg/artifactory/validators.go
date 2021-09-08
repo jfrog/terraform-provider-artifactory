@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/gorhill/cronexpr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -63,7 +64,6 @@ var repoTypesSupported = []string{
 }
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
 
-
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
@@ -91,21 +91,21 @@ var defaultPassValidation = validation.All(
 	minLength(8),
 )
 
-var sliceIs = func (slice ... interface{}) schema.SchemaValidateFunc{
-	return func (value interface{}, _ string) ([]string, []error){
+var sliceIs = func(slice ...interface{}) schema.SchemaValidateFunc {
+	return func(value interface{}, _ string) ([]string, []error) {
 		for _, e := range slice {
 			if e == value {
 				return nil, nil
 			}
 		}
-		return nil, []error{fmt.Errorf("value %s not found in %q",value, slice)}
+		return nil, []error{fmt.Errorf("value %s not found in %q", value, slice)}
 	}
 }
 
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {
 		if len(value.(string)) < length {
-			return nil, []error{fmt.Errorf("password must be atleast %d characters long",length)}
+			return nil, []error{fmt.Errorf("password must be atleast %d characters long", length)}
 		}
 		return nil, nil
 	}

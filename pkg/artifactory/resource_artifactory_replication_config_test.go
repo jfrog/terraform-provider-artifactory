@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestInvalidCronFails(t *testing.T){
+func TestInvalidCronFails(t *testing.T) {
 	const invalidCron = `
 		resource "artifactory_local_repository" "lib-local" {
 			key = "lib-local"
@@ -30,7 +30,7 @@ func TestInvalidCronFails(t *testing.T){
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -40,7 +40,7 @@ func TestInvalidCronFails(t *testing.T){
 	})
 }
 
-func TestInvalidReplicationUrlFails(t *testing.T){
+func TestInvalidReplicationUrlFails(t *testing.T) {
 	const invalidUrl = `
 		resource "artifactory_local_repository" "lib-local" {
 			key = "lib-local"
@@ -60,7 +60,7 @@ func TestInvalidReplicationUrlFails(t *testing.T){
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,

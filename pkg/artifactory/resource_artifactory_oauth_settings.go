@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"context"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 

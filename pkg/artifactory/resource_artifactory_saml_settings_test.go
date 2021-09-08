@@ -2,8 +2,9 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
@@ -56,7 +57,6 @@ func TestAccSamlSettings_full(t *testing.T) {
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		c := testAccProvider.Meta().(*resty.Client)
-
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

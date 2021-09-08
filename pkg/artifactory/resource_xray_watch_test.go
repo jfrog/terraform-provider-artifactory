@@ -2,9 +2,10 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"net/http"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -164,7 +165,7 @@ func testAccCheckWatchDestroy(s *terraform.State) error {
 
 		}
 		if rs.Type == "xray_policy" {
-			policy, resp, err := getPolicy(rs.Primary.ID,client)
+			policy, resp, err := getPolicy(rs.Primary.ID, client)
 
 			if err != nil {
 				if resp != nil && resp.StatusCode() == http.StatusInternalServerError &&

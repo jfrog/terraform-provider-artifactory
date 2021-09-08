@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"context"
+
 	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,10 +43,9 @@ func resourceArtifactoryGeneralSecurity() *schema.Resource {
 func resourceGeneralSecurityRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 
-
 	generalSettings := GeneralSettings{}
 
-	_,err := c.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
+	_, err := c.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
 	if err != nil {
 		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read")
 	}
@@ -114,7 +114,7 @@ func packGeneralSecurity(s *GeneralSecurity, d *schema.ResourceData) diag.Diagno
 	errors := setValue("enable_anonymous_access", s.GeneralSettings.AnonAccessEnabled)
 
 	if errors != nil && len(errors) > 0 {
-		return diag.Errorf("failed to pack general security settings %q",errors)
+		return diag.Errorf("failed to pack general security settings %q", errors)
 	}
 
 	return nil

@@ -196,7 +196,6 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 	}
 }
 
-
 func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
 	const remoteNpmRepoBasicWithPropagate = `
 		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {

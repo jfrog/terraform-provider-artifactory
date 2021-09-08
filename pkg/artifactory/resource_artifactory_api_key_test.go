@@ -2,14 +2,13 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-
 
 func TestAccApiKey(t *testing.T) {
 	const apiKey = `
@@ -46,7 +45,7 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 		if err != nil {
 			return err
 		}
-		if _,ok = data["apiKey"]; ok {
+		if _, ok = data["apiKey"]; ok {
 			return fmt.Errorf("error: API key %s still exists", rs.Primary.ID)
 		}
 		return nil

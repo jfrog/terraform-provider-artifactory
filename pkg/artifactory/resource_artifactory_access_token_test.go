@@ -2,16 +2,15 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/http"
 	"os"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
 	const audienceBad = `
@@ -42,8 +41,6 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 		},
 	})
 }
-
-
 
 func TestAccAccessTokenAudienceGood(t *testing.T) {
 	const audienceGood = `
