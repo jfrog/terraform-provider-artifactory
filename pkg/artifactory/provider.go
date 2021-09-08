@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var Version = "2.2.16"
+var Version = "2.3.1"
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
