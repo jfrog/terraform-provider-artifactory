@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccUser_basic(t *testing.T) {
@@ -32,14 +32,13 @@ func TestAccUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("the.dude%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("the.dude%d@domain.com", id)),
-					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
-					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckNoResourceAttr(fqrn, "admin"),
+					resource.TestCheckNoResourceAttr(fqrn, "profile_updatable"),
 				),
 			},
 		},
 	})
 }
-
 
 func TestAccUser_full(t *testing.T) {
 	const userFull = `

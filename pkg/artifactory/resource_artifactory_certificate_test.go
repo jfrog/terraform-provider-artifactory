@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestHasFileAndContentFails(t *testing.T){
@@ -23,7 +23,7 @@ func TestHasFileAndContentFails(t *testing.T){
 		Steps: []resource.TestStep{
 			{
 				Config:      conflictsResource,
-				ExpectError: regexp.MustCompile(`.*only one of .* can be specified, but .* were specified.*`),
+				ExpectError: regexp.MustCompile(".*only one of `content,file` can be specified, but .* were.*"),
 			},
 		},
 	})
@@ -52,7 +52,7 @@ func TestAccCertWithFile(t *testing.T){
 	const certWithFile = `
 		resource "artifactory_certificate" "%s" {
 			alias   = "%s"
-			file = "${path.cwd}/../../samples/cert.pem" 
+			file = "../../samples/cert.pem" 
 		}
 	`
 	id := randomInt()

@@ -2,11 +2,11 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"testing"
-)
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
 
 const permissionNoIncludes = `
 	//resource "artifactory_local_repository" "{{ .repo_name }}" {

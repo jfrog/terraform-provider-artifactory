@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
@@ -271,19 +271,18 @@ func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *
 		return []interface{}{s}
 	}
 
-	hasErr := false
-	logErrors := cascadingErr(&hasErr)
+	setValue := mkLens(d)
 
-	logErrors(d.Set("name", permissionTarget.Name))
+	errors  := setValue("name", permissionTarget.Name)
 	if permissionTarget.Repo != nil {
-		logErrors(d.Set("repo", packPermission(permissionTarget.Repo)))
+		errors = setValue("repo", packPermission(permissionTarget.Repo))
 	}
 	if permissionTarget.Build != nil {
-		logErrors(d.Set("build", packPermission(permissionTarget.Build)))
+		errors = setValue("build", packPermission(permissionTarget.Build))
 	}
 
-	if hasErr {
-		return fmt.Errorf("failed to marshal permission target")
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to marshal permission target %q", errors)
 	}
 	return nil
 }
@@ -307,7 +306,7 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 			return resource.RetryableError(fmt.Errorf("expected permission target to be created, but currently not found"))
 		}
 
-		return resource.NonRetryableError(resourcePermissionTargetRead(d, m))
+		return nil
 	})
 }
 

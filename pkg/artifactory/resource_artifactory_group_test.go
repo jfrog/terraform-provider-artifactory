@@ -4,33 +4,12 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"net/http"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestNoAdminAndAutoSameTime(t *testing.T) {
-	const groupBasic = `
-		resource "artifactory_group" "test-group" {
-			name  = "terraform-group"
-			auto_join = true
-			admin_privileges = true
-		}
-	`
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
-		Providers:    testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: groupBasic,
-				ExpectError: regexp.MustCompile(`.*admin privs on auto_join groups is not allowed.*`),
-			},
-		},
-	})
-}
 
 func TestAccGroup_basic(t *testing.T) {
 	const groupBasic = `
@@ -52,8 +31,6 @@ func TestAccGroup_basic(t *testing.T) {
 		},
 	})
 }
-
-
 
 func TestAccGroup_full(t *testing.T) {
 	const groupFull = `
@@ -120,22 +97,22 @@ func TestAccGroup_full(t *testing.T) {
 				Config: groupUserUpdate1,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1386592683", "anonymous"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "anonymous"),
 				),
 			},
 			{
 				Config: groupUserUpdate2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.3672628397", "admin"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1386592683", "anonymous"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "admin"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1", "anonymous"),
 				),
 			},
 			{
 				Config: groupUserUpdate3,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.3672628397", "admin"),
+					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "admin"),
 				),
 			},
 		},

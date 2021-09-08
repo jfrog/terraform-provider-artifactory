@@ -5,10 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/atlassian/go-artifactory/v2/artifactory"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
+	"text/template"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type ResourceData struct{ *schema.ResourceData }
 
 func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
 	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.String(v.(string))
+		return StringPtr(v.(string))
 	}
 	return nil
 }
@@ -29,7 +29,7 @@ func (d *ResourceData) getString(key string, onlyIfChanged bool) string {
 
 func (d *ResourceData) getBoolRef(key string, onlyIfChanged bool) *bool {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.Bool(v.(bool))
+		return BoolPtr(v.(bool))
 	}
 	return nil
 }
@@ -43,7 +43,7 @@ func (d *ResourceData) getBool(key string, onlyIfChanged bool) bool {
 
 func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return artifactory.Int(v.(int))
+		return IntPtr(v.(int))
 	}
 	return nil
 }
@@ -129,14 +129,20 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 }
 
 func repoExists(id string, m interface{}) (bool, error) {
-	client := m.(*ArtClient).Resty
-
-	_, err := client.R().Head(repositoriesEndpoint+ id)
+	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint+ id)
 
 	return err == nil, err
 }
 
 
+func executeTemplate(name, temp string, fields interface{} ) string {
+	var tpl bytes.Buffer
+	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl,fields); err != nil {
+		panic(err)
+	}
+
+	return tpl.String()
+}
 
 func mkNames(name, resource string) (int, string, string) {
 	id := randomInt()
@@ -178,7 +184,7 @@ func cascadingErr(hasErr *bool) func(error) {
 
 func sendConfigurationPatch(content []byte, m interface{}) error {
 
-	_, err := m.(*ArtClient).Resty.R().SetBody(content).
+	_, err := m.(*resty.Client).R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
 		Patch("artifactory/api/system/configuration")
 

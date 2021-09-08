@@ -2,14 +2,13 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/http"
 	"os"
 	"regexp"
 	"testing"
 	"time"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 
@@ -413,7 +412,7 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 			return err
 		}
 		accessToken := rs.Primary.Attributes["access_token"]
-		resty, err = addAuthToResty(resty, "", "", accessToken, "")
+		resty, err = addAuthToResty(resty, "", "", "", accessToken)
 		if err != nil {
 			return err
 		}

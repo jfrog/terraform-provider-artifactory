@@ -3,7 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 )

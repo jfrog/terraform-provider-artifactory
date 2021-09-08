@@ -1,18 +1,19 @@
 package artifactory
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"io/ioutil"
 	"os"
 	"strings"
+	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const endpoint = "artifactory/api/system/security/certificates/"
@@ -103,21 +104,23 @@ func resourceArtifactoryCertificate() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(d *schema.ResourceDiff, _ interface{}) error {
-			content, err := getContentFromDiff(d)
-			fingerprint, err := calculateFingerPrint(content)
-			if err != nil {
-				return err
-			}
-			if d.Get("fingerprint").(string) != fingerprint {
-				if err = d.SetNewComputed("fingerprint"); err != nil {
-					fmt.Println(err)
-					return err
-				}
-			}
-			return nil
-		},
+		CustomizeDiff: calculateFingerprint,
 	}
+}
+
+func calculateFingerprint(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	content, err := getContentFromDiff(d)
+	fingerprint, err := calculateFingerPrint(content)
+	if err != nil {
+		return err
+	}
+	if d.Get("fingerprint").(string) != fingerprint {
+		if err = d.SetNewComputed("fingerprint"); err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func formatFingerPrint(f []byte) string {

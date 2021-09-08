@@ -3,10 +3,8 @@ package artifactory
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jasonwbarnett/go-xray/xray"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"net/http"
 	"net/url"
 )
@@ -15,15 +13,10 @@ var Version = "2.2.16"
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
-type ArtClient struct {
-
-	Xray   *xray.Xray
-	Resty  *resty.Client
-}
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
@@ -82,6 +75,9 @@ func Provider() terraform.ResourceProvider {
 			"artifactory_certificate":               resourceArtifactoryCertificate(),
 			"artifactory_api_key":                   resourceArtifactoryApiKey(),
 			"artifactory_access_token":              resourceArtifactoryAccessToken(),
+			"artifactory_general_security":          resourceArtifactoryGeneralSecurity(),
+			"artifactory_oauth_settings":            resourceArtifactoryOauthSettings(),
+			"artifactory_saml_settings":             resourceArtifactorySamlSettings(),
 			// Deprecated. Remove in V3
 			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
 			// Xray resources

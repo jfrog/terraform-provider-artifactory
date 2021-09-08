@@ -3,7 +3,8 @@ package artifactory
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 )
@@ -21,9 +22,9 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
@@ -156,30 +157,30 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	repo := MessyRepo{}
 
 	repo.Rclass = "local"
-	repo.Key = d.getString("key",false)
-	repo.PackageType = d.getString("package_type",false)
-	repo.Description = d.getString("description",false)
-	repo.Notes = d.getString("notes",false)
-	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout",false)
-	repo.IncludesPattern = d.getString("includes_pattern",false)
-	repo.ExcludesPattern = d.getString("excludes_pattern",false)
-	repo.RepoLayoutRef = d.getString("repo_layout_ref",false)
-	repo.MaxUniqueTags = d.getInt("max_unique_tags",false)
+	repo.Key = d.getString("key", false)
+	repo.PackageType = d.getString("package_type", false)
+	repo.Description = d.getString("description", false)
+	repo.Notes = d.getString("notes", false)
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
+	repo.IncludesPattern = d.getString("includes_pattern", false)
+	repo.ExcludesPattern = d.getString("excludes_pattern", false)
+	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
+	repo.MaxUniqueTags = d.getInt("max_unique_tags", false)
 	repo.BlackedOut = d.getBoolRef("blacked_out", false)
 	repo.CalculateYumMetadata = d.getBoolRef("calculate_yum_metadata", false)
-	repo.YumRootDepth = d.getInt("yum_root_depth",false)
+	repo.YumRootDepth = d.getInt("yum_root_depth", false)
 	repo.ArchiveBrowsingEnabled = d.getBoolRef("archive_browsing_enabled", false)
-	repo.DockerApiVersion = d.getString("docker_api_verision",false)
+	repo.DockerApiVersion = d.getString("docker_api_verision", false)
 	repo.EnableFileListsIndexing = d.getBoolRef("enable_file_lists_indexing", false)
 	repo.PropertySets = d.getSet("property_sets")
 	repo.HandleReleases = d.getBoolRef("handle_releases", false)
 	repo.HandleSnapshots = d.getBoolRef("handle_snapshots", false)
-	repo.ChecksumPolicyType = d.getString("checksum_policy_type",false)
-	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots",false)
-	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior",false)
+	repo.ChecksumPolicyType = d.getString("checksum_policy_type", false)
+	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots", false)
+	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior", false)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", false)
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
-	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication",false)
+	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
 	return repo
 }
@@ -207,7 +208,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
 	if err != nil {
 		if resp != nil {
-			if resp.StatusCode() == http.StatusNotFound{
+			if resp.StatusCode() == http.StatusNotFound {
 				d.SetId("")
 				return nil
 			}
@@ -246,7 +247,7 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed saving state for local repos %q",errors)
+		return fmt.Errorf("failed saving state for local repos %q", errors)
 	}
 
 	return nil
@@ -266,7 +267,7 @@ func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().SetHeader("Accept", "*/*").Delete(repositoriesEndpoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 	return err
 }
 

@@ -3,10 +3,11 @@ package artifactory
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ReplicationConfig struct {
@@ -44,9 +45,9 @@ var repMultipleSchema = map[string]*schema.Schema{
 }
 var replicationSchema = map[string]*schema.Schema{
 	"url": {
-		Type:     schema.TypeString,
-		Optional: true,
-		ForceNew: true,
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
 		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 	},
 	"socket_timeout_millis": {

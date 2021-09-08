@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 	"os"
@@ -170,7 +170,8 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 			}
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
-		return resource.NonRetryableError(resourceUserRead(d, m))
+
+		return nil
 	})
 }
 

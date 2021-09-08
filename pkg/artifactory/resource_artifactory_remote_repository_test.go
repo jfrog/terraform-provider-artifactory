@@ -2,11 +2,12 @@ package artifactory
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestKeyHasSpecialCharsFails(t *testing.T) {
@@ -33,7 +34,7 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 }
 
 func TestAccRemoteRepository_basic(t *testing.T) {
-	id := randomInt()
+	id := rand.Int()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	const remoteRepoBasic = `
@@ -184,7 +185,7 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 					resource.TestCheckResourceAttr(fqrn, "synchronize_properties", "true"),
 					resource.TestCheckResourceAttr(fqrn, "block_mismatching_mime_types", "true"),
 					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "property_sets.214975871", "artifactory"),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.0", "artifactory"),
 					resource.TestCheckResourceAttr(fqrn, "allow_any_host_auth", "false"),
 					resource.TestCheckResourceAttr(fqrn, "enable_cookie_management", "true"),
 					resource.TestCheckResourceAttr(fqrn, "client_tls_certificate", ""),

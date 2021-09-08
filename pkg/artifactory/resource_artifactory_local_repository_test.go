@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccLocalRepository_basic(t *testing.T) {
@@ -89,7 +89,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "suppress_pom_consistency_checks", "true"),
 					resource.TestCheckResourceAttr(resourceName, "blacked_out", "false"),
 					resource.TestCheckResourceAttr(resourceName, "property_sets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "property_sets.214975871", "artifactory"),
+					resource.TestCheckResourceAttr(resourceName, "property_sets.0", "artifactory"),
 					resource.TestCheckResourceAttr(resourceName, "archive_browsing_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "calculate_yum_metadata", "false"),
 					resource.TestCheckResourceAttr(resourceName, "yum_root_depth", "0"),

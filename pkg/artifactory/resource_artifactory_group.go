@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
@@ -116,7 +117,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("expected group to be created, but currently not found"))
 		}
 
-		return resource.NonRetryableError(resourceGroupRead(d, m))
+		return nil
 	})
 }
 

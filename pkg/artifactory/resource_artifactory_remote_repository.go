@@ -3,11 +3,12 @@ package artifactory
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type MessyRemoteRepo struct {
@@ -35,9 +36,9 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: repoKeyValidator,
 			},
 			"package_type": {
