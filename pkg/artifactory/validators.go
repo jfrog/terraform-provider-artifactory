@@ -2,13 +2,12 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/gorhill/cronexpr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
