@@ -93,7 +93,6 @@ func dataSourceArtifactoryFile() *schema.Resource {
 			"output_path": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: fileExist,
 			},
 			"force_overwrite": {
 				Type:     schema.TypeBool,
@@ -116,11 +115,17 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	fileExists := FileExists(outputPath)
-	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-	if !chksMatches {
-		return fmt.Errorf("local file differs from upstream version")
+	chksMatches, err := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+
+	if err != nil {
+		return err
 	}
-	if !fileExists || (!chksMatches && forceOverwrite) {
+
+	if fileExists {
+		if !chksMatches && !forceOverwrite {
+			return fmt.Errorf("local file differs from upstream version and no overwrite is permitted")
+		}
+	} else {
 		outFile, err := os.Create(outputPath)
 		if err != nil {
 			return err
@@ -129,11 +134,11 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 		defer func(outFile *os.File) {
 			_ = outFile.Close()
 		}(outFile)
+	}
 
-		_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
-		if err != nil {
-			return err
-		}
+	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+	if err != nil {
+		return err
 	}
 
 	return packFileInfo(fileInfo, d)

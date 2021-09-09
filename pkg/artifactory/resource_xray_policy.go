@@ -25,7 +25,7 @@ type PolicyRuleCriteria struct {
 	CVSSRange       *PolicyCVSSRange `json:"cvss_range,omitempty"`
 
 	// License Criteria
-	AllowUnkown     *bool     `json:"allow_unknown,omitempty"`
+	AllowUnknown     *bool     `json:"allow_unknown,omitempty"`
 	BannedLicenses  *[]string `json:"banned_licenses,omitempty"`
 	AllowedLicenses *[]string `json:"allowed_licenses,omitempty"`
 }
@@ -282,7 +282,7 @@ func expandCriteria(l []interface{}, policyType *string) (*PolicyRuleCriteria, e
 		}
 
 		// If these are both the default values, we must be using license criteria
-		criteria.AllowUnkown = allowUnk // "Unkown" is a typo in xray-oss
+		criteria.AllowUnknown = allowUnk
 		criteria.BannedLicenses = banned
 		criteria.AllowedLicenses = allowed
 	} else {
@@ -412,8 +412,8 @@ func flattenCriteria(criteria *PolicyRuleCriteria) []interface{} {
 	if criteria.MinimumSeverity != nil {
 		m["min_severity"] = *criteria.MinimumSeverity
 	}
-	if criteria.AllowUnkown != nil {
-		m["allow_unknown"] = *criteria.AllowUnkown // Same typo in the library
+	if criteria.AllowUnknown != nil {
+		m["allow_unknown"] = *criteria.AllowUnknown // Same typo in the library
 	}
 	if criteria.BannedLicenses != nil {
 		m["banned_licenses"] = *criteria.BannedLicenses
