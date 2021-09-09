@@ -78,6 +78,11 @@ Permission target V1 support has been totally removed. Dynamically testing of pe
 currently doesn't work because of race conditions when creating a repo. This will have to be resolved with retries at a 
 later date. 
 
+### Changes to user creation ###
+Previously, passwords were being generated for the user if none was supplied. This was both unnecessary (since TF has a password provider)
+and because the internal implementation could never be entirely in line with the remote server (or, be sure it was).
+With the release of 2.3.1, password is still optional, but if supplied, must watch the default password requirements. These
+can be overridden with `JFROG_PASSWD_VALIDATION_ON=false` if a custom password policy is in place.
 
 
 ## Build the Provider
