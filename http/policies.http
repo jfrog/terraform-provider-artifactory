@@ -1,0 +1,98 @@
+GET {{ host }}/xray/api/v1/policies
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+###
+
+POST {{ host }}/xray/api/v1/policies
+Authorization: Bearer {{ token }}
+Content-Type: application/json
+
+{
+  "name": "terraform-test-policy",
+  "type": "security",
+  "description": "policy created by xray acceptance tests",
+  "rules": [
+    {
+      "name": "test-security-rule",
+      "priority": 1,
+      "criteria": {
+        "min_severity": "High"
+      },
+      "actions": {
+        "fail_build": false,
+        "block_download": {
+          "unscanned": true,
+          "active": true
+        },
+        "custom_severity": ""
+      }
+    }
+  ]
+}
+
+
+
+###
+POST {{ host }}/xray/api/v1/policies
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+{
+  "name": "test-{{ $uuid }}",
+  "type": "security",
+  "description": "Watch on artifactory images uploaded",
+  "author": "{{ $env.USER }}",
+  "rules": [
+    {
+      "name": "thing",
+      "priority": 1,
+      "actions": {
+        "webhooks": [
+          "jfrog-Slack-integration-a453b",
+          "jfrog-Slack-integration-c11c1"
+        ],
+        "block_download": {
+          "unscanned": false,
+          "active": false
+        }
+      },
+      "criteria": {
+        "cvss_range": {
+          "from": 4.1,
+          "to": 9.4
+        }
+      }
+    }
+  ]
+}
+
+###
+
+PUT {{ host }}/xray/api/v1/policies/terraform-test-policy
+
+{
+  "name": "terraform-test-policy",
+  "type": "security",
+  "description": "policy created by xray acceptance tests",
+  "rules": [
+    {
+      "name": "test-security-rule",
+      "priority": 1,
+      "criteria": {
+        "min_severity": "High"
+      },
+      "actions": {
+        "fail_build": false,
+        "block_download": {
+          "unscanned": true,
+          "active": true
+        },
+        "custom_severity": ""
+      }
+    }
+  ]
+}
+

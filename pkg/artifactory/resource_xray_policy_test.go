@@ -271,103 +271,103 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 func testAccXrayPolicyBasic(name, description, ruleName string) string {
 	return fmt.Sprintf(`
-	resource "xray_policy" "test" {
-		name  = "%s"
-		description = "%s"
-		type = "security"
-
-		rules {
-			name = "%s"
-			priority = 1
-			criteria {
-				min_severity = "High"
-			}
-			actions {
-				block_download {
-					unscanned = true
-					active = true
+		resource "artifactory_xray_policy" "test" {
+			name  = "%s"
+			description = "%s"
+			type = "security"
+	
+			rules {
+				name = "%s"
+				priority = 1
+				criteria {
+					min_severity = "High"
+				}
+				actions {
+					block_download {
+						unscanned = true
+						active = true
+					}
 				}
 			}
 		}
-	}
 `, name, description, ruleName)
 }
 
 func testAccXrayPolicyCVSSRange(name, description, ruleName string, rangeTo int) string {
 	return fmt.Sprintf(`
-resource "xray_policy" "test" {
-	name  = "%s"
-	description = "%s"
-	type = "security"
-
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-			cvss_range {
-				from = 1
-				to = %d
+		resource "artifactory_xray_policy" "test" {
+			name  = "%s"
+			description = "%s"
+			type = "security"
+		
+			rules {
+				name = "%s"
+				priority = 1
+				criteria {
+					cvss_range {
+						from = 1
+						to = %d
+					}
+				}
+				actions {
+					block_download {
+						unscanned = true
+						active = true
+					}
+				}
 			}
 		}
-		actions {
-			block_download {
-				unscanned = true
-				active = true
-			}
-		}
-	}
-}
 `, name, description, ruleName, rangeTo)
 }
 
 func testAccXrayPolicyAllActions(name, description, ruleName, email string) string {
 	// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
 	return fmt.Sprintf(`
-resource "xray_policy" "test" {
-	name  = "%s"
-	description = "%s"
-	type = "security"
-
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-			min_severity = "High"
-		}
-		actions {
-			fail_build = true
-			block_download {
-				unscanned = false
-				active = false
+		resource "artifactory_xray_policy" "test" {
+			name  = "%s"
+			description = "%s"
+			type = "security"
+		
+			rules {
+				name = "%s"
+				priority = 1
+				criteria {
+					min_severity = "High"
+				}
+				actions {
+					fail_build = true
+					block_download {
+						unscanned = false
+						active = false
+					}
+					mails = ["%s"]
+					custom_severity = "High"
+				}
 			}
-			mails = ["%s"]
-			custom_severity = "High"
 		}
-	}
-}
 `, name, description, ruleName, email)
 }
 
 func testAccXrayPolicyLicense(name, description, ruleName, allowedLicense string) string {
 	return fmt.Sprintf(`
-resource "xray_policy" "test" {
-	name = "%s"
-	description = "%s"
-	type = "license"
-
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-			allow_unknown = true
-			allowed_licenses = ["%s"]
-		}
-		actions {
-			block_download {
-				unscanned = true
-				active = true
-			}
-		}
+		resource "artifactory_xray_policy" "test" {
+			name = "%s"
+			description = "%s"
+			type = "license"
+		
+			rules {
+				name = "%s"
+				priority = 1
+				criteria {
+					allow_unknown = true
+					allowed_licenses = ["%s"]
+				}
+				actions {
+					block_download {
+						unscanned = true
+						active = true
+					}
+				}
 	}
 }
 `, name, description, ruleName, allowedLicense)
@@ -375,26 +375,26 @@ resource "xray_policy" "test" {
 
 func testAccXrayPolicyLicenseBanned(name, description, ruleName, bannedLicense1, bannedLicense2 string) string {
 	return fmt.Sprintf(`
-resource "xray_policy" "test" {
-	name = "%s"
-	description = "%s"
-	type = "license"
-
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-			allow_unknown = true
-			banned_licenses = ["%s", "%s"]
-		}
-		actions {
-			block_download {
-				unscanned = true
-				active = true
+		resource "artifactory_xray_policy" "test" {
+			name = "%s"
+			description = "%s"
+			type = "license"
+		
+			rules {
+				name = "%s"
+				priority = 1
+				criteria {
+					allow_unknown = true
+					banned_licenses = ["%s", "%s"]
+				}
+				actions {
+					block_download {
+						unscanned = true
+						active = true
+					}
+				}
 			}
 		}
-	}
-}
 `, name, description, ruleName, bannedLicense1, bannedLicense2)
 }
 

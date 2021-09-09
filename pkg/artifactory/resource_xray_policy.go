@@ -2,10 +2,9 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"log"
 	"net/http"
-
-	"github.com/go-resty/resty/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,7 +24,7 @@ type PolicyRuleCriteria struct {
 	CVSSRange       *PolicyCVSSRange `json:"cvss_range,omitempty"`
 
 	// License Criteria
-	AllowUnknown     *bool     `json:"allow_unknown,omitempty"`
+	AllowUnknown    *bool     `json:"allow_unknown,omitempty"`
 	BannedLicenses  *[]string `json:"banned_licenses,omitempty"`
 	AllowedLicenses *[]string `json:"allowed_licenses,omitempty"`
 }
@@ -62,10 +61,14 @@ type Policy struct {
 
 func resourceXrayPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceXrayPolicyCreate,
-		Read:   resourceXrayPolicyRead,
-		Update: resourceXrayPolicyUpdate,
-		Delete: resourceXrayPolicyDelete,
+		SchemaVersion:      1,
+		Create:             resourceXrayPolicyCreate,
+		Read:               resourceXrayPolicyRead,
+		Update:             resourceXrayPolicyUpdate,
+		Delete:             resourceXrayPolicyDelete,
+		DeprecationMessage: "This portion of the provider uses V1 apis and will eventually be removed",
+		Description: "Creates an xray policy using V1 of the underlying APIs. Please note: " +
+			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

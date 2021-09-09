@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source = "registry.terraform.io/jfrog/artifactory"
-      version = "2.2.16"
+      version = "2.3.3"
     }
   }
 }
@@ -12,7 +12,8 @@ variable "supported_repo_types" {
   default = [
     "alpine",
     "bower",
-    "cargo", // xray refuses to watch these. They also require a mandatory field we can't currently support
+    // xray refuses to cargo. They also require a mandatory field we can't currently support
+    "cargo",
     "chef",
     "cocoapods",
     "composer",
@@ -45,13 +46,13 @@ variable "supported_repo_types" {
 }
 resource "artifactory_local_repository" "local" {
   count = length(var.supported_repo_types)
-  key =
+  key = "${var.supported_repo_types[count.index]}-local"
   package_type = var.supported_repo_types[count.index]
   xray_index = false
   description = "hello ${var.supported_repo_types[count.index]}-local"
 }
 provider "artifactory" {
-//  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
+  //  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
 }
 resource "artifactory_remote_repository" "npm-remote" {
   key = "npm-remote"

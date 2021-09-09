@@ -22,29 +22,27 @@ func Provider() *schema.Provider {
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", func() (interface{}, error) {
-					return "http://localhost:8082", nil
-				}),
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", func() (interface{}, error) {
-					return "admin", nil
-				}),
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
+
 			},
 			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", func() (interface{}, error) {
-					return "password", nil
-				}),
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
+				Description: "Insider note: You may actually use an api_key as the password. This will get your around xray limitations instead of a bearer token",
 			},
 			"api_key": {
 				Type:          schema.TypeString,
@@ -53,6 +51,7 @@ func Provider() *schema.Provider {
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
 				ConflictsWith: []string{"username", "access_token", "password"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
 			},
 			"access_token": {
 				Type:          schema.TypeString,
@@ -60,6 +59,7 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
 				ConflictsWith: []string{"api_key", "password"},
+				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 		},
 
@@ -128,15 +128,14 @@ func buildResty(URL string) (*resty.Client, error) {
 }
 
 func addAuthToResty(client *resty.Client, username, password, apiKey, accessToken string) (*resty.Client, error) {
-
-	if username != "" && password != "" {
-		return client.SetBasicAuth(username, password), nil
+	if accessToken != "" {
+		return client.SetAuthToken(accessToken), nil
 	}
 	if apiKey != "" {
 		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
 	}
-	if accessToken != "" {
-		return client.SetAuthToken(accessToken), nil
+	if username != "" && password != "" {
+		return client.SetBasicAuth(username, password), nil
 	}
 	return nil, fmt.Errorf("no authentication details supplied")
 }
