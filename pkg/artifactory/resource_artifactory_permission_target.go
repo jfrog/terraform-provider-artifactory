@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,7 +29,6 @@ func resourceArtifactoryPermissionTargets() *schema.Resource {
 }
 
 func resourceArtifactoryPermissionTarget() *schema.Resource {
-
 	actionSchema := schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -130,10 +128,12 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 		},
 	}
 }
+
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
-	return hashcode.String(p["name"].(string)) + 31*hashcode.String(hashcode.Strings(castToStringArr(p["permissions"].(*schema.Set).List())))
+	return schema.HashString(p["name"].(string)) + 31*schema.HashString(schema.HashString(castToStringArr(p["permissions"].(*schema.Set).List())))
 }
+
 func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetParams {
 	d := &ResourceData{s}
 
@@ -297,7 +297,6 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 
 	d.SetId(permissionTarget.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-
 		exists, err := resourcePermissionTargetExists(d, m)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))

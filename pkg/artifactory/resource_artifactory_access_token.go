@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/google/go-querystring/query"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -21,6 +20,7 @@ import (
 type AccessTokenRevokeOptions struct {
 	Token string `url:"token,omitempty"`
 }
+
 type AccessTokenOptions struct {
 	// The grant type used to authenticate the request. In this case, the only value supported is "client_credentials" which is also the default value if this parameter is not specified.
 	GrantType string `url:"grant_type,omitempty"` // [Optional, default: "client_credentials"]
@@ -43,6 +43,7 @@ type AccessTokenOptions struct {
 	// In case you want the token to be accepted by all Artifactory instances you may use the following audience parameter "audience=jfrt@*".
 	Audience string `url:"audience,omitempty"` // [Optional, default: Only the Service ID of the Artifactory instance that created the token]
 }
+
 type AccessToken struct {
 	AccessToken  string `json:"access_token,omitempty"`
 	ExpiresIn    int    `json:"expires_in,omitempty"`
@@ -214,7 +215,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(hashcode.String(accessToken.AccessToken)))
+	d.SetId(strconv.Itoa(schema.HashString(accessToken.AccessToken)))
 
 	err = d.Set("access_token", accessToken.AccessToken)
 	if err != nil {
@@ -269,7 +270,6 @@ func resourceAccessTokenDelete(d *schema.ResourceData, m interface{}) error {
 		resp, err := m.(*resty.Client).R().
 			SetHeader("Content-Type", "application/x-www-form-urlencoded").
 			SetFormDataFromValues(values).Post("artifactory/api/security/token/revoke")
-
 		if err != nil {
 			if resp != nil {
 				if resp.StatusCode() == http.StatusNotFound {
@@ -328,7 +328,6 @@ func unpackAdminToken(d *schema.ResourceData, tokenOptions *AccessTokenOptions) 
 
 func checkUserExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head("artifactory/api/security/users/" + name)
-
 	if err != nil {
 		// If there is an error, it possible the user does not exist.
 		if resp != nil {
@@ -351,7 +350,6 @@ func checkUserExists(client *resty.Client, name string) (bool, error) {
 
 func checkGroupExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head(groupsEndpoint + name)
-
 	// If there is an error, it possible the group does not exist.
 	if err != nil {
 		if resp != nil {
