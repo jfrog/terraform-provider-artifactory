@@ -8,6 +8,8 @@ updated in Terraform. If no password is given a random one is created otherwise 
 noting "removing" the password argument does not reset the password; it just removes Terraform from storing the "known"
 state.
 
+- Note: The password is optional, but if supplied, it will be compared to the default artifactory password rules. You can
+override password validation entirely by setting `export JFROG_PASSWD_VALIDATION_ON=false`, if your organization has it's own password requirements
 
 ## Example Usage
 

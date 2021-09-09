@@ -115,5 +115,5 @@ The following arguments are supported:
     Conflicts with `api_key`, and `access_token`. This can also be sourced from the `ARTIFACTORY_PASSWORD` environment variable.
 * `api_key` - (Optional) API key for api auth. Uses `X-JFrog-Art-Api` header. 
     Conflicts with `username`, `password`, and `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
-* `access_token` - (Optional) API key for token auth. Uses `Authorization: Bearer` header. 
+* `access_token` - (Optional) API key for token auth. Uses `Authorization: Bearer` header. For xray functionality, this is the only auth method accepted
     Conflicts with `username` and `password`, and `api_key`. This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.

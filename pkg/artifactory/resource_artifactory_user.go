@@ -68,7 +68,7 @@ func resourceArtifactoryUser() *schema.Resource {
 			"password": {
 				Type:      schema.TypeString,
 				Sensitive: true,
-				Required:  true,
+				Optional:  true,
 				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
 					validationOn, _ := strconv.ParseBool(os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
 					if validationOn {
