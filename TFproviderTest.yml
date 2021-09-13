@@ -99,17 +99,66 @@ pipelines:
             - add_run_variables NEW_RT_PASSWORD=$NEW_RT_PASSWORD
             - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepo_gitRepoRepositorySshUrl}
             - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepo_gitRepoFullName}" | sed -e 's/.*\///g')
+            - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
             - printenv
-            - echo "Some changes. Test"
+            - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
+            - cd partner-integration-tests
+            - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
+            - ./gradlew common
+            #- generate ACCESS_TOKEN
+            #- add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_TOKEN}
           onSuccess:
             - echo "GKE cluster created successfully with JFrog Artifactory and Xray"
             - echo "Visit Artifactory at https://${GKE_CLUSTER}-rt.jfrog.tech"
             - echo "Artifactory username admin"
-            - echo "Artifactory password password"
+            - echo "Artifactory password ${NEW_RT_PASSWORD}"
           onFailure:
             - echo "JFrog Artifactory and Xray creation failed."
+            #- add remove cluster command
           onComplete:
             - echo "JFrog Artifactory and Xray Job Complete"
+
+
+#      - name: tf_provider_run_test
+#        type: Bash
+#        configuration:
+#          runtime:
+#            type: image
+#            image:
+#              auto:
+#                language: java
+#                versions:
+#                  - "11"
+#          integrations:
+#            - name: partnersSlack
+#            - name: partnership_jfrog_io
+#            - name: danielMiakotkinGitHub
+#          inputSteps:
+#            - name: fozzie_gke_jfrog_rt_xray_create
+#          inputResources:
+#            - name: GitHubTFProviderRepo
+#        execution:
+#          onStart:
+#            - echo "Preparing for work..."
+#          onExecute:
+#            - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
+#            - printenv
+#            - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
+#            - cd partner-integration-tests
+#            - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
+#            - ./gradlew common
+#            # generate ARTIFACTORY_ACCESS_TOKEN
+#            - echo "Run Terraform provider acceptance tests"
+#            - printenv
+#            #- make acceptance
+#          onSuccess:
+#            - send_notification partnersSlack --text "Terraform Provider. All tests passed"
+#          onFailure:
+#            - send_notification partnersSlack --text "${step_name} step is failed"
+#          onComplete:
+#            - echo "Cleaning up!"
+
+
 
       - name: build_and_run_tf_provider
         type: Bash
@@ -126,7 +175,7 @@ pipelines:
             - name: gkeEnvVars
             - name: danielMiakotkinGitHub
           inputSteps:
-            - name: fozzie_gke_jfrog_rt_xray_create
+            - name: tf_provider_fozzie_gke_jfrog_rt_xray
         execution:
           onStart:
             - echo "Preparing for work..."
@@ -156,11 +205,12 @@ pipelines:
             - cat sample.tf | sed -e "s/version =.*/version = \"${NEXT_PROVIDER_VERSION}\"/g" > sample.tf.tmp
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
-            - make install
             - echo "Add variables needed to run Terraform Provider"
             - export ARTIFACTORY_URL=${jdp_url}
             - export ARTIFACTORY_USERNAME=admin
-            - export ARTIFACTORY_PASSWORD=password
+            - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD}
+            - make install
+            - make acceptance
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
             #- terraform apply -auto-approve
             - printenv
@@ -171,45 +221,6 @@ pipelines:
           onComplete:
             - echo "Complete"
 
-      - name: tf_provider_run_test
-        type: Bash
-        configuration:
-          runtime:
-            type: image
-            image:
-              auto:
-                language: java
-                versions:
-                  - "11"
-          integrations:
-            - name: partnersSlack
-            - name: partnership_jfrog_io
-            - name: danielMiakotkinGitHub
-          inputSteps:
-            - name: build_and_run_tf_provider
-          inputResources:
-            - name: GitHubTFProviderRepo
-        execution:
-          onStart:
-            - echo "Preparing for work..."
-          onExecute:
-            - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
-            - printenv
-            - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
-            - cd partner-integration-tests
-            - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
-            - ./gradlew common
-            # generate ARTIFACTORY_ACCESS_TOKEN
-            - echo "Run Terraform provider acceptance tests"
-            - printenv
-            #- make acceptance
-          onSuccess:
-            - send_notification partnersSlack --text "Terraform Provider. All tests passed"
-          onFailure:
-            - send_notification partnersSlack --text "${step_name} step is failed"
-          onComplete:
-            - echo "Cleaning up!"
-
       - name: create_pr_to_master_branch
         type: Bash
         configuration:
@@ -218,7 +229,7 @@ pipelines:
             - name: partnership_jfrog_io
             - name: danielMiakotkinGitHub
           inputSteps:
-            - name: tf_provider_run_test
+            - name: build_and_run_tf_provider
         execution:
           onStart:
             - echo "Preparing for work..."
@@ -227,8 +238,8 @@ pipelines:
             - git clone https://${int_danielMiakotkinGitHub_token}${TFProviderRepo} && cd $repoFolder
             - git checkout -b development && ls
             - git status
-            #- git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print $1 "." $2 "." $3 +1 }'
-            #- git push --tags
+            - git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print $1 "." $2 "." $3 +1 }'
+            - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=danielmkn/terraform-provider-artifactory
             - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq '.html_url' | sed 's/"//g')
