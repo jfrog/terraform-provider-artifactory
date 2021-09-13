@@ -100,7 +100,65 @@ const permissionFull = `
      //depends_on = [artifactory_local_repository.{{ .repo_name }}]
 	}
 `
-
+func TestGitHubIssue126(test *testing.T) {
+	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
+	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")
+	_, _, username := mkNames("artifactory_user", "artifactory_user")
+	testConfig := `
+		resource "artifactory_local_repository" "{{ .repo_name }}" {
+		  key             = "{{ .repo_name }}"
+		  package_type    = "generic"
+		  repo_layout_ref = "simple-default"
+		}
+		
+		resource "artifactory_user" "{{ .username }}" {
+		  name                       = "{{ .username }}"
+		  email                      = "example@example.com"
+		  groups                     = ["readers"]
+		  admin                      = false
+		  disable_ui_access          = true
+		  internal_password_disabled = true
+		  password 					 = "Password1"
+		}
+		
+		resource "artifactory_permission_target" "{{ .perm_name }}" {
+		  name = "{{ .perm_name }}"
+		  repo {
+			includes_pattern = ["**"]
+			repositories = [
+			  "{{ .repo_name }}"
+			]
+			actions {
+			  users {
+				name        = artifactory_user.{{ .username }}.name
+				permissions = ["annotate", "read", "write", "delete"]
+			  }
+			}
+		  }
+		}`
+	variables := map[string]string{
+		"perm_name" : permName,
+		"username" : username,
+		"repo_name" : repoName,
+	}
+	foo := executeTemplate(permFqrn, testConfig, variables)
+	resource.Test(test, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(test) },
+		CheckDestroy: testPermissionTargetCheckDestroy(permFqrn),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: foo,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(permFqrn, "name", permName),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", "4"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
+				),
+			},
+		},
+	})
+}
 func TestAccPermissionTarget_full(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
 	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")

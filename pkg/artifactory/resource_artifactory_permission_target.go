@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -131,7 +132,10 @@ func resourceArtifactoryPermissionTarget() *schema.Resource {
 
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
-	return schema.HashString(p["name"].(string)) + 31*schema.HashString(schema.HashString(castToStringArr(p["permissions"].(*schema.Set).List())))
+	part1 := schema.HashString(p["name"].(string)) + 31
+	permissions := castToStringArr(p["permissions"].(*schema.Set).List())
+	part3 := schema.HashString(strings.Join(permissions,""))
+	return part1 * part3
 }
 
 func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetParams {

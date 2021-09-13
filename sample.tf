@@ -13,7 +13,7 @@ variable "supported_repo_types" {
     "alpine",
     "bower",
     // xray refuses to cargo. They also require a mandatory field we can't currently support
-    "cargo",
+//    "cargo",
     "chef",
     "cocoapods",
     "composer",
