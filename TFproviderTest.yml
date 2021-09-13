@@ -158,8 +158,6 @@ pipelines:
 #          onComplete:
 #            - echo "Cleaning up!"
 
-
-
       - name: build_and_run_tf_provider
         type: Bash
         configuration:
@@ -175,7 +173,7 @@ pipelines:
             - name: gkeEnvVars
             - name: danielMiakotkinGitHub
           inputSteps:
-            - name: tf_provider_fozzie_gke_jfrog_rt_xray
+            - name: fozzie_gke_jfrog_rt_xray_create
         execution:
           onStart:
             - echo "Preparing for work..."
