@@ -204,11 +204,13 @@ pipelines:
             - git clone https://${int_danielMiakotkinGitHub_token}${TFProviderRepo} && cd $repoFolder
             - git checkout -b development && ls
             - git status
-            - git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print $1 "." $2 "." $3 +1 }'
+            - export NEXT_VERSION=$(git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
+            - git tag "${NEXT_VERSION}"
             - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=danielmkn/terraform-provider-artifactory
-            - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch $(date +%s)","head":"development","base":"master"}' | jq '.html_url' | sed 's/"//g')
+            - export PR_TITLE="PR from development to master branch " $(date +%s)
+            - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"${PR_TITLE}","head":"development","base":"master"}' | jq '.html_url' | sed 's/"//g')
             - echo ${PR_URL}
             - >-
               if [[ "${PR_URL}" == null ]]; then
