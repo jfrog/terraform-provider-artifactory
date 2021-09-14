@@ -206,7 +206,7 @@ pipelines:
             - echo "Add variables needed to run Terraform Provider"
             - export ARTIFACTORY_URL=${jdp_url} && echo ${ARTIFACTORY_URL}
             - export ARTIFACTORY_USERNAME=admin && echo ${ARTIFACTORY_USERNAME}
-            - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && ${ARTIFACTORY_PASSWORD}
+            - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
             #- make acceptance
             #- make install
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
