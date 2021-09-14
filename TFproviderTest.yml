@@ -104,7 +104,7 @@ pipelines:
             - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
             - cd partner-integration-tests
             - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
-            - ./gradlew common
+            - ./gradlew artifactory_common
             #- generate ACCESS_TOKEN
             #- add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_TOKEN}
           onSuccess:
@@ -207,8 +207,8 @@ pipelines:
             - export ARTIFACTORY_URL=${jdp_url}
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD}
-            - make install
             - make acceptance
+            - make install
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
             #- terraform apply -auto-approve
             - printenv
