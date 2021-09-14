@@ -130,6 +130,7 @@ pipelines:
                 versions:
                   - "1.15.2"
           integrations:
+            - name: partnersSlack
             - name: gkeEnvVars
             - name: danielMiakotkinGitHub
           inputResources:
@@ -210,7 +211,7 @@ pipelines:
             - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq '.html_url' | sed 's/"//g')
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "${gitHubRepoUrl}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
+            - send_notification partnersSlack --text "Terraform Provider ${TFProviderRepo}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
           onFailure:
             - send_notification partnersSlack --text "${step_name} step is failed"
           onComplete:
