@@ -36,7 +36,7 @@ attach:
 	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-artifactory)
 
 acceptance: fmtcheck
-	TF_ACC=1
+	export TF_ACC=1
 	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
 		&& go test -v -parallel 1 ./pkg/...
 
