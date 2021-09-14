@@ -44,6 +44,11 @@ variable "supported_repo_types" {
     "vcs",
   ]
 }
+resource "random_id" "randid" {
+  byte_length = 16
+}
+
+
 resource "artifactory_local_repository" "local" {
   count = length(var.supported_repo_types)
   key = "${var.supported_repo_types[count.index]}-local"
@@ -51,6 +56,15 @@ resource "artifactory_local_repository" "local" {
   xray_index = false
   description = "hello ${var.supported_repo_types[count.index]}-local"
 }
+
+resource "artifactory_local_repository" "local-rand" {
+  count = 100
+  key = "foo-${count.index}-local"
+  package_type = var.supported_repo_types[random_id.randid.dec % length(var.supported_repo_types)]
+  xray_index = true
+  description = "hello ${count.index}-local"
+}
+
 provider "artifactory" {
   //  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
 }
@@ -61,3 +75,54 @@ resource "artifactory_remote_repository" "npm-remote" {
   xray_index = true
 }
 
+resource "artifactory_xray_policy" "test" {
+  name = "test-policy-name-severity"
+  description = "test policy description"
+  type = "security"
+  rules {
+    name = "rule-name"
+    priority = 1
+    criteria {
+      min_severity = "High"
+    }
+    actions {
+      block_download {
+        unscanned = true
+        active = true
+      }
+    }
+  }
+}
+
+resource "artifactory_xray_watch" "test" {
+  name = "watch-npm-local-repo"
+  description = "apply a severity-based policy to the npm local repo"
+
+  resources {
+    type = "repository"
+    name = "npm-local"
+    bin_mgr_id = "example-com-artifactory-instance"
+    repo_type = "local"
+    filters {
+      type = "package-type"
+      value = "Npm"
+    }
+  }
+
+  resources {
+    type = "repository"
+    name = artifactory_remote_repository.npm-remote.key
+    bin_mgr_id = "default"
+    repo_type = "remote"
+
+    filters {
+      type = "package-type"
+      value = "Npm"
+    }
+  }
+
+  assigned_policies {
+    name = artifactory_xray_policy.test.name
+    type = "security"
+  }
+}
