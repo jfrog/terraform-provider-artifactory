@@ -176,7 +176,7 @@ pipelines:
             - export ARTIFACTORY_USERNAME=admin && echo ${ARTIFACTORY_USERNAME}
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
             - make acceptance
-            #- make install
+            - make install
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
             #- terraform apply -auto-approve
             - printenv
@@ -212,7 +212,7 @@ pipelines:
             - echo ${PR_URL}
             - >-
               if [[ "${PR_URL}" == null ]]; then
-                echo "PR was not created. PR link is empty!"
+                echo "PR was not created (already exists?). PR link is empty!"
                 exit 1
               fi
           onSuccess:
