@@ -282,7 +282,10 @@ func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
+	newClient := m.(*resty.Client)
+	_, err := newClient.AddRetryCondition(func(response *resty.Response, err error) bool {
+		return response.StatusCode() == 400
+	}).R().Head(repositoriesEndpoint + d.Id())
 	// artifactory returns 400 instead of 404. but regardless, it's an error
 	return err == nil, err
 }
