@@ -174,7 +174,7 @@ pipelines:
             - export ARTIFACTORY_URL=https://tf-provider-rt-xray-1631639520-rt.jfrog.tech # hardcoded for testing
             - export ARTIFACTORY_USERNAME=admin && echo ${ARTIFACTORY_USERNAME}
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
-            #- make acceptance
+            - make acceptance
             #- make install
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
             #- terraform apply -auto-approve

@@ -38,7 +38,7 @@ attach:
 acceptance: fmtcheck
 	TF_ACC=1
 	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
-		&& go test -v -parallel 1 ./pkg/... timeout 120m
+		&& go test -v -parallel 1 ./pkg/...
 
 
 fmt:
