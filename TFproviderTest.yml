@@ -204,11 +204,11 @@ pipelines:
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
             - echo "Add variables needed to run Terraform Provider"
-            - export ARTIFACTORY_URL=${jdp_url}
-            - export ARTIFACTORY_USERNAME=admin
-            - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD}
-            - make acceptance
-            - make install
+            - export ARTIFACTORY_URL=${jdp_url} && echo ${ARTIFACTORY_URL}
+            - export ARTIFACTORY_USERNAME=admin && echo ${ARTIFACTORY_USERNAME}
+            - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && ${ARTIFACTORY_PASSWORD}
+            #- make acceptance
+            #- make install
             - echo "Run Terraform provider on the deployed Artifactory+Xray instance"
             #- terraform apply -auto-approve
             - printenv
