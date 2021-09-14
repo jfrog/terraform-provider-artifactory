@@ -209,7 +209,7 @@ pipelines:
             - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=danielmkn/terraform-provider-artifactory
-            - export PR_TITLE="PR from development to master branch " $(date +%s)
+            - export PR_TITLE="PR from development to master branch $(date +%s)"
             - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"${PR_TITLE}","head":"development","base":"master"}' | jq '.html_url' | sed 's/"//g')
             - echo ${PR_URL}
             - >-
