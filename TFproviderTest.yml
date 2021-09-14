@@ -148,6 +148,8 @@ pipelines:
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
             - sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt install terraform && terraform -version
+            - gitHubRepoUrl=${res_GitHubTFProviderRepo_gitRepoRepositorySshUrl} # test
+            - repoFolder=$(echo "${res_GitHubTFProviderRepo_gitRepoFullName}" | sed -e 's/.*\///g') # test
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - echo "git clone https://${TFProviderRepo}"
             - git clone https://${TFProviderRepo} && cd $repoFolder
