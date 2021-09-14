@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
+	"regexp"
 
 	"net/http"
 
@@ -187,11 +188,18 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	return repo
 }
 
+func retryOnOverload(response *resty.Response, _ error) bool {
+	// either 400 or 500 error code seem to appear with this problem
+	return regexp.MustCompile(".*Could not merge and save new descriptor.*").MatchString(string(response.Body()[:]))
+}
+
 func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error {
 
 	repo := unmarshalLocalRepository(d)
-
-	_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
+	// so that we don't effect the settings of the general client, make a copy
+	// There is an outstanding PR to do this per request
+	newClient := m.(*resty.Client)
+	_, err := newClient.AddRetryCondition(retryOnOverload).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
 
 	if err != nil {
 		return err

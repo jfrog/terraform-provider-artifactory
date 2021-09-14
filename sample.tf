@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source = "registry.terraform.io/jfrog/artifactory"
-      version = "2.3.3"
+      version = "2.3.5"
     }
   }
 }
@@ -44,6 +44,11 @@ variable "supported_repo_types" {
     "vcs",
   ]
 }
+resource "random_id" "randid" {
+  byte_length = 16
+}
+
+
 resource "artifactory_local_repository" "local" {
   count = length(var.supported_repo_types)
   key = "${var.supported_repo_types[count.index]}-local"
@@ -51,6 +56,15 @@ resource "artifactory_local_repository" "local" {
   xray_index = false
   description = "hello ${var.supported_repo_types[count.index]}-local"
 }
+
+resource "artifactory_local_repository" "local-rand" {
+  count = 100
+  key = "foo-${count.index}-local"
+  package_type = var.supported_repo_types[random_id.randid.dec % length(var.supported_repo_types)]
+  xray_index = true
+  description = "hello ${count.index}-local"
+}
+
 provider "artifactory" {
   //  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
 }

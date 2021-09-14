@@ -115,13 +115,14 @@ func buildResty(URL string) (*resty.Client, error) {
 			return fmt.Errorf("no response found")
 		}
 		if response.StatusCode() >= http.StatusBadRequest {
-			return fmt.Errorf("request failure %d: %s\n", response.StatusCode(), string(response.Body()[:]))
+			return fmt.Errorf("%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
 		}
 		return nil
 	}).
 		SetHeader("content-type", "application/json").
 		SetHeader("accept", "*/*").
-		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version)
+		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version).
+		SetRetryCount(5)
 	restyBase.DisableWarn = true
 	return restyBase, nil
 
