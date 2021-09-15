@@ -141,8 +141,8 @@ pipelines:
             - name: danielMiakotkinGitHub
           inputResources:
             - name: GitHubTFProviderRepo
-          inputSteps:
-            - name: fozzie_gke_jfrog_rt_xray_create
+#          inputSteps:
+#            - name: fozzie_gke_jfrog_rt_xray_create
           environmentVariables:
             NEW_RT_PASSWORD: ${int_gkeEnvVars_new_rt_password}
         execution:
