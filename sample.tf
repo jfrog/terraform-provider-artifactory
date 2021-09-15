@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source = "registry.terraform.io/jfrog/artifactory"
-      version = "2.3.5"
+      version = "2.3.8"
     }
   }
 }
@@ -13,7 +13,7 @@ variable "supported_repo_types" {
     "alpine",
     "bower",
     // xray refuses to cargo. They also require a mandatory field we can't currently support
-//    "cargo",
+    //    "cargo",
     "chef",
     "cocoapods",
     "composer",
@@ -126,3 +126,5 @@ resource "artifactory_xray_watch" "test" {
     type = "security"
   }
 }
+
+

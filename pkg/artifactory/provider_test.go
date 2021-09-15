@@ -2,7 +2,9 @@ package artifactory
 
 import (
 	"context"
+	"github.com/go-resty/resty/v2"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,12 +30,20 @@ func TestProvider(t *testing.T) {
 func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
 }
-
-func testAccPreCheck(t *testing.T) {
+func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
+	uri := "/artifactory/" + remotePath
+	_, err := client.R().SetFile(filepath.Base(localPath),localPath).
+		SetHeader("Content-Type", contentType).Put(uri)
+	//curl -n --location --request PUT 'http://localhost:8081/artifactory/example-repo-local/artifact.zip' \
+	//> --header 'Content-Type: application/zip' \
+	//> --data-binary '@/Users/christianb/go/pkg/mod/github.com/klauspost/compress@v1.11.2/zstd/testdata/good.zip'
+	return err
+}
+func getTestResty(t *testing.T) *resty.Client {
 	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
 		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
 	}
-	resty, err := buildResty(os.Getenv("ARTIFACTORY_URL"))
+	restyClient, err := buildResty(os.Getenv("ARTIFACTORY_URL"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,12 +51,17 @@ func testAccPreCheck(t *testing.T) {
 	password := os.Getenv("ARTIFACTORY_PASSWORD")
 	api := os.Getenv("ARTIFACTORY_APIKEY")
 	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
-	resty, err = addAuthToResty(resty, username, password, api, accessToken)
+	restyClient, err = addAuthToResty(restyClient, username, password, api, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
+	return restyClient
+}
+
+func testAccPreCheck(t *testing.T) {
+	restyClient := getTestResty(t)
 	// TODO check the payload and make sure it's the right license type
-	_, err = resty.R().Get("/artifactory/api/system/licenses/")
+	_, err := restyClient.R().Get("/artifactory/api/system/licenses/")
 	if err != nil {
 		t.Fatal(err)
 	}

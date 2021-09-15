@@ -1,6 +1,9 @@
 package artifactory
 
 import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +12,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+
+func testDlFile(t *testing.T) {
+	// every instance of RT has this repo and file out-of-the-box
+	script := `
+		data "artifactory_file" "example" {
+		  repository      = "example-repo-local"
+		  path            = "installer.zip"
+		  output_path     = "${path.cwd}/crash.zip"
+		  force_overwrite = true
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {
+			testAccPreCheck(t)
+			client := getTestResty(t)
+			err := uploadTestFile(client, "../../samples/crash.zip", "example-local-repo/crash.zip", "application/zip")
+			if err != nil {
+				panic(err)
+			}
+		},
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: script,
+				Check: func(state *terraform.State) error {
+					download := state.Modules[0].Resources["data.artifactory_file.ac_api_changelog_indexer_code"].Primary.Attributes["output_path"]
+					_, err := os.Stat(download)
+					if err != nil {
+						return err
+					}
+					verified, err := VerifySha256Checksum(download, "9888d5f4bd315d9756061ec13ea744383e0ed765c6430147c6f539195b4f6e9b")
+
+					if !verified {
+						return fmt.Errorf("%s checksum does not have expected checksum", download)
+					}
+					return err
+				},
+			},
+		},
+	})
+}
 func TestFileExists(t *testing.T) {
 	tmpFile, err := CreateTempFile("test")
 
