@@ -183,11 +183,11 @@ pipelines:
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
             - echo "Get cookie to generate Access token"
             - >-
-              export COOKIES=$(curl -c - POST "${jdp_url}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
+              export COOKIES=$(curl -c - "${jdp_url}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
                             --header "accept: application/json, text/plain, */*" \
                             --header "content-type: application/json;charset=UTF-8" \
                             --header "x-requested-with: XMLHttpRequest" \
-                            -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}')
+                            -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
             - export REFRESHTOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
             - export ACCESSTOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $7 }')
             - >-
@@ -195,6 +195,9 @@ pipelines:
                                   --header "accept: application/json, text/plain, */*" \
                                   --header "x-requested-with: XMLHttpRequest" \
                                   --header "cookie: ACCESSTOKEN=${ACCESSTOKEN}; REFRESHTOKEN=${REFRESHTOKEN}")
+            - echo ${REFRESHTOKEN}
+            - echo ${ACCESSTOKEN}
+            - echo ${ACCESS_KEY}
             - export TF_ACC=1
             #- make acceptance # --- TODO: RT test TestAccPermissionTarget_full fails
             - make install
