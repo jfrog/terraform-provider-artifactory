@@ -9,7 +9,7 @@ resources:
       buildOn:
         commit: true
 pipelines:
-  - name: tf_provider_fozzie_gke_jfrog_rt_xray
+  - name: tf_provider_artifactory_xray_gke
     steps:
       - name: fozzie_gke_jfrog_rt_xray_create
         type: Bash
