@@ -13,13 +13,13 @@ import (
 )
 
 
-func TestDlFile(t *testing.T) {
+func testDlFile(t *testing.T) {
 	// every instance of RT has this repo and file out-of-the-box
 	script := `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
 		  path            = "installer.zip"
-		  output_path     = "${path.cwd}/installer.zip"
+		  output_path     = "${path.cwd}/crash.zip"
 		  force_overwrite = true
 		}
 	`
@@ -27,7 +27,7 @@ func TestDlFile(t *testing.T) {
 		PreCheck:     func() {
 			testAccPreCheck(t)
 			client := getTestResty(t)
-			err := uploadTestFile(client, "../../samples/crash.zip", "/crash.zip", "application/zip")
+			err := uploadTestFile(client, "../../samples/crash.zip", "example-local-repo/crash.zip", "application/zip")
 			if err != nil {
 				panic(err)
 			}

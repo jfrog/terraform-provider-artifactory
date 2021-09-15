@@ -31,9 +31,9 @@ func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
 }
 func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
-	_, err := client.R().SetFile(filepath.Base(localPath), localPath).
-		SetHeader("Content-Type", contentType).
-		Put(remotePath)
+	uri := "/artifactory/" + remotePath
+	_, err := client.R().SetFile(filepath.Base(localPath),localPath).
+		SetHeader("Content-Type", contentType).Put(uri)
 	//curl -n --location --request PUT 'http://localhost:8081/artifactory/example-repo-local/artifact.zip' \
 	//> --header 'Content-Type: application/zip' \
 	//> --data-binary '@/Users/christianb/go/pkg/mod/github.com/klauspost/compress@v1.11.2/zstd/testdata/good.zip'
