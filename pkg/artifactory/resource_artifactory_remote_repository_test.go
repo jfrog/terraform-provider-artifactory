@@ -9,7 +9,36 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_repository")
 
+	key := fmt.Sprintf("debian-remote.teleport%d",randomInt())
+	localRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key              = "%s"
+			package_type     = "debian"
+			repo_layout_ref  = "simple-default"
+			url              = "https://deb.releases.teleport.dev/"
+			notes            = "managed by terraform"
+			property_sets    = ["artifactory"]
+			includes_pattern = "**/*"
+			content_synchronisation {
+				enabled = false
+			}
+		}
+	`,name, key )
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.TestCheckResourceAttr(fqrn, "key", key),
+			},
+		},
+	})
+}
 func TestKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
 		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
