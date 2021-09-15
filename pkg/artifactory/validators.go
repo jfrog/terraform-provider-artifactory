@@ -530,7 +530,7 @@ func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 
 var repoKeyValidator = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
-	validation.StringDoesNotContainAny(" !@#$%^&*()_+={}[]:;<>,./?~`|\\"),
+	validation.StringDoesNotContainAny(" !@#$%^&*()_+={}[]:;<>,/?~`|\\"),
 )
 
 func fileExist(value interface{}, _ string) ([]string, []error) {

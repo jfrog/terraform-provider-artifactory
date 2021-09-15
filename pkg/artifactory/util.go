@@ -160,27 +160,7 @@ func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error 
 	}
 }
 
-// HashStrings hashcode was moved to internal in terraform-plugin-sdk, and schema does not expose a wrapper of hashcode.Strings
-func HashStrings(strings []string) string {
-	var buf bytes.Buffer
 
-	for _, s := range strings {
-		buf.WriteString(fmt.Sprintf("%s-", s))
-	}
-
-	return fmt.Sprintf("%d", schema.HashString(buf.String()))
-}
-func cascadingErr(hasErr *bool) func(error) {
-	if hasErr == nil {
-		panic("hasError cannot be nil")
-	}
-	return func(err error) {
-		if err != nil {
-			fmt.Println(err)
-			*hasErr = true
-		}
-	}
-}
 
 func sendConfigurationPatch(content []byte, m interface{}) error {
 
