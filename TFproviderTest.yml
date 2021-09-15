@@ -176,7 +176,7 @@ pipelines:
             - export ARTIFACTORY_USERNAME=admin && echo ${ARTIFACTORY_USERNAME}
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
             - export TF_ACC=1
-            #- make acceptance # RT test TestAccPermissionTarget_full fails
+            #- make acceptance # --- RT test TestAccPermissionTarget_full fails
             - make install
             - printenv
           onSuccess:
@@ -204,6 +204,7 @@ pipelines:
             - git checkout -b development && ls
             - git status
 #            - make release
+            - git tag
             - export NEXT_VERSION=$(git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
             - git tag "${NEXT_VERSION}"
             - git push --tags
