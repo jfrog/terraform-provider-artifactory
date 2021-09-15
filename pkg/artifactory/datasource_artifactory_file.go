@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/go-resty/resty/v2"
 
@@ -91,8 +92,8 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Computed: true,
 			},
 			"output_path": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"force_overwrite": {
 				Type:     schema.TypeBool,
@@ -115,17 +116,18 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	fileExists := FileExists(outputPath)
-	chksMatches, err := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-
-	if err != nil {
-		return err
-	}
+	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 
 	if fileExists {
 		if !chksMatches && !forceOverwrite {
 			return fmt.Errorf("local file differs from upstream version and no overwrite is permitted")
 		}
 	} else {
+		outdir := filepath.Dir(outputPath)
+		err = os.MkdirAll(outdir, os.ModePerm)
+		if err != nil {
+			return err
+		}
 		outFile, err := os.Create(outputPath)
 		if err != nil {
 			return err
@@ -139,6 +141,10 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 	if err != nil {
 		return err
+	}
+	chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	if !chksMatches {
+		return fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath,fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
 	}
 
 	return packFileInfo(fileInfo, d)
