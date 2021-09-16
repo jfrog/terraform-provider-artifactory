@@ -158,7 +158,7 @@ pipelines:
             - git branch --set-upstream-to=origin/development development
             - git pull && ls && pwd
             - export PROVIDER_VERSION=$(git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-            - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $3 +1 }')
+            - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
             - echo $PROVIDER_VERSION
             - echo $NEXT_PROVIDER_VERSION
             - echo "Rename the build to make it work on Ubuntu"
@@ -218,7 +218,7 @@ pipelines:
             - git clone https://${int_danielMiakotkinGitHub_token}${TFProviderRepo} && cd $repoFolder
             - git checkout -b development && ls
             - git status
-            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
+            - export NEXT_VERSION=$(git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
             - git tag "${NEXT_VERSION}"
             - git push --tags
             - echo "Create a PR from development branch to master with version tag"

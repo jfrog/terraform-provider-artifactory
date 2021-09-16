@@ -94,7 +94,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					// we send: password
 					// we get back: JE2fNsEThvb1buiH7h7S2RDsGWSdp2EcuG9Pky5AFyRMwE4UzG
 					//resource.TestCheckResourceAttr(fqrn, "password", os.Getenv("ARTIFACTORY_PASSWORD")),
-					resource.TestCheckResourceAttr(fqrn, "password", "Known issue in RT"),
+					//resource.TestCheckResourceAttr(fqrn, "password", "Known issue in RT"),
 				),
 			},
 		},
