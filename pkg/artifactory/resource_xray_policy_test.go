@@ -1,17 +1,17 @@
-//package artifactory
-//
-//import (
-//	"fmt"
-//	"net/http"
-//	"regexp"
-//	"testing"
-//
-//	"github.com/go-resty/resty/v2"
-//
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-//)
-//
+package artifactory
+
+import (
+	"fmt"
+	"net/http"
+	"regexp"
+	"testing"
+
+	"github.com/go-resty/resty/v2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
 //func TestAccPolicy_basic(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -41,7 +41,7 @@
 //		},
 //	})
 //}
-//
+
 //func TestAccPolicy_cvssRange(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -83,7 +83,7 @@
 //		},
 //	})
 //}
-//
+
 //func TestAccPolicy_allActions(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -131,7 +131,7 @@
 //		},
 //	})
 //}
-//
+
 //func TestAccPolicy_licenseCriteria(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -175,7 +175,7 @@
 //		},
 //	})
 //}
-//
+
 //func TestAccPolicy_badLicenseCriteria(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -194,7 +194,7 @@
 //		},
 //	})
 //}
-//
+
 //func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 //	policyName := "terraform-test-policy"
 //	policyDesc := "policy created by xray acceptance tests"
@@ -213,37 +213,37 @@
 //		},
 //	})
 //}
-//
-//// This should be uncommented when someone figures out how to deal with this (see comment in expandActions in the provider)
-///*func TestAccPolicy_missingBlockDownloads(t *testing.T) {
-//	policyName   := "terraform-test-policy"
-//	policyDesc   := "policy created by xray acceptance tests"
-//	ruleName     := "test-security-rule"
-//	resourceName := "xray_policy.test"
-//
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:     func() { testAccPreCheck(t) },
-//		CheckDestroy: testAccCheckPolicyDestroy,
-//		Providers:    testAccProviders,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccXrayPolicy_missingBlockDownloads(policyName, policyDesc, ruleName),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr(resourceName, "name", policyName),
-//					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
-//					resource.TestCheckResourceAttr(resourceName, "rules.0.name", ruleName),
-//					resource.TestCheckResourceAttr(resourceName, "rules.0.priority", "1"),
-//				),
-//			},
-//			{
-//				ResourceName:      resourceName,
-//				ImportState:       true,
-//				ImportStateVerify: false,
-//			},
-//		},
-//	})
-//}*/
-//
+
+// This should be uncommented when someone figures out how to deal with this (see comment in expandActions in the provider)
+/*func TestAccPolicy_missingBlockDownloads(t *testing.T) {
+	policyName   := "terraform-test-policy"
+	policyDesc   := "policy created by xray acceptance tests"
+	ruleName     := "test-security-rule"
+	resourceName := "xray_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicyDestroy,
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccXrayPolicy_missingBlockDownloads(policyName, policyDesc, ruleName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", policyName),
+					resource.TestCheckResourceAttr(resourceName, "description", policyDesc),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "rules.0.priority", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: false,
+			},
+		},
+	})
+}*/
+
 //func testAccCheckPolicyDestroy(s *terraform.State) error {
 //
 //	for _, rs := range s.RootModule().Resources {
@@ -268,7 +268,7 @@
 //	}
 //	return nil
 //}
-//
+
 //func testAccXrayPolicyBasic(name, description, ruleName string) string {
 //	return fmt.Sprintf(`
 //		resource "artifactory_xray_policy" "test" {
@@ -292,7 +292,7 @@
 //		}
 //`, name, description, ruleName)
 //}
-//
+
 //func testAccXrayPolicyCVSSRange(name, description, ruleName string, rangeTo int) string {
 //	return fmt.Sprintf(`
 //		resource "artifactory_xray_policy" "test" {
@@ -319,7 +319,7 @@
 //		}
 //`, name, description, ruleName, rangeTo)
 //}
-//
+
 //func testAccXrayPolicyAllActions(name, description, ruleName, email string) string {
 //	// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
 //	return fmt.Sprintf(`
@@ -347,7 +347,7 @@
 //		}
 //`, name, description, ruleName, email)
 //}
-//
+
 //func testAccXrayPolicyLicense(name, description, ruleName, allowedLicense string) string {
 //	return fmt.Sprintf(`
 //		resource "artifactory_xray_policy" "test" {
@@ -372,7 +372,7 @@
 //}
 //`, name, description, ruleName, allowedLicense)
 //}
-//
+
 //func testAccXrayPolicyLicenseBanned(name, description, ruleName, bannedLicense1, bannedLicense2 string) string {
 //	return fmt.Sprintf(`
 //		resource "artifactory_xray_policy" "test" {
@@ -397,7 +397,7 @@
 //		}
 //`, name, description, ruleName, bannedLicense1, bannedLicense2)
 //}
-//
+
 //func testAccXrayPolicy_badLicense(name, description, ruleName string, rangeTo int) string {
 //	return fmt.Sprintf(`
 //resource "artifactory_xray_policy" "test" {
@@ -423,7 +423,7 @@
 //}
 //`, name, description, ruleName, rangeTo)
 //}
-//
+
 //func testAccXrayPolicy_badSecurity(name, description, ruleName, allowedLicense string) string {
 //	return fmt.Sprintf(`
 //resource "artifactory_xray_policy" "test" {

@@ -1,16 +1,16 @@
-//package artifactory
-//
-//import (
-//	"fmt"
-//	"net/http"
-//	"testing"
-//
-//	"github.com/go-resty/resty/v2"
-//
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-//)
-//
+package artifactory
+
+import (
+	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/go-resty/resty/v2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
 //func TestAccWatch_basic(t *testing.T) {
 //	watchName := "test-watch"
 //	policyName := "test-policy"
