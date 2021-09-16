@@ -162,7 +162,7 @@ pipelines:
             - git checkout -b development
             - git branch --set-upstream-to=origin/development development
             - git pull && ls && pwd
-            - export PROVIDER_VERSION=$(git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+            - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
             - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
             - echo $PROVIDER_VERSION
             - echo $NEXT_PROVIDER_VERSION
