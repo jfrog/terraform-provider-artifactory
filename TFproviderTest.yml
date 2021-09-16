@@ -26,7 +26,7 @@ pipelines:
           integrations:
             - name: gkeEnvVars
           inputResources:
-            - name: GitHubTFProviderRepo
+            - name: GitHubTFProviderRepoJFrog
           environmentVariables:
             FOZZIE_HOME: "/home/fozzie"
             PROVISIONER: "native-steps"
@@ -97,8 +97,8 @@ pipelines:
             - kubectl rollout status statefulset/xray
             - add_run_variables jdp_url=https://${GKE_CLUSTER}-rt.jfrog.tech
             - add_run_variables NEW_RT_PASSWORD=$NEW_RT_PASSWORD
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepo_gitRepoRepositorySshUrl}
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepo_gitRepoFullName}" | sed -e 's/.*\///g')
+            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
+            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
             - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
             - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
             - cd partner-integration-tests
