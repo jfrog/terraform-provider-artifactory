@@ -1,5 +1,5 @@
 resources:
-  - name: GitHubTFProviderRepo
+  - name: GitHubTFProviderRepoJFrog
     type: GitRepo
     configuration:
       gitProvider: danielMiakotkinGitHub
