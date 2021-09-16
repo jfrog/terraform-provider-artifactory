@@ -229,15 +229,15 @@ pipelines:
             - git tag --sort=-v:refname
             - git tag "${NEXT_VERSION}"
             - git push --tags
-#            - echo "Create a PR from development branch to master with version tag"
-#            - export REPO_NAME=jfrog/terraform-provider-artifactory
-#            - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
-#            - echo ${PR_URL}
-#            - >-
-#              if [[ "${PR_URL}" == null ]]; then
-#                echo "PR was not created (already exists from this head branch?). PR link is empty!"
-#                exit 1
-#              fi
+            - echo "Create a PR from development branch to master with version tag"
+            - export REPO_NAME=jfrog/terraform-provider-artifactory
+            - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
+            - echo ${PR_URL}
+            - >-
+              if [[ "${PR_URL}" == null ]]; then
+                echo "PR was not created (already exists from this head branch?). PR link is empty!"
+                exit 1
+              fi
           onSuccess:
             - echo "Success"
             - send_notification partnersSlack --text "Terraform Provider ${TFProviderRepo}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
