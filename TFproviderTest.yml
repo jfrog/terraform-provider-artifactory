@@ -152,7 +152,7 @@ pipelines:
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - echo "git clone https://${TFProviderRepo}"
             - git clone https://${TFProviderRepo} && cd $repoFolder
-            - git clone https://github.com/danielmkn/terraform-provider-artifactory.git && cd terraform-provider-artifactory
+            - git clone https://github.com/jfrog/terraform-provider-artifactory.git && cd terraform-provider-artifactory
             - git fetch origin
             - git checkout -b development
             - git branch --set-upstream-to=origin/development development
