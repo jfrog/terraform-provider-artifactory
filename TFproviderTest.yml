@@ -151,7 +151,7 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
             - git checkout -b development
             - git branch --set-upstream-to=origin/development development
-            - git pull && ls && pwd
+            - git pull && ls && pwd && git branch
             - go version
             - echo "Install Terraform"
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
