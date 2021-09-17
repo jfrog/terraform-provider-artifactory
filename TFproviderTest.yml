@@ -233,6 +233,8 @@ pipelines:
             - echo $NEXT_VERSION
             - git tag --sort=-v:refname
             - git tag "${NEXT_VERSION}"
+            - git config --global user.email jfrog-solutions-ci+1@jfrog.com
+            - git config --global user.name jfrogsolutioncicd
             - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=jfrog/terraform-provider-artifactory
