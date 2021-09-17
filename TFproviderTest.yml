@@ -11,115 +11,115 @@ resources:
 pipelines:
   - name: tf_provider_artifactory_xray_gke
     steps:
-      - name: fozzie_gke_jfrog_rt_xray_create
-        type: Bash
-        configuration:
-          priority: 0
-          runtime:
-            type: image
-            image:
-              custom:
-                name: partnership-fozzie-images.jfrog.io/gke
-                tag: latest
-                registry: PartnershipArtifactory
-                sourceRepository: fozzie-images
-          integrations:
-            - name: gkeEnvVars
-          inputResources:
-            - name: GitHubTFProviderRepoJFrog
-          environmentVariables:
-            FOZZIE_HOME: "/home/fozzie"
-            PROVISIONER: "native-steps"
-            GIT_ACCESS_USER: ${int_gkeEnvVars_git_user}
-            GIT_ACCESS_TOKEN: ${int_gkeEnvVars_git_token}
-            PARTNERSHIP_USER: ${int_gkeEnvVars_partnership_user}
-            PARTNERSHIP_API_KEY: ${int_gkeEnvVars_partnership_api_key}
-            SERVICE_ACCOUNT_JSON: /home/fozzie/native-steps/credentials/serviceaccount.json
-            GKE_CLUSTER: ${int_gkeEnvVars_gke_cluster}
-            GKE_ZONE: ${int_gkeEnvVars_gke_zone}
-            GKE_PROJECT: ${int_gkeEnvVars_gke_project}
-            CLOUDFLARE_ZONE_ID: ${int_gkeEnvVars_cloudflare_zone_id}
-            CLOUDFLARE_TOKEN: ${int_gkeEnvVars_cloudflare_token}
-            NUM_NODES: ${int_gkeEnvVars_NUM_NODES}
-            ARTIFACTORY_DISTRIBUTION: artifactory
-            NEW_RT_PASSWORD: ${int_gkeEnvVars_new_rt_password}
-        execution:
-          onStart:
-            - echo "Preparing for work..."
-          onExecute:
-            - GKE_CLUSTER=tf-provider-rt-xray-$(date +%s)
-            - fozzie checkout native-steps
-            - fozzie gke/create_cluster
-            - echo "Creating Artifactory Secret"
-            - kubectl create secret generic artifactory-license --from-file=$FOZZIE_HOME/native-steps/license/artifactory.cluster.license
-            - echo "Creating TLS Secret"
-            - kubectl create secret tls tls-ingress --cert=$FOZZIE_HOME/native-steps/dns/tls.crt --key=$FOZZIE_HOME/native-steps/dns/tls.key
-            - helm repo add jfrog https://charts.jfrog.io/
-            - helm repo update
-            - add_run_variables rt_helm_chart_version=$(helm search repo | grep "${ARTIFACTORY_DISTRIBUTION} " | awk '{$1=$1};1' |  cut -f2 -d " ")
-            - echo "Helm chart version "${rt_helm_chart_version}
-            - add_run_variables artifactory_version=$(helm search repo | grep "${ARTIFACTORY_DISTRIBUTION} " | awk '{$1=$1};1' |  cut -f3 -d " ")
-            - echo "Artifactory version "${artifactory_version}
-            - add_run_variables xray_helm_chart_version=$(helm search repo | grep "/xray" | awk '{$1=$1};1' |  cut -f2 -d " ")
-            - echo "Xray Helm chart version "${xray_helm_chart_version}
-            - add_run_variables xray_version=$(helm search repo | grep "/xray" | awk '{$1=$1};1' |  cut -f3 -d " ")
-            - echo "Xray version "${xray_version}
-            - echo "Installing ${ARTIFACTORY_DISTRIBUTION}"
-            - MASTER_KEY=$(openssl rand -hex 32)
-            - JOIN_KEY=$(openssl rand -hex 32)
-            - >-
-              if [[ ${ARTIFACTORY_DISTRIBUTION} == "artifactory-ha" ]]; then
-                 helm upgrade --install artifactory-ha  jfrog/artifactory-ha --set nginx.service.ssloffload=true --set nginx.tlsSecretName=tls-ingress --set artifactory.masterKey=$MASTER_KEY --set artifactory.joinKey=$JOIN_KEY --set artifactory.license.secret=artifactory-license --set artifactory.license.dataKey=artifactory.cluster.license --set artifactory.node.replicaCount=1
-                 echo "Waiting for Artifactory HA roll out"
-                 kubectl rollout status deployment/artifactory-ha-nginx
-                 kubectl rollout status statefulset/artifactory-ha-artifactory-ha-primary
-                 kubectl rollout status statefulset/artifactory-ha-artifactory-ha-member
-                 echo "Mapping Artifactory DNS record"
-                 export IP_ADDR=$(kubectl get svc artifactory-ha-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-                 export URL="${GKE_CLUSTER}-rt.jfrog.tech"
-                 fozzie dns/add
-                 echo "Installing JFrog Xray"
-                 helm upgrade --install xray jfrog/xray --set postgresql.persistence.size=200Gi --set xray.jfrogUrl=http://artifactory-ha-nginx --set xray.masterKey=$MASTER_KEY --set xray.joinKey=$JOIN_KEY
-              else
-                 helm upgrade --install artifactory  jfrog/artifactory --set nginx.service.ssloffload=true --set nginx.tlsSecretName=tls-ingress --set artifactory.masterKey=$MASTER_KEY --set artifactory.joinKey=$JOIN_KEY --set artifactory.license.secret=artifactory-license --set artifactory.license.dataKey=artifactory.cluster.license
-                 echo "Waiting for Artifactory roll out"
-                 kubectl rollout status deployment/artifactory-artifactory-nginx
-                 kubectl rollout status statefulset/artifactory
-                 echo "Mapping Artifactory DNS record"
-                 export IP_ADDR=$(kubectl get svc artifactory-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-                 export URL="${GKE_CLUSTER}-rt.jfrog.tech"
-                 fozzie dns/add
-                 echo "Installing JFrog Xray"
-                 helm upgrade --install xray jfrog/xray --set postgresql.persistence.size=200Gi --set xray.jfrogUrl=http://artifactory-artifactory-nginx --set xray.masterKey=$MASTER_KEY --set xray.joinKey=$JOIN_KEY
-              fi
-            - kubectl rollout status statefulset/xray-postgresql
-            - kubectl rollout status statefulset/xray-rabbitmq
-            - kubectl rollout status statefulset/xray
-            - add_run_variables jdp_url=https://${GKE_CLUSTER}-rt.jfrog.tech
-            - add_run_variables NEW_RT_PASSWORD=$NEW_RT_PASSWORD
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
-            - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
-            - git clone https://${int_Partnership_GitHub_token}@github.com/jfrog/partner-integration-tests.git
-            - cd partner-integration-tests
-            - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
-            - ./gradlew artifactory_common
-          onSuccess:
-            - echo "GKE cluster created successfully with JFrog Artifactory and Xray"
-            - echo "Visit Artifactory at https://${GKE_CLUSTER}-rt.jfrog.tech"
-            - echo "Artifactory username admin"
-            - echo "Artifactory password ${NEW_RT_PASSWORD}"
-          onFailure:
-            - echo "JFrog Artifactory and Xray creation failed."
-            - fozzie checkout native-steps
-            - echo "Removing GKE cluster"
-            - fozzie gke/authorize
-            - fozzie gke/delete_cluster
-            - echo "Removing DNS entry"
-            - export URL="${GKE_CLUSTER}-rt.jfrog.tech"
-            - fozzie dns/delete
-          onComplete:
-            - echo "JFrog Artifactory and Xray Job Complete"
+#      - name: fozzie_gke_jfrog_rt_xray_create
+#        type: Bash
+#        configuration:
+#          priority: 0
+#          runtime:
+#            type: image
+#            image:
+#              custom:
+#                name: partnership-fozzie-images.jfrog.io/gke
+#                tag: latest
+#                registry: PartnershipArtifactory
+#                sourceRepository: fozzie-images
+#          integrations:
+#            - name: gkeEnvVars
+#          inputResources:
+#            - name: GitHubTFProviderRepoJFrog
+#          environmentVariables:
+#            FOZZIE_HOME: "/home/fozzie"
+#            PROVISIONER: "native-steps"
+#            GIT_ACCESS_USER: ${int_gkeEnvVars_git_user}
+#            GIT_ACCESS_TOKEN: ${int_gkeEnvVars_git_token}
+#            PARTNERSHIP_USER: ${int_gkeEnvVars_partnership_user}
+#            PARTNERSHIP_API_KEY: ${int_gkeEnvVars_partnership_api_key}
+#            SERVICE_ACCOUNT_JSON: /home/fozzie/native-steps/credentials/serviceaccount.json
+#            GKE_CLUSTER: ${int_gkeEnvVars_gke_cluster}
+#            GKE_ZONE: ${int_gkeEnvVars_gke_zone}
+#            GKE_PROJECT: ${int_gkeEnvVars_gke_project}
+#            CLOUDFLARE_ZONE_ID: ${int_gkeEnvVars_cloudflare_zone_id}
+#            CLOUDFLARE_TOKEN: ${int_gkeEnvVars_cloudflare_token}
+#            NUM_NODES: ${int_gkeEnvVars_NUM_NODES}
+#            ARTIFACTORY_DISTRIBUTION: artifactory
+#            NEW_RT_PASSWORD: ${int_gkeEnvVars_new_rt_password}
+#        execution:
+#          onStart:
+#            - echo "Preparing for work..."
+#          onExecute:
+#            - GKE_CLUSTER=tf-provider-rt-xray-$(date +%s)
+#            - fozzie checkout native-steps
+#            - fozzie gke/create_cluster
+#            - echo "Creating Artifactory Secret"
+#            - kubectl create secret generic artifactory-license --from-file=$FOZZIE_HOME/native-steps/license/artifactory.cluster.license
+#            - echo "Creating TLS Secret"
+#            - kubectl create secret tls tls-ingress --cert=$FOZZIE_HOME/native-steps/dns/tls.crt --key=$FOZZIE_HOME/native-steps/dns/tls.key
+#            - helm repo add jfrog https://charts.jfrog.io/
+#            - helm repo update
+#            - add_run_variables rt_helm_chart_version=$(helm search repo | grep "${ARTIFACTORY_DISTRIBUTION} " | awk '{$1=$1};1' |  cut -f2 -d " ")
+#            - echo "Helm chart version "${rt_helm_chart_version}
+#            - add_run_variables artifactory_version=$(helm search repo | grep "${ARTIFACTORY_DISTRIBUTION} " | awk '{$1=$1};1' |  cut -f3 -d " ")
+#            - echo "Artifactory version "${artifactory_version}
+#            - add_run_variables xray_helm_chart_version=$(helm search repo | grep "/xray" | awk '{$1=$1};1' |  cut -f2 -d " ")
+#            - echo "Xray Helm chart version "${xray_helm_chart_version}
+#            - add_run_variables xray_version=$(helm search repo | grep "/xray" | awk '{$1=$1};1' |  cut -f3 -d " ")
+#            - echo "Xray version "${xray_version}
+#            - echo "Installing ${ARTIFACTORY_DISTRIBUTION}"
+#            - MASTER_KEY=$(openssl rand -hex 32)
+#            - JOIN_KEY=$(openssl rand -hex 32)
+#            - >-
+#              if [[ ${ARTIFACTORY_DISTRIBUTION} == "artifactory-ha" ]]; then
+#                 helm upgrade --install artifactory-ha  jfrog/artifactory-ha --set nginx.service.ssloffload=true --set nginx.tlsSecretName=tls-ingress --set artifactory.masterKey=$MASTER_KEY --set artifactory.joinKey=$JOIN_KEY --set artifactory.license.secret=artifactory-license --set artifactory.license.dataKey=artifactory.cluster.license --set artifactory.node.replicaCount=1
+#                 echo "Waiting for Artifactory HA roll out"
+#                 kubectl rollout status deployment/artifactory-ha-nginx
+#                 kubectl rollout status statefulset/artifactory-ha-artifactory-ha-primary
+#                 kubectl rollout status statefulset/artifactory-ha-artifactory-ha-member
+#                 echo "Mapping Artifactory DNS record"
+#                 export IP_ADDR=$(kubectl get svc artifactory-ha-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+#                 export URL="${GKE_CLUSTER}-rt.jfrog.tech"
+#                 fozzie dns/add
+#                 echo "Installing JFrog Xray"
+#                 helm upgrade --install xray jfrog/xray --set postgresql.persistence.size=200Gi --set xray.jfrogUrl=http://artifactory-ha-nginx --set xray.masterKey=$MASTER_KEY --set xray.joinKey=$JOIN_KEY
+#              else
+#                 helm upgrade --install artifactory  jfrog/artifactory --set nginx.service.ssloffload=true --set nginx.tlsSecretName=tls-ingress --set artifactory.masterKey=$MASTER_KEY --set artifactory.joinKey=$JOIN_KEY --set artifactory.license.secret=artifactory-license --set artifactory.license.dataKey=artifactory.cluster.license
+#                 echo "Waiting for Artifactory roll out"
+#                 kubectl rollout status deployment/artifactory-artifactory-nginx
+#                 kubectl rollout status statefulset/artifactory
+#                 echo "Mapping Artifactory DNS record"
+#                 export IP_ADDR=$(kubectl get svc artifactory-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+#                 export URL="${GKE_CLUSTER}-rt.jfrog.tech"
+#                 fozzie dns/add
+#                 echo "Installing JFrog Xray"
+#                 helm upgrade --install xray jfrog/xray --set postgresql.persistence.size=200Gi --set xray.jfrogUrl=http://artifactory-artifactory-nginx --set xray.masterKey=$MASTER_KEY --set xray.joinKey=$JOIN_KEY
+#              fi
+#            - kubectl rollout status statefulset/xray-postgresql
+#            - kubectl rollout status statefulset/xray-rabbitmq
+#            - kubectl rollout status statefulset/xray
+#            - add_run_variables jdp_url=https://${GKE_CLUSTER}-rt.jfrog.tech
+#            - add_run_variables NEW_RT_PASSWORD=$NEW_RT_PASSWORD
+#            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
+#            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
+#            - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
+#            - git clone https://${int_Partnership_GitHub_token}@github.com/jfrog/partner-integration-tests.git
+#            - cd partner-integration-tests
+#            - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
+#            - ./gradlew artifactory_common
+#          onSuccess:
+#            - echo "GKE cluster created successfully with JFrog Artifactory and Xray"
+#            - echo "Visit Artifactory at https://${GKE_CLUSTER}-rt.jfrog.tech"
+#            - echo "Artifactory username admin"
+#            - echo "Artifactory password ${NEW_RT_PASSWORD}"
+#          onFailure:
+#            - echo "JFrog Artifactory and Xray creation failed."
+#            - fozzie checkout native-steps
+#            - echo "Removing GKE cluster"
+#            - fozzie gke/authorize
+#            - fozzie gke/delete_cluster
+#            - echo "Removing DNS entry"
+#            - export URL="${GKE_CLUSTER}-rt.jfrog.tech"
+#            - fozzie dns/delete
+#          onComplete:
+#            - echo "JFrog Artifactory and Xray Job Complete"
 
       - name: build_and_run_tf_provider
         type: Bash
@@ -136,8 +136,10 @@ pipelines:
             - name: partnersSlack
             - name: gkeEnvVars
             - name: Partnership_GitHub
-          inputSteps:
-            - name: fozzie_gke_jfrog_rt_xray_create
+#          inputSteps:
+#            - name: fozzie_gke_jfrog_rt_xray_create
+          inputResources:
+            - name: GitHubTFProviderRepoJFrog
           environmentVariables:
             NEW_RT_PASSWORD: ${int_gkeEnvVars_new_rt_password}
         execution:
@@ -149,12 +151,13 @@ pipelines:
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
             - sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt install terraform && terraform -version
-            #- add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} #test
+            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} #test
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            #- add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g') #test
+            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g') #test
             - echo "git clone https://${TFProviderRepo}"
-            - git clone https://${TFProviderRepo} && cd $repoFolder
-            - git clone https://github.com/jfrog/terraform-provider-artifactory.git && cd terraform-provider-artifactory
+            #- git clone https://${TFProviderRepo} && cd $repoFolder
+            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd ${repoFolder}
+            #- git clone https://github.com/jfrog/terraform-provider-artifactory.git && cd terraform-provider-artifactory
             - git fetch origin
             - git checkout -b development
             - git branch --set-upstream-to=origin/development development
@@ -203,46 +206,46 @@ pipelines:
           onComplete:
             - echo "Complete"
 
-      - name: create_pr_to_master_branch
-        type: Bash
-        configuration:
-          integrations:
-            - name: partnersSlack
-            - name: partnership_jfrog_io
-            - name: Partnership_GitHub
-          inputSteps:
-            - name: build_and_run_tf_provider
-        execution:
-          onStart:
-            - echo "Preparing for work..."
-          onExecute:
-            - printenv
-            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd $repoFolder
-            - git checkout -b development && ls
-            - git status
-            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
-            - echo $NEXT_VERSION
-            - git tag --sort=-v:refname
-            - git tag "${NEXT_VERSION}"
-            - git push --tags
-            - echo "Create a PR from development branch to master with version tag"
-            - export REPO_NAME=jfrog/terraform-provider-artifactory
-            - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
-            - echo ${PR_URL}
-            - >-
-              if [[ "${PR_URL}" == null ]]; then
-                echo "PR was not created (already exists from this head branch?). PR link is empty!"
-                exit 1
-              fi
-          onSuccess:
-            - echo "Success"
-            - send_notification partnersSlack --text "Terraform Provider ${TFProviderRepo}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
-          onFailure:
-            - >-
-              if [[ "${PR_URL}" == null ]]; then
-                send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
-              else
-                send_notification partnersSlack --text "${step_name} step is failed."
-              fi
-          onComplete:
-            - echo "Cleaning up"
+#      - name: create_pr_to_master_branch
+#        type: Bash
+#        configuration:
+#          integrations:
+#            - name: partnersSlack
+#            - name: partnership_jfrog_io
+#            - name: Partnership_GitHub
+#          inputSteps:
+#            - name: build_and_run_tf_provider
+#        execution:
+#          onStart:
+#            - echo "Preparing for work..."
+#          onExecute:
+#            - printenv
+#            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd $repoFolder
+#            - git checkout -b development && ls
+#            - git status
+#            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
+#            - echo $NEXT_VERSION
+#            - git tag --sort=-v:refname
+#            - git tag "${NEXT_VERSION}"
+#            - git push --tags
+#            - echo "Create a PR from development branch to master with version tag"
+#            - export REPO_NAME=jfrog/terraform-provider-artifactory
+#            - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
+#            - echo ${PR_URL}
+#            - >-
+#              if [[ "${PR_URL}" == null ]]; then
+#                echo "PR was not created (already exists from this head branch?). PR link is empty!"
+#                exit 1
+#              fi
+#          onSuccess:
+#            - echo "Success"
+#            - send_notification partnersSlack --text "Terraform Provider ${TFProviderRepo}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
+#          onFailure:
+#            - >-
+#              if [[ "${PR_URL}" == null ]]; then
+#                send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
+#              else
+#                send_notification partnersSlack --text "${step_name} step is failed."
+#              fi
+#          onComplete:
+#            - echo "Cleaning up"
