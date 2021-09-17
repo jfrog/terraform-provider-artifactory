@@ -147,11 +147,7 @@ pipelines:
             - echo "Preparing for work..."
           onExecute:
             - printenv
-            - ls ${res_GitHubTFProviderRepoJFrog_resourcePath}
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
-            - git checkout -b development
-            - git branch --set-upstream-to=origin/development development
-            - git pull && ls && pwd && git branch
+            - pwd && ls -al
             - go version
             - echo "Install Terraform"
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
@@ -161,13 +157,11 @@ pipelines:
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g') #test
             - echo "git clone https://${TFProviderRepo}"
-            #- git clone https://${TFProviderRepo} && cd $repoFolder
-            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd ${repoFolder}
-            #- git clone https://github.com/jfrog/terraform-provider-artifactory.git && cd terraform-provider-artifactory
+            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
             - git fetch origin
             - git checkout -b development
             - git branch --set-upstream-to=origin/development development
-            - git pull && ls && pwd
+            - git pull && ls && pwd && git branch
             - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
             - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
             - echo $PROVIDER_VERSION
@@ -227,6 +221,7 @@ pipelines:
 #          onExecute:
 #            - printenv
 #            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd $repoFolder
+#            -
 #            - git checkout -b development && ls
 #            - git status
 #            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
