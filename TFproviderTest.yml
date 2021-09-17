@@ -227,6 +227,8 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
             - git checkout -b development && ls -al
             - git status
+            - git branch --set-upstream-to=origin/development development
+            - git pull && ls && pwd && git branch
             - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
             - echo $NEXT_VERSION
             - git tag --sort=-v:refname
