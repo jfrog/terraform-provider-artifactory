@@ -217,11 +217,11 @@ pipelines:
             - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd ${repoFolder}
             - git checkout -b development && ls
             - git status
-            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
-            - echo $NEXT_VERSION
-            - git tag --sort=-v:refname
-            - git tag "${NEXT_VERSION}"
-            - git push --tags
+#            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
+#            - echo $NEXT_VERSION
+#            - git tag --sort=-v:refname
+#            - git tag "${NEXT_VERSION}"
+#            - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=jfrog/terraform-provider-artifactory
             - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
