@@ -2,7 +2,7 @@ resources:
   - name: GitHubTFProviderRepoJFrog
     type: GitRepo
     configuration:
-      gitProvider: danielMiakotkinGitHub
+      gitProvider: Partnership_GitHub
       path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
         include: development
@@ -100,7 +100,7 @@ pipelines:
             - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
             - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
             - export RT_URL=$(echo ${jdp_url} | sed -e 's/.*https:\/\///g') && echo ${RT_URL}
-            - git clone https://${int_danielMiakotkinGitHub_token}@github.com/jfrog/partner-integration-tests.git
+            - git clone https://${int_Partnership_GitHub_token}@github.com/jfrog/partner-integration-tests.git
             - cd partner-integration-tests
             - echo "Common test will check services health and change the default admin user password, if NEW_RT_PASSWORD is set"
             - ./gradlew artifactory_common
@@ -135,7 +135,7 @@ pipelines:
           integrations:
             - name: partnersSlack
             - name: gkeEnvVars
-            - name: danielMiakotkinGitHub
+            - name: Partnership_GitHub
           inputSteps:
             - name: fozzie_gke_jfrog_rt_xray_create
           environmentVariables:
@@ -209,7 +209,7 @@ pipelines:
           integrations:
             - name: partnersSlack
             - name: partnership_jfrog_io
-            - name: danielMiakotkinGitHub
+            - name: Partnership_GitHub
           inputSteps:
             - name: build_and_run_tf_provider
         execution:
@@ -217,7 +217,7 @@ pipelines:
             - echo "Preparing for work..."
           onExecute:
             - printenv
-            - git clone https://${int_danielMiakotkinGitHub_token}${TFProviderRepo} && cd $repoFolder
+            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd $repoFolder
             - git checkout -b development && ls
             - git status
             - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
@@ -227,7 +227,7 @@ pipelines:
             - git push --tags
             - echo "Create a PR from development branch to master with version tag"
             - export REPO_NAME=jfrog/terraform-provider-artifactory
-            - export PR_URL=$(curl -H "Authorization:Bearer ${int_danielMiakotkinGitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
+            - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
             - echo ${PR_URL}
             - >-
               if [[ "${PR_URL}" == null ]]; then
