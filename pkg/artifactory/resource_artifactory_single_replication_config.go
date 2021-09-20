@@ -87,16 +87,33 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
+
 	replications := new([]utils.ReplicationBody)
 	_, err := m.(*resty.Client).R().SetResult(replications).Get(replicationEndpoint + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return err
 	}
+	replicationConfig := ReplicationConfig{}
+
+	if len(*replications) > 0 {
+		replicationConfig.Replications = []utils.ReplicationBody{}
+	}
+
+	for _, replication := range *replications {
+		replicationConfig.RepoKey = replication.RepoKey
+		replicationConfig.CronExp = replication.CronExp
+		replicationConfig.EnableEventReplication = replication.EnableEventReplication
+
+		replicationConfig.Replications = append(replicationConfig.Replications, replication)
+	}
+
+
+
 	if len(*replications) > 1 {
 		return fmt.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
 	}
-	return packSingleReplicationConfig(&(*replications)[0], d)
+	return packSingleReplicationConfig(replicationConfig, d)
 }
 
 func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
