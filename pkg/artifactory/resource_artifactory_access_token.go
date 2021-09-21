@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,7 +37,7 @@ type AccessTokenOptions struct {
 	// If omitted and the username specified exists, the token is granted the scope of that user.
 	Scope string `url:"scope,omitempty"` // [Optional if the user specified in username exists]
 	// The time in seconds for which the token will be valid. To specify a token that never expires, set to zero. Non-admin can only set a value that is equal to or less than the default 3600.
-	ExpiresIn int `url:"expires_in,omitempty"` // [Optional, default: 3600]
+	ExpiresIn int `url:"expires_in"` // [Optional, default: 3600]
 	// If true, this token is refreshable and the refresh token can be used to replace it with a new token once it expires.
 	Refreshable string `url:"refreshable,omitempty"` // [Optional, default: false]
 	// A space-separate list of the other Artifactory instances or services that should accept this token identified by their Artifactory Service IDs as obtained from the Get Service ID endpoint.
@@ -202,7 +203,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	accessToken := AccessToken{}
-	values, err := query.Values(tokenOptions)
+	values, err := tokenOptsToValues(tokenOptions)
 	if err != nil {
 		return err
 	}
@@ -404,4 +405,8 @@ func getDate(d *schema.ResourceData) (time.Time, int, error) {
 		return endDate, -1, fmt.Errorf("end date must be in the future, but is %s", endDate.String())
 	}
 	return endDate, differenceInSeconds, nil
+}
+
+func tokenOptsToValues(t AccessTokenOptions) (url.Values, error) {
+	return query.Values(t)
 }

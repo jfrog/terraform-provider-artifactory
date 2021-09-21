@@ -437,3 +437,11 @@ func testAccCheckAccessTokenNotCreated(id string) func(*terraform.State) error {
 		return nil
 	}
 }
+
+func TestTokenOptsToValuesNonExpiring(t *testing.T) {
+	tOpts := AccessTokenOptions{Username: "existinguser", ExpiresIn: 0}
+	values, _ := tokenOptsToValues(tOpts)
+	if values.Get("expires_in") != "0" {
+		t.Error("`expires_in` not correctly set when creating non-expiring tokens")
+	}
+}
