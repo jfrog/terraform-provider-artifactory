@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -87,33 +88,37 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
+	var testBody interface{}
+	var result interface{}
 
 	replications := new([]utils.ReplicationBody)
-	_, err := m.(*resty.Client).R().SetResult(replications).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&testBody).Get(replicationEndpoint + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return err
 	}
-	replicationConfig := ReplicationConfig{}
-
-	if len(*replications) > 0 {
-		replicationConfig.Replications = []utils.ReplicationBody{}
+	// there is no way to know, short of 2 API calls, if the body we will get here is singular or arrayed
+	// so, we use some cheap reflection. A single is the result of remote repo pull
+	switch testBody.(type) {
+	case []interface{}:
+		result = replications
+		err = json.Unmarshal(resp.Body(), result)
+		if err != nil {
+			return err
+		}
+	default:
+		result = &utils.ReplicationBody{}
+		err = json.Unmarshal(resp.Body(), result)
+		if err != nil {
+			return err
+		}
+		result = append(replications,*result)
 	}
-
-	for _, replication := range *replications {
-		replicationConfig.RepoKey = replication.RepoKey
-		replicationConfig.CronExp = replication.CronExp
-		replicationConfig.EnableEventReplication = replication.EnableEventReplication
-
-		replicationConfig.Replications = append(replicationConfig.Replications, replication)
-	}
-
-
 
 	if len(*replications) > 1 {
 		return fmt.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
 	}
-	return packSingleReplicationConfig(replicationConfig, d)
+	return packSingleReplicationConfig(&(*replications)[0], d)
 }
 
 func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
