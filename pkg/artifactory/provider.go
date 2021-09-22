@@ -1,7 +1,9 @@
 package artifactory
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/http"
 	"net/url"
 
@@ -90,13 +92,12 @@ func Provider() *schema.Provider {
 			"artifactory_fileinfo": dataSourceArtifactoryFileInfo(),
 		},
 	}
-
-	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	p.ConfigureContextFunc = func(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(d, terraformVersion)
+		return providerConfigure(d, terraformVersion), diag.Diagnostics{}
 	}
 
 	return p
@@ -115,7 +116,7 @@ func buildResty(URL string) (*resty.Client, error) {
 			return fmt.Errorf("no response found")
 		}
 		if response.StatusCode() >= http.StatusBadRequest {
-			return fmt.Errorf("%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
+			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
 		}
 		return nil
 	}).

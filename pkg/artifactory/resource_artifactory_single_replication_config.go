@@ -107,12 +107,12 @@ func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 	default:
-		result = &utils.ReplicationBody{}
-		err = json.Unmarshal(resp.Body(), result)
+		result = utils.ReplicationBody{}
+		err = json.Unmarshal(resp.Body(), &result)
 		if err != nil {
 			return err
 		}
-		result = append(replications,*result)
+		result = append(*replications,result.(utils.ReplicationBody))
 	}
 
 	if len(*replications) > 1 {
