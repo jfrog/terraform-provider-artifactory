@@ -24,6 +24,10 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 		},
 
 		Schema: mergeSchema(replicationSchemaCommon, replicationSchema),
+		Description: "Used for configuring replications on repos. However, the TCL only makes " +
+			"good sense for local repo replication (PUSH) and not remote (PULL).",
+		DeprecationMessage: "The APIs underpinning this resource support local and remote replication, " +
+			"but their payloads are entirely different. You should only use this for local replication.",
 	}
 }
 
@@ -47,7 +51,7 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.ReplicationBod
 	return replicationConfig
 }
 
-func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.ResourceData) error {
+func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceData) error {
 	setValue := mkLens(d)
 
 	setValue("repo_key", config.RepoKey)
@@ -74,7 +78,25 @@ func packSingleReplicationConfig(config *utils.ReplicationBody, d *schema.Resour
 
 	return nil
 }
+func packPullReplicationBody(config PullReplication, d *schema.ResourceData) error {
+	setValue := mkLens(d)
 
+	setValue("repo_key", config.RepoKey)
+	setValue("cron_exp", config.CronExp)
+	setValue("enable_event_replication", config.EnableEventReplication)
+
+	setValue("enabled", config.Enabled)
+	setValue("sync_deletes", config.SyncDeletes)
+	setValue("sync_properties", config.SyncProperties)
+
+	errors := setValue("path_prefix", config.PathPrefix)
+
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack replication config %q", errors)
+	}
+
+	return nil
+}
 func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
@@ -86,39 +108,66 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 	d.SetId(replicationConfig.RepoKey)
 	return resourceSingleReplicationConfigRead(d, m)
 }
+// ReplicationSummary this is what you would get if you hit replications/
+type ReplicationSummary struct {
+	ReplicationType                 string `json:"replicationType"`
+	Enabled                         bool   `json:"enabled"`
+	CronExp                         string `json:"cronExp"`
+	SyncDeletes                     bool   `json:"syncDeletes"`
+	SyncProperties                  bool   `json:"syncProperties"`
+	PathPrefix                      string `json:"pathPrefix"`
+	RepoKey                         string `json:"repoKey"`
+	EnableEventReplication          bool   `json:"enableEventReplication"`
+	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
+	SyncStatistics                  bool   `json:"syncStatistics"`
+}
+// PullReplication this is the structure for a PULL replication on a remote repo
+type PullReplication struct {
+	Enabled                         bool   `json:"enabled"`
+	CronExp                         string `json:"cronExp"`
+	SyncDeletes                     bool   `json:"syncDeletes"`
+	SyncProperties                  bool   `json:"syncProperties"`
+	PathPrefix                      string `json:"pathPrefix"`
+	RepoKey                         string `json:"repoKey"`
+	ReplicationKey                  string `json:"replicationKey"`
+	EnableEventReplication          bool   `json:"enableEventReplication"`
+	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
+}
 
 func resourceSingleReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
-	var testBody interface{}
+	// this endpoint serves for both PULL type replications (remote repo) and PUSH type replications
+	// (local repos). In the case of a remote (pull), it's a singular object. In case of local (push), it's an array
+	// If we query replications/ it will tell us which is which, but the direct query does not.
+	// I don't like the idea of interrogating the data type but I also don't like having to make 2 api calls either
+	// Frankly, the whole api sucks. We are going to reimplement it as atlassian did, but really, this needed to be
+	// an entirely different resource because values like "url" are never available after submit.
 	var result interface{}
 
-	replications := new([]utils.ReplicationBody)
-	resp, err := m.(*resty.Client).R().SetResult(&testBody).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return err
 	}
-	// there is no way to know, short of 2 API calls, if the body we will get here is singular or arrayed
-	// so, we use some cheap reflection. A single is the result of remote repo pull
-	switch testBody.(type) {
-	case []interface{}:
-		result = replications
-		err = json.Unmarshal(resp.Body(), result)
-		if err != nil {
-			return err
-		}
-	default:
-		result = utils.ReplicationBody{}
-		err = json.Unmarshal(resp.Body(), &result)
-		if err != nil {
-			return err
-		}
-		result = append(*replications,result.(utils.ReplicationBody))
-	}
 
-	if len(*replications) > 1 {
-		return fmt.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
+	switch result.(type) {
+	case []interface{}:
+		if len(result.([]interface{})) > 1 {
+			return fmt.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
+		}
+		var final []utils.ReplicationBody
+		err = json.Unmarshal(resp.Body(), &final)
+		if err != nil {
+			return err
+		}
+		return packPushReplicationBody(final[0], d)
+	default:
+		final := PullReplication{}
+		err = json.Unmarshal(resp.Body(), &final)
+		if err != nil {
+			return err
+		}
+		return packPullReplicationBody(final, d)
 	}
-	return packSingleReplicationConfig(&(*replications)[0], d)
 }
 
 func resourceSingleReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {

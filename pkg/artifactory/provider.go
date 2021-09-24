@@ -1,9 +1,7 @@
 package artifactory
 
 import (
-	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/http"
 	"net/url"
 
@@ -92,12 +90,13 @@ func Provider() *schema.Provider {
 			"artifactory_fileinfo": dataSourceArtifactoryFileInfo(),
 		},
 	}
-	p.ConfigureContextFunc = func(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
+
+	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(d, terraformVersion), diag.Diagnostics{}
+		return providerConfigure(d, terraformVersion)
 	}
 
 	return p
