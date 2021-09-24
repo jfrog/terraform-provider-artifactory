@@ -28,6 +28,7 @@ pipelines:
                 sourceRepository: fozzie-images
           integrations:
             - name: gkeEnvVars
+            - name: partnersSlack
           inputResources:
             - name: GitHubTFProviderRepoJFrog
           environmentVariables:
