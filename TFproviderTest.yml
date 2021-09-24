@@ -220,6 +220,7 @@ pipelines:
             - printenv
             - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
             - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
+            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 echo "PR was not created (already exists from this head branch?). PR link is empty!"
@@ -227,7 +228,7 @@ pipelines:
               fi
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "Terraform Provider ${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}. A new PR was submitted by ${PR_COMMITTER} - ${PR_URL}. Changes tested successfully. Please, review and merge."
+            - send_notification partnersSlack --text "Terraform Provider ${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}. A new PR was submitted by ${PR_COMMITTER} - ${PR_URL}, branch *${PR_BRANCH}*. Changes tested successfully. Please, review and merge."
           onFailure:
             - >-
               if [[ "${PR_URL}" == null ]]; then
