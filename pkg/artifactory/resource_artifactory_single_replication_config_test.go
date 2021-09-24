@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 	"regexp"
 	"testing"
@@ -94,7 +95,70 @@ func TestAccSingleReplication_full(t *testing.T) {
 					// we send: password
 					// we get back: JE2fNsEThvb1buiH7h7S2RDsGWSdp2EcuG9Pky5AFyRMwE4UzG
 					//resource.TestCheckResourceAttr(fqrn, "password", os.Getenv("ARTIFACTORY_PASSWORD")),
-					resource.TestCheckResourceAttr(fqrn, "password", "Known issue in RT"),
+					//resource.TestCheckResourceAttr(fqrn, "password", "Known issue in RT"),
+				),
+			},
+		},
+	})
+}
+func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
+	return func(state *terraform.State) error {
+		var errors []error
+		for _, f := range funcs {
+			err := f(state)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		if len(errors) > 0 {
+			return fmt.Errorf("%q",errors)
+		}
+		return nil
+	}
+}
+func TestAccSingleReplicationRemoteRepo(t *testing.T) {
+	_, fqrn, name := mkNames("lib-remote", "artifactory_single_replication_config")
+	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
+	var tcl = `
+		resource "artifactory_remote_repository" "{{ .remote_name }}" {
+			key 				  = "{{ .remote_name }}"
+			package_type          = "maven"
+			url                   = "https://repo1.maven.org/maven2/"
+			repo_layout_ref       = "maven-2-default"
+		}
+
+		resource "artifactory_single_replication_config" "{{ .repoconfig_name }}" {
+			repo_key = "{{ .remote_name }}"
+			cron_exp = "0 0 12 ? * MON *" 
+			enable_event_replication = false
+			url = "https://repo1.maven.org/maven2/"
+			username = "christianb"
+			password = "password"
+			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
+		}
+	`
+	tcl = executeTemplate("foo", tcl, map[string]string{
+		"repoconfig_name": name,
+		"remote_name":     repo_name,
+	})
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: compositeCheckDestroy(
+			testAccCheckRepositoryDestroy(fqrepoName),
+			testAccCheckReplicationDestroy(fqrn),
+		),
+
+		Providers: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: tcl,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", repo_name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 ? * MON *"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "false"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "false"),
+					resource.TestCheckResourceAttr(fqrn, "sync_properties", "false"),
 				),
 			},
 		},

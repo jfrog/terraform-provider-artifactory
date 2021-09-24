@@ -115,7 +115,7 @@ func buildResty(URL string) (*resty.Client, error) {
 			return fmt.Errorf("no response found")
 		}
 		if response.StatusCode() >= http.StatusBadRequest {
-			return fmt.Errorf("%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
+			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
 		}
 		return nil
 	}).
