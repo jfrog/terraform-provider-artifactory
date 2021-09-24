@@ -30,6 +30,16 @@ func resourceArtifactoryLocalRepository() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: repoKeyValidator,
 			},
+			"project_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+			},
+			"environments": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Optional: true,
+			},
 			"package_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -162,6 +172,8 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	repo.Rclass = "local"
 	repo.Key = d.getString("key", false)
 	repo.PackageType = d.getString("package_type", false)
+	repo.ProjectKey = d.getString("project_key", false)
+	repo.Environments = d.getString("environments")
 	repo.Description = d.getString("description", false)
 	repo.Notes = d.getString("notes", false)
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
@@ -233,6 +245,8 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	// type 'yum' is not to be supported, as this is really of type 'rpm'. When 'yum' is used on create, RT will
 	// respond with 'rpm' and thus confuse TF into think there has been a state change.
 	setValue("package_type", repo.PackageType)
+	setValue("project_key", repo.ProjectKey)
+	setValue("environments", schema.NewSet(schema.HashString, castToInterfaceArr(repo.Environments)))
 	setValue("description", repo.Description)
 	setValue("notes", repo.Notes)
 	setValue("includes_pattern", repo.IncludesPattern)

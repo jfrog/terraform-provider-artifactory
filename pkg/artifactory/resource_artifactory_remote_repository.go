@@ -50,6 +50,16 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Default:      "generic",
 				ValidateFunc: repoTypeValidator,
 			},
+			"project_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+			},
+			"environments": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -348,6 +358,8 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 	repo.Notes = d.getString("notes", true)
 	repo.Offline = d.getBoolRef("offline", true)
 	repo.PackageType = d.getString("package_type", true)
+	repo.ProjectKey = d.getString("project_key", false)
+	repo.Environments = d.getString("environments")
 	repo.Password = d.getString("password", true)
 	repo.PropertySets = d.getSet("property_sets")
 	repo.Proxy = d.getString("proxy", true)
@@ -406,6 +418,8 @@ func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
 	setValue("hard_fail", repo.HardFail)
 	setValue("includes_pattern", repo.IncludesPattern)
 	setValue("key", repo.Key)
+	setValue("project_key", repo.ProjectKey)
+	setValue("environments", schema.NewSet(schema.HashString, castToInterfaceArr(repo.Environments)))
 	setValue("local_address", repo.LocalAddress)
 	setValue("max_unique_snapshots", repo.MaxUniqueSnapshots)
 	setValue("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)

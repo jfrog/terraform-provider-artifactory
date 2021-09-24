@@ -32,6 +32,16 @@ func resourceArtifactoryVirtualRepository() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: repoTypeValidator,
 			},
+			"project_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+			},
+			"environments": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Optional: true,
+			},
 			"repositories": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -106,6 +116,8 @@ func unpackVirtualRepository(s *schema.ResourceData) MessyVirtualRepo {
 	repo.Key = d.getString("key", false)
 	repo.Rclass = "virtual"
 	repo.PackageType = d.getString("package_type", false)
+	repo.ProjectKey = d.getString("project_key", false)
+	repo.Environments = d.getString("environments")
 	repo.IncludesPattern = d.getString("includes_pattern", false)
 	repo.ExcludesPattern = d.getString("excludes_pattern", false)
 	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
@@ -129,6 +141,8 @@ func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error 
 
 	setValue("key", repo.Key)
 	setValue("package_type", repo.PackageType)
+	setValue("project_key", repo.ProjectKey)
+	setValue("environments", schema.NewSet(schema.HashString, castToInterfaceArr(repo.Environments)))
 	setValue("description", repo.Description)
 	setValue("notes", repo.Notes)
 	setValue("includes_pattern", repo.IncludesPattern)

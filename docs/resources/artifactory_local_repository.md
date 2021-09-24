@@ -18,6 +18,8 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 * `key` - (Required)
 * `package_type` - (Required)
+* `project_key` - (Optional)
+* `environments`  - (Optional, ["DEV", "PROD"])
 * `description` - (Optional)
 * `notes` - (Optional)
 * `includes_pattern` - (Optional)
