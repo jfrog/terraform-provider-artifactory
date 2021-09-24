@@ -232,7 +232,7 @@ pipelines:
 #            - git tag "${NEXT_VERSION}"
 #            - git push --tags
             - printenv
-#            - echo "Merge the PR from feature branch to development"
+            - echo "Merge the PR from feature branch to development"
 #            - echo "Create a PR from development branch to master"
 #            - export REPO_NAME=jfrog/terraform-provider-artifactory
 #            - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
