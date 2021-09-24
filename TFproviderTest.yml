@@ -113,6 +113,7 @@ pipelines:
             - echo "Artifactory password ${NEW_RT_PASSWORD}"
           onFailure:
             - echo "JFrog Artifactory and Xray creation failed."
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. Pipeline failed on <${step_url}|${step_name}> step"
             - fozzie checkout native-steps
             - echo "Removing GKE cluster"
             - fozzie gke/authorize
@@ -198,6 +199,7 @@ pipelines:
             - send_notification partnersSlack --text "Terraform Provider run is completed. Version ${NEXT_PROVIDER_VERSION}."
           onFailure:
             - echo "Failure"
+            - send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
           onComplete:
             - echo "Complete"
 
@@ -235,7 +237,7 @@ pipelines:
               if [[ "${PR_URL}" == null ]]; then
                 send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
               else
-                send_notification partnersSlack --text "${step_name} step is failed."
+                send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
               fi
           onComplete:
             - echo "Cleaning up"
