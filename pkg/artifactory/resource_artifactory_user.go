@@ -97,11 +97,11 @@ func resourceArtifactoryUser() *schema.Resource {
 func resourceUserExists(data *schema.ResourceData, m interface{}) (bool, error) {
 
 	d := &ResourceData{data}
-	userName := d.getString("name", false)
-	if userName == "" {
-		return false, fmt.Errorf("no usersname supplied")
+	name := d.getString("name", false)
+	if name == "" {
+		return false, fmt.Errorf("'name' not supplied")
 	}
-	return userExists(m.(*resty.Client), userName)
+	return userExists(m.(*resty.Client), name)
 }
 
 func userExists(client *resty.Client, userName string) (bool, error) {

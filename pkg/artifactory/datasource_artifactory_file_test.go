@@ -13,12 +13,12 @@ import (
 )
 
 
-func testDlFile(t *testing.T) {
+func TestDlFile(t *testing.T) {
 	// every instance of RT has this repo and file out-of-the-box
 	script := `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
-		  path            = "installer.zip"
+		  path            = "crash.zip"
 		  output_path     = "${path.cwd}/crash.zip"
 		  force_overwrite = true
 		}
@@ -27,7 +27,7 @@ func testDlFile(t *testing.T) {
 		PreCheck:     func() {
 			testAccPreCheck(t)
 			client := getTestResty(t)
-			err := uploadTestFile(client, "../../samples/crash.zip", "example-local-repo/crash.zip", "application/zip")
+			err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
 			if err != nil {
 				panic(err)
 			}
@@ -37,12 +37,12 @@ func testDlFile(t *testing.T) {
 			{
 				Config: script,
 				Check: func(state *terraform.State) error {
-					download := state.Modules[0].Resources["data.artifactory_file.ac_api_changelog_indexer_code"].Primary.Attributes["output_path"]
+					download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
 					_, err := os.Stat(download)
 					if err != nil {
 						return err
 					}
-					verified, err := VerifySha256Checksum(download, "9888d5f4bd315d9756061ec13ea744383e0ed765c6430147c6f539195b4f6e9b")
+					verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
 
 					if !verified {
 						return fmt.Errorf("%s checksum does not have expected checksum", download)
