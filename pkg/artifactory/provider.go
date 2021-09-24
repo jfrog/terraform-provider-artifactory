@@ -20,29 +20,28 @@ func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
+				Type:         schema.TypeString,
+				Optional:     true,
+				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
-				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
-
+				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
 				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
-				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
-				Description: "Insider note: You may actually use an api_key as the password. This will get your around xray limitations instead of a bearer token",
+				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
+				Description:   "Insider note: You may actually use an api_key as the password. This will get your around xray limitations instead of a bearer token",
 			},
 			"api_key": {
 				Type:          schema.TypeString,
@@ -51,7 +50,7 @@ func Provider() *schema.Provider {
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
 				ConflictsWith: []string{"username", "access_token", "password"},
 				ValidateFunc:  validation.StringIsNotEmpty,
-				Deprecated: "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
+				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
 			},
 			"access_token": {
 				Type:          schema.TypeString,
@@ -59,7 +58,7 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
 				ConflictsWith: []string{"api_key", "password"},
-				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
+				Description:   "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 		},
 
@@ -115,7 +114,7 @@ func buildResty(URL string) (*resty.Client, error) {
 			return fmt.Errorf("no response found")
 		}
 		if response.StatusCode() >= http.StatusBadRequest {
-			return fmt.Errorf("%d %s %s\n%s", response.StatusCode(),response.Request.Method, response.Request.URL, string(response.Body()[:]))
+			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(), response.Request.Method, response.Request.URL, string(response.Body()[:]))
 		}
 		return nil
 	}).
