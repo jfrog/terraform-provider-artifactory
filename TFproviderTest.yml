@@ -162,10 +162,6 @@ pipelines:
             - git branch # test
             - ls -al
             - printenv
-            #- git fetch origin
-            #- git checkout -b development
-            #- git branch --set-upstream-to=origin/development development
-            #- git pull && ls && pwd && git branch
             - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
             - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
             - echo $PROVIDER_VERSION
@@ -223,28 +219,17 @@ pipelines:
             - echo "Preparing for work..."
             - echo "Create and push a new tag, associated with the lates changes on develpment branch"
           onExecute:
-#            - git clone https://${int_Partnership_GitHub_token}${TFProviderRepo} && cd ${repoFolder}
-#            - git checkout -b development && ls
-#            - git status
-#            - export NEXT_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p' | awk -F '.' '{print "v" $1 "." $2 "." $3 +1 }')
-#            - echo $NEXT_VERSION
-#            - git tag --sort=-v:refname
-#            - git tag "${NEXT_VERSION}"
-#            - git push --tags
             - printenv
-#            - echo "Merge the PR from feature branch to development"
-#            - echo "Create a PR from development branch to master"
-#            - export REPO_NAME=jfrog/terraform-provider-artifactory
-#            - export PR_URL=$(curl -H "Authorization:Bearer ${int_Partnership_GitHub_token}" -H "Accept:application/vnd.github.v3+json" -X POST https://api.github.com/repos/${REPO_NAME}/pulls -d '{"title":"PR from development to master branch","head":"development","base":"master"}' | jq -re '.html_url')
-#            - echo ${PR_URL}
-#            - >-
-#              if [[ "${PR_URL}" == null ]]; then
-#                echo "PR was not created (already exists from this head branch?). PR link is empty!"
-#                exit 1
-#              fi
+            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
+            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
+            - >-
+              if [[ "${PR_URL}" == null ]]; then
+                echo "PR was not created (already exists from this head branch?). PR link is empty!"
+                exit 1
+              fi
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "Terraform Provider ${TFProviderRepo}. New changes has been pushed to development branch, all tests passed. development -> master PR created - ${PR_URL}. Please, review and merge."
+            - send_notification partnersSlack --text "Terraform Provider ${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}. A new PR was submitted by ${PR_COMMITTER} - ${PR_URL}. Changes tested successfully. Please, review and merge."
           onFailure:
             - >-
               if [[ "${PR_URL}" == null ]]; then
