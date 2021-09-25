@@ -108,6 +108,7 @@ func resourceSingleReplicationConfigCreate(d *schema.ResourceData, m interface{}
 	d.SetId(replicationConfig.RepoKey)
 	return resourceSingleReplicationConfigRead(d, m)
 }
+
 // ReplicationSummary this is what you would get if you hit replications/
 type ReplicationSummary struct {
 	ReplicationType                 string `json:"replicationType"`
@@ -121,6 +122,7 @@ type ReplicationSummary struct {
 	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
 	SyncStatistics                  bool   `json:"syncStatistics"`
 }
+
 // PullReplication this is the structure for a PULL replication on a remote repo
 type PullReplication struct {
 	Enabled                         bool   `json:"enabled"`
