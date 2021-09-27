@@ -62,6 +62,82 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 	})
 }
 
+func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
+	_,fqrn,name := mkNames("github-remote","artifactory_remote_repository")
+	const step1 = `
+		locals {
+		  allowed_github_repos = [
+			"quixoten/gotee/releases/download/v*/gotee-*",
+			"nats-io/gnatsd/releases/download/v*/gnatsd-*"
+		  ]
+		}
+		resource "artifactory_remote_repository" "{{ .name }}" {
+		  key = "{{ .name }}"
+		  package_type = "generic"
+		  url = "https://github.com"
+		  repo_layout_ref = "simple-default"
+		  notes = "managed by terraform"
+		  content_synchronisation {
+			enabled = false
+		  }
+		  bypass_head_requests = true
+		  property_sets = [
+			"artifactory"
+		  ]
+		  includes_pattern = join(", ", local.allowed_github_repos)
+		}
+	`
+	const step2 = `
+		locals {
+		  allowed_github_repos = [
+			"quixoten/gotee/releases/download/v*/gotee-*"
+		  ]
+		}
+		resource "artifactory_remote_repository" "{{ .name }}" {
+		  key = "{{ .name }}"
+		  package_type = "generic"
+		  url = "https://github.com"
+		  repo_layout_ref = "simple-default"
+		  notes = "managed by terraform"
+		  content_synchronisation {
+			enabled = false
+		  }
+		  bypass_head_requests = true
+		  property_sets = [
+			"artifactory"
+		  ]
+		  includes_pattern = join(", ", local.allowed_github_repos)
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: executeTemplate("one", step1, map[string]interface{}{
+					"name" : name,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
+				),
+			},
+			{
+				Config: executeTemplate("two", step2, map[string]interface{}{
+					"name" : name,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRemoteRepository_basic(t *testing.T) {
 	id := rand.Int()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
