@@ -281,3 +281,38 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRemoteRepository_basic_with_project_key(t *testing.T) {
+	id := rand.Int()
+	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+	const remoteRepoBasic = `
+		resource "artifactory_remote_repository" "%s" {
+			key 				  = "%s"
+			package_type          = "npm"
+			url                   = "https://registry.npmjs.org/"
+			repo_layout_ref       = "npm-default"
+			project_key           = "frog-proj"
+			environments          = [ "DEV", "PROD" ]
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(remoteRepoBasic, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://registry.npmjs.org/"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", "frog-proj"),
+					resource.TestCheckResourceAttr(fqrn, "environments.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "environments.0", "DEV"),
+					resource.TestCheckResourceAttr(fqrn, "environments.1", "PROD"),
+				),
+			},
+		},
+	})
+}

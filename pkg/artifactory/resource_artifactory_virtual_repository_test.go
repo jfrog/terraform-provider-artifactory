@@ -233,3 +233,39 @@ func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
 		return nil
 	}
 }
+
+
+func TestAccVirtualRepository_basic_with_project_key(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("foo-with-project-key%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	const virtualRepositoryBasic = `
+		resource "artifactory_virtual_repository" "%s" {
+			key          = "%s"
+			package_type = "maven"
+			repositories = []
+			project_key = "frog-proj"
+			environments = [ "DEV", "PROD" ]
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(virtualRepositoryBasic, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", "frog-proj"),
+					resource.TestCheckResourceAttr(fqrn, "environments.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "environments.0", "DEV"),
+					resource.TestCheckResourceAttr(fqrn, "environments.1", "PROD"),
+				),
+			},
+		},
+	})
+}

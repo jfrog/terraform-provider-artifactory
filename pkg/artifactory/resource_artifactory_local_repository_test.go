@@ -108,3 +108,33 @@ func TestAccAllRepoTypesLocal(t *testing.T) {
 		})
 	}
 }
+
+func TestAccLocalRepository_basic_with_project_key(t *testing.T) {
+	name := fmt.Sprintf("terraform-local-test-repo-basic-with-project-key%d", rand.Int())
+	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)
+	localRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_local_repository" "%s" {
+			key 	     = "%s"
+			project_key                     = "frog-proj"
+			environments                    = [ "DEV", "PROD" ]
+		}
+	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "key", name),
+					resource.TestCheckResourceAttr(resourceName, "package_type", "docker"),
+					resource.TestCheckResourceAttr(resourceName, "project_key", "frog-proj"),
+					resource.TestCheckResourceAttr(resourceName, "environments.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environments.0", "DEV"),
+					resource.TestCheckResourceAttr(resourceName, "environments.1", "PROD"),
+				),
+			},
+		},
+	})
+}
