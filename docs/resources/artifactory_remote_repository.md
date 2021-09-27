@@ -64,6 +64,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `enable_cookie_management` - (Optional)
 * `client_tls_certificate` - (Optional)
 * `pypi_registry_url` - (Optional)
+* `helm_charts_base_url` - Base URL for the translation of chart source URLs in the index.yaml of virtual repos. Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url. (Optional)
 * `bypass_head_requests` - (Optional)
 * `enable_token_authentication` - (Optional)
 * `feed_context_path` - (Optional, Nuget repos only)

@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type HelmRemoteRepositoryParams struct {
+	services.RemoteRepositoryBaseParams
+	HelmChartsBaseURL string `json:"chartsBaseUrl,omitempty"`
+}
+
 type MessyRemoteRepo struct {
 	services.RemoteRepositoryBaseParams
 	services.BowerRemoteRepositoryParams
@@ -21,6 +26,7 @@ type MessyRemoteRepo struct {
 	services.VcsRemoteRepositoryParams
 	services.PypiRemoteRepositoryParams
 	services.NugetRemoteRepositoryParams
+	HelmRemoteRepositoryParams
 	PropagateQueryParams bool `json:"propagateQueryParams"`
 }
 
@@ -266,6 +272,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"helm_charts_base_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"feed_context_path": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -362,6 +372,7 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 	repo.UnusedArtifactsCleanupPeriodHours = d.getInt("unused_artifacts_cleanup_period_hours", true)
 	repo.Url = d.getString("url", true)
 	repo.Username = d.getString("username", true)
+	repo.HelmChartsBaseURL = d.getString("helm_charts_base_url", true)
 	repo.VcsGitDownloadUrl = d.getString("vcs_git_download_url", true)
 	repo.VcsGitProvider = d.getString("vcs_git_provider", true)
 	repo.VcsType = d.getString("vcs_type", true)
@@ -425,6 +436,7 @@ func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
 	setValue("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
 	setValue("url", repo.Url)
 	setValue("username", repo.Username)
+	setValue("helm_charts_base_url", repo.HelmChartsBaseURL)
 	setValue("vcs_git_download_url", repo.VcsGitDownloadUrl)
 	setValue("vcs_git_provider", repo.VcsGitProvider)
 	setValue("vcs_type", repo.VcsType)
