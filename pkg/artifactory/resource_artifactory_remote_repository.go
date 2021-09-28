@@ -370,7 +370,7 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", true)
 	repo.SynchronizeProperties = d.getBoolRef("synchronize_properties", true)
 	repo.UnusedArtifactsCleanupPeriodHours = d.getInt("unused_artifacts_cleanup_period_hours", true)
-	repo.Url = d.getString("url", true)
+	repo.Url = d.getString("url", false)
 	repo.Username = d.getString("username", true)
 	repo.HelmChartsBaseURL = d.getString("helm_charts_base_url", true)
 	repo.VcsGitDownloadUrl = d.getString("vcs_git_download_url", true)
