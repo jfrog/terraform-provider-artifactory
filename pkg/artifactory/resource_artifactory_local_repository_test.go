@@ -115,8 +115,8 @@ func TestAccLocalRepository_basic_with_project_key(t *testing.T) {
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_local_repository" "%s" {
 			key 	     = "%s"
-			project_key                     = "frog-proj"
-			environments                    = [ "DEV", "PROD" ]
+			project_key  = "frog-proj"
+			environments = [ "DEV", "PROD" ]
 		}
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{

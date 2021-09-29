@@ -244,7 +244,7 @@ func TestAccVirtualRepository_basic_with_project_key(t *testing.T) {
 			key          = "%s"
 			package_type = "maven"
 			repositories = []
-			project_key = "frog-proj"
+			project_key  = "frog-proj"
 			environments = [ "DEV", "PROD" ]
 		}
 	`
