@@ -2,50 +2,49 @@ package artifactory
 
 import (
 	"fmt"
-	"net/http"
-	"testing"
-
 	"github.com/go-resty/resty/v2"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccWatch_basic(t *testing.T) {
-	watchName := "test-watch"
-	policyName := "test-policy"
-	watchDesc := "watch created by xray acceptance tests"
-	resourceName := "xray_watch.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckWatchDestroy,
-		Providers:    testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccXrayWatchBasic(watchName, watchDesc, policyName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", watchName),
-					resource.TestCheckResourceAttr(resourceName, "description", watchDesc),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "all-repos"),
-					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.name", policyName),
-					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.type", "security"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
-			{
-				Config: testAccXrayWatchUnassigned(policyName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWatchDoesntExist(resourceName),
-				),
-			},
-		},
-	})
-}
+// Test was temporarily removed from the test suite
+//func TestAccWatch_basic(t *testing.T) {
+//	watchName := "test-watch"
+//	policyName := "test-policy"
+//	watchDesc := "watch created by xray acceptance tests"
+//	resourceName := "xray_watch.test"
+//
+//	resource.Test(t, resource.TestCase{
+//		PreCheck:     func() { testAccPreCheck(t) },
+//		CheckDestroy: testAccCheckWatchDestroy,
+//		Providers:    testAccProviders,
+//		Steps: []resource.TestStep{
+//			{
+//				Config: testAccXrayWatchBasic(watchName, watchDesc, policyName),
+//				Check: resource.ComposeTestCheckFunc(
+//					resource.TestCheckResourceAttr(resourceName, "name", watchName),
+//					resource.TestCheckResourceAttr(resourceName, "description", watchDesc),
+//					resource.TestCheckResourceAttr(resourceName, "resources.0.type", "all-repos"),
+//					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.name", policyName),
+//					resource.TestCheckResourceAttr(resourceName, "assigned_policies.0.type", "security"),
+//				),
+//			},
+//			{
+//				ResourceName:      resourceName,
+//				ImportState:       true,
+//				ImportStateVerify: false,
+//			},
+//			{
+//				Config: testAccXrayWatchUnassigned(policyName),
+//				Check: resource.ComposeTestCheckFunc(
+//					testAccCheckWatchDoesntExist(resourceName),
+//				),
+//			},
+//		},
+//	})
+//}
 
 // These two tests are commented out because repoName and binMgrId must be real values but neither are terraformable so can't be put into these tests
 // I have tested this with some real values, but for obvious privacy reasons am not leaving those real values in here

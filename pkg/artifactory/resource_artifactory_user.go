@@ -97,10 +97,7 @@ func resourceArtifactoryUser() *schema.Resource {
 func resourceUserExists(data *schema.ResourceData, m interface{}) (bool, error) {
 
 	d := &ResourceData{data}
-	name := d.getString("name", false)
-	if name == "" {
-		return false, fmt.Errorf("'name' not supplied")
-	}
+	name := d.Id()
 	return userExists(m.(*resty.Client), name)
 }
 
@@ -179,7 +176,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
 	d := &ResourceData{rd}
 
-	userName := d.getString("name", false)
+	userName := d.Id()
 	user := &services.User{}
 	resp, err := m.(*resty.Client).R().SetResult(user).Get("artifactory/api/security/users/" + userName)
 

@@ -37,6 +37,12 @@ func TestAccUser_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "profile_updatable"),
 				),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
+			},
 		},
 	})
 }
@@ -67,6 +73,12 @@ func TestAccUser_full(t *testing.T) {
 					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(FQRN, "groups.#", "1"),
 				),
+			},
+			{
+				ResourceName:            FQRN,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
 	})
