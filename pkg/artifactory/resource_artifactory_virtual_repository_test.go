@@ -38,6 +38,48 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccVirtualMavenRepository_basic(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("foo%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
+	var virtualRepositoryBasic = fmt.Sprintf(`
+		resource "artifactory_virtual_maven_repository" "%s" {
+			key          = "%s"
+			package_type = "maven"
+			repo_layout_ref = "maven-2-default"
+			repositories = []
+			description = "A test virtual repo"
+			notes = "Internal description"
+			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+			excludes_pattern = "com/google/**"
+			force_maven_authentication = true
+			pom_repository_references_cleanup_policy = "discard_active_reference"
+		}
+	`,name,name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryBasic,
+				// we check to make sure some of the base params are picked up
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "force_maven_authentication", "true"),
+					// to test key pair, we'd have to be able to create them on the fly and we currently can't.
+					resource.TestCheckResourceAttr(fqrn, "key_pair", ""),
+					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
+				),
+			},
+		},
+	})
+}
+
+
 func TestAccVirtualRepository_update(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)

@@ -12,7 +12,7 @@ install:
 		terraform init
 
 clean:
-	rm -fR .terraform.d/ .terraform terraform.tfstate*
+	rm -fR .terraform.d/ .terraform terraform.tfstate* terraform.d/
 
 release:
 	@git tag ${NEXT_VERSION} && git push --mirror

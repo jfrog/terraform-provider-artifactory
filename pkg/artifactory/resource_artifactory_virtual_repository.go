@@ -9,83 +9,102 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
+var baseVirtualRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"package_type": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: repoTypeValidator,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"notes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "**/*",
+		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
+			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
+	"excludes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
+			"By default no artifacts are excluded.",
+	},
+	"repo_layout_ref": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"repositories": {
+		Type:     schema.TypeList,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Required: true,
+	},
+
+	"artifactory_requests_can_retrieve_remote_artifacts": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
+	"default_deployment_repo": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+}
+var legacySchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+
+	"debian_trivial_layout": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
+
+	"key_pair": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"pom_repository_references_cleanup_policy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+
+	"force_nuget_authentication": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+})
+
+func newMessyRepo() interface{} {
+	return &MessyVirtualRepo{}
+}
+
+var readFunc = mkVirtualRepoRead(packVirtualRepository, newMessyRepo)
+
 func resourceArtifactoryVirtualRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVirtualRepositoryCreate,
-		Read:   resourceVirtualRepositoryRead,
-		Update: resourceVirtualRepositoryUpdate,
+		Create: mkVirtualCreate(unpackVirtualRepository, readFunc),
+		Read:   readFunc,
+		Update: mkVirtualUpdate(unpackVirtualRepository, readFunc),
 		Delete: resourceVirtualRepositoryDelete,
 		Exists: resourceVirtualRepositoryExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		Schema: map[string]*schema.Schema{
-			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"package_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: repoTypeValidator,
-			},
-			"repositories": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"notes": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"includes_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "**/*",
-			},
-			"excludes_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"repo_layout_ref": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"debian_trivial_layout": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"artifactory_requests_can_retrieve_remote_artifacts": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"key_pair": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"pom_repository_references_cleanup_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"default_deployment_repo": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"force_nuget_authentication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-		},
+		Schema: legacySchema,
+		DeprecationMessage: "This resource is deprecated and you should use repo type specific resources " +
+			"(such as artifactory_virtual_maven_repository) in the future",
 	}
 }
 
@@ -96,12 +115,10 @@ type MessyVirtualRepo struct {
 	services.NugetVirtualRepositoryParams
 }
 
-func (repo MessyVirtualRepo) Id() string {
-	return repo.Key
-}
-func unpackVirtualRepository(s *schema.ResourceData) MessyVirtualRepo {
+func unpackBaseVirtRepo(s *schema.ResourceData) (services.VirtualRepositoryBaseParams, string) {
 	d := &ResourceData{s}
-	repo := MessyVirtualRepo{}
+
+	repo := services.VirtualRepositoryBaseParams{}
 
 	repo.Key = d.getString("key", false)
 	repo.Rclass = "virtual"
@@ -109,22 +126,32 @@ func unpackVirtualRepository(s *schema.ResourceData) MessyVirtualRepo {
 	repo.IncludesPattern = d.getString("includes_pattern", false)
 	repo.ExcludesPattern = d.getString("excludes_pattern", false)
 	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
-	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
 	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts", false)
 	repo.Repositories = d.getList("repositories")
 	repo.Description = d.getString("description", false)
 	repo.Notes = d.getString("notes", false)
+	repo.DefaultDeploymentRepo = d.getString("default_deployment_repo", false)
+
+	return repo, repo.Key
+}
+
+func unpackVirtualRepository(s *schema.ResourceData) (interface{}, string) {
+	d := &ResourceData{s}
+	base, _ := unpackBaseVirtRepo(s)
+	repo := MessyVirtualRepo{
+		VirtualRepositoryBaseParams: base,
+	}
+	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
+	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts", false)
 	repo.KeyPair = d.getString("key_pair", false)
 	repo.PomRepositoryReferencesCleanupPolicy = d.getString("pom_repository_references_cleanup_policy", false)
-	repo.DefaultDeploymentRepo = d.getString("default_deployment_repo", false)
 	// because this doesn't apply to all repo types, RT isn't required to honor what you tell it.
 	// So, saying the type is "maven" but then setting this to 'true' doesn't make sense, and RT doesn't seem to care what you tell it
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
 
-	return repo
+	return &repo, repo.Key
 }
-
-func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error {
+func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBaseParams)  Lens {
 	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
@@ -134,11 +161,19 @@ func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error 
 	setValue("includes_pattern", repo.IncludesPattern)
 	setValue("excludes_pattern", repo.ExcludesPattern)
 	setValue("repo_layout_ref", repo.RepoLayoutRef)
+	setValue("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
+	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
+	setValue("repositories", repo.Repositories)
+	return setValue
+}
+func packVirtualRepository(r interface{}, d *schema.ResourceData) error {
+	repo := r.(*MessyVirtualRepo)
+	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
+
 	setValue("debian_trivial_layout", repo.DebianTrivialLayout)
 	setValue("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
 	setValue("key_pair", repo.KeyPair)
 	setValue("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
 	setValue("repositories", repo.Repositories)
 	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
 
@@ -148,43 +183,49 @@ func packVirtualRepository(repo MessyVirtualRepo, d *schema.ResourceData) error 
 
 	return nil
 }
+func mkVirtualCreate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
+		repo, key := unpack(d)
+		// repo must be a pointer
+		_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + key)
 
-func resourceVirtualRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	repo := unpackVirtualRepository(d)
-
-	_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
-
-	if err != nil {
-		return err
-	}
-	d.SetId(repo.Key)
-	return resourceVirtualRepositoryRead(d, m)
-}
-
-func resourceVirtualRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	repo := MessyVirtualRepo{}
-	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
-
-	if err != nil {
-		if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
-			d.SetId("")
-			return nil
+		if err != nil {
+			return err
 		}
-		return err
+		d.SetId(key)
+		return read(d, m)
 	}
-	return packVirtualRepository(repo, d)
 }
 
-func resourceVirtualRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	repo := unpackVirtualRepository(d)
+func mkVirtualRepoRead(pack PackFunc, construct Constructor) func(d *schema.ResourceData, m interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
+		repo := construct()
+		// repo must be a pointer
+		resp, err := m.(*resty.Client).R().SetResult(repo).Get(repositoriesEndpoint + d.Id())
 
-	_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
-	if err != nil {
-		return err
+		if err != nil {
+			if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
+				d.SetId("")
+				return nil
+			}
+			return err
+		}
+		return pack(repo, d)
 	}
+}
 
-	d.SetId(repo.Key)
-	return resourceVirtualRepositoryRead(d, m)
+func mkVirtualUpdate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
+		repo, key := unpack(d)
+		// repo must be a pointer
+		_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
+		if err != nil {
+			return err
+		}
+
+		d.SetId(key)
+		return read(d, m)
+	}
 }
 
 func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
