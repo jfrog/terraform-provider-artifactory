@@ -37,6 +37,47 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccVirtualGoRepository_basic(t *testing.T) {
+	_, fqrn, name := mkNames("foo","artifactory_virtual_go_repository")
+	var virtualRepositoryBasic = fmt.Sprintf(`
+		resource "artifactory_virtual_go_repository" "%s" {
+		  key          = "%s"
+		  package_type = "go"
+		  repo_layout_ref = "go-default"
+		  repositories = []
+		  description = "A test virtual repo"
+		  notes = "Internal description"
+		  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+		  excludes_pattern = "com/google/**"
+		  external_dependencies_enabled = true
+		  external_dependencies_patterns = [
+			"**/github.com/**",
+			"**/go.googlesource.com/**"
+		  ]
+		}
+	`,name,name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Providers:    testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryBasic,
+				// we check to make sure some of the base params are picked up
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "go"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "**/github.com/**"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.1", "**/go.googlesource.com/**"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	id := randomInt()
