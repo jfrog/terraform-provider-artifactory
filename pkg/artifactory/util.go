@@ -150,7 +150,9 @@ func mkNames(name, resource string) (int, string, string) {
 	return id, fmt.Sprintf("%s.%s", resource, n), n
 }
 
-func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error {
+type Lens func(key string, value interface{}) []error
+
+func mkLens(d *schema.ResourceData) Lens {
 	var errors []error
 	return func(key string, value interface{}) []error {
 		if err := d.Set(key, value); err != nil {
@@ -160,8 +162,15 @@ func mkLens(d *schema.ResourceData) func(key string, value interface{}) []error 
 	}
 }
 
+type ReadFunc func(d *schema.ResourceData, m interface{}) error
 
+// Constructor Must return a pointer to a struct. When just returning a struct, it somehow converts to a map
+type Constructor func() interface{}
 
+// UnpackFunc must return a pointer to a struct and the resource id
+type UnpackFunc func(s *schema.ResourceData) (interface{}, string)
+
+type PackFunc func(repo interface{}, d *schema.ResourceData) error
 func sendConfigurationPatch(content []byte, m interface{}) error {
 
 	_, err := m.(*resty.Client).R().SetBody(content).

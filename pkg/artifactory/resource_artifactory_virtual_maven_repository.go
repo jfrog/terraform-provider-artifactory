@@ -1,0 +1,82 @@
+package artifactory
+
+import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+)
+
+var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+
+	"force_maven_authentication": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Optional:    true,
+		Description: "User authentication is required when accessing the repository. An anonymous request will display an HTTP 401 error. This is also enforced when aggregated repositories support anonymous requests.",
+	},
+	"pom_repository_references_cleanup_policy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ValidateFunc: validation.StringInSlice(
+			[]string{"discard_active_reference", "discard_any_reference", "nothing"}, false,
+		),
+		Description: "(1: discard_active_reference) Discard Active References - Removes repository elements that are declared directly under project or under a profile in the same POM that is activeByDefault.\n" +
+			"(2: discard_any_reference) Discard Any References - Removes all repository elements regardless of whether they are included in an active profile or not.\n" +
+			"(3: nothing) Nothing - Does not remove any repository elements declared in the POM.",
+	},
+	"key_pair": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+})
+
+func newMavenStruct() interface{} {
+	return &services.MavenVirtualRepositoryParams{}
+}
+
+var mvnVirtReader = mkVirtualRepoRead(packMavenVirtualRepository, newMavenStruct)
+
+func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
+	return &schema.Resource{
+		Create: mkVirtualCreate(unpackMavenVirtualRepository, mvnVirtReader),
+		Read:   mvnVirtReader,
+		Update: mkVirtualUpdate(unpackMavenVirtualRepository, mvnVirtReader),
+		Delete: resourceVirtualRepositoryDelete,
+		Exists: resourceVirtualRepositoryExists,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Schema: mavenVirtualSchema,
+	}
+}
+
+func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string) {
+	d := &ResourceData{s}
+	base, _ := unpackBaseVirtRepo(s)
+
+	repo := services.MavenVirtualRepositoryParams{
+		VirtualRepositoryBaseParams: base,
+	}
+	repo.KeyPair = d.getString("key_pair", false)
+	repo.ForceMavenAuthentication = d.getBoolRef("force_maven_authentication", false)
+	repo.PomRepositoryReferencesCleanupPolicy = d.getString("pom_repository_references_cleanup_policy", false)
+
+	return repo, repo.Key
+}
+
+func packMavenVirtualRepository(r interface{}, d *schema.ResourceData) error {
+	repo := r.(*services.MavenVirtualRepositoryParams)
+	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
+
+	setValue("key_pair", repo.KeyPair)
+	setValue("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
+	errors := setValue("force_maven_authentication", *repo.ForceMavenAuthentication)
+
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed to pack virtual repo %q", errors)
+	}
+
+	return nil
+}
