@@ -32,37 +32,7 @@ func validateCron(value interface{}, key string) (ws []string, es []error) {
 	return nil, nil
 }
 
-var repoTypesSupported = []string{
-	"alpine",
-	"bower",
-	//"cargo", // not supported
-	"chef",
-	"cocoapods",
-	"composer",
-	"conan",
-	"conda",
-	"cran",
-	"debian",
-	"docker",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"gradle",
-	"helm",
-	"ivy",
-	"maven",
-	"npm",
-	"nuget",
-	"opkg",
-	"p2",
-	"puppet",
-	"pypi",
-	"rpm",
-	"sbt",
-	"vagrant",
-	"vcs",
-}
+
 var validLicenseTypes = []string{
 	"0BSD",
 	"AAL",
@@ -501,7 +471,7 @@ var validLicenseTypes = []string{
 }
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes,false)
 
-var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
+
 
 var upgrade = func(oldValidFunc schema.SchemaValidateFunc, key string) schema.SchemaValidateDiagFunc {
 	return func(value interface{}, path cty.Path) diag.Diagnostics {
@@ -528,10 +498,7 @@ func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	return nil, nil
 }
 
-var repoKeyValidator = validation.All(
-	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
-	validation.StringDoesNotContainAny(" !@#$%^&*()_+={}[]:;<>,/?~`|\\"),
-)
+
 
 func fileExist(value interface{}, _ string) ([]string, []error) {
 	if _, err := os.Stat(value.(string)); err != nil {

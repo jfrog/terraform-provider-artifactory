@@ -2,8 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
@@ -90,14 +88,14 @@ func newMessyRepo() interface{} {
 	return &MessyVirtualRepo{}
 }
 
-var readFunc = mkVirtualRepoRead(packVirtualRepository, newMessyRepo)
+var readFunc = mkRepoRead(packVirtualRepository, newMessyRepo)
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: mkVirtualCreate(unpackVirtualRepository, readFunc),
+		Create: mkRepoCreate(unpackVirtualRepository, readFunc),
 		Read:   readFunc,
-		Update: mkVirtualUpdate(unpackVirtualRepository, readFunc),
-		Delete: resourceVirtualRepositoryDelete,
+		Update: mkRepoUpdate(unpackVirtualRepository, readFunc),
+		Delete: deleteRepo,
 		Exists: resourceVirtualRepositoryExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -183,60 +181,11 @@ func packVirtualRepository(r interface{}, d *schema.ResourceData) error {
 
 	return nil
 }
-func mkVirtualCreate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
-	return func(d *schema.ResourceData, m interface{}) error {
-		repo, key := unpack(d)
-		// repo must be a pointer
-		_, err := m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + key)
 
-		if err != nil {
-			return err
-		}
-		d.SetId(key)
-		return read(d, m)
-	}
-}
 
-func mkVirtualRepoRead(pack PackFunc, construct Constructor) func(d *schema.ResourceData, m interface{}) error {
-	return func(d *schema.ResourceData, m interface{}) error {
-		repo := construct()
-		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().SetResult(repo).Get(repositoriesEndpoint + d.Id())
 
-		if err != nil {
-			if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
-				d.SetId("")
-				return nil
-			}
-			return err
-		}
-		return pack(repo, d)
-	}
-}
 
-func mkVirtualUpdate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
-	return func(d *schema.ResourceData, m interface{}) error {
-		repo, key := unpack(d)
-		// repo must be a pointer
-		_, err := m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
-		if err != nil {
-			return err
-		}
 
-		d.SetId(key)
-		return read(d, m)
-	}
-}
-
-func resourceVirtualRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
-
-	if err != nil && (resp != nil && resp.StatusCode() == http.StatusNotFound) {
-		d.SetId("")
-		return nil
-	}
-	return err
-}
 
 func resourceVirtualRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())

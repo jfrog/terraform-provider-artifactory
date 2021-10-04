@@ -32,14 +32,14 @@ func newGoVirtStruct() interface{} {
 	return &services.GoVirtualRepositoryParams{}
 }
 
-var goVirtReader = mkVirtualRepoRead(packGoVirtualRepository, newGoVirtStruct)
+var goVirtReader = mkRepoRead(packGoVirtualRepository, newGoVirtStruct)
 
 func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: mkVirtualCreate(unpackGoVirtualRepository, goVirtReader),
+		Create: mkRepoCreate(unpackGoVirtualRepository, goVirtReader),
 		Read:   goVirtReader,
-		Update: mkVirtualUpdate(unpackGoVirtualRepository, goVirtReader),
-		Delete: resourceVirtualRepositoryDelete,
+		Update: mkRepoUpdate(unpackGoVirtualRepository, goVirtReader),
+		Delete: deleteRepo,
 		Exists: resourceVirtualRepositoryExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

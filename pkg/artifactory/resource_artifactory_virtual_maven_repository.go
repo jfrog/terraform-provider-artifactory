@@ -32,18 +32,17 @@ var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.S
 	},
 })
 
-func newMavenStruct() interface{} {
-	return &services.MavenVirtualRepositoryParams{}
-}
 
-var mvnVirtReader = mkVirtualRepoRead(packMavenVirtualRepository, newMavenStruct)
+var mvnVirtReader = mkRepoRead(packMavenVirtualRepository, func () interface{} {
+	return &services.MavenVirtualRepositoryParams{}
+})
 
 func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: mkVirtualCreate(unpackMavenVirtualRepository, mvnVirtReader),
+		Create: mkRepoCreate(unpackMavenVirtualRepository, mvnVirtReader),
 		Read:   mvnVirtReader,
-		Update: mkVirtualUpdate(unpackMavenVirtualRepository, mvnVirtReader),
-		Delete: resourceVirtualRepositoryDelete,
+		Update: mkRepoUpdate(unpackMavenVirtualRepository, mvnVirtReader),
+		Delete: deleteRepo,
 		Exists: resourceVirtualRepositoryExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

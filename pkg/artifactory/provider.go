@@ -12,7 +12,6 @@ import (
 
 var Version = "2.3.1"
 
-const repositoriesEndpoint = "artifactory/api/repositories/"
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions

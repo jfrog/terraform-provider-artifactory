@@ -29,8 +29,8 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 		Create: resourceRemoteRepositoryCreate,
 		Read:   resourceRemoteRepositoryRead,
 		Update: resourceRemoteRepositoryUpdate,
-		Delete: resourceRemoteRepositoryDelete,
-		Exists: resourceRemoteRepositoryExists,
+		Delete: deleteRepo,
+		Exists: repoExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -498,23 +498,6 @@ func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error
 	return resourceRemoteRepositoryRead(d, m)
 }
 
-func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 
-	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
 
-	return err
-}
 
-func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
-
-	// as long as we don't have an error, it's good
-	return err == nil, err
-}
