@@ -471,8 +471,6 @@ var validLicenseTypes = []string{
 }
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes,false)
 
-
-
 var upgrade = func(oldValidFunc schema.SchemaValidateFunc, key string) schema.SchemaValidateDiagFunc {
 	return func(value interface{}, path cty.Path) diag.Diagnostics {
 		warnings, errors := oldValidFunc(value, key)

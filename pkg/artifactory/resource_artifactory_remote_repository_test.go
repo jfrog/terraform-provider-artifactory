@@ -204,7 +204,7 @@ func TestAllRemoteRepoTypes(t *testing.T) {
 	//
 	for _, repo := range repoTypesSupported {
 		if repo != "nuget" { // this requires special testing
-			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+			t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 				// NuGet Repository configuration is missing mandatory field downloadContextPath
 				resource.Test(mkRemoteRepoTestCase(repo, t))
 			})

@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var Version = "2.3.1"
+// Version for some reason isn't getting updated by the linker
+var Version = "2.6.9"
 
 
 // Provider Artifactory provider that supports configuration via username+password or a token

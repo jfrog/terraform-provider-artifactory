@@ -40,7 +40,7 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 		Read:   goVirtReader,
 		Update: mkRepoUpdate(unpackGoVirtualRepository, goVirtReader),
 		Delete: deleteRepo,
-		Exists: resourceVirtualRepositoryExists,
+		Exists: repoExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,9 +48,9 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 	}
 }
 
-func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string) {
+func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
-	base, _ := unpackBaseVirtRepo(s)
+	base := unpackBaseVirtRepo(s)
 
 	repo := services.GoVirtualRepositoryParams{
 		VirtualRepositoryBaseParams:  base,
@@ -58,7 +58,7 @@ func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string) {
 		ExternalDependenciesEnabled:  d.getBoolRef("external_dependencies_enabled", false),
 	}
 
-	return repo, repo.Key
+	return &repo, repo.Key, nil
 }
 
 func packGoVirtualRepository(r interface{}, d *schema.ResourceData) error {

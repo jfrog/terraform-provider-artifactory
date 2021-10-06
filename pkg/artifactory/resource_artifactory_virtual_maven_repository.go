@@ -32,8 +32,7 @@ var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.S
 	},
 })
 
-
-var mvnVirtReader = mkRepoRead(packMavenVirtualRepository, func () interface{} {
+var mvnVirtReader = mkRepoRead(packMavenVirtualRepository, func() interface{} {
 	return &services.MavenVirtualRepositoryParams{}
 })
 
@@ -43,7 +42,7 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 		Read:   mvnVirtReader,
 		Update: mkRepoUpdate(unpackMavenVirtualRepository, mvnVirtReader),
 		Delete: deleteRepo,
-		Exists: resourceVirtualRepositoryExists,
+		Exists: repoExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,9 +50,9 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 	}
 }
 
-func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string) {
+func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
-	base, _ := unpackBaseVirtRepo(s)
+	base := unpackBaseVirtRepo(s)
 
 	repo := services.MavenVirtualRepositoryParams{
 		VirtualRepositoryBaseParams: base,
@@ -62,7 +61,7 @@ func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string) 
 	repo.ForceMavenAuthentication = d.getBoolRef("force_maven_authentication", false)
 	repo.PomRepositoryReferencesCleanupPolicy = d.getString("pom_repository_references_cleanup_policy", false)
 
-	return repo, repo.Key
+	return &repo, repo.Key, nil
 }
 
 func packMavenVirtualRepository(r interface{}, d *schema.ResourceData) error {

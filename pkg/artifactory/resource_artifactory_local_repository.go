@@ -11,80 +11,6 @@ var legacyLocalReadFun = mkRepoRead(saveLocalRepoState, func() interface{} {
 	return &MessyRepo{}
 })
 
-var baseLocalRepoSchema = map[string]*schema.Schema{
-	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: repoKeyValidator,
-	},
-	"package_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		Computed:     true,
-		ValidateFunc: repoTypeValidator,
-	},
-	"description": {
-		Type:     schema.TypeString,
-		Optional: true,
-	},
-	"notes": {
-		Type:     schema.TypeString,
-		Optional: true,
-	},
-	"includes_pattern": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-	},
-	"excludes_pattern": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-	},
-	"repo_layout_ref": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-	},
-	"blacked_out": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
-	},
-
-	"xray_index": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
-	},
-	"property_sets": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Set:      schema.HashString,
-		Optional: true,
-	},
-	"archive_browsing_enabled": {
-		Type:     schema.TypeBool,
-		Optional: true,
-	},
-	"optional_index_compression_formats": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Set:      schema.HashString,
-		Optional: true,
-	},
-	"download_direct": {
-		Type:     schema.TypeBool,
-		Optional: true,
-	},
-	"block_pushing_schema1": {
-		Type:     schema.TypeBool,
-		Optional: true,
-	},
-}
-
 var legacyLocalSchema = mergeSchema(baseLocalRepoSchema,map[string]*schema.Schema{
 
 	"handle_releases": {
@@ -175,7 +101,7 @@ type MessyRepo struct {
 	ForceNugetAuthentication bool `json:"forceNugetAuthentication"`
 }
 
-func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string) {
+func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := MessyRepo{}
 
@@ -205,7 +131,7 @@ func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string) {
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
 	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
-	return repo, repo.Key
+	return repo, repo.Key, nil
 }
 
 
