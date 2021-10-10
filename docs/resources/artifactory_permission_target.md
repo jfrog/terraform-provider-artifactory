@@ -57,6 +57,24 @@ The following arguments are supported:
         * `groups` - (Optional) Groups this permission applies for. 
 * `build` - (Optional) As for repo but for artifactory-build-info permssions.
 
+## Permissions
+
+The provider supports the following `permission` enums:
+
+* `read`
+* `write`
+* `annotate`
+* `delete`
+* `manage`
+
+The values can be mapped to the permissions from the official [documentation](https://www.jfrog.com/confluence/display/JFROG/Permissions):
+
+* `read` - matches `Read` permissions.
+* `write` - matches ` Deploy / Cache / Create` permissions.
+* `annotate` - matches `Annotate` permissions.
+* `delete` - matches `Delete / Overwrite` permissions.
+* `manage` - matches `Manage` permissions.
+
 ## Import
 
 Permission targets can be imported using their name, e.g.
