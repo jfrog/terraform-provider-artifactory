@@ -9,10 +9,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
 func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_repository")
 
-	key := fmt.Sprintf("debian-remote.teleport%d",randomInt())
+	key := fmt.Sprintf("debian-remote.teleport%d", randomInt())
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_repository" "%s" {
 			key              = "%s"
@@ -26,7 +27,7 @@ func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 				enabled = false
 			}
 		}
-	`,name, key )
+	`, name, key)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
@@ -34,7 +35,7 @@ func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
-				Check: resource.TestCheckResourceAttr(fqrn, "key", key),
+				Check:  resource.TestCheckResourceAttr(fqrn, "key", key),
 			},
 		},
 	})
@@ -62,8 +63,18 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 	})
 }
 
+func TestAccRemoteDockerRepository(t *testing.T) {
+	_, testCase := mkNewRemoteTestCase("docker", t, map[string]interface{}{
+		"external_dependencies_enabled":  true,
+		"enable_token_authentication":    true,
+		"block_pushing_schema1":          true,
+		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+	})
+	resource.Test(t, testCase)
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
-	_,fqrn,name := mkNames("github-remote","artifactory_remote_repository")
+	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `
 		locals {
 		  allowed_github_repos = [
@@ -116,7 +127,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate("one", step1, map[string]interface{}{
-					"name" : name,
+					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
@@ -126,7 +137,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 			},
 			{
 				Config: executeTemplate("two", step2, map[string]interface{}{
-					"name" : name,
+					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
@@ -200,19 +211,87 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	})
 }
 
-func TestAllRemoteRepoTypes(t *testing.T) {
+func TestAllLegacyRemoteRepoTypes(t *testing.T) {
 	//
 	for _, repo := range repoTypesSupported {
 		if repo != "nuget" { // this requires special testing
-			t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+			t.Run(fmt.Sprintf("TestLegacyRemote%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 				// NuGet Repository configuration is missing mandatory field downloadContextPath
-				resource.Test(mkRemoteRepoTestCase(repo, t))
+				resource.Test(mkLegacyRemoteTestCase(repo, t))
 			})
 		}
 	}
 }
 
-func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-full", "artifactory_remote_docker_repository")
+
+	defaultFields := map[string]interface{}{
+		"key":          name,
+		"package_type": repoType,
+		"url":          "https://registry.npmjs.org/",
+		"username":     "user",
+		// This returns encrypted. Can't be tested
+		//"password":                           "foo",
+		"proxy": "",
+
+		//"description":                        "foo", // the server returns this suffixed. Test seperate
+		"notes":                          "notes",
+		"includes_pattern":               "**/*.js",
+		"excludes_pattern":               "**/*.jsx",
+		"repo_layout_ref":                "npm-default",
+		"hard_fail":                      true,
+		"offline":                        true,
+		"blacked_out":                    true,
+		"xray_index":                     true,
+		"store_artifacts_locally":        true,
+		"socket_timeout_millis":          25000,
+		"local_address":                  "",
+		"retrieval_cache_period_seconds": 70,
+		// this doesn't get returned on a GET
+		//"failed_retrieval_cache_period_secs": 140,
+		"missed_cache_period_seconds":             2500,
+		"unused_artifacts_cleanup_period_enabled": true,
+		"unused_artifacts_cleanup_period_hours":   96,
+		"assumed_offline_period_secs":             96,
+		"share_configuration":                     true,
+		"synchronize_properties":                  true,
+		"block_mismatching_mime_types":            true,
+		"property_sets":                           []interface{}{"artifactory"},
+		"allow_any_host_auth":                     true,
+		"enable_cookie_management":                true,
+		"bypass_head_requests":                    true,
+		"client_tls_certificate":                  "",
+		"content_synchronisation": map[string]interface{}{
+			"enabled": false, // even when set to true, it seems to come back as false on the wire
+		},
+	}
+	allFields := mergeMaps(defaultFields, extraFields)
+	allFieldsHcl := fmtMapToHcl(allFields)
+	const remoteRepoFull = `
+		resource "artifactory_remote_docker_repository" "%s" {
+%s
+		}
+	`
+	extraChecks := mapToTestChecks(fqrn, extraFields)
+	defaultChecks := mapToTestChecks(fqrn, allFields)
+
+	checks := append(defaultChecks, extraChecks...)
+	config := fmt.Sprintf(remoteRepoFull, name, allFieldsHcl)
+	return t, resource.TestCase{
+		Providers:    testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(checks...),
+			},
+		},
+	}
+}
+
+func mkLegacyRemoteTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	const remoteRepoFull = `
 		resource "artifactory_remote_repository" "%s" {
 			key                             	  = "%s"
@@ -250,9 +329,8 @@ func mkRemoteRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.T
 			client_tls_certificate				  = ""
 		}
 	`
-	id := randomInt()
-	name := fmt.Sprintf("terraform-remote-test-repo-full%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+
+	_, fqrn, name := mkNames("terraform-remote-test-repo-full", "artifactory_remote_repository")
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },

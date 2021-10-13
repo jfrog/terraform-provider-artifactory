@@ -12,6 +12,58 @@ import (
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
+type ContentSynchronisation struct {
+	Enabled    bool `json:"enables,omitempty"`
+	Statistics struct {
+		Enabled bool `json:"enables,omitempty"`
+	} `json:"statistics,omitempty"`
+	Properties struct {
+		Enabled bool `json:"enables,omitempty"`
+	} `json:"properties,omitempty"`
+	Source struct {
+		OriginAbsenceDetection bool `json:"originAbsenceDetection,omitempty"`
+	} `json:"source,omitempty"`
+}
+
+type RemoteRepositoryBaseParams struct {
+	Key                               string                  `json:"key,omitempty"`
+	Rclass                            string                  `json:"rclass"`
+	PackageType                       string                  `json:"packageType,omitempty"`
+	Url                               string                  `json:"url"`
+	Username                          string                  `json:"username,omitempty"`
+	Password                          string                  `json:"password,omitempty"`
+	Proxy                             string                  `json:"proxy,omitempty"`
+	Description                       string                  `json:"description,omitempty"`
+	Notes                             string                  `json:"notes,omitempty"`
+	IncludesPattern                   string                  `json:"includesPattern,omitempty"`
+	ExcludesPattern                   string                  `json:"excludesPattern,omitempty"`
+	RepoLayoutRef                     string                  `json:"repoLayoutRef,omitempty"`
+	HardFail                          *bool                   `json:"hardFail,omitempty"`
+	Offline                           *bool                   `json:"offline,omitempty"`
+	BlackedOut                        *bool                   `json:"blackedOut,omitempty"`
+	XrayIndex                         *bool                   `json:"xrayIndex,omitempty"`
+	PropagateQueryParams              bool                    `json:"propagateQueryParams"`
+	PriorityResolution                bool                    `json:"priorityResolution"`
+	StoreArtifactsLocally             *bool                   `json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis               int                     `json:"socketTimeoutMillis,omitempty"`
+	LocalAddress                      string                  `json:"localAddress,omitempty"`
+	RetrievalCachePeriodSecs          int                     `json:"retrievalCachePeriodSecs,omitempty"`
+	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    int                     `json:"missedRetrievalCachePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupEnabled     *bool                   `json:"unusedArtifactsCleanupEnabled,omitempty"`
+	UnusedArtifactsCleanupPeriodHours int                     `json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          int                     `json:"assumedOfflinePeriodSecs,omitempty"`
+	ShareConfiguration                *bool                   `json:"shareConfiguration,omitempty"`
+	SynchronizeProperties             *bool                   `json:"synchronizeProperties,omitempty"`
+	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes,omitempty"`
+	PropertySets                      []string                `json:"propertySets,omitempty"`
+	AllowAnyHostAuth                  *bool                   `json:"allowAnyHostAuth,omitempty"`
+	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
+	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
+	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
+	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+}
+
 type ReadFunc func(d *schema.ResourceData, m interface{}) error
 
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
@@ -181,7 +233,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"blacked_out": {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Computed: true,
+		Default: false,
 	},
 
 	"xray_index": {
@@ -196,8 +248,9 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"archive_browsing_enabled": {
-		Type:     schema.TypeBool,
-		Optional: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
 	},
 	"optional_index_compression_formats": {
 		Type:     schema.TypeSet,
@@ -206,10 +259,6 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"download_direct": {
-		Type:     schema.TypeBool,
-		Optional: true,
-	},
-	"block_pushing_schema1": {
 		Type:     schema.TypeBool,
 		Optional: true,
 	},
@@ -251,7 +300,9 @@ var baseRemoteSchema = map[string]*schema.Schema{
 	"description": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+			// this is literally what comes back from the server
 			return old == fmt.Sprintf("%s (local file cache)", new)
 		},
 	},
@@ -280,14 +331,16 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"offline": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.",
 	},
 	"blacked_out": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
 	},
 	"xray_index": {
 		Type:     schema.TypeBool,
@@ -295,9 +348,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"store_artifacts_locally": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.",
 	},
 	"socket_timeout_millis": {
 		Type:         schema.TypeInt,
@@ -324,6 +378,8 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
+		Deprecated: "This field is not returned in a get payload but is offered on the UI. " +
+			"It's inserted here for inclusive and informational reasons. It does not function",
 	},
 	"missed_cache_period_seconds": {
 		Type:         schema.TypeInt,
@@ -346,7 +402,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 	"assumed_offline_period_secs": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
 	},
 	"share_configuration": {
@@ -355,14 +410,16 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"synchronize_properties": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "When set, remote artifacts are fetched along with their properties.",
 	},
 	"block_mismatching_mime_types": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
 	},
 	"property_sets": {
 		Type:     schema.TypeSet,
@@ -371,30 +428,30 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"allow_any_host_auth": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.",
 	},
 	"enable_cookie_management": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Enables cookie management if the remote repository uses cookies to manage client state.",
 	},
 	"bypass_head_requests": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
 	},
 	"client_tls_certificate": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
 	},
-	"block_push_schema1": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
-	},
+
+
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -408,6 +465,11 @@ var baseRemoteSchema = map[string]*schema.Schema{
 				},
 			},
 		},
+	},
+	"propagate_query_params": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default: false,
 	},
 }
 var baseVirtualRepoSchema = map[string]*schema.Schema{
@@ -464,7 +526,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-func packBaseRemoteRepo(d *schema.ResourceData, repo services.RemoteRepositoryBaseParams) Lens {
+func packBaseRemoteRepo(d *schema.ResourceData, repo RemoteRepositoryBaseParams) Lens {
 	setValue := mkLens(d)
 	setValue("key", repo.Key)
 	setValue("package_type", repo.PackageType)
@@ -485,10 +547,11 @@ func packBaseRemoteRepo(d *schema.ResourceData, repo services.RemoteRepositoryBa
 	setValue("socket_timeout_millis", repo.SocketTimeoutMillis)
 	setValue("local_address", repo.LocalAddress)
 	setValue("retrieval_cache_period_seconds", repo.RetrievalCachePeriodSecs)
-	setValue("failed_retrieval_cache_period_secs", repo.FailedRetrievalCachePeriodSecs)
+	// this does not appear in the body when calling GET
+	//setValue("failed_retrieval_cache_period_secs", repo.FailedRetrievalCachePeriodSecs)
 	setValue("missed_cache_period_seconds", repo.MissedRetrievalCachePeriodSecs)
-	setValue("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
 	setValue("assumed_offline_period_secs", repo.AssumedOfflinePeriodSecs)
+	setValue("unused_artifacts_cleanup_period_hours", repo.UnusedArtifactsCleanupPeriodHours)
 	setValue("share_configuration", *repo.ShareConfiguration)
 	setValue("synchronize_properties", *repo.SynchronizeProperties)
 	setValue("block_mismatching_mime_types", *repo.BlockMismatchingMimeTypes)
@@ -497,7 +560,7 @@ func packBaseRemoteRepo(d *schema.ResourceData, repo services.RemoteRepositoryBa
 	setValue("enable_cookie_management", *repo.EnableCookieManagement)
 	setValue("bypass_head_requests", *repo.BypassHeadRequests)
 	setValue("client_tls_certificate", repo.ClientTlsCertificate)
-	setValue("block_push_schema1", *repo.BlockPushingSchema1)
+	setValue("propagate_query_params", repo.PropagateQueryParams)
 
 	if repo.ContentSynchronisation != nil {
 		setValue("content_synchronisation", []interface{}{
@@ -508,10 +571,10 @@ func packBaseRemoteRepo(d *schema.ResourceData, repo services.RemoteRepositoryBa
 	}
 	return setValue
 }
-func unpackBaseRemoteRepo(s *schema.ResourceData) services.RemoteRepositoryBaseParams {
+func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	d := &ResourceData{s}
 
-	repo := services.RemoteRepositoryBaseParams{
+	repo := RemoteRepositoryBaseParams{
 		Rclass:                            "remote",
 		Key:                               d.getString("key", false),
 		PackageType:                       d.getString("package_type", true),
@@ -532,7 +595,8 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) services.RemoteRepositoryBaseP
 		SocketTimeoutMillis:               d.getInt("socket_timeout_millis", true),
 		LocalAddress:                      d.getString("local_address", true),
 		RetrievalCachePeriodSecs:          d.getInt("retrieval_cache_period_seconds", true),
-		FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
+		// Not returned in the GET
+		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
 		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", true),
 		UnusedArtifactsCleanupEnabled:     d.getBoolRef("unused_artifacts_cleanup_period_enabled", true),
 		UnusedArtifactsCleanupPeriodHours: d.getInt("unused_artifacts_cleanup_period_hours", true),
@@ -545,13 +609,12 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) services.RemoteRepositoryBaseP
 		EnableCookieManagement:            d.getBoolRef("enable_cookie_management", true),
 		BypassHeadRequests:                d.getBoolRef("bypass_head_requests", true),
 		ClientTlsCertificate:              d.getString("client_tls_certificate", true),
-		BlockPushingSchema1:               d.getBoolRef("block_push_schema1", true),
 	}
 
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
-		repo.ContentSynchronisation = &services.ContentSynchronisation{
+		repo.ContentSynchronisation = &ContentSynchronisation{
 			Enabled: enabled,
 		}
 	}

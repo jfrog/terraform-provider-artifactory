@@ -119,6 +119,17 @@ var randomInt = func() func() int {
 	return rand.Int
 }()
 
+func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{
+
+	}
+	for _, schma := range schemata {
+		for k, v := range schma {
+			result[k] = v
+		}
+	}
+	return result
+}
 func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
 	result := map[string]*schema.Schema{}
 	for _, schma := range schemata {
@@ -128,8 +139,6 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 	}
 	return result
 }
-
-
 
 func executeTemplate(name, temp string, fields interface{}) string {
 	var tpl bytes.Buffer
@@ -157,6 +166,7 @@ func mkLens(d *schema.ResourceData) Lens {
 		return errors
 	}
 }
+
 
 
 func sendConfigurationPatch(content []byte, m interface{}) error {
