@@ -278,6 +278,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, name, allFieldsHcl)
+	fmt.Println(config)
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
