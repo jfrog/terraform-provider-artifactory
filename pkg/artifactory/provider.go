@@ -10,9 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var Version = "2.3.1"
-
-const repositoriesEndpoint = "artifactory/api/repositories/"
+// Version for some reason isn't getting updated by the linker
+var Version = "2.6.9"
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
@@ -65,6 +64,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"artifactory_local_repository":          resourceArtifactoryLocalRepository(),
 			"artifactory_remote_repository":         resourceArtifactoryRemoteRepository(),
+			"artifactory_remote_docker_repository":  resourceArtifactoryRemoteDockerRepository(),
 			"artifactory_virtual_repository":        resourceArtifactoryVirtualRepository(),
 			"artifactory_virtual_maven_repository":  resourceArtifactoryMavenVirtualRepository(),
 			"artifactory_virtual_go_repository":     resourceArtifactoryGoVirtualRepository(),

@@ -119,6 +119,17 @@ var randomInt = func() func() int {
 	return rand.Int
 }()
 
+func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{
+
+	}
+	for _, schma := range schemata {
+		for k, v := range schma {
+			result[k] = v
+		}
+	}
+	return result
+}
 func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
 	result := map[string]*schema.Schema{}
 	for _, schma := range schemata {
@@ -127,12 +138,6 @@ func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 		}
 	}
 	return result
-}
-
-func repoExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + id)
-
-	return err == nil, err
 }
 
 func executeTemplate(name, temp string, fields interface{}) string {
@@ -162,15 +167,8 @@ func mkLens(d *schema.ResourceData) Lens {
 	}
 }
 
-type ReadFunc func(d *schema.ResourceData, m interface{}) error
 
-// Constructor Must return a pointer to a struct. When just returning a struct, it somehow converts to a map
-type Constructor func() interface{}
 
-// UnpackFunc must return a pointer to a struct and the resource id
-type UnpackFunc func(s *schema.ResourceData) (interface{}, string)
-
-type PackFunc func(repo interface{}, d *schema.ResourceData) error
 func sendConfigurationPatch(content []byte, m interface{}) error {
 
 	_, err := m.(*resty.Client).R().SetBody(content).

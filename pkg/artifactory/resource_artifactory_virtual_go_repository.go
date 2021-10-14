@@ -32,15 +32,15 @@ func newGoVirtStruct() interface{} {
 	return &services.GoVirtualRepositoryParams{}
 }
 
-var goVirtReader = mkVirtualRepoRead(packGoVirtualRepository, newGoVirtStruct)
+var goVirtReader = mkRepoRead(packGoVirtualRepository, newGoVirtStruct)
 
 func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: mkVirtualCreate(unpackGoVirtualRepository, goVirtReader),
+		Create: mkRepoCreate(unpackGoVirtualRepository, goVirtReader),
 		Read:   goVirtReader,
-		Update: mkVirtualUpdate(unpackGoVirtualRepository, goVirtReader),
-		Delete: resourceVirtualRepositoryDelete,
-		Exists: resourceVirtualRepositoryExists,
+		Update: mkRepoUpdate(unpackGoVirtualRepository, goVirtReader),
+		Delete: deleteRepo,
+		Exists: repoExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,9 +48,9 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 	}
 }
 
-func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string) {
+func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
-	base, _ := unpackBaseVirtRepo(s)
+	base := unpackBaseVirtRepo(s)
 
 	repo := services.GoVirtualRepositoryParams{
 		VirtualRepositoryBaseParams:  base,
@@ -58,7 +58,7 @@ func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string) {
 		ExternalDependenciesEnabled:  d.getBoolRef("external_dependencies_enabled", false),
 	}
 
-	return repo, repo.Key
+	return &repo, repo.Key, nil
 }
 
 func packGoVirtualRepository(r interface{}, d *schema.ResourceData) error {

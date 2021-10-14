@@ -311,7 +311,7 @@ func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
-		exists, _ := repoExists(rs.Primary.ID, testAccProvider.Meta())
+		exists, _ := checkRepo(rs.Primary.ID, testAccProvider.Meta(), neverRetry)
 		if exists {
 			return fmt.Errorf("error: Repository %s still exists", rs.Primary.ID)
 		}

@@ -3,146 +3,92 @@ package artifactory
 import (
 	"fmt"
 
-	"github.com/go-resty/resty/v2"
-	"regexp"
-
-	"net/http"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
+var legacyLocalReadFun = mkRepoRead(saveLocalRepoState, func() interface{} {
+	return &MessyRepo{}
+})
+
+var legacyLocalSchema = mergeSchema(baseLocalRepoSchema,map[string]*schema.Schema{
+
+	"handle_releases": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"handle_snapshots": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"max_unique_snapshots": {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+	},
+	"debian_trivial_layout": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
+	"checksum_policy_type": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"max_unique_tags": {
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+	},
+	"snapshot_version_behavior": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"suppress_pom_consistency_checks": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"calculate_yum_metadata": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
+	"yum_root_depth": {
+		Type:     schema.TypeInt,
+		Optional: true,
+	},
+	"docker_api_version": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"enable_file_lists_indexing": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"force_nuget_authentication": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+})
+
 func resourceArtifactoryLocalRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocalRepositoryCreate,
-		Read:   resourceLocalRepositoryRead,
-		Update: resourceLocalRepositoryUpdate,
-		Delete: resourceLocalRepositoryDelete,
-		Exists: resourceLocalRepositoryExists,
+		Create: mkRepoCreate(unmarshalLocalRepository, legacyLocalReadFun),
+		Read:   legacyLocalReadFun,
+		Update: mkRepoUpdate(unmarshalLocalRepository, legacyLocalReadFun),
+		Delete: deleteRepo,
+		Exists: repoExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: repoKeyValidator,
-			},
-			"package_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: repoTypeValidator,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"notes": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"includes_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"excludes_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"repo_layout_ref": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"handle_releases": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"handle_snapshots": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"max_unique_snapshots": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"debian_trivial_layout": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"checksum_policy_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"max_unique_tags": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"snapshot_version_behavior": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"suppress_pom_consistency_checks": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"blacked_out": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"property_sets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Optional: true,
-			},
-			"archive_browsing_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"calculate_yum_metadata": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"yum_root_depth": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"docker_api_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_file_lists_indexing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"xray_index": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"force_nuget_authentication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-		},
+		Schema: legacyLocalSchema,
 	}
 }
 
@@ -155,7 +101,7 @@ type MessyRepo struct {
 	ForceNugetAuthentication bool `json:"forceNugetAuthentication"`
 }
 
-func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
+func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := MessyRepo{}
 
@@ -185,48 +131,13 @@ func unmarshalLocalRepository(data *schema.ResourceData) MessyRepo {
 	repo.XrayIndex = d.getBoolRef("xray_index", false)
 	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
-	return repo
+	return repo, repo.Key, nil
 }
 
-func retryOnOverload(response *resty.Response, _ error) bool {
-	// either 400 or 500 error code seem to appear with this problem
-	return regexp.MustCompile(".*Could not merge and save new descriptor.*").MatchString(string(response.Body()[:]))
-}
 
-func resourceLocalRepositoryCreate(d *schema.ResourceData, m interface{}) error {
+func saveLocalRepoState(r interface{}, d *schema.ResourceData) error {
 
-	repo := unmarshalLocalRepository(d)
-	// so that we don't effect the settings of the general client, make a copy
-	// There is an outstanding PR to do this per request
-	newClient := m.(*resty.Client)
-	_, err := newClient.AddRetryCondition(retryOnOverload).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
-
-	if err != nil {
-		return err
-	}
-	d.SetId(repo.Key)
-	return resourceLocalRepositoryRead(d, m)
-}
-
-func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
-
-	repo := MessyRepo{}
-	if d.Id() == "" {
-		return fmt.Errorf("no id given")
-	}
-
-	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
-	if err != nil {
-		if resp != nil {
-			if resp.StatusCode() == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("error: id: %s %s %s", d.Id(), err, string(resp.Body()[:]))
-		}
-		return err
-	}
-
+	repo := r.(*MessyRepo)
 	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
@@ -263,29 +174,4 @@ func resourceLocalRepositoryRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceLocalRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	repo := unmarshalLocalRepository(d)
 
-	_, err := m.(*resty.Client).R().SetBody(repo).SetHeader("accept", "text/plain").
-		Post(repositoriesEndpoint + d.Id())
-
-	if err != nil {
-		return err
-	}
-	d.SetId(repo.Key) // I have no idea why someone would do this when d.Id() is already correct
-	return resourceLocalRepositoryRead(d, m)
-}
-
-func resourceLocalRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
-	return err
-}
-
-func resourceLocalRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	newClient := m.(*resty.Client)
-	_, err := newClient.AddRetryCondition(func(response *resty.Response, err error) bool {
-		return response.StatusCode() == 400
-	}).R().Head(repositoriesEndpoint + d.Id())
-	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return err == nil, err
-}
