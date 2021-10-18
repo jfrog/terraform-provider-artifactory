@@ -74,16 +74,19 @@ type UnpackFunc func(s *schema.ResourceData) (interface{}, string, error)
 
 type PackFunc func(repo interface{}, d *schema.ResourceData) error
 
+var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
+var retryOnMergeError = func(response *resty.Response, _r error) bool {
+	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
+}
 func mkRepoCreate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
+
 	return func(d *schema.ResourceData, m interface{}) error {
 		repo, key, err := unpack(d)
 		if err != nil {
 			return err
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(func(response *resty.Response, _r error) bool {
-			return regexp.MustCompile(".*Could not merge and save new descriptor.*").MatchString(string(response.Body()[:]))
-		}).SetBody(repo).Put(repositoriesEndpoint + key)
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Put(repositoriesEndpoint + key)
 
 		if err != nil {
 			return err
@@ -165,7 +168,7 @@ var repoKeyValidator = validation.All(
 var repoTypesSupported = []string{
 	"alpine",
 	"bower",
-	//"cargo", // not supported
+	"cargo",
 	"chef",
 	"cocoapods",
 	"composer",
