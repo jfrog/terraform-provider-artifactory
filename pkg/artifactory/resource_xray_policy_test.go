@@ -187,8 +187,8 @@ func TestAccPolicy_badLicenseCriteria(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
-		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicyDestroy(policyName),
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayPolicy_badLicense(policyName, policyDesc, ruleName, rangeTo),
@@ -206,8 +206,8 @@ func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
-		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckPolicyDestroy(policyName),
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayPolicy_badSecurity(policyName, policyDesc, ruleName, allowedLicense),
@@ -245,23 +245,28 @@ func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 			},
 		},
 	})
-}*/
+}
 
-func testAccCheckPolicyDestroy(s *terraform.State) error {
+ */
+func testAccCheckPolicyDestroy(id string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type == "xray_policy" {
+		rs, ok := s.RootModule().Resources[id]
+		if !ok {
+			return fmt.Errorf("err: Resource id[%s] not found", id)
+		}
+		provider, _ := testAccProviders["artifactory"]()
 
-			policy, resp, err := getPolicy(rs.Primary.ID, testAccProvider.Meta().(*resty.Client))
+		policy, resp, err := getPolicy(rs.Primary.ID, provider.Meta().(*resty.Client))
 
 			if err != nil {
 				if resp != nil {
 					if resp.StatusCode() == http.StatusInternalServerError &&
 						err.Error() == fmt.Sprintf("{\"error\":\"Failed to find Policy %s\"}", rs.Primary.ID) {
-						continue
+					return nil
 					}
 					if resp.StatusCode() == http.StatusNotFound {
-						continue
+					return nil
 					}
 				}
 				return err
@@ -269,8 +274,6 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("error: Policy %s still exists %s", rs.Primary.ID, *policy.Name)
 		}
 	}
-	return nil
-}
 
 func testAccXrayPolicyBasic(name, description, ruleName string) string {
 	return fmt.Sprintf(`

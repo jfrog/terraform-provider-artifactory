@@ -53,7 +53,7 @@ import (
 	watchDesc := "watch created by xray acceptance tests"
 	repoName := "repo-name"
 	binMgrId := "artifactory-id"
-	policyName := "test-policy"
+	policyName := fmt.Sprintf("test-policy%d",randomInt())
 	filterValue := "Debian"
 	updatedDesc := "updated watch description"
 	updatedValue := "Docker"
@@ -62,7 +62,7 @@ import (
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckWatchDestroy,
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXrayWatchFilters(watchName, watchDesc, repoName, binMgrId, policyName, filterValue),
@@ -109,7 +109,7 @@ func TestAccWatch_builds(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckWatchDestroy,
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccXrayWatchBuilds(watchName, watchDesc, policyName, binMgrId),
@@ -147,7 +147,9 @@ func testAccCheckWatchDoesntExist(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckWatchDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*resty.Client)
+	provider, _ := testAccProviders["artifactory"]()
+
+	client := provider.Meta().(*resty.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "xray_watch" {

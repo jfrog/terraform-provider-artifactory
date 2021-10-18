@@ -31,7 +31,7 @@ resource "artifactory_oauth_settings" "oauth" {
 func TestAccOauthSettings_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccOauthSettingsDestroy("artifactory_oauth_settings.oauth"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ resource "artifactory_oauth_settings" "oauth" {
 func TestAccOauthSettings_multipleProviders(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccOauthSettingsDestroy("artifactory_oauth_settings.oauth"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,8 @@ func TestAccOauthSettings_multipleProviders(t *testing.T) {
 
 func testAccOauthSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

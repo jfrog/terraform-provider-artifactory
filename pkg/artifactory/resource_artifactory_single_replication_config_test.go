@@ -45,7 +45,7 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -63,7 +63,7 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -149,7 +149,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			testAccCheckReplicationDestroy(fqrn),
 		),
 
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{

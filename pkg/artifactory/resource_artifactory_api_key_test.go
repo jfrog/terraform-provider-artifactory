@@ -18,7 +18,7 @@ func TestAccApiKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: apiKey,
@@ -32,7 +32,8 @@ func TestAccApiKey(t *testing.T) {
 
 func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {

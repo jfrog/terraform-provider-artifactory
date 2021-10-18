@@ -18,7 +18,7 @@ resource "artifactory_general_security" "security" {
 func TestAccGeneralSecurity_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccGeneralSecurityDestroy("artifactory_general_security.security"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -33,7 +33,8 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 
 func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {
