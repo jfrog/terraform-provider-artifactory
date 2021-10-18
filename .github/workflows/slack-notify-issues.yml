@@ -15,6 +15,6 @@ jobs:
           SLACK_COLOR: '#00A86B'
           SLACK_ICON: https://pbs.twimg.com/profile_images/978188446178082817/86ulJdF0.jpg
           SLACK_TITLE: "[${{ github.event.issue.state}}] ${{ github.event.issue.title }} on ${{ github.repository }} :rocket:"
-          SLACK_MESSAGE: 'Link: ${{ github.event.issue.url }}'
+          SLACK_MESSAGE: 'Link: ${{ github.event.issue.html_url }}'
           SLACK_USERNAME: PartnerEngineers
           SLACK_WEBHOOK: ${{ secrets.SLACK_ISSUE_WEBHOOK }}
