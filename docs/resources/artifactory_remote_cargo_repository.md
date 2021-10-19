@@ -1,0 +1,40 @@
+# Artifactory Remote Repository Resource
+
+Provides an Artifactory remote `cargo` repository resource. This provides cargo specific fields and is the only way to get them
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Cargo+Registry)
+
+
+## Example Usage
+Create a new Artifactory remote cargo repository called my-remote-cargo
+for brevity sake, only cargo specific fields are included; for other fields see documentation for
+[generic repo](artifactory_remote_docker_repository.md).
+```hcl
+
+resource "artifactory_remote_docker_repository" "my-remote-cargo" {
+  key                 = "my-remote-docker"
+  package_type        = "docker"
+  anonymous_access    = true
+  git_registry_url    = "https://github.com/rust-lang/foo.index"
+}
+```
+## Note
+If you get a 400 error: `"Custom Base URL should be defined prior to creating a Cargo repository"`, 
+you must set the base url at: `http://${host}/ui/admin/configuration/general` 
+
+## Argument Reference
+
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
+
+* `key` - (Required) The repository identifier. Must be unique system-wide
+* `package_type` - (Required) - self-explanatory
+* `username` - (Optional)
+* `xray_index` - (Optional)
+
+
+## Import
+
+Remote repositories can be imported using their name, e.g.
+
+```
+$ terraform import artifactory_remote_repository.my-remote my-remote
+```

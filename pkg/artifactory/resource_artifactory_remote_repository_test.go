@@ -73,6 +73,14 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 	resource.Test(t, testCase)
 }
 
+func TestAccRemoteCargoRepository(t *testing.T) {
+	_, testCase := mkNewRemoteTestCase("cargo", t, map[string]interface{}{
+		"git_registry_url":  "https://github.com/rust-lang/foo.index",
+		"anonymous_access":    true,
+	})
+	resource.Test(t, testCase)
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `
@@ -223,8 +231,9 @@ func TestAllLegacyRemoteRepoTypes(t *testing.T) {
 	}
 }
 
+// if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-full", "artifactory_remote_docker_repository")
+	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository",repoType))
 
 	defaultFields := map[string]interface{}{
 		"key":          name,
@@ -269,7 +278,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	allFields := mergeMaps(defaultFields, extraFields)
 	allFieldsHcl := fmtMapToHcl(allFields)
 	const remoteRepoFull = `
-		resource "artifactory_remote_docker_repository" "%s" {
+		resource "artifactory_remote_%s_repository" "%s" {
 %s
 		}
 	`
@@ -277,8 +286,8 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	defaultChecks := mapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
-	config := fmt.Sprintf(remoteRepoFull, name, allFieldsHcl)
-	fmt.Println(config)
+	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
+
 	return t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },

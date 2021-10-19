@@ -47,7 +47,12 @@ type DockerRemoteRepo struct {
 }
 
 var dockerRemoteRepoReadFun = mkRepoRead(packDockerRemoteRepo, func() interface{} {
-	return &DockerRemoteRepo{}
+	return &DockerRemoteRepo{
+		RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			Rclass: "remote",
+			PackageType: "docker",
+		},
+	}
 })
 
 func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
