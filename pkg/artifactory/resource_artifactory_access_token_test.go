@@ -32,7 +32,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      audienceBad,
@@ -62,7 +62,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: audienceGood,
@@ -99,7 +99,7 @@ func TestAccAccessTokenExistingUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: existingUser,
@@ -141,7 +141,7 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: fixedDateGood(),
@@ -177,7 +177,7 @@ func TestAccAccessTokenFixedDateBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      fixedDateBad,
@@ -212,7 +212,7 @@ func TestAccAccessTokenAdminToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      adminToken,
@@ -242,7 +242,7 @@ func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: refreshableToken,
@@ -273,7 +273,7 @@ func TestAccAccessTokenMissingUserBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      missingUserBad,
@@ -297,7 +297,7 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: missingUserGood,
@@ -338,7 +338,7 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      missingGroup,
@@ -367,7 +367,7 @@ func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: nonExpiringToken,
