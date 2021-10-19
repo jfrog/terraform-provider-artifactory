@@ -20,7 +20,7 @@ func TestAccGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: groupBasic,
@@ -80,7 +80,7 @@ func TestAccGroup_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: groupFull,
@@ -121,7 +121,8 @@ func TestAccGroup_full(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {

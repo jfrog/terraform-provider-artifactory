@@ -21,7 +21,7 @@ func TestAccLocalRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -65,7 +65,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 
 	cfg := fmt.Sprintf(localRepositoryConfigFull, name, name, repoType, name, name)
 	return t, resource.TestCase{
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
 		Steps: []resource.TestStep{

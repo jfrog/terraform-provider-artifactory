@@ -188,7 +188,7 @@ func TestAccPolicy_badLicenseCriteria(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckPolicyDestroy,
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayPolicy_badLicense(policyName, policyDesc, ruleName, rangeTo),
@@ -207,7 +207,7 @@ func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckPolicyDestroy,
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayPolicy_badSecurity(policyName, policyDesc, ruleName, allowedLicense),
@@ -251,8 +251,8 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "xray_policy" {
-
-			policy, resp, err := getPolicy(rs.Primary.ID, testAccProvider.Meta().(*resty.Client))
+			provider, _ := testAccProviders["artifactory"]()
+			policy, resp, err := getPolicy(rs.Primary.ID, provider.Meta().(*resty.Client))
 
 			if err != nil {
 				if resp != nil {
