@@ -81,6 +81,13 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 	resource.Test(t, testCase)
 }
 
+func TestAccRemoteHelmRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("helm", t, map[string]interface{}{
+		"helm_charts_base_url":  "https://github.com/rust-lang/foo.index",
+	}))
+}
+
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `

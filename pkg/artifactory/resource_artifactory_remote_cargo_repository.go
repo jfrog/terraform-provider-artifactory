@@ -58,7 +58,7 @@ func unpackCargoRemoteRepo(s *schema.ResourceData) (interface{}, string, error) 
 		RegistryUrl:                d.getString("git_registry_url", false),
 		AnonymousAccess:            d.getBool("anonymous_access", false),
 	}
-
+	repo.PackageType = "cargo"
 	return repo, repo.Key, nil
 }
 
