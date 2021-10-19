@@ -27,7 +27,6 @@ var dockerRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema
 	"external_dependencies_patterns": {
 		Type:     schema.TypeList,
 		Optional: true,
-		ForceNew: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -79,7 +78,7 @@ func unpackDockerRemoteRepo(s *schema.ResourceData) (interface{}, string, error)
 		BlockPushingSchema1:          d.getBoolRef("block_pushing_schema1", false),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 	}
-
+	repo.PackageType = "docker"
 	return repo, repo.Key, nil
 }
 
