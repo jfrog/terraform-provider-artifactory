@@ -55,14 +55,13 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 
 func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
-	base := unpackBaseVirtRepo(s)
 
 	repo := services.GoVirtualRepositoryParams{
-		VirtualRepositoryBaseParams:  base,
+		VirtualRepositoryBaseParams:  unpackBaseVirtRepo(s),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 		ExternalDependenciesEnabled:  d.getBoolRef("external_dependencies_enabled", false),
 	}
-
+	repo.PackageType = "go"
 	return &repo, repo.Key, nil
 }
 

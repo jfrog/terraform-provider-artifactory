@@ -244,7 +244,6 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 
 	defaultFields := map[string]interface{}{
 		"key":          name,
-		"package_type": repoType,
 		"url":          "https://registry.npmjs.org/",
 		"username":     "user",
 		// This returns encrypted. Can't be tested

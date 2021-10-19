@@ -78,6 +78,7 @@ var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descr
 var retryOnMergeError = func(response *resty.Response, _r error) bool {
 	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
 }
+
 func mkRepoCreate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData, m interface{}) error {
 
 	return func(d *schema.ResourceData, m interface{}) error {
@@ -204,11 +205,10 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		ValidateFunc: repoKeyValidator,
 	},
 	"package_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		Computed:     true,
-		ValidateFunc: repoTypeValidator,
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
 	},
 	"description": {
 		Type:     schema.TypeString,
@@ -236,7 +236,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"blacked_out": {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Default: false,
+		Default:  false,
 	},
 
 	"xray_index": {
@@ -274,11 +274,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		ValidateFunc: repoKeyValidator,
 	},
 	"package_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		Default:      "generic",
-		ValidateFunc: repoTypeValidator,
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
 	},
 	"url": {
 		Type:         schema.TypeString,
@@ -472,7 +471,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 	"propagate_query_params": {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Default: false,
+		Default:  false,
 	},
 }
 var baseVirtualRepoSchema = map[string]*schema.Schema{
@@ -482,10 +481,10 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		ForceNew: true,
 	},
 	"package_type": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: repoTypeValidator,
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
 	},
 	"description": {
 		Type:     schema.TypeString,
@@ -578,26 +577,27 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	d := &ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
-		Rclass:                            "remote",
-		Key:                               d.getString("key", false),
-		PackageType:                       d.getString("package_type", true),
-		Url:                               d.getString("url", false),
-		Username:                          d.getString("username", true),
-		Password:                          d.getString("password", true),
-		Proxy:                             d.getString("proxy", true),
-		Description:                       d.getString("description", true),
-		Notes:                             d.getString("notes", true),
-		IncludesPattern:                   d.getString("includes_pattern", true),
-		ExcludesPattern:                   d.getString("excludes_pattern", true),
-		RepoLayoutRef:                     d.getString("repo_layout_ref", true),
-		HardFail:                          d.getBoolRef("hard_fail", true),
-		Offline:                           d.getBoolRef("offline", true),
-		BlackedOut:                        d.getBoolRef("blacked_out", true),
-		XrayIndex:                         d.getBoolRef("xray_index", true),
-		StoreArtifactsLocally:             d.getBoolRef("store_artifacts_locally", true),
-		SocketTimeoutMillis:               d.getInt("socket_timeout_millis", true),
-		LocalAddress:                      d.getString("local_address", true),
-		RetrievalCachePeriodSecs:          d.getInt("retrieval_cache_period_seconds", true),
+		Rclass:                   "remote",
+		Key:                      d.getString("key", false),
+		//must be set independently
+		PackageType:              "invalid",
+		Url:                      d.getString("url", false),
+		Username:                 d.getString("username", true),
+		Password:                 d.getString("password", true),
+		Proxy:                    d.getString("proxy", true),
+		Description:              d.getString("description", true),
+		Notes:                    d.getString("notes", true),
+		IncludesPattern:          d.getString("includes_pattern", true),
+		ExcludesPattern:          d.getString("excludes_pattern", true),
+		RepoLayoutRef:            d.getString("repo_layout_ref", true),
+		HardFail:                 d.getBoolRef("hard_fail", true),
+		Offline:                  d.getBoolRef("offline", true),
+		BlackedOut:               d.getBoolRef("blacked_out", true),
+		XrayIndex:                d.getBoolRef("xray_index", true),
+		StoreArtifactsLocally:    d.getBoolRef("store_artifacts_locally", true),
+		SocketTimeoutMillis:      d.getInt("socket_timeout_millis", true),
+		LocalAddress:             d.getString("local_address", true),
+		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", true),
 		// Not returned in the GET
 		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
 		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", true),
@@ -628,9 +628,10 @@ func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBasePa
 	d := &ResourceData{s}
 
 	return services.VirtualRepositoryBaseParams{
-		Key:             d.getString("key", false),
-		Rclass:          "virtual",
-		PackageType:     d.getString("package_type", false),
+		Key:    d.getString("key", false),
+		Rclass: "virtual",
+		//must be set independently
+		PackageType:              "invalid",
 		IncludesPattern: d.getString("includes_pattern", false),
 		ExcludesPattern: d.getString("excludes_pattern", false),
 		RepoLayoutRef:   d.getString("repo_layout_ref", false),
