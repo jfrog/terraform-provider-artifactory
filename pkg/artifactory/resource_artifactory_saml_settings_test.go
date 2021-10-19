@@ -30,7 +30,7 @@ resource "artifactory_saml_settings" "saml" {
 func TestAccSamlSettings_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testAccSamlSettingsDestroy("artifactory_saml_settings.saml"),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,9 @@ func TestAccSamlSettings_full(t *testing.T) {
 
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		c := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+
+		c := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

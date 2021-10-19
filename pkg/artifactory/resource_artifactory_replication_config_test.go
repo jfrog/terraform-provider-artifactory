@@ -29,7 +29,7 @@ func TestInvalidCronFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -59,7 +59,7 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -120,7 +120,8 @@ func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		exists, _ := repConfigExists(rs.Primary.ID, testAccProvider.Meta())
+		provider, _ := testAccProviders["artifactory"]()
+		exists, _ := repConfigExists(rs.Primary.ID, provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)
 		}

@@ -23,7 +23,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -202,7 +202,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase
 	return t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -311,7 +311,9 @@ func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
-		exists, _ := checkRepo(rs.Primary.ID, testAccProvider.Meta(), neverRetry)
+		provider, _ := testAccProviders["artifactory"]()
+
+		exists, _ := checkRepo(rs.Primary.ID, provider.Meta(), neverRetry)
 		if exists {
 			return fmt.Errorf("error: Repository %s still exists", rs.Primary.ID)
 		}

@@ -11,15 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var testAccProviders map[string]*schema.Provider
-var testAccProvider *schema.Provider
-
-func init() {
-	testAccProvider = Provider()
-	testAccProviders = map[string]*schema.Provider{
-		"artifactory": testAccProvider,
+var testAccProviders = func() map[string]func() (*schema.Provider, error) {
+	provider := Provider()
+	return map[string]func() (*schema.Provider, error){
+		"artifactory": func() (*schema.Provider, error) {
+			return provider, nil
+		},
 	}
-}
+}()
 
 func TestProvider(t *testing.T) {
 	if err := Provider().InternalValidate(); err != nil {
@@ -66,7 +65,8 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	oldErr := testAccProvider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	provider, _ := testAccProviders["artifactory"]()
+	oldErr := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
 	if oldErr != nil {
 		t.Fatal(oldErr)
 	}

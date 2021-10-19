@@ -26,7 +26,7 @@ func TestAccUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckUserDestroy(fqrn),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userBasic, name, id, id),
@@ -62,7 +62,7 @@ func TestAccUser_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckUserDestroy(FQRN),
-		Providers:    testAccProviders,
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, id, id),
@@ -86,7 +86,8 @@ func TestAccUser_full(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*resty.Client)
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 
