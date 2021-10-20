@@ -75,6 +75,15 @@ resource "artifactory_remote_repository" "npm-remote" {
   xray_index = true
 }
 
+resource "tls_private_key" "example" {
+  algorithm   = "RSA"
+  rsa_bits = 2048
+}
+
+data "tls_public_key" "example" {
+
+}
+
 resource "artifactory_xray_policy" "test" {
   name = "test-policy-name-severity"
   description = "test policy description"

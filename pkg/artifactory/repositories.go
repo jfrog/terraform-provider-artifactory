@@ -7,10 +7,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
+	"reflect"
 	"regexp"
 )
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
+
+type LocalRepositoryBaseParams struct {
+	Key                             string   `hcl:"key" json:"key,omitempty"`
+	Rclass                          string   `json:"rclass"`
+	PackageType                     string   `hcl:"package_type" json:"packageType,omitempty"`
+	Description                     string   `hcl:"description" json:"description,omitempty"`
+	Notes                           string   `hcl:"notes" json:"notes,omitempty"`
+	IncludesPattern                 string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
+	ExcludesPattern                 string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	RepoLayoutRef                   string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
+	BlackedOut                      *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
+	XrayIndex                       *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
+	PropertySets                    []string `hcl:"property_sets" json:"propertySets,omitempty"`
+	ArchiveBrowsingEnabled          *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
+	OptionalIndexCompressionFormats []string `hcl:"key" json:"optionalIndexCompressionFormats,omitempty"`
+	DownloadRedirect                *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
+}
 
 type ContentSynchronisation struct {
 	Enabled    bool `json:"enables,omitempty"`
@@ -657,4 +675,39 @@ func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBas
 	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
 	setValue("repositories", repo.Repositories)
 	return setValue
+}
+
+func universalPack(repo interface{}, d *schema.ResourceData) error{
+	setValue := mkLens(d)
+	t := reflect.TypeOf(repo).Elem()
+	v := reflect.ValueOf(repo).Elem()
+	var errors []error
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		hcl := field.Tag.Get("hcl")
+		if hcl != "" {
+			value := v.Field(i).String()
+			errors = setValue(hcl,value)
+		}
+	}
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed saving state %q", errors)
+	}
+	return nil
+}
+
+func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack UnpackFunc, constructor Constructor) *schema.Resource {
+	var reader = mkRepoRead(packer,constructor)
+	return &schema.Resource{
+		Create: mkRepoCreate(unpack, reader),
+		Read:   reader,
+		Update: mkRepoUpdate(unpack, reader),
+		Delete: deleteRepo,
+		Exists: repoExists,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: skeema,
+	}
 }

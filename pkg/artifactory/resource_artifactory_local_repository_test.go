@@ -9,6 +9,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+func TestAccLocalAlpineRepository(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-local-test-repo-basic","artifactory_local_alpine_repository")
+	localRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_local_alpine_repository" "%s" {
+			key 	     = "%s"
+			primary_keypair_ref = "foo-key"
+		}
+	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", "foo-key"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLocalRepository_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-local-test-repo-basic%d", rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)
