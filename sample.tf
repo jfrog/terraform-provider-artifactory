@@ -95,7 +95,6 @@ resource "artifactory_xray_policy" "test" {
 }
 resource "artifactory_virtual_go_repository" "baz-go" {
   key          = "baz-go"
-  package_type = "go"
   repo_layout_ref = "go-default"
   repositories = []
   description = "A test virtual repo"
@@ -111,7 +110,6 @@ resource "artifactory_virtual_go_repository" "baz-go" {
 
 resource "artifactory_virtual_maven_repository" "foo" {
   key          = "maven-virt-repo"
-  package_type = "maven"
   repo_layout_ref = "maven-2-default"
   repositories = []
   description = "A test virtual repo"
