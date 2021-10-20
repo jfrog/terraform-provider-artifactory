@@ -498,7 +498,7 @@ func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
 
 func getPolicy(id string, client *resty.Client) (Policy, *resty.Response, error) {
 	policy := Policy{}
-	resp, err := client.R().SetResult(&policy).Put("xray/api/v1/policies/" + id)
+	resp, err := client.R().SetResult(&policy).Get("xray/api/v1/policies/" + id)
 	return policy, resp, err
 }
 func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
