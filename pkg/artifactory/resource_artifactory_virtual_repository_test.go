@@ -42,7 +42,6 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
 		  key          = "%s"
-		  package_type = "go"
 		  repo_layout_ref = "go-default"
 		  repositories = []
 		  description = "A test virtual repo"
@@ -88,7 +87,6 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
-			package_type = "maven"
 			repo_layout_ref = "maven-2-default"
 			repositories = []
 			description = "A test virtual repo"
