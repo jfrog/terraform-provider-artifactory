@@ -1,4 +1,4 @@
-# Artifactory Virtual Repository Resource
+# Artifactory Virtual Maven Repository Resource
 
 Provides an Artifactory virtual repository resource, but with specific maven feature. This should be preferred over the original
 one-size-fits-all `artifactory_virtual_repository`. 
@@ -21,7 +21,6 @@ resource "artifactory_remote_repository" "baz" {
 
 resource "artifactory_virtual_maven_repository" "foo" {
   key          = "maven-virt-repo"
-  package_type = "maven"
   repo_layout_ref = "maven-2-default"
   repositories = [
     "${artifactory_local_repository.bar.key}",
@@ -41,7 +40,6 @@ resource "artifactory_virtual_maven_repository" "foo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
 * `key` - (Required)
-* `package_type` - (Required)
 * `repositories` - (Required, but may be empty)
 * `description` - (Optional)
 * `notes` - (Optional)
