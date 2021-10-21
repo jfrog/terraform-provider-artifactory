@@ -2,8 +2,11 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"math"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -74,5 +77,49 @@ func toHclFormat(thing interface{}) string {
 		return fmt.Sprintf("\n\t%s\n\t\t\t\t", fmtMapToHcl(thing.(map[string]interface{})))
 	default:
 		return fmt.Sprintf("%v", thing)
+	}
+}
+
+type Checker func(id string, request *resty.Request) (*resty.Response, error)
+
+func verifyDestroy(id string, check Checker) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
+
+		rs, ok := s.RootModule().Resources[id]
+		if !ok {
+			return fmt.Errorf("err: Resource id[%s] not found", id)
+		}
+		resp, err := check(id, client.R())
+
+		if err != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				return nil
+			}
+			return err
+		}
+
+		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
+	}
+}
+func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+
+		rs, ok := s.RootModule().Resources[id]
+
+		if !ok {
+			return fmt.Errorf("error: Resource id [%s] not found", id)
+		}
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
+		resp, err := checkRepo(rs.Primary.ID, client.R(), neverRetry)
+		if err != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				return nil
+			}
+			return err
+		}
+		return nil
 	}
 }

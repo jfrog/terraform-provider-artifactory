@@ -31,7 +31,7 @@ var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Sche
 func newGoVirtStruct() interface{} {
 	return &services.GoVirtualRepositoryParams{
 		VirtualRepositoryBaseParams: services.VirtualRepositoryBaseParams{
-			Rclass: "virtual",
+			Rclass:      "virtual",
 			PackageType: "go",
 		},
 	}

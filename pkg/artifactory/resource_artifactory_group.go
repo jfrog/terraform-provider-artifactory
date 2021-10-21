@@ -96,17 +96,17 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	groupParams, err := groupParams(d)
+	gp, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
+	_, err = m.(*resty.Client).R().SetBody(&(gp.GroupDetails)).Put(groupsEndpoint + gp.GroupDetails.Name)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(groupParams.GroupDetails.Name)
+	d.SetId(gp.GroupDetails.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		exists, err := resourceGroupExists(d, m)
 		if err != nil {

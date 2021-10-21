@@ -18,8 +18,8 @@ func TestAccGroup_basic(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckGroupDestroy("artifactory_group.test-group"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -78,8 +78,8 @@ func TestAccGroup_full(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckGroupDestroy("artifactory_group.test-group"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckGroupDestroy("artifactory_group.test-group"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -134,7 +134,7 @@ func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
 	part1 := schema.HashString(p["name"].(string)) + 31
 	permissions := castToStringArr(p["permissions"].(*schema.Set).List())
-	part3 := schema.HashString(strings.Join(permissions,""))
+	part3 := schema.HashString(strings.Join(permissions, ""))
 	return part1 * part3
 }
 

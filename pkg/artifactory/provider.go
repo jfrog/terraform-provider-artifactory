@@ -62,6 +62,7 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"artifactory_keypair":                   resourceArtifactoryKeyPair(),
 			"artifactory_local_repository":          resourceArtifactoryLocalRepository(),
 			"artifactory_local_alpine_repository":   resourceArtifactoryLocalAlpineRepository(),
 			"artifactory_remote_repository":         resourceArtifactoryRemoteRepository(),

@@ -24,8 +24,8 @@ func TestAccUser_basic(t *testing.T) {
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckUserDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(fqrn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -60,8 +60,8 @@ func TestAccUser_full(t *testing.T) {
 	`
 	id, FQRN, name := mkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckUserDestroy(FQRN),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(FQRN),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

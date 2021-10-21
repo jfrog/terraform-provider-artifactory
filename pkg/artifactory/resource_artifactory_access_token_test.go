@@ -30,8 +30,8 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -60,8 +60,8 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -97,8 +97,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenExistingUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -139,8 +139,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -175,8 +175,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenFixedDateBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -210,8 +210,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenAdminToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -240,8 +240,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -271,8 +271,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingUserBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -295,8 +295,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingUserGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -336,8 +336,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -365,8 +365,8 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

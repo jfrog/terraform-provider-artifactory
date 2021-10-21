@@ -16,8 +16,8 @@ func TestAccApiKey(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

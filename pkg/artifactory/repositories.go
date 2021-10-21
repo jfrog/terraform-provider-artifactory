@@ -50,7 +50,7 @@ type RemoteRepositoryBaseParams struct {
 	Url                               string                  `json:"url"`
 	Username                          string                  `json:"username,omitempty"`
 	Password                          string                  `json:"password,omitempty"`
-	Proxy                             string                  `json:"proxy,omitempty"`
+	Proxy                             string                  `json:"proxy"`
 	Description                       string                  `json:"description,omitempty"`
 	Notes                             string                  `json:"notes,omitempty"`
 	IncludesPattern                   string                  `json:"includesPattern,omitempty"`
@@ -167,14 +167,15 @@ var retry400 = func(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
-func checkRepo(id string, m interface{}, retryCond resty.RetryConditionFunc) (bool, error) {
-	_, err := m.(*resty.Client).R().AddRetryCondition(retryCond).Head(repositoriesEndpoint + id)
+func checkRepo(id string, request *resty.Request, retry resty.RetryConditionFunc) (*resty.Response, error) {
 	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return err == nil, err
+	return request.AddRetryCondition(retry).Head(repositoriesEndpoint + id)
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return checkRepo(d.Id(), m, retry400)
+	_, err := checkRepo(d.Id(), m.(*resty.Client).R(), retry400)
+	return err == nil, err
+
 }
 
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
@@ -471,7 +472,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 
-
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -595,8 +595,8 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	d := &ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
-		Rclass:                   "remote",
-		Key:                      d.getString("key", false),
+		Rclass: "remote",
+		Key:    d.getString("key", false),
 		//must be set independently
 		PackageType:              "invalid",
 		Url:                      d.getString("url", false),
@@ -649,7 +649,7 @@ func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBasePa
 		Key:    d.getString("key", false),
 		Rclass: "virtual",
 		//must be set independently
-		PackageType:              "invalid",
+		PackageType:     "invalid",
 		IncludesPattern: d.getString("includes_pattern", false),
 		ExcludesPattern: d.getString("excludes_pattern", false),
 		RepoLayoutRef:   d.getString("repo_layout_ref", false),
@@ -677,7 +677,7 @@ func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBas
 	return setValue
 }
 
-func universalPack(repo interface{}, d *schema.ResourceData) error{
+func universalPack(repo interface{}, d *schema.ResourceData) error {
 	setValue := mkLens(d)
 	t := reflect.TypeOf(repo).Elem()
 	v := reflect.ValueOf(repo).Elem()
@@ -687,7 +687,7 @@ func universalPack(repo interface{}, d *schema.ResourceData) error{
 		hcl := field.Tag.Get("hcl")
 		if hcl != "" {
 			value := v.Field(i).String()
-			errors = setValue(hcl,value)
+			errors = setValue(hcl, value)
 		}
 	}
 	if errors != nil && len(errors) > 0 {
@@ -697,7 +697,7 @@ func universalPack(repo interface{}, d *schema.ResourceData) error{
 }
 
 func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack UnpackFunc, constructor Constructor) *schema.Resource {
-	var reader = mkRepoRead(packer,constructor)
+	var reader = mkRepoRead(packer, constructor)
 	return &schema.Resource{
 		Create: mkRepoCreate(unpack, reader),
 		Read:   reader,

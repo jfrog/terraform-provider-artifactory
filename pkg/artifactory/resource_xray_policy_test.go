@@ -186,8 +186,8 @@ func TestAccPolicy_badLicenseCriteria(t *testing.T) {
 	rangeTo := 4
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -205,8 +205,8 @@ func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 	allowedLicense := "BSD-4-Clause"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

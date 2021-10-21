@@ -100,6 +100,7 @@ const permissionFull = `
      //depends_on = [artifactory_local_repository.{{ .repo_name }}]
 	}
 `
+
 func TestGitHubIssue126(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
 	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")
@@ -137,14 +138,14 @@ func TestGitHubIssue126(test *testing.T) {
 		  }
 		}`
 	variables := map[string]string{
-		"perm_name" : permName,
-		"username" : username,
-		"repo_name" : repoName,
+		"perm_name": permName,
+		"username":  username,
+		"repo_name": repoName,
 	}
 	foo := executeTemplate(permFqrn, testConfig, variables)
 	resource.Test(test, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(test) },
-		CheckDestroy: testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:          func() { testAccPreCheck(test) },
+		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -169,8 +170,8 @@ func TestAccPermissionTarget_full(test *testing.T) {
 	}
 
 	resource.Test(test, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(test) },
-		CheckDestroy: testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:          func() { testAccPreCheck(test) },
+		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -203,8 +204,8 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

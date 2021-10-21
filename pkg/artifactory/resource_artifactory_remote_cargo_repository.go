@@ -30,7 +30,7 @@ type CargoRemoteRepo struct {
 var cargoRemoteRepoReadFun = mkRepoRead(packCargoRemoteRepo, func() interface{} {
 	return &CargoRemoteRepo{
 		RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
-			Rclass: "remote",
+			Rclass:      "remote",
 			PackageType: "cargo",
 		},
 	}

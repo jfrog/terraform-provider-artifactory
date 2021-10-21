@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccLocalAlpineRepository(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-local-test-repo-basic","artifactory_local_alpine_repository")
+	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_local_alpine_repository" "%s" {
 			key 	     = "%s"
@@ -18,8 +18,8 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		}
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -44,8 +44,8 @@ func TestAccLocalRepository_basic(t *testing.T) {
 		}
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckRepositoryDestroy(resourceName),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -91,8 +91,8 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	cfg := fmt.Sprintf(localRepositoryConfigFull, name, name, repoType, name, name)
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(resourceName),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckRepositoryDestroy(resourceName),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,

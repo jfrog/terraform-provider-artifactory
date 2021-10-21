@@ -29,7 +29,7 @@ resource "artifactory_saml_settings" "saml" {
 
 func TestAccSamlSettings_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccSamlSettingsDestroy("artifactory_saml_settings.saml"),
+		CheckDestroy:      testAccSamlSettingsDestroy("artifactory_saml_settings.saml"),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{

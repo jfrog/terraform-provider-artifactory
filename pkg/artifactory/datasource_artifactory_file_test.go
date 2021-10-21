@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestDlFile(t *testing.T) {
 	// every instance of RT has this repo and file out-of-the-box
 	script := `
@@ -24,7 +23,7 @@ func TestDlFile(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {
+		PreCheck: func() {
 			testAccPreCheck(t)
 			client := getTestResty(t)
 			err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
