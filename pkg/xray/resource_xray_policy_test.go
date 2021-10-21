@@ -1,4 +1,4 @@
-package artifactory
+package xray
 
 import (
 	"fmt"
@@ -186,8 +186,8 @@ func TestAccPolicy_badLicenseCriteria(t *testing.T) {
 	rangeTo := 4
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -205,8 +205,8 @@ func TestAccPolicy_badSecurityCriteria(t *testing.T) {
 	allowedLicense := "BSD-4-Clause"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckPolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -274,7 +274,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 func testAccXrayPolicyBasic(name, description, ruleName string) string {
 	return fmt.Sprintf(`
-		resource "artifactory_xray_policy" "test" {
+		resource "xray_policy" "test" {
 			name  = "%s"
 			description = "%s"
 			type = "security"
@@ -298,7 +298,7 @@ func testAccXrayPolicyBasic(name, description, ruleName string) string {
 
 func testAccXrayPolicyCVSSRange(name, description, ruleName string, rangeTo int) string {
 	return fmt.Sprintf(`
-		resource "artifactory_xray_policy" "test" {
+		resource "xray_policy" "test" {
 			name  = "%s"
 			description = "%s"
 			type = "security"
@@ -326,7 +326,7 @@ func testAccXrayPolicyCVSSRange(name, description, ruleName string, rangeTo int)
 func testAccXrayPolicyAllActions(name, description, ruleName, email string) string {
 	// Except for webhooks, because the API won't let you test with junk urls: Error: {"error":"Rule test-security-rule triggers an unrecognized webhook https://example.com"}
 	return fmt.Sprintf(`
-		resource "artifactory_xray_policy" "test" {
+		resource "xray_policy" "test" {
 			name  = "%s"
 			description = "%s"
 			type = "security"
@@ -353,7 +353,7 @@ func testAccXrayPolicyAllActions(name, description, ruleName, email string) stri
 
 func testAccXrayPolicyLicense(name, description, ruleName, allowedLicense string) string {
 	return fmt.Sprintf(`
-		resource "artifactory_xray_policy" "test" {
+		resource "xray_policy" "test" {
 			name = "%s"
 			description = "%s"
 			type = "license"
@@ -378,7 +378,7 @@ func testAccXrayPolicyLicense(name, description, ruleName, allowedLicense string
 
 func testAccXrayPolicyLicenseBanned(name, description, ruleName, bannedLicense1, bannedLicense2 string) string {
 	return fmt.Sprintf(`
-		resource "artifactory_xray_policy" "test" {
+		resource "xray_policy" "test" {
 			name = "%s"
 			description = "%s"
 			type = "license"
@@ -403,7 +403,7 @@ func testAccXrayPolicyLicenseBanned(name, description, ruleName, bannedLicense1,
 
 func testAccXrayPolicy_badLicense(name, description, ruleName string, rangeTo int) string {
 	return fmt.Sprintf(`
-resource "artifactory_xray_policy" "test" {
+resource "xray_policy" "test" {
 	name = "%s"
 	description = "%s"
 	type = "license"
@@ -429,7 +429,7 @@ resource "artifactory_xray_policy" "test" {
 
 func testAccXrayPolicy_badSecurity(name, description, ruleName, allowedLicense string) string {
 	return fmt.Sprintf(`
-resource "artifactory_xray_policy" "test" {
+resource "xray_policy" "test" {
 	name = "%s"
 	description = "%s"
 	type = "security"

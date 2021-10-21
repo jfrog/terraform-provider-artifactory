@@ -1,6 +1,6 @@
 terraform-provider-artifactory
 dist/
-vendor/
+pkg/
 .idea/
 .github/
 .modules/

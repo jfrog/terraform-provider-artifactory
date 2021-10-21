@@ -1,4 +1,4 @@
-package artifactory
+package xray
 
 import (
 	"context"
@@ -46,11 +46,8 @@ func getTestResty(t *testing.T) *resty.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
-	username := os.Getenv("ARTIFACTORY_USERNAME")
-	password := os.Getenv("ARTIFACTORY_PASSWORD")
-	api := os.Getenv("ARTIFACTORY_APIKEY")
 	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
-	restyClient, err = addAuthToResty(restyClient, username, password, api, accessToken)
+	restyClient, err = addAuthToResty(restyClient, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

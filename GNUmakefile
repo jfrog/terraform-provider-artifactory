@@ -1,14 +1,16 @@
 TEST?=./...
-PKG_NAME=pkg/artifactory
-VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+PKG_NAME=pkg/xray
+#VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+# Replace explicit version after the first release
+VERSION := 0.0.0
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 
 default: build
 
 install:
-	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		(test -f terraform-provider-artifactory || go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'") && \
-		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/darwin_amd64 && \
+		(test -f terraform-provider-xray || go build -ldflags="-X 'xray.Version=${NEXT_VERSION}'") && \
+		mv terraform-provider-xray terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
 clean:
@@ -19,12 +21,12 @@ release:
 	@echo "Pushed ${NEXT_VERSION}"
 
 build: fmtcheck
-	go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'"
+	go build -ldflags="-X 'xray.Version=${NEXT_VERSION}'"
 
 debug_install:
-	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'") && \
-		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/darwin_amd64 && \
+		(test -f terraform-provider-xray || go build -gcflags "all=-N -l" -ldflags="-X 'xray.Version=${NEXT_VERSION}-develop'") && \
+		mv terraform-provider-xray terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
 
@@ -33,7 +35,7 @@ test:
 	go test $(TEST) -timeout=30s -parallel=4
 
 attach:
-	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-artifactory)
+	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-xray)
 
 acceptance: fmtcheck
 	export TF_ACC=1
@@ -44,7 +46,7 @@ acceptance: fmtcheck
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	@gofmt -s -w ./$(PKG_NAME)
-	(command -v goimports &> /dev/null || go get golang.org/x/tools/cmd/goimports) && goimports -w pkg/artifactory
+	(command -v goimports &> /dev/null || go get golang.org/x/tools/cmd/goimports) && goimports -w pkg/xray
 
 fmtcheck:
 	@echo "==> Checking that code complies with gofmt requirements..."
