@@ -181,7 +181,6 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
 	// this results in a group where users are not managed by artifactory if users_names is not set.
 
-	// The bug is omitempty on UsersNames causing it not to be included if there are 0 names
 	if groupParams.IncludeUsers {
 		_, err := m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + d.Id())
 		if err != nil {
