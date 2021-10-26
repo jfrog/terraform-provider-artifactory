@@ -5,12 +5,9 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const groupsEndpoint = "artifactory/api/security/groups/"
@@ -71,10 +68,10 @@ func resourceArtifactoryGroup() *schema.Resource {
 	}
 }
 
-func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
+func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	d := &ResourceData{s}
 
-	group := services.Group{
+	group := Group{
 		Name:            d.getString("name", false),
 		Description:     d.getString("description", false),
 		AutoJoin:        d.getBool("auto_join", false),
@@ -86,7 +83,7 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 
 	// Validator
 	if group.AdminPrivileges && group.AutoJoin {
-		return services.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
+		return Group{}, false, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
 	}
 
 	// includeUsers determines if tf is managing group membership
@@ -96,26 +93,21 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 	// without an explict instruction
 
 	includeUsers := len(group.UsersNames) > 0 || d.getBool("detach_all_users", false)
-	return services.GroupParams{
-			GroupDetails:    group,
-			ReplaceIfExists: true,
-			IncludeUsers:    includeUsers,
-		},
-		nil
+	return group, includeUsers, nil
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	groupParams, err := groupParams(d)
+	group, _, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
+	_, err = m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + group.Name)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(groupParams.GroupDetails.Name)
+	d.SetId(group.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		exists, err := resourceGroupExists(d, m)
 		if err != nil {
@@ -130,14 +122,14 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	})
 }
 
-func resourceGroupGet(d *schema.ResourceData, m interface{}) (*services.Group, error) {
-	params, err := groupParams(d)
+func resourceGroupGet(d *schema.ResourceData, m interface{}) (*Group, error) {
+	params, includeUsers, err := groupParams(d)
 	if err != nil {
 		return nil, err
 	}
 
-	group := services.Group{}
-	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.GroupDetails.Name, params.IncludeUsers)
+	group := Group{}
+	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.Name, includeUsers)
 	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
@@ -169,19 +161,17 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	groupParams, err := groupParams(d)
+	group, includeUsers, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-
-	group := toEncodableGroup(groupParams.GroupDetails)
 
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
 	// This recreates the group with the same permissions and updated users
 	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
 	// this results in a group where users are not managed by artifactory if users_names is not set.
 
-	if groupParams.IncludeUsers {
+	if includeUsers {
 		_, err := m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + d.Id())
 		if err != nil {
 			return err
@@ -193,7 +183,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	d.SetId(groupParams.GroupDetails.Name)
+	d.SetId(group.Name)
 	return resourceGroupRead(d, m)
 }
 
@@ -211,9 +201,9 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 	return err == nil, err
 }
 
-// EncodableGroup is a copy of services.group capable of encoding an empty usersnames array
-// required to be able to detach all users
-type EncodableGroup struct {
+// Group is a encoding struct to match
+// https://www.jfrog.com/confluence/display/JFROG/Security+Configuration+JSON#SecurityConfigurationJSON-application/vnd.org.jfrog.artifactory.security.Group+json
+type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
 	AutoJoin        bool     `json:"autoJoin,omitempty"`
@@ -221,16 +211,11 @@ type EncodableGroup struct {
 	Realm           string   `json:"realm,omitempty"`
 	RealmAttributes string   `json:"realmAttributes,omitempty"`
 	UsersNames      []string `json:"userNames"`
-}
 
-func toEncodableGroup(in services.Group) EncodableGroup {
-	return EncodableGroup{
-		Name:            in.Name,
-		Description:     in.Description,
-		AutoJoin:        in.AutoJoin,
-		AdminPrivileges: in.AdminPrivileges,
-		Realm:           in.Realm,
-		RealmAttributes: in.RealmAttributes,
-		UsersNames:      in.UsersNames,
-	}
+	// Below are part of the api spec
+	// but are not currently surfaced to  users
+
+	// WatchManager    bool     `json:"watchManager,omitempty"`
+	// PolicyManager   bool     `json:"policyManager,omitempty"`
+	// ReportsManager  bool     `json:"reportsManager,omitempty"`
 }

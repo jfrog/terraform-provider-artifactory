@@ -13,20 +13,23 @@ import (
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	const groupBasic = `
-		resource "artifactory_group" "test-group" {
-			name  = "terraform-group"
+	_, rfqn, groupName := mkNames("test-group-full", "artifactory_group")
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name  = "{{ .groupName }}"
 		}
 	`
+	config := executeTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckGroupDestroy("artifactory_group.test-group"),
+		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: groupBasic,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
+					resource.TestCheckResourceAttr(rfqn, "name", groupName),
 				),
 			},
 		},
@@ -34,19 +37,22 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_full(t *testing.T) {
-	const groupFull = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+	_, rfqn, groupName := mkNames("test-group-full", "artifactory_group")
+
+	templates := []string{
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = true
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
 		}
-	`
-	const groupUserUpdate1 = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = true
 			admin_privileges = false
@@ -54,10 +60,10 @@ func TestAccGroup_full(t *testing.T) {
 			realm_attributes = "Some attribute"
 			users_names = ["anonymous", "admin"]
 		}
-	`
-	const groupUserUpdate2 = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = true
 			admin_privileges = false
@@ -65,22 +71,20 @@ func TestAccGroup_full(t *testing.T) {
 			realm_attributes = "Some attribute"
 			users_names = ["anonymous"]
 		}
-	`
-
-	const groupUserUpdate3 = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = true
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
 		}
-	`
-
-	const groupUserUpdate4 = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = false
 			admin_privileges = false
@@ -88,11 +92,10 @@ func TestAccGroup_full(t *testing.T) {
 			realm_attributes = "Some attribute"
 			users_names = ["anonymous", "admin"]
 		}
-	`
-
-	const groupUserUpdateFinal = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = false
 			admin_privileges = false
@@ -100,63 +103,71 @@ func TestAccGroup_full(t *testing.T) {
 			realm_attributes = "Some attribute"
 			detach_all_users = true
 		}
-	`
+		`,
+	}
+
+	configs := []string{}
+	for step, template := range templates {
+		configs = append(configs, executeTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckGroupDestroy("artifactory_group.test-group"),
+		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: groupFull,
+				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "auto_join", "true"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "admin_privileges", "false"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm", "test"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm_attributes", "Some attribute"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "0"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 0),
+					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
+					resource.TestCheckResourceAttr(rfqn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(rfqn, 0),
 				),
 			},
 			{
-				Config: groupUserUpdate1,
+				Config: configs[1],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "admin"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 2),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.1", "anonymous"),
+					testAccDirectCheckGroupMembership(rfqn, 2),
 				),
 			},
 			{
-				Config: groupUserUpdate2,
+				Config: configs[2],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "anonymous"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 1),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "1"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.0", "anonymous"),
+					testAccDirectCheckGroupMembership(rfqn, 1),
 				),
 			},
 			{
-				Config: groupUserUpdate3,
+				Config: configs[3],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "0"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 1),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(rfqn, 1),
 				),
 			},
 			{
-				Config: groupUserUpdate4,
+				Config: configs[4],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.0", "admin"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 2),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.1", "anonymous"),
+					testAccDirectCheckGroupMembership(rfqn, 2),
 				),
 			},
 			{
-				Config: groupUserUpdateFinal,
+				Config: configs[5],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "0"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 0),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
+					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
+					testAccDirectCheckGroupMembership(rfqn, 0),
 				),
 			},
 		},
@@ -164,9 +175,12 @@ func TestAccGroup_full(t *testing.T) {
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	const groupFull = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+	_, rfqn, groupName := mkNames("test-group-unmanagedmembers", "artifactory_group")
+
+	templates := []string{
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = true
 			admin_privileges = false
@@ -174,21 +188,20 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 			realm_attributes = "Some attribute"
 			users_names = ["anonymous", "admin"]
 		}
-	`
-	const groupUpdateUnmanaged = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = false
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
 		}
-	`
-
-	const groupUpdateDetachAll = `
-		resource "artifactory_group" "test-group" {
-			name             = "terraform-group"
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
 			description 	 = "Test group"
 			auto_join        = false
 			admin_privileges = false
@@ -196,38 +209,43 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 			realm_attributes = "Some attribute"
 			detach_all_users = true
 		}
-	`
+		`,
+	}
+	configs := []string{}
+	for step, template := range templates {
+		configs = append(configs, executeTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckGroupDestroy("artifactory_group.test-group"),
+		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: groupFull,
+				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "name", "terraform-group"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "auto_join", "true"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "admin_privileges", "false"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm", "test"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "realm_attributes", "Some attribute"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "2"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 2),
+					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
+					resource.TestCheckResourceAttr(rfqn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
+					testAccDirectCheckGroupMembership(rfqn, 2),
 				),
 			},
 			{
-				Config: groupUpdateUnmanaged,
+				Config: configs[1],
 				Check: resource.ComposeTestCheckFunc(
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 2),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(rfqn, 2),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
 				),
 			},
 			{
-				Config: groupUpdateDetachAll,
+				Config: configs[2],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "users_names.#", "0"),
-					resource.TestCheckResourceAttr("artifactory_group.test-group", "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership("artifactory_group.test-group", 0),
+					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
+					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
+					testAccDirectCheckGroupMembership(rfqn, 0),
 				),
 			},
 		},
