@@ -34,3 +34,12 @@ Groups can be imported using their name, e.g.
 ```
 $ terraform import artifactory_group.terraform-group mygroup
 ```
+
+
+## Managed vs Unmanaged Group Membership
+TF does not distinguish between an absent UsersNames array and setting to an array of length 0
+To prevent accidental deletion of existing membership, the default was chosen to mean that tf does not manage membership
+and that to detach all users would require an explicit bool.
+
+Note when moving from managed group membership to unmanaged the tf plan will show the users previously in the array
+being removed from terraform state, but it will not actually delete any members.
