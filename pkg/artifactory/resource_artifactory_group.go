@@ -174,7 +174,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	group := toJsonFriendlyGroup(groupParams.GroupDetails)
+	group := toEncodableGroup(groupParams.GroupDetails)
 
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
 	// This recreates the group with the same permissions and updated users
@@ -212,9 +212,9 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 	return err == nil, err
 }
 
-// JsonGroup is a copy of services.group capable of encoding an empty usersnames array
+// EncodableGroup is a copy of services.group capable of encoding an empty usersnames array
 // required to be able to detach all users
-type JsonGroup struct {
+type EncodableGroup struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
 	AutoJoin        bool     `json:"autoJoin,omitempty"`
@@ -224,34 +224,14 @@ type JsonGroup struct {
 	UsersNames      []string `json:"userNames"`
 }
 
-func toJsonFriendlyGroup(in services.Group) JsonGroup {
-	// To ensure usersNames is encoded as '[]' instead of null
-	// we manually initialize as empty and then copy values in
-
-	usersNames := in.UsersNames
-	if usersNames == nil {
-		usersNames = []string{}
-	}
-
-	return JsonGroup{
+func toEncodableGroup(in services.Group) EncodableGroup {
+	return EncodableGroup{
 		Name:            in.Name,
 		Description:     in.Description,
 		AutoJoin:        in.AutoJoin,
 		AdminPrivileges: in.AdminPrivileges,
 		Realm:           in.Realm,
 		RealmAttributes: in.RealmAttributes,
-		UsersNames:      usersNames,
+		UsersNames:      in.UsersNames,
 	}
 }
-
-// const tempString = "{\"name\" : \"%s\",\"description\" : \"%s\",\"autoJoin\" : %t,\"realm\" : \"%s\",\"realmAttributes\" : \"%s\",\"adminPrivileges\" : %t,\"userNames\" : %s}"
-
-// func toJson(in services.Group) string {
-// 	usersJson := "["
-// 	for _, user := range in.UsersNames {
-// 		usersJson = usersJson + "\"" + user + "\","
-// 	}
-// 	usersJson = strings.TrimSuffix(usersJson, ",") + "]"
-// 	return fmt.Sprintf(tempString, in.Name, in.Description, in.AutoJoin, in.Realm, in.RealmAttributes, in.AdminPrivileges, usersJson)
-
-// }
