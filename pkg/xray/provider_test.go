@@ -3,7 +3,6 @@ package xray
 import (
 	"context"
 	"github.com/go-resty/resty/v2"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 var testAccProviders = func() map[string]func() (*schema.Provider, error) {
 	provider := Provider()
 	return map[string]func() (*schema.Provider, error){
-		"artifactory": func() (*schema.Provider, error) {
+		"xray": func() (*schema.Provider, error) {
 			return provider, nil
 		},
 	}
@@ -26,18 +25,10 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-func TestProvider_impl(t *testing.T) {
-	var _ = Provider()
-}
-func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
-	body, err := ioutil.ReadFile(localPath)
-	if err != nil {
-		return err
-	}
-	uri := "/artifactory/" + remotePath
-	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
-	return err
-}
+//func TestProvider_impl(t *testing.T) {
+//	var _ = Provider()
+//}
+
 func getTestResty(t *testing.T) *resty.Client {
 	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
 		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
@@ -62,7 +53,7 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	provider, _ := testAccProviders["artifactory"]()
+	provider, _ := testAccProviders["xray"]()
 	oldErr := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
 	if oldErr != nil {
 		t.Fatal(oldErr)

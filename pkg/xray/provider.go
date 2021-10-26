@@ -34,8 +34,8 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			// Xray resources
-			"xray_policy": resourceXrayPolicy(),
-			"xray_watch":  resourceXrayWatch(),
+			"xray_security_policy": resourceXraySecurityPolicyV2(),
+			"xray_license_policy":  resourceXrayLicensePolicyV2(),
 		},
 	}
 
@@ -83,7 +83,7 @@ func addAuthToResty(client *resty.Client, accessToken string) (*resty.Client, er
 	return nil, fmt.Errorf("no authentication details supplied")
 }
 
-// Creates the client for artifactory, will prefer token auth over basic auth if both set
+// Creates the client for artifactory, will use token auth
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	URL, ok := d.GetOk("url")
 	if URL == nil || URL == "" || !ok {

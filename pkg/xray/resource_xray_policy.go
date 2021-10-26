@@ -14,8 +14,8 @@ import (
 // The current objective is to rip out any dependencies not from jfrog. So, jfrog doesn't support it
 // I need backward compatibility, and I can't have any other dependencies.
 type PolicyCVSSRange struct {
-	To   *int `json:"to,omitempty"`
-	From *int `json:"from,omitempty"`
+	To   *int `json:"to,omitempty"`   // replace with float32
+	From *int `json:"from,omitempty"` // replace with float32
 }
 
 type PolicyRuleCriteria struct {
@@ -24,9 +24,10 @@ type PolicyRuleCriteria struct {
 	CVSSRange       *PolicyCVSSRange `json:"cvss_range,omitempty"`
 
 	// License Criteria
-	AllowUnknown    *bool     `json:"allow_unknown,omitempty"`
-	BannedLicenses  *[]string `json:"banned_licenses,omitempty"`
-	AllowedLicenses *[]string `json:"allowed_licenses,omitempty"`
+	AllowUnknown           *bool     `json:"allow_unknown,omitempty"`
+	MultiLicensePermissive *bool     `json:"multi_license_permissive,omitempty"`
+	BannedLicenses         *[]string `json:"banned_licenses,omitempty"`
+	AllowedLicenses        *[]string `json:"allowed_licenses,omitempty"`
 }
 
 type BlockDownloadSettings struct {
@@ -35,11 +36,17 @@ type BlockDownloadSettings struct {
 }
 
 type PolicyRuleActions struct {
-	Mails          *[]string              `json:"mails,omitempty"`
-	FailBuild      *bool                  `json:"fail_build,omitempty"`
-	BlockDownload  *BlockDownloadSettings `json:"block_download,omitempty"`
-	Webhooks       *[]string              `json:"webhooks,omitempty"`
-	CustomSeverity *string                `json:"custom_severity,omitempty"`
+	Webhooks                *[]string              `json:"webhooks,omitempty"`
+	Mails                   *[]string              `json:"mails,omitempty"`
+	FailBuild               *bool                  `json:"fail_build,omitempty"`
+	BlockDownload           *BlockDownloadSettings `json:"block_download,omitempty"`
+	BlockReleaseBundle      *bool                  `json:"block_release_bundle_distribution,omitempty"`
+	NotifyWatchRecipients   *bool                  `json:"notify_watch_recipients,omitempty"`
+	NotifyDeployer          *bool                  `json:"notify_deployer,omitempty"`
+	CreateJiraTicketEnabled *bool                  `json:"create_ticket_enabled,omitempty"`
+	FailureGracePerioddays  *int                   `json:"failure_grace_period_in_days,omitempty"`
+	// License Actions
+	CustomSeverity *string `json:"custom_severity,omitempty"`
 }
 
 type PolicyRule struct {
@@ -59,19 +66,18 @@ type Policy struct {
 	Modified    *string       `json:"modified,omitempty"`
 }
 
-func resourceXrayPolicy() *schema.Resource {
+func resourceXraySecurityPolicyV2() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion:      1,
-		Create:             resourceXrayPolicyCreate,
-		Read:               resourceXrayPolicyRead,
-		Update:             resourceXrayPolicyUpdate,
-		Delete:             resourceXrayPolicyDelete,
-		DeprecationMessage: "This portion of the provider uses V1 apis and will eventually be removed",
-		Description: "Creates an xray policy using V1 of the underlying APIs. Please note: " +
+		SchemaVersion: 1,
+		Create:        resourceXrayPolicyCreate,
+		Read:          resourceXrayPolicyRead,
+		Update:        resourceXrayPolicyUpdate,
+		Delete:        resourceXrayPolicyDelete,
+		Description: "Creates an xray policy using V2 of the underlying APIs. Please note: " +
 			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,14 +86,15 @@ func resourceXrayPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			// not in create policy body, but it is in the get call response. Remove?
 			"author": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -100,7 +107,7 @@ func resourceXrayPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			//
 			"rules": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -114,26 +121,28 @@ func resourceXrayPolicy() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-
 						"criteria": {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 1,
+							MaxItems: 1, // move conflict here
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									// Security criteria
 									"min_severity": {
 										Type:     schema.TypeString,
 										Optional: true,
+										//ConflictsWith: []string{"cvss_range"},
+										//AtLeastOneOf: []string{"min_severity","cvss_range"},
 									},
 									"cvss_range": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
+										//ConflictsWith: []string{"min_severity"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"from": {
+													// TODO: Testing with integers first, test with TypeFloat later
 													Type:     schema.TypeInt, // Yes, the xray web ui allows floats. The go library says ints. :(
 													Required: true,
 												},
@@ -143,25 +152,7 @@ func resourceXrayPolicy() *schema.Resource {
 												},
 											},
 										},
-									},
-									// License Criteria
-									"allow_unknown": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"banned_licenses": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"allowed_licenses": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
+										//AtLeastOneOf: []string{"min_severity","cvss_range"},
 									},
 								},
 							},
@@ -172,6 +163,13 @@ func resourceXrayPolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"webhooks": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
 									"mails": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -179,14 +177,9 @@ func resourceXrayPolicy() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"fail_build": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
 									"block_download": {
 										Type:     schema.TypeList,
 										Required: true,
-										// TODO: In an ideal world, this would be optional (see note in expandActions)
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -201,6 +194,129 @@ func resourceXrayPolicy() *schema.Resource {
 											},
 										},
 									},
+									"block_release_bundle_distribution": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"fail_build": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"notify_deployer": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"notify_watch_recipients": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"create_ticket_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func resourceXrayLicensePolicyV2() *schema.Resource {
+	return &schema.Resource{
+		SchemaVersion: 1,
+		Create:        resourceXrayPolicyCreate,
+		Read:          resourceXrayPolicyRead,
+		Update:        resourceXrayPolicyUpdate,
+		Delete:        resourceXrayPolicyDelete,
+		Description: "Creates an xray policy using V2 of the underlying APIs. Please note: " +
+			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			// not in create policy body, but it is in the get call response. Remove?
+			"author": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"modified": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			//
+			"rules": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"priority": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"criteria": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"banned_licenses": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"allowed_licenses": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"allow_unknown": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"multi_license_permissive": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"actions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
 									"webhooks": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -208,8 +324,56 @@ func resourceXrayPolicy() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
+									"mails": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"block_download": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"unscanned": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"active": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+									"block_release_bundle_distribution": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"fail_build": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"notify_deployer": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"notify_watch_recipients": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"create_ticket_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 									"custom_severity": {
 										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"failure_grace_period_in_days": {
+										Type:     schema.TypeInt,
 										Optional: true,
 									},
 								},
@@ -268,16 +432,18 @@ func expandCriteria(l []interface{}, policyType *string) (*PolicyRuleCriteria, e
 	m := l[0].(map[string]interface{}) // We made this a list of one to make schema validation easier
 	criteria := new(PolicyRuleCriteria)
 
-	// The API doesn't allow both severity and license criteria to be _set_, even if they have empty values
-	// So we have to figure out which group is actually empty and not even set it
-	minSev := StringPtr(m["min_severity"].(string))
-	cvss := expandCVSSRange(m["cvss_range"].([]interface{}))
-	allowUnk := BoolPtr(m["allow_unknown"].(bool))
-	banned := expandLicenses(m["banned_licenses"].([]interface{}))
-	allowed := expandLicenses(m["allowed_licenses"].([]interface{}))
-
 	licenseType := "license"
 	securityType := "security"
+
+	// The API doesn't allow both severity and license criteria to be _set_, even if they have empty values
+	// So we have to figure out which group is actually empty and not even set it
+	// Security policy properties
+	minSev := StringPtr(m["min_severity"].(string))
+	cvss := expandCVSSRange(m["cvss_range"].([]interface{}))
+	// License policy properties
+	allowUnk := BoolPtr(m["allow_unknown"].(bool)) //TODO: nil here, because it tests two resources, one of them doesn't have this field
+	banned := expandLicenses(m["banned_licenses"].([]interface{}))
+	allowed := expandLicenses(m["allowed_licenses"].([]interface{}))
 
 	if *minSev == "" && cvss == nil {
 		if *policyType == securityType {
@@ -329,6 +495,7 @@ func expandLicenses(l []interface{}) *[]string {
 	return &licenses
 }
 
+//TODO: add more elements - done
 func expandActions(l []interface{}) *PolicyRuleActions {
 	if len(l) == 0 {
 		return nil
@@ -336,7 +503,14 @@ func expandActions(l []interface{}) *PolicyRuleActions {
 
 	actions := new(PolicyRuleActions)
 	m := l[0].(map[string]interface{}) // We made this a list of one to make schema validation easier
-
+	if v, ok := m["webhooks"]; ok && len(v.([]interface{})) > 0 {
+		m := v.([]interface{})
+		webhooks := make([]string, 0, len(m))
+		for _, hook := range m {
+			webhooks = append(webhooks, hook.(string))
+		}
+		actions.Webhooks = &webhooks
+	}
 	if v, ok := m["mails"]; ok && len(v.([]interface{})) > 0 {
 		m := v.([]interface{})
 		mails := make([]string, 0, len(m))
@@ -370,14 +544,24 @@ func expandActions(l []interface{}) *PolicyRuleActions {
 			// rules.0.actions.0.block_download.0.unscanned: "false" => ""
 		}
 	}
-
-	if v, ok := m["webhooks"]; ok && len(v.([]interface{})) > 0 {
-		m := v.([]interface{})
-		webhooks := make([]string, 0, len(m))
-		for _, hook := range m {
-			webhooks = append(webhooks, hook.(string))
-		}
-		actions.Webhooks = &webhooks
+	if v, ok := m["block_release_bundle_distribution"]; ok {
+		actions.BlockReleaseBundle = BoolPtr(v.(bool))
+	}
+	//
+	if v, ok := m["notify_watch_recipients"]; ok {
+		actions.NotifyWatchRecipients = BoolPtr(v.(bool))
+	}
+	if v, ok := m["block_release_bundle_distribution"]; ok {
+		actions.BlockReleaseBundle = BoolPtr(v.(bool))
+	}
+	if v, ok := m["notify_deployer"]; ok {
+		actions.NotifyDeployer = BoolPtr(v.(bool))
+	}
+	if v, ok := m["create_ticket_enabled"]; ok {
+		actions.CreateJiraTicketEnabled = BoolPtr(v.(bool))
+	}
+	if v, ok := m["failure_grace_period_in_days"]; ok {
+		actions.FailureGracePerioddays = IntPtr(v.(int))
 	}
 	if v, ok := m["custom_severity"]; ok {
 		gosucks := v.(string)
@@ -440,6 +624,7 @@ func flattenCVSSRange(cvss *PolicyCVSSRange) []interface{} {
 	return []interface{}{m}
 }
 
+//TODO: add more elements - done
 func flattenActions(actions *PolicyRuleActions) []interface{} {
 	if actions == nil {
 		return []interface{}{}
@@ -448,15 +633,29 @@ func flattenActions(actions *PolicyRuleActions) []interface{} {
 	m := map[string]interface{}{
 		"block_download": flattenBlockDownload(actions.BlockDownload),
 	}
-
+	if actions.Webhooks != nil {
+		m["webhooks"] = *actions.Webhooks
+	}
 	if actions.Mails != nil {
 		m["mails"] = *actions.Mails
 	}
 	if actions.FailBuild != nil {
 		m["fail_build"] = *actions.FailBuild
 	}
-	if actions.Webhooks != nil {
-		m["webhooks"] = *actions.Webhooks
+	if actions.BlockReleaseBundle != nil {
+		m["block_release_bundle_distribution"] = *actions.BlockReleaseBundle
+	}
+	if actions.NotifyWatchRecipients != nil {
+		m["notify_watch_recipients"] = *actions.NotifyWatchRecipients
+	}
+	if actions.NotifyDeployer != nil {
+		m["notify_deployer"] = *actions.NotifyDeployer
+	}
+	if actions.CreateJiraTicketEnabled != nil {
+		m["create_ticket_enabled"] = *actions.CreateJiraTicketEnabled
+	}
+	if actions.FailureGracePerioddays != nil {
+		m["failure_grace_period_in_days"] = *actions.FailureGracePerioddays // integer
 	}
 	if actions.CustomSeverity != nil {
 		m["custom_severity"] = *actions.CustomSeverity
@@ -481,8 +680,8 @@ func flattenBlockDownload(bd *BlockDownloadSettings) []interface{} {
 	return []interface{}{m}
 }
 
+// Create Xray policy
 func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
-
 	policy, err := expandPolicy(d)
 	if err != nil {
 		return err
@@ -496,9 +695,11 @@ func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceXrayPolicyRead(d, m)
 }
 
+// Get a list of Xray policies
 func getPolicy(id string, client *resty.Client) (Policy, *resty.Response, error) {
 	policy := Policy{}
-	resp, err := client.R().SetResult(&policy).Put("xray/api/v1/policies/" + id)
+	resp, err := client.R().SetResult(&policy).Get("xray/api/v2/policies/" + id)
+	fmt.Printf("Get policy call response code: %d", resp.StatusCode()) //verify the call
 	return policy, resp, err
 }
 func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
@@ -512,24 +713,24 @@ func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if err := d.Set("name", *policy.Name); err != nil {
+	if err := d.Set("name", policy.Name); err != nil {
 		return err
 	}
-	if err := d.Set("type", *policy.Type); err != nil {
+	if err := d.Set("type", policy.Type); err != nil {
 		return err
 	}
 	if policy.Description != nil {
-		if err := d.Set("description", *policy.Description); err != nil {
+		if err := d.Set("description", policy.Description); err != nil {
 			return err
 		}
 	}
-	if err := d.Set("author", *policy.Author); err != nil {
+	if err := d.Set("author", policy.Author); err != nil {
 		return err
 	}
-	if err := d.Set("created", *policy.Created); err != nil {
+	if err := d.Set("created", policy.Created); err != nil {
 		return err
 	}
-	if err := d.Set("modified", *policy.Modified); err != nil {
+	if err := d.Set("modified", policy.Modified); err != nil {
 		return err
 	}
 	if err := d.Set("rules", flattenRules(*policy.Rules)); err != nil {
@@ -544,7 +745,7 @@ func resourceXrayPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	_, err = m.(*resty.Client).R().SetBody(policy).Put("xray/api/v1/policies/" + d.Id())
+	_, err = m.(*resty.Client).R().SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
 	if err != nil {
 		return err
 	}
@@ -554,6 +755,6 @@ func resourceXrayPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceXrayPolicyDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete("xray/api/v1/policies/" + d.Id())
+	_, err := m.(*resty.Client).R().Delete("xray/api/v2/policies/" + d.Id())
 	return err
 }
