@@ -24,7 +24,8 @@ The following arguments are supported:
 * `admin_privileges`    - (Optional) Any users added to this group will automatically be assigned with admin privileges in the system.
 * `realm`               - (Optional) The realm for the group.
 * `realm_attributes`    - (Optional) The realm attributes for the group.
-* `users_names`         - (Optional) List of users assigned to the group.
+* `users_names`         - (Optional) List of users assigned to the group. If missing or empty, tf will not manage group membership
+* `detach_all_users`    - (Optional) When this override is set, an empty or missing usernames array will detach all users from the group
 
 ## Import
 

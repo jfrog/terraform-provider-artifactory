@@ -63,6 +63,10 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"detach_all_users": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -77,9 +81,7 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 		AdminPrivileges: d.getBool("admin_privileges", false),
 		Realm:           d.getString("realm", false),
 		RealmAttributes: d.getString("realm_attributes", false),
-	}
-	if usersNames := d.getSetRef("users_names"); usersNames != nil {
-		group.UsersNames = *usersNames
+		UsersNames:      d.getSet("users_names"),
 	}
 
 	// Validator
@@ -87,10 +89,17 @@ func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
 		return services.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
 	}
 
+	// includeUsers determines if tf is managing group membership
+	// if not it shouldn't return users on the read since they arent in state
+	// this means usersnames is always empty
+	// so it also changes the update from put to post to prevent detaching all existing users
+	// without an explict instruction
+
+	includeUsers := len(group.UsersNames) > 0 || d.getBool("detach_all_users", false)
 	return services.GroupParams{
 			GroupDetails:    group,
 			ReplaceIfExists: true,
-			IncludeUsers:    true,
+			IncludeUsers:    includeUsers,
 		},
 		nil
 }
@@ -122,13 +131,14 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupGet(d *schema.ResourceData, m interface{}) (*services.Group, error) {
-	params := services.GroupParams{}
-	params.GroupDetails.Name = d.Id()
-	params.IncludeUsers = true
+	params, err := groupParams(d)
+	if err != nil {
+		return nil, err
+	}
 
 	group := services.Group{}
 	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.GroupDetails.Name, params.IncludeUsers)
-	_, err := m.(*resty.Client).R().SetResult(&group).Get(url)
+	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
 
@@ -163,12 +173,25 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
-	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
 
-	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + d.Id())
-	if err != nil {
-		return err
+	group := toJsonFriendlyGroup(groupParams.GroupDetails)
+
+	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
+	// This recreates the group with the same permissions and updated users
+	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
+	// this results in a group where users are not managed by artifactory if users_names is not set.
+
+	// The bug is omitempty on UsersNames causing it not to be included if there are 0 names
+	if groupParams.IncludeUsers {
+		_, err := m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + d.Id())
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = m.(*resty.Client).R().SetBody(group).Post(groupsEndpoint + d.Id())
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(groupParams.GroupDetails.Name)
@@ -188,3 +211,47 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 	_, err := client.R().Head(groupsEndpoint + groupName)
 	return err == nil, err
 }
+
+// JsonGroup is a copy of services.group capable of encoding an empty usersnames array
+// required to be able to detach all users
+type JsonGroup struct {
+	Name            string   `json:"name,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	AutoJoin        bool     `json:"autoJoin,omitempty"`
+	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	Realm           string   `json:"realm,omitempty"`
+	RealmAttributes string   `json:"realmAttributes,omitempty"`
+	UsersNames      []string `json:"userNames"`
+}
+
+func toJsonFriendlyGroup(in services.Group) JsonGroup {
+	// To ensure usersNames is encoded as '[]' instead of null
+	// we manually initialize as empty and then copy values in
+
+	usersNames := in.UsersNames
+	if usersNames == nil {
+		usersNames = []string{}
+	}
+
+	return JsonGroup{
+		Name:            in.Name,
+		Description:     in.Description,
+		AutoJoin:        in.AutoJoin,
+		AdminPrivileges: in.AdminPrivileges,
+		Realm:           in.Realm,
+		RealmAttributes: in.RealmAttributes,
+		UsersNames:      usersNames,
+	}
+}
+
+// const tempString = "{\"name\" : \"%s\",\"description\" : \"%s\",\"autoJoin\" : %t,\"realm\" : \"%s\",\"realmAttributes\" : \"%s\",\"adminPrivileges\" : %t,\"userNames\" : %s}"
+
+// func toJson(in services.Group) string {
+// 	usersJson := "["
+// 	for _, user := range in.UsersNames {
+// 		usersJson = usersJson + "\"" + user + "\","
+// 	}
+// 	usersJson = strings.TrimSuffix(usersJson, ",") + "]"
+// 	return fmt.Sprintf(tempString, in.Name, in.Description, in.AutoJoin, in.Realm, in.RealmAttributes, in.AdminPrivileges, usersJson)
+
+// }
