@@ -67,7 +67,8 @@ func resourceXrayWatch() *schema.Resource {
 		Update: resourceXrayWatchUpdate,
 		Delete: resourceXrayWatchDelete,
 		DeprecationMessage: "This portion of the provider uses V1 apis and will eventually be moved " +
-			"to the separate repo. The discussion is here: https://github.com/jfrog/terraform-provider-artifactory/issues/160",
+			"to the separate repo. The discussion is here: https://github.com/jfrog/terraform-provider-artifactory/issues/160, " +
+			"we encourage you to give input on new HCL and features",
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
