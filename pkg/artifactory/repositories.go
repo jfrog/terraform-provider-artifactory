@@ -165,7 +165,7 @@ func mkRepoUpdate(unpack UnpackFunc, read ReadFunc) func(d *schema.ResourceData,
 			return err
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Post(repositoriesEndpoint + d.Id())
 		if err != nil {
 			return err
 		}

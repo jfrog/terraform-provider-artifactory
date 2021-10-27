@@ -1,4 +1,4 @@
-# Artifactory Virtual Repository Resource
+# Artifactory Virtual Go Repository Resource
 
 Provides an Artifactory virtual repository resource, but with specific go lang features. This should be preferred over the original
 one-size-fits-all `artifactory_virtual_repository`. 
@@ -44,5 +44,5 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 Virtual repositories can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_virtual_repository.foo foo
+$ terraform import artifactory_virtual_go_repository.foo foo
 ```
