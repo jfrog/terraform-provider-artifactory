@@ -5,12 +5,9 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const groupsEndpoint = "artifactory/api/security/groups/"
@@ -63,50 +60,54 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"detach_all_users": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func groupParams(s *schema.ResourceData) (services.GroupParams, error) {
+func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	d := &ResourceData{s}
 
-	group := services.Group{
+	group := Group{
 		Name:            d.getString("name", false),
 		Description:     d.getString("description", false),
 		AutoJoin:        d.getBool("auto_join", false),
 		AdminPrivileges: d.getBool("admin_privileges", false),
 		Realm:           d.getString("realm", false),
 		RealmAttributes: d.getString("realm_attributes", false),
-	}
-	if usersNames := d.getSetRef("users_names"); usersNames != nil {
-		group.UsersNames = *usersNames
+		UsersNames:      d.getSet("users_names"),
 	}
 
 	// Validator
 	if group.AdminPrivileges && group.AutoJoin {
-		return services.GroupParams{}, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
+		return Group{}, false, fmt.Errorf("error: auto_join cannot be true if admin_privileges is true")
 	}
 
-	return services.GroupParams{
-			GroupDetails:    group,
-			ReplaceIfExists: true,
-			IncludeUsers:    true,
-		},
-		nil
+	// includeUsers determines if tf is managing group membership
+	// if not it shouldn't return users on the read since they arent in state
+	// this means usersnames is always empty
+	// so it also changes the update from put to post to prevent detaching all existing users
+	// without an explict instruction
+
+	includeUsers := len(group.UsersNames) > 0 || d.getBool("detach_all_users", false)
+	return group, includeUsers, nil
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	groupParams, err := groupParams(d)
+	group, _, err := groupParams(d)
 	if err != nil {
 		return err
 	}
-	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + groupParams.GroupDetails.Name)
+	_, err = m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + group.Name)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(groupParams.GroupDetails.Name)
+	d.SetId(group.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		exists, err := resourceGroupExists(d, m)
 		if err != nil {
@@ -121,14 +122,15 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	})
 }
 
-func resourceGroupGet(d *schema.ResourceData, m interface{}) (*services.Group, error) {
-	params := services.GroupParams{}
-	params.GroupDetails.Name = d.Id()
-	params.IncludeUsers = true
+func resourceGroupGet(d *schema.ResourceData, m interface{}) (*Group, error) {
+	params, includeUsers, err := groupParams(d)
+	if err != nil {
+		return nil, err
+	}
 
-	group := services.Group{}
-	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.GroupDetails.Name, params.IncludeUsers)
-	_, err := m.(*resty.Client).R().SetResult(&group).Get(url)
+	group := Group{}
+	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.Name, includeUsers)
+	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
 
@@ -159,19 +161,29 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
-	groupParams, err := groupParams(d)
+	group, includeUsers, err := groupParams(d)
 	if err != nil {
 		return err
 	}
+
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
-	// Update instead uses POST which prevents removing users. This recreates the group with the same permissions and updated users
+	// This recreates the group with the same permissions and updated users
+	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
+	// this results in a group where users are not managed by artifactory if users_names is not set.
 
-	_, err = m.(*resty.Client).R().SetBody(&(groupParams.GroupDetails)).Put(groupsEndpoint + d.Id())
-	if err != nil {
-		return err
+	if includeUsers {
+		_, err := m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + d.Id())
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = m.(*resty.Client).R().SetBody(group).Post(groupsEndpoint + d.Id())
+		if err != nil {
+			return err
+		}
 	}
 
-	d.SetId(groupParams.GroupDetails.Name)
+	d.SetId(group.Name)
 	return resourceGroupRead(d, m)
 }
 
@@ -187,4 +199,23 @@ func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
 func groupExists(client *resty.Client, groupName string) (bool, error) {
 	_, err := client.R().Head(groupsEndpoint + groupName)
 	return err == nil, err
+}
+
+// Group is a encoding struct to match
+// https://www.jfrog.com/confluence/display/JFROG/Security+Configuration+JSON#SecurityConfigurationJSON-application/vnd.org.jfrog.artifactory.security.Group+json
+type Group struct {
+	Name            string   `json:"name,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	AutoJoin        bool     `json:"autoJoin,omitempty"`
+	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	Realm           string   `json:"realm,omitempty"`
+	RealmAttributes string   `json:"realmAttributes,omitempty"`
+	UsersNames      []string `json:"userNames"`
+
+	// Below are part of the api spec
+	// but are not currently surfaced to  users
+
+	// WatchManager    bool     `json:"watchManager,omitempty"`
+	// PolicyManager   bool     `json:"policyManager,omitempty"`
+	// ReportsManager  bool     `json:"reportsManager,omitempty"`
 }

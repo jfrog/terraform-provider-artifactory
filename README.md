@@ -99,7 +99,8 @@ How to run the tests isn't obvious.
 First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local
 version. You can ask for an instance to test against in as part of your PR or by messaging the maintainer in gitter
 Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same
-directory called `artifactory.lic`, you can start just an artifactory instance. The license, however, is not supplied
+directory called `artifactory.lic`, you can start just an artifactory instance. The license is not supplied, but  a [30 day trial
+liscense can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local developement
 
 Once you have that done you must set the following properties
 
