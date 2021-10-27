@@ -1,4 +1,4 @@
-# Artifactory Remote Repository Resource
+# Artifactory Remote Cargo Repository Resource
 
 Provides an Artifactory remote `cargo` repository resource. This provides cargo specific fields and is the only way to get them
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Cargo+Registry)
@@ -10,7 +10,7 @@ for brevity sake, only cargo specific fields are included; for other fields see 
 [generic repo](artifactory_remote_docker_repository.md).
 ```hcl
 
-resource "artifactory_remote_docker_repository" "my-remote-cargo" {
+resource "artifactory_remote_cargo_repository" "my-remote-cargo" {
   key                 = "my-remote-cargo"
   anonymous_access    = true
   git_registry_url    = "https://github.com/rust-lang/foo.index"

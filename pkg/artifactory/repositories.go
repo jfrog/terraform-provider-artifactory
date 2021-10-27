@@ -5,10 +5,10 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
 	"reflect"
 	"regexp"
+	"strings"
 )
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
@@ -26,8 +26,12 @@ type LocalRepositoryBaseParams struct {
 	XrayIndex                       *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
 	PropertySets                    []string `hcl:"property_sets" json:"propertySets,omitempty"`
 	ArchiveBrowsingEnabled          *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
-	OptionalIndexCompressionFormats []string `hcl:"key" json:"optionalIndexCompressionFormats,omitempty"`
+	OptionalIndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
 	DownloadRedirect                *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
+}
+
+func (bp LocalRepositoryBaseParams) Id() string {
+	return bp.Key
 }
 
 type ContentSynchronisation struct {
@@ -80,6 +84,28 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+}
+
+func (bp RemoteRepositoryBaseParams) Id() string {
+	return bp.Key
+}
+
+type VirtualRepositoryBaseParams struct {
+	Key                                           string   `json:"key,omitempty"`
+	Rclass                                        string   `json:"rclass"`
+	PackageType                                   string   `json:"packageType,omitempty"`
+	Description                                   string   `json:"description,omitempty"`
+	Notes                                         string   `json:"notes,omitempty"`
+	IncludesPattern                               string   `json:"includesPattern,omitempty"`
+	ExcludesPattern                               string   `json:"excludesPattern,omitempty"`
+	RepoLayoutRef                                 string   `json:"repoLayoutRef,omitempty"`
+	Repositories                                  []string `json:"repositories,omitempty"`
+	ArtifactoryRequestsCanRetrieveRemoteArtifacts *bool    `json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
+	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
+}
+
+func (bp VirtualRepositoryBaseParams) Id() string {
+	return bp.Key
 }
 
 type ReadFunc func(d *schema.ResourceData, m interface{}) error
@@ -167,13 +193,13 @@ var retry400 = func(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
-func checkRepo(id string, request *resty.Request, retry resty.RetryConditionFunc) (*resty.Response, error) {
+func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
 	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.AddRetryCondition(retry).Head(repositoriesEndpoint + id)
+	return request.Head(repositoriesEndpoint + id)
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := checkRepo(d.Id(), m.(*resty.Client).R(), retry400)
+	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
 	return err == nil, err
 
 }
@@ -642,10 +668,10 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	return repo
 }
 
-func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBaseParams {
+func unpackBaseVirtRepo(s *schema.ResourceData) VirtualRepositoryBaseParams {
 	d := &ResourceData{s}
 
-	return services.VirtualRepositoryBaseParams{
+	return VirtualRepositoryBaseParams{
 		Key:    d.getString("key", false),
 		Rclass: "virtual",
 		//must be set independently
@@ -661,7 +687,7 @@ func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBasePa
 	}
 }
 
-func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBaseParams) Lens {
+func packBaseVirtRepo(d *schema.ResourceData, repo VirtualRepositoryBaseParams) Lens {
 	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
@@ -676,17 +702,68 @@ func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBas
 	setValue("repositories", repo.Repositories)
 	return setValue
 }
+// universalUnpack - todo implement me
+func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{}, string, error) {
+	d := &ResourceData{s}
+	var t = reflect.TypeOf(payload)
+	var v = reflect.ValueOf(payload)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	//lookup := map[reflect.Kind]func(field, val reflect.Value) {
+	//	reflect.String: func(field, val reflect.Value)  {
+	//		val.SetString(field.String())
+	//	},
+	//}
+	for i := 0; i < t.NumField(); i++ {
+		thing := v.Field(i)
 
-func universalPack(repo interface{}, d *schema.ResourceData) error {
+		switch thing.Kind() {
+		case reflect.String:
+			v.SetString(thing.String())
+		case reflect.Int:
+			v.SetInt(thing.Int())
+		case reflect.Bool:
+			v.SetBool(thing.Bool())
+		}
+	}
+	result := KeyPairPayLoad{
+		PairName:    d.getString("pair_name", false),
+		PairType:    d.getString("pair_type", false),
+		Alias:       d.getString("alias", false),
+		PrivateKey:  strings.ReplaceAll(d.getString("private_key", false), "\t", ""),
+		PublicKey:   strings.ReplaceAll(d.getString("public_key", false), "\t", ""),
+		Unavailable: d.getBool("unavailable", false),
+	}
+	return &result, result.PairName, nil
+}
+
+func universalPack(payload interface{}, d *schema.ResourceData) error {
 	setValue := mkLens(d)
-	t := reflect.TypeOf(repo).Elem()
-	v := reflect.ValueOf(repo).Elem()
+
+	var t = reflect.TypeOf(payload)
+	var v = reflect.ValueOf(payload)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
 	var errors []error
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+		thing := v.Field(i)
+
+		value := thing.Interface()
+		switch thing.Kind() {
+		case reflect.Struct:
+			errors = append(errors, universalPack(value, d))
+		case reflect.Ptr:
+			value = reflect.Indirect(thing).Interface()
+		case reflect.Slice:
+			value = castToInterfaceArr(value.([]string))
+		}
 		hcl := field.Tag.Get("hcl")
 		if hcl != "" {
-			value := v.Field(i).String()
 			errors = setValue(hcl, value)
 		}
 	}
@@ -710,4 +787,8 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 
 		Schema: skeema,
 	}
+}
+
+type Identifiable interface {
+	Id() string
 }

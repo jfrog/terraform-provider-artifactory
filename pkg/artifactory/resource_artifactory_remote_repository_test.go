@@ -30,7 +30,7 @@ func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 	`, name, key)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +136,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +177,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -296,7 +296,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -349,7 +349,7 @@ func mkLegacyRemoteTestCase(repoType string, t *testing.T) (*testing.T, resource
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoFull, name, name, repoType),
@@ -436,7 +436,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

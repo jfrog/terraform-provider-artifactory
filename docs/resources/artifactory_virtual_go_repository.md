@@ -8,7 +8,6 @@ one-size-fits-all `artifactory_virtual_repository`.
 ```hcl
 resource "artifactory_virtual_go_repository" "baz-go" {
   key          = "baz-go"
-  package_type = "go"
   repo_layout_ref = "go-default"
   repositories = []
   description = "A test virtual repo"
@@ -28,7 +27,6 @@ resource "artifactory_virtual_go_repository" "baz-go" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
 * `key` - (Required)
-* `package_type` - (Required)
 * `repositories` - (Required, but may be empty)
 * `description` - (Optional)
 * `notes` - (Optional)

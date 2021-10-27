@@ -473,17 +473,21 @@ var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 var upgrade = func(oldValidFunc schema.SchemaValidateFunc, key string) schema.SchemaValidateDiagFunc {
 	return func(value interface{}, path cty.Path) diag.Diagnostics {
 		warnings, errors := oldValidFunc(value, key)
-		return diag.Diagnostics{
-			diag.Diagnostic{
+		var ds diag.Diagnostics
+		if len(errors) > 0 {
+			ds = append(ds, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  fmt.Sprintf("%q", errors),
-			},
-			diag.Diagnostic{
+			})
+		}
+		if len(warnings) > 0 {
+			ds = append(ds,diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  fmt.Sprintf("%q", warnings),
 				Detail:   strings.Join(warnings, "\n"),
-			},
+			})
 		}
+		return ds
 	}
 }
 

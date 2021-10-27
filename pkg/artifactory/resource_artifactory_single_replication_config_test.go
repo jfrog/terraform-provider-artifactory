@@ -145,7 +145,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(
-			testAccCheckRepositoryDestroy(fqrepoName),
+			verifyDeleted(fqrepoName, testCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 

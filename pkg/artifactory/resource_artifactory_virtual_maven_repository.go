@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
 var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
@@ -29,12 +28,24 @@ var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.S
 	"key_pair": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Description: "The keypair used to sign artifacts",
 	},
 })
 
+type CommonMavenGradleVirtualRepositoryParams struct {
+	ForceMavenAuthentication             *bool  `json:"forceMavenAuthentication,omitempty"`
+	PomRepositoryReferencesCleanupPolicy string `json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
+	KeyPair                              string `json:"keyPair,omitempty"`
+}
+
+type MavenVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	CommonMavenGradleVirtualRepositoryParams
+}
+
 var mvnVirtReader = mkRepoRead(packMavenVirtualRepository, func() interface{} {
-	return &services.MavenVirtualRepositoryParams{
-		VirtualRepositoryBaseParams: services.VirtualRepositoryBaseParams{
+	return &MavenVirtualRepositoryParams{
+		VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 			Rclass:      "virtual",
 			PackageType: "maven",
 		}}
@@ -57,9 +68,9 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 
-	repo := services.MavenVirtualRepositoryParams{
+	repo := MavenVirtualRepositoryParams{
 		VirtualRepositoryBaseParams: unpackBaseVirtRepo(s),
-		CommonMavenGradleVirtualRepositoryParams: services.CommonMavenGradleVirtualRepositoryParams{
+		CommonMavenGradleVirtualRepositoryParams: CommonMavenGradleVirtualRepositoryParams{
 			KeyPair:                              d.getString("key_pair", false),
 			ForceMavenAuthentication:             d.getBoolRef("force_maven_authentication", false),
 			PomRepositoryReferencesCleanupPolicy: d.getString("pom_repository_references_cleanup_policy", false),
@@ -71,7 +82,7 @@ func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, 
 }
 
 func packMavenVirtualRepository(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*services.MavenVirtualRepositoryParams)
+	repo := r.(*MavenVirtualRepositoryParams)
 	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
 
 	setValue("key_pair", repo.KeyPair)

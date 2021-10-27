@@ -21,7 +21,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -139,7 +139,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -195,7 +195,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase
 	`
 	return t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -275,7 +275,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckRepositoryDestroy(fqrn),
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{

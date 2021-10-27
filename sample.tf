@@ -2,10 +2,32 @@
 terraform {
   required_providers {
     artifactory = {
-      source = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.9"
+      source  = "registry.terraform.io/jfrog/artifactory"
+      version = "2.6.14"
     }
   }
+}
+resource "artifactory_keypair" "some-keypairRSA" {
+  pair_name   = "some-keypair${random_id.randid.id}"
+  pair_type   = "RSA"
+  alias       = "foo-alias${random_id.randid.id}"
+  private_key = file("samples/rsa.priv")
+  public_key  = file("samples/rsa.pub")
+}
+# currently PGP isn't supported
+#resource "artifactory_keypair" "some-keypairPGP" {
+#  pair_name   = "some-keypair${random_id.randid.id}"
+#  pair_type   = "PGP"
+#  alias       = "foo-alias${random_id.randid.id}"
+#  private_key = file("samples/pgp.priv")
+#  public_key  = file("samples/pgp.pub")
+#  passphrase = "123456"
+#}
+
+resource "artifactory_local_alpine_repository" "terraform-local-test-repo-basic1896042683811651651" {
+  key                 = "terraform-local-test-repo-basic1896042683811651651"
+  primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
+  depends_on = [artifactory_keypair.some-keypairRSA]
 }
 variable "supported_repo_types" {
   type = list(string)

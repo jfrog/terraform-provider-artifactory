@@ -2,10 +2,14 @@ package artifactory
 
 import (
 	"context"
-	"fmt"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 )
 
@@ -16,6 +20,7 @@ type KeyPairPayLoad struct {
 	PairType    string `hcl:"pair_type" json:"pairType"`
 	Alias       string `hcl:"alias" json:"alias"`
 	PrivateKey  string `hcl:"private_key" json:"privateKey"`
+	Passphrase  string `hcl:"passphrase" json:"passphrase"`
 	PublicKey   string `hcl:"public_key" json:"publicKey"`
 	Unavailable bool   `hcl:"unavailable" json:"unavailable"`
 }
@@ -25,74 +30,113 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 		CreateContext: createKeyPair,
 		DeleteContext: rmKeyPair,
 		ReadContext:   readKeyPair,
-		UpdateContext: func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
-			return diag.Errorf("please implement me")
-		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Manage the GPG signing keys used to sign packages for authentication and the RSA keys used to sign and verify the Alpine Linux Index files\n" +
+			"https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateKeyPair",
 
 		Schema: map[string]*schema.Schema{
 			"pair_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"pair_type": {
-				Type: schema.TypeString,
-				//ValidateDiagFunc: upgrade(validation.StringInSlice([]string{"rsa", "gpg"}, false), "pair_type"),
-				Required: true,
+				Type:             schema.TypeString,
+				// working sample PGP key is checked in but not tested
+				ValidateDiagFunc: upgrade(validation.StringInSlice([]string{"RSA"}, false), "pair_type"),
+				Required:         true,
+				Description:      "Let's RT know what kind of key pair you're supplying. RT also supports GPG, but that's for a later day",
+				ForceNew:         true,
 			},
 			"alias": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Will be used as a filename when retrieving the public key via REST API",
+				ForceNew:    true,
 			},
 			"private_key": {
-				Type:         schema.TypeString,
-				Sensitive:    true,
-				Optional:     true,
+				Type:             schema.TypeString,
+				Sensitive:        true,
+				Required:         true,
 				DiffSuppressFunc: stripTabs,
-				ExactlyOneOf: []string{"private_key_file", "private_key"},
+				ValidateDiagFunc: validatePrivateKey,
+				ForceNew:         true,
 			},
-			"private_key_file": {
-				Type:         schema.TypeString,
-				Sensitive:    true,
-				Optional:     true,
-				ExactlyOneOf: []string{"private_key_file", "private_key"},
+			"passphrase": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Used to decrypt the private key (if applicable). Will be verified server side",
+				ForceNew:    true,
 			},
 			"public_key": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
 				DiffSuppressFunc: stripTabs,
+				ValidateDiagFunc: validatePublicKey,
+				ForceNew:         true,
 			},
 			"unavailable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default: false,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Unknown usage. Returned in the json payload and cannot be set.",
 			},
 		},
 	}
 }
-func stripTabs(_, old, new string, _ *schema.ResourceData) bool {
-	return old == strings.ReplaceAll(new,"\t","")
+func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
+	privPem, _ := pem.Decode([]byte(strings.ReplaceAll(value.(string), "\t", "")))
+	if privPem == nil {
+		return diag.Errorf("unable to decode private key pem format")
+	}
+	var privPemBytes []byte
+	if privPem.Type != "RSA PRIVATE KEY" {
+		return diag.Errorf("RSA private key is of the wrong type. Pem Type: %s", privPem.Type)
+	}
+
+	privPemBytes = privPem.Bytes
+	var parsedKey interface{}
+	var err error
+	if parsedKey, err = x509.ParsePKCS1PrivateKey(privPemBytes); err != nil {
+		if parsedKey, err = x509.ParsePKCS8PrivateKey(privPemBytes); err != nil { // note this returns type `interface{}`
+			return diag.FromErr(err)
+		}
+	}
+
+	_, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return diag.Errorf("unable to cast to RSA private key")
+	}
+	return nil
 }
-func packKeyPair(kp KeyPairPayLoad, d *schema.ResourceData) error {
 
-	setValue := mkLens(d)
+func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
+	pubPem, _ := pem.Decode([]byte(strings.ReplaceAll(value.(string), "\t", "")))
+	if pubPem == nil {
+		return diag.Errorf("rsa public key not in pem format")
+	}
+	if !strings.Contains(pubPem.Type, "PUBLIC KEY") {
+		return diag.Errorf("RSA public key is of the wrong type and must container the header 'PUBLIC KEY': Pem Type: %s ", pubPem.Type)
+	}
+	var parsedKey interface{}
+	var err error
+	if parsedKey, err = x509.ParsePKIXPublicKey(pubPem.Bytes); err != nil {
+		return diag.Errorf("unable to parse RSA public key")
+	}
 
-	setValue("pair_name", kp.PairName)
-	setValue("pair_type", kp.PairType)
-	setValue("alias", kp.Alias)
-	setValue("unavailable", kp.Unavailable)
-	setValue("private_key", strings.ReplaceAll(kp.PrivateKey,"\t",""))
-	errors := setValue("public_key", strings.ReplaceAll(kp.PublicKey,"\t",""))
-
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack keypair %q", errors)
+	if _, ok := parsedKey.(*rsa.PublicKey); !ok {
+		return diag.Errorf("unable to cast to RSA public key")
 	}
 
 	return nil
 }
+
+func stripTabs(_, old, new string, _ *schema.ResourceData) bool {
+	return old == strings.ReplaceAll(new, "\t", "")
+}
+
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 	result := KeyPairPayLoad{
@@ -113,7 +157,7 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = packKeyPair(*keyPair.(*KeyPairPayLoad), d)
+	err = universalPack(*keyPair.(*KeyPairPayLoad), d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -128,7 +172,7 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = packKeyPair(data, d)
+	err = universalPack(data, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -144,4 +188,8 @@ func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Di
 
 func verifyKeyPair(id string, request *resty.Request) (*resty.Response, error) {
 	return request.Head(keypairEndPoint + id)
+}
+
+func (kp KeyPairPayLoad) Id() string {
+	return kp.PairName
 }

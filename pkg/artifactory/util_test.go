@@ -80,30 +80,10 @@ func toHclFormat(thing interface{}) string {
 	}
 }
 
-type Checker func(id string, request *resty.Request) (*resty.Response, error)
+type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-func verifyDestroy(id string, check Checker) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
-		client := provider.Meta().(*resty.Client)
 
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
-		resp, err := check(id, client.R())
-
-		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
-			return err
-		}
-
-		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
-	}
-}
-func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
+func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[id]
@@ -113,13 +93,20 @@ func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
 		}
 		provider, _ := testAccProviders["artifactory"]()
 		client := provider.Meta().(*resty.Client)
-		resp, err := checkRepo(rs.Primary.ID, client.R(), neverRetry)
+		resp, err := check(rs.Primary.ID, client.R())
 		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
+			if resp != nil {
+				switch resp.StatusCode() {
+				case http.StatusNotFound, http.StatusBadRequest:
+					return nil
+				}
 			}
 			return err
 		}
-		return nil
+		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
 	}
+}
+
+func testCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	return checkRepo(id, request.AddRetryCondition(neverRetry))
 }
