@@ -32,7 +32,6 @@ func validateCron(value interface{}, key string) (ws []string, es []error) {
 	return nil, nil
 }
 
-
 var validLicenseTypes = []string{
 	"0BSD",
 	"AAL",
@@ -469,22 +468,26 @@ var validLicenseTypes = []string{
 	"ZPL-2.0",
 	"ZPL-2.1",
 }
-var licenseTypeValidator = validation.StringInSlice(validLicenseTypes,false)
+var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 
 var upgrade = func(oldValidFunc schema.SchemaValidateFunc, key string) schema.SchemaValidateDiagFunc {
 	return func(value interface{}, path cty.Path) diag.Diagnostics {
 		warnings, errors := oldValidFunc(value, key)
-		return diag.Diagnostics{
-			diag.Diagnostic{
+		var ds diag.Diagnostics
+		if len(errors) > 0 {
+			ds = append(ds, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("%q",errors),
-			},
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("%q",warnings),
-				Detail: strings.Join(warnings,"\n"),
-			},
+				Summary:  fmt.Sprintf("%q", errors),
+			})
 		}
+		if len(warnings) > 0 {
+			ds = append(ds,diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("%q", warnings),
+				Detail:   strings.Join(warnings, "\n"),
+			})
+		}
+		return ds
 	}
 }
 
@@ -495,8 +498,6 @@ func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	}
 	return nil, nil
 }
-
-
 
 func fileExist(value interface{}, _ string) ([]string, []error) {
 	if _, err := os.Stat(value.(string)); err != nil {

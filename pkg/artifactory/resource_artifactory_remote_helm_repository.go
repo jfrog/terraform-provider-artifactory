@@ -11,7 +11,7 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-		Description:  "Base URL for the translation of chart source URLs in the index.yaml of virtual repos. " +
+		Description: "Base URL for the translation of chart source URLs in the index.yaml of virtual repos. " +
 			"Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url.",
 	},
 })

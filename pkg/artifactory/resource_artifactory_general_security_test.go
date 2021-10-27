@@ -17,7 +17,7 @@ resource "artifactory_general_security" "security" {
 
 func TestAccGeneralSecurity_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccGeneralSecurityDestroy("artifactory_general_security.security"),
+		CheckDestroy:      testAccGeneralSecurityDestroy("artifactory_general_security.security"),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{

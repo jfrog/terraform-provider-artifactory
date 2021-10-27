@@ -29,8 +29,8 @@ func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 		}
 	`, name, key)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,18 +75,17 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 
 func TestAccRemoteCargoRepository(t *testing.T) {
 	_, testCase := mkNewRemoteTestCase("cargo", t, map[string]interface{}{
-		"git_registry_url":  "https://github.com/rust-lang/foo.index",
-		"anonymous_access":    true,
+		"git_registry_url": "https://github.com/rust-lang/foo.index",
+		"anonymous_access": true,
 	})
 	resource.Test(t, testCase)
 }
 
 func TestAccRemoteHelmRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("helm", t, map[string]interface{}{
-		"helm_charts_base_url":  "https://github.com/rust-lang/foo.index",
+		"helm_charts_base_url": "https://github.com/rust-lang/foo.index",
 	}))
 }
-
 
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
@@ -136,8 +135,8 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -177,8 +176,8 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -209,8 +208,8 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -240,12 +239,12 @@ func TestAllLegacyRemoteRepoTypes(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository",repoType))
+	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
 	defaultFields := map[string]interface{}{
-		"key":          name,
-		"url":          "https://registry.npmjs.org/",
-		"username":     "user",
+		"key":      name,
+		"url":      "https://registry.npmjs.org/",
+		"username": "user",
 		// This returns encrypted. Can't be tested
 		//"password":                           "foo",
 		"proxy": "",
@@ -296,8 +295,8 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -349,8 +348,8 @@ func mkLegacyRemoteTestCase(repoType string, t *testing.T) (*testing.T, resource
 	_, fqrn, name := mkNames("terraform-remote-test-repo-full", "artifactory_remote_repository")
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoFull, name, name, repoType),
@@ -407,7 +406,7 @@ func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -436,8 +435,8 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

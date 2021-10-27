@@ -3,8 +3,13 @@ package artifactory
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
+
+type GoVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
+}
 
 var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
@@ -29,9 +34,9 @@ var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Sche
 })
 
 func newGoVirtStruct() interface{} {
-	return &services.GoVirtualRepositoryParams{
-		VirtualRepositoryBaseParams: services.VirtualRepositoryBaseParams{
-			Rclass: "virtual",
+	return &GoVirtualRepositoryParams{
+		VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			Rclass:      "virtual",
 			PackageType: "go",
 		},
 	}
@@ -56,7 +61,7 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 
-	repo := services.GoVirtualRepositoryParams{
+	repo := GoVirtualRepositoryParams{
 		VirtualRepositoryBaseParams:  unpackBaseVirtRepo(s),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 		ExternalDependenciesEnabled:  d.getBoolRef("external_dependencies_enabled", false),
@@ -66,7 +71,7 @@ func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, err
 }
 
 func packGoVirtualRepository(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*services.GoVirtualRepositoryParams)
+	repo := r.(*GoVirtualRepositoryParams)
 	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
 
 	setValue("external_dependencies_patterns", repo.ExternalDependenciesPatterns)

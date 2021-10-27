@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -21,8 +20,8 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -38,7 +37,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	})
 }
 func TestAccVirtualGoRepository_basic(t *testing.T) {
-	_, fqrn, name := mkNames("foo","artifactory_virtual_go_repository")
+	_, fqrn, name := mkNames("foo", "artifactory_virtual_go_repository")
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
 		  key          = "%s"
@@ -54,11 +53,11 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 			"**/go.googlesource.com/**"
 		  ]
 		}
-	`,name,name)
+	`, name, name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -78,8 +77,6 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	})
 }
 
-
-
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
@@ -96,11 +93,11 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 			force_maven_authentication = true
 			pom_repository_references_cleanup_policy = "discard_active_reference"
 		}
-	`,name,name)
+	`, name, name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -119,7 +116,6 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 		},
 	})
 }
-
 
 func TestAccVirtualRepository_update(t *testing.T) {
 	id := randomInt()
@@ -142,8 +138,8 @@ func TestAccVirtualRepository_update(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -198,8 +194,8 @@ func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase
 		}
 	`
 	return t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -241,8 +237,8 @@ func TestNugetPackageCreationFull(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -278,8 +274,8 @@ func TestAccVirtualRepository_full(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckRepositoryDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -299,22 +295,4 @@ func TestAccVirtualRepository_full(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckRepositoryDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-
-		rs, ok := s.RootModule().Resources[id]
-
-		if !ok {
-			return fmt.Errorf("error: Resource id [%s] not found", id)
-		}
-		provider, _ := testAccProviders["artifactory"]()
-
-		exists, _ := checkRepo(rs.Primary.ID, provider.Meta(), neverRetry)
-		if exists {
-			return fmt.Errorf("error: Repository %s still exists", rs.Primary.ID)
-		}
-		return nil
-	}
 }

@@ -189,7 +189,6 @@ func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string, e
 	return repo, repo.Key, nil
 }
 
-
 func saveLocalRepoState(r interface{}, d *schema.ResourceData) error {
 
 	repo := r.(*MessyRepo)
@@ -228,5 +227,3 @@ func saveLocalRepoState(r interface{}, d *schema.ResourceData) error {
 
 	return nil
 }
-
-

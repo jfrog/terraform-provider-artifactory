@@ -120,9 +120,7 @@ var randomInt = func() func() int {
 }()
 
 func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
-	result := map[string]interface{}{
-
-	}
+	result := map[string]interface{}{}
 	for _, schma := range schemata {
 		for k, v := range schma {
 			result[k] = v
@@ -166,8 +164,6 @@ func mkLens(d *schema.ResourceData) Lens {
 		return errors
 	}
 }
-
-
 
 func sendConfigurationPatch(content []byte, m interface{}) error {
 

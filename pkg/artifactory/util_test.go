@@ -2,8 +2,11 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"math"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -75,4 +78,35 @@ func toHclFormat(thing interface{}) string {
 	default:
 		return fmt.Sprintf("%v", thing)
 	}
+}
+
+type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
+
+
+func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+
+		rs, ok := s.RootModule().Resources[id]
+
+		if !ok {
+			return fmt.Errorf("error: Resource id [%s] not found", id)
+		}
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
+		resp, err := check(rs.Primary.ID, client.R())
+		if err != nil {
+			if resp != nil {
+				switch resp.StatusCode() {
+				case http.StatusNotFound, http.StatusBadRequest:
+					return nil
+				}
+			}
+			return err
+		}
+		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
+	}
+}
+
+func testCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	return checkRepo(id, request.AddRetryCondition(neverRetry))
 }

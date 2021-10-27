@@ -144,7 +144,7 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	}
 	chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 	if !chksMatches {
-		return fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath,fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
+		return fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
 	}
 
 	return packFileInfo(fileInfo, d)

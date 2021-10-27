@@ -5,12 +5,34 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"net/http"
+	"reflect"
 	"regexp"
+	"strings"
 )
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
+
+type LocalRepositoryBaseParams struct {
+	Key                             string   `hcl:"key" json:"key,omitempty"`
+	Rclass                          string   `json:"rclass"`
+	PackageType                     string   `hcl:"package_type" json:"packageType,omitempty"`
+	Description                     string   `hcl:"description" json:"description,omitempty"`
+	Notes                           string   `hcl:"notes" json:"notes,omitempty"`
+	IncludesPattern                 string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
+	ExcludesPattern                 string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	RepoLayoutRef                   string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
+	BlackedOut                      *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
+	XrayIndex                       *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
+	PropertySets                    []string `hcl:"property_sets" json:"propertySets,omitempty"`
+	ArchiveBrowsingEnabled          *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
+	OptionalIndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
+	DownloadRedirect                *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
+}
+
+func (bp LocalRepositoryBaseParams) Id() string {
+	return bp.Key
+}
 
 type ContentSynchronisation struct {
 	Enabled    bool `json:"enables,omitempty"`
@@ -32,7 +54,7 @@ type RemoteRepositoryBaseParams struct {
 	Url                               string                  `json:"url"`
 	Username                          string                  `json:"username,omitempty"`
 	Password                          string                  `json:"password,omitempty"`
-	Proxy                             string                  `json:"proxy,omitempty"`
+	Proxy                             string                  `json:"proxy"`
 	Description                       string                  `json:"description,omitempty"`
 	Notes                             string                  `json:"notes,omitempty"`
 	IncludesPattern                   string                  `json:"includesPattern,omitempty"`
@@ -62,6 +84,28 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+}
+
+func (bp RemoteRepositoryBaseParams) Id() string {
+	return bp.Key
+}
+
+type VirtualRepositoryBaseParams struct {
+	Key                                           string   `json:"key,omitempty"`
+	Rclass                                        string   `json:"rclass"`
+	PackageType                                   string   `json:"packageType,omitempty"`
+	Description                                   string   `json:"description,omitempty"`
+	Notes                                         string   `json:"notes,omitempty"`
+	IncludesPattern                               string   `json:"includesPattern,omitempty"`
+	ExcludesPattern                               string   `json:"excludesPattern,omitempty"`
+	RepoLayoutRef                                 string   `json:"repoLayoutRef,omitempty"`
+	Repositories                                  []string `json:"repositories,omitempty"`
+	ArtifactoryRequestsCanRetrieveRemoteArtifacts *bool    `json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
+	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
+}
+
+func (bp VirtualRepositoryBaseParams) Id() string {
+	return bp.Key
 }
 
 type ReadFunc func(d *schema.ResourceData, m interface{}) error
@@ -149,14 +193,15 @@ var retry400 = func(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
-func checkRepo(id string, m interface{}, retryCond resty.RetryConditionFunc) (bool, error) {
-	_, err := m.(*resty.Client).R().AddRetryCondition(retryCond).Head(repositoriesEndpoint + id)
+func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
 	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return err == nil, err
+	return request.Head(repositoriesEndpoint + id)
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return checkRepo(d.Id(), m, retry400)
+	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
+	return err == nil, err
+
 }
 
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
@@ -453,7 +498,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 
-
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -577,8 +621,8 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	d := &ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
-		Rclass:                   "remote",
-		Key:                      d.getString("key", false),
+		Rclass: "remote",
+		Key:    d.getString("key", false),
 		//must be set independently
 		PackageType:              "invalid",
 		Url:                      d.getString("url", false),
@@ -624,14 +668,14 @@ func unpackBaseRemoteRepo(s *schema.ResourceData) RemoteRepositoryBaseParams {
 	return repo
 }
 
-func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBaseParams {
+func unpackBaseVirtRepo(s *schema.ResourceData) VirtualRepositoryBaseParams {
 	d := &ResourceData{s}
 
-	return services.VirtualRepositoryBaseParams{
+	return VirtualRepositoryBaseParams{
 		Key:    d.getString("key", false),
 		Rclass: "virtual",
 		//must be set independently
-		PackageType:              "invalid",
+		PackageType:     "invalid",
 		IncludesPattern: d.getString("includes_pattern", false),
 		ExcludesPattern: d.getString("excludes_pattern", false),
 		RepoLayoutRef:   d.getString("repo_layout_ref", false),
@@ -643,7 +687,7 @@ func unpackBaseVirtRepo(s *schema.ResourceData) services.VirtualRepositoryBasePa
 	}
 }
 
-func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBaseParams) Lens {
+func packBaseVirtRepo(d *schema.ResourceData, repo VirtualRepositoryBaseParams) Lens {
 	setValue := mkLens(d)
 
 	setValue("key", repo.Key)
@@ -657,4 +701,94 @@ func packBaseVirtRepo(d *schema.ResourceData, repo services.VirtualRepositoryBas
 	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
 	setValue("repositories", repo.Repositories)
 	return setValue
+}
+// universalUnpack - todo implement me
+func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{}, string, error) {
+	d := &ResourceData{s}
+	var t = reflect.TypeOf(payload)
+	var v = reflect.ValueOf(payload)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	//lookup := map[reflect.Kind]func(field, val reflect.Value) {
+	//	reflect.String: func(field, val reflect.Value)  {
+	//		val.SetString(field.String())
+	//	},
+	//}
+	for i := 0; i < t.NumField(); i++ {
+		thing := v.Field(i)
+
+		switch thing.Kind() {
+		case reflect.String:
+			v.SetString(thing.String())
+		case reflect.Int:
+			v.SetInt(thing.Int())
+		case reflect.Bool:
+			v.SetBool(thing.Bool())
+		}
+	}
+	result := KeyPairPayLoad{
+		PairName:    d.getString("pair_name", false),
+		PairType:    d.getString("pair_type", false),
+		Alias:       d.getString("alias", false),
+		PrivateKey:  strings.ReplaceAll(d.getString("private_key", false), "\t", ""),
+		PublicKey:   strings.ReplaceAll(d.getString("public_key", false), "\t", ""),
+		Unavailable: d.getBool("unavailable", false),
+	}
+	return &result, result.PairName, nil
+}
+
+func universalPack(payload interface{}, d *schema.ResourceData) error {
+	setValue := mkLens(d)
+
+	var t = reflect.TypeOf(payload)
+	var v = reflect.ValueOf(payload)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	var errors []error
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		thing := v.Field(i)
+
+		value := thing.Interface()
+		switch thing.Kind() {
+		case reflect.Struct:
+			errors = append(errors, universalPack(value, d))
+		case reflect.Ptr:
+			value = reflect.Indirect(thing).Interface()
+		case reflect.Slice:
+			value = castToInterfaceArr(value.([]string))
+		}
+		hcl := field.Tag.Get("hcl")
+		if hcl != "" {
+			errors = setValue(hcl, value)
+		}
+	}
+	if errors != nil && len(errors) > 0 {
+		return fmt.Errorf("failed saving state %q", errors)
+	}
+	return nil
+}
+
+func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack UnpackFunc, constructor Constructor) *schema.Resource {
+	var reader = mkRepoRead(packer, constructor)
+	return &schema.Resource{
+		Create: mkRepoCreate(unpack, reader),
+		Read:   reader,
+		Update: mkRepoUpdate(unpack, reader),
+		Delete: deleteRepo,
+		Exists: repoExists,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: skeema,
+	}
+}
+
+type Identifiable interface {
+	Id() string
 }

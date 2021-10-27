@@ -43,8 +43,8 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
-		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -61,8 +61,8 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url")
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
-		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
+		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(
-			testAccCheckRepositoryDestroy(fqrepoName),
+			verifyDeleted(fqrepoName, testCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 

@@ -48,7 +48,7 @@ type DockerRemoteRepo struct {
 var dockerRemoteRepoReadFun = mkRepoRead(packDockerRemoteRepo, func() interface{} {
 	return &DockerRemoteRepo{
 		RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
-			Rclass: "remote",
+			Rclass:      "remote",
 			PackageType: "docker",
 		},
 	}

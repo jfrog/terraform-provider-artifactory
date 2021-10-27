@@ -3,10 +3,6 @@ package artifactory
 import (
 	"fmt"
 
-	"github.com/go-resty/resty/v2"
-
-	"net/http"
-
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,13 +20,17 @@ type MessyRemoteRepo struct {
 	PropagateQueryParams bool `json:"propagateQueryParams"`
 }
 
+var legacyRemoteRepoReadFun = mkRepoRead(packLegacyRemoteRepo, func() interface{} {
+	return &MessyRemoteRepo{}
+})
+
 func resourceArtifactoryRemoteRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRemoteRepositoryCreate,
-		Read:   resourceRemoteRepositoryRead,
-		Update: resourceRemoteRepositoryUpdate,
-		Delete: resourceRemoteRepositoryDelete,
-		Exists: resourceRemoteRepositoryExists,
+		Create: mkRepoCreate(unpackLegacyRemoteRepo, legacyRemoteRepoReadFun),
+		Read:   legacyRemoteRepoReadFun,
+		Update: mkRepoUpdate(unpackLegacyRemoteRepo, legacyRemoteRepoReadFun),
+		Delete: deleteRepo,
+		Exists: repoExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -107,10 +107,10 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional: true,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				StateFunc: getMD5Hash,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				StateFunc:   getMD5Hash,
 				Description: "This field can only be used if encryption has been turned off",
 			},
 			"proxy": {
@@ -319,7 +319,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 	}
 }
 
-func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
+func unpackLegacyRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 	repo := MessyRemoteRepo{}
 
@@ -380,13 +380,15 @@ func unpackRemoteRepo(s *schema.ResourceData) (MessyRemoteRepo, error) {
 		}
 	}
 	if repo.PackageType != "" && repo.PackageType != "generic" && repo.PropagateQueryParams == true {
-		return MessyRemoteRepo{}, fmt.Errorf("cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories", repo.PackageType)
+		format := "cannot use propagate_query_params with repository type %s. This parameter can be used only with generic repositories"
+		return MessyRemoteRepo{}, "", fmt.Errorf(format, repo.PackageType)
 	}
 
-	return repo, nil
+	return repo, repo.Key, nil
 }
 
-func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
+func packLegacyRemoteRepo(r interface{}, d *schema.ResourceData) error {
+	repo := r.(*MessyRemoteRepo)
 	setValue := mkLens(d)
 
 	setValue("remote_repo_checksum_policy_type", repo.RemoteRepoChecksumPolicyType)
@@ -451,71 +453,4 @@ func packRemoteRepo(repo MessyRemoteRepo, d *schema.ResourceData) error {
 		return fmt.Errorf("failed to pack remote repo %q", errors)
 	}
 	return nil
-}
-
-func resourceRemoteRepositoryCreate(d *schema.ResourceData, m interface{}) error {
-	repo, err := unpackRemoteRepo(d)
-	if err != nil {
-		return err
-	}
-
-	_, err = m.(*resty.Client).R().SetBody(repo).Put(repositoriesEndpoint + repo.Key)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(repo.Key)
-	return resourceRemoteRepositoryRead(d, m)
-}
-
-func resourceRemoteRepositoryRead(d *schema.ResourceData, m interface{}) error {
-	repo := MessyRemoteRepo{}
-	resp, err := m.(*resty.Client).R().SetResult(&repo).Get(repositoriesEndpoint + d.Id())
-	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	if resp == nil {
-		return fmt.Errorf("no response returned during resourceRemoteRepositoryRead")
-	}
-
-	return packRemoteRepo(repo, d)
-}
-
-func resourceRemoteRepositoryUpdate(d *schema.ResourceData, m interface{}) error {
-	repo, err := unpackRemoteRepo(d)
-	if err != nil {
-		return err
-	}
-	_, err = m.(*resty.Client).R().SetBody(repo).Post(repositoriesEndpoint + repo.Key)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(repo.Key)
-	return resourceRemoteRepositoryRead(d, m)
-}
-
-func resourceRemoteRepositoryDelete(d *schema.ResourceData, m interface{}) error {
-	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
-
-	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	return err
-}
-
-func resourceRemoteRepositoryExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(repositoriesEndpoint + d.Id())
-
-	// as long as we don't have an error, it's good
-	return err == nil, err
 }
