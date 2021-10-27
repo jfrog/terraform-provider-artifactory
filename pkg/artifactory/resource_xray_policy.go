@@ -61,12 +61,14 @@ type Policy struct {
 
 func resourceXrayPolicy() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion:      1,
-		Create:             resourceXrayPolicyCreate,
-		Read:               resourceXrayPolicyRead,
-		Update:             resourceXrayPolicyUpdate,
-		Delete:             resourceXrayPolicyDelete,
-		DeprecationMessage: "This portion of the provider uses V1 apis and will eventually be removed",
+		SchemaVersion: 1,
+		Create:        resourceXrayPolicyCreate,
+		Read:          resourceXrayPolicyRead,
+		Update:        resourceXrayPolicyUpdate,
+		Delete:        resourceXrayPolicyDelete,
+		DeprecationMessage: "This portion of the provider uses V1 apis and will eventually be moved " +
+			"to the separate repo. The discussion is here: https://github.com/jfrog/terraform-provider-artifactory/issues/160, " +
+			"we encourage you to give input on new HCL and features",
 		Description: "Creates an xray policy using V1 of the underlying APIs. Please note: " +
 			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
 
