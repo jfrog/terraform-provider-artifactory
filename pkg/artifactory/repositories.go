@@ -34,6 +34,25 @@ func (bp LocalRepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
+func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
+	d := &ResourceData{s}
+	return LocalRepositoryBaseParams{
+		Rclass:                          "local",
+		Key:                             d.getString("key", false),
+		PackageType:                     packageType,
+		Description:                     d.getString("description", false),
+		Notes:                           d.getString("notes", false),
+		IncludesPattern:                 d.getString("includes_pattern", false),
+		ExcludesPattern:                 d.getString("excludes_pattern", false),
+		RepoLayoutRef:                   d.getString("repo_layout_ref", false),
+		BlackedOut:                      d.getBoolRef("blacked_out", false),
+		ArchiveBrowsingEnabled:          d.getBoolRef("archive_browsing_enabled", false),
+		PropertySets:                    d.getSet("property_sets"),
+		OptionalIndexCompressionFormats: d.getList("index_compression_formats"),
+		XrayIndex:                       d.getBoolRef("xray_index", false),
+		DownloadRedirect:                d.getBoolRef("download_direct", false),
+	}
+}
 type ContentSynchronisation struct {
 	Enabled    bool `json:"enables,omitempty"`
 	Statistics struct {
