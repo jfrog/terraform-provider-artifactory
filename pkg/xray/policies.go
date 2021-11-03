@@ -13,8 +13,8 @@ import (
 // I need backward compatibility, and I can't have any other dependencies.
 
 type PolicyCVSSRange struct {
-	To   *float64 `json:"to,omitempty"`
-	From *float64 `json:"from,omitempty"`
+	To   float64 `json:"to,omitempty"`
+	From float64 `json:"from,omitempty"`
 }
 
 type PolicyRuleCriteria struct {
@@ -93,11 +93,9 @@ func expandRules(configured []interface{}, policyType *string) (policyRules []Po
 		rule.Name = StringPtr(data["name"].(string))
 		rule.Priority = IntPtr(data["priority"].(int))
 		if *policyType == "license" {
-			//fmt.Println("[INFO] Expand rules for the License policy")
 			rule.Criteria, err = expandLicenseCriteria(data["criteria"].([]interface{}))
 		}
 		if *policyType == "security" {
-			//fmt.Println("[INFO] Expand rules for the Security policy")
 			rule.Criteria, err = expandSecurityCriteria(data["criteria"].([]interface{}))
 		}
 
@@ -155,8 +153,8 @@ func expandCVSSRange(l []interface{}) *PolicyCVSSRange {
 
 	m := l[0].(map[string]interface{})
 	cvssrange := &PolicyCVSSRange{
-		From: Float64Ptr(m["from"].(float64)),
-		To:   Float64Ptr(m["to"].(float64)),
+		From: m["from"].(float64),
+		To:   m["to"].(float64),
 	}
 	return cvssrange
 }
@@ -186,7 +184,7 @@ func expandActions(l []interface{}) *PolicyRuleActions {
 		for _, hook := range m {
 			webhooks = append(webhooks, hook.(string))
 		}
-		actions.Webhooks = &webhooks
+		actions.Webhooks = &webhooks // if webhook in not set - the empty value is not passing to the payload
 	}
 	if v, ok := m["mails"]; ok && len(v.([]interface{})) > 0 {
 		m := v.([]interface{})
@@ -222,7 +220,7 @@ func expandActions(l []interface{}) *PolicyRuleActions {
 		}
 	}
 	if v, ok := m["block_release_bundle_distribution"]; ok {
-		actions.BlockReleaseBundle = BoolPtr(v.(bool))
+		actions.BlockReleaseBundle = BoolPtr(v.(bool)) // TODO: why do we need to return the poiner instead of just assigning the value?
 	}
 	//
 	if v, ok := m["notify_watch_recipients"]; ok {
@@ -322,8 +320,8 @@ func flattenCVSSRange(cvss *PolicyCVSSRange) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"from": *cvss.From,
-		"to":   *cvss.To,
+		"from": cvss.From,
+		"to":   cvss.To,
 	}
 	return []interface{}{m}
 }

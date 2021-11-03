@@ -1,5 +1,5 @@
-//module github.com/jfrog/terraform-provider-xray
-module terraform-provider-xray
+module github.com/jfrog/terraform-provider-xray
+//module terraform-provider-xray
 
 require (
 	github.com/go-resty/resty/v2 v2.6.1-0.20210916045937-1792d629c3c6

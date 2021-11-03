@@ -32,7 +32,7 @@ func resourceXraySecurityPolicyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			// not in create policy body, but it is in the get call response. Remove?
+			// not in create policy body, but it is in the get call response.
 			"author": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -63,20 +63,17 @@ func resourceXraySecurityPolicyV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 1, // move conflict here
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_severity": {
 										Type:     schema.TypeString,
 										Optional: true,
-										//ConflictsWith: []string{"cvss_range"},
-										//AtLeastOneOf: []string{"min_severity","cvss_range"},
 									},
 									"cvss_range": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
-										//ConflictsWith: []string{"min_severity"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"from": {
@@ -89,7 +86,6 @@ func resourceXraySecurityPolicyV2() *schema.Resource {
 												},
 											},
 										},
-										//AtLeastOneOf: []string{"min_severity","cvss_range"},
 									},
 								},
 							},
@@ -134,22 +130,27 @@ func resourceXraySecurityPolicyV2() *schema.Resource {
 									"block_release_bundle_distribution": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  true,
 									},
 									"fail_build": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  true,
 									},
 									"notify_deployer": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 									},
 									"notify_watch_recipients": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 									},
 									"create_ticket_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 									},
 									"build_failure_grace_period_in_days": {
 										Type:     schema.TypeInt,

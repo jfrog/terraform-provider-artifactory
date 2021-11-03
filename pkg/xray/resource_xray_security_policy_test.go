@@ -231,17 +231,25 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 }
 
 func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
-	policyName := "terraform-security-policy-8"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-security-rule-8"
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_security_policy." + resourceName
-	cvssFrom := 1.5
-	cvssTo := 5.3
-	failBuild := "true"
-	gracePeriod := 5
-	blockUnscanned := "true"
-	blockActive := "true"
+
+	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+
+	tempStruct := map[string]string{
+		"resource_name":                     resourceName,
+		"policy_name":                       "terraform-security-policy-8",
+		"policy_description":                "policy created by xray acceptance tests",
+		"rule_name":                         "test-security-rule-8",
+		"cvss_from":                         "1.5",
+		"cvss_to":                           "5.3",
+		"block_release_bundle_distribution": "true",
+		"fail_build":                        "true",
+		"notify_watch_recipients":           "true",
+		"notify_deployer":                   "true",
+		"create_ticket_enabled":             "false",
+		"grace_period_days":                 "5",
+		"block_unscanned":                   "true",
+		"block_active":                      "true",
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -249,18 +257,21 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXraySecurityPolicy_createSecurityPolicyCVSS(resourceName, policyName, policyDesc,
-					ruleName, cvssFrom, cvssTo, failBuild, gracePeriod, blockUnscanned, blockActive),
+				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", policyDesc),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", ruleName),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", strconv.Itoa(gracePeriod)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", failBuild),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", blockActive),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", blockUnscanned),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", fmt.Sprint(cvssFrom)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", fmt.Sprint(cvssTo)),
+					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
 				),
 			},
 		},
@@ -389,3 +400,89 @@ resource "xray_security_policy" "%s" {
 }
 `, resourceName, name, description, ruleName, minSeverity, failBuild, gracePeriod, blockUnscanned, blockActive)
 }
+
+const licensePolicy = `resource "xray_license_policy" "{{ .resource_name }}" {
+	name = "{{ .policy_name }}"
+	description = "{{ .policy_description }}"
+	type = "license"
+	rules {
+		name = "{{ .rule_name }}"
+		priority = 1
+		criteria {	
+          allowed_licenses = ["Apache-1.0","Apache-2.0"]
+          allow_unknown = false
+          multi_license_permissive = true
+		}
+		actions {
+          webhooks = []
+          mails = ["test@email.com"]
+          block_download {
+				unscanned = {{ .block_unscanned }}
+				active = {{ .block_active }}
+          }
+          block_release_bundle_distribution = {{ .block_distribution }}
+          fail_build = {{ .fail_build }}
+          notify_watch_recipients = {{ .notify_watchers }}
+          notify_deployer = {{ .notify_deployer }}
+          create_ticket_enabled = {{ .create_ticket }}           
+          custom_severity = "High"
+          build_failure_grace_period_in_days = {{ .grace_period_days }}  
+		}
+	}
+}`
+
+//CVSS, add severity policy later
+const securityPolicyCVSS = `resource "xray_security_policy" "{{ .resource_name }}" {
+	name = "{{ .policy_name }}"
+	description = "{{ .policy_description }}"
+	type = "security"
+	rules {
+		name = "{{ .rule_name }}"
+		priority = 1
+		criteria {	
+			cvss_range {
+				from = {{ .cvss_from }}
+				to = {{ .cvss_to }}
+			}
+		}
+		actions {
+			block_release_bundle_distribution = {{ .block_release_bundle_distribution }}
+			fail_build = {{ .fail_build }}
+			notify_watch_recipients = {{ .notify_watch_recipients }}
+			notify_deployer = {{ .notify_deployer }}
+			create_ticket_enabled = {{ .create_ticket_enabled }}
+			build_failure_grace_period_in_days = {{ .grace_period_days }}
+			block_download {
+				unscanned = {{ .block_unscanned }}
+				active = {{ .block_active }}
+			}
+		}
+	}
+}`
+
+const securityPolicyMinSeverity = `resource "xray_security_policy" "{{ .resource_name }}" {
+	name = "{{ .policy_name }}"
+	description = "{{ .policy_description }}"
+	type = "security"
+	rules {
+		name = "{{ .rule_name }}"
+		priority = 1
+		criteria {	
+			cvss_range {
+ 				min_severity = {{ .min_severity }}
+			}
+		}
+		actions {
+			block_release_bundle_distribution = {{ .block_distribution }}
+			fail_build = {{ .fail_build }}
+			notify_watch_recipients = {{ .notify_watchers }}
+			notify_deployer = {{ .notify_deployer }}
+			create_ticket_enabled = {{ .create_ticket }}
+			build_failure_grace_period_in_days = {{ .grace_period_days }}
+			block_download {
+				unscanned = {{ .block_unscanned }}
+				active = {{ .block_active }}
+			}
+		}
+	}
+}`
