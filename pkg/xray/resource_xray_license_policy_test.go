@@ -329,3 +329,33 @@ resource "xray_license_policy" "%s" {
 }
 `, resourceName, name, description, ruleName, gracePeriod)
 }
+
+const licensePolicy = `resource "xray_license_policy" "{{ .resource_name }}" {
+	name = "{{ .policy_name }}"
+	description = "{{ .policy_description }}"
+	type = "license"
+	rules {
+		name = "{{ .rule_name }}"
+		priority = 1
+		criteria {	
+          allowed_licenses = ["Apache-1.0","Apache-2.0"]
+          allow_unknown = false
+          multi_license_permissive = true
+		}
+		actions {
+          webhooks = []
+          mails = ["test@email.com"]
+          block_download {
+				unscanned = {{ .block_unscanned }}
+				active = {{ .block_active }}
+          }
+          block_release_bundle_distribution = {{ .block_distribution }}
+          fail_build = {{ .fail_build }}
+          notify_watch_recipients = {{ .notify_watchers }}
+          notify_deployer = {{ .notify_deployer }}
+          create_ticket_enabled = {{ .create_ticket }}           
+          custom_severity = "High"
+          build_failure_grace_period_in_days = {{ .grace_period_days }}  
+		}
+	}
+}`
