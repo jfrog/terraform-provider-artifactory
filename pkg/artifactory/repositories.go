@@ -319,7 +319,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
 	},
-	"optional_index_compression_formats": {
+	"index_compression_formats": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Set:      schema.HashString,
