@@ -13,6 +13,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+var tempStructGeneral = map[string]string{
+	"resource_name":                     "",
+	"policy_name":                       "terraform-security-policy",
+	"policy_description":                "policy created by xray acceptance tests",
+	"rule_name":                         "test-security-rule",
+	"cvss_from":                         "1",    // conflicts with min_severity
+	"cvss_to":                           "5",    // conflicts with min_severity
+	"min_severity":                      "High", // conflicts with cvss_from/cvss_to
+	"block_release_bundle_distribution": "true",
+	"fail_build":                        "true",
+	"notify_watch_recipients":           "true",
+	"notify_deployer":                   "true",
+	"create_ticket_enabled":             "false",
+	"grace_period_days":                 "5",
+	"block_unscanned":                   "true",
+	"block_active":                      "true",
+}
+
 // Teh test will try to create a security policy with the type of "license"
 // The Policy criteria will be ignored in this case
 func TestAccSecurityPolicy_badTypeInSecurityPolicy(t *testing.T) {
@@ -60,25 +78,16 @@ func TestAccSecurityPolicy_badSecurityCriteria(t *testing.T) {
 // This test will try to create a security policy with "build_failure_grace_period_in_days" set,
 // but with "fail_build" set to false, which conflicts with the field mentioned above.
 func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
-
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-3",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-3",
-		"cvss_from":                         "1",
-		"cvss_to":                           "5",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "false",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "true",
-		"block_active":                      "true",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-3"
+	tempStruct["rule_name"] = "test-security-rule-3"
+	tempStruct["fail_build"] = "false"
+	tempStruct["grace_period_days"] = "5"
+	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -93,26 +102,16 @@ func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 	})
 }
 
+// CVSS criteria, block downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
-
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-4",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-4",
-		"cvss_from":                         "1",
-		"cvss_to":                           "5",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "true",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "true",
-		"block_active":                      "true",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-4"
+	tempStruct["rule_name"] = "test-security-rule-4"
+	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -141,26 +140,18 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 	})
 }
 
+// CVSS criteria, allow downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
-
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-5",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-5",
-		"cvss_from":                         "1",
-		"cvss_to":                           "5",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "true",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "false",
-		"block_active":                      "false",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-5"
+	tempStruct["rule_name"] = "test-security-rule-5"
+	tempStruct["block_unscanned"] = "false"
+	tempStruct["block_active"] = "false"
+	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -189,24 +180,17 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 	})
 }
 
+// Min severity criteria, block downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-6",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-6",
-		"min_severity":                      "High",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "true",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "true",
-		"block_active":                      "true",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-6"
+	tempStruct["rule_name"] = "test-security-rule-6"
+	delete(tempStruct, "cvss_from")
+	delete(tempStruct, "cvss_to")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -234,24 +218,19 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 	})
 }
 
+// Min severity criteria, allow downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-7",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-7",
-		"min_severity":                      "High",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "true",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "false",
-		"block_active":                      "false",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-7"
+	tempStruct["rule_name"] = "test-security-rule-7"
+	tempStruct["block_unscanned"] = "false"
+	tempStruct["block_active"] = "false"
+	delete(tempStruct, "cvss_from")
+	delete(tempStruct, "cvss_to")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -279,25 +258,18 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 	})
 }
 
+// CVSS criteria, use float values for CVSS range
 func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
 
-	tempStruct := map[string]string{
-		"resource_name":                     resourceName,
-		"policy_name":                       "terraform-security-policy-8",
-		"policy_description":                "policy created by xray acceptance tests",
-		"rule_name":                         "test-security-rule-8",
-		"cvss_from":                         "1.5",
-		"cvss_to":                           "5.3",
-		"block_release_bundle_distribution": "true",
-		"fail_build":                        "true",
-		"notify_watch_recipients":           "true",
-		"notify_deployer":                   "true",
-		"create_ticket_enabled":             "false",
-		"grace_period_days":                 "5",
-		"block_unscanned":                   "true",
-		"block_active":                      "true",
-	}
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-8"
+	tempStruct["rule_name"] = "test-security-rule-8"
+	tempStruct["cvss_from"] = "1.5"
+	tempStruct["cvss_to"] = "5.3"
+	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -321,6 +293,32 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
 					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSecurityPolicy_blockMismatchCVSS(t *testing.T) {
+	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructGeneral, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-9"
+	tempStruct["rule_name"] = "test-security-rule-9"
+	tempStruct["block_unscanned"] = "true"
+	tempStruct["block_active"] = "false"
+	delete(tempStruct, "min_severity")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckSecurityPolicyDestroy(fqrn),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
+				ExpectError: regexp.MustCompile("Rule " + tempStruct["rule_name"] +
+					" has block unscanned without block download"),
 			},
 		},
 	})
@@ -427,17 +425,15 @@ const securityPolicyMinSeverity = `resource "xray_security_policy" "{{ .resource
 	rules {
 		name = "{{ .rule_name }}"
 		priority = 1
-		criteria {	
-			cvss_range {
- 				min_severity = {{ .min_severity }}
-			}
+		criteria {
+            min_severity = "{{ .min_severity }}"
 		}
 		actions {
-			block_release_bundle_distribution = {{ .block_distribution }}
+			block_release_bundle_distribution = {{ .block_release_bundle_distribution }}
 			fail_build = {{ .fail_build }}
-			notify_watch_recipients = {{ .notify_watchers }}
+			notify_watch_recipients = {{ .notify_watch_recipients }}
 			notify_deployer = {{ .notify_deployer }}
-			create_ticket_enabled = {{ .create_ticket }}
+			create_ticket_enabled = {{ .create_ticket_enabled }}
 			build_failure_grace_period_in_days = {{ .grace_period_days }}
 			block_download {
 				unscanned = {{ .block_unscanned }}
