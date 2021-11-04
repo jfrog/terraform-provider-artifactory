@@ -12,7 +12,7 @@ import (
 func TestAccLocalAlpineRepository(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair", "artifactory_keypair")
-	localRepositoryBasic := executeTemplate("keypair",`
+	localRepositoryBasic := executeTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "RSA"
@@ -64,9 +64,9 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 	`, map[string]interface{}{
-		"kp_id" : kpId,
-		"kp_name": kpName,
-		"repo_name" : name,
+		"kp_id":     kpId,
+		"kp_name":   kpName,
+		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -88,7 +88,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 	})
 }
 
-func TestAccLocalRepository_basic(t *testing.T) {
+func TestAccLegacyLocalRepository_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-local-test-repo-basic%d", rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)
 	localRepositoryBasic := fmt.Sprintf(`
@@ -99,7 +99,7 @@ func TestAccLocalRepository_basic(t *testing.T) {
 	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName,testCheckRepo),
+		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -107,6 +107,69 @@ func TestAccLocalRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
 					resource.TestCheckResourceAttr(resourceName, "package_type", "docker"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalDockerV1Repository(t *testing.T) {
+
+	_, fqrn, name := mkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
+	params := map[string]interface{} {
+		"name" : name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalDockerv2Repository",`
+		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
+			key 	     = "{{ .name }}"
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+				),
+			},
+		},
+	})
+}
+func TestAccLocalDockerV2Repository(t *testing.T) {
+
+	_, fqrn, name := mkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
+	params := map[string]interface{} {
+		"block" :randBool(),
+		"retention" : randSelect(1, 5, 10),
+		"max_tags" : randSelect(0, 5, 10),
+		"name" : name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalDockerV2Repository",`
+		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+			key 	     = "{{ .name }}"
+			tag_retention = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+			block_pushing_schema1 = {{ .block }}
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t",params["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d",params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d",params["max_tags"])),
 				),
 			},
 		},
@@ -146,7 +209,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName,testCheckRepo),
+		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,

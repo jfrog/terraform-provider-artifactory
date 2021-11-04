@@ -119,6 +119,14 @@ var randomInt = func() func() int {
 	return rand.Int
 }()
 
+func randBool() bool {
+	return randomInt() % 2 == 0
+}
+
+func randSelect(items ... interface{}) interface{} {
+	return items[randomInt() % len(items)]
+}
+
 func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
 	result := map[string]interface{}{}
 	for _, schma := range schemata {

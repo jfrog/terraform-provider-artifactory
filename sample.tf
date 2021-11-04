@@ -3,16 +3,33 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.14"
+      version = "2.6.16"
     }
   }
 }
+resource "artifactory_local_docker_v2_repository" "foo" {
+  key 	     = "foo"
+  tag_retention = 3
+  max_unique_tags = 5
+}
+resource "artifactory_local_docker_v1_repository" "foo" {
+  key 	     = "foo"
+}
+
+resource "random_id" "randid" {
+  byte_length = 16
+}
+resource "tls_private_key" "example" {
+  algorithm   = "RSA"
+  rsa_bits = 2048
+
+}
 resource "artifactory_keypair" "some-keypairRSA" {
-  pair_name   = "some-keypair${random_id.randid.id}"
+  pair_name   = "some-keypairfoo"
   pair_type   = "RSA"
-  alias       = "foo-alias${random_id.randid.id}"
   private_key = file("samples/rsa.priv")
   public_key  = file("samples/rsa.pub")
+  alias       = "foo-aliasfoo"
 }
 # currently PGP isn't supported
 #resource "artifactory_keypair" "some-keypairPGP" {
@@ -182,5 +199,6 @@ resource "artifactory_xray_watch" "test" {
     type = "security"
   }
 }
+
 
 
