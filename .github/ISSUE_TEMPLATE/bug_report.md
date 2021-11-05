@@ -12,7 +12,8 @@ A clear and concise description of what the bug is.
 
 **Requirements for and issue**
 - [ ] A fully functioning terraform snippet that can be copy&pasted (no outside files or ENV vars unless that's part of the issue)
-- [ ] Your version of artifactory (you can `curl` it at `$host/artifactory/api/system/version`
+- [ ] Your version of Artifactory and Xray (you can `curl` Artifactory version at `$host/artifactory/api/system/version` and Xray version at 
+`$host/xray/api/v1/system/version`
 - [ ] Your version of terraform
 
 **Expected behavior**

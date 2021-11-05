@@ -18,24 +18,26 @@ func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"JFROG_URL", "ARTIFACTORY_URL", "PROJECTS_URL"},
+					"http://localhost:8081"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"access_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"XRAY_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"},
+					"JFROG_ACCESS_TOKEN"),
 				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
 			// Xray resources
-			"xray_policy": resourceXrayPolicy(),
-			"xray_watch":  resourceXrayWatch(),
+			"xray_security_policy": resourceXraySecurityPolicyV2(),
+			"xray_license_policy":  resourceXrayLicensePolicyV2(),
 		},
 	}
 
@@ -83,7 +85,7 @@ func addAuthToResty(client *resty.Client, accessToken string) (*resty.Client, er
 	return nil, fmt.Errorf("no authentication details supplied")
 }
 
-// Creates the client for artifactory, will prefer token auth over basic auth if both set
+// Creates the client for artifactory, will use token auth
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	URL, ok := d.GetOk("url")
 	if URL == nil || URL == "" || !ok {

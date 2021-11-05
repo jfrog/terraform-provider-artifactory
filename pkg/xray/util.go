@@ -119,6 +119,13 @@ var randomInt = func() func() int {
 	return rand.Int
 }()
 
+func copyStringMap(source map[string]string, target map[string]string) map[string]string {
+	for k, v := range source {
+		target[k] = v
+	}
+	return target
+}
+
 func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
 	result := map[string]interface{}{}
 	for _, schma := range schemata {
@@ -179,5 +186,7 @@ func BoolPtr(v bool) *bool { return &v }
 func IntPtr(v int) *int { return &v }
 
 func Int64Ptr(v int64) *int64 { return &v }
+
+func Float64Ptr(v float64) *float64 { return &v }
 
 func StringPtr(v string) *string { return &v }

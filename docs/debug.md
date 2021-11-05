@@ -43,9 +43,9 @@ This code effectively creates an infinite sleep loop; but that's actually essent
 terraform will basically stop, as it waits on a response from you provider; because you put an infinite sleep loop in
 5. You must now tell `delve` to connect to this remote process using it's PID. This isn't as hard as it seems.
 Run this commands:
-`dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $(pgrep terraform-provider-artifactory)`
+`dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $(pgrep terraform-provider-xray)`
 The last argument gets the `PID` for your provider and supplies it to `delve` to connect. Immediately upon running this 
-command, you're going to hit your break point. Please make sure to substitute `terraform-provider-artifactory` for your provider name
+command, you're going to hit your break point. Please make sure to substitute `terraform-provider-xray` for your provider name
 6. To exit this infinite loop, use your debugger to set `connected` to `true`. By doing so you change the loop predicate 
 and it will exit this loop on the next iteration.
 7. *DEBUG!* - At this point you can, step, watch, drop the call stack, etc. Your whole arsenel is available
