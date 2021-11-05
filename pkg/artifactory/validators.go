@@ -3,9 +3,6 @@ package artifactory
 import (
 	"fmt"
 	"github.com/gorhill/cronexpr"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/mail"
 	"os"
 	"regexp"
@@ -470,26 +467,6 @@ var validLicenseTypes = []string{
 }
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 
-var upgrade = func(oldValidFunc schema.SchemaValidateFunc, key string) schema.SchemaValidateDiagFunc {
-	return func(value interface{}, path cty.Path) diag.Diagnostics {
-		warnings, errors := oldValidFunc(value, key)
-		var ds diag.Diagnostics
-		if len(errors) > 0 {
-			ds = append(ds, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("%q", errors),
-			})
-		}
-		if len(warnings) > 0 {
-			ds = append(ds,diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("%q", warnings),
-				Detail:   strings.Join(warnings, "\n"),
-			})
-		}
-		return ds
-	}
-}
 
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
@@ -513,16 +490,6 @@ var defaultPassValidation = validation.All(
 	minLength(8),
 )
 
-var sliceIs = func(slice ...interface{}) schema.SchemaValidateFunc {
-	return func(value interface{}, _ string) ([]string, []error) {
-		for _, e := range slice {
-			if e == value {
-				return nil, nil
-			}
-		}
-		return nil, []error{fmt.Errorf("value %s not found in %q", value, slice)}
-	}
-}
 
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {

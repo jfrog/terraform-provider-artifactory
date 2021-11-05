@@ -36,7 +36,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.2.7"
+      version = "2.6.17"
     }
   }
 }
@@ -72,7 +72,7 @@ Usage:
 ```hcl
 # Configure the Artifactory provider
 provider "artifactory" {
-  url = "artifactory.site.com/artifactory"
+  url = "artifactory.site.com/"
   username = "myusername"
   password = "mypassword"
 }

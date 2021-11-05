@@ -48,7 +48,6 @@ func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalReposi
 		BlackedOut:                      d.getBoolRef("blacked_out", false),
 		ArchiveBrowsingEnabled:          d.getBoolRef("archive_browsing_enabled", false),
 		PropertySets:                    d.getSet("property_sets"),
-		OptionalIndexCompressionFormats: d.getList("index_compression_formats"),
 		XrayIndex:                       d.getBoolRef("xray_index", false),
 		DownloadRedirect:                d.getBoolRef("download_direct", false),
 	}
@@ -318,12 +317,6 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
-	},
-	"index_compression_formats": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Set:      schema.HashString,
-		Optional: true,
 	},
 	"download_direct": {
 		Type:     schema.TypeBool,
