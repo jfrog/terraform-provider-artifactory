@@ -467,6 +467,11 @@ func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func resourceXrayPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
 	_, err := m.(*resty.Client).R().Delete("xray/api/v2/policies/" + d.Id())
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return diags
 }
