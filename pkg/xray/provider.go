@@ -29,7 +29,7 @@ func Provider() *schema.Provider {
 				Optional:  true,
 				Sensitive: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"XRAY_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"},
-					"ARTIFACTORY_ACCESS_TOKEN"),
+					"JFROG_ACCESS_TOKEN"),
 				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 		},
