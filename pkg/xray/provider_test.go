@@ -25,10 +25,6 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-//func TestProvider_impl(t *testing.T) {
-//	var _ = Provider()
-//}
-
 func getTestResty(t *testing.T) *resty.Client {
 	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
 		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")

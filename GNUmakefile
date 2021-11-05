@@ -39,7 +39,7 @@ attach:
 
 acceptance: fmtcheck
 	export TF_ACC=1
-	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_URL \
+	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_URL && test -n ARTIFACTORY_ACCESS_TOKEN \
 		&& go test -v -parallel 20 ./pkg/...
 
 

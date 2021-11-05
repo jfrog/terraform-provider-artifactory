@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var tempStructGeneral = map[string]string{
+var tempStructSecurity = map[string]string{
 	"resource_name":                     "",
 	"policy_name":                       "terraform-security-policy",
 	"policy_description":                "policy created by xray acceptance tests",
@@ -80,14 +80,13 @@ func TestAccSecurityPolicy_badSecurityCriteria(t *testing.T) {
 func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-3"
 	tempStruct["rule_name"] = "test-security-rule-3"
 	tempStruct["fail_build"] = "false"
 	tempStruct["grace_period_days"] = "5"
-	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -106,12 +105,11 @@ func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-4"
 	tempStruct["rule_name"] = "test-security-rule-4"
-	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -144,14 +142,13 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-5"
 	tempStruct["rule_name"] = "test-security-rule-5"
 	tempStruct["block_unscanned"] = "false"
 	tempStruct["block_active"] = "false"
-	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -184,13 +181,11 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-6"
 	tempStruct["rule_name"] = "test-security-rule-6"
-	delete(tempStruct, "cvss_from")
-	delete(tempStruct, "cvss_to")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -222,15 +217,13 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-7"
 	tempStruct["rule_name"] = "test-security-rule-7"
 	tempStruct["block_unscanned"] = "false"
 	tempStruct["block_active"] = "false"
-	delete(tempStruct, "cvss_from")
-	delete(tempStruct, "cvss_to")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -262,14 +255,13 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-8"
 	tempStruct["rule_name"] = "test-security-rule-8"
 	tempStruct["cvss_from"] = "1.5"
 	tempStruct["cvss_to"] = "5.3"
-	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -301,14 +293,13 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 func TestAccSecurityPolicy_blockMismatchCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
 	tempStruct := make(map[string]string)
-	copyStringMap(tempStructGeneral, tempStruct)
+	copyStringMap(tempStructSecurity, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-9"
 	tempStruct["rule_name"] = "test-security-rule-9"
 	tempStruct["block_unscanned"] = "true"
 	tempStruct["block_active"] = "false"
-	delete(tempStruct, "min_severity")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

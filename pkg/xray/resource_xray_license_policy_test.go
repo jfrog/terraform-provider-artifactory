@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -13,17 +12,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+var tempStructLicense = map[string]string{
+	"resource_name":                     "",
+	"policy_name":                       "terraform-license-policy",
+	"policy_description":                "policy created by xray acceptance tests",
+	"rule_name":                         "test-license-rule",
+	"license_0":                         "Apache-1.0",
+	"license_1":                         "Apache-2.0",
+	"mails_0":                           "test0@email.com",
+	"mails_1":                           "test1@email.com",
+	"allow_unknown":                     "true",
+	"multi_license_permissive":          "false",
+	"block_release_bundle_distribution": "true",
+	"fail_build":                        "true",
+	"notify_watch_recipients":           "true",
+	"notify_deployer":                   "true",
+	"create_ticket_enabled":             "false",
+	"custom_severity":                   "High",
+	"grace_period_days":                 "5",
+	"block_unscanned":                   "true",
+	"block_active":                      "true",
+}
+
 // License policy criteria are different from the security policy criteria
 // Test will try to post a new license policy with incorrect body of security policy
 // with specified cvss_range. The function expandLicenseCriteria will ignore all the
 // fields except of "allow_unknown", "banned_licenses" and "allowed_licenses" if the Policy type is "license"
 func TestAccLicensePolicy_badLicenseCriteria(t *testing.T) {
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
 	policyName := "terraform-license-policy-1"
 	policyDesc := "policy created by xray acceptance tests"
 	ruleName := "test-license-rule-1"
 	rangeTo := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -40,12 +60,15 @@ func TestAccLicensePolicy_badLicenseCriteria(t *testing.T) {
 
 // This test will try to create a license policy with failure grace period set, but without fail build turned on
 func TestAccLicensePolicy_badGracePeriod(t *testing.T) {
-	policyName := "terraform-license-policy-2"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-2"
-	gracePeriod := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructLicense, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-security-policy-2"
+	tempStruct["rule_name"] = "test-license-rule-2"
+	tempStruct["fail_build"] = "false"
+	tempStruct["grace_period_days"] = "5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -53,23 +76,22 @@ func TestAccLicensePolicy_badGracePeriod(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccXrayLicensePolicy_badGracePeriod(resourceName, policyName, policyDesc, ruleName, gracePeriod),
-				ExpectError: regexp.MustCompile("Rule " + ruleName + " has failure grace period without fail build"),
+				Config:      executeTemplate(fqrn, licensePolicyAllowed, tempStruct),
+				ExpectError: regexp.MustCompile("Rule " + tempStruct["rule_name"] + " has failure grace period without fail build"),
 			},
 		},
 	})
 }
 
 func TestAccLicensePolicy_createAllowedLic(t *testing.T) {
-	policyName := "terraform-license-policy-3"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-3"
-	gracePeriod := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
-	multiLicense := "true"
-	blockUnscanned := "true"
-	blockActive := "true"
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructLicense, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-license-policy-3"
+	tempStruct["rule_name"] = "test-license-rule-3"
+	tempStruct["multi_license_permissive"] = "true"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -77,20 +99,26 @@ func TestAccLicensePolicy_createAllowedLic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayLicensePolicy_createAllowedLic(resourceName, policyName, policyDesc,
-					ruleName, multiLicense, gracePeriod, blockUnscanned, blockActive),
+				Config: executeTemplate(fqrn, licensePolicyAllowed, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", policyDesc),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", ruleName),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", strconv.Itoa(gracePeriod)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", "High"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.0", "Apache-1.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.1", "Apache-2.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", "true"),
+					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.0", tempStruct["license_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.1", tempStruct["license_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.0", tempStruct["mails_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.1", tempStruct["mails_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", tempStruct["custom_severity"]),
 				),
 			},
 		},
@@ -98,12 +126,13 @@ func TestAccLicensePolicy_createAllowedLic(t *testing.T) {
 }
 
 func TestAccLicensePolicy_createBannedLic(t *testing.T) {
-	policyName := "terraform-license-policy-4"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-4"
-	gracePeriod := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructLicense, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-license-policy-4"
+	tempStruct["rule_name"] = "test-license-rule-4"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -111,19 +140,26 @@ func TestAccLicensePolicy_createBannedLic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayLicensePolicy_createBanneddLic(resourceName, policyName, policyDesc, ruleName, gracePeriod),
+				Config: executeTemplate(fqrn, licensePolicyBanned, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", policyDesc),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", ruleName),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", strconv.Itoa(gracePeriod)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", "High"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.0", "Apache-1.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.1", "Apache-2.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", "true"),
+					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.0", tempStruct["license_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.1", tempStruct["license_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.0", tempStruct["mails_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.1", tempStruct["mails_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", tempStruct["custom_severity"]),
 				),
 			},
 		},
@@ -131,15 +167,13 @@ func TestAccLicensePolicy_createBannedLic(t *testing.T) {
 }
 
 func TestAccLicensePolicy_createMultiLicensePermissiveFalse(t *testing.T) {
-	policyName := "terraform-license-policy-5"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-5"
-	gracePeriod := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
-	multiLicense := "false"
-	blockUnscanned := "true"
-	blockActive := "true"
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructLicense, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-license-policy-5"
+	tempStruct["rule_name"] = "test-license-rule-5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -147,20 +181,26 @@ func TestAccLicensePolicy_createMultiLicensePermissiveFalse(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayLicensePolicy_createAllowedLic(resourceName, policyName, policyDesc,
-					ruleName, multiLicense, gracePeriod, blockUnscanned, blockActive),
+				Config: executeTemplate(fqrn, licensePolicyBanned, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", policyDesc),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", ruleName),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", strconv.Itoa(gracePeriod)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", "High"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.0", "Apache-1.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.1", "Apache-2.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", "false"),
+					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.0", tempStruct["license_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.1", tempStruct["license_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.0", tempStruct["mails_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.1", tempStruct["mails_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", tempStruct["custom_severity"]),
 				),
 			},
 		},
@@ -168,15 +208,15 @@ func TestAccLicensePolicy_createMultiLicensePermissiveFalse(t *testing.T) {
 }
 
 func TestAccLicensePolicy_createBlockFalse(t *testing.T) {
-	policyName := "terraform-license-policy-6"
-	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-6"
-	gracePeriod := 5
-	resourceName := "policy-" + strconv.Itoa(randomInt())
-	fqrn := "xray_license_policy." + resourceName
-	multiLicense := "false"
-	blockUnscanned := "false"
-	blockActive := "false"
+	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
+	tempStruct := make(map[string]string)
+	copyStringMap(tempStructLicense, tempStruct)
+
+	tempStruct["resource_name"] = resourceName
+	tempStruct["policy_name"] = "terraform-license-policy-6"
+	tempStruct["rule_name"] = "test-license-rule-6"
+	tempStruct["block_unscanned"] = "true"
+	tempStruct["block_active"] = "true"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -184,20 +224,26 @@ func TestAccLicensePolicy_createBlockFalse(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccXrayLicensePolicy_createAllowedLic(resourceName, policyName, policyDesc,
-					ruleName, multiLicense, gracePeriod, blockUnscanned, blockActive),
+				Config: executeTemplate(fqrn, licensePolicyBanned, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", policyDesc),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", ruleName),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", strconv.Itoa(gracePeriod)),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", "High"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", "true"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", "false"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", "false"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.0", "Apache-1.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allowed_licenses.1", "Apache-2.0"),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", "false"),
+					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.0", tempStruct["license_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.banned_licenses.1", tempStruct["license_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.0", tempStruct["mails_0"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.1", tempStruct["mails_1"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", tempStruct["custom_severity"]),
 				),
 			},
 		},
@@ -246,91 +292,7 @@ resource "xray_security_policy" "%s" {
 `, resourceName, name, description, ruleName, rangeTo)
 }
 
-func testAccXrayLicensePolicy_badGracePeriod(resourceName, name, description, ruleName string, gracePeriod int) string {
-	return fmt.Sprintf(`
-resource "xray_license_policy" "%s" {
-	name = "%s"
-	description = "%s"
-	type = "license"
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-		  allowed_licenses = ["Apache-1.0","Apache-2.0"]
-          allow_unknown = false
-          multi_license_permissive = true
-		}
-		actions {
-			fail_build = false
-			build_failure_grace_period_in_days = %d
-			block_download {
-				unscanned = true
-				active = true
-			}
-		}
-	}
-}
-`, resourceName, name, description, ruleName, gracePeriod)
-}
-
-func testAccXrayLicensePolicy_createAllowedLic(resourceName, name, description, ruleName string,
-	multiLicense string, gracePeriod int, blockUnscanned string, blockActive string) string {
-	return fmt.Sprintf(`
-resource "xray_license_policy" "%s" {
-	name = "%s"
-	description = "%s"
-	type = "license"
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-		  allowed_licenses = ["Apache-1.0","Apache-2.0"]
-          allow_unknown = false
-          multi_license_permissive = %s
-		}
-		actions {
-			fail_build = true
-			build_failure_grace_period_in_days = %d
-			custom_severity = "High"			
-			block_download {
-				unscanned = %s
-				active = %s
-			}
-		}
-	}
-}
-`, resourceName, name, description, ruleName, multiLicense, gracePeriod, blockUnscanned, blockActive)
-}
-
-func testAccXrayLicensePolicy_createBanneddLic(resourceName, name, description, ruleName string, gracePeriod int) string {
-	return fmt.Sprintf(`
-resource "xray_license_policy" "%s" {
-	name = "%s"
-	description = "%s"
-	type = "license"
-	rules {
-		name = "%s"
-		priority = 1
-		criteria {
-		  banned_licenses = ["Apache-1.0","Apache-2.0"]
-          allow_unknown = true
-          multi_license_permissive = true
-		}
-		actions {
-			fail_build = true
-			build_failure_grace_period_in_days = %d
-			custom_severity = "High"			
-			block_download {
-				unscanned = true
-				active = true
-			}
-		}
-	}
-}
-`, resourceName, name, description, ruleName, gracePeriod)
-}
-
-const licensePolicy = `resource "xray_license_policy" "{{ .resource_name }}" {
+const licensePolicyAllowed = `resource "xray_license_policy" "{{ .resource_name }}" {
 	name = "{{ .policy_name }}"
 	description = "{{ .policy_description }}"
 	type = "license"
@@ -338,23 +300,53 @@ const licensePolicy = `resource "xray_license_policy" "{{ .resource_name }}" {
 		name = "{{ .rule_name }}"
 		priority = 1
 		criteria {	
-          allowed_licenses = ["Apache-1.0","Apache-2.0"]
-          allow_unknown = false
-          multi_license_permissive = true
+          allowed_licenses = ["{{ .license_0 }}","{{ .license_1 }}"]
+          allow_unknown = {{ .allow_unknown }}
+          multi_license_permissive = {{ .multi_license_permissive }}
 		}
 		actions {
           webhooks = []
-          mails = ["test@email.com"]
+          mails = ["{{ .mails_0 }}", "{{ .mails_1 }}"]
           block_download {
 				unscanned = {{ .block_unscanned }}
 				active = {{ .block_active }}
           }
-          block_release_bundle_distribution = {{ .block_distribution }}
+          block_release_bundle_distribution = {{ .block_release_bundle_distribution }}
           fail_build = {{ .fail_build }}
-          notify_watch_recipients = {{ .notify_watchers }}
+          notify_watch_recipients = {{ .notify_watch_recipients }}
           notify_deployer = {{ .notify_deployer }}
-          create_ticket_enabled = {{ .create_ticket }}           
-          custom_severity = "High"
+          create_ticket_enabled = {{ .create_ticket_enabled }}           
+          custom_severity = "{{ .custom_severity }}"
+          build_failure_grace_period_in_days = {{ .grace_period_days }}  
+		}
+	}
+}`
+
+const licensePolicyBanned = `resource "xray_license_policy" "{{ .resource_name }}" {
+	name = "{{ .policy_name }}"
+	description = "{{ .policy_description }}"
+	type = "license"
+	rules {
+		name = "{{ .rule_name }}"
+		priority = 1
+		criteria {	
+          banned_licenses = ["{{ .license_0 }}","{{ .license_1 }}"]
+          allow_unknown = {{ .allow_unknown }}
+          multi_license_permissive = {{ .multi_license_permissive }}
+		}
+		actions {
+          webhooks = []
+          mails = ["{{ .mails_0 }}", "{{ .mails_1 }}"]
+          block_download {
+				unscanned = {{ .block_unscanned }}
+				active = {{ .block_active }}
+          }
+          block_release_bundle_distribution = {{ .block_release_bundle_distribution }}
+          fail_build = {{ .fail_build }}
+          notify_watch_recipients = {{ .notify_watch_recipients }}
+          notify_deployer = {{ .notify_deployer }}
+          create_ticket_enabled = {{ .create_ticket_enabled }}           
+          custom_severity = "{{ .custom_severity }}"
           build_failure_grace_period_in_days = {{ .grace_period_days }}  
 		}
 	}

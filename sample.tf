@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "xray" {
-  //  supply ARTIFACTORY_URL and ARTIFACTORY_ACCESS_TOKEN as env vars
+  //  supply ARTIFACTORY_URL (or JFROG_URL) and ARTIFACTORY_ACCESS_TOKEN (or XRAY_ACCESS_TOKEN) as env vars
 }
 
 resource "random_id" "randid" {
@@ -134,36 +134,3 @@ resource "xray_license_policy" "license2" {
     }
   }
 }
-
-//resource "xray_watch" "test" {
-//  name        = "watch-npm-local-repo"
-//  description = "apply a severity-based policy to the npm local repo"
-//
-//  resources {
-//    type       = "repository"
-//    name       = "npm-local"
-//    bin_mgr_id = "example-com-artifactory-instance"
-//    repo_type  = "local"
-//    filters {
-//      type  = "package-type"
-//      value = "Npm"
-//    }
-//  }
-//
-//  resources {
-//    type       = "repository"
-//    name       = "npm-remote"
-//    bin_mgr_id = "default"
-//    repo_type  = "remote"
-//
-//    filters {
-//      type  = "package-type"
-//      value = "Npm"
-//    }
-//  }
-//
-//  assigned_policies {
-//    name = xray_policy.test.name
-//    type = "security"
-//  }
-//}
