@@ -1,7 +1,9 @@
 package xray
 
 import (
+	"context"
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/http"
@@ -382,18 +384,21 @@ func flattenBlockDownload(bd *BlockDownloadSettings) []interface{} {
 }
 
 // Create Xray policy
-func resourceXrayPolicyCreate(d *schema.ResourceData, m interface{}) error {
+func resourceXrayPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	policy, err := expandPolicy(d)
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	_, err = m.(*resty.Client).R().SetBody(policy).Post("xray/api/v2/policies")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(*policy.Name)
-	return resourceXrayPolicyRead(d, m)
+	resourceXrayPolicyRead(ctx, d, m)
+	return diags
 }
 
 // Get Xray policy by name
@@ -402,66 +407,66 @@ func getPolicy(id string, client *resty.Client) (Policy, *resty.Response, error)
 	resp, err := client.R().SetResult(&policy).Get("xray/api/v2/policies/" + id)
 	return policy, resp, err
 }
-func resourceXrayPolicyRead(d *schema.ResourceData, m interface{}) error {
+func resourceXrayPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	policy, resp, err := getPolicy(d.Id(), m.(*resty.Client))
+	var diags diag.Diagnostics
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			log.Printf("[WARN] Xray policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", policy.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("type", policy.Type); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if policy.Description != nil {
 		if err := d.Set("description", policy.Description); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if err := d.Set("author", policy.Author); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("created", policy.Created); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("modified", policy.Modified); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if *policy.Type == "license" {
 		if err := d.Set("rules", flattenLicenseRules(*policy.Rules)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if *policy.Type == "security" {
 		if err := d.Set("rules", flattenSecurityRules(*policy.Rules)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return nil
+	return diags
 }
 
-func resourceXrayPolicyUpdate(d *schema.ResourceData, m interface{}) error {
-
+func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	policy, err := expandPolicy(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	_, err = m.(*resty.Client).R().SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(*policy.Name)
-	return resourceXrayPolicyRead(d, m)
+	return resourceXrayPolicyRead(ctx, d, m)
 }
 
-func resourceXrayPolicyDelete(d *schema.ResourceData, m interface{}) error {
+func resourceXrayPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete("xray/api/v2/policies/" + d.Id())
-	return err
+	return diag.FromErr(err)
 }

@@ -7,10 +7,10 @@ import (
 func resourceXraySecurityPolicyV2() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        resourceXrayPolicyCreate,
-		Read:          resourceXrayPolicyRead,
-		Update:        resourceXrayPolicyUpdate,
-		Delete:        resourceXrayPolicyDelete,
+		CreateContext: resourceXrayPolicyCreate,
+		ReadContext:   resourceXrayPolicyRead,
+		UpdateContext: resourceXrayPolicyUpdate,
+		DeleteContext: resourceXrayPolicyDelete,
 		Description: "Creates an xray policy using V2 of the underlying APIs. Please note: " +
 			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
 
