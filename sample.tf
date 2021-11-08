@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.16"
+      version = "2.6.17"
     }
   }
 }
@@ -31,15 +31,28 @@ resource "artifactory_keypair" "some-keypairRSA" {
   public_key  = file("samples/rsa.pub")
   alias       = "foo-aliasfoo"
 }
-# currently PGP isn't supported
-#resource "artifactory_keypair" "some-keypairPGP" {
-#  pair_name   = "some-keypair${random_id.randid.id}"
-#  pair_type   = "PGP"
-#  alias       = "foo-alias${random_id.randid.id}"
-#  private_key = file("samples/pgp.priv")
-#  public_key  = file("samples/pgp.pub")
-#  passphrase = "123456"
-#}
+resource "artifactory_keypair" "some-keypairGPG1" {
+  pair_name   = "some-keypair${random_id.randid.id}"
+  pair_type   = "GPG"
+  alias       = "foo-alias1"
+  private_key = file("samples/gpg.priv")
+  public_key  = file("samples/gpg.pub")
+}
+resource "artifactory_keypair" "some-keypairGPG2" {
+  pair_name   = "some-keypair4${random_id.randid.id}"
+  pair_type   = "GPG"
+  alias       = "foo-alias2"
+  private_key = file("samples/gpg.priv")
+  public_key  = file("samples/gpg.pub")
+}
+resource "artifactory_local_debian_repository" "my-debian-repo" {
+  key                       = "my-debian-repo"
+  primary_keypair_ref       = artifactory_keypair.some-keypairGPG1.pair_name
+  secondary_keypair_ref     = artifactory_keypair.some-keypairGPG2.pair_name
+  index_compression_formats = ["bz2", "lzma", "xz"]
+  trivial_layout            = true
+  depends_on                = [artifactory_keypair.some-keypairGPG1, artifactory_keypair.some-keypairGPG2]
+}
 
 resource "artifactory_local_alpine_repository" "terraform-local-test-repo-basic1896042683811651651" {
   key                 = "terraform-local-test-repo-basic1896042683811651651"
@@ -83,9 +96,6 @@ variable "supported_repo_types" {
     "vcs",
   ]
 }
-resource "random_id" "randid" {
-  byte_length = 16
-}
 
 
 resource "artifactory_local_repository" "local" {
@@ -112,15 +122,6 @@ resource "artifactory_remote_repository" "npm-remote" {
   package_type = "npm"
   url = "https://registry.npmjs.org"
   xray_index = true
-}
-
-resource "tls_private_key" "example" {
-  algorithm   = "RSA"
-  rsa_bits = 2048
-}
-
-data "tls_public_key" "example" {
-
 }
 
 resource "artifactory_xray_policy" "test" {

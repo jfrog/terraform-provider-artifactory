@@ -44,9 +44,9 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 				ForceNew: true,
 			},
 			"pair_type": {
-				Type:             schema.TypeString,
+				Type: schema.TypeString,
 				// working sample PGP key is checked in but not tested
-				ValidateDiagFunc: upgrade(validation.StringInSlice([]string{"RSA"}, false), "pair_type"),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"RSA", "GPG"}, false)),
 				Required:         true,
 				Description:      "Let's RT know what kind of key pair you're supplying. RT also supports GPG, but that's for a later day",
 				ForceNew:         true,
@@ -87,7 +87,19 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 	}
 }
 func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
-	privPem, _ := pem.Decode([]byte(strings.ReplaceAll(value.(string), "\t", "")))
+	stripped := strings.ReplaceAll(value.(string), "\t", "")
+	var err error
+	// currently can't validate GPG
+	if strings.Contains(stripped, "BEGIN PGP PRIVATE KEY BLOCK") {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary: "usage of GPG can't be validated.",
+					Detail: "Due to limitations of go libraries, your GPG key can't be validated client side",
+				},
+			}
+	}
+	privPem, _ := pem.Decode([]byte(stripped))
 	if privPem == nil {
 		return diag.Errorf("unable to decode private key pem format")
 	}
@@ -98,7 +110,6 @@ func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 
 	privPemBytes = privPem.Bytes
 	var parsedKey interface{}
-	var err error
 	if parsedKey, err = x509.ParsePKCS1PrivateKey(privPemBytes); err != nil {
 		if parsedKey, err = x509.ParsePKCS8PrivateKey(privPemBytes); err != nil { // note this returns type `interface{}`
 			return diag.FromErr(err)
@@ -113,7 +124,20 @@ func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 }
 
 func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
-	pubPem, _ := pem.Decode([]byte(strings.ReplaceAll(value.(string), "\t", "")))
+	var err error
+
+	stripped := strings.ReplaceAll(value.(string), "\t", "")
+	// currently can't validate GPG
+	if strings.Contains(stripped, "BEGIN PGP PUBLIC KEY BLOCK") {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary: "usage of GPG can't be validated.",
+				Detail: "Due to limitations of go libraries, your GPG key can't be validated client side",
+			},
+		}
+	}
+	pubPem, _ := pem.Decode([]byte(stripped))
 	if pubPem == nil {
 		return diag.Errorf("rsa public key not in pem format")
 	}
@@ -121,7 +145,7 @@ func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
 		return diag.Errorf("RSA public key is of the wrong type and must container the header 'PUBLIC KEY': Pem Type: %s ", pubPem.Type)
 	}
 	var parsedKey interface{}
-	var err error
+
 	if parsedKey, err = x509.ParsePKIXPublicKey(pubPem.Bytes); err != nil {
 		return diag.Errorf("unable to parse RSA public key")
 	}

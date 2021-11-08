@@ -65,6 +65,7 @@ func Provider() *schema.Provider {
 			"artifactory_keypair":                    resourceArtifactoryKeyPair(),
 			"artifactory_local_repository":           resourceArtifactoryLocalRepository(),
 			"artifactory_local_alpine_repository":    resourceArtifactoryLocalAlpineRepository(),
+			"artifactory_local_debian_repository":    resourceArtifactoryLocalDebianRepository(),
 			"artifactory_local_docker_v2_repository": resourceArtifactoryLocalDockerV2Repository(),
 			"artifactory_local_docker_v1_repository": resourceArtifactoryLocalDockerV1Repository(),
 			"artifactory_remote_repository":          resourceArtifactoryRemoteRepository(),
