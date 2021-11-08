@@ -124,24 +124,6 @@ resource "artifactory_remote_repository" "npm-remote" {
   xray_index = true
 }
 
-resource "artifactory_xray_policy" "test" {
-  name = "test-policy-name-severity"
-  description = "test policy description"
-  type = "security"
-  rules {
-    name = "rule-name"
-    priority = 1
-    criteria {
-      min_severity = "High"
-    }
-    actions {
-      block_download {
-        unscanned = true
-        active = true
-      }
-    }
-  }
-}
 resource "artifactory_virtual_go_repository" "baz-go" {
   key          = "baz-go"
   repo_layout_ref = "go-default"
@@ -167,38 +149,6 @@ resource "artifactory_virtual_maven_repository" "foo" {
   excludes_pattern = "com/google/**"
   force_maven_authentication = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
-}
-resource "artifactory_xray_watch" "test" {
-  name = "watch-npm-local-repo"
-  description = "apply a severity-based policy to the npm local repo"
-
-  resources {
-    type = "repository"
-    name = "npm-local"
-    bin_mgr_id = "example-com-artifactory-instance"
-    repo_type = "local"
-    filters {
-      type = "package-type"
-      value = "Npm"
-    }
-  }
-
-  resources {
-    type = "repository"
-    name = artifactory_remote_repository.npm-remote.key
-    bin_mgr_id = "default"
-    repo_type = "remote"
-
-    filters {
-      type = "package-type"
-      value = "Npm"
-    }
-  }
-
-  assigned_policies {
-    name = artifactory_xray_policy.test.name
-    type = "security"
-  }
 }
 
 

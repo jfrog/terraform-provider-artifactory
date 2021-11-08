@@ -123,13 +123,13 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupGet(d *schema.ResourceData, m interface{}) (*Group, error) {
-	params, includeUsers, err := groupParams(d)
+	_, includeUsers, err := groupParams(d)
 	if err != nil {
 		return nil, err
 	}
 
 	group := Group{}
-	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, params.Name, includeUsers)
+	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, d.Id(), includeUsers)
 	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
@@ -218,4 +218,8 @@ type Group struct {
 	// WatchManager    bool     `json:"watchManager,omitempty"`
 	// PolicyManager   bool     `json:"policyManager,omitempty"`
 	// ReportsManager  bool     `json:"reportsManager,omitempty"`
+}
+
+func (g Group) Id() string {
+	return g.Name
 }
