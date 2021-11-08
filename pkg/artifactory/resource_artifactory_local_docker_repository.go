@@ -13,14 +13,14 @@ var dockerV2LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Sc
 		Description: "The maximum number of unique tags of a single Docker image to store in this repository.\n" +
 			"Once the number tags for an image exceeds this setting, older tags are removed. A value of 0 (default) indicates there is no limit.\n" +
 			"This only applies to manifest v2",
-		ValidateDiagFunc: upgrade(validation.IntAtLeast(0), "max_unique_tags"),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 	},
 	"tag_retention": {
 		Type:             schema.TypeInt,
 		Optional:         true,
 		Computed:         false,
 		Description:      "If greater than 1, overwritten tags will be saved by their digest, up to the set up number. This only applies to manifest V2",
-		ValidateDiagFunc: upgrade(validation.IntAtLeast(1), "tag_retention"),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 	},
 	"block_pushing_schema1": {
 		Type:        schema.TypeBool,
