@@ -320,37 +320,30 @@ resource "xray_security_policy" "test" {
 }
 
 func verifySecurityPolicy(fqrn string, tempStruct map[string]string, cvssOrSeverity string) resource.TestCheckFunc {
+	var commonCheckList = resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+		resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+	)
 	if cvssOrSeverity == "cvss" {
 		return resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-			resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+			commonCheckList,
 			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
 			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
 		)
 	}
 	if cvssOrSeverity == "severity" {
 		return resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-			resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+			commonCheckList,
 			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.min_severity", tempStruct["min_severity"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-			resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
 		)
 	}
 	return nil
