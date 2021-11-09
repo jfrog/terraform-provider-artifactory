@@ -304,9 +304,9 @@ func TestAccLocalNugetRepository(t *testing.T) {
 
 	_, fqrn, name := mkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
-		"force_nuget_authentication":      randBool(),
-		"max_unique_snapshots": randSelect(0, 5, 10),
-		"name":       name,
+		"force_nuget_authentication": randBool(),
+		"max_unique_snapshots":       randSelect(0, 5, 10),
+		"name":                       name,
 	}
 	localRepositoryBasic := executeTemplate("TestAccLocalNugetRepository", `
 		resource "artifactory_local_nuget_repository" "{{ .name }}" {

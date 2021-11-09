@@ -14,9 +14,9 @@ var nugetLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schem
 	},
 
 	"force_nuget_authentication": {
-		Type: schema.TypeBool,
-		Optional: true,
-		Default: false,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
 		Description: "Force basic authentication credentials in order to use this repository.",
 	},
 })
