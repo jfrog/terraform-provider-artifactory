@@ -82,7 +82,6 @@ func toHclFormat(thing interface{}) string {
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-
 func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 

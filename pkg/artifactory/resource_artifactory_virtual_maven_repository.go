@@ -26,8 +26,8 @@ var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.S
 			"(3: nothing) Nothing - Does not remove any repository elements declared in the POM.",
 	},
 	"key_pair": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "The keypair used to sign artifacts",
 	},
 })

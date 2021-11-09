@@ -467,7 +467,6 @@ var validLicenseTypes = []string{
 }
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 
-
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
@@ -489,7 +488,6 @@ var defaultPassValidation = validation.All(
 	validation.StringMatch(regexp.MustCompile("[A-Z]+"), "password must contain at least 1 upper case char"),
 	minLength(8),
 )
-
 
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {

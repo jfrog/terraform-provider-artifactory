@@ -120,11 +120,11 @@ var randomInt = func() func() int {
 }()
 
 func randBool() bool {
-	return randomInt() % 2 == 0
+	return randomInt()%2 == 0
 }
 
-func randSelect(items ... interface{}) interface{} {
-	return items[randomInt() % len(items)]
+func randSelect(items ...interface{}) interface{} {
+	return items[randomInt()%len(items)]
 }
 
 func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
