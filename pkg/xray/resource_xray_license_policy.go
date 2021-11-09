@@ -106,7 +106,8 @@ func resourceXrayLicensePolicyV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:         schema.TypeString,
+											ValidateFunc: validateIsEmail,
 										},
 									},
 									"block_download": {
