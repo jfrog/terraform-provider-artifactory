@@ -3,9 +3,14 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.17"
+      version = "2.6.18"
     }
   }
+}
+resource "artifactory_local_nuget_repository" "my-nuget-local" {
+  key                 = "my-nuget-local"
+  max_unique_snapshots = 10
+  force_nuget_authentication = true
 }
 resource "artifactory_local_docker_v2_repository" "foo" {
   key 	     = "foo"

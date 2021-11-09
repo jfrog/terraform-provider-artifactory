@@ -183,8 +183,8 @@ func TestAccLocalDebianRepository(t *testing.T) {
 	`, map[string]interface{}{
 		"kp_id":     kpId,
 		"kp_name":   kpName,
-		"kp_id2":     kpId2,
-		"kp_name2":   kpName2,
+		"kp_id2":    kpId2,
+		"kp_name2":  kpName2,
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 	resource.Test(t, resource.TestCase{
@@ -241,10 +241,10 @@ func TestAccLegacyLocalRepository_basic(t *testing.T) {
 func TestAccLocalDockerV1Repository(t *testing.T) {
 
 	_, fqrn, name := mkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
-	params := map[string]interface{} {
-		"name" : name,
+	params := map[string]interface{}{
+		"name": name,
 	}
-	localRepositoryBasic := executeTemplate("TestAccLocalDockerv2Repository",`
+	localRepositoryBasic := executeTemplate("TestAccLocalDockerv2Repository", `
 		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
 		}
@@ -269,13 +269,13 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 func TestAccLocalDockerV2Repository(t *testing.T) {
 
 	_, fqrn, name := mkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
-	params := map[string]interface{} {
-		"block" :randBool(),
-		"retention" : randSelect(1, 5, 10),
-		"max_tags" : randSelect(0, 5, 10),
-		"name" : name,
+	params := map[string]interface{}{
+		"block":     randBool(),
+		"retention": randSelect(1, 5, 10),
+		"max_tags":  randSelect(0, 5, 10),
+		"name":      name,
 	}
-	localRepositoryBasic := executeTemplate("TestAccLocalDockerV2Repository",`
+	localRepositoryBasic := executeTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
 			tag_retention = {{ .retention }}
@@ -292,9 +292,40 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t",params["block"])),
-					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d",params["retention"])),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d",params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+				),
+			},
+		},
+	})
+}
+func TestAccLocalNugetRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("nuget-local", "artifactory_local_nuget_repository")
+	params := map[string]interface{}{
+		"force_nuget_authentication": randBool(),
+		"max_unique_snapshots":       randSelect(0, 5, 10),
+		"name":                       name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalNugetRepository", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  max_unique_snapshots = {{ .max_unique_snapshots }}
+		  force_nuget_authentication = {{ .force_nuget_authentication }}
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
 				),
 			},
 		},

@@ -14,7 +14,7 @@ import (
 func fmtMapToHcl(fields map[string]interface{}) string {
 	var allPairs []string
 	max := float64(0)
-	for key, _ := range fields {
+	for key := range fields {
 		max = math.Max(max, float64(len(key)))
 	}
 	for key, value := range fields {
@@ -81,7 +81,6 @@ func toHclFormat(thing interface{}) string {
 }
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
-
 
 func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {

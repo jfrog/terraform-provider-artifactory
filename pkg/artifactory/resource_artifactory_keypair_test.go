@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 )
+
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
@@ -33,7 +34,7 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: keyBasic,
+				Config:      keyBasic,
 				ExpectError: regexp.MustCompile(".*unable to decode private key pem format.*"),
 			},
 		},
@@ -85,7 +86,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: keyBasic,
+				Config:      keyBasic,
 				ExpectError: regexp.MustCompile(".*rsa public key not in pem format.*"),
 			},
 		},
@@ -160,6 +161,7 @@ func TestAccRSAKeyPair(t *testing.T) {
 		},
 	})
 }
+
 // not supported yet
 func testAccPGPKeyPair(t *testing.T) {
 	id, fqrn, name := mkNames("mykp", "artifactory_keypair")

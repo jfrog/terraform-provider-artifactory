@@ -11,7 +11,7 @@ import (
 )
 
 // Version for some reason isn't getting updated by the linker
-var Version = "2.6.10"
+var Version = "2.6.18"
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
@@ -64,6 +64,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"artifactory_keypair":                    resourceArtifactoryKeyPair(),
 			"artifactory_local_repository":           resourceArtifactoryLocalRepository(),
+			"artifactory_local_nuget_repository":     resourceArtifactoryLocalNugetRepository(),
 			"artifactory_local_alpine_repository":    resourceArtifactoryLocalAlpineRepository(),
 			"artifactory_local_debian_repository":    resourceArtifactoryLocalDebianRepository(),
 			"artifactory_local_docker_v2_repository": resourceArtifactoryLocalDockerV2Repository(),

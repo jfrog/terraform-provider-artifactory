@@ -91,13 +91,13 @@ func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 	var err error
 	// currently can't validate GPG
 	if strings.Contains(stripped, "BEGIN PGP PRIVATE KEY BLOCK") {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary: "usage of GPG can't be validated.",
-					Detail: "Due to limitations of go libraries, your GPG key can't be validated client side",
-				},
-			}
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "usage of GPG can't be validated.",
+				Detail:   "Due to limitations of go libraries, your GPG key can't be validated client side",
+			},
+		}
 	}
 	privPem, _ := pem.Decode([]byte(stripped))
 	if privPem == nil {
@@ -132,8 +132,8 @@ func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary: "usage of GPG can't be validated.",
-				Detail: "Due to limitations of go libraries, your GPG key can't be validated client side",
+				Summary:  "usage of GPG can't be validated.",
+				Detail:   "Due to limitations of go libraries, your GPG key can't be validated client side",
 			},
 		}
 	}
