@@ -75,7 +75,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccCheckReplicationDestroy(fqrn),
+		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{

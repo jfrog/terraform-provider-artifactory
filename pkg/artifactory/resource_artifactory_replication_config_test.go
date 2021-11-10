@@ -69,7 +69,6 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 	})
 }
 
-
 func TestAccReplication_full(t *testing.T) {
 	const replicationConfigTemplate = `
 		resource "artifactory_local_repository" "lib-local" {
@@ -90,7 +89,7 @@ func TestAccReplication_full(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: testAccCheckReplicationDestroy("artifactory_replication_config.lib-local"),
+		CheckDestroy:      testAccCheckReplicationDestroy("artifactory_replication_config.lib-local"),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{

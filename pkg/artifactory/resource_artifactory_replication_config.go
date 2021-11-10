@@ -265,4 +265,3 @@ func repConfigExists(id string, m interface{}) (bool, error) {
 	_, err := m.(*resty.Client).R().Head("artifactory/api/replications/" + id)
 	return err == nil, err
 }
-
