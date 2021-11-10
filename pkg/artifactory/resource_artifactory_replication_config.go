@@ -1,7 +1,8 @@
 package artifactory
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/go-resty/resty/v2"
 
@@ -63,9 +64,10 @@ var replicationSchema = map[string]*schema.Schema{
 	},
 	"password": {
 		Type:      schema.TypeString,
-		Optional:  true,
+		Computed:  true,
 		Sensitive: true,
-		StateFunc: getMD5Hash,
+		Description: "If a password is used to create the resource, it will be returned as encrypted and this will become the new state." +
+			"Practically speaking, what this means is that, the password can only be set, not gotten. ",
 	},
 	"enabled": {
 		Type:     schema.TypeBool,
@@ -95,11 +97,10 @@ var replicationSchema = map[string]*schema.Schema{
 
 func resourceArtifactoryReplicationConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationConfigCreate,
-		Read:   resourceReplicationConfigRead,
-		Update: resourceReplicationConfigUpdate,
-		Delete: resourceReplicationConfigDelete,
-		Exists: resourceReplicationConfigExists,
+		CreateContext: resourceReplicationConfigCreate,
+		ReadContext:   resourceReplicationConfigRead,
+		UpdateContext: resourceReplicationConfigUpdate,
+		DeleteContext: resourceReplicationConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -177,7 +178,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 	return *replicationConfig
 }
 
-func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) error {
+func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
@@ -193,7 +194,7 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 			replication["url"] = repo.URL
 			replication["socket_timeout_millis"] = repo.SocketTimeoutMillis
 			replication["username"] = repo.Username
-			replication["password"] = getMD5Hash(repo.Password)
+			replication["password"] = repo.Password
 			replication["enabled"] = repo.Enabled
 			replication["sync_deletes"] = repo.SyncDeletes
 			replication["sync_properties"] = repo.SyncProperties
@@ -204,33 +205,32 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 
 		errors = setValue("replications", replications)
 	}
-
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack replication config %q", errors)
+		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
 	return nil
 }
 
-func resourceReplicationConfigCreate(d *schema.ResourceData, m interface{}) error {
+func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
 	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put("artifactory/api/replications/multiple/" + replicationConfig.RepoKey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(replicationConfig.RepoKey)
-	return resourceReplicationConfigRead(d, m)
+	return resourceReplicationConfigRead(ctx, d, m)
 }
 
-func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error {
+func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []utils.ReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	repConfig := ReplicationConfig{
@@ -244,28 +244,25 @@ func resourceReplicationConfigRead(d *schema.ResourceData, m interface{}) error 
 	return packReplicationConfig(&repConfig, d)
 }
 
-func resourceReplicationConfigUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
 	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post("/api/replications/" + d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(replicationConfig.RepoKey)
 
-	return resourceReplicationConfigRead(d, m)
+	return resourceReplicationConfigRead(ctx, d, m)
 }
 
-func resourceReplicationConfigDelete(d *schema.ResourceData, m interface{}) error {
+func resourceReplicationConfigDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete("artifactory/api/replications/" + d.Id())
-	return err
+	return diag.FromErr(err)
 }
 func repConfigExists(id string, m interface{}) (bool, error) {
 	_, err := m.(*resty.Client).R().Head("artifactory/api/replications/" + id)
 	return err == nil, err
 }
 
-func resourceReplicationConfigExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return repConfigExists(d.Id(), m)
-}
