@@ -332,6 +332,94 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	})
 }
 
+func TestAccLocalMavenRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("maven-local", "artifactory_local_maven_repository")
+	params := map[string]interface{}{
+		"name":                            name,
+		"checksum_policy_type":            "client-checksums",
+		"snapshot_version_behavior":       "unique",
+		"max_unique_snapshots":            randSelect(0, 5, 10),
+		"handle_releases":                 true,
+		"handle_snapshots":                true,
+		"suppress_pom_consistency_checks": false,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalMavenRepository", `
+		resource "artifactory_local_maven_repository" "{{ .name }}" {
+		  key                 			  = "{{ .name }}"
+		  checksum_policy_type            = "{{ .checksum_policy_type }}"
+		  snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+		  max_unique_snapshots            = {{ .max_unique_snapshots }}
+		  handle_releases                 = {{ .handle_releases }}
+		  handle_snapshots                = {{ .handle_snapshots }}
+		  suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", params["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", params["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", params["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", params["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", params["suppress_pom_consistency_checks"])),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalGradleRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("gradle-local", "artifactory_local_gradle_repository")
+	params := map[string]interface{}{
+		"name":                            name,
+		"checksum_policy_type":            "client-checksums",
+		"snapshot_version_behavior":       "unique",
+		"max_unique_snapshots":            randSelect(0, 5, 10),
+		"handle_releases":                 true,
+		"handle_snapshots":                true,
+		"suppress_pom_consistency_checks": true,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalGradleRepository", `
+		resource "artifactory_local_gradle_repository" "{{ .name }}" {
+		  key                 			  = "{{ .name }}"
+		  checksum_policy_type            = "{{ .checksum_policy_type }}"
+		  snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+		  max_unique_snapshots            = {{ .max_unique_snapshots }}
+		  handle_releases                 = {{ .handle_releases }}
+		  handle_snapshots                = {{ .handle_snapshots }}
+		  suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", params["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", params["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", params["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", params["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", params["suppress_pom_consistency_checks"])),
+				),
+			},
+		},
+	})
+}
+
 func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-test-%d-full", rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)

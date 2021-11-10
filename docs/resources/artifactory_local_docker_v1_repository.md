@@ -1,5 +1,5 @@
 # Artifactory Local Docker V1 Repository Resource
-Creates a local docker v1 repository - By choosing a V1 repository, you don't really have many options 
+Creates a local Docker v1 repository - By choosing a V1 repository, you don't really have many options 
 
 ## Example Usage
 

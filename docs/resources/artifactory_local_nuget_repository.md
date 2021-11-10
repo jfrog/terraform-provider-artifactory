@@ -1,6 +1,6 @@
-# Artifactory Local nuget Repository Resource
+# Artifactory Local Nuget Repository Resource
 
-Creates a local nuget repository and allows for the creation of a 
+Creates a local Nuget repository and allows for the creation of a 
 
 ## Example Usage
 
