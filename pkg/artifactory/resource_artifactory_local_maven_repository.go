@@ -26,7 +26,7 @@ var mavenLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schem
 	"max_unique_snapshots": {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  nil, // will it work as an "empty value" ? Or just remove the default?
+		Default:  10, // Default value per RT documentation is empty, which means unlimited, We need to support an empty value here
 		Description: "The maximum number of unique snapshots of a single artifact to store.\nOnce the number of " +
 			"snapshots exceeds this setting, older versions are removed.\nA value of 0 (default) indicates there is " +
 			"no limit, and unique snapshots are not cleaned up.",
