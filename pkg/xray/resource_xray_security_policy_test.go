@@ -29,6 +29,7 @@ var tempStructSecurity = map[string]string{
 	"grace_period_days":                 "5",
 	"block_unscanned":                   "true",
 	"block_active":                      "true",
+	"cvssOrSeverity":                    "cvss",
 }
 
 // Teh test will try to create a security policy with the type of "license"
@@ -110,6 +111,7 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-4"
 	tempStruct["rule_name"] = "test-security-rule-4"
+	tempStruct["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -118,21 +120,7 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-				),
+				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -149,6 +137,7 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 	tempStruct["rule_name"] = "test-security-rule-5"
 	tempStruct["block_unscanned"] = "false"
 	tempStruct["block_active"] = "false"
+	tempStruct["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -157,21 +146,7 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-				),
+				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -186,6 +161,7 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 	tempStruct["resource_name"] = resourceName
 	tempStruct["policy_name"] = "terraform-security-policy-6"
 	tempStruct["rule_name"] = "test-security-rule-6"
+	tempStruct["cvssOrSeverity"] = "severity"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -194,20 +170,7 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, securityPolicyMinSeverity, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.min_severity", tempStruct["min_severity"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-				),
+				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -224,6 +187,7 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 	tempStruct["rule_name"] = "test-security-rule-7"
 	tempStruct["block_unscanned"] = "false"
 	tempStruct["block_active"] = "false"
+	tempStruct["cvssOrSeverity"] = "severity"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -232,20 +196,7 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, securityPolicyMinSeverity, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.min_severity", tempStruct["min_severity"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-				),
+				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -262,6 +213,7 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 	tempStruct["rule_name"] = "test-security-rule-8"
 	tempStruct["cvss_from"] = "1.5"
 	tempStruct["cvss_to"] = "5.3"
+	tempStruct["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -270,21 +222,7 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-					resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-				),
+				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -379,6 +317,36 @@ resource "xray_security_policy" "test" {
 	}
 }
 `, name, description, ruleName, allowedLicense)
+}
+
+func verifySecurityPolicy(fqrn string, tempStruct map[string]string, cvssOrSeverity string) resource.TestCheckFunc {
+	var commonCheckList = resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
+		resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+	)
+	if cvssOrSeverity == "cvss" {
+		return resource.ComposeTestCheckFunc(
+			commonCheckList,
+			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
+			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
+		)
+	}
+	if cvssOrSeverity == "severity" {
+		return resource.ComposeTestCheckFunc(
+			commonCheckList,
+			resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.min_severity", tempStruct["min_severity"]),
+		)
+	}
+	return nil
 }
 
 const securityPolicyCVSS = `resource "xray_security_policy" "{{ .resource_name }}" {
