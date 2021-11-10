@@ -332,6 +332,32 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	})
 }
 
+func TestAccLocalNpmRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("npm-local", "artifactory_local_npm_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalNpmRepository", `
+		resource "artifactory_local_npm_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+				),
+			},
+		},
+	})
+}
+
 func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-test-%d-full", rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)
