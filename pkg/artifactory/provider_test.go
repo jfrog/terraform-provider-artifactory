@@ -60,8 +60,15 @@ func getTestResty(t *testing.T) *resty.Client {
 func testAccPreCheck(t *testing.T) {
 	// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
 	restyClient := getTestResty(t)
+
+	// Set customer base URL so repos that relies on it will work
+	// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
+	_, err := restyClient.R().SetBody(os.Getenv("ARTIFACTORY_URL")).SetHeader("Content-Type", "text/plain").Put("/artifactory/api/system/configuration/baseUrl")
+	if err != nil {
+		t.Fatal(err)
+	}
 	// TODO check the payload and make sure it's the right license type
-	_, err := restyClient.R().Get("/artifactory/api/system/licenses/")
+	_, err = restyClient.R().Get("/artifactory/api/system/licenses/")
 	if err != nil {
 		t.Fatal(err)
 	}

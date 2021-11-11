@@ -10,7 +10,7 @@ import (
 )
 
 //TODO: failing test - to fix
-func skipTestAccLocalAlpineRepository(t *testing.T) {
+func TestAccLocalAlpineRepository(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair", "artifactory_keypair")
 	localRepositoryBasic := executeTemplate("keypair", `
@@ -90,7 +90,7 @@ func skipTestAccLocalAlpineRepository(t *testing.T) {
 }
 
 //TODO: failing test - to fix
-func skipTestAccLocalDebianRepository(t *testing.T) {
+func TestAccLocalDebianRepository(t *testing.T) {
 	_, fqrn, name := mkNames("local-debian-repo", "artifactory_local_debian_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := mkNames("some-keypair2", "artifactory_keypair")
