@@ -7,28 +7,40 @@ terraform {
     }
   }
 }
+
 resource "artifactory_local_nuget_repository" "my-nuget-local" {
   key                 = "my-nuget-local"
   max_unique_snapshots = 10
   force_nuget_authentication = true
 }
+
 resource "artifactory_local_docker_v2_repository" "foo" {
   key 	     = "foo"
   tag_retention = 3
   max_unique_tags = 5
 }
+
 resource "artifactory_local_docker_v1_repository" "foo" {
   key 	     = "foo"
+}
+
+resource "artifactory_local_rpm_repository" "my-rpm-local" {
+  key                        = "my-rpm-local"
+  yum_root_depth             = 5
+  calculate_yum_metadata     = true
+  enable_file_lists_indexing = true
+  yum_group_file_names       = "my-file.xml"
 }
 
 resource "random_id" "randid" {
   byte_length = 16
 }
+
 resource "tls_private_key" "example" {
   algorithm   = "RSA"
   rsa_bits = 2048
-
 }
+
 resource "artifactory_keypair" "some-keypairRSA" {
   pair_name   = "some-keypairfoo"
   pair_type   = "RSA"
@@ -36,6 +48,7 @@ resource "artifactory_keypair" "some-keypairRSA" {
   public_key  = file("samples/rsa.pub")
   alias       = "foo-aliasfoo"
 }
+
 resource "artifactory_keypair" "some-keypairGPG1" {
   pair_name   = "some-keypair${random_id.randid.id}"
   pair_type   = "GPG"
@@ -43,6 +56,7 @@ resource "artifactory_keypair" "some-keypairGPG1" {
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
 }
+
 resource "artifactory_keypair" "some-keypairGPG2" {
   pair_name   = "some-keypair4${random_id.randid.id}"
   pair_type   = "GPG"
@@ -50,6 +64,7 @@ resource "artifactory_keypair" "some-keypairGPG2" {
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
 }
+
 resource "artifactory_local_debian_repository" "my-debian-repo" {
   key                       = "my-debian-repo"
   primary_keypair_ref       = artifactory_keypair.some-keypairGPG1.pair_name
@@ -64,6 +79,7 @@ resource "artifactory_local_alpine_repository" "terraform-local-test-repo-basic1
   primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
   depends_on = [artifactory_keypair.some-keypairRSA]
 }
+
 variable "supported_repo_types" {
   type = list(string)
   default = [
@@ -122,6 +138,7 @@ resource "artifactory_local_repository" "local-rand" {
 provider "artifactory" {
   //  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
 }
+
 resource "artifactory_remote_repository" "npm-remote" {
   key = "npm-remote"
   package_type = "npm"
@@ -155,6 +172,3 @@ resource "artifactory_virtual_maven_repository" "foo" {
   force_maven_authentication = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
-
-
-
