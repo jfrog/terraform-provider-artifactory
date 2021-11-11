@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceArtifactoryLocalJavaRepository(repoType string, supressPom bool) *schema.Resource {
+func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 	var javaLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"checksum_policy_type": {
 			Type:             schema.TypeString,
@@ -88,7 +88,7 @@ func resourceArtifactoryLocalJavaRepository(repoType string, supressPom bool) *s
 				PackageType: repoType,
 				Rclass:      "local",
 			},
-			SuppressPomConsistencyChecks: supressPom,
+			SuppressPomConsistencyChecks: suppressPom,
 		}
 	})
 }
