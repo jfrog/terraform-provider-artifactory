@@ -60,7 +60,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		}
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
-			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name 
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 	`, map[string]interface{}{
@@ -98,7 +98,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
 		-----BEGIN PGP PRIVATE KEY BLOCK-----
-		
+
 		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
 		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
@@ -117,7 +117,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		EOF
 			public_key = <<EOF
 		-----BEGIN PGP PUBLIC KEY BLOCK-----
-		
+
 		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
 		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
@@ -138,7 +138,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 			alias = "foo-alias{{ .kp_id2 }}"
 			private_key = <<EOF
 		-----BEGIN PGP PRIVATE KEY BLOCK-----
-		
+
 		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
 		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
@@ -157,7 +157,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		EOF
 			public_key = <<EOF
 		-----BEGIN PGP PUBLIC KEY BLOCK-----
-		
+
 		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
 		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
@@ -174,11 +174,13 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		}
 		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
-			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name 
-			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name 
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
 			trivial_layout = true
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
+			depends_on = [artifactory_keypair.{{ .kp_name }}
+
+]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -300,6 +302,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 		},
 	})
 }
+
 func TestAccLocalNugetRepository(t *testing.T) {
 
 	_, fqrn, name := mkNames("nuget-local", "artifactory_local_nuget_repository")
@@ -326,6 +329,44 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalRpmRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("rpm-local", "artifactory_local_rpm_repository")
+	params := map[string]interface{}{
+		"yum_root_depth":             randSelect(0, 5, 10),
+		"calculate_yum_metadata":     randBool(),
+		"enable_file_lists_indexing": randBool(),
+		"yum_group_file_names":       "file-1.xml,file-2.xml",
+		"name":                       name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalRpmRepository", `
+		resource "artifactory_local_rpm_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  yum_root_depth = {{ .yum_root_depth }}
+		  calculate_yum_metadata = {{ .calculate_yum_metadata }}
+		  enable_file_lists_indexing = {{ .enable_file_lists_indexing }}
+		  yum_group_file_names = "{{ .yum_group_file_names }}"
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", fmt.Sprintf("%d", params["yum_root_depth"])),
+					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", fmt.Sprintf("%t", params["calculate_yum_metadata"])),
+					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", fmt.Sprintf("%t", params["enable_file_lists_indexing"])),
+					resource.TestCheckResourceAttr(fqrn, "yum_group_file_names", fmt.Sprintf("%s", params["yum_group_file_names"])),
 				),
 			},
 		},
