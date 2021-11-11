@@ -29,6 +29,7 @@ func TestProvider(t *testing.T) {
 func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
 }
+
 func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
 	body, err := ioutil.ReadFile(localPath)
 	if err != nil {
@@ -38,6 +39,7 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
 	return err
 }
+
 func getTestResty(t *testing.T) *resty.Client {
 	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
 		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
@@ -58,7 +60,6 @@ func getTestResty(t *testing.T) *resty.Client {
 }
 
 func testAccPreCheck(t *testing.T) {
-	// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
 	restyClient := getTestResty(t)
 
 	// Set customer base URL so repos that relies on it will work
