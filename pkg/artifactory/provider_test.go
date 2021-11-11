@@ -68,7 +68,6 @@ func testAccPreCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	// TODO check the payload and make sure it's the right license type
 	_, err = restyClient.R().Get("/artifactory/api/system/licenses/")
 	if err != nil {
