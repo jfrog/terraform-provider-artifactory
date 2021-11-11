@@ -12,6 +12,12 @@ resource "artifactory_local_nuget_repository" "my-nuget-local" {
   max_unique_snapshots = 10
   force_nuget_authentication = true
 }
+resource "artifactory_local_generic_repository" "my-generic-local" {
+  key                 = "my-generic-local"
+}
+resource "artifactory_local_npm_repository" "my-npm-local" {
+  key                 = "my-npm-local"
+}
 resource "artifactory_local_docker_v2_repository" "foo" {
   key 	     = "foo"
   tag_retention = 3

@@ -1,12 +1,12 @@
-# Artifactory Local NPM Repository Resource
+# Artifactory Local Pypi Repository Resource
 
-Creates a local npm repository. 
+Creates a local pypi repository. 
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_npm_repository" "terraform-local-test-npm-repo" {
-  key                 = "terraform-local-test-npm-repo"
+resource "artifactory_local_pypi_repository" "terraform-local-test-pypi-repo" {
+  key                 = "terraform-local-test-pypi-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for NPM repository type closely matches with arguments for Generic repository type. 
+Arguments for Pypi repository type closely matches with arguments for Generic repository type. 

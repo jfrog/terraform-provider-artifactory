@@ -261,6 +261,26 @@ var repoTypesSupported = []string{
 	"vagrant",
 	"vcs",
 }
+var repoTypesLikeGeneric = []string{
+	"bower",
+	"chef",
+	"cocoapods",
+	"composer",
+	"conan",
+	"cran",
+	"gems",
+	"generic",
+	"gitlfs",
+	"go",
+	"helm",
+	"ivy",
+	"npm",
+	"opkg",
+	"puppet",
+	"pypi",
+	"sbt",
+	"vagrant",
+}
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,

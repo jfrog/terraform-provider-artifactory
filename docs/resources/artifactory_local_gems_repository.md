@@ -1,12 +1,12 @@
-# Artifactory Local NPM Repository Resource
+# Artifactory Local Gems Repository Resource
 
-Creates a local npm repository. 
+Creates a local gems repository. 
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_npm_repository" "terraform-local-test-npm-repo" {
-  key                 = "terraform-local-test-npm-repo"
+resource "artifactory_local_gems_repository" "terraform-local-test-gems-repo" {
+  key                 = "terraform-local-test-gems-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for NPM repository type closely matches with arguments for Generic repository type. 
+Arguments for Gems repository type closely matches with arguments for Generic repository type. 
