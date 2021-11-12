@@ -214,7 +214,7 @@ var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
 
 var repoKeyValidator = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
-	validation.StringDoesNotContainAny(" !@#$%^&*()_+={}[]:;<>,/?~`|\\"),
+	validation.StringDoesNotContainAny(" !@#$%^&*()+={}[]:;<>,/?~`|\\"),
 )
 
 var repoTypesSupported = []string{

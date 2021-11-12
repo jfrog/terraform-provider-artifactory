@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
+func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_repository")
 
-	key := fmt.Sprintf("debian-remote.teleport%d", randomInt())
+	key := fmt.Sprintf("debian-remote.teleport_%d", randomInt())
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_repository" "%s" {
 			key              = "%s"
@@ -40,10 +40,11 @@ func TestAccLocalAllowDotsAndDashesInKeyGH129(t *testing.T) {
 		},
 	})
 }
+
 func TestKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
 		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
-			key                     = "IHave++special_Chars"
+			key                     = "IHave++special,Chars"
 			package_type            = "npm"
 			url                     = "https://registry.npmjs.org/"
 			repo_layout_ref         = "npm-default"

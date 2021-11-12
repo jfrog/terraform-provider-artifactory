@@ -136,6 +136,14 @@ func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
 	}
 	return result
 }
+
+func copyInterfaceMap(source map[string]interface{}, target map[string]interface{}) map[string]interface{} {
+	for k, v := range source {
+		target[k] = v
+	}
+	return target
+}
+
 func mergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
 	result := map[string]*schema.Schema{}
 	for _, schma := range schemata {
