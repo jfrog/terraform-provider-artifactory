@@ -300,9 +300,10 @@ func unpackGroups(d *schema.ResourceData, client *resty.Client, tokenOptions *Ac
 		for i, group := range srcGroups.([]interface{}) {
 			groups[i] = group.(string)
 
-			exist, err := checkGroupExists(client, groups[i])
-			if !exist && groups[i] != "*" {
-				return err
+			if groups[i] != "*" {
+				if exist, err := checkGroupExists(client, groups[i]); !exist {
+					return err
+				}
 			}
 		}
 
