@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+//TODO: failing test - to fix
 func TestAccLocalAlpineRepository(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair", "artifactory_keypair")
@@ -60,7 +61,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		}
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
-			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name 
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 	`, map[string]interface{}{
@@ -87,6 +88,8 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		},
 	})
 }
+
+//TODO: failing test - to fix
 func TestAccLocalDebianRepository(t *testing.T) {
 	_, fqrn, name := mkNames("local-debian-repo", "artifactory_local_debian_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1", "artifactory_keypair")
@@ -98,7 +101,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
 		-----BEGIN PGP PRIVATE KEY BLOCK-----
-		
+
 		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
 		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
@@ -117,7 +120,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		EOF
 			public_key = <<EOF
 		-----BEGIN PGP PUBLIC KEY BLOCK-----
-		
+
 		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
 		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
@@ -138,7 +141,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 			alias = "foo-alias{{ .kp_id2 }}"
 			private_key = <<EOF
 		-----BEGIN PGP PRIVATE KEY BLOCK-----
-		
+
 		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
 		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
@@ -157,7 +160,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		EOF
 			public_key = <<EOF
 		-----BEGIN PGP PUBLIC KEY BLOCK-----
-		
+
 		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
 		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
 		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
@@ -174,8 +177,8 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		}
 		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
-			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name 
-			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name 
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
 			trivial_layout = true
 			depends_on = [artifactory_keypair.{{ .kp_name }}]
@@ -326,6 +329,90 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
+				),
+			},
+		},
+	})
+}
+
+var commonJavaParams = map[string]interface{}{
+	"name":                            "",
+	"checksum_policy_type":            "client-checksums",
+	"snapshot_version_behavior":       "unique",
+	"max_unique_snapshots":            randSelect(0, 5, 10),
+	"handle_releases":                 true,
+	"handle_snapshots":                true,
+	"suppress_pom_consistency_checks": false,
+}
+
+const localJavaRepositoryBasic = `
+		resource "{{ .resource_name }}" "{{ .name }}" {
+		  key                 			  = "{{ .name }}"
+		  checksum_policy_type            = "{{ .checksum_policy_type }}"
+		  snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+		  max_unique_snapshots            = {{ .max_unique_snapshots }}
+		  handle_releases                 = {{ .handle_releases }}
+		  handle_snapshots                = {{ .handle_snapshots }}
+		  suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+		}
+	`
+
+func TestAccLocalMavenRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("maven-local", "artifactory_local_maven_repository")
+	tempStruct := make(map[string]interface{})
+	copyInterfaceMap(commonJavaParams, tempStruct)
+
+	tempStruct["name"] = name
+	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
+	tempStruct["suppress_pom_consistency_checks"] = false
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: executeTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalGradleRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("gradle-local", "artifactory_local_gradle_repository")
+	tempStruct := make(map[string]interface{})
+	copyInterfaceMap(commonJavaParams, tempStruct)
+
+	tempStruct["name"] = name
+	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
+	tempStruct["suppress_pom_consistency_checks"] = true
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: executeTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
 				),
 			},
 		},

@@ -1,5 +1,6 @@
 TEST?=./...
 PKG_NAME=pkg/artifactory
+PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/${PKG_NAME}
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 
@@ -7,7 +8,7 @@ default: build
 
 install:
 	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		(test -f terraform-provider-artifactory || go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'") && \
+		(test -f terraform-provider-artifactory || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
@@ -19,11 +20,11 @@ release:
 	@echo "Pushed ${NEXT_VERSION}"
 
 build: fmtcheck
-	go build -ldflags="-X 'artifactory.Version=${NEXT_VERSION}'"
+	go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'"
 
 debug_install:
 	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X 'artifactory.Version=${NEXT_VERSION}-develop'") && \
+		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-develop'") && \
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		terraform init
 
@@ -38,7 +39,7 @@ attach:
 acceptance: fmtcheck
 	export TF_ACC=1
 	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
-		&& go test -v -parallel 20 ./pkg/...
+		&& go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -parallel 20 ./pkg/...
 
 
 fmt:

@@ -111,7 +111,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				StateFunc:   getMD5Hash,
-				Description: "This field can only be used if encryption has been turned off",
+				Description: "This field can only be used if encryption has been turned off. TF will track the field, but it will be encrypted",
 			},
 			"proxy": {
 				Type:     schema.TypeString,

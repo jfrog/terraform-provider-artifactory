@@ -1,6 +1,6 @@
 # Artifactory Local Docker V2 Repository Resource
 
-Creates a local docker v2 repository 
+Creates a local Docker v2 repository 
 
 ## Example Usage
 
