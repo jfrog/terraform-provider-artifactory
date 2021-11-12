@@ -61,15 +61,16 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 				Type:             schema.TypeString,
 				Sensitive:        true,
 				Required:         true,
-				DiffSuppressFunc: stripTabs,
+				DiffSuppressFunc: ignoreEmpty,
 				ValidateDiagFunc: validatePrivateKey,
 				ForceNew:         true,
 			},
 			"passphrase": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Used to decrypt the private key (if applicable). Will be verified server side",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: ignoreEmpty,
+				Description:      "Used to decrypt the private key (if applicable). Will be verified server side",
+				ForceNew:         true,
 			},
 			"public_key": {
 				Type:             schema.TypeString,
@@ -159,6 +160,10 @@ func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
 
 func stripTabs(_, old, new string, _ *schema.ResourceData) bool {
 	return old == strings.ReplaceAll(new, "\t", "")
+}
+
+func ignoreEmpty(_, old, new string, _ *schema.ResourceData) bool {
+	return false
 }
 
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {

@@ -11,6 +11,12 @@ resource "artifactory_keypair" "some-keypairRSA" {
   alias       = "foo-alias"
   private_key = file("samples/rsa.priv")
   public_key  = file("samples/rsa.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 
 resource "artifactory_local_alpine_repository" "terraform-local-test-alpine-repo-basic" {
