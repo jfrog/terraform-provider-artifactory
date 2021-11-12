@@ -8,7 +8,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -295,23 +294,12 @@ func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *
 func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(*resty.Client).R().AddRetryCondition(retry400).SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
 		return err
 	}
 
 	d.SetId(permissionTarget.Name)
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		exists, err := resourcePermissionTargetExists(d, m)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error describing permssions target: %s", err))
-		}
-
-		if !exists {
-			return resource.RetryableError(fmt.Errorf("expected permission target to be created, but currently not found"))
-		}
-
-		return nil
-	})
+	return nil
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {

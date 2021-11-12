@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -23,54 +22,27 @@ var cargoRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 
 type CargoRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	RegistryUrl     string `json:"gitRegistryUrl"`
-	AnonymousAccess bool   `json:"cargoAnonymousAccess"`
+	RegistryUrl     string `hcl:"git_registry_url" json:"gitRegistryUrl"`
+	AnonymousAccess bool   `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
 }
 
-var cargoRemoteRepoReadFun = mkRepoRead(packCargoRemoteRepo, func() interface{} {
-	return &CargoRemoteRepo{
-		RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
-			Rclass:      "remote",
-			PackageType: "cargo",
-		},
-	}
-})
-
 func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
-	return &schema.Resource{
-		Create: mkRepoCreate(unpackCargoRemoteRepo, cargoRemoteRepoReadFun),
-		Read:   cargoRemoteRepoReadFun,
-		Update: mkRepoUpdate(unpackCargoRemoteRepo, cargoRemoteRepoReadFun),
-		Delete: deleteRepo,
-		Exists: repoExists,
-
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-		Schema: cargoRemoteSchema,
-	}
+	return mkResourceSchema(cargoRemoteSchema, defaultPacker, unpackCargoRemoteRepo, func() interface{} {
+		return &CargoRemoteRepo{
+			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+				Rclass:      "remote",
+				PackageType: "cargo",
+			},
+		}
+	})
 }
 
 func unpackCargoRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 	repo := CargoRemoteRepo{
-		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s),
+		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, "cargo"),
 		RegistryUrl:                d.getString("git_registry_url", false),
 		AnonymousAccess:            d.getBool("anonymous_access", false),
 	}
-	repo.PackageType = "cargo"
-	return repo, repo.Key, nil
-}
-
-func packCargoRemoteRepo(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*CargoRemoteRepo)
-	setValue := packBaseRemoteRepo(d, repo.RemoteRepositoryBaseParams)
-	setValue("git_registry_url", repo.RegistryUrl)
-	errors := setValue("anonymous_access", repo.AnonymousAccess)
-
-	if len(errors) > 0 {
-		return fmt.Errorf("%q", errors)
-	}
-
-	return nil
+	return repo, repo.Id(), nil
 }

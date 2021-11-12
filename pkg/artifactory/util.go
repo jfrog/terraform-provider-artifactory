@@ -171,6 +171,17 @@ func mkNames(name, resource string) (int, string, string) {
 
 type Lens func(key string, value interface{}) []error
 
+type Schema map[string]*schema.Schema
+
+func schemaHasKey(skeema map[string]*schema.Schema) HclPredicate {
+	return func(key string) bool {
+		_, ok := skeema[key]
+		return ok
+	}
+}
+
+type HclPredicate func(hcl string) bool
+
 func mkLens(d *schema.ResourceData) Lens {
 	var errors []error
 	return func(key string, value interface{}) []error {

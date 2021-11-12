@@ -1,21 +1,20 @@
 package artifactory
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type GoVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	ExternalDependenciesEnabled  *bool    `json:"externalDependenciesEnabled,omitempty"`
-	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
+	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled,omitempty"`
+	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns,omitempty"`
 }
 
 var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
 	"external_dependencies_enabled": {
 		Type:        schema.TypeBool,
-		Computed:    true,
+		Default:     true,
 		Optional:    true,
 		Description: "When set (default), Artifactory will automatically follow remote VCS roots in 'go-import' meta tags to download remote modules.",
 	},
@@ -33,29 +32,16 @@ var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Sche
 	},
 })
 
-func newGoVirtStruct() interface{} {
-	return &GoVirtualRepositoryParams{
-		VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
-			Rclass:      "virtual",
-			PackageType: "go",
-		},
-	}
-}
-
-var goVirtReader = mkRepoRead(packGoVirtualRepository, newGoVirtStruct)
-
 func resourceArtifactoryGoVirtualRepository() *schema.Resource {
-	return &schema.Resource{
-		Create: mkRepoCreate(unpackGoVirtualRepository, goVirtReader),
-		Read:   goVirtReader,
-		Update: mkRepoUpdate(unpackGoVirtualRepository, goVirtReader),
-		Delete: deleteRepo,
-		Exists: repoExists,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-		Schema: goVirtualSchema,
-	}
+	return mkResourceSchema(goVirtualSchema, defaultPacker, unpackGoVirtualRepository, func() interface{} {
+		return &GoVirtualRepositoryParams{
+			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+				Rclass:      "virtual",
+				PackageType: "go",
+			},
+		}
+	})
+
 }
 
 func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
@@ -64,22 +50,8 @@ func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, err
 	repo := GoVirtualRepositoryParams{
 		VirtualRepositoryBaseParams:  unpackBaseVirtRepo(s),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
-		ExternalDependenciesEnabled:  d.getBoolRef("external_dependencies_enabled", false),
+		ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
 	}
 	repo.PackageType = "go"
 	return &repo, repo.Key, nil
-}
-
-func packGoVirtualRepository(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*GoVirtualRepositoryParams)
-	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
-
-	setValue("external_dependencies_patterns", repo.ExternalDependenciesPatterns)
-	errors := setValue("external_dependencies_enabled", repo.ExternalDependenciesEnabled)
-
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack go virtual repo %q", errors)
-	}
-
-	return nil
 }

@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -33,9 +32,9 @@ var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.S
 })
 
 type CommonMavenGradleVirtualRepositoryParams struct {
-	ForceMavenAuthentication             *bool  `json:"forceMavenAuthentication,omitempty"`
-	PomRepositoryReferencesCleanupPolicy string `json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
-	KeyPair                              string `json:"keyPair,omitempty"`
+	ForceMavenAuthentication             bool   `json:"forceMavenAuthentication,omitempty"`
+	PomRepositoryReferencesCleanupPolicy string `hcl:"pom_repository_references_cleanup_policy" json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
+	KeyPair                              string `hcl:"key_pair" json:"keyPair,omitempty"`
 }
 
 type MavenVirtualRepositoryParams struct {
@@ -43,26 +42,16 @@ type MavenVirtualRepositoryParams struct {
 	CommonMavenGradleVirtualRepositoryParams
 }
 
-var mvnVirtReader = mkRepoRead(packMavenVirtualRepository, func() interface{} {
-	return &MavenVirtualRepositoryParams{
-		VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
-			Rclass:      "virtual",
-			PackageType: "maven",
-		}}
-})
-
 func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
-	return &schema.Resource{
-		Create: mkRepoCreate(unpackMavenVirtualRepository, mvnVirtReader),
-		Read:   mvnVirtReader,
-		Update: mkRepoUpdate(unpackMavenVirtualRepository, mvnVirtReader),
-		Delete: deleteRepo,
-		Exists: repoExists,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-		Schema: mavenVirtualSchema,
-	}
+	return mkResourceSchema(mavenVirtualSchema, defaultPacker, unpackMavenVirtualRepository, func() interface{} {
+		return &MavenVirtualRepositoryParams{
+			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+				Rclass:      "virtual",
+				PackageType: "maven",
+			},
+		}
+	})
+
 }
 
 func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
@@ -72,26 +61,11 @@ func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, 
 		VirtualRepositoryBaseParams: unpackBaseVirtRepo(s),
 		CommonMavenGradleVirtualRepositoryParams: CommonMavenGradleVirtualRepositoryParams{
 			KeyPair:                              d.getString("key_pair", false),
-			ForceMavenAuthentication:             d.getBoolRef("force_maven_authentication", false),
+			ForceMavenAuthentication:             d.getBool("force_maven_authentication", false),
 			PomRepositoryReferencesCleanupPolicy: d.getString("pom_repository_references_cleanup_policy", false),
 		},
 	}
 	repo.PackageType = "maven"
 
 	return &repo, repo.Key, nil
-}
-
-func packMavenVirtualRepository(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*MavenVirtualRepositoryParams)
-	setValue := packBaseVirtRepo(d, repo.VirtualRepositoryBaseParams)
-
-	setValue("key_pair", repo.KeyPair)
-	setValue("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	errors := setValue("force_maven_authentication", *repo.ForceMavenAuthentication)
-
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack virtual repo %q", errors)
-	}
-
-	return nil
 }
