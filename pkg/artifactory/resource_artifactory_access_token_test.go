@@ -21,7 +21,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 			groups = ["readers"]
 			password = "Passsword1"
 		}
-		
+
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
 			username = artifactory_user.existinguser.name
@@ -51,7 +51,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 			groups = ["readers"]
 			password = "Passsword1"
 		}
-		
+
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
 			username = artifactory_user.existinguser.name
@@ -343,6 +343,47 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 			{
 				Config:      missingGroup,
 				ExpectError: regexp.MustCompile("group must exist in artifactory"),
+			},
+		},
+	})
+}
+
+const wildcardGroupGood = `
+resource "artifactory_user" "existinguser" {
+	name  = "existinguser"
+  email = "existinguser@a.com"
+	admin = false
+	groups = ["readers"]
+	password = "Passsword1"
+}
+
+resource "artifactory_access_token" "foobar" {
+	end_date_relative = "1s"
+	username = artifactory_user.existinguser.name
+	groups = [
+		"*",
+	]
+}
+`
+
+func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: wildcardGroupGood,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.0", "*"),
+				),
 			},
 		},
 	})
