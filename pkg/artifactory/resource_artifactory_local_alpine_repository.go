@@ -11,18 +11,10 @@ var alpineLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Sche
 		Description: "Used to sign index files in Alpine Linux repositories. " +
 			"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
 	},
-
-	"index_compression_formats": {
-		Type: schema.TypeList,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
-		Optional: true,
-	},
-})
+}, compressionFormats)
 
 func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
-	return mkResourceSchema(alpineLocalSchema, universalPack, unPackLocalAlpineRepository, func() interface{} {
+	return mkResourceSchema(alpineLocalSchema, defaultPacker, unPackLocalAlpineRepository, func() interface{} {
 		return &AlpineLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "alpine",

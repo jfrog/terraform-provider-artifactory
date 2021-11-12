@@ -398,7 +398,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	}
 }
 
-func TestAccAllRepoTypesLocal(t *testing.T) {
+func TestAccAllLegacyRepoTypesLocal(t *testing.T) {
 
 	for _, repo := range repoTypesSupported {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {

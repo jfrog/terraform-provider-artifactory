@@ -55,8 +55,14 @@ var dockerV1LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Sc
 })
 
 func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	return mkResourceSchema(dockerV2LocalSchema, universalPack, unPackLocalDockerV2Repository, func() interface{} {
-		return &DockerLocalRepo{
+
+	packer := universalPack(
+		allHclPredicate(
+			noClass, schemaHasKey(dockerV2LocalSchema),
+		),
+	)
+	return mkResourceSchema(dockerV2LocalSchema, packer, unPackLocalDockerV2Repository, func() interface{} {
+		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
@@ -76,8 +82,8 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		skeema[key].Description = value.Description
 	}
 
-	return mkResourceSchema(skeema, universalPack, unPackLocalDockerV1Repository, func() interface{} {
-		return &DockerLocalRepo{
+	return mkResourceSchema(skeema, defaultPacker, unPackLocalDockerV1Repository, func() interface{} {
+		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
@@ -90,7 +96,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	})
 }
 
-type DockerLocalRepo struct {
+type DockerLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
 	MaxUniqueTags       int    `hcl:"max_unique_tags" json:"maxUniqueTags,omitempty"`
 	DockerApiVersion    string `hcl:"api_version" json:"dockerApiVersion"`
@@ -99,7 +105,7 @@ type DockerLocalRepo struct {
 }
 
 func unPackLocalDockerV1Repository(data *schema.ResourceData) (interface{}, string, error) {
-	repo := DockerLocalRepo{
+	repo := DockerLocalRepositoryParams{
 		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "docker"),
 		MaxUniqueTags:             0,
 		DockerApiVersion:          "V1",
@@ -111,7 +117,7 @@ func unPackLocalDockerV1Repository(data *schema.ResourceData) (interface{}, stri
 }
 func unPackLocalDockerV2Repository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
-	repo := DockerLocalRepo{
+	repo := DockerLocalRepositoryParams{
 		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "docker"),
 		MaxUniqueTags:             d.getInt("max_unique_tags", false),
 		DockerApiVersion:          "V2",

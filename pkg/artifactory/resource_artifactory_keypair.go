@@ -181,7 +181,7 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = universalPack(*keyPair.(*KeyPairPayLoad), d)
+	err = defaultPacker(*keyPair.(*KeyPairPayLoad), d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -196,7 +196,7 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = universalPack(data, d)
+	err = defaultPacker(data, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}

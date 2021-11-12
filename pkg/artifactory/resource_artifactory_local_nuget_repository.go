@@ -23,7 +23,7 @@ var nugetLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schem
 
 func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 
-	return mkResourceSchema(nugetLocalSchema, universalPack, unPackLocalNugetRepository, func() interface{} {
+	return mkResourceSchema(nugetLocalSchema, defaultPacker, unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "nuget",

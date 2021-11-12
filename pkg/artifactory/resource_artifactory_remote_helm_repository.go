@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -18,51 +17,25 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 
 type HelmRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	HelmChartsBaseURL string `json:"chartsBaseUrl,omitempty"`
+	HelmChartsBaseURL string `hcl:"helm_charts_base_url" json:"chartsBaseUrl,omitempty"`
 }
 
-var helmRemoteRepoReadFun = mkRepoRead(packhelmRemoteRepo, func() interface{} {
-	return &HelmRemoteRepo{
-		RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
-			Rclass:      "remote",
-			PackageType: "helm",
-		},
-	}
-})
-
 func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
-	return &schema.Resource{
-		Create: mkRepoCreate(unpackhelmRemoteRepo, helmRemoteRepoReadFun),
-		Read:   helmRemoteRepoReadFun,
-		Update: mkRepoUpdate(unpackhelmRemoteRepo, helmRemoteRepoReadFun),
-		Delete: deleteRepo,
-		Exists: repoExists,
-
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-		Schema: helmRemoteSchema,
-	}
+	return mkResourceSchema(helmRemoteSchema, defaultPacker, unpackhelmRemoteRepo, func() interface{} {
+		return &HelmRemoteRepo{
+			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+				Rclass:      "remote",
+				PackageType: "helm",
+			},
+		}
+	})
 }
 
 func unpackhelmRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 	repo := HelmRemoteRepo{
-		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s),
+		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, "helm"),
 		HelmChartsBaseURL:          d.getString("helm_charts_base_url", false),
 	}
-	repo.PackageType = "helm"
-	return repo, repo.Key, nil
-}
-
-func packhelmRemoteRepo(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*HelmRemoteRepo)
-	setValue := packBaseRemoteRepo(d, repo.RemoteRepositoryBaseParams)
-	errors := setValue("helm_charts_base_url", repo.HelmChartsBaseURL)
-
-	if len(errors) > 0 {
-		return fmt.Errorf("%q", errors)
-	}
-
-	return nil
+	return repo, repo.Id(), nil
 }

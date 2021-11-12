@@ -1,12 +1,10 @@
 package artifactory
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
 
-var legacySchema = map[string]*schema.Schema{
+var legacyVirtualSchema = map[string]*schema.Schema{
 	"key": {
 		Type:     schema.TypeString,
 		Required: true,
@@ -73,31 +71,33 @@ var legacySchema = map[string]*schema.Schema{
 	},
 }
 
-var readFunc = mkRepoRead(packVirtualRepository, func() interface{} {
-	return &MessyVirtualRepo{}
-})
-
 func resourceArtifactoryVirtualRepository() *schema.Resource {
-	return &schema.Resource{
-		Create: mkRepoCreate(unpackVirtualRepository, readFunc),
-		Read:   readFunc,
-		Update: mkRepoUpdate(unpackVirtualRepository, readFunc),
-		Delete: deleteRepo,
-		Exists: repoExists,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-		Schema: legacySchema,
-		DeprecationMessage: "This resource is deprecated and you should use repo type specific resources " +
-			"(such as artifactory_virtual_maven_repository) in the future",
-	}
+	packer := universalPack(schemaHasKey(legacyVirtualSchema))
+	skeema := mkResourceSchema(legacyVirtualSchema, packer, unpackVirtualRepository, func() interface{} {
+		return &MessyVirtualRepo{
+			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+				Rclass: "virtual",
+			},
+		}
+	})
+	skeema.DeprecationMessage = "This resource is deprecated and you should use repo type specific resources " +
+		"(such as artifactory_virtual_maven_repository) in the future"
+	return skeema
 }
 
+type DebianVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	DebianTrivialLayout *bool `json:"debianTrivialLayout,omitempty"`
+}
+type NugetVirtualRepositoryParams struct {
+	VirtualRepositoryBaseParams
+	ForceNugetAuthentication *bool `json:"forceNugetAuthentication,omitempty"`
+}
 type MessyVirtualRepo struct {
-	services.VirtualRepositoryBaseParams
-	services.DebianVirtualRepositoryParams
-	services.MavenVirtualRepositoryParams
-	services.NugetVirtualRepositoryParams
+	VirtualRepositoryBaseParams
+	DebianVirtualRepositoryParams
+	MavenVirtualRepositoryParams
+	NugetVirtualRepositoryParams
 }
 
 func unpackVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
@@ -111,7 +111,7 @@ func unpackVirtualRepository(s *schema.ResourceData) (interface{}, string, error
 	repo.ExcludesPattern = d.getString("excludes_pattern", false)
 	repo.RepoLayoutRef = d.getString("repo_layout_ref", false)
 	repo.DebianTrivialLayout = d.getBoolRef("debian_trivial_layout", false)
-	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBoolRef("artifactory_requests_can_retrieve_remote_artifacts", false)
+	repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts = d.getBool("artifactory_requests_can_retrieve_remote_artifacts", false)
 	repo.Repositories = d.getList("repositories")
 	repo.Description = d.getString("description", false)
 	repo.Notes = d.getString("notes", false)
@@ -122,30 +122,4 @@ func unpackVirtualRepository(s *schema.ResourceData) (interface{}, string, error
 	// So, saying the type is "maven" but then setting this to 'true' doesn't make sense, and RT doesn't seem to care what you tell it
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)
 	return &repo, repo.Key, nil
-}
-
-func packVirtualRepository(r interface{}, d *schema.ResourceData) error {
-	repo := r.(*MessyVirtualRepo)
-	setValue := mkLens(d)
-
-	setValue("key", repo.Key)
-	setValue("package_type", repo.PackageType)
-	setValue("description", repo.Description)
-	setValue("notes", repo.Notes)
-	setValue("includes_pattern", repo.IncludesPattern)
-	setValue("excludes_pattern", repo.ExcludesPattern)
-	setValue("repo_layout_ref", repo.RepoLayoutRef)
-	setValue("debian_trivial_layout", repo.DebianTrivialLayout)
-	setValue("artifactory_requests_can_retrieve_remote_artifacts", repo.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
-	setValue("key_pair", repo.KeyPair)
-	setValue("pom_repository_references_cleanup_policy", repo.PomRepositoryReferencesCleanupPolicy)
-	setValue("default_deployment_repo", repo.DefaultDeploymentRepo)
-	setValue("repositories", repo.Repositories)
-	errors := setValue("force_nuget_authentication", repo.ForceNugetAuthentication)
-
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack virtual repo %q", errors)
-	}
-
-	return nil
 }

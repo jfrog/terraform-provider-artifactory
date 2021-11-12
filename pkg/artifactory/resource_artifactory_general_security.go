@@ -27,7 +27,7 @@ func resourceArtifactoryGeneralSecurity() *schema.Resource {
 		ReadContext:   resourceGeneralSecurityRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
