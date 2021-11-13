@@ -28,8 +28,8 @@ func Provider() *schema.Provider {
 				Type:          schema.TypeString,
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
-				ConflictsWith: []string{"access_token", "api_key"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				ConflictsWith: []string{"api_key"},
 				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
 			},
 			"password": {

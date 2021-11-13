@@ -93,8 +93,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 	})
 }
 
-//TODO: failing test - to fix
-func skipTestAccRSAKeyPair(t *testing.T) {
+func TestAccRSAKeyPair(t *testing.T) {
 	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
@@ -141,6 +140,12 @@ func skipTestAccRSAKeyPair(t *testing.T) {
 		DQIDAQAB
 		-----END PUBLIC KEY-----
 		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
 		}
 	`, name, name, id)
 	resource.Test(t, resource.TestCase{

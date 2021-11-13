@@ -11,6 +11,12 @@ resource "artifactory_keypair" "some-keypairGPG1" {
   alias       = "foo-alias1"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 resource "artifactory_keypair" "some-keypairGPG2" {
   pair_name   = "some-keypair4${random_id.randid.id}"
@@ -18,6 +24,12 @@ resource "artifactory_keypair" "some-keypairGPG2" {
   alias       = "foo-alias2"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 resource "artifactory_local_debian_repository" "my-debian-repo" {
   key                       = "my-debian-repo"
@@ -38,3 +50,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `secondary_keypair_ref` - (Optional) - Not really clear what this does
 * `index_compression_formats` - (Optional) - If you're creating this repo, then maybe you know?
 * `trivial_layout` - (Optional) - Apparently this is a deprecated repo layout
+
+Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.

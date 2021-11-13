@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-//TODO: failing test - to fix
 func TestAccLocalAlpineRepository(t *testing.T) {
 	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair", "artifactory_keypair")
@@ -58,6 +57,12 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		DQIDAQAB
 		-----END PUBLIC KEY-----
 		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
 		}
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
@@ -89,7 +94,6 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 	})
 }
 
-//TODO: failing test - to fix
 func TestAccLocalDebianRepository(t *testing.T) {
 	_, fqrn, name := mkNames("local-debian-repo", "artifactory_local_debian_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1", "artifactory_keypair")
@@ -134,6 +138,12 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		=2kMe
 		-----END PGP PUBLIC KEY BLOCK-----
 		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
 		}
 		resource "artifactory_keypair" "{{ .kp_name2 }}" {
 			pair_name  = "{{ .kp_name2 }}"
@@ -174,6 +184,12 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		=2kMe
 		-----END PGP PUBLIC KEY BLOCK-----
 		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
 		}
 		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"

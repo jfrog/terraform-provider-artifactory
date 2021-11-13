@@ -61,6 +61,12 @@ resource "artifactory_keypair" "some-keypairRSA" {
   private_key = file("samples/rsa.priv")
   public_key  = file("samples/rsa.pub")
   alias       = "foo-aliasfoo"
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 resource "artifactory_keypair" "some-keypairGPG1" {
   pair_name   = "some-keypair${random_id.randid.id}"
@@ -68,6 +74,12 @@ resource "artifactory_keypair" "some-keypairGPG1" {
   alias       = "foo-alias1"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 resource "artifactory_keypair" "some-keypairGPG2" {
   pair_name   = "some-keypair4${random_id.randid.id}"
@@ -75,6 +87,12 @@ resource "artifactory_keypair" "some-keypairGPG2" {
   alias       = "foo-alias2"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 resource "artifactory_local_debian_repository" "my-debian-repo" {
   key                       = "my-debian-repo"
