@@ -32,3 +32,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 * `key` - (Required) - the identity key of the repo
 * `primary_keypair_ref` - (Optional) - The RSA key to be used to sign alpine indecies
+
+Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.

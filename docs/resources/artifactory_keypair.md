@@ -44,4 +44,4 @@ The following arguments are supported:
 * `unavailable` - (Computed) - it's unknown what this does, but, it's returned in the payload and there is no known place to set it in the UI
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
-The meta-argument `lifecycle` used here to make Provider ignore the verification for these two keys in the Terraform state. 
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state. 

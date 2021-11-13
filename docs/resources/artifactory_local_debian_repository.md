@@ -50,3 +50,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `secondary_keypair_ref` - (Optional) - Not really clear what this does
 * `index_compression_formats` - (Optional) - If you're creating this repo, then maybe you know?
 * `trivial_layout` - (Optional) - Apparently this is a deprecated repo layout
+
+Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.

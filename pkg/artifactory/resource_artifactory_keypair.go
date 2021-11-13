@@ -63,14 +63,16 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 				Required:         true,
 				DiffSuppressFunc: ignoreEmpty,
 				ValidateDiagFunc: validatePrivateKey,
+				Description:      "Artifactory doesn't return the value after creation",
 				ForceNew:         true,
 			},
 			"passphrase": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: ignoreEmpty,
-				Description:      "Used to decrypt the private key (if applicable). Will be verified server side",
-				ForceNew:         true,
+				Description: "Used to decrypt the private key (if applicable). Will be verified server side. " +
+					"Artifactory doesn't return the value after creation",
+				ForceNew: true,
 			},
 			"public_key": {
 				Type:             schema.TypeString,
