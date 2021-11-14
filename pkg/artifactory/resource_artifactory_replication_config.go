@@ -3,6 +3,8 @@ package artifactory
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	utils2 "github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/validators"
 
 	"github.com/go-resty/resty/v2"
 
@@ -27,7 +29,7 @@ var replicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validateCron,
+		ValidateFunc: validators.ValidateCron,
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
@@ -106,15 +108,15 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: utils2.MergeSchema(replicationSchemaCommon, repMultipleSchema),
 	}
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
-	d := &ResourceData{s}
+	d := &utils2.ResourceData{s}
 	replicationConfig := new(ReplicationConfig)
 
-	repo := d.getString("repo_key", false)
+	repo := d.GetString("repo_key", false)
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
@@ -125,8 +127,8 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 		for i, o := range arr {
 			if i == 0 {
 				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.getString("cron_exp", false)
-				replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
+				replicationConfig.CronExp = d.GetString("cron_exp", false)
+				replicationConfig.EnableEventReplication = d.GetBool("enable_event_replication", false)
 			}
 
 			m := o.(map[string]interface{})
@@ -180,7 +182,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 
 func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := mkLens(d)
+	setValue := utils2.MkLens(d)
 
 	setValue("repo_key", replicationConfig.RepoKey)
 	setValue("cron_exp", replicationConfig.CronExp)

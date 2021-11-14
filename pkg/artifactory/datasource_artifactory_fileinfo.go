@@ -2,6 +2,8 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/validators"
 
 	"github.com/go-resty/resty/v2"
 
@@ -16,7 +18,7 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 			"repository": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: repoKeyValidator,
+				ValidateFunc: validators.RepoKeyValidator,
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -84,7 +86,7 @@ func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) error {
-	setValue := mkLens(d)
+	setValue := util.MkLens(d)
 
 	d.SetId(fileInfo.DownloadUri)
 

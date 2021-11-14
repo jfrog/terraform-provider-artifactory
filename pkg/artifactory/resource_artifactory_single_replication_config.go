@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	utils2 "github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,8 +24,8 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon, replicationSchema),
-		Description: "Used for configuring replications on repos. However, the TCL only makes " +
+		Schema: utils2.MergeSchema(replicationSchemaCommon, replicationSchema),
+		Description: "Used for configuring replications on  However, the TCL only makes " +
 			"good sense for local repo replication (PUSH) and not remote (PULL).",
 		DeprecationMessage: "The APIs underpinning this resource support local and remote replication, " +
 			"but their payloads are entirely different. You should only use this for local replication.",
@@ -32,27 +33,27 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 }
 
 func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.ReplicationBody {
-	d := &ResourceData{s}
+	d := &utils2.ResourceData{s}
 	replicationConfig := new(utils.ReplicationBody)
 
-	replicationConfig.RepoKey = d.getString("repo_key", false)
-	replicationConfig.CronExp = d.getString("cron_exp", false)
-	replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
-	replicationConfig.URL = d.getString("url", false)
-	replicationConfig.SocketTimeoutMillis = d.getInt("socket_timeout_millis", false)
-	replicationConfig.Username = d.getString("username", false)
-	replicationConfig.Enabled = d.getBool("enabled", false)
-	replicationConfig.SyncDeletes = d.getBool("sync_deletes", false)
-	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
-	replicationConfig.SyncStatistics = d.getBool("sync_statistics", false)
-	replicationConfig.PathPrefix = d.getString("path_prefix", false)
-	replicationConfig.Password = d.getString("password", false)
+	replicationConfig.RepoKey = d.GetString("repo_key", false)
+	replicationConfig.CronExp = d.GetString("cron_exp", false)
+	replicationConfig.EnableEventReplication = d.GetBool("enable_event_replication", false)
+	replicationConfig.URL = d.GetString("url", false)
+	replicationConfig.SocketTimeoutMillis = d.GetInt("socket_timeout_millis", false)
+	replicationConfig.Username = d.GetString("username", false)
+	replicationConfig.Enabled = d.GetBool("enabled", false)
+	replicationConfig.SyncDeletes = d.GetBool("sync_deletes", false)
+	replicationConfig.SyncProperties = d.GetBool("sync_properties", false)
+	replicationConfig.SyncStatistics = d.GetBool("sync_statistics", false)
+	replicationConfig.PathPrefix = d.GetString("path_prefix", false)
+	replicationConfig.Password = d.GetString("password", false)
 
 	return replicationConfig
 }
 
 func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils2.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
@@ -79,7 +80,7 @@ func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceDat
 	return nil
 }
 func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils2.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)

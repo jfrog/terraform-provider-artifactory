@@ -31,7 +31,7 @@ func TestDlFile(t *testing.T) {
 				panic(err)
 			}
 		},
-		ProviderFactories: testAccProviders,
+		ProviderFactories: TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: script,

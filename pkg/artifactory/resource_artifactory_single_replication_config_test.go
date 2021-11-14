@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
 	"os"
 	"regexp"
 	"testing"
@@ -37,13 +38,13 @@ func mkTclForRepConfg(name, cron, url string) string {
 }
 func TestInvalidCronSingleReplication(t *testing.T) {
 
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := util.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -55,13 +56,13 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 
 func TestInvalidUrlSingleReplication(t *testing.T) {
 
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := util.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url")
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -72,11 +73,11 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 }
 
 func TestAccSingleReplication_full(t *testing.T) {
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := util.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: TestAccProviders,
 
 		Steps: []resource.TestStep{
 			{
@@ -93,24 +94,10 @@ func TestAccSingleReplication_full(t *testing.T) {
 	})
 }
 
-func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
-	return func(state *terraform.State) error {
-		var errors []error
-		for _, f := range funcs {
-			err := f(state)
-			if err != nil {
-				errors = append(errors, err)
-			}
-		}
-		if len(errors) > 0 {
-			return fmt.Errorf("%q", errors)
-		}
-		return nil
-	}
-}
+
 func TestAccSingleReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := mkNames("lib-remote", "artifactory_single_replication_config")
-	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
+	_, fqrn, name := util.MkNames("lib-remote", "artifactory_single_replication_config")
+	_, fqrepoName, repo_name := util.MkNames("lib-remote", "artifactory_remote_repository")
 	var tcl = `
 		resource "artifactory_remote_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -128,17 +115,17 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = executeTemplate("foo", tcl, map[string]string{
+	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrepoName, testCheckRepo),
+			util.verifyDeleted(fqrepoName, util.testCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 
-		ProviderFactories: testAccProviders,
+		ProviderFactories: TestAccProviders,
 
 		Steps: []resource.TestStep{
 			{
