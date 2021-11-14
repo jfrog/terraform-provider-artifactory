@@ -5,13 +5,15 @@ import (
 )
 
 func resourceArtifactoryLocalGenericRepository(pkt string) *schema.Resource {
-	return mkResourceSchema(baseLocalRepoSchema, universalPack, func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := unpackBaseLocalRepo(data, pkt)
-		return repo, repo.Id(), nil
-	}, func() interface{} {
+	constructor := func() interface{} {
 		return &LocalRepositoryBaseParams{
 			PackageType: pkt,
 			Rclass:      "local",
 		}
-	})
+	}
+	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := unpackBaseLocalRepo(data, pkt)
+		return repo, repo.Id(), nil
+	}
+	return mkResourceSchema(baseLocalRepoSchema, universalPack(schemaHasKey(baseRemoteSchema)), unpack, constructor)
 }
