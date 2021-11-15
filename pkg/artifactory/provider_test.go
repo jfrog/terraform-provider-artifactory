@@ -3,7 +3,6 @@ package artifactory
 import (
 	"context"
 	"github.com/go-resty/resty/v2"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -30,15 +29,7 @@ func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
 }
 
-func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
-	body, err := ioutil.ReadFile(localPath)
-	if err != nil {
-		return err
-	}
-	uri := "/artifactory/" + remotePath
-	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
-	return err
-}
+
 
 func getTestResty(t *testing.T) *resty.Client {
 	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {

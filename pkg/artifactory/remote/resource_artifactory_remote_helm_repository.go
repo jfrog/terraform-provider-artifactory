@@ -37,7 +37,7 @@ func unpackhelmRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 	d := &util.ResourceData{ResourceData: s}
 	repo := HelmRemoteRepo{
 		RepositoryBaseParams: unpackBaseRemoteRepo(s, "helm"),
-		HelmChartsBaseURL:          d.GetString("helm_charts_base_url", false),
+		HelmChartsBaseURL:    d.GetString("helm_charts_base_url", false),
 	}
 	return repo, repo.Id(), nil
 }

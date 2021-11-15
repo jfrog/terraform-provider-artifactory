@@ -94,7 +94,6 @@ func TestAccSingleReplication_full(t *testing.T) {
 	})
 }
 
-
 func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	_, fqrn, name := util.MkNames("lib-remote", "artifactory_single_replication_config")
 	_, fqrepoName, repo_name := util.MkNames("lib-remote", "artifactory_remote_repository")
@@ -120,8 +119,8 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 		"remote_name":     repo_name,
 	})
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: compositeCheckDestroy(
-			util.verifyDeleted(fqrepoName, util.testCheckRepo),
+		CheckDestroy: CompositeCheckDestroy(
+			util.VerifyDeleted(fqrepoName, util.testCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 

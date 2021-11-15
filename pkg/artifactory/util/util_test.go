@@ -1,11 +1,19 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/retry"
 	"math"
+	"math/rand"
+	"net/http"
 	"reflect"
 	"strings"
+	"text/template"
+	"time"
 )
 
 func fmtMapToHcl(fields map[string]interface{}) string {
@@ -76,5 +84,72 @@ func toHclFormat(thing interface{}) string {
 		return fmt.Sprintf("%v", thing)
 	}
 }
+type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
+func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
+	return func(s *terraform.State) error {
 
+		rs, ok := s.RootModule().Resources[id]
+
+		if !ok {
+			return fmt.Errorf("error: Resource id [%s] not found", id)
+		}
+		provider, _ := testAccProviders["artifactory"]()
+		client := provider.Meta().(*resty.Client)
+		resp, err := check(rs.Primary.ID, client.R())
+		if err != nil {
+			if resp != nil {
+				switch resp.StatusCode() {
+				case http.StatusNotFound, http.StatusBadRequest:
+					return nil
+				}
+			}
+			return err
+		}
+		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
+	}
+}
+var RandomInt = func() func() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Int
+}()
+func ExecuteTemplate(name, temp string, fields interface{}) string {
+	var tpl bytes.Buffer
+	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
+		panic(err)
+	}
+
+	return tpl.String()
+}
+
+func MkNames(name, resource string) (int, string, string) {
+	id := RandomInt()
+	n := fmt.Sprintf("%s%d", name, id)
+	return id, fmt.Sprintf("%s.%s", resource, n), n
+}
+
+func CompositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
+	return func(state *terraform.State) error {
+		var errors []error
+		for _, f := range funcs {
+			err := f(state)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		if len(errors) > 0 {
+			return fmt.Errorf("%q", errors)
+		}
+		return nil
+	}
+}
+func RandBool() bool {
+	return RandomInt()%2 == 0
+}
+
+func RandSelect(items ...interface{}) interface{} {
+	return items[RandomInt()%len(items)]
+}
+func TestCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	return checkRepo(id, request.AddRetryCondition(retry.Never))
+}

@@ -59,6 +59,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 }
+
 type RepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
 	Rclass                                        string   `json:"rclass"`

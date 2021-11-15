@@ -497,7 +497,8 @@ func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 		return nil, nil
 	}
 }
-var repoTypesSupported = []string{
+
+var RepoTypesSupported = []string{
 	"alpine",
 	"bower",
 	"cargo",
@@ -529,7 +530,7 @@ var repoTypesSupported = []string{
 	"vcs",
 }
 
-var RepoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
+var RepoTypeValidator = validation.StringInSlice(RepoTypesSupported, false)
 
 var RepoKeyValidator = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),

@@ -43,8 +43,8 @@ func unpackCargoRemoteRepo(s *schema.ResourceData) (interface{}, string, error) 
 	d := &util.ResourceData{ResourceData: s}
 	repo := CargoRemoteRepo{
 		RepositoryBaseParams: unpackBaseRemoteRepo(s, "cargo"),
-		RegistryUrl:                d.GetString("git_registry_url", false),
-		AnonymousAccess:            d.GetBool("anonymous_access", false),
+		RegistryUrl:          d.GetString("git_registry_url", false),
+		AnonymousAccess:      d.GetBool("anonymous_access", false),
 	}
 	return repo, repo.Id(), nil
 }

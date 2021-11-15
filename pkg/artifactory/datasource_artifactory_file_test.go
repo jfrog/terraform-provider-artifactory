@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"io/ioutil"
@@ -12,6 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
+	body, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		return err
+	}
+	uri := "/artifactory/" + remotePath
+	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
+	return err
+}
 func TestDlFile(t *testing.T) {
 	// every instance of RT has this repo and file out-of-the-box
 	script := `

@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
 	"net/http"
 )
+
 const repositoriesEndpoint = "artifactory/api/repositories/"
 
 func MkRepoCreate(unpack util.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
@@ -100,11 +101,3 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer util.PackFunc, un
 		Schema: skeema,
 	}
 }
-
-
-
-
-
-
-
-

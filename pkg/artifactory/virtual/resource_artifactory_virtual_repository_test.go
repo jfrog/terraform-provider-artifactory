@@ -2,17 +2,27 @@ package virtual
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory"
-	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/repos"
 	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
+	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/validators"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+var artProvider = func() map[string]func() (*schema.Provider, error) {
+	provider := artifactory.Provider()
+	return map[string]func() (*schema.Provider, error){
+		"artifactory": func() (*schema.Provider, error) {
+			return provider, nil
+		},
+	}
+}()
+
 func TestAccVirtualRepository_basic(t *testing.T) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryBasic = `
@@ -25,7 +35,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.VerifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +71,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.VerifyDeleted(fqrn, util.TestCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +91,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	var virtualRepositoryBasic = fmt.Sprintf(`
@@ -101,7 +111,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.verifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +131,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRepository_update(t *testing.T) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryUpdateBefore = `
@@ -143,7 +153,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.verifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -168,7 +178,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	})
 }
 func TestAllPackageTypes(t *testing.T) {
-	for _, repo := range repoTypesSupported {
+	for _, repo := range validators.RepoTypesSupported {
 		if repo != "nuget" { // this requires special testing
 			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 				// NuGet Repository configuration is missing mandatory field downloadContextPath
@@ -179,7 +189,7 @@ func TestAllPackageTypes(t *testing.T) {
 }
 
 func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("%s%d", repo, id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -199,7 +209,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase
 	return t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.verifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -221,7 +231,7 @@ func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase
 }
 
 func TestNugetPackageCreationFull(t *testing.T) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -242,7 +252,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.verifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +269,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 
 }
 func TestAccVirtualRepository_full(t *testing.T) {
-	id := util.randomInt()
+	id := util.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -279,7 +289,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { artifactory.testAccPreCheck(t) },
 		CheckDestroy:      util.verifyDeleted(fqrn, util.testCheckRepo),
-		ProviderFactories: artifactory.TestAccProviders,
+		ProviderFactories: artProvider,
 
 		Steps: []resource.TestStep{
 			{

@@ -8,7 +8,7 @@ import (
 
 var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
 
-func OnMergeError(response *resty.Response, _ error)  bool {
+func OnMergeError(response *resty.Response, _ error) bool {
 	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
 }
 func Never(_ *resty.Response, _ error) bool {

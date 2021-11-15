@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/util"
 	"github.com/jfrog/terraform-provider-artifactory/pkg/artifactory/validators"
 )
+
 type ContentSynchronisation struct {
 	Enabled bool `hcl:"enabled" json:"enables,omitempty"`
 }
@@ -53,6 +54,7 @@ type RepositoryBaseParams struct {
 func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
+
 var baseRemoteSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -263,6 +265,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Default:  false,
 	},
 }
+
 func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
 	d := &util.ResourceData{ResourceData: s}
 

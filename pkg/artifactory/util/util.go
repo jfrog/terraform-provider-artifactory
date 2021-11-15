@@ -118,18 +118,7 @@ func GetMD5Hash(o interface{}) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-var randomInt = func() func() int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Int
-}()
 
-func randBool() bool {
-	return randomInt()%2 == 0
-}
-
-func randSelect(items ...interface{}) interface{} {
-	return items[randomInt()%len(items)]
-}
 
 func mergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
 	result := map[string]interface{}{}
@@ -158,20 +147,6 @@ func MergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 	return result
 }
 
-func ExecuteTemplate(name, temp string, fields interface{}) string {
-	var tpl bytes.Buffer
-	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
-		panic(err)
-	}
-
-	return tpl.String()
-}
-
-func MkNames(name, resource string) (int, string, string) {
-	id := randomInt()
-	n := fmt.Sprintf("%s%d", name, id)
-	return id, fmt.Sprintf("%s.%s", resource, n), n
-}
 
 type Lens func(key string, value interface{}) []error
 
@@ -195,46 +170,7 @@ func MkLens(d *schema.ResourceData) Lens {
 		return errors
 	}
 }
-type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-func CompositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
-	return func(state *terraform.State) error {
-		var errors []error
-		for _, f := range funcs {
-			err := f(state)
-			if err != nil {
-				errors = append(errors, err)
-			}
-		}
-		if len(errors) > 0 {
-			return fmt.Errorf("%q", errors)
-		}
-		return nil
-	}
-}
-//func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
-//	return func(s *terraform.State) error {
-//
-//		rs, ok := s.RootModule().Resources[id]
-//
-//		if !ok {
-//			return fmt.Errorf("error: Resource id [%s] not found", id)
-//		}
-//		provider, _ := artifactory.TestAccProviders["artifactory"]()
-//		client := provider.Meta().(*resty.Client)
-//		resp, err := check(rs.Primary.ID, client.R())
-//		if err != nil {
-//			if resp != nil {
-//				switch resp.StatusCode() {
-//				case http.StatusNotFound, http.StatusBadRequest:
-//					return nil
-//				}
-//			}
-//			return err
-//		}
-//		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
-//	}
-//}
 
 
 
@@ -382,6 +318,7 @@ func UniversalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 		return nil
 	}
 }
+
 type ReadFunc func(d *schema.ResourceData, m interface{}) error
 
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
@@ -391,7 +328,6 @@ type Constructor func() interface{}
 type UnpackFunc func(s *schema.ResourceData) (interface{}, string, error)
 
 type PackFunc func(repo interface{}, d *schema.ResourceData) error
-
 
 type Identifiable interface {
 	Id() string
