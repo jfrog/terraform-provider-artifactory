@@ -25,7 +25,7 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 
 		Schema: mergeSchema(replicationSchemaCommon, replicationSchema),
 		Description: "Used for configuring replications on repos. However, the TCL only makes " +
-			"good sense for local repo replication (PUSH) and not remote (PULL).",
+			"good sense for remote (PULL) repo replication (PUSH) and not local (PUSH).",
 		DeprecationMessage: "The APIs underpinning this resource support local and remote repository replication, " +
 			"but their payloads are entirely different. You should only use this for remote repository replication.",
 	}
