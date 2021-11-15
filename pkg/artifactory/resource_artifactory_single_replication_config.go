@@ -78,25 +78,7 @@ func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceDat
 
 	return nil
 }
-func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
 
-	setValue("repo_key", config.RepoKey)
-	setValue("cron_exp", config.CronExp)
-	setValue("enable_event_replication", config.EnableEventReplication)
-
-	setValue("enabled", config.Enabled)
-	setValue("sync_deletes", config.SyncDeletes)
-	setValue("sync_properties", config.SyncProperties)
-
-	errors := setValue("path_prefix", config.PathPrefix)
-
-	if errors != nil && len(errors) > 0 {
-		return diag.Errorf("failed to pack replication config %q", errors)
-	}
-
-	return nil
-}
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
@@ -121,19 +103,6 @@ type ReplicationSummary struct {
 	EnableEventReplication          bool   `json:"enableEventReplication"`
 	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
 	SyncStatistics                  bool   `json:"syncStatistics"`
-}
-
-// PullReplication this is the structure for a PULL replication on a remote repo
-type PullReplication struct {
-	Enabled                         bool   `json:"enabled"`
-	CronExp                         string `json:"cronExp"`
-	SyncDeletes                     bool   `json:"syncDeletes"`
-	SyncProperties                  bool   `json:"syncProperties"`
-	PathPrefix                      string `json:"pathPrefix"`
-	RepoKey                         string `json:"repoKey"`
-	ReplicationKey                  string `json:"replicationKey"`
-	EnableEventReplication          bool   `json:"enableEventReplication"`
-	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
 }
 
 func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

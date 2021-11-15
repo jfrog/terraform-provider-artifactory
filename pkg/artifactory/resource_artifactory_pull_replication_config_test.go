@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 	"regexp"
 	"testing"
@@ -9,19 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func mkTclForRepConfg(name, cron, url string) string {
+func mkTclForPullRepConfg(name, cron, url string) string {
 	const tcl = `
 		resource "artifactory_local_repository" "%s" {
 			key = "%s"
 			package_type = "maven"
 		}
 		
-		resource "artifactory_single_replication_config" "%s" {
+		resource "artifactory_pull_replication_config" "%s" {
 			repo_key = "${artifactory_local_repository.%s.key}"
 			cron_exp = "%s" 
 			enable_event_replication = true
-			url = "%s"
-			username = "%s"
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -34,10 +33,10 @@ func mkTclForRepConfg(name, cron, url string) string {
 		os.Getenv("ARTIFACTORY_USERNAME"),
 	)
 }
-func TestInvalidCronSingleReplication(t *testing.T) {
+func TestInvalidCronPullReplication(t *testing.T) {
 
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
+	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication_config")
+	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
@@ -52,27 +51,9 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 	})
 }
 
-func TestInvalidUrlSingleReplication(t *testing.T) {
-
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url")
-
-	resource.Test(t, resource.TestCase{
-		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      failCron,
-				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got bad_url.*`),
-			},
-		},
-	})
-}
-
-func TestAccSingleReplication_full(t *testing.T) {
-	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+func TestAccPullReplication_full(t *testing.T) {
+	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication_config")
+	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		ProviderFactories: testAccProviders,
@@ -84,16 +65,29 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSingleReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := mkNames("lib-remote", "artifactory_single_replication_config")
+func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
+	return func(state *terraform.State) error {
+		var errors []error
+		for _, f := range funcs {
+			err := f(state)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		if len(errors) > 0 {
+			return fmt.Errorf("%q", errors)
+		}
+		return nil
+	}
+}
+func TestAccPullReplicationRemoteRepo(t *testing.T) {
+	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication_config")
 	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
 	var tcl = `
 		resource "artifactory_remote_repository" "{{ .remote_name }}" {
@@ -103,12 +97,10 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			repo_layout_ref       = "maven-2-default"
 		}
 
-		resource "artifactory_single_replication_config" "{{ .repoconfig_name }}" {
+		resource "artifactory_pull_replication_config" "{{ .repoconfig_name }}" {
 			repo_key = "{{ .remote_name }}"
 			cron_exp = "0 0 12 ? * MON *" 
 			enable_event_replication = false
-			url = "https://repo1.maven.org/maven2/"
-			username = "christianb"
 			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
 		}
 	`
