@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type ReplicationConfig struct {
+type PushReplication struct {
 	RepoKey                string                  `json:"-"`
 	CronExp                string                  `json:"cronExp,omitempty"`
 	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
 	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
 }
 
-var replicationSchemaCommon = map[string]*schema.Schema{
+var pushReplicationSchemaCommon = map[string]*schema.Schema{
 	"repo_key": {
 		Type:     schema.TypeString,
 		Required: true,
@@ -36,16 +36,17 @@ var replicationSchemaCommon = map[string]*schema.Schema{
 	},
 }
 
-var repMultipleSchema = map[string]*schema.Schema{
+var pushRepMultipleSchema = map[string]*schema.Schema{
 	"replications": {
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: replicationSchema,
+			Schema: pushReplicationSchema,
 		},
 	},
 }
-var replicationSchema = map[string]*schema.Schema{
+
+var pushReplicationSchema = map[string]*schema.Schema{
 	"url": {
 		Type:         schema.TypeString,
 		Optional:     true,
@@ -95,38 +96,38 @@ var replicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceArtifactoryReplicationConfig() *schema.Resource {
+func resourceArtifactoryPushReplication() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceReplicationConfigCreate,
-		ReadContext:   resourceReplicationConfigRead,
-		UpdateContext: resourceReplicationConfigUpdate,
+		CreateContext: resourcePushReplicationCreate,
+		ReadContext:   resourcePushReplicationRead,
+		UpdateContext: resourcePushReplicationUpdate,
 		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: mergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
 	}
 }
 
-func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
+func unpackPushReplication(s *schema.ResourceData) PushReplication {
 	d := &ResourceData{s}
-	replicationConfig := new(ReplicationConfig)
+	pushReplication := new(PushReplication)
 
 	repo := d.getString("repo_key", false)
 
-	if v, ok := d.GetOkExists("replications"); ok {
+	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
 		tmp := make([]utils.ReplicationBody, 0, len(arr))
-		replicationConfig.Replications = tmp
+		pushReplication.Replications = tmp
 
 		for i, o := range arr {
 			if i == 0 {
-				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.getString("cron_exp", false)
-				replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
+				pushReplication.RepoKey = repo
+				pushReplication.CronExp = d.getString("cron_exp", false)
+				pushReplication.EnableEventReplication = d.getBool("enable_event_replication", false)
 			}
 
 			m := o.(map[string]interface{})
@@ -171,24 +172,24 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 				replication.Password = pass.(string)
 			}
 
-			replicationConfig.Replications = append(replicationConfig.Replications, replication)
+			pushReplication.Replications = append(pushReplication.Replications, replication)
 		}
 	}
 
-	return *replicationConfig
+	return *pushReplication
 }
 
-func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
+func packPushReplication(pushReplication *PushReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
-	setValue("repo_key", replicationConfig.RepoKey)
-	setValue("cron_exp", replicationConfig.CronExp)
-	errors = setValue("enable_event_replication", replicationConfig.EnableEventReplication)
+	setValue("repo_key", pushReplication.RepoKey)
+	setValue("cron_exp", pushReplication.CronExp)
+	errors = setValue("enable_event_replication", pushReplication.EnableEventReplication)
 
-	if replicationConfig.Replications != nil {
+	if pushReplication.Replications != nil {
 		var replications []map[string]interface{}
-		for _, repo := range replicationConfig.Replications {
+		for _, repo := range pushReplication.Replications {
 			replication := make(map[string]interface{})
 
 			replication["url"] = repo.URL
@@ -212,19 +213,19 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 	return nil
 }
 
-func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackReplicationConfig(d)
+func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put("artifactory/api/replications/multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put("artifactory/api/replications/multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(replicationConfig.RepoKey)
-	return resourceReplicationConfigRead(ctx, d, m)
+	d.SetId(pushReplication.RepoKey)
+	return resourcePushReplicationRead(ctx, d, m)
 }
 
-func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []utils.ReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
@@ -233,7 +234,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
-	repConfig := ReplicationConfig{
+	repConfig := PushReplication{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}
@@ -241,18 +242,28 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 		repConfig.EnableEventReplication = replications[0].EnableEventReplication
 		repConfig.CronExp = replications[0].CronExp
 	}
-	return packReplicationConfig(&repConfig, d)
+	return packPushReplication(&repConfig, d)
 }
 
-func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackReplicationConfig(d)
+func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post("/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post("/api/replications/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(replicationConfig.RepoKey)
+	d.SetId(pushReplication.RepoKey)
 
-	return resourceReplicationConfigRead(ctx, d, m)
+	return resourcePushReplicationRead(ctx, d, m)
+}
+
+func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	_, err := m.(*resty.Client).R().Delete("artifactory/api/replications/" + d.Id())
+	return diag.FromErr(err)
+}
+
+func repConfigExists(id string, m interface{}) (bool, error) {
+	_, err := m.(*resty.Client).R().Head("artifactory/api/replications/" + id)
+	return err == nil, err
 }
