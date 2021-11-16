@@ -107,6 +107,8 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 		},
 
 		Schema: mergeSchema(replicationSchemaCommon, repMultipleSchema),
+		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
+			"artifactory_push_replication resource.",
 	}
 }
 
