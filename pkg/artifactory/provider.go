@@ -100,7 +100,7 @@ func Provider() *schema.Provider {
 			"artifactory_group":                      resourceArtifactoryGroup(),
 			"artifactory_user":                       resourceArtifactoryUser(),
 			"artifactory_permission_target":          resourceArtifactoryPermissionTarget(),
-			"artifactory_pull_replication_config":    resourceArtifactoryPullReplicationConfig(),
+			"artifactory_pull_replication":           resourceArtifactoryPullReplication(),
 			"artifactory_replication_config":         resourceArtifactoryReplicationConfig(),
 			"artifactory_single_replication_config":  resourceArtifactorySingleReplicationConfig(),
 			"artifactory_certificate":                resourceArtifactoryCertificate(),

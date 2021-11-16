@@ -10,12 +10,12 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
 
-func resourceArtifactoryPullReplicationConfig() *schema.Resource {
+func resourceArtifactoryPullReplication() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePullReplicationConfigCreate,
-		ReadContext:   resourcePullReplicationConfigRead,
-		UpdateContext: resourcePullReplicationConfigUpdate,
-		DeleteContext: resourceReplicationConfigDelete,
+		CreateContext: resourcePullReplicationCreate,
+		ReadContext:   resourcePullReplicationRead,
+		UpdateContext: resourcePullReplicationUpdate,
+		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -26,7 +26,7 @@ func resourceArtifactoryPullReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackPullReplicationConfig(s *schema.ResourceData) *utils.ReplicationBody {
+func unpackPullReplication(s *schema.ResourceData) *utils.ReplicationBody {
 	d := &ResourceData{s}
 	replicationConfig := new(utils.ReplicationBody)
 
@@ -61,8 +61,8 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 
 	return nil
 }
-func resourcePullReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackPullReplicationConfig(d)
+func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
 	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
 	if err != nil {
@@ -70,7 +70,7 @@ func resourcePullReplicationConfigCreate(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(replicationConfig.RepoKey)
-	return resourcePullReplicationConfigRead(ctx, d, m)
+	return resourcePullReplicationRead(ctx, d, m)
 }
 
 // PullReplication this is the structure for a PULL replication on a remote repo
@@ -85,7 +85,7 @@ type PullReplication struct {
 	EnableEventReplication bool   `json:"enableEventReplication"`
 }
 
-func resourcePullReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
 	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
@@ -102,8 +102,8 @@ func resourcePullReplicationConfigRead(_ context.Context, d *schema.ResourceData
 	return packPullReplicationBody(final, d)
 }
 
-func resourcePullReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackPullReplicationConfig(d)
+func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	replicationConfig := unpackPullReplication(d)
 	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
@@ -111,5 +111,5 @@ func resourcePullReplicationConfigUpdate(ctx context.Context, d *schema.Resource
 
 	d.SetId(replicationConfig.RepoKey)
 
-	return resourcePullReplicationConfigRead(ctx, d, m)
+	return resourcePullReplicationRead(ctx, d, m)
 }

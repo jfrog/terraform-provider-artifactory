@@ -17,7 +17,7 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 		CreateContext: resourceSingleReplicationConfigCreate,
 		ReadContext:   resourceSingleReplicationConfigRead,
 		UpdateContext: resourceSingleReplicationConfigUpdate,
-		DeleteContext: resourceReplicationConfigDelete,
+		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

@@ -17,7 +17,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 			package_type = "maven"
 		}
 		
-		resource "artifactory_pull_replication_config" "%s" {
+		resource "artifactory_pull_replication" "%s" {
 			repo_key = "${artifactory_local_repository.%s.key}"
 			cron_exp = "%s" 
 			enable_event_replication = true
@@ -35,7 +35,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 }
 func TestInvalidCronPullReplication(t *testing.T) {
 
-	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication_config")
+	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
@@ -52,7 +52,7 @@ func TestInvalidCronPullReplication(t *testing.T) {
 }
 
 func TestAccPullReplication_full(t *testing.T) {
-	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication_config")
+	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
@@ -87,7 +87,7 @@ func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 	}
 }
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication_config")
+	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication")
 	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
 	var tcl = `
 		resource "artifactory_remote_repository" "{{ .remote_name }}" {
@@ -97,7 +97,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			repo_layout_ref       = "maven-2-default"
 		}
 
-		resource "artifactory_pull_replication_config" "{{ .repoconfig_name }}" {
+		resource "artifactory_pull_replication" "{{ .repoconfig_name }}" {
 			repo_key = "{{ .remote_name }}"
 			cron_exp = "0 0 12 ? * MON *" 
 			enable_event_replication = false

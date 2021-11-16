@@ -100,7 +100,7 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 		CreateContext: resourceReplicationConfigCreate,
 		ReadContext:   resourceReplicationConfigRead,
 		UpdateContext: resourceReplicationConfigUpdate,
-		DeleteContext: resourceReplicationConfigDelete,
+		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -257,7 +257,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceReplicationConfigRead(ctx, d, m)
 }
 
-func resourceReplicationConfigDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete("artifactory/api/replications/" + d.Id())
 	return diag.FromErr(err)
 }
