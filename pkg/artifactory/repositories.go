@@ -847,6 +847,7 @@ func ignoreHclPredicate(names ...string) HclPredicate {
 }
 
 var defaultPacker = universalPack(noClass)
+
 func inSchema(skeema map[string]*schema.Schema) func(payload interface{}, d *schema.ResourceData) error {
 	return universalPack(schemaHasKey(skeema))
 }

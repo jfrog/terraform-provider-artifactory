@@ -29,7 +29,6 @@ func validateCron(value interface{}, key string) (ws []string, es []error) {
 	return nil, nil
 }
 
-
 var commaSeperatedList = validation.ToDiagFunc(
 	validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"),
 )

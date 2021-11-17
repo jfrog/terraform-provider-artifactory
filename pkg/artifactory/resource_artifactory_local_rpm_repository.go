@@ -8,9 +8,9 @@ import (
 func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 	var rpmLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"yum_root_depth": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			Description: "The depth, relative to the repository's root folder, where RPM metadata is created. " +
 				"This is useful when your repository contains multiple RPM repositories under parallel hierarchies. " +
@@ -30,9 +30,9 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 		},
 
 		"yum_group_file_names": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "",
 			ValidateDiagFunc: commaSeperatedList,
 			Description: "A list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
