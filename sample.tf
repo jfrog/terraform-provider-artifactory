@@ -192,6 +192,8 @@ resource "artifactory_remote_npm_repository" "thing" {
   url                         = "https://registry.npmjs.org/"
   repo_layout_ref             = "npm-default"
   missed_cache_period_seconds = 0
+  list_remote_folder_items    = true
+  mismatching_mime_types_override_list = "application/json,application/xml"
 }
 resource "artifactory_virtual_maven_repository" "foo" {
   key                                      = "maven-virt-repo"
