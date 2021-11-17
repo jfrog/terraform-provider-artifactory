@@ -15,14 +15,14 @@ resource "artifactory_local_repository" "provider_test_source" {
 resource "artifactory_remote_repository" "provider_test_dest" {
 	key          = "provider_test_dest"
 	package_type = "maven"
-    url          = "https://example.com/artifactory/${artifactory_local_repository.artifactory_local_repository.key}"
-    username     = "foo"
-    password     = "bar"
+	url          = "https://example.com/artifactory/${artifactory_local_repository.artifactory_local_repository.key}"
+	username     = "foo"
+	password     = "bar"
 }
 
 resource "artifactory_pull_replication" "foo-rep" {
-	repo_key = "${artifactory_remote_repository.provider_test_dest.key}"
-	cron_exp = "0 0 * * * ?"
+	repo_key                 = "${artifactory_remote_repository.provider_test_dest.key}"
+	cron_exp                 = "0 0 * * * ?"
 	enable_event_replication = true	
 }
 ```
