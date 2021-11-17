@@ -1,8 +1,6 @@
 package artifactory
 
 import (
-	"regexp"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -35,7 +33,7 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string")),
+			ValidateDiagFunc: commaSeperatedList,
 			Description: "A list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
@@ -63,7 +61,7 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(rpmLocalSchema, universalPack(schemaHasKey(rpmLocalSchema)), unPackLocalRpmRepository, func() interface{} {
+	return mkResourceSchema(rpmLocalSchema, inSchema(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "rpm",

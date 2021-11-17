@@ -15,5 +15,5 @@ func resourceArtifactoryLocalGenericRepository(pkt string) *schema.Resource {
 		repo := unpackBaseLocalRepo(data, pkt)
 		return repo, repo.Id(), nil
 	}
-	return mkResourceSchema(baseLocalRepoSchema, universalPack(schemaHasKey(baseRemoteSchema)), unpack, constructor)
+	return mkResourceSchema(baseLocalRepoSchema, inSchema(baseRemoteSchema), unpack, constructor)
 }

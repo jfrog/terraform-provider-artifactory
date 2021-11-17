@@ -82,7 +82,7 @@ func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 
 		return repo, repo.Id(), nil
 	}
-	return mkResourceSchema(javaLocalSchema, universalPack(schemaHasKey(javaLocalSchema)), unPackLocalJavaRepository, func() interface{} {
+	return mkResourceSchema(javaLocalSchema, inSchema(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
 		return &JavaLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: repoType,
