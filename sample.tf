@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.18"
+      version = "2.6.19"
     }
   }
 }
@@ -79,8 +79,8 @@ resource "artifactory_keypair" "some-keypairGPG1" {
       private_key,
       passphrase,
     ]
+    }
   }
-}
 resource "artifactory_keypair" "some-keypairGPG2" {
   pair_name   = "some-keypair4${random_id.randid.id}"
   pair_type   = "GPG"
@@ -187,7 +187,14 @@ resource "artifactory_virtual_go_repository" "baz-go" {
     "**/go.googlesource.com/**"
   ]
 }
-
+resource "artifactory_remote_npm_repository" "thing" {
+  key                         = "remote-thing-npm"
+  url                         = "https://registry.npmjs.org/"
+  repo_layout_ref             = "npm-default"
+  missed_cache_period_seconds = 0
+  list_remote_folder_items    = true
+  mismatching_mime_types_override_list = "application/json,application/xml"
+}
 resource "artifactory_virtual_maven_repository" "foo" {
   key                                      = "maven-virt-repo"
   repo_layout_ref                          = "maven-2-default"
@@ -199,6 +206,5 @@ resource "artifactory_virtual_maven_repository" "foo" {
   force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
-
 
 

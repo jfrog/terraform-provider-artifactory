@@ -88,6 +88,13 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteNpmRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("npm", t, map[string]interface{}{
+		"list_remote_folder_items":             true,
+		"mismatching_mime_types_override_list": "application/json,application/xml",
+	}))
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `

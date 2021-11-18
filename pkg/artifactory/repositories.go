@@ -63,6 +63,7 @@ type RemoteRepositoryBaseParams struct {
 	IncludesPattern          string `hcl:"includes_pattern" json:"includesPattern,omitempty"`
 	ExcludesPattern          string `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
 	RepoLayoutRef            string `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
+	RemoteRepoLayoutRef      string `json:"remoteRepoLayoutRef"`
 	HardFail                 *bool  `hcl:"hard_fail" json:"hardFail,omitempty"`
 	Offline                  *bool  `hcl:"offline" json:"offline,omitempty"`
 	BlackedOut               *bool  `hcl:"blacked_out" json:"blackedOut,omitempty"`
@@ -75,7 +76,7 @@ type RemoteRepositoryBaseParams struct {
 	RetrievalCachePeriodSecs int    `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs,omitempty"`
 	// doesn't appear in the body when calling get. Hence no HCL
 	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
-	MissedRetrievalCachePeriodSecs    int                     `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    int                     `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
 	UnusedArtifactsCleanupEnabled     *bool                   `hcl:"unused_artifacts_cleanup_period_enabled" json:"unusedArtifactsCleanupEnabled,omitempty"`
 	UnusedArtifactsCleanupPeriodHours int                     `hcl:"unused_artifacts_cleanup_period_hours" json:"unusedArtifactsCleanupPeriodHours,omitempty"`
 	AssumedOfflinePeriodSecs          int                     `hcl:"assumed_offline_period_secs" json:"assumedOfflinePeriodSecs,omitempty"`
@@ -388,6 +389,11 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"repo_layout_ref": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"remote_repo_layout_ref": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
@@ -841,6 +847,10 @@ func ignoreHclPredicate(names ...string) HclPredicate {
 }
 
 var defaultPacker = universalPack(noClass)
+
+func inSchema(skeema map[string]*schema.Schema) func(payload interface{}, d *schema.ResourceData) error {
+	return universalPack(schemaHasKey(skeema))
+}
 
 // universalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not

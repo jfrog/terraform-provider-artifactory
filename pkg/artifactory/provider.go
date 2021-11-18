@@ -91,6 +91,7 @@ func Provider() *schema.Provider {
 			"artifactory_local_docker_v1_repository": resourceArtifactoryLocalDockerV1Repository(),
 			"artifactory_local_rpm_repository":       resourceArtifactoryLocalRpmRepository(),
 			"artifactory_remote_repository":          resourceArtifactoryRemoteRepository(),
+			"artifactory_remote_npm_repository":      resourceArtifactoryRemoteNpmRepository(),
 			"artifactory_remote_docker_repository":   resourceArtifactoryRemoteDockerRepository(),
 			"artifactory_remote_helm_repository":     resourceArtifactoryRemoteHelmRepository(),
 			"artifactory_remote_cargo_repository":    resourceArtifactoryRemoteCargoRepository(),
