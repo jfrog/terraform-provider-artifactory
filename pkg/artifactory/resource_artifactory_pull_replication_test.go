@@ -16,11 +16,13 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 			key = "%s"
 			package_type = "maven"
 		}
-		
+
 		resource "artifactory_pull_replication" "%s" {
 			repo_key = "${artifactory_local_repository.%s.key}"
-			cron_exp = "%s" 
+			cron_exp = "%s"
 			enable_event_replication = true
+			url = "%s"
+			username = "%s"
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -29,6 +31,8 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 		name,
 		name,
 		cron,
+		url,
+		os.Getenv("ARTIFACTORY_USERNAME"),
 	)
 }
 func TestInvalidCronPullReplication(t *testing.T) {
@@ -97,7 +101,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 
 		resource "artifactory_pull_replication" "{{ .repoconfig_name }}" {
 			repo_key = "{{ .remote_name }}"
-			cron_exp = "0 0 12 ? * MON *" 
+			cron_exp = "0 0 12 ? * MON *"
 			enable_event_replication = false
 			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
 		}
