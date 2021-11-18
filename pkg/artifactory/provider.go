@@ -101,8 +101,8 @@ func Provider() *schema.Provider {
 			"artifactory_group":                      resourceArtifactoryGroup(),
 			"artifactory_user":                       resourceArtifactoryUser(),
 			"artifactory_permission_target":          resourceArtifactoryPermissionTarget(),
-			"artifactory_replication_config":         resourceArtifactoryReplicationConfig(),
-			"artifactory_single_replication_config":  resourceArtifactorySingleReplicationConfig(),
+			"artifactory_pull_replication":           resourceArtifactoryPullReplication(),
+			"artifactory_push_replication":           resourceArtifactoryPushReplication(),
 			"artifactory_certificate":                resourceArtifactoryCertificate(),
 			"artifactory_api_key":                    resourceArtifactoryApiKey(),
 			"artifactory_access_token":               resourceArtifactoryAccessToken(),
@@ -110,7 +110,9 @@ func Provider() *schema.Provider {
 			"artifactory_oauth_settings":             resourceArtifactoryOauthSettings(),
 			"artifactory_saml_settings":              resourceArtifactorySamlSettings(),
 			// Deprecated. Remove in V3
-			"artifactory_permission_targets": resourceArtifactoryPermissionTargets(),
+			"artifactory_permission_targets":        resourceArtifactoryPermissionTargets(),
+			"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
+			"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
 			// Xray resources
 			"artifactory_xray_policy": resourceXrayPolicy(),
 			"artifactory_xray_watch":  resourceXrayWatch(),

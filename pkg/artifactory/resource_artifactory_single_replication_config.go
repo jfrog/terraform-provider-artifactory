@@ -17,7 +17,7 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 		CreateContext: resourceSingleReplicationConfigCreate,
 		ReadContext:   resourceSingleReplicationConfigRead,
 		UpdateContext: resourceSingleReplicationConfigUpdate,
-		DeleteContext: resourceReplicationConfigDelete,
+		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -26,8 +26,8 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 		Schema: mergeSchema(replicationSchemaCommon, replicationSchema),
 		Description: "Used for configuring replications on repos. However, the TCL only makes " +
 			"good sense for local repo replication (PUSH) and not remote (PULL).",
-		DeprecationMessage: "The APIs underpinning this resource support local and remote replication, " +
-			"but their payloads are entirely different. You should only use this for local replication.",
+		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
+			"artifactory_pull_replication resource.",
 	}
 }
 
@@ -78,25 +78,7 @@ func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceDat
 
 	return nil
 }
-func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
 
-	setValue("repo_key", config.RepoKey)
-	setValue("cron_exp", config.CronExp)
-	setValue("enable_event_replication", config.EnableEventReplication)
-
-	setValue("enabled", config.Enabled)
-	setValue("sync_deletes", config.SyncDeletes)
-	setValue("sync_properties", config.SyncProperties)
-
-	errors := setValue("path_prefix", config.PathPrefix)
-
-	if errors != nil && len(errors) > 0 {
-		return diag.Errorf("failed to pack replication config %q", errors)
-	}
-
-	return nil
-}
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
@@ -121,19 +103,6 @@ type ReplicationSummary struct {
 	EnableEventReplication          bool   `json:"enableEventReplication"`
 	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
 	SyncStatistics                  bool   `json:"syncStatistics"`
-}
-
-// PullReplication this is the structure for a PULL replication on a remote repo
-type PullReplication struct {
-	Enabled                         bool   `json:"enabled"`
-	CronExp                         string `json:"cronExp"`
-	SyncDeletes                     bool   `json:"syncDeletes"`
-	SyncProperties                  bool   `json:"syncProperties"`
-	PathPrefix                      string `json:"pathPrefix"`
-	RepoKey                         string `json:"repoKey"`
-	ReplicationKey                  string `json:"replicationKey"`
-	EnableEventReplication          bool   `json:"enableEventReplication"`
-	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
 }
 
 func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
