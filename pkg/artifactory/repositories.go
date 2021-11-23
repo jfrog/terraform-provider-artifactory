@@ -208,7 +208,6 @@ func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
 	return err == nil, err
-
 }
 
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
