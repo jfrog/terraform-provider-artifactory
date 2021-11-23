@@ -13,7 +13,7 @@ install:
 		terraform init
 
 clean:
-	rm -fR .terraform.d/ .terraform terraform.tfstate* terraform.d/
+	rm -fR .terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
 
 release:
 	@git tag ${NEXT_VERSION} && git push --mirror
@@ -37,10 +37,9 @@ attach:
 	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-artifactory)
 
 acceptance: fmtcheck
-	export TF_ACC=1
-	test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
+	export TF_ACC=true && \
+		test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
 		&& go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -parallel 20 ./pkg/...
-
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
