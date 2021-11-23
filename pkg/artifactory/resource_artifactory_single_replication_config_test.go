@@ -15,10 +15,10 @@ func mkTclForRepConfg(name, cron, url string) string {
 			key = "%s"
 			package_type = "maven"
 		}
-		
+
 		resource "artifactory_single_replication_config" "%s" {
 			repo_key = "${artifactory_local_repository.%s.key}"
-			cron_exp = "%s" 
+			cron_exp = "%s"
 			enable_event_replication = true
 			url = "%s"
 			username = "%s"
@@ -105,16 +105,17 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 
 		resource "artifactory_single_replication_config" "{{ .repoconfig_name }}" {
 			repo_key = "{{ .remote_name }}"
-			cron_exp = "0 0 12 ? * MON *" 
+			cron_exp = "0 0 12 ? * MON *"
 			enable_event_replication = false
 			url = "https://repo1.maven.org/maven2/"
-			username = "christianb"
+			username = "{{ .username }}"
 			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
 		}
 	`
 	tcl = executeTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
+		"username":        os.Getenv("ARTIFACTORY_USERNAME"),
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(

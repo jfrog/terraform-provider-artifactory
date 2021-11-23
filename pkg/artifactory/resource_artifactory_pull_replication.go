@@ -33,6 +33,8 @@ func unpackPullReplication(s *schema.ResourceData) *utils.ReplicationBody {
 	replicationConfig.RepoKey = d.getString("repo_key", false)
 	replicationConfig.CronExp = d.getString("cron_exp", false)
 	replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
+	replicationConfig.URL = d.getString("url", false)
+	replicationConfig.Username = d.getString("username", false)
 	replicationConfig.Enabled = d.getBool("enabled", false)
 	replicationConfig.SyncDeletes = d.getBool("sync_deletes", false)
 	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
@@ -83,6 +85,8 @@ type PullReplication struct {
 	RepoKey                string `json:"repoKey"`
 	ReplicationKey         string `json:"replicationKey"`
 	EnableEventReplication bool   `json:"enableEventReplication"`
+	Username               string `json:"username"`
+	URL                    string `json:"url"`
 }
 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -94,12 +98,25 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	final := PullReplication{}
-	err = json.Unmarshal(resp.Body(), &final)
-	if err != nil {
-		return diag.FromErr(err)
+	switch result.(type) {
+	case []interface{}:
+		if len(result.([]interface{})) > 1 {
+			return diag.Errorf("received more than one replication payload. expect only one in array")
+		}
+		var final []PullReplication
+		err = json.Unmarshal(resp.Body(), &final)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return packPullReplicationBody(final[0], d)
+	default:
+		final := PullReplication{}
+		err = json.Unmarshal(resp.Body(), &final)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return packPullReplicationBody(final, d)
 	}
-	return packPullReplicationBody(final, d)
 }
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
