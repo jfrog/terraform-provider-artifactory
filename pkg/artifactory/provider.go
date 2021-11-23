@@ -11,7 +11,7 @@ import (
 )
 
 // Version for some reason isn't getting updated by the linker
-var Version = "2.6.20"
+var Version = "2.6.18"
 
 // Provider Artifactory provider that supports configuration via username+password or a token
 // Supported resources are repos, users, groups, replications, and permissions
