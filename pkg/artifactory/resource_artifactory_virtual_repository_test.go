@@ -36,6 +36,73 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("foo%d", id)
+	localRepoName := fmt.Sprintf("%s-local", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	const virtualRepositoryWithDefaultDeploymentRepo = `
+		resource "artifactory_local_repository" "%[1]s" {
+			key = "%[1]s"
+			package_type = "maven"
+		}
+
+		resource "artifactory_virtual_repository" "%[2]s" {
+			key          = "%[2]s"
+			package_type = "maven"
+			repositories = ["%[1]s"]
+			default_deployment_repo = "%[1]s"
+			depends_on = [artifactory_local_repository.%[1]s]
+		}
+	`
+	const virtualRepositoryWithoutDefaultDeploymentRepo = `
+		resource "artifactory_local_repository" "%[1]s" {
+			key = "%[1]s"
+			package_type = "maven"
+		}
+
+		resource "artifactory_virtual_repository" "%[2]s" {
+			key          = "%[2]s"
+			package_type = "maven"
+			repositories = ["%[1]s"]
+			depends_on = [artifactory_local_repository.%[1]s]
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(virtualRepositoryWithoutDefaultDeploymentRepo, localRepoName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "default_deployment_repo", ""),
+				),
+			},
+			{
+				Config: fmt.Sprintf(virtualRepositoryWithDefaultDeploymentRepo, localRepoName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "default_deployment_repo", localRepoName),
+				),
+			},
+			{
+				Config: fmt.Sprintf(virtualRepositoryWithoutDefaultDeploymentRepo, localRepoName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "default_deployment_repo", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVirtualGoRepository_basic(t *testing.T) {
 	_, fqrn, name := mkNames("foo", "artifactory_virtual_go_repository")
 	var virtualRepositoryBasic = fmt.Sprintf(`
