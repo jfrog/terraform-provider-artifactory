@@ -206,5 +206,3 @@ resource "artifactory_virtual_maven_repository" "foo" {
   force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
-
-

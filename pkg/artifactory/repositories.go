@@ -155,7 +155,7 @@ func mkRepoRead(pack PackFunc, construct Constructor) schema.ReadContextFunc {
 		resp, err := m.(*resty.Client).R().SetResult(repo).Get(repositoriesEndpoint + d.Id())
 
 		if err != nil {
-			if resp != nil && (resp.StatusCode() == http.StatusNotFound) {
+			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
 				d.SetId("")
 				return nil
 			}
@@ -185,7 +185,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().Delete(repositoriesEndpoint + d.Id())
 
-	if err != nil && (resp != nil && resp.StatusCode() == http.StatusNotFound) {
+	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
 		return nil
 	}
@@ -208,7 +208,6 @@ func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
 	return err == nil, err
-
 }
 
 var repoTypeValidator = validation.StringInSlice(repoTypesSupported, false)
