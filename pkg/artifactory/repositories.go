@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -685,7 +684,7 @@ func getDefaultDeploymentRepo(d *ResourceData) string {
 	// When value has changed and is empty string, then it has been removed from
 	// the Terraform configuration.
 	if value == "" && d.HasChange(key) {
-		return uuid.NewString()
+		return fmt.Sprintf("non-existant-repo-%d", randomInt())
 	}
 
 	return value
