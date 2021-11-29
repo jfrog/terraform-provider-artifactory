@@ -3,14 +3,15 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
@@ -670,6 +671,24 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 	return repo
 }
 
+// Special handling of DefaultDeploymentRepo field
+// Artifactory REST API will not accept empty string or null to reset value to not set
+// Instead, using a non-existant repo key works as a workaround
+// To ensure we don't accidentally set the value to a valid repo, we use a UUID v4 string
+// for the repo key
+func getDefaultDeploymentRepo(d *ResourceData) string {
+	key := "default_deployment_repo"
+	value := d.getString(key, false)
+
+	// When value has changed and is empty string, then it has been removed from
+	// the Terraform configuration.
+	if value == "" && d.HasChange(key) {
+		return fmt.Sprintf("non-existant-repo-%d", randomInt())
+	}
+
+	return value
+}
+
 func unpackBaseVirtRepo(s *schema.ResourceData) VirtualRepositoryBaseParams {
 	d := &ResourceData{s}
 
@@ -685,7 +704,7 @@ func unpackBaseVirtRepo(s *schema.ResourceData) VirtualRepositoryBaseParams {
 		Repositories:          d.getList("repositories"),
 		Description:           d.getString("description", false),
 		Notes:                 d.getString("notes", false),
-		DefaultDeploymentRepo: d.getString("default_deployment_repo", false),
+		DefaultDeploymentRepo: getDefaultDeploymentRepo(d),
 	}
 }
 
