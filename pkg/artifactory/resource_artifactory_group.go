@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 
@@ -197,7 +198,12 @@ func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
 }
 
 func groupExists(client *resty.Client, groupName string) (bool, error) {
-	_, err := client.R().Head(groupsEndpoint + groupName)
+	resp, err := client.R().Head(groupsEndpoint + groupName)
+	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
+		// Do not error on 404s as this causes errors when the upstream user has been manually removed
+		return false, nil
+	}
+
 	return err == nil, err
 }
 
