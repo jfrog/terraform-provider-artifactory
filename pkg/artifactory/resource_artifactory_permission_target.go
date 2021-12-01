@@ -338,7 +338,11 @@ func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool
 }
 
 func permTargetExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(permissionsEndPoint + id)
+	resp, err := m.(*resty.Client).R().Head(permissionsEndPoint + id)
+	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
+		// Do not error on 404s as this causes errors when the upstream permission has been manually removed
+		return false, nil
+	}
 
 	return err == nil, err
 }

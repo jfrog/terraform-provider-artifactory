@@ -102,7 +102,12 @@ func resourceUserExists(data *schema.ResourceData, m interface{}) (bool, error) 
 }
 
 func userExists(client *resty.Client, userName string) (bool, error) {
-	_, err := client.R().Head("artifactory/api/security/users/" + userName)
+	resp, err := client.R().Head("artifactory/api/security/users/" + userName)
+	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
+		// Do not error on 404s as this causes errors when the upstream user has been manually removed
+		return false, nil
+	}
+
 	return err == nil, err
 }
 
