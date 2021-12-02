@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -194,6 +195,12 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
+
+	err = checkArtifactoryLicense(restyBase)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = sendUsageRepo(restyBase, terraformVersion)
 
 	if err != nil {
@@ -202,6 +209,27 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	return restyBase, nil
 
+}
+
+func checkArtifactoryLicense(client *resty.Client) error {
+
+	type License struct {
+		Type 		 string `json:"type"`
+		ValidThrough string `json:"validThrough"`
+		LicensedTo   string `json:"licensedTo"`
+	}
+
+	license := License{}
+	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/licenses/")
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(license.Type, "Enterprise") {
+		return fmt.Errorf("Artifactory requires Enterprise license to work with Terraform!")
+	}
+
+	return nil
 }
 
 func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{}, error) {
