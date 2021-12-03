@@ -95,12 +95,12 @@ var replicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceArtifactoryReplicationConfig() *schema.Resource {
+func resourceArtifactoryReplicationConfig(resource string) *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceReplicationConfigCreate,
-		ReadContext:   resourceReplicationConfigRead,
-		UpdateContext: resourceReplicationConfigUpdate,
-		DeleteContext: resourceReplicationDelete,
+		CreateContext: applyTelemetry(resource, "create", resourceReplicationConfigCreate),
+		ReadContext:   applyTelemetry(resource, "read", resourceReplicationConfigRead),
+		UpdateContext: applyTelemetry(resource, "update", resourceReplicationConfigUpdate),
+		DeleteContext: applyTelemetry(resource, "delete", resourceReplicationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -2,15 +2,16 @@ package artifactory
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"math/rand"
 	"text/template"
 	"time"
-
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ResourceData struct{ *schema.ResourceData }
@@ -118,6 +119,32 @@ var randomInt = func() func() int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Int
 }()
+
+func sendUsage(resource, verb string, meta interface{}) {
+	type Feature struct {
+		FeatureId string `json:"featureId"`
+	}
+	type UsageStruct struct {
+		ProductId string    `json:"productId"`
+		Features  []Feature `json:"features"`
+	}
+	_, _ = meta.(*resty.Client).R().SetBody(UsageStruct{
+		"terraform-provider-artifactory/" + Version,
+		[]Feature{
+			{FeatureId: "Partner/ACC-007450"},
+			{FeatureId: "Terraform/" + Version},
+			{FeatureId: fmt.Sprintf("Terraform/%s/%s", resource, verb)},
+		},
+	}).Post("artifactory/api/system/usage")
+	// log error
+}
+func applyTelemetry(resource, verb string, f func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		// best effort. Go routine it
+		go sendUsage(resource, verb, meta)
+		return f(ctx, data, meta)
+	}
+}
 
 func randBool() bool {
 	return randomInt()%2 == 0
