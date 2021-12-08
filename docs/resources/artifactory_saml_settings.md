@@ -35,7 +35,7 @@ The following arguments are supported:
 * `certificate`                     - (Optional) SAML certificate that contains the public key for the IdP service provider.  Used by Artifactory to verify sign-in requests.
 * `email_attribute`                 - (Optional) Name of the attribute in the SAML response from the IdP that contains the user's email.
 * `group_attribute`                 - (Optional) Name of the attribute in the SAML response from the IdP that contains the user's group memberships.  
-* `no_auto_user_creation`           - (Optional) Enable the creation of local Artifactory users.  Default value is `false`.
+* `no_auto_user_creation`           - (Optional) When automatic user creation is off, authenticated users are not automatically created inside Artifactory. Instead, for every request from an SSO user, the user is temporarily associated with default groups (if such groups are defined), and the permissions for these groups apply. Without auto-user creation, you must manually create the user inside Artifactory to manage user permissions not attached to their default groups. Default value is `false`.
 * `allow_user_to_access_profile`    - (Optional) Allow persisted users to access their profile.  Default value is `true`.
 * `auto_redirect`                   - (Optional) Auto redirect to login through the IdP when clicking on Artifactory's login link.  Default value is `false`.
 * `sync_groups`                     - (Optional) Associate user with Artifactory groups based on the `group_attribute` provided in the SAML response from the identity provider.  Default value is `false`.
