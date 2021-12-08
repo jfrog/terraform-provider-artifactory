@@ -70,21 +70,24 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 		"enable_token_authentication":    true,
 		"block_pushing_schema1":          true,
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 	})
 	resource.Test(t, testCase)
 }
 
 func TestAccRemoteCargoRepository(t *testing.T) {
 	_, testCase := mkNewRemoteTestCase("cargo", t, map[string]interface{}{
-		"git_registry_url": "https://github.com/rust-lang/foo.index",
-		"anonymous_access": true,
+		"git_registry_url":            "https://github.com/rust-lang/foo.index",
+		"anonymous_access":            true,
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 	})
 	resource.Test(t, testCase)
 }
 
 func TestAccRemoteHelmRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("helm", t, map[string]interface{}{
-		"helm_charts_base_url": "https://github.com/rust-lang/foo.index",
+		"helm_charts_base_url":        "https://github.com/rust-lang/foo.index",
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 	}))
 }
 
@@ -92,6 +95,7 @@ func TestAccRemoteNpmRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("npm", t, map[string]interface{}{
 		"list_remote_folder_items":             true,
 		"mismatching_mime_types_override_list": "application/json,application/xml",
+		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 	}))
 }
 
@@ -453,6 +457,62 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "propagate_query_params", "true"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/jfrog/terraform-provider-artifactory/issues/225
+func TestAccRemoteLegacyRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-basic", "artifactory_remote_repository")
+
+	key := fmt.Sprintf("cran-remote-%d", randomInt())
+	remoteRepositoryInit := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key              = "%s"
+			package_type     = "cran"
+			repo_layout_ref  = "bower-default"
+			url              = "https://cran.r-project.org/"
+			notes            = "managed by terraform"
+			property_sets    = ["artifactory"]
+			unused_artifacts_cleanup_period_hours = 10100
+			retrieval_cache_period_seconds        = 600
+			missed_cache_period_seconds           = 1800
+		}
+	`, name, key)
+
+	remoteRepositoryUpdate := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key              = "%s"
+			package_type     = "cran"
+			repo_layout_ref  = "simple-default"
+			url              = "https://cran.r-project.org/"
+			notes            = "managed by terraform"
+			property_sets    = ["artifactory"]
+			unused_artifacts_cleanup_period_hours = 10100
+			retrieval_cache_period_seconds        = 600
+			missed_cache_period_seconds           = 1800
+		}
+	`, name, key)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryInit,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
+				),
+			},
+			{
+				Config: remoteRepositoryUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
 				),
 			},
 		},

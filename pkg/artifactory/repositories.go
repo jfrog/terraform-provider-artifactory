@@ -647,7 +647,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", true),
 		// Not returned in the GET
 		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
-		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", true),
+		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", false),
 		UnusedArtifactsCleanupEnabled:     d.getBoolRef("unused_artifacts_cleanup_period_enabled", true),
 		UnusedArtifactsCleanupPeriodHours: d.getInt("unused_artifacts_cleanup_period_hours", true),
 		AssumedOfflinePeriodSecs:          d.getInt("assumed_offline_period_secs", true),
