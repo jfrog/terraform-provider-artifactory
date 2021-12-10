@@ -60,6 +60,12 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"api_key", "password"},
 				Description:   "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
+			"check_license": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Toggle for pre-flight checking of Artifactory license. Default to `true`.",
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -148,6 +154,7 @@ func buildResty(URL string) (*resty.Client, error) {
 		if response == nil {
 			return fmt.Errorf("no response found")
 		}
+
 		if response.StatusCode() >= http.StatusBadRequest {
 			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(), response.Request.Method, response.Request.URL, string(response.Body()[:]))
 		}
@@ -196,9 +203,12 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, err
 	}
 
-	err = checkArtifactoryLicense(restyBase)
-	if err != nil {
-		return nil, err
+	checkLicense := d.Get("check_license").(bool)
+	if checkLicense {
+		err = checkArtifactoryLicense(restyBase)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	_, err = sendUsageRepo(restyBase, terraformVersion)
@@ -214,7 +224,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 func checkArtifactoryLicense(client *resty.Client) error {
 
 	type License struct {
-		Type 		 string `json:"type"`
+		Type         string `json:"type"`
 		ValidThrough string `json:"validThrough"`
 		LicensedTo   string `json:"licensedTo"`
 	}
