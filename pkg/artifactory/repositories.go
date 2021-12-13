@@ -473,7 +473,9 @@ var baseRemoteSchema = map[string]*schema.Schema{
 	"assumed_offline_period_secs": {
 		Type:         schema.TypeInt,
 		Optional:     true,
+		Default:      300,
 		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline. Default to 300.",
 	},
 	"share_configuration": {
 		Type:     schema.TypeBool,

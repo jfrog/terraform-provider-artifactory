@@ -518,3 +518,36 @@ func TestAccRemoteLegacyRepository_MissedRetrievalCachePeriodSecs_retained_betwe
 		},
 	})
 }
+
+// https://github.com/jfrog/terraform-provider-artifactory/issues/241
+func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
+
+	key := fmt.Sprintf("docker-remote-%d", randomInt())
+	remoteRepositoryInit := fmt.Sprintf(`
+		resource "artifactory_remote_docker_repository" "%s" {
+			key                                   = "%s"
+			description                           = "DockerHub mirror"
+			url                                   = "https://registry-1.docker.io/"
+			external_dependencies_enabled         = true
+			enable_token_authentication           = true
+			block_pushing_schema1                 = false
+			unused_artifacts_cleanup_period_hours = 2 * 7 * 24
+		}
+	`, name, key)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryInit,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "assumed_offline_period_secs", "300"),
+				),
+			},
+		},
+	})
+}
