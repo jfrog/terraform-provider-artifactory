@@ -16,12 +16,12 @@ func TestInvalidCronFails(t *testing.T) {
 			key = "lib-local"
 			package_type = "maven"
 		}
-		
+
 		resource "artifactory_replication_config" "lib-local" {
 			repo_key = "${artifactory_local_repository.lib-local.key}"
 			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
-			
+
 			replications {
 				url = "http://localhost:8080"
 				username = "%s"
@@ -46,12 +46,12 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 			key = "lib-local"
 			package_type = "maven"
 		}
-		
+
 		resource "artifactory_replication_config" "lib-local" {
 			repo_key = "${artifactory_local_repository.lib-local.key}"
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
-			
+
 			replications {
 				url = "not a URL"
 				username = "%s"
