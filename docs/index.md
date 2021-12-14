@@ -117,4 +117,4 @@ The following arguments are supported:
     Conflicts with `username`, `password`, and `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
 * `access_token` - (Optional) API key for token auth. Uses `Authorization: Bearer` header. For xray functionality, this is the only auth method accepted
     Conflicts with `username` and `password`, and `api_key`. This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
-* `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `false`.
+* `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.

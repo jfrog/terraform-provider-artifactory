@@ -63,8 +63,8 @@ func Provider() *schema.Provider {
 			"check_license": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `false`.",
+				Default:     true,
+				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
 			},
 		},
 
@@ -232,11 +232,11 @@ func checkArtifactoryLicense(client *resty.Client) error {
 	license := License{}
 	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/licenses/")
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to check for license. If your usage doesn't require admin permission, you can set `check_license` attribute to `false` to skip this check. %s", err)
 	}
 
 	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial)`, license.Type); !matched {
-		return fmt.Errorf("Artifactory requires Pro or Enterprise license to work with Terraform!")
+		return fmt.Errorf("Artifactory requires Pro or Enterprise license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check.")
 	}
 
 	return nil
