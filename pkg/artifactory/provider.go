@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"regexp"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,8 +63,8 @@ func Provider() *schema.Provider {
 			"check_license": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
-				Description: "Toggle for pre-flight checking of Artifactory license. Default to `true`.",
+				Default:     false,
+				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `false`.",
 			},
 		},
 
@@ -235,8 +235,8 @@ func checkArtifactoryLicense(client *resty.Client) error {
 		return err
 	}
 
-	if !strings.Contains(license.Type, "Enterprise") {
-		return fmt.Errorf("Artifactory requires Enterprise license to work with Terraform!")
+	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial)`, license.Type); !matched {
+		return fmt.Errorf("Artifactory requires Pro or Enterprise license to work with Terraform!")
 	}
 
 	return nil
