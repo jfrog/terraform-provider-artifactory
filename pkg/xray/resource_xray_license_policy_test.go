@@ -2,14 +2,10 @@ package xray
 
 import (
 	"fmt"
-	"net/http"
 	"regexp"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var tempStructLicense = map[string]string{
@@ -37,19 +33,19 @@ var tempStructLicense = map[string]string{
 
 // License policy criteria are different from the security policy criteria
 // Test will try to post a new license policy with incorrect body of security policy
-// with specified cvss_range. The function expandLicenseCriteria will ignore all the
+// with specified cvss_range. The function unpackLicenseCriteria will ignore all the
 // fields except of "allow_unknown", "banned_licenses" and "allowed_licenses" if the Policy type is "license"
 func TestAccLicensePolicy_badLicenseCriteria(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_license_policy")
-	policyName := "terraform-license-policy-1"
+	policyName := fmt.Sprintf("terraform-license-policy-1-%d", randomInt())
 	policyDesc := "policy created by xray acceptance tests"
-	ruleName := "test-license-rule-1"
+	ruleName := fmt.Sprintf("test-license-rule-1-%d", randomInt())
 	rangeTo := 5
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayLicensePolicy_badLicense(resourceName, policyName, policyDesc, ruleName, rangeTo),
@@ -66,15 +62,15 @@ func TestAccLicensePolicy_badGracePeriod(t *testing.T) {
 	copyStringMap(tempStructLicense, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = "terraform-security-policy-2"
-	tempStruct["rule_name"] = "test-license-rule-2"
+	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-2-%d", randomInt())
+	tempStruct["rule_name"] = fmt.Sprintf("test-license-rule-2-%d", randomInt())
 	tempStruct["fail_build"] = "false"
 	tempStruct["grace_period_days"] = "5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config:      executeTemplate(fqrn, licensePolicyTemplate, tempStruct),
@@ -90,15 +86,15 @@ func TestAccLicensePolicy_createAllowedLic(t *testing.T) {
 	copyStringMap(tempStructLicense, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = "terraform-license-policy-3"
-	tempStruct["rule_name"] = "test-license-rule-3"
+	tempStruct["policy_name"] = fmt.Sprintf("terraform-license-policy-3-%d", randomInt())
+	tempStruct["rule_name"] = fmt.Sprintf("test-license-rule-3-%d", randomInt())
 	tempStruct["multi_license_permissive"] = "true"
 	tempStruct["allowedOrBanned"] = "allowed_licenses"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, licensePolicyTemplate, tempStruct),
@@ -114,14 +110,14 @@ func TestAccLicensePolicy_createBannedLic(t *testing.T) {
 	copyStringMap(tempStructLicense, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = "terraform-license-policy-4"
-	tempStruct["rule_name"] = "test-license-rule-4"
+	tempStruct["policy_name"] = fmt.Sprintf("terraform-license-policy-4-%d", randomInt())
+	tempStruct["rule_name"] = fmt.Sprintf("test-license-rule-4-%d", randomInt())
 	tempStruct["allowedOrBanned"] = "banned_licenses"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, licensePolicyTemplate, tempStruct),
@@ -137,14 +133,14 @@ func TestAccLicensePolicy_createMultiLicensePermissiveFalse(t *testing.T) {
 	copyStringMap(tempStructLicense, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = "terraform-license-policy-5"
-	tempStruct["rule_name"] = "test-license-rule-5"
+	tempStruct["policy_name"] = fmt.Sprintf("terraform-license-policy-5-%d", randomInt())
+	tempStruct["rule_name"] = fmt.Sprintf("test-license-rule-5-%d", randomInt())
 	tempStruct["allowedOrBanned"] = "banned_licenses"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, licensePolicyTemplate, tempStruct),
@@ -160,16 +156,16 @@ func TestAccLicensePolicy_createBlockFalse(t *testing.T) {
 	copyStringMap(tempStructLicense, tempStruct)
 
 	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = "terraform-license-policy-6"
-	tempStruct["rule_name"] = "test-license-rule-6"
+	tempStruct["policy_name"] = fmt.Sprintf("terraform-license-policy-6-%d", randomInt())
+	tempStruct["rule_name"] = fmt.Sprintf("test-license-rule-6-%d", randomInt())
 	tempStruct["block_unscanned"] = "true"
 	tempStruct["block_active"] = "true"
 	tempStruct["allowedOrBanned"] = "banned_licenses"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      testAccCheckLicensePolicyDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      verifyDeleted(fqrn, testCheckPolicy),
+		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
 				Config: executeTemplate(fqrn, licensePolicyTemplate, tempStruct),
@@ -179,29 +175,13 @@ func TestAccLicensePolicy_createBlockFalse(t *testing.T) {
 	})
 }
 
-func testAccCheckLicensePolicyDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("error: Resource id [%s] not found", id)
-		}
-		provider, _ := testAccProviders["xray"]()
-		_, resp, _ := getPolicy(rs.Primary.ID, provider.Meta().(*resty.Client))
-
-		if resp.StatusCode() == http.StatusOK {
-			return fmt.Errorf("error: Policy %s still exists", rs.Primary.ID)
-		}
-		return nil
-	}
-}
-
 func testAccXrayLicensePolicy_badLicense(resourceName, name, description, ruleName string, rangeTo int) string {
 	return fmt.Sprintf(`
 resource "xray_security_policy" "%s" {
 	name = "%s"
 	description = "%s"
 	type = "license"
-	rules {
+	rule {
 		name = "%s"
 		priority = 1
 		criteria {
@@ -225,22 +205,22 @@ func verifyLicensePolicy(fqrn string, tempStruct map[string]string, allowedOrBan
 	return resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
 		resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.name", tempStruct["rule_name"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
-		resource.TestCheckResourceAttr(fqrn, fmt.Sprintf("rules.0.criteria.0.%s.0", allowedOrBanned), tempStruct["license_0"]),
-		resource.TestCheckResourceAttr(fqrn, fmt.Sprintf("rules.0.criteria.0.%s.1", allowedOrBanned), tempStruct["license_1"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.0", tempStruct["mails_0"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.mails.1", tempStruct["mails_1"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.fail_build", tempStruct["fail_build"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
-		resource.TestCheckResourceAttr(fqrn, "rules.0.actions.0.custom_severity", tempStruct["custom_severity"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.name", tempStruct["rule_name"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.allow_unknown", tempStruct["allow_unknown"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.multi_license_permissive", tempStruct["multi_license_permissive"]),
+		resource.TestCheckResourceAttr(fqrn, fmt.Sprintf("rule.0.criteria.0.%s.0", allowedOrBanned), tempStruct["license_0"]),
+		resource.TestCheckResourceAttr(fqrn, fmt.Sprintf("rule.0.criteria.0.%s.1", allowedOrBanned), tempStruct["license_1"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.mails.0", tempStruct["mails_0"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.mails.1", tempStruct["mails_1"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.fail_build", tempStruct["fail_build"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.active", tempStruct["block_active"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.custom_severity", tempStruct["custom_severity"]),
 	)
 }
 
@@ -248,7 +228,7 @@ const licensePolicyTemplate = `resource "xray_license_policy" "{{ .resource_name
 	name = "{{ .policy_name }}"
 	description = "{{ .policy_description }}"
 	type = "license"
-	rules {
+	rule {
 		name = "{{ .rule_name }}"
 		priority = 1
 		criteria {	

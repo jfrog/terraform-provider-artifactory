@@ -1,17 +1,23 @@
 package xray
 
 import (
+	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"math"
+	"net/http"
 	"reflect"
 	"strings"
+	"testing"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func fmtMapToHcl(fields map[string]interface{}) string {
 	var allPairs []string
 	max := float64(0)
-	for key, _ := range fields {
+	for key := range fields {
 		max = math.Max(max, float64(len(key)))
 	}
 	for key, value := range fields {
@@ -74,5 +80,46 @@ func toHclFormat(thing interface{}) string {
 		return fmt.Sprintf("\n\t%s\n\t\t\t\t", fmtMapToHcl(thing.(map[string]interface{})))
 	default:
 		return fmt.Sprintf("%v", thing)
+	}
+}
+
+func checkPolicy(id string, request *resty.Request) (*resty.Response, error) {
+	return request.Get("xray/api/v2/policies/" + id)
+}
+
+func testCheckPolicy(id string, request *resty.Request) (*resty.Response, error) {
+	return checkPolicy(id, request.AddRetryCondition(neverRetry))
+}
+
+func testCheckPolicyDeleted(id string, t *testing.T, request *resty.Request) *resty.Response {
+	_, err := checkPolicy(id, request.AddRetryCondition(neverRetry))
+	if err == nil {
+		t.Errorf("Policy %s still exists!", id)
+	}
+	return nil
+}
+
+type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
+
+func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[id]
+		if !ok {
+			return fmt.Errorf("error: Resource id [%s] not found", id)
+		}
+		provider, _ := testAccProviders()["xray"]()
+		provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		client := provider.Meta().(*resty.Client)
+		resp, err := check(rs.Primary.ID, client.R())
+		if err != nil {
+			if resp != nil {
+				switch resp.StatusCode() {
+				case http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError:
+					return nil
+				}
+			}
+			return err
+		}
+		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
 	}
 }

@@ -181,6 +181,10 @@ func sendConfigurationPatch(content []byte, m interface{}) error {
 	return err
 }
 
+var neverRetry = func(response *resty.Response, err error) bool {
+	return false
+}
+
 func BoolPtr(v bool) *bool { return &v }
 
 func IntPtr(v int) *int { return &v }

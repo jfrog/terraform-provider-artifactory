@@ -2,14 +2,15 @@ package xray
 
 import (
 	"fmt"
-	"github.com/gorhill/cronexpr"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -527,4 +528,8 @@ func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 		}
 		return nil, nil
 	}
+}
+
+func inList(strings ...string) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(strings, true))
 }

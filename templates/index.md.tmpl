@@ -1,0 +1,60 @@
+---
+layout: ""
+page_title: "JFrog Xray Provider"
+description: |-
+  The Xray provider is used to interact with the resources supported by JFrog Xray.
+---
+
+# JFrog Xray Provider
+
+The [Xray](https://jfrog.com/xray/) provider is used to interact with the
+resources supported by JFrog Xray. Xray is a part of JFrog Artifactory and can't be used separately.
+The provider needs to be configured with the proper credentials before it can be used.
+Xray API documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API)
+
+Links to documentation for specific resources can be found in the table of contents to the left.
+
+This provider requires access to Artifactory and Xray APIs, which are only available in the _licensed_ pro and enterprise editions.
+You can determine which license you have by accessing the following URL
+`${host}/artifactory/api/system/licenses/`
+
+You can either access it via api, or web browser - it does require admin level credentials, but it's one of the few APIs that will work without a license (side node: you can also install your license here with a `POST`)
+
+```bash
+curl -sL ${host}/projects/api/system/licenses/ | jq .
+{
+  "type" : "Enterprise Plus Trial",
+  "validThrough" : "Jan 29, 2022",
+  "licensedTo" : "JFrog Ltd"
+}
+```
+
+The following 3 license types (`jq .type`) do **NOT** support APIs:
+- Community Edition for C/C++
+- JCR Edition
+- OSS
+
+## Example Usage
+
+{{tffile "examples/sample.tf"}}
+
+## Authentication
+
+The Xray provider supports one type of authentication using Bearer token.
+
+### Bearer Token
+Artifactory access tokens may be used via the Authorization header by providing the `access_token` field to the provider
+block. Getting this value from the environment is supported with the `XRAY_ACCESS_TOKEN`,
+or `JFROG_ACCESS_TOKEN` variables.
+Set `url` field to provide JFrog Xray URL. Alternatively you can set `ARTIFACTORY_URL`, `JFROG_URL` or `PROJECTS_URL` variables.
+
+Usage:
+```hcl
+# Configure the Xray provider
+provider "xray" {
+  url = "artifactory.site.com/xray"
+  access_token = "abc...xy"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

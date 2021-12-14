@@ -1,12 +1,16 @@
 package xray
 
 import (
+	"context"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Version for some reason isn't getting updated by the linker
@@ -20,17 +24,18 @@ func Provider() *schema.Provider {
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"JFROG_URL", "ARTIFACTORY_URL", "PROJECTS_URL"},
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"JFROG_URL", "XRAY_URL"},
 					"http://localhost:8081"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+				Description:  "URL of Artifactory. This can also be sourced from the `XRAY_URL` or `JFROG_URL` environment variable. Default to 'http://localhost:8081' if not set.",
 			},
 			"access_token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"XRAY_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"},
-					"JFROG_ACCESS_TOKEN"),
-				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Sensitive:        true,
+				DefaultFunc:      schema.MultiEnvDefaultFunc([]string{"XRAY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN"}, ""),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description:      "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 		},
 
@@ -38,15 +43,17 @@ func Provider() *schema.Provider {
 			// Xray resources
 			"xray_security_policy": resourceXraySecurityPolicyV2(),
 			"xray_license_policy":  resourceXrayLicensePolicyV2(),
+			"xray_watch":           resourceXrayWatch(),
 		},
 	}
 
-	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	p.ConfigureContextFunc = func(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
-			terraformVersion = "0.11+compatible"
+			terraformVersion = "0.13+compatible"
 		}
-		return providerConfigure(d, terraformVersion)
+		configuration, err := providerConfigure(data, terraformVersion)
+		return configuration, diag.FromErr(err)
 	}
 
 	return p
@@ -102,8 +109,13 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	_, err = sendUsageRepo(restyBase, terraformVersion)
 
+	_, err = sendUsageRepo(restyBase, terraformVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	err = checkArtifactoryLicense(restyBase)
 	if err != nil {
 		return nil, err
 	}
@@ -132,4 +144,25 @@ func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{
 		return nil, fmt.Errorf("unable to report usage %s", err)
 	}
 	return nil, nil
+}
+
+func checkArtifactoryLicense(client *resty.Client) error {
+
+	type License struct {
+		Type         string `json:"type"`
+		ValidThrough string `json:"validThrough"`
+		LicensedTo   string `json:"licensedTo"`
+	}
+
+	license := License{}
+	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/licenses/")
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(license.Type, "Enterprise") {
+		return fmt.Errorf("Artifactory requires Enterprise license to work with Terraform!")
+	}
+
+	return nil
 }
