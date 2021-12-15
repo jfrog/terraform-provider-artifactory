@@ -1,0 +1,184 @@
+GET {{ host }}/xray/api/v2/watches
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+###
+
+GET {{ host }}/xray/api/v2/watches/{{ watch_name_all_repos }}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+###
+
+POST {{ host }}/xray/api/v2/watches
+Authorization: Bearer {{ token }}
+Content-Type: application/json
+
+{
+  "general_data": {
+    "name": "{{ watch_name_all_repos }}",
+    "description": "Watch all repositories",
+    "active": true
+  },
+  "project_resources": {
+    "resources": [
+      {
+        "type": "all-repos",
+        "filters": [
+          {
+            "type": "package-type",
+            "value": "Docker"
+          },
+          {
+            "type": "package-type",
+            "value": "Debian"
+          }
+        ]
+      }
+    ]
+  },
+  "assigned_policies": [
+    {
+      "name": "{{ license_policy_name }}",
+      "type": "license"
+    },
+        {
+      "name": "{{ security_policy_name }}",
+      "type": "security"
+    }
+  ],
+  "watch_recipients":["name@myemail.com","name1@youremail.com"]
+}
+
+###
+
+POST {{ host }}/xray/api/v2/watches
+Authorization: Bearer {{ token }}
+Content-Type: application/json
+
+{
+  "general_data": {
+    "name": "{{ watch_name_single_repo }}",
+    "description": "Watch selected repositories",
+    "active": true
+  },
+  "project_resources": {
+    "resources": [
+      {
+        "type": "repository",
+        "bin_mgr_id": "default",
+        "name": "libs-release-local",
+        "filters": [
+          {
+            "type": "regex",
+            "value": ".*"
+          }
+        ]
+      },
+      {
+        "type": "repository",
+        "bin_mgr_id": "default",
+        "name": "libs-release-local-1",
+        "filters": [
+          {
+            "type": "regex",
+            "value": ".*"
+          }
+        ]
+      }
+    ]
+  },
+  "assigned_policies": [
+    {
+      "name": "{{ license_policy_name }}",
+      "type": "license"
+    },
+        {
+      "name": "{{ security_policy_name }}",
+      "type": "security"
+    }
+  ],
+  "watch_recipients":["name@myemail.com","name1@youremail.com"]
+}
+
+###
+
+POST {{ host }}/xray/api/v2/watches
+Authorization: Bearer {{ token }}
+Content-Type: application/json
+
+{
+  "general_data": {
+    "name": "{{ watch_name_builds }}",
+    "description": "Watch selected builds",
+    "active": true
+  },
+  "project_resources": {
+    "resources": [
+      {
+        "type": "build",
+        "bin_mgr_id": "default",
+        "name": "your-build-name"
+      },
+      {
+        "type": "build",
+        "bin_mgr_id": "default",
+        "name": "your-other-build-name"
+      }
+    ]
+  },
+  "assigned_policies": [
+    {
+      "name": "{{ license_policy_name }}",
+      "type": "license"
+    },
+        {
+      "name": "{{ security_policy_name }}",
+      "type": "security"
+    }
+  ],
+  "watch_recipients":["name@myemail.com","name1@youremail.com"]
+}
+
+###
+
+PUT {{ host }}/xray/api/v2/watches/{{ watch_name_all_repos }}
+Authorization: Bearer {{ token }}
+Content-Type: application/json
+
+{
+  "general_data": {
+    "name": "{{ watch_name_all_repos }}",
+    "description": "Watch all repositories, updated",
+    "active": true
+  },
+  "project_resources": {
+    "resources": [
+      {
+        "type": "all-repos",
+        "filters": [
+          {
+            "type": "package-type",
+            "value": "Docker"
+          }
+        ]
+      }
+    ]
+  },
+  "assigned_policies": [
+    {
+      "name": "{{ license_policy_name }}",
+      "type": "license"
+    }
+  ],
+  "watch_recipients":["name@myemail.com","name1@youremail.com"]
+}
+
+
+###
+
+DELETE {{ host }}/xray/api/v2/watches/{{ watch_name_all_repos }}
+Authorization: Bearer {{ token }}
+Content-Type: application/json
