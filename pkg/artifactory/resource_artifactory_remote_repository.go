@@ -318,13 +318,30 @@ var legacyRemoteSchema = map[string]*schema.Schema{
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
-		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
+				},
+				"statistics_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, download statistics for the artifact at the remote Artifactory instance will be updated each time a cached item is downloaded from your repository.",
+				},
+				"properties_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance.",
+				},
+				"source_origin_absence_detection_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, Artifactory will check that cached artifacts' sources are available in the origin repository.",
 				},
 			},
 		},
@@ -407,9 +424,23 @@ func unpackLegacyRemoteRepo(s *schema.ResourceData) (interface{}, string, error)
 	repo.PropagateQueryParams = d.getBool("propagate_query_params", true)
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
+
 		enabled := contentSynchronisationConfig["enabled"].(bool)
+		statisticsEnabled := contentSynchronisationConfig["statistics_enabled"].(bool)
+		propertiesEnabled := contentSynchronisationConfig["properties_enabled"].(bool)
+		sourceOriginAbsenceDetectionEnabled := contentSynchronisationConfig["source_origin_absence_detection_enabled"].(bool)
+
 		repo.ContentSynchronisation = &ContentSynchronisation{
 			Enabled: enabled,
+			Statistics: ContentSynchronisationStatistics{
+				Enabled: statisticsEnabled,
+			},
+			Properties: ContentSynchronisationProperties{
+				Enabled: propertiesEnabled,
+			},
+			Source: ContentSynchronisationSource{
+				OriginAbsenceDetection: sourceOriginAbsenceDetectionEnabled,
+			},
 		}
 	}
 	if repo.PackageType != "" && repo.PackageType != "generic" && repo.PropagateQueryParams == true {
@@ -474,6 +505,9 @@ func packLegacyRemoteRepo(r interface{}, d *schema.ResourceData) error {
 		setValue("content_synchronisation", []interface{}{
 			map[string]bool{
 				"enabled": repo.ContentSynchronisation.Enabled,
+				"statistics_enabled": repo.ContentSynchronisation.Statistics.Enabled,
+				"properties_enabled": repo.ContentSynchronisation.Properties.Enabled,
+				"source_origin_absence_detection_enabled": repo.ContentSynchronisation.Source.OriginAbsenceDetection,
 			},
 		})
 	}

@@ -61,9 +61,9 @@ type ContentSynchronisationSource struct {
 
 type ContentSynchronisation struct {
 	Enabled    bool `hcl:"enabled" json:"enabled,omitempty"`
-	Statistics ContentSynchronisationStatistics
-	Properties ContentSynchronisationProperties
-	Source     ContentSynchronisationSource
+	Statistics ContentSynchronisationStatistics `json:"statistics"`
+	Properties ContentSynchronisationProperties `json:"properties"`
+	Source     ContentSynchronisationSource     `json:"source"`
 }
 
 type RemoteRepositoryBaseParams struct {
@@ -545,9 +545,8 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"content_synchronisation": {
-		Type:     schema.TypeList,
+		Type:     schema.TypeSet,
 		Optional: true,
-		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -707,13 +706,13 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 
 		repo.ContentSynchronisation = &ContentSynchronisation{
 			Enabled: enabled,
-			Statistics: &ContentSynchronisationStatistics{
+			Statistics: ContentSynchronisationStatistics{
 				Enabled: statisticsEnabled,
 			},
-			Properties: &ContentSynchronisationProperties{
+			Properties: ContentSynchronisationProperties{
 				Enabled: propertiesEnabled,
 			},
-			Source: &ContentSynchronisationSource{
+			Source: ContentSynchronisationSource{
 				OriginAbsenceDetection: sourceOriginAbsenceDetectionEnabled,
 			},
 		}
