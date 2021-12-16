@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"regexp"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -64,7 +64,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Toggle for pre-flight checking of Artifactory license. Default to `true`.",
+				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
 			},
 		},
 
@@ -165,8 +165,8 @@ func buildResty(URL string) (*resty.Client, error) {
 		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version).
 		SetRetryCount(5)
 	restyBase.DisableWarn = true
-	return restyBase, nil
 
+	return restyBase, nil
 }
 
 func addAuthToResty(client *resty.Client, username, password, apiKey, accessToken string) (*resty.Client, error) {
@@ -224,19 +224,32 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 func checkArtifactoryLicense(client *resty.Client) error {
 
 	type License struct {
-		Type         string `json:"type"`
-		ValidThrough string `json:"validThrough"`
-		LicensedTo   string `json:"licensedTo"`
+		Type string `json:"type"`
 	}
 
-	license := License{}
-	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/licenses/")
+	type LicensesWrapper struct {
+		License
+		Licenses []License `json:"licenses"` // HA licenses returns as an array instead
+	}
+
+	licensesWrapper := LicensesWrapper{}
+	_, err := client.R().
+		SetResult(&licensesWrapper).
+		Get("/artifactory/api/system/licenses")
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to check for license. If your usage doesn't require admin permission, you can set `check_license` attribute to `false` to skip this check. %s", err)
 	}
 
-	if !strings.Contains(license.Type, "Enterprise") {
-		return fmt.Errorf("Artifactory requires Enterprise license to work with Terraform!")
+	var licenseType string
+	if len(licensesWrapper.Licenses) > 0 {
+		licenseType = licensesWrapper.Licenses[0].Type
+	} else {
+		licenseType = licensesWrapper.Type
+	}
+
+	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial)`, licenseType); !matched {
+		return fmt.Errorf("Artifactory requires Pro or Enterprise license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check.")
 	}
 
 	return nil
