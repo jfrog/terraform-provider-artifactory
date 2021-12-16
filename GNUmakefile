@@ -10,7 +10,7 @@ install:
 	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		(test -f terraform-provider-artifactory || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
-		rm .terraform.lock.hcl && \
+		rm -f .terraform.lock.hcl && \
 		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
 
