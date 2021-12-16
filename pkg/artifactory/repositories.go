@@ -47,8 +47,23 @@ func (bp LocalRepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
+type ContentSynchronisationStatistics struct {
+	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationProperties struct {
+	Enabled bool `hcl:"properties_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationSource struct {
+	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection_enabled" json:"originAbsenceDetection"`
+}
+
 type ContentSynchronisation struct {
-	Enabled bool `hcl:"enabled" json:"enables,omitempty"`
+	Enabled    bool `hcl:"enabled" json:"enabled,omitempty"`
+	Statistics ContentSynchronisationStatistics
+	Properties ContentSynchronisationProperties
+	Source     ContentSynchronisationSource
 }
 
 type RemoteRepositoryBaseParams struct {
@@ -90,6 +105,7 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `hcl:"bypass_head_requests" json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `hcl:"client_tls_certificate" json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `hcl:"content_synchronisation" json:"contentSynchronisation,omitempty"`
+	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
 }
 
 func (bp RemoteRepositoryBaseParams) Id() string {
@@ -528,7 +544,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
-
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -539,6 +554,25 @@ var baseRemoteSchema = map[string]*schema.Schema{
 				"enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
+					Default:  false,
+				},
+				"statistics_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, download statistics for the artifact at the remote Artifactory instance will be updated each time a cached item is downloaded from your repository.",
+				},
+				"properties_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance.",
+				},
+				"source_origin_absence_detection_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If set, Artifactory will check that cached artifacts' sources are available in the origin repository.",
 				},
 			},
 		},
@@ -665,9 +699,23 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
+
 		enabled := contentSynchronisationConfig["enabled"].(bool)
+		statisticsEnabled := contentSynchronisationConfig["statistics_enabled"].(bool)
+		propertiesEnabled := contentSynchronisationConfig["properties_enabled"].(bool)
+		sourceOriginAbsenceDetectionEnabled := contentSynchronisationConfig["source_origin_absence_detection_enabled"].(bool)
+
 		repo.ContentSynchronisation = &ContentSynchronisation{
 			Enabled: enabled,
+			Statistics: &ContentSynchronisationStatistics{
+				Enabled: statisticsEnabled,
+			},
+			Properties: &ContentSynchronisationProperties{
+				Enabled: propertiesEnabled,
+			},
+			Source: &ContentSynchronisationSource{
+				OriginAbsenceDetection: sourceOriginAbsenceDetectionEnabled,
+			},
 		}
 	}
 	return repo
