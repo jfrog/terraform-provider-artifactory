@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"text/template"
 	"time"
 
@@ -184,6 +185,13 @@ func sendConfigurationPatch(content []byte, m interface{}) error {
 var neverRetry = func(response *resty.Response, err error) bool {
 	return false
 }
+
+var retryOnMergeError = func() func(response *resty.Response, _r error) bool {
+	var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
+	return func(response *resty.Response, _r error) bool {
+		return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
+	}
+}()
 
 func BoolPtr(v bool) *bool { return &v }
 

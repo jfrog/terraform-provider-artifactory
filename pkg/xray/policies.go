@@ -335,36 +335,7 @@ func packBlockDownload(bd BlockDownloadSettings) []interface{} {
 	return []interface{}{m}
 }
 
-func resourceXrayPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	policy, err := unpackPolicy(d)
-	// Warning or errors can be collected in a slice type
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	_, err = m.(*resty.Client).R().SetBody(policy).Post("xray/api/v2/policies")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(policy.Name)
-	return resourceXrayPolicyRead(ctx, d, m)
-}
-
-func getPolicy(id string, client *resty.Client) (Policy, *resty.Response, error) {
-	policy := Policy{}
-	resp, err := client.R().SetResult(&policy).Get("xray/api/v2/policies/" + id)
-	return policy, resp, err
-}
-func resourceXrayPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	policy, resp, err := getPolicy(d.Id(), m.(*resty.Client))
-	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			log.Printf("[WARN] Xray policy (%s) not found, removing from state", d.Id())
-			d.SetId("")
-		}
-		return diag.FromErr(err)
-	}
-
+func packPolicy(policy Policy, d *schema.ResourceData) diag.Diagnostics {
 	if err := d.Set("name", policy.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -392,12 +363,46 @@ func resourceXrayPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	return nil
 }
 
+func getPolicy(id string, client *resty.Client) (Policy, *resty.Response, error) {
+	policy := Policy{}
+	resp, err := client.R().SetResult(&policy).Get("xray/api/v2/policies/" + id)
+	return policy, resp, err
+}
+
+func resourceXrayPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	policy, err := unpackPolicy(d)
+	// Warning or errors can be collected in a slice type
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(policy).Post("xray/api/v2/policies")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(policy.Name)
+	return resourceXrayPolicyRead(ctx, d, m)
+}
+
+func resourceXrayPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	policy, resp, err := getPolicy(d.Id(), m.(*resty.Client))
+	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			log.Printf("[WARN] Xray policy (%s) not found, removing from state", d.Id())
+			d.SetId("")
+		}
+		return diag.FromErr(err)
+	}
+	packPolicy(policy, d)
+	return nil
+}
+
 func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	policy, err := unpackPolicy(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(*resty.Client).R().SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
+	_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -408,7 +413,7 @@ func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceXrayPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
-	resp, err := m.(*resty.Client).R().Delete("xray/api/v2/policies/" + d.Id())
+	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete("xray/api/v2/policies/" + d.Id())
 	if err != nil && resp.StatusCode() == http.StatusInternalServerError {
 		d.SetId("")
 		return diag.FromErr(err)
