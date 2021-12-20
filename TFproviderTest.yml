@@ -1,5 +1,5 @@
 resources:
-  - name: GitHubTFProviderRepoJFrog
+  - name: GitHubTFProviderXrayRepoJFrog
     type: GitRepo
     configuration:
       gitProvider: Partnership_GitHub
@@ -12,7 +12,7 @@ resources:
       cancelPendingRunsOn:
         pullRequestUpdate: true
 pipelines:
-  - name: tf_provider_artifactory_xray_gke
+  - name: tf_provider_xray_gke
     steps:
       - name: fozzie_gke_jfrog_rt_xray_create
         type: Bash
@@ -30,7 +30,7 @@ pipelines:
             - name: gkeEnvVars
             - name: partnersSlack
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderXrayRepoJFrog
           environmentVariables:
             FOZZIE_HOME: "/home/fozzie"
             PROVISIONER: "native-steps"
@@ -52,7 +52,7 @@ pipelines:
             - echo "Preparing for work..."
             - echo "Create GKE cluster and deploy Artifactory and Xray, latest versions form Helm repo"
           onExecute:
-            - GKE_CLUSTER=tf-provider-rt-xray-$(date +%s)
+            - GKE_CLUSTER=tf-provider-xray-$(date +%s)
             - fozzie checkout native-steps
             - fozzie gke/create_cluster
             - echo "Creating Artifactory Secret"
@@ -114,7 +114,7 @@ pipelines:
             - echo "Artifactory password ${NEW_RT_PASSWORD}"
           onFailure:
             - echo "JFrog Artifactory and Xray creation failed."
-            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. Pipeline failed on <${step_url}|${step_name}> step"
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider Xray>. Pipeline failed on <${step_url}|${step_name}> step"
             - fozzie checkout native-steps
             - echo "Removing GKE cluster"
             - fozzie gke/authorize
@@ -135,7 +135,7 @@ pipelines:
               auto:
                 language: go
                 versions:
-                  - "1.15.2"
+                  - "1.16.7"
           integrations:
             - name: partnersSlack
             - name: gkeEnvVars
@@ -143,7 +143,7 @@ pipelines:
           inputSteps:
             - name: fozzie_gke_jfrog_rt_xray_create
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderXrayRepoJFrog
           environmentVariables:
             NEW_RT_PASSWORD: ${int_gkeEnvVars_new_rt_password}
         execution:
@@ -156,16 +156,17 @@ pipelines:
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
             - sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt install terraform && terraform -version
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
+            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
+            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderXrayRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
+            - cd ${res_GitHubTFProviderXrayRepoJFrog_resourcePath}
             - echo "Verify the code contents merged feature branch with development branch"
             - git branch && ls -al
-            - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-            - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
-            - echo $PROVIDER_VERSION
-            - echo $NEXT_PROVIDER_VERSION
+            ## commented out before the first version released. Version is hardcoded to 0.0.1
+            #- export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+            #- export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
+            #- echo $PROVIDER_VERSION
+            #- echo $NEXT_PROVIDER_VERSION
             - echo "Rename the build to make it work on Ubuntu"
             - cat GNUmakefile | sed -e "s/darwin_amd64/linux_amd64/g" > GNUmakefile.tmp
             - cp GNUmakefile.tmp GNUmakefile && rm GNUmakefile.tmp
@@ -173,7 +174,7 @@ pipelines:
             - cat sample.tf | sed -e "s/version =.*/version = \"${NEXT_PROVIDER_VERSION}\"/g" > sample.tf.tmp
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
-            - echo "Add variables needed to run Terraform Provider"
+            - echo "Add variables needed to run Terraform Provider Xray"
             - export ARTIFACTORY_URL=${jdp_url} && echo ${ARTIFACTORY_URL}
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=${NEW_RT_PASSWORD} && echo ${ARTIFACTORY_PASSWORD}
@@ -191,21 +192,21 @@ pipelines:
                                   --header "accept: application/json, text/plain, */*" \
                                   --header "x-requested-with: XMLHttpRequest" \
                                   --header "cookie: ACCESSTOKEN=${ACCESSTOKEN}; REFRESHTOKEN=${REFRESHTOKEN}")
-            - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
-            - echo "Unset ARTIFACTORY_USERNAME and ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
+            - add_run_variables JFROG_ACCESS_TOKEN=${ACCESS_KEY}
+            - echo "Unset ARTIFACTORY_USERNAME and ARTIFACTORY_PASSWORD, acceptance test will use JFROG_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_USERNAME && unset ARTIFACTORY_PASSWORD
             - export TF_ACC=1
             - make acceptance
             - make install
           onSuccess:
-            - send_notification partnersSlack --text "Terraform Provider run is completed. Version ${NEXT_PROVIDER_VERSION}."
+            - send_notification partnersSlack --text "Terraform Provider Xray run is completed. Version ${NEXT_PROVIDER_VERSION}."
           onFailure:
             - echo "Failure"
-            - send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider Xray>. Pipeline failed on <${step_url}|${step_name}> step"
           onComplete:
             - echo "Complete"
 
-      - name: create_pr_to_master_branch
+      - name: create_pr_to_master_branch_message
         type: Bash
         configuration:
           integrations:
@@ -215,17 +216,17 @@ pipelines:
           inputSteps:
             - name: build_and_run_tf_provider
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderXrayRepoJFrog
         execution:
           onStart:
             - echo "Preparing for work..."
             - echo "Create and push a new tag, associated with the lates changes on develpment branch"
           onExecute:
             - printenv
-            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
-            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
-            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
-            - export PR_TITLE=${res_GitHubTFProviderRepoJFrog_commitMessage}
+            - export PR_URL=${res_GitHubTFProviderXrayRepoJFrog_commitUrl}
+            - export PR_COMMITTER=${res_GitHubTFProviderXrayRepoJFrog_committerLogin}
+            - export PR_BRANCH=${res_GitHubTFProviderXrayRepoJFrog_headCommitRef}
+            - export PR_TITLE=${res_GitHubTFProviderXrayRepoJFrog_commitMessage}
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 echo "PR was not created (already exists from this head branch?). PR link is empty!"
@@ -233,13 +234,13 @@ pipelines:
               fi
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider Xray>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
           onFailure:
             - >-
               if [[ "${PR_URL}" == null ]]; then
-                send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
+                send_notification partnersSlack --text "<${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider Xray>. Pipeline failed on <${step_url}|${step_name}> step. PR was not created (already exists from this head branch?)"
               else
-                send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
+                send_notification partnersSlack --text "<${res_GitHubTFProviderXrayRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider Xray>. Pipeline failed on <${step_url}|${step_name}> step"
               fi
           onComplete:
             - echo "Cleaning up"
