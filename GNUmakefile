@@ -1,4 +1,5 @@
 TEST?=./...
+TARGET_ARCH?=darwin_amd64
 PKG_NAME=pkg/xray
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-xray/${PKG_NAME}
 #VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
@@ -6,15 +7,17 @@ PKG_VERSION_PATH=github.com/jfrog/terraform-provider-xray/${PKG_NAME}
 VERSION := 0.0.0
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BINARY_NAME=terraform-provider-xray
-BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/darwin_amd64
+BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/${TARGET_ARCH}
 
 default: build
 
 install:
 	mkdir -p ${BUILD_PATH} && \
-		(test -f ${BINARY_NAME} || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
+		(test -f ${BINARY_NAME} || go build -o ./${BINARY_NAME} -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv ${BINARY_NAME} ${BUILD_PATH} && \
+		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
+
 
 clean:
 	rm -fR .terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
