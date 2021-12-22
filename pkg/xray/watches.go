@@ -208,7 +208,7 @@ func getWatch(id string, client *resty.Client) (Watch, *resty.Response, error) {
 
 func resourceXrayWatchCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	watch := unpackWatch(d)
-	_, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(watch).Post("xray/api/v2/watches")
+	_, err := m.(*resty.Client).R().SetBody(watch).Post("xray/api/v2/watches")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -232,7 +232,7 @@ func resourceXrayWatchRead(ctx context.Context, d *schema.ResourceData, m interf
 
 func resourceXrayWatchUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	watch := unpackWatch(d)
-	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(watch).Put("xray/api/v2/watches/" + d.Id())
+	resp, err := m.(*resty.Client).R().SetBody(watch).Put("xray/api/v2/watches/" + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			log.Printf("[WARN] Xray watch (%s) not found, removing from state", d.Id())
@@ -246,7 +246,7 @@ func resourceXrayWatchUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceXrayWatchDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete("xray/api/v2/watches/" + d.Id())
+	resp, err := m.(*resty.Client).R().Delete("xray/api/v2/watches/" + d.Id())
 	if err != nil && resp.StatusCode() == http.StatusNotFound {
 		d.SetId("")
 		return diag.FromErr(err)

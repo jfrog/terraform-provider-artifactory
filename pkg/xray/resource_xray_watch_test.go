@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var tempStructWatch = map[string]string{
+var testDataWatch = map[string]string{
 	"resource_name":     "",
 	"watch_name":        "xray-watch",
 	"description":       "This is a new watch created by TF Provider",
@@ -26,12 +26,12 @@ var tempStructWatch = map[string]string{
 
 func TestAccWatch_allReposSinglePolicy(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -43,8 +43,8 @@ func TestAccWatch_allReposSinglePolicy(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, allReposSinglePolicyWatchTemplate, tempStruct),
-				Check:  verifyXrayWatch(fqrn, tempStruct),
+				Config: executeTemplate(fqrn, allReposSinglePolicyWatchTemplate, testData),
+				Check:  verifyXrayWatch(fqrn, testData),
 			},
 		},
 	})
@@ -52,13 +52,13 @@ func TestAccWatch_allReposSinglePolicy(t *testing.T) {
 
 func TestAccWatch_allReposMultiplePolicies(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-1%d", randomInt())
-	tempStruct["policy_name_1"] = fmt.Sprintf("xray-policy-2%d", randomInt())
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-1%d", randomInt())
+	testData["policy_name_1"] = fmt.Sprintf("xray-policy-2%d", randomInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -72,14 +72,14 @@ func TestAccWatch_allReposMultiplePolicies(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, allReposMultiplePoliciesWatchTemplate, tempStruct),
+				Config: executeTemplate(fqrn, allReposMultiplePoliciesWatchTemplate, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", tempStruct["watch_name"]),
-					resource.TestCheckResourceAttr(fqrn, "description", tempStruct["description"]),
-					resource.TestCheckResourceAttr(fqrn, "watch_resource.0.type", tempStruct["watch_type"]),
-					resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.name", tempStruct["policy_name_0"]),
+					resource.TestCheckResourceAttr(fqrn, "name", testData["watch_name"]),
+					resource.TestCheckResourceAttr(fqrn, "description", testData["description"]),
+					resource.TestCheckResourceAttr(fqrn, "watch_resource.0.type", testData["watch_type"]),
+					resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.name", testData["policy_name_0"]),
 					resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.type", "security"),
-					resource.TestCheckResourceAttr(fqrn, "assigned_policy.1.name", tempStruct["policy_name_1"]),
+					resource.TestCheckResourceAttr(fqrn, "assigned_policy.1.name", testData["policy_name_1"]),
 					resource.TestCheckResourceAttr(fqrn, "assigned_policy.1.type", "license"),
 				),
 			},
@@ -92,25 +92,25 @@ func TestAccWatch_allReposMultiplePolicies(t *testing.T) {
 // We need to figure out how to use external providers (like Artifactory) in the tests. Documented approach didn't work
 func TestAccWatch_singleRepository(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
-	tempStruct["watch_type"] = "repository"
-	repo0 := "libs-release-local"
-	repo1 := "libs-release-local-1"
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
+	testData["watch_type"] = "repository"
+	testData["repo0"] = fmt.Sprintf("libs-release-local-0-%d", randomInt())
+	testData["repo1"] = fmt.Sprintf("libs-release-local-1-%d", randomInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccCreateRepos(t, repo0)
-			testAccCreateRepos(t, repo1)
+			testAccCreateRepos(t, testData["repo0"])
+			testAccCreateRepos(t, testData["repo1"])
 		},
 		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			testAccDeleteRepo(t, repo0)
-			testAccDeleteRepo(t, repo1)
+			testAccDeleteRepo(t, testData["repo0"])
+			testAccDeleteRepo(t, testData["repo1"])
 			testCheckPolicyDeleted("xray_security_policy.security", t, request)
 			resp, err := testCheckWatch(id, request)
 			return resp, err
@@ -119,8 +119,8 @@ func TestAccWatch_singleRepository(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, singleRepositoryWatchTemplate, tempStruct),
-				Check:  verifyXrayWatch(fqrn, tempStruct),
+				Config: executeTemplate(fqrn, singleRepositoryWatchTemplate, testData),
+				Check:  verifyXrayWatch(fqrn, testData),
 			},
 		},
 	})
@@ -128,25 +128,25 @@ func TestAccWatch_singleRepository(t *testing.T) {
 
 func TestAccWatch_multipleRepositories(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
-	tempStruct["watch_type"] = "repository"
-	repo0 := "libs-release-local"
-	repo1 := "libs-release-local-1"
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
+	testData["watch_type"] = "repository"
+	testData["repo0"] = fmt.Sprintf("libs-release-local-0-%d", randomInt())
+	testData["repo1"] = fmt.Sprintf("libs-release-local-1-%d", randomInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccCreateRepos(t, repo0)
-			testAccCreateRepos(t, repo1)
+			testAccCreateRepos(t, testData["repo0"])
+			testAccCreateRepos(t, testData["repo1"])
 		},
 		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			testAccDeleteRepo(t, repo0)
-			testAccDeleteRepo(t, repo1)
+			testAccDeleteRepo(t, testData["repo0"])
+			testAccDeleteRepo(t, testData["repo1"])
 			testCheckPolicyDeleted("xray_security_policy.security", t, request)
 			resp, err := testCheckWatch(id, request)
 			return resp, err
@@ -154,8 +154,8 @@ func TestAccWatch_multipleRepositories(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, multipleRepositoriesWatchTemplate, tempStruct),
-				Check:  verifyXrayWatch(fqrn, tempStruct),
+				Config: executeTemplate(fqrn, multipleRepositoriesWatchTemplate, testData),
+				Check:  verifyXrayWatch(fqrn, testData),
 			},
 		},
 	})
@@ -163,16 +163,16 @@ func TestAccWatch_multipleRepositories(t *testing.T) {
 
 func TestAccWatch_build(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
-	tempStruct["watch_type"] = "build"
-	tempStruct["build_name0"] = "release-pipeline"
-	tempStruct["build_name1"] = "release-pipeline1"
-	builds := []string{tempStruct["build_name0"]}
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
+	testData["watch_type"] = "build"
+	testData["build_name0"] = fmt.Sprintf("release-pipeline-%d", randomInt())
+	testData["build_name1"] = fmt.Sprintf("release-pipeline1-%d", randomInt())
+	builds := []string{testData["build_name0"]}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -183,8 +183,8 @@ func TestAccWatch_build(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, buildWatchTemplate, tempStruct),
-				Check:  verifyXrayWatch(fqrn, tempStruct),
+				Config: executeTemplate(fqrn, buildWatchTemplate, testData),
+				Check:  verifyXrayWatch(fqrn, testData),
 			},
 		},
 	})
@@ -192,16 +192,16 @@ func TestAccWatch_build(t *testing.T) {
 
 func TestAccWatch_multipleBuilds(t *testing.T) {
 	_, fqrn, resourceName := mkNames("watch-", "xray_watch")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructWatch, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataWatch, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
-	tempStruct["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
-	tempStruct["watch_type"] = "build"
-	tempStruct["build_name0"] = "release-pipeline"
-	tempStruct["build_name1"] = "release-pipeline1"
-	builds := []string{tempStruct["build_name0"], tempStruct["build_name1"]}
+	testData["resource_name"] = resourceName
+	testData["watch_name"] = fmt.Sprintf("xray-watch-%d", randomInt())
+	testData["policy_name_0"] = fmt.Sprintf("xray-policy-%d", randomInt())
+	testData["watch_type"] = "build"
+	testData["build_name0"] = fmt.Sprintf("release-pipeline-%d", randomInt())
+	testData["build_name1"] = fmt.Sprintf("release-pipeline1-%d", randomInt())
+	builds := []string{testData["build_name0"], testData["build_name1"]}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -212,8 +212,8 @@ func TestAccWatch_multipleBuilds(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, multipleBuildsWatchTemplate, tempStruct),
-				Check:  verifyXrayWatch(fqrn, tempStruct),
+				Config: executeTemplate(fqrn, multipleBuildsWatchTemplate, testData),
+				Check:  verifyXrayWatch(fqrn, testData),
 			},
 		},
 	})
@@ -386,7 +386,7 @@ resource "xray_watch" "{{ .resource_name }}" {
   watch_resource {
 	type       	= "{{ .watch_type }}"
 	bin_mgr_id  = "default"
-	name		= "libs-release-local"
+	name		= "{{ .repo0 }}"
 	filter {
 		type  	= "{{ .filter_type_0 }}"
 		value	= "{{ .filter_value_0 }}"
@@ -434,7 +434,7 @@ resource "xray_watch" "{{ .resource_name }}" {
   watch_resource {
 	type       	= "{{ .watch_type }}"
 	bin_mgr_id  = "default"
-	name		= "libs-release-local"
+	name		= "{{ .repo0 }}"
 	filter {
 		type  	= "{{ .filter_type_0 }}"
 		value	= "{{ .filter_value_0 }}"
@@ -443,7 +443,7 @@ resource "xray_watch" "{{ .resource_name }}" {
   watch_resource {
 	type       	= "repository"
 	bin_mgr_id  = "default"
-	name		= "libs-release-local-1"
+	name		= "{{ .repo1 }}"
 	filter {
 		type  	= "{{ .filter_type_0 }}"
 		value	= "{{ .filter_value_0 }}"
@@ -550,12 +550,12 @@ resource "xray_watch" "{{ .resource_name }}" {
   watch_recipients = ["{{ .watch_recipient_0 }}", "{{ .watch_recipient_1 }}"]
 }`
 
-func verifyXrayWatch(fqrn string, tempStruct map[string]string) resource.TestCheckFunc {
+func verifyXrayWatch(fqrn string, testData map[string]string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(fqrn, "name", tempStruct["watch_name"]),
-		resource.TestCheckResourceAttr(fqrn, "description", tempStruct["description"]),
-		resource.TestCheckResourceAttr(fqrn, "watch_resource.0.type", tempStruct["watch_type"]),
-		resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.name", tempStruct["policy_name_0"]),
+		resource.TestCheckResourceAttr(fqrn, "name", testData["watch_name"]),
+		resource.TestCheckResourceAttr(fqrn, "description", testData["description"]),
+		resource.TestCheckResourceAttr(fqrn, "watch_resource.0.type", testData["watch_type"]),
+		resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.name", testData["policy_name_0"]),
 		resource.TestCheckResourceAttr(fqrn, "assigned_policy.0.type", "security"),
 	)
 }

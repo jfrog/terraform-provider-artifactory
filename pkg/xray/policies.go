@@ -375,7 +375,7 @@ func resourceXrayPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(policy).Post("xray/api/v2/policies")
+	_, err = m.(*resty.Client).R().SetBody(policy).Post("xray/api/v2/policies")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -402,7 +402,7 @@ func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
+	_, err = m.(*resty.Client).R().SetBody(policy).Put("xray/api/v2/policies/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -413,7 +413,7 @@ func resourceXrayPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceXrayPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
-	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete("xray/api/v2/policies/" + d.Id())
+	resp, err := m.(*resty.Client).R().Delete("xray/api/v2/policies/" + d.Id())
 	if err != nil && resp.StatusCode() == http.StatusInternalServerError {
 		d.SetId("")
 		return diag.FromErr(err)

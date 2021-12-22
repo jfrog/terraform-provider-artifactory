@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var tempStructSecurity = map[string]string{
+var testDataSecurity = map[string]string{
 	"resource_name":                     "",
 	"policy_name":                       "terraform-security-policy",
 	"policy_description":                "policy created by xray acceptance tests",
@@ -76,14 +76,14 @@ func TestAccSecurityPolicy_badSecurityCriteria(t *testing.T) {
 // but with "fail_build" set to false, which conflicts with the field mentioned above.
 func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-3-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-3-%d", randomInt())
-	tempStruct["fail_build"] = "false"
-	tempStruct["grace_period_days"] = "5"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-3-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-3-%d", randomInt())
+	testData["fail_build"] = "false"
+	testData["grace_period_days"] = "5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -91,8 +91,8 @@ func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config:      executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				ExpectError: regexp.MustCompile("Rule " + tempStruct["rule_name"] + " has failure grace period without fail build"),
+				Config:      executeTemplate(fqrn, securityPolicyCVSS, testData),
+				ExpectError: regexp.MustCompile("Rule " + testData["rule_name"] + " has failure grace period without fail build"),
 			},
 		},
 	})
@@ -101,13 +101,13 @@ func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 // CVSS criteria, block downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-4-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-4-%d", randomInt())
-	tempStruct["cvssOrSeverity"] = "cvss"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-4-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-4-%d", randomInt())
+	testData["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -115,8 +115,8 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
+				Config: executeTemplate(fqrn, securityPolicyCVSS, testData),
+				Check:  verifySecurityPolicy(fqrn, testData, testData["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -125,15 +125,15 @@ func TestAccSecurityPolicy_createBlockDownloadTrueCVSS(t *testing.T) {
 // CVSS criteria, allow downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-5-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-5-%d", randomInt())
-	tempStruct["block_unscanned"] = "false"
-	tempStruct["block_active"] = "false"
-	tempStruct["cvssOrSeverity"] = "cvss"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-5-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-5-%d", randomInt())
+	testData["block_unscanned"] = "false"
+	testData["block_active"] = "false"
+	testData["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -141,8 +141,8 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
+				Config: executeTemplate(fqrn, securityPolicyCVSS, testData),
+				Check:  verifySecurityPolicy(fqrn, testData, testData["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -151,13 +151,13 @@ func TestAccSecurityPolicy_createBlockDownloadFalseCVSS(t *testing.T) {
 // Min severity criteria, block downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-6-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-6-%d", randomInt())
-	tempStruct["cvssOrSeverity"] = "severity"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-6-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-6-%d", randomInt())
+	testData["cvssOrSeverity"] = "severity"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -165,8 +165,8 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyMinSeverity, tempStruct),
-				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
+				Config: executeTemplate(fqrn, securityPolicyMinSeverity, testData),
+				Check:  verifySecurityPolicy(fqrn, testData, testData["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -175,15 +175,15 @@ func TestAccSecurityPolicy_createBlockDownloadTrueMinSeverity(t *testing.T) {
 // Min severity criteria, allow downloading of unscanned and active
 func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-7-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-7-%d", randomInt())
-	tempStruct["block_unscanned"] = "false"
-	tempStruct["block_active"] = "false"
-	tempStruct["cvssOrSeverity"] = "severity"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-7-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-7-%d", randomInt())
+	testData["block_unscanned"] = "false"
+	testData["block_active"] = "false"
+	testData["cvssOrSeverity"] = "severity"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -191,8 +191,8 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyMinSeverity, tempStruct),
-				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
+				Config: executeTemplate(fqrn, securityPolicyMinSeverity, testData),
+				Check:  verifySecurityPolicy(fqrn, testData, testData["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -201,15 +201,15 @@ func TestAccSecurityPolicy_createBlockDownloadFalseMinSeverity(t *testing.T) {
 // CVSS criteria, use float values for CVSS range
 func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-8-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-8-%d", randomInt())
-	tempStruct["cvss_from"] = "1.5"
-	tempStruct["cvss_to"] = "5.3"
-	tempStruct["cvssOrSeverity"] = "cvss"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-8-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-8-%d", randomInt())
+	testData["cvss_from"] = "1.5"
+	testData["cvss_to"] = "5.3"
+	testData["cvssOrSeverity"] = "cvss"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -217,8 +217,8 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				Check:  verifySecurityPolicy(fqrn, tempStruct, tempStruct["cvssOrSeverity"]),
+				Config: executeTemplate(fqrn, securityPolicyCVSS, testData),
+				Check:  verifySecurityPolicy(fqrn, testData, testData["cvssOrSeverity"]),
 			},
 		},
 	})
@@ -226,14 +226,14 @@ func TestAccSecurityPolicy_createCVSSFloat(t *testing.T) {
 
 func TestAccSecurityPolicy_blockMismatchCVSS(t *testing.T) {
 	_, fqrn, resourceName := mkNames("policy-", "xray_security_policy")
-	tempStruct := make(map[string]string)
-	copyStringMap(tempStructSecurity, tempStruct)
+	testData := make(map[string]string)
+	copyStringMap(testDataSecurity, testData)
 
-	tempStruct["resource_name"] = resourceName
-	tempStruct["policy_name"] = fmt.Sprintf("terraform-security-policy-9-%d", randomInt())
-	tempStruct["rule_name"] = fmt.Sprintf("test-security-rule-9-%d", randomInt())
-	tempStruct["block_unscanned"] = "true"
-	tempStruct["block_active"] = "false"
+	testData["resource_name"] = resourceName
+	testData["policy_name"] = fmt.Sprintf("terraform-security-policy-9-%d", randomInt())
+	testData["rule_name"] = fmt.Sprintf("test-security-rule-9-%d", randomInt())
+	testData["block_unscanned"] = "true"
+	testData["block_active"] = "false"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -241,8 +241,8 @@ func TestAccSecurityPolicy_blockMismatchCVSS(t *testing.T) {
 		ProviderFactories: testAccProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(fqrn, securityPolicyCVSS, tempStruct),
-				ExpectError: regexp.MustCompile("Rule " + tempStruct["rule_name"] +
+				Config: executeTemplate(fqrn, securityPolicyCVSS, testData),
+				ExpectError: regexp.MustCompile("Rule " + testData["rule_name"] +
 					" has block unscanned without block download"),
 			},
 		},
@@ -299,31 +299,31 @@ resource "xray_security_policy" "test" {
 `, name, description, ruleName, allowedLicense)
 }
 
-func verifySecurityPolicy(fqrn string, tempStruct map[string]string, cvssOrSeverity string) resource.TestCheckFunc {
+func verifySecurityPolicy(fqrn string, testData map[string]string, cvssOrSeverity string) resource.TestCheckFunc {
 	var commonCheckList = resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(fqrn, "name", tempStruct["policy_name"]),
-		resource.TestCheckResourceAttr(fqrn, "description", tempStruct["policy_description"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.name", tempStruct["rule_name"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_release_bundle_distribution", tempStruct["block_release_bundle_distribution"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.fail_build", tempStruct["fail_build"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_watch_recipients", tempStruct["notify_watch_recipients"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_deployer", tempStruct["notify_deployer"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.create_ticket_enabled", tempStruct["create_ticket_enabled"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.build_failure_grace_period_in_days", tempStruct["grace_period_days"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.active", tempStruct["block_active"]),
-		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.unscanned", tempStruct["block_unscanned"]),
+		resource.TestCheckResourceAttr(fqrn, "name", testData["policy_name"]),
+		resource.TestCheckResourceAttr(fqrn, "description", testData["policy_description"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.name", testData["rule_name"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_release_bundle_distribution", testData["block_release_bundle_distribution"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.fail_build", testData["fail_build"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_watch_recipients", testData["notify_watch_recipients"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.notify_deployer", testData["notify_deployer"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.create_ticket_enabled", testData["create_ticket_enabled"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.build_failure_grace_period_in_days", testData["grace_period_days"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.active", testData["block_active"]),
+		resource.TestCheckResourceAttr(fqrn, "rule.0.actions.0.block_download.0.unscanned", testData["block_unscanned"]),
 	)
 	if cvssOrSeverity == "cvss" {
 		return resource.ComposeTestCheckFunc(
 			commonCheckList,
-			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.cvss_range.0.from", tempStruct["cvss_from"]),
-			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.cvss_range.0.to", tempStruct["cvss_to"]),
+			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.cvss_range.0.from", testData["cvss_from"]),
+			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.cvss_range.0.to", testData["cvss_to"]),
 		)
 	}
 	if cvssOrSeverity == "severity" {
 		return resource.ComposeTestCheckFunc(
 			commonCheckList,
-			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.min_severity", tempStruct["min_severity"]),
+			resource.TestCheckResourceAttr(fqrn, "rule.0.criteria.0.min_severity", testData["min_severity"]),
 		)
 	}
 	return nil
