@@ -101,8 +101,6 @@ entitled to contribute the code/documentation/translation to the project
 and is willing to have it used in distributions and derivative works
 (or is willing to transfer ownership).
 
-[Sign the CLA](https://cla-assistant.io/jfrog/terraform-provider-xray)
-
 ## License
 Copyright (c) 2021 JFrog.
 
