@@ -155,7 +155,7 @@ func checkArtifactoryLicense(client *resty.Client) error {
 	}
 
 	license := License{}
-	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/licenses/")
+	_, err := client.R().SetResult(&license).Get("/artifactory/api/system/license/")
 	if err != nil {
 		return err
 	}
