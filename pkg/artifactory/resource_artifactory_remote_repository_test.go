@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_repository")
+func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-basic", "artifactory_remote_repository")
 
 	key := fmt.Sprintf("debian-remote.teleport_%d", randomInt())
 	localRepositoryBasic := fmt.Sprintf(`

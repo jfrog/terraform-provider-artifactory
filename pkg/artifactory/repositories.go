@@ -285,6 +285,7 @@ var repoTypesLikeGeneric = []string{
 	"sbt",
 	"vagrant",
 }
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -348,6 +349,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 }
+
 var baseRemoteSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -582,6 +584,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Default:  false,
 	},
 }
+
 var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:     schema.TypeString,
