@@ -17,12 +17,12 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Default:     false,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "When set, external dependencies are rewritten.",
 	},
 	"external_dependencies_patterns": {
 		Type:     schema.TypeList,
 		Optional: true,
-		ForceNew: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
