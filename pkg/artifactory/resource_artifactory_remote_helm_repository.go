@@ -17,7 +17,6 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Default:     false,
 		Optional:    true,
-		ForceNew:    true,
 		Description: "When set, external dependencies are rewritten.",
 	},
 	"external_dependencies_patterns": {
@@ -36,8 +35,8 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 type HelmRemoteRepo struct {
 	RemoteRepositoryBaseParams
 	HelmChartsBaseURL            string   `hcl:"helm_charts_base_url" json:"chartsBaseUrl,omitempty"`
-	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled,omitempty"`
-	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns,omitempty"`
+	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
+	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 }
 
 func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
