@@ -89,7 +89,7 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
-		"external_dependencies_patterns": []interface{}{"**/github.com/**"},
+		"external_dependencies_patterns": []interface{}{"**github.com**"},
 	}))
 }
 

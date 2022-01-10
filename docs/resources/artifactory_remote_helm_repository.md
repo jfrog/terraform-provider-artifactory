@@ -14,7 +14,7 @@ resource "artifactory_remote_helm_repository" "helm-remote" {
   helm_charts_base_url = "https://foo.com"
   external_dependencies_enabled = true
   external_dependencies_patterns = [
-    "**/github.com/**"
+    "**github.com**"
   ]
 }
 ```
