@@ -2,10 +2,8 @@ TEST?=./...
 TARGET_ARCH?=darwin_amd64
 PKG_NAME=pkg/xray
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-xray/${PKG_NAME}
-#VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-# Replace explicit version after the first release
-VERSION := 0.0.0
-NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
+VERSION := $(shell git tag --sort=-creatordate | head -1 | sed -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }')
 BINARY_NAME=terraform-provider-xray
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/xray/${NEXT_VERSION}/${TARGET_ARCH}
 
