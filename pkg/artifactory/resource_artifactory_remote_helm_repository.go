@@ -28,7 +28,9 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		},
 		RequiredWith: []string{"external_dependencies_enabled"},
 		Description: "An Allow List of Ant-style path expressions that specify where external dependencies may be downloaded from. " +
-			"By default, this is set to ** which means that dependencies may be downloaded from any external source.",
+			"By default, this is an empty list which means that no dependencies may be downloaded from external sources. " +
+			"Note that the official documentation states the default is '**', " +
+			"which is correct when creating repositories in the UI, but incorrect for the API.",
 	},
 })
 
