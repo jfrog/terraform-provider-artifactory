@@ -439,11 +439,13 @@ func TestAccLocalGenericRepository(t *testing.T) {
 
 	_, fqrn, name := mkNames("generic-local", "artifactory_local_generic_repository")
 	params := map[string]interface{}{
-		"name": name,
+		"name":                name,
+		"priority_resolution": randBool(),
 	}
 	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
+			priority_resolution = "{{ .priority_resolution }}"
 		}
 	`, params)
 	resource.Test(t, resource.TestCase{
@@ -455,6 +457,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "priority_resolution", fmt.Sprintf("%t", params["priority_resolution"])),
 				),
 			},
 		},
