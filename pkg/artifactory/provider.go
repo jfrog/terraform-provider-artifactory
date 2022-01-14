@@ -120,6 +120,7 @@ func Provider() *schema.Provider {
 			"artifactory_permission_targets":        resourceArtifactoryPermissionTargets(),
 			"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
 			"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
+			"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
 			// Xray resources
 			"artifactory_xray_policy": resourceXrayPolicy(),
 			"artifactory_xray_watch":  resourceXrayWatch(),
