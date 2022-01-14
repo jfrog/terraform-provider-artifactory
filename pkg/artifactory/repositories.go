@@ -30,6 +30,7 @@ type LocalRepositoryBaseParams struct {
 	PropertySets           []string `hcl:"property_sets" json:"propertySets,omitempty"`
 	ArchiveBrowsingEnabled *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
 	DownloadRedirect       *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
+	PriorityResolution     bool     `hcl:"priority_resolution" json:"priorityResolution"`
 }
 
 var compressionFormats = map[string]*schema.Schema{
@@ -316,6 +317,12 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
+	"priority_resolution": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+	},
 	"property_sets": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
@@ -519,9 +526,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
 	},
 	"priority_resolution": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
 	},
 	"client_tls_certificate": {
 		Type:     schema.TypeString,
@@ -620,6 +628,7 @@ func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalReposi
 		PropertySets:           d.getSet("property_sets"),
 		XrayIndex:              d.getBoolRef("xray_index", false),
 		DownloadRedirect:       d.getBoolRef("download_direct", false),
+		PriorityResolution:     d.getBool("priority_resolution", false),
 	}
 }
 func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
