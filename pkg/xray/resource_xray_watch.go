@@ -51,7 +51,7 @@ func resourceXrayWatch() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "default",
-							Description: "The ID number of a binary manager resource. Should be set to `default` if not set on the Artifactory side.",
+							Description: "The ID number of a binary manager resource. Default value is `default`. To check the list of available binary managers, use the API call `${JFROG_URL}/xray/api/v1/binMgr` as an admin user, use `binMgrId` value. More info [here](https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-GetBinaryManager)",
 						},
 						"name": {
 							Type:        schema.TypeString,

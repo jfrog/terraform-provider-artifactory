@@ -145,7 +145,7 @@ Required:
 
 Optional:
 
-- **bin_mgr_id** (String) The ID number of a binary manager resource. Should be set to `default` if not set on the Artifactory side.
+- **bin_mgr_id** (String) The ID number of a binary manager resource. Default value is `default`. To check the list of available binary managers, use the API call `${JFROG_URL}/xray/api/v1/binMgr` as an admin user, use `binMgrId` value. More info [here](https://www.jfrog.com/confluence/display/JFROG/Xray+REST+API#XrayRESTAPI-GetBinaryManager)
 - **filter** (Block List) Nested argument describing filters to be applied. Defined below. (see [below for nested schema](#nestedblock--watch_resource--filter))
 - **name** (String) The name of the build or repository. Enable Xray indexing must be enabled on the repo or build
 
