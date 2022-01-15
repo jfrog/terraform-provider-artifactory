@@ -29,7 +29,7 @@ debug_install:
 		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-develop'") && \
 		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
 		rm .terraform.lock.hcl && \
-		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
+		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak  && \
 		terraform init
 
 test:

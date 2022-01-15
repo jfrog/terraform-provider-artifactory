@@ -24,6 +24,20 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	manager_password = "testmgrpaswd"
 }`
 
+const LdapSettingTemplateUpdate = `
+resource "artifactory_ldap_setting" "ldaptest" {
+	key = "ldaptest"
+	enabled = true
+	ldap_url = "ldap://ldaptestldap"
+	user_dn_pattern = "uid={0},ou=People"
+	email_attribute = "testldapupdate@test.org"
+	search_sub_tree = true
+	search_filter = "(uid={0})"
+	search_base = "ou=users"
+	manager_dn = "testmgrdn"
+	manager_password = "testmgrpaswd"
+}`
+
 func TestAccLdapSetting_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptest"),
@@ -42,6 +56,13 @@ func TestAccLdapSetting_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_base", "ou=users"),
 				),
 			},
+			{
+				Config: LdapSettingTemplateUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "testldapupdate@test.org"),
+				),
+			},
 		},
 	})
 }
@@ -55,7 +76,7 @@ func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		ldapConfigs := &xmlLdapConfig{}
+		ldapConfigs := &XmlLdapConfig{}
 
 		response, err := client.R().Get("artifactory/api/system/configuration")
 		if err != nil {
