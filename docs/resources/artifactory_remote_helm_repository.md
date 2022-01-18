@@ -28,5 +28,6 @@ All generic repo arguments are supported, in addition to:
 * `helm_charts_base_url` - (Optional) - No documentation is available. Hopefully you know what this means
 * `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten.
 * `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external
-  dependencies may be downloaded from. By default, this is set to ** which means that dependencies may be downloaded
-  from any external source.
+  dependencies may be downloaded from. By default, this is an empty list which means that no dependencies may be downloaded
+  from external sources. Note that the official documentation states the default is '**', which is correct when creating
+  repositories in the UI, but incorrect for the API.
