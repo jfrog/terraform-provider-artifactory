@@ -1,15 +1,17 @@
 TEST?=./...
+TARGET_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
 PKG_NAME=pkg/artifactory
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/${PKG_NAME}
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
+BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/${TARGET_ARCH}
 
 default: build
 
 install:
-	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+	mkdir -p ${BUILD_PATH} && \
 		(test -f terraform-provider-artifactory || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
-		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		mv terraform-provider-artifactory ${BUILD_PATH} && \
 		rm -f .terraform.lock.hcl && \
 		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
@@ -25,9 +27,9 @@ build: fmtcheck
 	go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'"
 
 debug_install:
-	mkdir -p terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+	mkdir -p ${BUILD_PATH} && \
 		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-develop'") && \
-		mv terraform-provider-artifactory terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/darwin_amd64 && \
+		mv terraform-provider-artifactory ${BUILD_PATH} && \
 		rm .terraform.lock.hcl && \
 		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
