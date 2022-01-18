@@ -80,7 +80,7 @@ func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 
 		response, err := client.R().Get("artifactory/api/system/configuration")
 		if err != nil {
-			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/system/configuration during Read")
+			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
 		err = xml.Unmarshal(response.Body(), &ldapConfigs)

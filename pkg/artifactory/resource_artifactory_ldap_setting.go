@@ -41,6 +41,94 @@ type XmlLdapConfig struct {
 	LdapSettings LdapSettings `xml:"security>ldapSettings"`
 }
 
+var ldap_setting_schema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringIsNotEmpty,
+		Description:  `(Required) Ldap setting name.`,
+	},
+	"enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: `(Optional) Flag to enable or disable the ldap setting. Default value is "true".`,
+	},
+	"ldap_url": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.IsURLWithScheme([]string{"ldap", "ldaps"}),
+		Description:  "(Required) Location of the LDAP server in the following format: ldap://myldapserver/dc=sampledomain,dc=com",
+	},
+	"user_dn_pattern": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringIsNotEmpty,
+		Description:  "(Required) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People",
+	},
+	"auto_create_user": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: `(Optional) When set, users are automatically created when using LDAP. Otherwise, users are transient and associated with auto-join groups defined in Artifactory. Default value is "true".`,
+	},
+	"email_attribute": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validateIsEmail,
+		Description:  `(Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory.`,
+	},
+	"ldap_poisoning_protection": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: `(Optional) Protects against LDAP poisoning by filtering out users exposed to vulnerabilities. Default value is "true".`,
+	},
+	"allow_user_to_access_profile": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `(Optional) Auto created users will have access to their profile page and will be able to perform actions such as generating an API key. Default value is "false".`,
+	},
+	"paging_support_enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: `(Optional) When set, supports paging results for the LDAP server. This feature requires that the LDAP server supports a PagedResultsControl configuration. Default value is "true".`,
+	},
+	"search_filter": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
+		Description: "(Optional) A filter expression used to search for the user DN used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, and is denoted by '{0}'. Possible examples are: (uid={0}) - This searches for a username match on the attribute. Authentication to LDAP is performed from the DN found if successful.",
+	},
+	"search_base": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
+		Description: "(Optional) A context name to search in relative to the base DN of the LDAP URL. For example, 'ou=users' With the LDAP Group Add-on enabled, it is possible to enter multiple search base entries separated by a pipe ('|') character.",
+	},
+	"search_sub_tree": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: `(Optional) When set, enables deep search through the sub tree of the LDAP URL + search base. Default value is "true".`,
+	},
+	"manager_dn": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
+		Description: `(Optional) The full DN of the user that binds to the LDAP server to perform user searches. Only used with "search" authentication.`,
+	},
+	"manager_password": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: `(Optional) The password of the user that binds to the LDAP server to perform the search. Only used with "search" authentication.`,
+		Sensitive:   true,
+		Computed:    true,
+	},
+}
+
 func resourceArtifactoryLdapSetting() *schema.Resource {
 	return &schema.Resource{
 		UpdateContext: resourceLdapSettingsUpdate,
@@ -52,104 +140,17 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-				Description:  `(Required) Ldap setting name.`,
-			},
-			"enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: `(Optional) Flag to enable or disable the ldap setting. Default value is "true".`,
-			},
-			"ldap_url": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.IsURLWithScheme([]string{"ldap", "ldaps"}),
-				Description:  "(Required) Location of the LDAP server in the following format: ldap://myldapserver/dc=sampledomain,dc=com",
-			},
-			"user_dn_pattern": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-				Description:  "(Required) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People",
-			},
-			"auto_create_user": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: `(Optional) When set, users are automatically created when using LDAP. Otherwise, users are transient and associated with auto-join groups defined in Artifactory. Default value is "true".`,
-			},
-			"email_attribute": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateIsEmail,
-				Description:  `(Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory.`,
-			},
-			"ldap_poisoning_protection": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: `(Optional) Protects against LDAP poisoning by filtering out users exposed to vulnerabilities. Default value is "true".`,
-			},
-			"allow_user_to_access_profile": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: `(Optional) Auto created users will have access to their profile page and will be able to perform actions such as generating an API key. Default value is "false".`,
-			},
-			"paging_support_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: `(Optional) When set, supports paging results for the LDAP server. This feature requires that the LDAP server supports a PagedResultsControl configuration. Default value is "true".`,
-			},
-			"search_filter": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "(Optional) A filter expression used to search for the user DN used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, and is denoted by '{0}'. Possible examples are: (uid={0}) - This searches for a username match on the attribute. Authentication to LDAP is performed from the DN found if successful.",
-			},
-			"search_base": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "(Optional) A context name to search in relative to the base DN of the LDAP URL. For example, 'ou=users' With the LDAP Group Add-on enabled, it is possible to enter multiple search base entries separated by a pipe ('|') character.",
-			},
-			"search_sub_tree": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: `(Optional) When set, enables deep search through the sub tree of the LDAP URL + search base. Default value is "true".`,
-			},
-			"manager_dn": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: `(Optional) The full DN of the user that binds to the LDAP server to perform user searches. Only used with "search" authentication.`,
-			},
-			"manager_password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: `(Optional) The password of the user that binds to the LDAP server to perform the search. Only used with "search" authentication.`,
-				Sensitive:   true,
-				Computed:    true,
-			},
-		},
+		Schema: ldap_setting_schema,
 	}
 }
 
 func resourceLdapSettingsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(*resty.Client)
 	ldapConfigs := &XmlLdapConfig{}
 	ldapSetting := unpackLdapSetting(d)
 
-	resp, err := client.R().Get("artifactory/api/system/configuration")
+	resp, err := m.(*resty.Client).R().Get("artifactory/api/system/configuration")
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/system/configuration during Read")
+		return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 	}
 
 	err = xml.Unmarshal(resp.Body(), &ldapConfigs)
@@ -160,23 +161,27 @@ func resourceLdapSettingsRead(_ context.Context, d *schema.ResourceData, m inter
 	for _, iterLdapSetting := range ldapConfigs.LdapSettings.LdapSettingArr {
 		if iterLdapSetting.Key == ldapSetting.Key {
 			matchedLdapSetting = iterLdapSetting
+			break
 		}
 	}
-
-	packDiag := packLdapSetting(&matchedLdapSetting, d)
-	if packDiag != nil {
-		return packDiag
-	}
-	return diag.Diagnostics{{
-		Severity: diag.Warning,
-		Summary:  "Usage of Undocumented Artifactory API Endpoints",
-		Detail:   "The artifactory_ldap_setting resource uses endpoints that are undocumented and may not work with SaaS environments, or may change without notice.",
-	}}
+	var ldapSettingClass = ignoreHclPredicate("class", "rclass", "manager_password")
+	packer := universalPack(
+		allHclPredicate(
+			ldapSettingClass, schemaHasKey(ldap_setting_schema),
+		),
+	)
+	return diag.FromErr(packer(&matchedLdapSetting, d))
 }
 
 func resourceLdapSettingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	unpackedLdapSetting := unpackLdapSetting(d)
 
+	/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	GET call structure has "security -> ldapSettings -> ldapSetting -> Array of ldapSetting config blocks".
+	PATCH call structure has "security -> ldapSettings -> Name/Key of ldap setting that is being patch -> config block of the ldapSetting being patched".
+	Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
+	*/
 	var constructBody = map[string]map[string]map[string]LdapSetting{}
 	constructBody["security"] = map[string]map[string]LdapSetting{}
 	constructBody["security"]["ldapSettings"] = map[string]LdapSetting{}
@@ -198,17 +203,16 @@ func resourceLdapSettingsUpdate(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceLdapSettingsDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	rClient := m.(*resty.Client)
 	ldapConfigs := &XmlLdapConfig{}
 
 	rsrcLdapSetting := unpackLdapSetting(d)
 
-	response, err := rClient.R().Get("artifactory/api/system/configuration")
+	response, err := m.(*resty.Client).R().Get("artifactory/api/system/configuration")
 	if err != nil {
-		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/system/configuration during Read")
+		return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 	}
 	if response.IsError() {
-		return diag.Errorf("Got error response for <base_url>/artifactory/api/system/configuration request during Read")
+		return diag.Errorf("Got error response for API: /artifactory/api/system/configuration request during Read")
 	}
 
 	err = xml.Unmarshal(response.Body(), &ldapConfigs)
@@ -216,6 +220,12 @@ func resourceLdapSettingsDelete(_ context.Context, d *schema.ResourceData, m int
 		return diag.Errorf("failed to xml unmarshal ldap setting during delete operation")
 	}
 
+	/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	GET call structure has "security -> ldapSettings -> ldapSetting -> Array of ldapSetting config blocks".
+	PATCH call structure has "security -> ldapSettings -> Name/Key of ldap setting that is being patch -> config block of the ldapSetting being patched".
+	Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
+	*/
 	var restoreLdapSettings = map[string]map[string]map[string]LdapSetting{}
 	restoreLdapSettings["security"] = map[string]map[string]LdapSetting{}
 	restoreLdapSettings["security"]["ldapSettings"] = map[string]LdapSetting{}
@@ -265,25 +275,4 @@ func unpackLdapSetting(s *schema.ResourceData) *LdapSetting {
 	ldapSetting.Search.ManagerDn = d.getString("manager_dn", false)
 	ldapSetting.Search.ManagerPassword = d.getString("manager_password", true)
 	return &ldapSetting
-}
-
-func packLdapSetting(ldapSetting *LdapSetting, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
-	setValue("key", ldapSetting.Key)
-	setValue("ldap_url", ldapSetting.LdapUrl)
-	setValue("enabled", ldapSetting.Enabled)
-	setValue("user_dn_pattern", ldapSetting.UserDnPattern)
-	setValue("auto_create_user", ldapSetting.AutoCreateUser)
-	setValue("ldap_poisoning_protection", ldapSetting.LdapPoisoningProtection)
-	setValue("allow_user_to_access_profile", ldapSetting.AllowUserToAccessProfile)
-	setValue("paging_support_enabled", ldapSetting.PagingSupportEnabled)
-	setValue("search_base", ldapSetting.Search.SearchBase)
-	setValue("search_filter", ldapSetting.Search.SearchFilter)
-	setValue("search_sub_tree", ldapSetting.Search.SearchSubTree)
-	setValue("manager_dn", ldapSetting.Search.ManagerDn)
-	errors := setValue("email_attribute", ldapSetting.EmailAttribute)
-	if errors != nil && len(errors) > 0 {
-		return diag.Errorf("failed to pack ldap settings %q", errors)
-	}
-	return nil
 }
