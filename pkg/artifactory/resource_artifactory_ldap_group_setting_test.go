@@ -87,7 +87,7 @@ func testAccLdapGroupSettingDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("failed to xml unmarshal ldap group settings during test destroy operation")
 		}
 
-		for _, iterLdapGroupSetting := range ldapGroupConfigs.LdapGroupSettings.LdapGroupSettingArr {
+		for _, iterLdapGroupSetting := range ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr {
 			if iterLdapGroupSetting.Name == id {
 				return fmt.Errorf("error: LdapGroupSetting with name: " + id + " still exists.")
 			}

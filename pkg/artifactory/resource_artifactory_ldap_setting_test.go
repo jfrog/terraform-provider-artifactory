@@ -88,7 +88,7 @@ func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("failed to xml unmarshal ldap settings during test destroy operation")
 		}
 
-		for _, iterLdapSetting := range ldapConfigs.LdapSettings.LdapSettingArr {
+		for _, iterLdapSetting := range ldapConfigs.Security.LdapSettings.LdapSettingArr {
 			if iterLdapSetting.Key == id {
 				return fmt.Errorf("error: LdapSetting with key: " + id + " still exists.")
 			}
