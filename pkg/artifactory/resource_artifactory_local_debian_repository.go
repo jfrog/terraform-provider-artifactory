@@ -46,7 +46,7 @@ type DebianLocalRepositoryParams struct {
 func unPackLocalDebianRepository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := DebianLocalRepositoryParams{
-		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "debian"),
+		LocalRepositoryBaseParams: unpackBaseRepo("local", data, "debian"),
 		PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
 		SecondaryKeyPairRef:       d.getString("secondary_keypair_ref", false),
 		TrivialLayout:             d.getBool("trivial_layout", false),

@@ -71,7 +71,7 @@ func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := JavaLocalRepositoryParams{
-			LocalRepositoryBaseParams:    unpackBaseLocalRepo(data, repoType),
+			LocalRepositoryBaseParams:    unpackBaseRepo("local", data, repoType),
 			ChecksumPolicyType:           d.getString("checksum_policy_type", false),
 			SnapshotVersionBehavior:      d.getString("snapshot_version_behavior", false),
 			MaxUniqueSnapshots:           d.getInt("max_unique_snapshots", false),

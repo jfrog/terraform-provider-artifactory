@@ -32,7 +32,7 @@ type AlpineLocalRepo struct {
 func unPackLocalAlpineRepository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := AlpineLocalRepo{
-		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "alpine"),
+		LocalRepositoryBaseParams: unpackBaseRepo("local", data, "alpine"),
 		PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
 	}
 

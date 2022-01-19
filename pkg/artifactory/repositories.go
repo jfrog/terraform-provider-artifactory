@@ -275,6 +275,11 @@ var repoTypesLikeGeneric = []string{
 	"sbt",
 	"vagrant",
 }
+
+var repoTypesLikeGenericFederated = []string{
+	"generic",
+}
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -624,10 +629,10 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
+func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
 	d := &ResourceData{s}
 	return LocalRepositoryBaseParams{
-		Rclass:                 "local",
+		Rclass:                 rclassType,
 		Key:                    d.getString("key", false),
 		PackageType:            packageType,
 		Description:            d.getString("description", false),
@@ -810,7 +815,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 	case reflect.Slice:
 		return func(field reflect.StructField, thing reflect.Value) map[string]interface{} {
 			return map[string]interface{}{
-				fieldToHcl(field): castToInterfaceArr(thing.Interface().([]string)),
+				fieldToHcl(field): castToInterfaceArr(thing.Interface().([]string)), // interface conversion: interface {} is []artifactory.Member, not []string
 			}
 		}
 	}
@@ -893,6 +898,19 @@ func ignoreHclPredicate(names ...string) HclPredicate {
 	return func(hcl string) bool {
 		_, found := set[hcl]
 		return !found
+	}
+}
+func composePacker(packers ...PackFunc) PackFunc {
+	return func(repo interface{}, d *schema.ResourceData) error {
+		var errors []error
+
+		for _, packer := range packers {
+			errors = append(errors, packer(repo, d))
+		}
+		if errors != nil && len(errors) > 0 {
+			return fmt.Errorf("failed saving state %q", errors)
+		}
+		return nil
 	}
 }
 

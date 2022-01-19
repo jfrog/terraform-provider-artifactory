@@ -106,7 +106,7 @@ type DockerLocalRepositoryParams struct {
 
 func unPackLocalDockerV1Repository(data *schema.ResourceData) (interface{}, string, error) {
 	repo := DockerLocalRepositoryParams{
-		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "docker"),
+		LocalRepositoryBaseParams: unpackBaseRepo("local", data, "docker"),
 		MaxUniqueTags:             0,
 		DockerApiVersion:          "V1",
 		TagRetention:              1,
@@ -118,7 +118,7 @@ func unPackLocalDockerV1Repository(data *schema.ResourceData) (interface{}, stri
 func unPackLocalDockerV2Repository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := DockerLocalRepositoryParams{
-		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "docker"),
+		LocalRepositoryBaseParams: unpackBaseRepo("local", data, "docker"),
 		MaxUniqueTags:             d.getInt("max_unique_tags", false),
 		DockerApiVersion:          "V2",
 		TagRetention:              d.getInt("tag_retention", false),
