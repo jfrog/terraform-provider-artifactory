@@ -4,17 +4,18 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const LdapGroupSettingTemplateFull = `
+func TestAccLdapGroupSetting_full(t *testing.T) {
+	const LdapGroupSettingTemplateFull = `
 resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	name = "ldapgrouptest"
 	enabled_ldap = "ldaptest"
-	group_base_dn = "ldaptest_dn"
+	group_base_dn = "CN=Users,DC=MyDomain,DC=com"
 	group_name_attribute = "cn"
 	group_member_attribute = "uniqueMember"
 	sub_tree = true
@@ -23,11 +24,11 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	strategy = "STATIC"
 }`
 
-const LdapGroupSettingTemplateUpdate = `
+	const LdapGroupSettingTemplateUpdate = `
 resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	name = "ldapgrouptest"
 	enabled_ldap = "ldaptest"
-	group_base_dn = "ldaptest1_dn"
+	group_base_dn = "CN=Users,DC=MyDomain,DC=com"
 	group_name_attribute = "cn"
 	group_member_attribute = "uniqueMember"
 	sub_tree = true
@@ -36,7 +37,6 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	strategy = "STATIC"
 }`
 
-func TestAccLdapGroupSetting_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapGroupSettingDestroy("ldapgrouptest"),
 		ProviderFactories: testAccProviders,
@@ -46,7 +46,7 @@ func TestAccLdapGroupSetting_full(t *testing.T) {
 				Config: LdapGroupSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "enabled_ldap", "ldaptest"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "ldaptest_dn"),
+					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_name_attribute", "cn"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_member_attribute", "uniqueMember"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "sub_tree", "true"),
@@ -58,7 +58,7 @@ func TestAccLdapGroupSetting_full(t *testing.T) {
 				Config: LdapGroupSettingTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "enabled_ldap", "ldaptest"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "ldaptest1_dn"),
+					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "description_attribute", "description1"),
 				),
 			},

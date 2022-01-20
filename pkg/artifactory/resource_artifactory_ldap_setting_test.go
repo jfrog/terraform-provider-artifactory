@@ -4,27 +4,28 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const LdapSettingTemplateFull = `
+func TestAccLdapSetting_full(t *testing.T) {
+	const LdapSettingTemplateFull = `
 resource "artifactory_ldap_setting" "ldaptest" {
 	key = "ldaptest"
 	enabled = true
 	ldap_url = "ldap://ldaptestldap"
-	user_dn_pattern = "uid={0},ou=People"
+	user_dn_pattern = "ou=Peo *ple, uid={0}"
 	email_attribute = "testldap@test.org"
 	search_sub_tree = true
 	search_filter = "(uid={0})"
-	search_base = "ou=users"
-	manager_dn = "testmgrdn"
+	search_base = "ou=users|ou=people"
+	manager_dn = "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com"
 	manager_password = "testmgrpaswd"
 }`
 
-const LdapSettingTemplateUpdate = `
+	const LdapSettingTemplateUpdate = `
 resource "artifactory_ldap_setting" "ldaptest" {
 	key = "ldaptest"
 	enabled = true
@@ -34,11 +35,9 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	search_sub_tree = true
 	search_filter = "(uid={0})"
 	search_base = "ou=users"
-	manager_dn = "testmgrdn"
+	manager_dn = "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com"
 	manager_password = "testmgrpaswd"
 }`
-
-func TestAccLdapSetting_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptest"),
 		ProviderFactories: testAccProviders,
@@ -49,11 +48,11 @@ func TestAccLdapSetting_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "ldap_url", "ldap://ldaptestldap"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "user_dn_pattern", "uid={0},ou=People"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "user_dn_pattern", "ou=Peo *ple, uid={0}"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "testldap@test.org"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_sub_tree", "true"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_filter", "(uid={0})"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_base", "ou=users"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_base", "ou=users|ou=people"),
 				),
 			},
 			{

@@ -10,6 +10,8 @@ require (
 	github.com/jfrog/jfrog-client-go v0.27.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/tools v0.1.5 // indirect
+	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
+	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

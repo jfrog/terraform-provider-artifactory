@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"github.com/go-resty/resty/v2"
+	"gopkg.in/ldap.v2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,10 +52,19 @@ func resourceArtifactoryLdapGroupSetting() *schema.Resource {
 			Description:      `(Required) The LDAP setting you want to use for group retrieval.`,
 		},
 		"group_base_dn": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Optional) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "",
+			ValidateDiagFunc: validation.ToDiagFunc(
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.ParseDN(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			),
+			Description: `(Optional) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
 		},
 		"group_name_attribute": {
 			Type:             schema.TypeString,
@@ -75,10 +85,19 @@ func resourceArtifactoryLdapGroupSetting() *schema.Resource {
 			Description: `(Optional) When set, enables deep search through the sub-tree of the LDAP URL + Search Base. True by default.`,
 		},
 		"filter": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) The LDAP filter used to search for group entries. Used for importing groups.`,
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(
+				validation.StringIsNotEmpty,
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.CompileFilter(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			)),
+			Description: `(Required) The LDAP filter used to search for group entries. Used for importing groups.`,
 		},
 		"description_attribute": {
 			Type:             schema.TypeString,
@@ -155,17 +174,12 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 
 		rsrcLdapGroupSetting := unpackLdapGroupSetting(d)
 
-		response, err := m.(*resty.Client).R().Get("artifactory/api/system/configuration")
+		response, err := m.(*resty.Client).R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 		if response.IsError() {
 			return diag.Errorf("Got error response for API: /artifactory/api/system/configuration request during Read")
-		}
-
-		err = xml.Unmarshal(response.Body(), &ldapGroupConfigs)
-		if err != nil {
-			return diag.Errorf("failed to xml unmarshal ldap group setting during delete operation")
 		}
 
 		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.

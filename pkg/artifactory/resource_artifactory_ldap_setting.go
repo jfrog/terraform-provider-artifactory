@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"github.com/go-resty/resty/v2"
+	"gopkg.in/ldap.v2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -66,10 +67,19 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			Description:      "(Required) Location of the LDAP server in the following format: ldap://myldapserver/dc=sampledomain,dc=com",
 		},
 		"user_dn_pattern": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Required) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People",
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(
+				validation.StringIsNotEmpty,
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.ParseDN(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			)),
+			Description: "(Required) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People",
 		},
 		"auto_create_user": {
 			Type:        schema.TypeBool,
@@ -102,15 +112,33 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			Description: `(Optional) When set, supports paging results for the LDAP server. This feature requires that the LDAP server supports a PagedResultsControl configuration. Default value is "true".`,
 		},
 		"search_filter": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(
+				validation.StringIsNotEmpty,
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.CompileFilter(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			)),
 			Description: "(Optional) A filter expression used to search for the user DN used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, and is denoted by '{0}'. Possible examples are: (uid={0}) - This searches for a username match on the attribute. Authentication to LDAP is performed from the DN found if successful.",
 		},
 		"search_base": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "",
+			ValidateDiagFunc: validation.ToDiagFunc(
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.ParseDN(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			),
 			Description: "(Optional) A context name to search in relative to the base DN of the LDAP URL. For example, 'ou=users' With the LDAP Group Add-on enabled, it is possible to enter multiple search base entries separated by a pipe ('|') character.",
 		},
 		"search_sub_tree": {
@@ -120,9 +148,18 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			Description: `(Optional) When set, enables deep search through the sub tree of the LDAP URL + search base. Default value is "true".`,
 		},
 		"manager_dn": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "",
+			ValidateDiagFunc: validation.ToDiagFunc(
+				func(value interface{}, key string) ([]string, []error) {
+					_, err := ldap.ParseDN(value.(string))
+					if err != nil {
+						return nil, []error{err}
+					}
+					return nil, nil
+				},
+			),
 			Description: `(Optional) The full DN of the user that binds to the LDAP server to perform user searches. Only used with "search" authentication.`,
 		},
 		"manager_password": {
@@ -192,17 +229,12 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 
 		rsrcLdapSetting := unpackLdapSetting(d)
 
-		response, err := m.(*resty.Client).R().Get("artifactory/api/system/configuration")
+		response, err := m.(*resty.Client).R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 		if response.IsError() {
 			return diag.Errorf("Got error response for API: /artifactory/api/system/configuration request during Read")
-		}
-
-		err = xml.Unmarshal(response.Body(), &ldapConfigs)
-		if err != nil {
-			return diag.Errorf("failed to xml unmarshal ldap setting during delete operation")
 		}
 
 		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
