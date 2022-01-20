@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/gorhill/cronexpr"
-	"gopkg.in/ldap.v2"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gorhill/cronexpr"
+	"gopkg.in/ldap.v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )

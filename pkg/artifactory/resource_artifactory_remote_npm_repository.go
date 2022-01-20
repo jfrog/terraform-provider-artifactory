@@ -1,9 +1,10 @@
 package artifactory
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"sort"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
