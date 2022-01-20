@@ -66,9 +66,9 @@ func resourceXrayPolicy() *schema.Resource {
 		Read:          resourceXrayPolicyRead,
 		Update:        resourceXrayPolicyUpdate,
 		Delete:        resourceXrayPolicyDelete,
-		DeprecationMessage: "Xray resources were moved into separate project, Terraform Provider Xray:" +
-			" https://github.com/jfrog/terraform-provider-xray. Terraform Provider Registry link:" +
-			" https://registry.terraform.io/providers/jfrog/xray",
+		DeprecationMessage: "Xray resources will be removed from this provider on or before March 31, 2022." +
+			" Please use the separated Terraform Provider Xray: https://github.com/jfrog/terraform-provider-xray. " +
+			"Terraform Provider Registry link: https://registry.terraform.io/providers/jfrog/xray",
 		Description: "Creates an xray policy using V1 of the underlying APIs. Please note: " +
 			"It's only compatible with Bearer token auth method (Identity and Access => Access Tokens",
 
