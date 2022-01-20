@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -33,53 +31,57 @@ func resourceArtifactoryUser() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				Description:  "Username for user.",
 			},
 			"email": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateIsEmail,
+				Description:  "Email for user.",
 			},
 			"admin": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "When enabled, this user is an administrator with all the ensuing privileges.",
 			},
 			"profile_updatable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				Description: "When enabled, this user can update their profile details (except for the password. " +
+					"Only an administrator can update the password). There may be cases in which you want to leave " +
+					"this unset to prevent users from updating their profile. For example, a departmental user with " +
+					"a single password shared between all department members.",
 			},
 			"disable_ui_access": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				Description: "When enabled, this user can only access the system through the REST API." +
+					" This option cannot be set if the user has Admin privileges.",
 			},
 			"internal_password_disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				Description: "When enabled, disables the fallback mechanism for using an internal password when " +
+					"external authentication (such as LDAP) is enabled.",
 			},
 			"groups": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Optional:    true,
+				Description: "List of groups this user is a part of.",
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Optional:  true,
-				ValidateFunc: func(tfValue interface{}, key string) ([]string, []error) {
-					validationOn, _ := strconv.ParseBool(os.Getenv("JFROG_PASSWD_VALIDATION_ON"))
-					if validationOn {
-						ses, err := defaultPassValidation(tfValue, key)
-						if err != nil {
-							return append(ses, "if your organization has custom password rules, you may override "+
-								"password validation by setting env var JFROG_PASSWD_VALIDATION_ON=false"), append(err)
-						}
-					}
-					return nil, nil
-				},
+				Type:             schema.TypeString,
+				Sensitive:        true,
+				Required:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description: "Password for the user. Password validation is not done by the provider and is " +
+					"offloaded onto the Artifactory side.",
 				StateFunc: func(str interface{}) string {
 					// Avoid storing the actual value in the state and instead store the hash of it
 					value, ok := str.(string)

@@ -81,8 +81,10 @@ later date.
 ### Changes to user creation ###
 Previously, passwords were being generated for the user if none was supplied. This was both unnecessary (since TF has a password provider)
 and because the internal implementation could never be entirely in line with the remote server (or, be sure it was).
-With the release of 2.3.1, password is still optional, but if supplied, must watch the default password requirements. These
-can be overridden with `JFROG_PASSWD_VALIDATION_ON=false` if a custom password policy is in place.
+Then, with the release of 2.3.1, password was still optional, but if supplied, must watch the default password requirements. These
+could be overridden with `JFROG_PASSWD_VALIDATION_ON=false` if a custom password policy is in place. 
+Now this functionality is removed. Password is a required field. The verification if offloaded to the Artifactory side, 
+which makes more sense, so we don't need to catch up with any possible changes on the Artifactory side.
 
 
 ## Build the Provider
