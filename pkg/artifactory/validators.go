@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"github.com/gorhill/cronexpr"
+	"gopkg.in/ldap.v2"
 	"net/mail"
 	"os"
 	"regexp"
@@ -475,6 +476,22 @@ func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
 		return nil, []error{fmt.Errorf("%s is not a valid address: %s", address, err)}
+	}
+	return nil, nil
+}
+
+func validateLdapDn(value interface{}, _ string) ([]string, []error) {
+	_, err := ldap.ParseDN(value.(string))
+	if err != nil {
+		return nil, []error{err}
+	}
+	return nil, nil
+}
+
+func validateLdapFilter(value interface{}, _ string) ([]string, []error) {
+	_, err := ldap.CompileFilter(value.(string))
+	if err != nil {
+		return nil, []error{err}
 	}
 	return nil, nil
 }

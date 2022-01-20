@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"encoding/xml"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"testing"
@@ -77,14 +76,12 @@ func testAccLdapGroupSettingDestroy(id string) func(*terraform.State) error {
 		}
 		ldapGroupConfigs := &XmlLdapGroupConfig{}
 
-		response, err := client.R().Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
-
-		err = xml.Unmarshal(response.Body(), &ldapGroupConfigs)
-		if err != nil {
-			return fmt.Errorf("failed to xml unmarshal ldap group settings during test destroy operation")
+		if response.IsError() {
+			return fmt.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
 		for _, iterLdapGroupSetting := range ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr {
