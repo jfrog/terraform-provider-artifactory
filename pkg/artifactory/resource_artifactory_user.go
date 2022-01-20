@@ -81,7 +81,7 @@ func resourceArtifactoryUser() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 				Description: "Password for the user. Password validation is not done by the provider and is " +
-					"offloaded onto the Artifactory side.",
+					"offloaded onto the Artifactory.",
 				StateFunc: func(str interface{}) string {
 					// Avoid storing the actual value in the state and instead store the hash of it
 					value, ok := str.(string)

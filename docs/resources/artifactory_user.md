@@ -30,7 +30,7 @@ The following arguments are supported:
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
 * `groups` - (Optional) List of groups this user is a part of.
-* `password` - (Required) Password for the user. Password validation is not done by the provider and is offloaded onto the Artifactory side. There may be cases in which you want to leave this unset to prevent users from updating their profile. For example, a departmental user with a single password shared between all department members.
+* `password` - (Required) Password for the user. Password validation is not done by the provider and is offloaded onto the Artifactory. There may be cases in which you want to leave this unset to prevent users from updating their profile. For example, a departmental user with a single password shared between all department members.
 
 ## Import
 

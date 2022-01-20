@@ -83,7 +83,7 @@ Previously, passwords were being generated for the user if none was supplied. Th
 and because the internal implementation could never be entirely in line with the remote server (or, be sure it was).
 Then, with the release of 2.3.1, password was still optional, but if supplied, must watch the default password requirements. These
 could be overridden with `JFROG_PASSWD_VALIDATION_ON=false` if a custom password policy is in place. 
-Now this functionality is removed. Password is a required field. The verification if offloaded to the Artifactory side, 
+Now this functionality is removed. Password is a required field. The verification is offloaded to the Artifactory, 
 which makes more sense, so we don't need to catch up with any possible changes on the Artifactory side.
 
 
