@@ -13,7 +13,7 @@ install:
 		(test -f terraform-provider-artifactory || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv terraform-provider-artifactory ${BUILD_PATH} && \
 		rm -f .terraform.lock.hcl && \
-		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
+		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak && \
 		terraform init
 
 clean:
@@ -31,7 +31,7 @@ debug_install:
 		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-develop'") && \
 		mv terraform-provider-artifactory ${BUILD_PATH} && \
 		rm .terraform.lock.hcl && \
-		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
+		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak  && \
 		terraform init
 
 test:
