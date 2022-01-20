@@ -44,11 +44,11 @@ func resourceArtifactoryLdapGroupSetting() *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      `(Required) Ldap group setting name.`,
 		},
-		"enabled_ldap": {
+		"ldap_setting_key": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) The LDAP setting you want to use for group retrieval.`,
+			Description:      `(Required) The LDAP setting key you want to use for group retrieval. The value for this field corresponds to 'enabledLdap' field of the ldap group setting XML block of system configuration.`,
 		},
 		"group_base_dn": {
 			Type:             schema.TypeString,
@@ -211,7 +211,8 @@ security:
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: ldapGroupSettingsSchema,
+		Schema:      ldapGroupSettingsSchema,
+		Description: "Provides an Artifactory ldap group setting resource. This resource configuration corresponds to ldapGroupSettings config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
 	}
 }
 
@@ -219,7 +220,7 @@ func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
 	d := &ResourceData{s}
 	ldapGroupSetting := LdapGroupSetting{
 		Name:                 d.getString("name", false),
-		EnabledLdap:          d.getString("enabled_ldap", false),
+		EnabledLdap:          d.getString("ldap_setting_key", false),
 		GroupBaseDn:          d.getString("group_base_dn", false),
 		GroupNameAttribute:   d.getString("group_name_attribute", false),
 		GroupMemberAttribute: d.getString("group_member_attribute", false),

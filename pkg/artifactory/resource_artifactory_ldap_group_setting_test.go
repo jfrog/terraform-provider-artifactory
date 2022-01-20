@@ -13,7 +13,7 @@ func TestAccLdapGroupSetting_full(t *testing.T) {
 	const LdapGroupSettingTemplateFull = `
 resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	name = "ldapgrouptest"
-	enabled_ldap = "ldaptest"
+	ldap_setting_key = "ldaptest"
 	group_base_dn = "CN=Users,DC=MyDomain,DC=com"
 	group_name_attribute = "cn"
 	group_member_attribute = "uniqueMember"
@@ -26,7 +26,7 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	const LdapGroupSettingTemplateUpdate = `
 resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	name = "ldapgrouptest"
-	enabled_ldap = "ldaptest"
+	ldap_setting_key = "ldaptest"
 	group_base_dn = "CN=Users,DC=MyDomain,DC=com"
 	group_name_attribute = "cn"
 	group_member_attribute = "uniqueMember"
@@ -44,7 +44,7 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 			{
 				Config: LdapGroupSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "enabled_ldap", "ldaptest"),
+					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "ldap_setting_key", "ldaptest"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_name_attribute", "cn"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_member_attribute", "uniqueMember"),
@@ -56,7 +56,7 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 			{
 				Config: LdapGroupSettingTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "enabled_ldap", "ldaptest"),
+					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "ldap_setting_key", "ldaptest"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
 					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "description_attribute", "description1"),
 				),

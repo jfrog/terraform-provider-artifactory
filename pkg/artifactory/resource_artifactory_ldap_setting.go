@@ -249,7 +249,8 @@ security:
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: ldapSettingsSchema,
+		Schema:      ldapSettingsSchema,
+		Description: "Provides an Artifactory ldap setting resource. This resource configuration corresponds to ldapSettings config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
 	}
 }
 
