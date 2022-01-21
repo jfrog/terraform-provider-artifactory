@@ -8,9 +8,8 @@ import (
 	"strings"
 
 	"github.com/gorhill/cronexpr"
-	"gopkg.in/ldap.v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"gopkg.in/ldap.v2"
 )
 
 func validateLowerCase(value interface{}, key string) (ws []string, es []error) {
