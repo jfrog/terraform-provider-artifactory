@@ -3,6 +3,7 @@ package artifactory
 import (
 	"context"
 	"encoding/xml"
+
 	"github.com/go-resty/resty/v2"
 	"gopkg.in/yaml.v2"
 
