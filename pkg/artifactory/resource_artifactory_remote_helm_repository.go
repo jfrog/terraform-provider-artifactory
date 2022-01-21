@@ -7,9 +7,10 @@ import (
 
 var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 	"helm_charts_base_url": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          "",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
 		Description: "Base URL for the translation of chart source URLs in the index.yaml of virtual repos. " +
 			"Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url.",
 	},
