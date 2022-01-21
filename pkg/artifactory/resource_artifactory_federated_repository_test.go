@@ -11,24 +11,22 @@ import (
 
 func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-federated-%s-%d-full", repoType, rand.Int())
-	resourceName := fmt.Sprintf("artifactory_fedrated_%s_repository.%s", repoType, name)
+	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
+	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
 	//TODO: invalid URL will cause an error, to get 201, use the URL of created repository
 	// Happy-path is to remove member completely, by default RT will assign the same repo as a member
 
 	const federatedRepositoryConfigFull = `
-		resource "artifactory_federated_%s_repository" "%s" {
-			key                             = "%s"
-			description                     = "Test federated repo for %s"
-			notes                           = "Test federated repo for %s"
-			
-			member {
-				url       					= "testing"
-				enabled		  				= true
-			}
+		resource "%s" "%[2]s" {
+			key         = "%[2]s"
+			description = "Test federated repo for %[2]s"
+			notes       = "Test federated repo for %[2]s"
+
+
 		}
 	`
 
-	cfg := fmt.Sprintf(federatedRepositoryConfigFull, repoType, name, name, name, name)
+	cfg := fmt.Sprintf(federatedRepositoryConfigFull, resourceType, name)
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
