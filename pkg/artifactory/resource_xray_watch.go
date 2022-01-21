@@ -67,7 +67,7 @@ func resourceXrayWatch() *schema.Resource {
 		Update: resourceXrayWatchUpdate,
 		Delete: resourceXrayWatchDelete,
 		DeprecationMessage: "Xray resources will be removed from this provider on or before March 31, 2022." +
-			" Please use the separated Terraform Provider Xray: https://github.com/jfrog/terraform-provider-xray. " +
+			" Please use the separate Terraform Provider Xray: https://github.com/jfrog/terraform-provider-xray. " +
 			"Terraform Provider Registry link: https://registry.terraform.io/providers/jfrog/xray",
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
