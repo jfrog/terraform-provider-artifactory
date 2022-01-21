@@ -78,10 +78,9 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			Description: `(Optional) When set, users are automatically created when using LDAP. Otherwise, users are transient and associated with auto-join groups defined in Artifactory. Default value is "true".`,
 		},
 		"email_attribute": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validateIsEmail),
-			Description:      `(Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory.`,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: `(Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory.`,
 		},
 		"ldap_poisoning_protection": {
 			Type:        schema.TypeBool,
