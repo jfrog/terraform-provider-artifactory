@@ -16,7 +16,7 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	enabled = true
 	ldap_url = "ldap://ldaptestldap"
 	user_dn_pattern = "ou=Peo *ple, uid={0}"
-	email_attribute = "testldap@test.org"
+	email_attribute = "mail"
 	search_sub_tree = true
 	search_filter = "(uid={0})"
 	search_base = "ou=users|ou=people"
@@ -30,7 +30,7 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	enabled = true
 	ldap_url = "ldap://ldaptestldap"
 	user_dn_pattern = "uid={0},ou=People"
-	email_attribute = "testldapupdate@test.org"
+	email_attribute = "mail"
 	search_sub_tree = true
 	search_filter = "(uid={0})"
 	search_base = "ou=users"
@@ -48,7 +48,7 @@ resource "artifactory_ldap_setting" "ldaptest" {
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "ldap_url", "ldap://ldaptestldap"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "user_dn_pattern", "ou=Peo *ple, uid={0}"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "testldap@test.org"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "mail"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_sub_tree", "true"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_filter", "(uid={0})"),
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_base", "ou=users|ou=people"),
@@ -58,7 +58,7 @@ resource "artifactory_ldap_setting" "ldaptest" {
 				Config: LdapSettingTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "testldapupdate@test.org"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "mail"),
 				),
 			},
 		},
