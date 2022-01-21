@@ -13,7 +13,7 @@ resource "artifactory_ldap_setting" "ldap_name" {
   enabled = true
   ldap_url = "ldap://ldap_server_url"
   user_dn_pattern = "uid={0},ou=People"
-  email_attribute = "ldap@company.org"
+  email_attribute = "mail"
   auto_create_user = true
   ldap_poisoning_protection = true
   allow_user_to_access_profile = false
@@ -36,7 +36,8 @@ The following arguments are supported:
 * `enabled`                      - (Optional) When set, these settings are enabled. Default value is `true`.
 * `ldap_url`                     - (Required) Location of the LDAP server in the following format: ldap://myserver:myport/dc=sampledomain,dc=com. The URL should include the base DN used to search for and/or authenticate users.
 * `user_dn_pattern`              - (Required) A DN pattern used to log users directly in to the LDAP database. This pattern is used to create a DN string for "direct" user authentication, and is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username at runtime. This only works if anonymous binding is allowed and a direct user DN can be used (which is not the default case for Active Directory). For example: uid={0},ou=People
-* `email_attribute`              - (Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory.
+* `email_attribute`              - (Optional) An attribute that can be used to map a user's email address to a user created automatically in Artifactory. Default value is `mail`.
+  - Note: If blank/empty string input was set for email_attribute, Default value "mail" takes effect. This is to match with Artifactory behavior.  
 * `auto_create_user`             - (Optional) When set, the system will automatically create new users for those who have logged in using LDAP, and assign them to the default groups.  Default value is `true`.
 * `ldap_poisoning_protection`    - (Optional) Protects against LDAP poisoning by filtering out users exposed to vulnerabilities.  Default value is `true`.
 * `allow_user_to_access_profile` - (Optional) When set, users created after logging in using LDAP will be able to access their profile page.  Default value is `false`.
