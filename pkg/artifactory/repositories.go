@@ -3,7 +3,6 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -865,11 +864,9 @@ func lookup(payload interface{}, predicate HclPredicate) map[string]interface{} 
 		thing := v.Field(i)
 
 		hcl := fieldToHcl(field)
-		log.Printf("hcl: %s", hcl)
 		if predicate(hcl) {
 			typeInspector := findInspector(thing.Kind())
 			for key, value := range typeInspector(field, thing) {
-				log.Printf("key: %s, value: %s", key, value)
 				if _, ok := values[key]; !ok {
 					values[key] = value
 				}
@@ -914,7 +911,6 @@ func ignoreHclPredicate(names ...string) HclPredicate {
 	}
 	return func(hcl string) bool {
 		_, found := set[hcl]
-		log.Printf("hcl: %s, found: %t", hcl, found)
 		return !found
 	}
 }
@@ -954,7 +950,6 @@ func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 		values := lookup(payload, predicate)
 
 		for hcl, value := range values {
-			log.Printf("[DEBUG] hcl: %s, value: %s", hcl, value)
 			if predicate != nil && predicate(hcl) {
 				errors = setValue(hcl, value)
 			}

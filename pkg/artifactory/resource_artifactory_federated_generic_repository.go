@@ -13,7 +13,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		"member": {
 			Type:     schema.TypeSet,
 			Optional: true,
-			// Computed: true,
+			Computed: true,
 			Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
 				"automatically be added with the combination of the configured base URL and `key` field value. " +
 				"Note that each of the federated members will need to have a base URL set. PLease follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
@@ -21,16 +21,14 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"url": {
-						Type:        schema.TypeString,
-						Optional:    true,
-						Computed:    true,
-						Description: "Full URL to ending with the repositoryName",
+						Type:             schema.TypeString,
+						Required:         true,
+						Description:      "Full URL to ending with the repositoryName",
 						ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 					},
 					"enabled": {
 						Type:     schema.TypeBool,
-						Optional: true,
-						Computed: true,
+						Required: true,
 						Description: "Represents the active state of the federated member. It is supported to " +
 							"change the enabled status of my own member. The config will be updated on the other " +
 							"federated members automatically.",
@@ -91,8 +89,8 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		members := repo.(*FederatedRepositoryParams).Members
 		for _, member := range members {
 			federatedMember := map[string]interface{}{
-				"url":         	member.Url,
-				"enabled":  	member.Enabled,
+				"url":     member.Url,
+				"enabled": member.Enabled,
 			}
 
 			federatedMembers = append(federatedMembers, federatedMember)
