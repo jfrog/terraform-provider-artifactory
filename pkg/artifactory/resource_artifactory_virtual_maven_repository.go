@@ -58,7 +58,7 @@ func unpackMavenVirtualRepository(s *schema.ResourceData) (interface{}, string, 
 	d := &ResourceData{s}
 
 	repo := MavenVirtualRepositoryParams{
-		VirtualRepositoryBaseParams: unpackBaseVirtRepo(s),
+		VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, "maven"),
 		CommonMavenGradleVirtualRepositoryParams: CommonMavenGradleVirtualRepositoryParams{
 			KeyPair:                              d.getString("key_pair", false),
 			ForceMavenAuthentication:             d.getBool("force_maven_authentication", false),

@@ -109,6 +109,7 @@ type VirtualRepositoryBaseParams struct {
 	Repositories                                  []string `hcl:"repositories" json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `hcl:"artifactory_requests_can_retrieve_remote_artifacts" json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
 	DefaultDeploymentRepo                         string   `hcl:"default_deployment_repo" json:"defaultDeploymentRepo,omitempty"`
+	VirtualRetrievalCachePeriodSecs               int      `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
 func (bp VirtualRepositoryBaseParams) Id() string {
@@ -610,6 +611,13 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"retrieval_cache_period_seconds": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      7200,
+		Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
+		ValidateFunc: validation.IntAtLeast(0),
+	},
 }
 
 func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
@@ -700,22 +708,23 @@ func getDefaultDeploymentRepo(d *ResourceData) string {
 	return value
 }
 
-func unpackBaseVirtRepo(s *schema.ResourceData) VirtualRepositoryBaseParams {
+func unpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParams {
 	d := &ResourceData{s}
 
 	return VirtualRepositoryBaseParams{
 		Key:    d.getString("key", false),
 		Rclass: "virtual",
 		//must be set independently
-		PackageType:     "invalid",
+		PackageType:     packageType,
 		IncludesPattern: d.getString("includes_pattern", false),
 		ExcludesPattern: d.getString("excludes_pattern", false),
 		RepoLayoutRef:   d.getString("repo_layout_ref", false),
 		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.getBool("artifactory_requests_can_retrieve_remote_artifacts", false),
-		Repositories:          d.getList("repositories"),
-		Description:           d.getString("description", false),
-		Notes:                 d.getString("notes", false),
-		DefaultDeploymentRepo: getDefaultDeploymentRepo(d),
+		Repositories:                    d.getList("repositories"),
+		Description:                     d.getString("description", false),
+		Notes:                           d.getString("notes", false),
+		DefaultDeploymentRepo:           getDefaultDeploymentRepo(d),
+		VirtualRetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
 	}
 }
 
