@@ -105,6 +105,7 @@ func Provider() *schema.Provider {
 			"artifactory_virtual_repository":         resourceArtifactoryVirtualRepository(),
 			"artifactory_virtual_maven_repository":   resourceArtifactoryMavenVirtualRepository(),
 			"artifactory_virtual_go_repository":      resourceArtifactoryGoVirtualRepository(),
+			"artifactory_virtual_conan_repository":   resourceArtifactoryConanVirtualRepository(),
 			"artifactory_group":                      resourceArtifactoryGroup(),
 			"artifactory_user":                       resourceArtifactoryUser(),
 			"artifactory_permission_target":          resourceArtifactoryPermissionTarget(),
