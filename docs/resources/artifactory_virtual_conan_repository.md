@@ -31,7 +31,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional)
 * `key_pair` - (Optional) - Key pair to use for... well, I'm not sure. Maybe ssh auth to remote repo?
 * `default_deployment_repo` - (Optional)
-* `virtual_retrieval_cache_period_seconds` - (Optional) - This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
+* `retrieval_cache_period_seconds` - (Optional) - This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
 
 ## Import
 

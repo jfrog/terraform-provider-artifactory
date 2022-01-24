@@ -7,19 +7,16 @@ import (
 
 type ConanVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `hcl:"virtual_retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
 func resourceArtifactoryConanVirtualRepository() *schema.Resource {
 	var conanVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
-		"virtual_retrieval_cache_period_seconds": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Computed:    true,
-			Description: "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
-			DefaultFunc: func() (interface{}, error) {
-				return 7200, nil
-			},
+		"retrieval_cache_period_seconds": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      7200,
+			Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
 			ValidateFunc: validation.IntAtLeast(0),
 		},
 	})
@@ -39,7 +36,7 @@ func unpackConanVirtualRepository(s *schema.ResourceData) (interface{}, string, 
 	d := &ResourceData{s}
 	repo := ConanVirtualRepositoryParams{
 		VirtualRepositoryBaseParams:     unpackBaseVirtRepo(s),
-		VirtualRetrievalCachePeriodSecs: d.getInt("virtual_retrieval_cache_period_seconds", true),
+		VirtualRetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", true),
 	}
 	repo.PackageType = "conan"
 	return &repo, repo.Key, nil

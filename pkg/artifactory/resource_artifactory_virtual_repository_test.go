@@ -170,6 +170,7 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "conan"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "7200"),
 				),
 			},
 		},
