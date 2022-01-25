@@ -144,6 +144,72 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccVirtualConanRepository_basic(t *testing.T) {
+	_, fqrn, name := mkNames("foo", "artifactory_virtual_conan_repository")
+	var virtualRepositoryBasic = fmt.Sprintf(`
+		resource "artifactory_virtual_conan_repository" "%s" {
+		  key          = "%s"
+		  repo_layout_ref = "conan-default"
+		  repositories = []
+		  description = "A test virtual repo"
+		  notes = "Internal description"
+		  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+		  excludes_pattern = "com/google/**"
+ 		  retrieval_cache_period_seconds = 7100
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryBasic,
+				// we check to make sure some of the base params are picked up
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "conan"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "7100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVirtualGenericRepository_basic(t *testing.T) {
+	_, fqrn, name := mkNames("foo", "artifactory_virtual_generic_repository")
+	var virtualRepositoryBasic = fmt.Sprintf(`
+		resource "artifactory_virtual_generic_repository" "%s" {
+		  key          = "%s"
+		  repo_layout_ref = "simple-default"
+		  repositories = []
+		  description = "A test virtual repo"
+		  notes = "Internal description"
+		  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+		  excludes_pattern = "com/google/**"
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryBasic,
+				// we check to make sure some of the base params are picked up
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)

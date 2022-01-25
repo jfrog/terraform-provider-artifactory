@@ -48,7 +48,7 @@ func unpackGoVirtualRepository(s *schema.ResourceData) (interface{}, string, err
 	d := &ResourceData{s}
 
 	repo := GoVirtualRepositoryParams{
-		VirtualRepositoryBaseParams:  unpackBaseVirtRepo(s),
+		VirtualRepositoryBaseParams:  unpackBaseVirtRepo(s, "go"),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 		ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
 	}
