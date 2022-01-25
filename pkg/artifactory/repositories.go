@@ -109,7 +109,11 @@ type VirtualRepositoryBaseParams struct {
 	Repositories                                  []string `hcl:"repositories" json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `hcl:"artifactory_requests_can_retrieve_remote_artifacts" json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
 	DefaultDeploymentRepo                         string   `hcl:"default_deployment_repo" json:"defaultDeploymentRepo,omitempty"`
-	VirtualRetrievalCachePeriodSecs               int      `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
+}
+
+type VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
+	VirtualRepositoryBaseParams
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
 func (bp VirtualRepositoryBaseParams) Id() string {
@@ -720,10 +724,18 @@ func unpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 		ExcludesPattern: d.getString("excludes_pattern", false),
 		RepoLayoutRef:   d.getString("repo_layout_ref", false),
 		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.getBool("artifactory_requests_can_retrieve_remote_artifacts", false),
-		Repositories:                    d.getList("repositories"),
-		Description:                     d.getString("description", false),
-		Notes:                           d.getString("notes", false),
-		DefaultDeploymentRepo:           getDefaultDeploymentRepo(d),
+		Repositories:          d.getList("repositories"),
+		Description:           d.getString("description", false),
+		Notes:                 d.getString("notes", false),
+		DefaultDeploymentRepo: getDefaultDeploymentRepo(d),
+	}
+}
+
+func unpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs {
+	d := &ResourceData{s}
+
+	return VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
+		VirtualRepositoryBaseParams:     unpackBaseVirtRepo(s, packageType),
 		VirtualRetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
 	}
 }

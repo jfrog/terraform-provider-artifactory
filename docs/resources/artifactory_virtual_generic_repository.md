@@ -1,14 +1,14 @@
-# Artifactory Virtual Conan Repository Resource
+# Artifactory Virtual Generic Repository Resource
 
-Provides an Artifactory virtual repository resource, but with specific conan features. This should be preferred over the original
+Provides an Artifactory virtual repository resource with generic package type. This should be preferred over the original
 one-size-fits-all `artifactory_virtual_repository`. 
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_virtual_conan_repository" "foo-conan" {
-  key          = "foo-conan"
-  repo_layout_ref = "conan-default"
+resource "artifactory_virtual_generic_repository" "foo-generic" {
+  key          = "foo-generic"
+  repo_layout_ref = "simple-default"
   repositories = []
   description = "A test virtual repo"
   notes = "Internal description"
@@ -30,12 +30,11 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `repo_layout_ref` - (Optional)
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional)
 * `default_deployment_repo` - (Optional)
-* `retrieval_cache_period_seconds` - (Optional) - This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
 
 ## Import
 
 Virtual repositories can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_virtual_conan_repository.foo foo
+$ terraform import artifactory_virtual_generic_repository.foo foo
 ```
