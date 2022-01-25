@@ -82,6 +82,34 @@ func testAccDeleteRepo(t *testing.T, repo string) {
 	}
 }
 
+// Create a project. It will be used in the tests
+func testAccCreateProject(t *testing.T, projectKey string, projectName string) {
+	restyClient := getTestResty(t)
+
+	type Project struct {
+		DisplayName string `json:"display_name"`
+		Description string `json:"description"`
+		ProjectKey  string `json:"project_key"`
+	}
+
+	project := Project{}
+	project.DisplayName = projectName
+	project.Description = "Project created by TF provider test"
+	project.ProjectKey = projectKey
+	response, errProject := restyClient.R().SetBody(project).Post("/access/api/v1/projects")
+
+	if errProject != nil || response.IsError() {
+		t.Error(fmt.Errorf("failed to created project %s - %s", response, errProject))
+	}
+}
+
+// Delete test projects after testing
+func testAccDeleteProject(t *testing.T, projectKey string) (*resty.Response, error) {
+	restyClient := getTestResty(t)
+	response, errProject := restyClient.R().Delete("/access/api/v1/projects/" + projectKey)
+	return response, errProject
+}
+
 // Create a set of builds or a single build, add the build into the Xray indexing configuration, to be able to add it to
 // the xray watch
 func testAccCreateBuilds(t *testing.T, builds []string) {

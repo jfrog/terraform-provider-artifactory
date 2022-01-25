@@ -56,7 +56,7 @@ func resourceXrayWatch() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The name of the build or repository. Enable Xray indexing must be enabled on the repo or build",
+							Description: "The name of the build, repository or project. Xray indexing must be enabled on the repository or build",
 						},
 						"filter": {
 							Type:        schema.TypeList,

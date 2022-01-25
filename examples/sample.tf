@@ -112,3 +112,53 @@ resource "xray_watch" "all-repos" {
 
   watch_recipients = ["test@email.com", "test1@email.com"]
 }
+
+resource "xray_watch" "all-projects" {
+  name        = "all-projects-watch-${random_id.randid.dec}"
+  description = "Watch all the projects"
+  active      = true
+
+  watch_resource {
+    type       	= "all-projects"
+    bin_mgr_id  = "default"
+  }
+
+  assigned_policy {
+    name = xray_security_policy.security_policy.name
+    type = "security"
+  }
+
+  assigned_policy {
+    name = xray_license_policy.license_policy.name
+    type = "license"
+  }
+
+  watch_recipients = ["test@email.com", "test1@email.com"]
+}
+
+resource "xray_watch" "project" {
+  name        = "project-watch-${random_id.randid.dec}"
+  description = "Watch selected projects"
+  active      = true
+
+  watch_resource {
+    type       	= "project"
+    name        = "test"
+  }
+  watch_resource {
+    type       	= "project"
+    name        = "test1"
+  }
+
+  assigned_policy {
+    name = xray_security_policy.security_policy.name
+    type = "security"
+  }
+
+  assigned_policy {
+    name = xray_license_policy.license_policy.name
+    type = "license"
+  }
+
+  watch_recipients = ["test@email.com", "test1@email.com"]
+}

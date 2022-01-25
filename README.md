@@ -21,8 +21,14 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.24"
+      version = "2.9.1"
     }
+    
+    project = {
+      source  = "registry.terraform.io/jfrog/project"
+      version = "1.0.1"
+    }
+    
     xray = {
       source  = "registry.terraform.io/jfrog/xray"
       version = "0.0.1"
@@ -31,6 +37,12 @@ terraform {
 }
 provider "artifactory" {
   // supply ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD and ARTIFACTORY_URL as env vars
+}
+
+provider "project" {
+  // supply PROJECT_URL, PROJECT_ACCESS_TOKEN as env vars
+  url = "${var.project_url}"
+  access_token = "${var.project_access_token}"
 }
 
 provider "xray" {
@@ -68,6 +80,29 @@ resource "artifactory_local_gradle_repository" "local-gradle-repo" {
   suppress_pom_consistency_checks = true
   xray_index = true # must be set to true to be able to assign the watch to the repo
 }
+
+resource "project" "myproject" {
+  key          = "test"
+  display_name = "My Project"
+  description  = "My Project"
+  admin_privileges {
+    manage_members   = true
+    manage_resources = true
+    index_resources  = true
+  }
+}
+
+resource "project" "myproject1" {
+  key          = "test1"
+  display_name = "My Project"
+  description  = "My Project"
+  admin_privileges {
+    manage_members   = true
+    manage_resources = true
+    index_resources  = true
+  }
+}
+
 
 resource "xray_security_policy" "security1" {
   name        = "test-security-policy-severity-${random_id.randid.dec}"
@@ -290,6 +325,56 @@ resource "xray_watch" "build" {
     name = xray_security_policy.security1.name
     type = "security"
   }
+  assigned_policy {
+    name = xray_license_policy.license1.name
+    type = "license"
+  }
+
+  watch_recipients = ["test@email.com", "test1@email.com"]
+}
+
+resource "xray_watch" "all-projects" {
+  name        = "all-projects-watch-${random_id.randid.dec}"
+  description = "Watch all the projects"
+  active      = true
+
+  watch_resource {
+    type       	= "all-projects"
+    bin_mgr_id  = "default"
+  }
+
+  assigned_policy {
+    name = xray_security_policy.security1.name
+    type = "security"
+  }
+
+  assigned_policy {
+    name = xray_license_policy.license1.name
+    type = "license"
+  }
+
+  watch_recipients = ["test@email.com", "test1@email.com"]
+}
+
+resource "xray_watch" "project" {
+  name        = "project-watch-${random_id.randid.dec}"
+  description = "Watch selected projects"
+  active      = true
+
+  watch_resource {
+    type       	= "project"
+    name        = project.myproject.key
+  }
+  watch_resource {
+    type       	= "project"
+    name        = project.myproject1.key
+  }
+
+  assigned_policy {
+    name = xray_security_policy.security1.name
+    type = "security"
+  }
+
   assigned_policy {
     name = xray_license_policy.license1.name
     type = "license"
