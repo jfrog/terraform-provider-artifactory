@@ -1,4 +1,4 @@
-# Artifactory keypair Resource
+# Artifactory Keypair Resource
 
 Creates a Keypair resource.
 
