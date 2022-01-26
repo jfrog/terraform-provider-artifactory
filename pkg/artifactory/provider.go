@@ -252,8 +252,8 @@ func checkArtifactoryLicense(client *resty.Client) error {
 		licenseType = licensesWrapper.Type
 	}
 
-	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial)`, licenseType); !matched {
-		return fmt.Errorf("Artifactory requires Pro or Enterprise license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check.")
+	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial|Edge)`, licenseType); !matched {
+		return fmt.Errorf("Artifactory requires Pro or Enterprise or Edge license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check.")
 	}
 
 	return nil
