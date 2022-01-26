@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `alias` - (Required) Name of the certificate.
 
-* `content` - (Required) PEM-encoded client certificate and private key.
+* `content` - (Required) PEM-encoded client certificate and private key, as a string.
 
 ## Attribute Reference
 
