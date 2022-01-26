@@ -1,27 +1,21 @@
 # Artifactory keypair Resource
 
-Creates an RSA Keypair resource - suitable for signing alpine indices. 
-- Currently, only RSA is supported.
-- Passphrases are not currently supported, though they exist in the API
+Creates a Keypair resource.
 
+~> **Note:** Presently, only **RSA** keys are supported which are suitable for signing Alpine Linux indices. Passphrases are not currently supported, though they exist in the API for GPG keys. GPG support is stubbed-out in the provider, but not fully implemented.
 
 ## Example Usage
 
 ```hcl
-terraform {
-  required_providers {
-    artifactory = {
-      source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.6.14"
-    }
-  }
-}
-resource "artifactory_keypair" "some-keypair6543461672124900137" {
-  pair_name   = "some-keypair6543461672124900137"
+resource "artifactory_keypair" "my_keypair" {
   pair_type   = "RSA"
+  pair_name   = "some-keypair6543461672124900137"
   alias       = "foo-alias6543461672124900137"
-  private_key = file("samples/rsa.priv")
+
+  private_key = file("samples/rsa.pem")
   public_key  = file("samples/rsa.pub")
+  # passphrase = ""
+
   lifecycle {
     ignore_changes = [
       private_key,
@@ -35,13 +29,16 @@ resource "artifactory_keypair" "some-keypair6543461672124900137" {
 
 The following arguments are supported:
 
-* `pair_name` - (Required) name of the key pair and the identity of the resource.
-* `pair_type` - (Required) RT requires this - presumably for verification purposes.
-* `alias` - (Required) Required but for unknown reasons
-* `private_key` - (Required)  - duh! This will have it's pem format validated
-* `passphrase` - (Optional/Questionable)  - This will be used to decrypt the private key. Validated server side.
-* `public_key` - (Required)  - duh! This will have it's pem format validated
-* `unavailable` - (Computed) - it's unknown what this does, but, it's returned in the payload and there is no known place to set it in the UI
+* `pair_name` - (Required) Name of the keypair and the identity of the resource.
 
-Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
-The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state. 
+* `pair_type` - (Required) The type of key. Allowed values are: `RSA` or `GPG`.
+
+* `alias` - (Required) Appears with the keypairs in the Admin UI for _signing keys_.
+
+* `private_key` - (Required) The private key portion of the RSA/GPG keypair, as a string.
+
+* `passphrase` - (Optional) - The passphrase for the GPG key. Validated server side. (Not currently implemented until GPG support is added.)
+
+* `public_key` - (Required) The public key portion of the RSA/GPG keypair, as a string.
+
+~> **Note:** The Artifactory API call _Get Key Pair_ doesn't return `private_key` or `passphrase`, but consumes these keys in the `POST` call. The meta-argument `lifecycle` is used here to ensure the provider ignores the changes for these two keys in the Terraform state.
