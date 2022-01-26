@@ -13,9 +13,8 @@ resource "artifactory_certificate" "my-cert" {
 
 # This can then be used by a remote repository
 resource "artifactory_remote_repository" "my-remote" {
-  // more code
   client_tls_certificate = "${artifactory_certificate.my-cert.alias}"
-  // more code
+  // ...
 }
 ```
 
@@ -23,7 +22,8 @@ resource "artifactory_remote_repository" "my-remote" {
 
 The following arguments are supported:
 
-* `alias` - (Required) Name of certificate.
+* `alias` - (Required) Name of the certificate.
+
 * `content` - (Required) PEM-encoded client certificate and private key.
 
 ## Attribute Reference
@@ -31,15 +31,19 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `fingerprint` - SHA256 fingerprint of the certificate.
+
 * `issued_by` - Name of the certificate authority that issued the certificate.
-* `issued_on` - The time & date when the certificate is valid from.
+
+* `issued_on` - The timestamp when the certificate is valid from.
+
 * `issued_to` - Name of whom the certificate has been issued to.
+
 * `valid_until` - The time & date when the certificate expires.
 
 ## Import
 
-Certificates can be imported using their alias, e.g.
+Certificates can be imported using their alias.
 
 ```
-$ terraform import artifactory_certificate.my-cert my-cert
+terraform import artifactory_certificate.my-cert my-cert
 ```
