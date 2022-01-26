@@ -2,8 +2,7 @@
 
 Provides an Artifactory Access Token resource. This can be used to create and manage Artifactory Access Tokens.
 
-~> **Note:** Access Tokens will be stored in the raw state as plain-text. [Read more about sensitive data in
-state](https://www.terraform.io/docs/state/sensitive-data.html).
+~> **Note:** Access Tokens will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 
 ## Example Usages
@@ -115,6 +114,7 @@ resource "artifactory_access_token" "fixeddate" {
 ```
 
 ### Rotate token after it expires
+
 This example will generate a token that will expire in 1 hour. If `terraform apply` is run before 1 hour has passed, nothing changes. Once an hour has passed, `terraform apply` will generate a new token.
 
 ```hcl
