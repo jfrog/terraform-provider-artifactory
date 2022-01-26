@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `size` - The size of the file, in bytes.
 
-* `download_uri` - The URI that can be used to download the file.
+* `download_uri` - The URL that can be used to download the file.
 
 * `md5` - MD5 checksum of the file.
 
