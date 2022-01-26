@@ -4,11 +4,10 @@ Provides an Artifactory file datasource. This can be used to download a file fro
 
 ## Example Usage
 
-```hcl
-# 
+```hcl 
 data "artifactory_file" "my-file" {
-   repository = "repo-key"
-   path = "/path/to/the/artifact.zip"
+   repository  = "repo-key"
+   path        = "/path/to/the/artifact.zip"
    output_path = "tmp/artifact.zip"
 }
 ```
@@ -18,22 +17,35 @@ data "artifactory_file" "my-file" {
 The following arguments are supported:
 
 * `repository` - (Required) Name of the repository where the file is stored.
+
 * `path` - (Required) The path to the file within the repository.
+
 * `output_path` - (Required) The local path the file should be downloaded to.
-* `force_overwrite` - (Optional) If set to true, an existing file in the output_path will be overwritten. Default: false
+
+* `force_overwrite` - (Optional) If set to `true`, an existing file in the `output_path` will be overwritten. If set to `false`, any existing file in the `output_path` location will prevent the download from writing to that location on disk. The default value is `false`.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `created` - The time & date when the file was created.
-* `created_by` - The user who created the file.
-* `last_modified` - The time & date when the file was last modified.
-* `modified_by` - The user who last modified the file.
-* `last_updated` - The time & date when the file was last updated.
+* `created` - The timestamp for when the file was created.
+
+* `created_by` - The Artifactory user who created the file.
+
+* `last_modified` - The timestamp when the file was last modified.
+
+* `modified_by` - The Artifactory user who last modified the file.
+
+* `last_updated` - The timestamp when the file was last updated.
+
 * `mimetype` - The mimetype of the file.
-* `size` - The size of the file.
+
+* `size` - The size of the file, in bytes.
+
 * `download_uri` - The URI that can be used to download the file.
+
 * `md5` - MD5 checksum of the file.
+
 * `sha1` - SHA1 checksum of the file.
+
 * `sha256` - SHA256 checksum of the file.
