@@ -33,8 +33,7 @@ func TestAccUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("the.dude%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("the.dude%d@domain.com", id)),
-					resource.TestCheckNoResourceAttr(fqrn, "admin"),
-					resource.TestCheckNoResourceAttr(fqrn, "profile_updatable"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
 			{
@@ -55,6 +54,17 @@ func TestAccUser_full(t *testing.T) {
 			password			= "Password1"
 			admin    			= true
 			profile_updatable   = true
+			disable_ui_access	= false
+			groups      		= [ "readers" ]
+		}
+	`
+	const userNonAdminNoProfUpd = `
+		resource "artifactory_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+			password			= "Password1"
+			admin    			= false
+			profile_updatable   = false
 			groups      		= [ "readers" ]
 		}
 	`
@@ -71,7 +81,17 @@ func TestAccUser_full(t *testing.T) {
 					resource.TestCheckResourceAttr(FQRN, "email", fmt.Sprintf("dummy%d@a.com", id)),
 					resource.TestCheckResourceAttr(FQRN, "admin", "true"),
 					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(FQRN, "disable_ui_access", "false"),
 					resource.TestCheckResourceAttr(FQRN, "groups.#", "1"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(FQRN, "admin", "false"),
+					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "false"),
 				),
 			},
 			{

@@ -10,8 +10,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 )
+
+type User struct {
+	Name                     string   `json:"name"`
+	Email                    string   `json:"email"`
+	Password                 string   `json:"password"`
+	Admin                    bool     `json:"admin"`
+	ProfileUpdatable         bool     `json:"profileUpdatable"`
+	DisableUIAccess          bool     `json:"disableUIAccess"`
+	InternalPasswordDisabled bool     `json:"internalPasswordDisabled"`
+	LastLoggedIn             string   `json:"lastLoggedIn"`
+	Realm                    string   `json:"realm"`
+	Groups                   []string `json:"groups"`
+}
 
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
@@ -42,13 +54,13 @@ func resourceArtifactoryUser() *schema.Resource {
 			"admin": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
+				Default:     false,
 				Description: "When enabled, this user is an administrator with all the ensuing privileges.",
 			},
 			"profile_updatable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  true,
 				Description: "When enabled, this user can update their profile details (except for the password. " +
 					"Only an administrator can update the password). There may be cases in which you want to leave " +
 					"this unset to prevent users from updating their profile. For example, a departmental user with " +
@@ -57,14 +69,14 @@ func resourceArtifactoryUser() *schema.Resource {
 			"disable_ui_access": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  true,
 				Description: "When enabled, this user can only access the system through the REST API." +
 					" This option cannot be set if the user has Admin privileges.",
 			},
 			"internal_password_disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 				Description: "When enabled, disables the fallback mechanism for using an internal password when " +
 					"external authentication (such as LDAP) is enabled.",
 			},
@@ -113,9 +125,9 @@ func userExists(client *resty.Client, userName string) (bool, error) {
 	return err == nil, err
 }
 
-func unpackUser(s *schema.ResourceData) services.User {
+func unpackUser(s *schema.ResourceData) User {
 	d := &ResourceData{s}
-	return services.User{
+	return User{
 		Name:                     d.getString("name", false),
 		Email:                    d.getString("email", false),
 		Password:                 d.getString("password", true),
@@ -127,7 +139,7 @@ func unpackUser(s *schema.ResourceData) services.User {
 	}
 }
 
-func packUser(user services.User, d *schema.ResourceData) error {
+func packUser(user User, d *schema.ResourceData) error {
 
 	setValue := mkLens(d)
 
@@ -166,7 +178,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(user.Name)
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		result := &services.User{}
+		result := &User{}
 		resp, e := m.(*resty.Client).R().SetResult(result).Get("artifactory/api/security/users/" + user.Name)
 
 		if e != nil {
@@ -184,7 +196,7 @@ func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
 	d := &ResourceData{rd}
 
 	userName := d.Id()
-	user := &services.User{}
+	user := &User{}
 	resp, err := m.(*resty.Client).R().SetResult(user).Get("artifactory/api/security/users/" + userName)
 
 	if err != nil {
