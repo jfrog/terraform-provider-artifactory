@@ -34,7 +34,6 @@ func TestAccUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("the.dude%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("the.dude%d@domain.com", id)),
 					resource.TestCheckNoResourceAttr(fqrn, "admin"),
-					resource.TestCheckNoResourceAttr(fqrn, "profile_updatable"),
 				),
 			},
 			{

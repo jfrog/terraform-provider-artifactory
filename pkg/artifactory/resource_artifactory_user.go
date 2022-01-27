@@ -13,16 +13,16 @@ import (
 )
 
 type User struct {
-	Name                     string   `json:"name,omitempty" csv:"username,omitempty"`
-	Email                    string   `json:"email,omitempty" csv:"email,omitempty"`
-	Password                 string   `json:"password,omitempty" csv:"password,omitempty"`
-	Admin                    bool     `json:"admin,omitempty" csv:"admin,omitempty"`
-	ProfileUpdatable         bool     `json:"profileUpdatable" csv:"profileUpdatable"`
-	DisableUIAccess          bool     `json:"disableUIAccess,omitempty" csv:"disableUIAccess,omitempty"`
-	InternalPasswordDisabled bool     `json:"internalPasswordDisabled,omitempty" csv:"internalPasswordDisabled,omitempty"`
-	LastLoggedIn             string   `json:"lastLoggedIn,omitempty" csv:"lastLoggedIn,omitempty"`
-	Realm                    string   `json:"realm,omitempty" csv:"realm,omitempty"`
-	Groups                   []string `json:"groups,omitempty" csv:"groups,omitempty"`
+	Name                     string   `json:"name"`
+	Email                    string   `json:"email"`
+	Password                 string   `json:"password"`
+	Admin                    bool     `json:"admin"`
+	ProfileUpdatable         bool     `json:"profileUpdatable"`
+	DisableUIAccess          bool     `json:"disableUIAccess"`
+	InternalPasswordDisabled bool     `json:"internalPasswordDisabled"`
+	LastLoggedIn             string   `json:"lastLoggedIn"`
+	Realm                    string   `json:"realm"`
+	Groups                   []string `json:"groups"`
 }
 
 func resourceArtifactoryUser() *schema.Resource {
@@ -68,14 +68,12 @@ func resourceArtifactoryUser() *schema.Resource {
 			"disable_ui_access": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				Description: "When enabled, this user can only access the system through the REST API." +
 					" This option cannot be set if the user has Admin privileges.",
 			},
 			"internal_password_disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				Description: "When enabled, disables the fallback mechanism for using an internal password when " +
 					"external authentication (such as LDAP) is enabled.",
 			},
