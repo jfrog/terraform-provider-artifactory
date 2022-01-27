@@ -54,6 +54,7 @@ func resourceArtifactoryUser() *schema.Resource {
 			"admin": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "When enabled, this user is an administrator with all the ensuing privileges.",
 			},
 			"profile_updatable": {
@@ -68,12 +69,14 @@ func resourceArtifactoryUser() *schema.Resource {
 			"disable_ui_access": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 				Description: "When enabled, this user can only access the system through the REST API." +
 					" This option cannot be set if the user has Admin privileges.",
 			},
 			"internal_password_disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 				Description: "When enabled, disables the fallback mechanism for using an internal password when " +
 					"external authentication (such as LDAP) is enabled.",
 			},
