@@ -58,6 +58,16 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
+	const userNonAdminNoProfUpd = `
+		resource "artifactory_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+			password			= "Password1"
+			admin    			= false
+			profile_updatable   = false
+			groups      		= [ "readers" ]
+		}
+	`
 	id, FQRN, name := mkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -72,6 +82,15 @@ func TestAccUser_full(t *testing.T) {
 					resource.TestCheckResourceAttr(FQRN, "admin", "true"),
 					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(FQRN, "groups.#", "1"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(FQRN, "admin", "false"),
+					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "false"),
 				),
 			},
 			{
