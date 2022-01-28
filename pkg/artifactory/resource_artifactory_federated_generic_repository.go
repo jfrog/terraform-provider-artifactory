@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -12,8 +11,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	var federatedSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
-			Optional: true,
-			Computed: true,
+			Required: true,
 			Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
 				"automatically be added with the combination of the configured base URL and `key` field value. " +
 				"Note that each of the federated members will need to have a base URL set. PLease follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
@@ -72,7 +70,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		return members
 	}
 
-	var unPackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
+	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := FederatedRepositoryParams{
 			LocalRepositoryBaseParams: unpackBaseRepo("federated", data, repoType),
 			Members:                   unpackMembers(data),
@@ -97,7 +95,6 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		}
 
 		errors := setValue("member", federatedMembers)
-		log.Printf("ResourceData.member: %v", d.Get("member"))
 
 		if errors != nil && len(errors) > 0 {
 			return fmt.Errorf("failed saving members to state %q", errors)
@@ -120,5 +117,5 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		}
 	}
 
-	return mkResourceSchema(federatedSchema, packer, unPackFederatedRepository, constructor)
+	return mkResourceSchema(federatedSchema, packer, unpackFederatedRepository, constructor)
 }

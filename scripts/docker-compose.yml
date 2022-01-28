@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  artifactory-1:
+    image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.27.10
+    container_name: art-1
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    volumes:
+      - ./scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro
+
+  artifactory-2:
+    image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.27.10
+    container_name: art-2
+    ports:
+      - "9080:8080"
+      - "9081:8081"
+      - "9082:8082"
+    volumes:
+      - ./scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro
