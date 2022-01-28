@@ -31,6 +31,7 @@ type SamlSettings struct {
 	AutoRedirect              bool   `yaml:"autoRedirect" json:"autoRedirect"`
 	SyncGroups                bool   `yaml:"syncGroups" json:"syncGroups"`
 	VerifyAudienceRestriction bool   `yaml:"verifyAudienceRestriction" json:"verifyAudienceRestriction"`
+	UseEncryptedAssertion     bool   `yaml:"useEncryptedAssertion" json:"useEncryptedAssertion"`
 }
 
 func resourceArtifactorySamlSettings() *schema.Resource {
@@ -46,59 +47,79 @@ func resourceArtifactorySamlSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"enable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: `(Optional) Enable SAML SSO.  Default value is "true".`,
 			},
 			"certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: `(Optional) SAML certificate that contains the public key for the IdP service provider.  Used by Artifactory to verify sign-in requests. Default value is "".`,
 			},
 			"email_attribute": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: `(Optional) Name of the attribute in the SAML response from the IdP that contains the user's email. Default value is "".`,
 			},
 			"group_attribute": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: `(Optional) Name of the attribute in the SAML response from the IdP that contains the user's group memberships. Default value is "".`,
 			},
 			"login_url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: `(Required) Service provider login url configured on the IdP.`,
 			},
 			"logout_url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: `(Required) Service provider logout url, or where to redirect after user logs out.`,
 			},
 			"no_auto_user_creation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "When automatic user creation is off, authenticated users are not automatically created inside Artifactory. Instead, for every request from an SSO user, the user is temporarily associated with default groups (if such groups are defined), and the permissions for these groups apply. Without auto-user creation, you must manually create the user inside Artifactory to manage user permissions not attached to their default groups. Default value is `false`.",
+				Description: `(Optional) When automatic user creation is off, authenticated users are not automatically created inside Artifactory. Instead, for every request from an SSO user, the user is temporarily associated with default groups (if such groups are defined), and the permissions for these groups apply. Without auto-user creation, you must manually create the user inside Artifactory to manage user permissions not attached to their default groups. Default value is "false".`,
 			},
 			"service_provider_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: `(Required) The SAML service provider name. This should be a URI that is also known as the entityID, providerID, or entity identity.`,
 			},
 			"allow_user_to_access_profile": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: `(Optional) Allow persisted users to access their profile.  Default value is "true".`,
 			},
 			"auto_redirect": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) Auto redirect to login through the IdP when clicking on Artifactory's login link.  Default value is "false".`,
 			},
 			"sync_groups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) Associate user with Artifactory groups based on the "group_attribute" provided in the SAML response from the identity provider.  Default value is "false".`,
 			},
 			"verify_audience_restriction": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: `(Optional) Enable "audience", or who the SAML assertion is intended for.  Ensures that the correct service provider intended for Artifactory is used on the IdP. Default value is "true".`,
+			},
+			"use_encrypted_assertion": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) When set, an X.509 public certificate will be created by Artifactory. Download this certificate and upload it to your IDP and choose your own encryption algorithm. This process will let you encrypt the assertion section in your SAML response. Default value is "false".`,
 			},
 		},
 	}
@@ -177,6 +198,7 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 		AutoRedirect:              d.getBool("auto_redirect", false),
 		SyncGroups:                d.getBool("sync_groups", false),
 		VerifyAudienceRestriction: d.getBool("verify_audience_restriction", false),
+		UseEncryptedAssertion:     d.getBool("use_encrypted_assertion", false),
 	}
 
 	security.Saml.Settings = settings
@@ -197,6 +219,7 @@ func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics 
 	setValue("allow_user_to_access_profile", s.Saml.Settings.AllowUserToAccessProfile)
 	setValue("auto_redirect", s.Saml.Settings.AutoRedirect)
 	setValue("sync_groups", s.Saml.Settings.SyncGroups)
+	setValue("use_encrypted_assertion", s.Saml.Settings.UseEncryptedAssertion)
 	errors := setValue("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction)
 
 	if errors != nil && len(errors) > 0 {
