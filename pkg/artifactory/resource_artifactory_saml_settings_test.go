@@ -25,6 +25,7 @@ resource "artifactory_saml_settings" "saml" {
 	auto_redirect                = true
 	sync_groups                  = true
 	verify_audience_restriction  = true
+    use_encrypted_assertion      = false
 }`
 
 func TestAccSamlSettings_full(t *testing.T) {
@@ -48,6 +49,7 @@ func TestAccSamlSettings_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "auto_redirect", "true"),
 					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "sync_groups", "true"),
 					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "verify_audience_restriction", "true"),
+					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "use_encrypted_assertion", "false"),
 				),
 			},
 		},
