@@ -815,7 +815,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 	case reflect.Slice:
 		return func(field reflect.StructField, thing reflect.Value) map[string]interface{} {
 			return map[string]interface{}{
-				fieldToHcl(field): castToInterfaceArr(thing.Interface().([]string)), // interface conversion: interface {} is []artifactory.Member, not []string
+				fieldToHcl(field): castToInterfaceArr(thing.Interface().([]string)),
 			}
 		}
 	}

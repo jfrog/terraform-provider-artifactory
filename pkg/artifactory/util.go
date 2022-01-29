@@ -93,14 +93,7 @@ func castToStringArr(arr []interface{}) []string {
 
 	return cpy
 }
-func castToIFaceArray(arr []interface{}) []interface{} {
-	cpy := make([]interface{}, 0, len(arr))
-	for _, r := range arr {
-		cpy = append(cpy, r)
-	}
 
-	return cpy
-}
 func castToInterfaceArr(arr []string) []interface{} {
 	cpy := make([]interface{}, 0, len(arr))
 	for _, r := range arr {
