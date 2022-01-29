@@ -276,10 +276,6 @@ var repoTypesLikeGeneric = []string{
 	"vagrant",
 }
 
-var repoTypesLikeGenericFederated = []string{
-	"generic",
-}
-
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
