@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"strings"
@@ -11,27 +10,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func skipFederatedRepo() (bool, error) {
-	artifactory2Url := os.Getenv("ARTIFACTORY_URL_2")
-	testFederatedRepo := os.Getenv("ARTIFACTORY_TEST_FEDERATED_REPO")
-
-	if testFederatedRepo == "true" && len(artifactory2Url) > 0 {
-		log.Println("Both env var `ARTIFACTORY_TEST_FEDERATED_REPO` and `ARTIFACTORY_URL_2` are set. Executing test.")
-		return false, nil
+func skipFederatedRepo() (bool, string) {
+	if len(os.Getenv("ARTIFACTORY_URL_2")) > 0 {
+		return false, "Env var `ARTIFACTORY_URL_2` is set. Executing test."
 	}
 
-	log.Println("Either env var `ARTIFACTORY_TEST_FEDERATED_REPO` or `ARTIFACTORY_URL_2` is not set. Skipping test.")
-	return true, nil
+	return true, "Env var `ARTIFACTORY_URL_2` is not set. Skipping test."
 }
 
 func TestAccFederatedRepoWithMembers(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skipf(reason)
+	}
+
 	name := fmt.Sprintf("terraform-federated-generic-%d-full", rand.Int())
 	resourceType := "artifactory_federated_generic_repository"
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
-	artifactoryUrl := os.Getenv("ARTIFACTORY_URL")
-	artifactory2Url := os.Getenv("ARTIFACTORY_URL_2")
-	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", artifactoryUrl, name)
-	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", artifactory2Url, name)
+	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
 	const federatedRepositoryConfigFull = `
 		resource "%s" "%[2]s" {
@@ -51,7 +47,8 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		}
 	`
 
-	cfg := fmt.Sprintf(federatedRepositoryConfigFull, resourceType, name, federatedMemberUrl, federatedMember2Url)
+	cfg := fmt.Sprintf(federatedRepositoryConfigFull, resourceType, name, federatedMember1Url, federatedMember2Url)
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -63,21 +60,23 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "member.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMember2Url),
 					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "member.1.url", federatedMemberUrl),
+					resource.TestCheckResourceAttr(resourceName, "member.1.url", federatedMember1Url),
 					resource.TestCheckResourceAttr(resourceName, "member.1.enabled", "true"),
 				),
-				SkipFunc: skipFederatedRepo,
 			},
 		},
 	})
 }
 
 func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skipf(reason)
+	}
+
 	name := fmt.Sprintf("terraform-federated-%s-%d-full", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
-	artifactoryUrl := os.Getenv("ARTIFACTORY_URL")
-	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", artifactoryUrl, name)
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	const federatedRepositoryConfigFull = `
 		resource "%s" "%[2]s" {
@@ -110,7 +109,6 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMemberUrl),
 					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
 				),
-				SkipFunc: skipFederatedRepo,
 			},
 		},
 	}

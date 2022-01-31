@@ -5,15 +5,6 @@
 
 To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
 
-## Release notes for 2.3.1
-With the major version release of 2.3.1, all remnants of the original atlassian code have been pitched. A real effort was made to sustain backward compatibility. For a variety of reasons, this was not possible. In some cases it simply couldn't be supported.
-
-In this release, all the rest clients were replaced with a single client: [Resty](https://github.com/go-resty/resty).
-
-The last major release before this major bump was 2.2.15, and it had no less than 4 different clients in use. In some cases, the jfrog-client-go code could have worked, but in others cases it was fundamentally incompatible with the way terraform needed to operate as the jfrog go client directly interpreted results as being errored or not (using non-standard error codes). In addition, the objective of this release is *not* to upgrade to new APIs, but to simply get rid of all the clients and get the tests passing. Since several of the V1 apis that this TF provider uses are not available in the jf-go client this gave further reason to go it alone.
-
-The end result is much more transparent code and complete portability. The final approach taken was to use resty for all the calls and to manage authentication, but to use the jfg client for payload structure. In the case of xray, this was not possible, and the original structure code was preserved.
-
 ## License requirements:
 
 This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions. You can determine which license you have by accessing the following URL `${host}/artifactory/api/system/licenses/`
@@ -65,10 +56,8 @@ Query params may be forwarded, but this field doesn't exist in the documentation
 
 Permission target V1 support has been totally removed. Dynamically testing of permission targets using a new repository currently doesn't work because of race conditions when creating a repo. This will have to be resolved with retries at a later date.
 
-### Changes to user creation ###
+### Changes to user creation
 Previously, passwords were being generated for the user if none was supplied. This was both unnecessary (since TF has a password provider) and because the internal implementation could never be entirely in line with the remote server (or, be sure it was).
-
-Then, with the release of 2.3.1, password was still optional, but if supplied, must watch the default password requirements. These could be overridden with `JFROG_PASSWD_VALIDATION_ON=false` if a custom password policy is in place.
 
 Now this functionality is removed. Password is a required field. The verification is offloaded to the Artifactory, which makes more sense, so we don't need to catch up with any possible changes on the Artifactory side.
 
@@ -82,7 +71,7 @@ Requirements:
 ## Testing
 How to run the tests isn't obvious.
 
-First, you need a running instance of the jfrog platform (RT and XR). However, there is no currently supported dockerized, local version. You can ask for an instance to test against in as part of your PR. Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same directory called `artifactory.lic`, you can start just an artifactory instance. The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development.
+First, you need a running instance of the JFrog platform (RT and XR). However, there is no currently supported dockerized, local version. You can ask for an instance to test against in as part of your PR. Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same directory called `artifactory.lic`, you can start just an artifactory instance. The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development.
 
 Once you have that done you must set the following properties
 
@@ -111,56 +100,29 @@ $ make acceptance
 
 ### Testing Federated repos
 
-To execute acceptance tests for federated repos resource, we need:
-- 2 Artifactory instances, configured with Circle-of-Trust
-- Set environment variables `ARTIFACTORY_TEST_FEDERATED_REPO` to enable the acceptance tests that utilize both Artifactory instances
+To execute acceptance tests for federated repo resource, we need:
+- 2 Artifactory instances, configured with [Circle-of-Trust](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-CircleofTrust(Cross-InstanceAuthentication))
+- Set environment variables `ARTIFACTORY_URL_2` to enable the acceptance tests that utilize both Artifactory instances
 
 #### Setup Artifactory instances
 
-Instead of using [scripts/run-artifactory.sh](scripts/run-artifactory.sh) to start one Artifactory instance for testing, use the file `scripts/docker-compose.yml` to startup *2* Artifactory instances.
+The [scripts/run-artifactory.sh](scripts/run-artifactory.sh) starts two Artifactory instances for testing using the file [scripts/docker-compose.yml](scripts/docker-compose.yml).
 
-`artifactory-1` will be on the usual 8080/8081/8082 ports while `artifactory-2` is on 9080/9081/9082
+`artifactory-1` is on the usual 8080/8081/8082 ports while `artifactory-2` is on 9080/9081/9082
 
+#### Enable acceptance tests
+
+Set the env var to the second Artifactory instance URL. This is the URL that will be accessible from `artifactory-1` container (not the URL from the Docker host):
 ```sh
-$ docker-compose up -d
-```
-
-Use `docker-compose logs -f` to monitor startup progress.
-
-Once both instances are up and running (this will take up to a minute or more), set their base URLs using
-```sh
-$ curl -X PUT http://localhost:8081/artifactory/api/system/configuration/baseUrl -d 'http://artifactory-1:8081' -u admin:password -H "Content-type: text/plain"
-$ curl -X PUT http://localhost:9081/artifactory/api/system/configuration/baseUrl -d 'http://artifactory-2:8081' -u admin:password -H "Content-type: text/plain"
-```
-
-Setup [Circle-of-Trust](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-CircleofTrust(Cross-InstanceAuthentication)) by copying each instance's `root.crt` to the other instance.
-
-Get the container IDs:
-```sh
-$ docker container ls
-```
-
-Get the `root.crt` from each instance
-```sh
-$ docker cp <container ID for artifactory-1>:/opt/jfrog/artifactory/var/etc/access/keys/root.crt artifactory-1.crt && chmod go+rw artifactory-1.crt
-$ docker cp <container ID for artifactory-2>:/opt/jfrog/artifactory/var/etc/access/keys/root.crt artifactory-2.crt && chmod go+rw artifactory-2.crt
-```
-
-Copy root certificate to the other instance
-```sh
-$ docker cp artifactory-1.crt <container ID for artifactory-2>:/opt/jfrog/artifactory/var/etc/access/keys/trusted/artifactory-1.crt
-$ docker cp artifactory-2.crt <container ID for artifactory-1>:/opt/jfrog/artifactory/var/etc/access/keys/trusted/artifactory-2.crt
-```
-
-#### Setup acceptance tests
-
-Set the following env vars:
-```sh
-$ export ARTIFACTORY_TEST_FEDERATED_REPO=true
 $ export ARTIFACTORY_URL_2=http://artifactory-2:8081
 ```
 
-Run the acceptance tests for Federated repos:
+Run all the acceptance tests as usual
+```sh
+$ make acceptance
+```
+
+Or run only the acceptance tests for Federated repos:
 ```sh
 $ make acceptance_federated
 ```
