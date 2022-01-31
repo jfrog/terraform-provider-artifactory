@@ -14,7 +14,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 			Required: true,
 			Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
 				"automatically be added with the combination of the configured base URL and `key` field value. " +
-				"Note that each of the federated members will need to have a base URL set. PLease follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
+				"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
 				" to set up Federated repositories correctly.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -112,7 +112,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		return &FederatedRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: repoType,
-				Rclass:      "federated", //TODO: the value is not in the rest call, but it is in the schema
+				Rclass:      "federated",
 			},
 		}
 	}
