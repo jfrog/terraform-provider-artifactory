@@ -859,8 +859,13 @@ func lookup(payload interface{}, predicate HclPredicate) map[string]interface{} 
 		field := t.Field(i)
 		thing := v.Field(i)
 
-		hcl := fieldToHcl(field)
-		if predicate(hcl) {
+		shouldLookup := true
+		if thing.Kind() != reflect.Struct {
+			hcl := fieldToHcl(field)
+			shouldLookup = predicate(hcl)
+		}
+
+		if shouldLookup {
 			typeInspector := findInspector(thing.Kind())
 			for key, value := range typeInspector(field, thing) {
 				if _, ok := values[key]; !ok {
