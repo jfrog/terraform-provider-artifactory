@@ -49,7 +49,7 @@ func (bp LocalRepositoryBaseParams) Id() string {
 }
 
 type ContentSynchronisation struct {
-	Enabled bool `hcl:"enabled" json:"enables,omitempty"`
+	Enabled bool `hcl:"enabled" json:"enabled,omitempty"`
 }
 
 type RemoteRepositoryBaseParams struct {
