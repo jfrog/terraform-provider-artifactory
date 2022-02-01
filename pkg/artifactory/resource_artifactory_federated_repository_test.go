@@ -29,25 +29,29 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
-	const federatedRepositoryConfigFull = `
-		resource "%s" "%[2]s" {
-			key         = "%[2]s"
-			description = "Test federated repo for %[2]s"
-			notes       = "Test federated repo for %[2]s"
+	params := map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"member1Url":   federatedMember1Url,
+		"member2Url":   federatedMember2Url,
+	}
+	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key         = "{{ .name }}"
+			description = "Test federated repo for {{ .name }}"
+			notes       = "Test federated repo for {{ .name }}"
 
 			member {
-				url     = "%[3]s"
+				url     = "{{ .member1Url }}"
 				enabled = true
 			}
 
 			member {
-				url     = "%[4]s"
+				url     = "{{ .member2Url }}"
 				enabled = true
 			}
 		}
-	`
-
-	cfg := fmt.Sprintf(federatedRepositoryConfigFull, resourceType, name, federatedMember1Url, federatedMember2Url)
+	`, params)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testAccProviders,
@@ -55,7 +59,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: cfg,
+				Config: federatedRepositoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "member.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMember2Url),
@@ -73,32 +77,36 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		t.Skipf(reason)
 	}
 
-	name := fmt.Sprintf("terraform-federated-%s-%d-full", repoType, rand.Int())
+	name := fmt.Sprintf("terraform-federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
-	const federatedRepositoryConfigFull = `
-		resource "%s" "%[2]s" {
-			key         = "%[2]s"
-			description = "Test federated repo for %[2]s"
-			notes       = "Test federated repo for %[2]s"
+	params := map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"memberUrl":    federatedMemberUrl,
+	}
+	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key         = "{{ .name }}"
+			description = "Test federated repo for {{ .name }}"
+			notes       = "Test federated repo for {{ .name }}"
 
 			member {
-				url     = "%[3]s"
+				url     = "{{ .memberUrl }}"
 				enabled = true
 			}
 		}
-	`
+	`, params)
 
-	cfg := fmt.Sprintf(federatedRepositoryConfigFull, resourceType, name, federatedMemberUrl)
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: cfg,
+				Config: federatedRepositoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
