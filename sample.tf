@@ -218,3 +218,17 @@ resource "artifactory_virtual_maven_repository" "foo" {
   force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
+
+resource "artifactory_federated_generic_repository" "generic-federated-1" {
+  key = "generic-federated-1"
+
+  member {
+    url    = "http://tempurl.org/artifactory/generic-federated-1"
+    enable = true
+  }
+
+  member {
+    url    = "http://tempurl2.org/artifactory/generic-federated-2"
+    enable = true
+  }
+}

@@ -51,7 +51,7 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := RpmLocalRepositoryParams{
-			LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "rpm"),
+			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "rpm"),
 			RootDepth:                 d.getInt("yum_root_depth", false),
 			CalculateYumMetadata:      d.getBool("calculate_yum_metadata", false),
 			EnableFileListsIndexing:   d.getBool("enable_file_lists_indexing", false),

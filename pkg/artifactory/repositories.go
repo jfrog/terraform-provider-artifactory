@@ -275,6 +275,7 @@ var repoTypesLikeGeneric = []string{
 	"sbt",
 	"vagrant",
 }
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -624,10 +625,10 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-func unpackBaseLocalRepo(s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
+func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
 	d := &ResourceData{s}
 	return LocalRepositoryBaseParams{
-		Rclass:                 "local",
+		Rclass:                 rclassType,
 		Key:                    d.getString("key", false),
 		PackageType:            packageType,
 		Description:            d.getString("description", false),
@@ -791,7 +792,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 	switch kind {
 	case reflect.Struct:
 		return func(f reflect.StructField, t reflect.Value) map[string]interface{} {
-			return lookup(t.Interface())
+			return lookup(t.Interface(), nil)
 		}
 	case reflect.Ptr:
 		return func(field reflect.StructField, thing reflect.Value) map[string]interface{} {
@@ -799,7 +800,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 			if deref.CanAddr() {
 				result := deref.Interface()
 				if deref.Kind() == reflect.Struct {
-					result = []interface{}{lookup(deref.Interface())}
+					result = []interface{}{lookup(deref.Interface(), nil)}
 				}
 				return map[string]interface{}{
 					fieldToHcl(field): result,
@@ -841,7 +842,11 @@ func fieldToHcl(field reflect.StructField) string {
 	return result
 }
 
-func lookup(payload interface{}) map[string]interface{} {
+func lookup(payload interface{}, predicate HclPredicate) map[string]interface{} {
+
+	if predicate == nil {
+		predicate = allowAllPredicate
+	}
 
 	values := map[string]interface{}{}
 	var t = reflect.TypeOf(payload)
@@ -853,15 +858,25 @@ func lookup(payload interface{}) map[string]interface{} {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		thing := v.Field(i)
-		typeInspector := findInspector(thing.Kind())
-		for key, value := range typeInspector(field, thing) {
-			if _, ok := values[key]; !ok {
-				values[key] = value
+
+		shouldLookup := true
+		if thing.Kind() != reflect.Struct {
+			hcl := fieldToHcl(field)
+			shouldLookup = predicate(hcl)
+		}
+
+		if shouldLookup {
+			typeInspector := findInspector(thing.Kind())
+			for key, value := range typeInspector(field, thing) {
+				if _, ok := values[key]; !ok {
+					values[key] = value
+				}
 			}
 		}
 	}
 	return values
 }
+
 func anyHclPredicate(predicates ...HclPredicate) HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
@@ -872,6 +887,7 @@ func anyHclPredicate(predicates ...HclPredicate) HclPredicate {
 		return false
 	}
 }
+
 func allHclPredicate(predicates ...HclPredicate) HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
@@ -885,6 +901,10 @@ func allHclPredicate(predicates ...HclPredicate) HclPredicate {
 
 var noClass = ignoreHclPredicate("class", "rclass")
 
+var allowAllPredicate = func(hcl string) bool {
+	return true
+}
+
 func ignoreHclPredicate(names ...string) HclPredicate {
 	set := map[string]interface{}{}
 	for _, name := range names {
@@ -893,6 +913,23 @@ func ignoreHclPredicate(names ...string) HclPredicate {
 	return func(hcl string) bool {
 		_, found := set[hcl]
 		return !found
+	}
+}
+
+func composePacker(packers ...PackFunc) PackFunc {
+	return func(repo interface{}, d *schema.ResourceData) error {
+		var errors []error
+
+		for _, packer := range packers {
+			err := packer(repo, d)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		if errors != nil && len(errors) > 0 {
+			return fmt.Errorf("failed saving state %q", errors)
+		}
+		return nil
 	}
 }
 
@@ -911,7 +948,7 @@ func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 
 		var errors []error
 
-		values := lookup(payload)
+		values := lookup(payload, predicate)
 
 		for hcl, value := range values {
 			if predicate != nil && predicate(hcl) {

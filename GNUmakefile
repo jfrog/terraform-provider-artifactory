@@ -51,6 +51,10 @@ acceptance: fmtcheck
 		test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
 		&& go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -parallel 20 ./pkg/...
 
+acceptance_federated:
+	export TF_ACC=true && \
+		go test -v -run TestAccFederatedRepo ./pkg/...
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	@gofmt -s -w ./$(PKG_NAME)

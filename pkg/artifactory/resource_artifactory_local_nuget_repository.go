@@ -44,7 +44,7 @@ type NugetLocalRepositoryParams struct {
 func unPackLocalNugetRepository(data *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{ResourceData: data}
 	repo := NugetLocalRepositoryParams{
-		LocalRepositoryBaseParams: unpackBaseLocalRepo(data, "nuget"),
+		LocalRepositoryBaseParams: unpackBaseRepo("local", data, "nuget"),
 		MaxUniqueSnapshots:        d.getInt("max_unique_snapshots", false),
 		ForceNugetAuthentication:  d.getBool("force_nuget_authentication", false),
 	}
