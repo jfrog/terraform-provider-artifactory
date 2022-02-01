@@ -62,7 +62,8 @@ func Provider() *schema.Provider {
 	for _, repoType := range repoTypesLikeGeneric {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = resourceArtifactoryLocalGenericRepository(repoType)
-
+	}
+	for _, repoType := range federatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resoucesMap[federatedResourceName] = resourceArtifactoryFederatedGenericRepository(repoType)
 	}
