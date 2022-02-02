@@ -192,7 +192,6 @@ func resourceXrayLicensePolicyV2() *schema.Resource {
 										Type:             schema.TypeInt,
 										Optional:         true,
 										Description:      "Allow grace period for certain number of days. All violations will be ignored during this time. To be used only if `fail_build` is enabled.",
-										Default:          3,
 										ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 									},
 								},
