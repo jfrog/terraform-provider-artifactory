@@ -189,7 +189,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 			repo_layout_ref       = "npm-default"
 			content_synchronisation {
 				enabled = false
-                statistics_enabled = true
+				statistics_enabled = true
 				properties_enabled = true
 				source_origin_absence_detection = true
 			}
