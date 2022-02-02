@@ -123,7 +123,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 }
 
 func TestAccFederatedRepoAllTypes(t *testing.T) {
-	for _, repo := range repoTypesLikeGeneric {
+	for _, repo := range federatedRepoTypesSupported {
 		t.Run(fmt.Sprintf("TestFederated%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
 		})

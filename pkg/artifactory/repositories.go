@@ -255,6 +255,37 @@ var repoTypesSupported = []string{
 	"vagrant",
 	"vcs",
 }
+
+var federatedRepoTypesSupported = []string{
+	"alpine",
+	"bower",
+	"cargo",
+	"chef",
+	"cocoapods",
+	"composer",
+	"conan",
+	"conda",
+	"cran",
+	"debian",
+	"docker",
+	"gems",
+	"generic",
+	"gitlfs",
+	"go",
+	"gradle",
+	"helm",
+	"ivy",
+	"maven",
+	"npm",
+	"nuget",
+	"opkg",
+	"puppet",
+	"pypi",
+	"rpm",
+	"sbt",
+	"vagrant",
+}
+
 var repoTypesLikeGeneric = []string{
 	"bower",
 	"chef",
