@@ -49,7 +49,7 @@ func (bp LocalRepositoryBaseParams) Id() string {
 }
 
 type ContentSynchronisation struct {
-	Enabled    bool                             `hcl:"enabled" json:"enabled"`
+	Enabled    bool                             `json:"enabled"`
 	Statistics ContentSynchronisationStatistics `json:"statistics"`
 	Properties ContentSynchronisationProperties `json:"properties"`
 	Source     ContentSynchronisationSource     `json:"source"`
@@ -593,6 +593,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
+		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
