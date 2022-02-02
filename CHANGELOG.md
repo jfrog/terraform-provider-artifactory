@@ -1,3 +1,10 @@
+## 2.13.1 (Unreleased)
+
+IMPROVEMENTS:
+
+* Add missing documentations for Federated repo resources [GH-304]
+* Add additional repo types for Federated repo resources [GH-304]
+
 ## 2.13.0 (Feb, 1, 2022)
 
 FEATURES:
