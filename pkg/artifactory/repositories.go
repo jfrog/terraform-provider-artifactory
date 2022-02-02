@@ -622,7 +622,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"default_deployment_repo": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Default repository to deploy artefacts.",
+		Description: "Default repository to deploy artifacts.",
 	},
 	"retrieval_cache_period_seconds": {
 		Type:         schema.TypeInt,
