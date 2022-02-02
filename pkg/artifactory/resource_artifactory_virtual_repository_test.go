@@ -348,10 +348,14 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 			}
 		}
 		resource "artifactory_virtual_rpm_repository" "{{ .repo_name }}" {
-			key 	     = "{{ .repo_name }}"
-			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+			key 	              = "{{ .repo_name }}"
+			primary_keypair_ref   = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
+
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -360,6 +364,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 		"kp_name2":  kpName2,
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		CheckDestroy: compositeCheckDestroy(

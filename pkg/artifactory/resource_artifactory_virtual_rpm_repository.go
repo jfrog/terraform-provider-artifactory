@@ -6,7 +6,6 @@ import (
 )
 
 var rpmVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
-
 	"primary_keypair_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -22,8 +21,8 @@ var rpmVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Sch
 })
 
 type CommonRpmDebianVirtualRepositoryParams struct {
-	PrimaryKeyPairRef   string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
-	SecondaryKeyPairRef string `hcl:"primary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
+	PrimaryKeyPairRef   string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+	SecondaryKeyPairRef string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 }
 
 type RpmVirtualRepositoryParams struct {
@@ -40,7 +39,6 @@ func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 			},
 		}
 	})
-
 }
 
 func unpackRpmVirtualRepository(s *schema.ResourceData) (interface{}, string, error) {
@@ -49,8 +47,8 @@ func unpackRpmVirtualRepository(s *schema.ResourceData) (interface{}, string, er
 	repo := RpmVirtualRepositoryParams{
 		VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, "rpm"),
 		CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
-			SecondaryKeyPairRef: d.getString("secondary_keypair_ref", true),
-			PrimaryKeyPairRef:   d.getString("primary_keypair_ref", true),
+			PrimaryKeyPairRef:   d.getString("primary_keypair_ref", false),
+			SecondaryKeyPairRef: d.getString("secondary_keypair_ref", false),
 		},
 	}
 	repo.PackageType = "rpm"
