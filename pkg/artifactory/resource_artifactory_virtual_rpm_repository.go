@@ -22,8 +22,8 @@ var rpmVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Sch
 })
 
 type CommonRpmDebianVirtualRepositoryParams struct {
-	PrimaryKeyPairRef   string `json:"primaryKeyPairRef,omitempty"`
-	SecondaryKeyPairRef string `json:"secondaryKeyPairRef,omitempty"`
+	PrimaryKeyPairRef   string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
+	SecondaryKeyPairRef string `hcl:"primary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
 }
 
 type RpmVirtualRepositoryParams struct {
