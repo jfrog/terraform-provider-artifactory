@@ -187,6 +187,12 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 			package_type          = "npm"
 			url                   = "https://registry.npmjs.org/"
 			repo_layout_ref       = "npm-default"
+			content_synchronisation {
+				enabled = false
+                statistics_enabled = true
+				properties_enabled = true
+				source_origin_absence_detection = true
+			}
 		}
 	`
 	resource.Test(t, resource.TestCase{
@@ -200,6 +206,10 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://registry.npmjs.org/"),
+					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.statistics_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.properties_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.source_origin_absence_detection", "true"),
 				),
 			},
 		},
