@@ -1,5 +1,5 @@
 ## 2.14.0 (Feb, 3, 2022)
-IMPROVEMENTS:
+FEATURES:
 
 * Added following smart remote repo attributes for npm, cargo, docker and helm remote repository resources [GH-305].
   * "statistics_enabled"
