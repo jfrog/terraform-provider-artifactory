@@ -71,6 +71,12 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 		"block_pushing_schema1":          true,
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
 	})
 	resource.Test(t, testCase)
 }
@@ -80,6 +86,12 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
 	})
 	resource.Test(t, testCase)
 }
@@ -90,6 +102,12 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
 		"external_dependencies_patterns": []interface{}{"**github.com**"},
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
 	}))
 }
 
@@ -98,6 +116,12 @@ func TestAccRemoteNpmRepository(t *testing.T) {
 		"list_remote_folder_items":             true,
 		"mismatching_mime_types_override_list": "application/json,application/xml",
 		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
 	}))
 }
 
@@ -189,9 +213,6 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 			repo_layout_ref       = "npm-default"
 			content_synchronisation {
 				enabled = false
-				statistics_enabled = true
-				properties_enabled = true
-				source_origin_absence_detection = true
 			}
 		}
 	`
@@ -207,9 +228,6 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://registry.npmjs.org/"),
 					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.enabled", "false"),
-					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.statistics_enabled", "true"),
-					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.properties_enabled", "true"),
-					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.source_origin_absence_detection", "true"),
 				),
 			},
 		},
