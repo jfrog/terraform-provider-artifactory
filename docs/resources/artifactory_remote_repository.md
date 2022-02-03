@@ -75,7 +75,8 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
   * `download_context_path` - (Optional)
   * `v3_feed_url` - (Optional)
 * `propagate_query_params` - (Optional, Generic repos only)
-
+* `content_synchronisation` - (Optional) Reference [JFROG Smart Remote Repositories](https://www.jfrog.com/confluence/display/JFROG/Smart+Remote+Repositories)
+  * `enabled` - (Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.
 
 ## Import
 

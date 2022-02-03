@@ -49,7 +49,22 @@ func (bp LocalRepositoryBaseParams) Id() string {
 }
 
 type ContentSynchronisation struct {
-	Enabled bool `hcl:"enabled" json:"enabled,omitempty"`
+	Enabled    bool                             `json:"enabled"`
+	Statistics ContentSynchronisationStatistics `json:"statistics"`
+	Properties ContentSynchronisationProperties `json:"properties"`
+	Source     ContentSynchronisationSource     `json:"source"`
+}
+
+type ContentSynchronisationStatistics struct {
+	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationProperties struct {
+	Enabled bool `hcl:"properties_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationSource struct {
+	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection"`
 }
 
 type RemoteRepositoryBaseParams struct {
@@ -582,8 +597,28 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
+				},
+				"statistics_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
+				},
+				"properties_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
+				},
+				"source_origin_absence_detection": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
 				},
 			},
 		},
@@ -719,8 +754,20 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
+		statisticsEnabled := contentSynchronisationConfig["statistics_enabled"].(bool)
+		propertiesEnabled := contentSynchronisationConfig["properties_enabled"].(bool)
+		sourceOriginAbsenceDetection := contentSynchronisationConfig["source_origin_absence_detection"].(bool)
 		repo.ContentSynchronisation = &ContentSynchronisation{
 			Enabled: enabled,
+			Statistics: ContentSynchronisationStatistics{
+				Enabled: statisticsEnabled,
+			},
+			Properties: ContentSynchronisationProperties{
+				Enabled: propertiesEnabled,
+			},
+			Source: ContentSynchronisationSource{
+				OriginAbsenceDetection: sourceOriginAbsenceDetection,
+			},
 		}
 	}
 	return repo
