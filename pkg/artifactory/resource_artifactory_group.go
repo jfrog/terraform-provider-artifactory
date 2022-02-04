@@ -65,6 +65,24 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"watch_manager": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) When this override is set,  User in the group can manage Xray Watches on any resource type. Default value is 'false'.`,
+			},
+			"policy_manager": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) When this override is set,  User in the group can set Xray security and compliance policies. Default value is 'false'.`,
+			},
+			"reports_manager": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `(Optional) When this override is set,  User in the group can manage Xray Reports. Default value is 'false'.`,
+			},
 		},
 	}
 }
@@ -80,6 +98,9 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 		Realm:           d.getString("realm", false),
 		RealmAttributes: d.getString("realm_attributes", false),
 		UsersNames:      d.getSet("users_names"),
+		WatchManager:    d.getBool("watch_manager", false),
+		PolicyManager:   d.getBool("policy_manager", false),
+		ReportsManager:  d.getBool("reports_manager", false),
 	}
 
 	// Validator
@@ -154,6 +175,9 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	setValue("admin_privileges", group.AdminPrivileges)
 	setValue("realm", group.Realm)
 	setValue("realm_attributes", group.RealmAttributes)
+	setValue("watch_manager", group.WatchManager)
+	setValue("policy_manager", group.PolicyManager)
+	setValue("reports_manager", group.ReportsManager)
 	errors := setValue("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames)))
 	if errors != nil && len(errors) > 0 {
 		return fmt.Errorf("failed saving state for groups %q", errors)
@@ -217,13 +241,9 @@ type Group struct {
 	Realm           string   `json:"realm,omitempty"`
 	RealmAttributes string   `json:"realmAttributes,omitempty"`
 	UsersNames      []string `json:"userNames"`
-
-	// Below are part of the api spec
-	// but are not currently surfaced to  users
-
-	// WatchManager    bool     `json:"watchManager,omitempty"`
-	// PolicyManager   bool     `json:"policyManager,omitempty"`
-	// ReportsManager  bool     `json:"reportsManager,omitempty"`
+	WatchManager    bool     `json:"watchManager"`
+	PolicyManager   bool     `json:"policyManager"`
+	ReportsManager  bool     `json:"reportsManager"`
 }
 
 func (g Group) Id() string {

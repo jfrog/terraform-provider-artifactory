@@ -1,3 +1,9 @@
+## 2.16.0 (Feb, 4, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_group: Added support for manager roles in artifactory_group resource [GH-308]
+
 ## 2.15.2 (Feb, 4, 2022)
 
 BUG FIXES:

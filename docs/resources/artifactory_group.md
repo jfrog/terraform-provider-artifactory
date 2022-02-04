@@ -26,6 +26,9 @@ The following arguments are supported:
 * `realm_attributes`    - (Optional) The realm attributes for the group.
 * `users_names`         - (Optional) List of users assigned to the group. If missing or empty, tf will not manage group membership
 * `detach_all_users`    - (Optional) When this override is set, an empty or missing usernames array will detach all users from the group
+* `watch_manager`       - (Optional) When this override is set, User in the group can manage Xray Watches on any resource type. Default value is 'false'.
+* `policy_manager`      - (Optional) When this override is set, User in the group can set Xray security and compliance policies. Default value is 'false'.
+* `reports_manager`     - (Optional) When this override is set, User in the group can manage Xray Reports on any resource type. Default value is 'false'.
 
 ## Import
 
