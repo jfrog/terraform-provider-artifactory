@@ -1,3 +1,9 @@
+## 2.15.1 (Feb, 4, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_xray_watch: Fix incorrect usage of variable reference with Resty `.SetBody()` in `create` and `update` funcs [GH-306]
+
 ## 2.15.0 (Feb, 3, 2022)
 
 FEATURES:
