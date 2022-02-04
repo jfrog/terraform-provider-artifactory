@@ -310,7 +310,7 @@ func flattenAssignedPolicies(policies *[]WatchAssignedPolicy) []interface{} {
 func resourceXrayWatchCreate(d *schema.ResourceData, m interface{}) error {
 
 	watch := expandWatch(d)
-	_, err := m.(*resty.Client).R().SetBody(&watch).Post("xray/api/v2/watches")
+	_, err := m.(*resty.Client).R().SetBody(watch).Post("xray/api/v2/watches")
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceXrayWatchUpdate(d *schema.ResourceData, m interface{}) error {
 	watch := expandWatch(d)
-	_, err := m.(*resty.Client).R().SetBody(&watch).Put("xray/api/v2/watches/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(watch).Put("xray/api/v2/watches/" + d.Id())
 	if err != nil {
 		return err
 	}
