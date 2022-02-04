@@ -1,3 +1,9 @@
+## 2.15.2 (Feb, 4, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_remote_repository: Fix unable to reset `proxy` attribute [GH-307]
+
 ## 2.15.1 (Feb, 4, 2022)
 
 BUG FIXES:
@@ -26,7 +32,7 @@ IMPROVEMENTS:
 
 * Add missing documentations for Federated repo resources [GH-304]
 * Add additional repo types for Federated repo resources [GH-304]
-  
+
 ## 2.13.0 (Feb, 1, 2022)
 
 FEATURES:
