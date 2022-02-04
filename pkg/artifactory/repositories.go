@@ -781,19 +781,18 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 	return repo
 }
 
-// Special handling of DefaultDeploymentRepo field
+// Special handling for field that requires non-existant value for RT
+//
 // Artifactory REST API will not accept empty string or null to reset value to not set
-// Instead, using a non-existant repo key works as a workaround
-// To ensure we don't accidentally set the value to a valid repo, we use a UUID v4 string
-// for the repo key
-func getDefaultDeploymentRepo(d *ResourceData) string {
-	key := "default_deployment_repo"
+// Instead, using a non-existant value works as a workaround
+// To ensure we don't accidentally set the value to a valid value, we use a UUID v4 string
+func handleResetWithNonExistantValue(d *ResourceData, key string) string {
 	value := d.getString(key, false)
 
 	// When value has changed and is empty string, then it has been removed from
 	// the Terraform configuration.
 	if value == "" && d.HasChange(key) {
-		return fmt.Sprintf("non-existant-repo-%d", randomInt())
+		return fmt.Sprintf("non-existant-value-%d", randomInt())
 	}
 
 	return value
@@ -814,7 +813,7 @@ func unpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 		Repositories:          d.getList("repositories"),
 		Description:           d.getString("description", false),
 		Notes:                 d.getString("notes", false),
-		DefaultDeploymentRepo: getDefaultDeploymentRepo(d),
+		DefaultDeploymentRepo: handleResetWithNonExistantValue(d, "default_deployment_repo"),
 	}
 }
 
