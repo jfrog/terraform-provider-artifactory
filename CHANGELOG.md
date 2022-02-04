@@ -1,3 +1,10 @@
+## 2.15.0 (Feb, 3, 2022)
+
+FEATURES:
+
+* **New Resource:** `artifactory_virtual_rpm_repository` with support for `primary_keypair_ref` and `secondary_keypair_ref` and [GH-303]
+
+
 ## 2.14.0 (Feb, 3, 2022)
 
 FEATURES:
