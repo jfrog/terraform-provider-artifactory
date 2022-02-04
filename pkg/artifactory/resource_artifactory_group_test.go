@@ -104,6 +104,19 @@ func TestAccGroup_full(t *testing.T) {
 			detach_all_users = true
 		}
 		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group"
+			auto_join        = false
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			watch_manager    = true
+			policy_manager   = true
+			reports_manager  = true
+		}
+		`,
 	}
 
 	configs := []string{}
@@ -168,6 +181,18 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
 					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
 					testAccDirectCheckGroupMembership(rfqn, 0),
+					resource.TestCheckResourceAttr(rfqn, "watch_manager", "false"),
+					resource.TestCheckResourceAttr(rfqn, "policy_manager", "false"),
+					resource.TestCheckResourceAttr(rfqn, "reports_manager", "false"),
+				),
+			},
+			{
+				Config: configs[6],
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "watch_manager", "true"),
+					resource.TestCheckResourceAttr(rfqn, "policy_manager", "true"),
+					resource.TestCheckResourceAttr(rfqn, "reports_manager", "true"),
 				),
 			},
 		},
