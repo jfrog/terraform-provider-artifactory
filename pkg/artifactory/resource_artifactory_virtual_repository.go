@@ -158,7 +158,7 @@ func unpackVirtualRepository(s *schema.ResourceData) (interface{}, string, error
 	repo.Notes = d.getString("notes", false)
 	repo.KeyPair = d.getString("key_pair", false)
 	repo.PomRepositoryReferencesCleanupPolicy = d.getString("pom_repository_references_cleanup_policy", false)
-	repo.DefaultDeploymentRepo = getDefaultDeploymentRepo(d)
+	repo.DefaultDeploymentRepo = handleResetWithNonExistantValue(d, "default_deployment_repo")
 	// because this doesn't apply to all repo types, RT isn't required to honor what you tell it.
 	// So, saying the type is "maven" but then setting this to 'true' doesn't make sense, and RT doesn't seem to care what you tell it
 	repo.ForceNugetAuthentication = d.getBoolRef("force_nuget_authentication", false)

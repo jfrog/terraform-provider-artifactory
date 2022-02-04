@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -135,9 +136,9 @@ var legacyRemoteSchema = map[string]*schema.Schema{
 		Description: "This field can only be used if encryption has been turned off",
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Proxy key from Artifactory Proxies setting",
 	},
 	"remote_repo_checksum_policy_type": {
 		Type:     schema.TypeString,
@@ -385,7 +386,7 @@ func unpackLegacyRemoteRepo(s *schema.ResourceData) (interface{}, string, error)
 	repo.PackageType = d.getString("package_type", true)
 	repo.Password = d.getString("password", true)
 	repo.PropertySets = d.getSet("property_sets")
-	repo.Proxy = d.getString("proxy", true)
+	repo.Proxy = handleResetWithNonExistantValue(d, "proxy")
 	repo.PypiRegistryUrl = d.getString("pypi_registry_url", true)
 	repo.RepoLayoutRef = d.getString("repo_layout_ref", true)
 	repo.RetrievalCachePeriodSecs = d.getInt("retrieval_cache_period_seconds", true)

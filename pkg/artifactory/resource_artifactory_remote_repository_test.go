@@ -581,3 +581,69 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 		},
 	})
 }
+
+func TestAccRemoteProxyUpdateGH2(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-proxy", "artifactory_remote_repository")
+
+	key := fmt.Sprintf("go-remote.proxy_%d", randomInt())
+	fakeProxy := "test-proxy"
+
+	remoteRepositoryWithProxy := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key             = "%s"
+			package_type    = "go"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			proxy           = "%s"
+		}
+	`, name, key, fakeProxy)
+
+	remoteRepositoryResetProxyWithEmptyString := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key             = "%s"
+			package_type    = "go"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			proxy           = ""
+		}
+	`, name, key)
+
+	remoteRepositoryResetProxyWithNoAttr := fmt.Sprintf(`
+		resource "artifactory_remote_repository" "%s" {
+			key             = "%s"
+			package_type    = "go"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+		}
+	`, name, key)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryWithProxy,
+				Check:  resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
+				),
+			},
+			{
+				Config: remoteRepositoryResetProxyWithEmptyString,
+				Check: resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+			},
+			{
+				Config: remoteRepositoryWithProxy,
+				Check:  resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
+				),
+			},
+			{
+				Config: remoteRepositoryResetProxyWithNoAttr,
+				Check: resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+			},
+		},
+	})
+}
