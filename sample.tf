@@ -219,6 +219,18 @@ resource "artifactory_virtual_maven_repository" "foo" {
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
 
+resource "artifactory_virtual_rpm_repository" "rpm-virt-repo" {
+  key                   = "rpm-virt-repo"
+
+  primary_keypair_ref   = artifactory_keypair.some-keypairGPG1.pair_name
+  secondary_keypair_ref = artifactory_keypair.some-keypairGPG2.pair_name
+
+  depends_on = [
+    artifactory_keypair.some-keypairGPG1,
+    artifactory_keypair.some-keypairGPG2,
+  ]
+}
+
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"
 

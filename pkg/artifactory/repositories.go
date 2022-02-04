@@ -631,23 +631,27 @@ var baseRemoteSchema = map[string]*schema.Schema{
 }
 var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"key": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
 	},
 	"package_type": {
-		Type:     schema.TypeString,
-		Required: false,
-		Computed: true,
-		ForceNew: true,
+		Type:        schema.TypeString,
+		Required:    false,
+		Computed:    true,
+		ForceNew:    true,
+		Description: "The Package Type. This must be specified when the repository is created, and once set, cannot be changed.",
 	},
 	"description": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "A free text field that describes the content and purpose of the repository.\nIf you choose to insert a link into this field, clicking the link will prompt the user to confirm that they might be redirected to a new domain.",
 	},
 	"notes": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "A free text field to add additional notes about the repository. These are only visible to the administrator.",
 	},
 	"includes_pattern": {
 		Type:     schema.TypeString,
@@ -663,24 +667,28 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {
-		Type:     schema.TypeList,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Required: true,
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "The effective list of actual repositories included in this virtual repository.",
 	},
 
 	"artifactory_requests_can_retrieve_remote_artifacts": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Default:  false,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
 	},
 	"default_deployment_repo": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Default repository to deploy artifacts.",
 	},
 	"retrieval_cache_period_seconds": {
 		Type:         schema.TypeInt,
