@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"gopkg.in/yaml.v2"
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
@@ -617,32 +619,86 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 		}
 	`, name, key)
 
+	type Proxy struct {
+		Key             string   `yaml:"key"`
+		Host            string   `yaml:"host"`
+		Port            int      `yaml:"port"`
+		PlatformDefault bool     `yaml:"platformDefault"`
+	}
+
+	var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
+		body := getProxiesBody()
+		restyClient := getTestResty(t)
+
+		err := sendConfigurationPatch(body, restyClient)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var createProxy = func(t *testing.T, proxyKey string) {
+		updateProxiesConfig(t, proxyKey, func() []byte {
+			testProxy := Proxy{
+				Key:             proxyKey,
+				Host:            "http://fake-proxy.org",
+				Port:            8080,
+				PlatformDefault: false,
+			}
+
+			constructBody := map[string][]Proxy{
+				"proxies": []Proxy{testProxy},
+			}
+
+			body, err := yaml.Marshal(&constructBody)
+			if err != nil {
+				t.Errorf("failed to marshal proxies settings during Update")
+			}
+
+			return body
+		})
+	}
+
+	var deleteProxy = func(t *testing.T, proxyKey string) {
+		updateProxiesConfig(t, proxyKey, func() []byte {
+			// Return empty yaml to clean up all proxies
+			return []byte(`proxies: ~`)
+		})
+	}
+
+	testProxyKey := "test-proxy"
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProxy(t, testProxyKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProxy(t, testProxyKey)
+			return testCheckRepo(id, request)
+		}),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryWithProxy,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", key),
 					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
 				),
 			},
 			{
 				Config: remoteRepositoryResetProxyWithEmptyString,
-				Check: resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+				Check:  resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 			},
 			{
 				Config: remoteRepositoryWithProxy,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", key),
 					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
 				),
 			},
 			{
 				Config: remoteRepositoryResetProxyWithNoAttr,
-				Check: resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+				Check:  resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 			},
 		},
 	})
