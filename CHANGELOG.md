@@ -1,3 +1,9 @@
+## 2.16.1 (Feb, 7, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_remote_repository: Fix failing test for `proxy` attribute [GH-311]
+
 ## 2.16.0 (Feb, 4, 2022)
 
 IMPROVEMENTS:
@@ -21,7 +27,6 @@ BUG FIXES:
 FEATURES:
 
 * **New Resource:** `artifactory_virtual_rpm_repository` with support for `primary_keypair_ref` and `secondary_keypair_ref` and [GH-303]
-
 
 ## 2.14.0 (Feb, 3, 2022)
 
