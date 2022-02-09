@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -14,10 +15,141 @@ var domainRepoTypeLookup = map[string]string {
 	"docker": "docker_v2",
 }
 
-var domainEventTypesLookup = map[string][]string {
-	"artifact": []string{"copied", "deleted", "deployed", "moved"},
-	"artifact_property": []string{"added", "deleted"},
-	"docker": []string{"pushed", "deleted", "promoted"},
+var domainValidationErrorMessageLookup = map[string]string {
+	"artifact": "repo_keys cannot be empty when both any_local and any_remote are false",
+	"artifact_property": "repo_keys cannot be empty when both any_local and any_remote are false",
+	"docker": "repo_keys cannot be empty when both any_local and any_remote are false",
+	"build": "selected_builds cannot be empty when any_build is false",
+	"release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+	"distribution": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+	"artifactory_release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+}
+
+var repoTemplate = `
+	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
+		key         = "{{ .webhookName }}"
+		description = "test description"
+		domain      = "{{ .webhookType }}"
+		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
+		criteria {
+			any_local = false
+			any_remote = false
+			repo_keys = []
+		}
+		url    = "http://tempurl.org"
+	}
+`
+
+var buildTemplate = `
+	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
+		key         = "{{ .webhookName }}"
+		description = "test description"
+		domain      = "{{ .webhookType }}"
+		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
+		criteria {
+			any_build = false
+			selected_builds = []
+		}
+		url    = "http://tempurl.org"
+	}
+`
+
+var releaseBundleTemplate = `
+	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
+		key         = "{{ .webhookName }}"
+		description = "test description"
+		domain      = "{{ .webhookType }}"
+		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
+		criteria {
+			any_release_bundle = false
+			registered_release_bundle_names = []
+		}
+		url    = "http://tempurl.org"
+	}
+`
+
+func TestAccWebhookCriteriaValidation(t *testing.T) {
+	for _, webhookType := range webhookTypesSupported {
+		t.Run(fmt.Sprintf("TestWebhook%sCriteriaValidation", strings.Title(strings.ToLower(webhookType))), func(t *testing.T) {
+			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
+		})
+	}
+}
+
+func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
+	id := randomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
+
+	var template string
+	switch webhookType {
+	case "artifact", "artifact_property", "docker":
+		template = repoTemplate
+	case "build":
+		template = buildTemplate
+	case "release_bundle", "distribution", "artifactory_release_bundle":
+		template = releaseBundleTemplate
+	}
+
+	params := map[string]interface{}{
+		"webhookType": webhookType,
+		"webhookName": name,
+		"eventTypes": domainEventTypesSupported[webhookType],
+	}
+	webhookConfig := executeTemplate("TestAccWebhookCriteriaValidation", template, params)
+
+	return t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		CheckDestroy: verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: webhookConfig,
+				ExpectError: regexp.MustCompile(domainValidationErrorMessageLookup[webhookType]),
+			},
+		},
+	}
+}
+
+func TestAccWebhookEventTypesValidation(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
+
+	wrongEventType := "wrong-event-type"
+
+	params := map[string]interface{}{
+		"webhookName": name,
+		"eventType": wrongEventType,
+	}
+	webhookConfig := executeTemplate("TestAccWebhookEventTypesValidation", `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			domain      = "artifact"
+			event_types = ["{{ .eventType }}"]
+			criteria {
+				any_local = true
+				any_remote = true
+				repo_keys = []
+			}
+			url    = "http://tempurl.org"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		CheckDestroy: verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: webhookConfig,
+				ExpectError: regexp.MustCompile(fmt.Sprintf("event_type %s not supported for domain artifact", wrongEventType)),
+			},
+		},
+	})
 }
 
 func TestAccWebhookAllTypes(t *testing.T) {
@@ -37,7 +169,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 
 	repoType := domainRepoTypeLookup[webhookType]
 	repoName := fmt.Sprintf("%s-local-%d", webhookType, id)
-	eventTypes := domainEventTypesLookup[webhookType]
+	eventTypes := domainEventTypesSupported[webhookType]
 
 	params := map[string]interface{}{
 		"repoName":    repoName,

@@ -2,14 +2,26 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
 
 var webhookTypesSupported = []string{
 	"artifact",
@@ -19,6 +31,16 @@ var webhookTypesSupported = []string{
 	"release_bundle",
 	"distribution",
 	"artifactory_release_bundle",
+}
+
+var domainEventTypesSupported = map[string][]string{
+	"artifact": []string{"deployed", "deleted", "moved", "copied"},
+	"artifact_property": []string{"added", "deleted"},
+	"docker": []string{"pushed", "deleted", "promoted"},
+	"build": []string{"uploaded", "deleted", "promoted"},
+	"release_bundle": []string{"created", "signed", "deleted"},
+	"distribution": []string{"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	"artifactory_release_bundle": []string{"received", "delete_started", "delete_completed", "delete_failed"},
 }
 
 type WebhookBaseParams struct {
@@ -159,9 +181,9 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Description: `Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: "org/apache/**"`,
 		},
 		"exclude_patterns": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: `Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: "org/apache/**"`,
 		},
 	}
@@ -186,7 +208,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					"repo_keys": {
 						Type:        schema.TypeSet,
 						Required:    true,
-						MinItems:    1,
 						Elem:        &schema.Schema{Type: schema.TypeString},
 						Description: "Trigger on this list of repository keys",
 					},
@@ -211,7 +232,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					"selected_builds": {
 						Type:        schema.TypeSet,
 						Required:    true,
-						MinItems:    1,
 						Elem:        &schema.Schema{Type: schema.TypeString},
 						Description: "Trigger on this list of build IDs",
 					},
@@ -236,7 +256,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					"registered_release_bundle_names": {
 						Type:        schema.TypeSet,
 						Required:    true,
-						MinItems:    1,
 						Elem:        &schema.Schema{Type: schema.TypeString},
 						Description: "Trigger on this list of release bundle names",
 					},
@@ -533,6 +552,86 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
+	var repoCriteriaValidation = func(criteria map[string]interface{}) error {
+		log.Print("[DEBUG] repoCriteriaValidation")
+
+		anyLocal := criteria["any_local"].(bool)
+		anyRemote := criteria["any_remote"].(bool)
+		repoKeys := criteria["repo_keys"].(*schema.Set).List()
+
+		if (anyLocal == false && anyRemote == false) && len(repoKeys) == 0 {
+			return fmt.Errorf("repo_keys cannot be empty when both any_local and any_remote are false")
+		}
+
+		return nil
+	}
+
+	var buildCriteriaValidation = func(criteria map[string]interface{}) error {
+		log.Print("[DEBUG] buildCriteriaValidation")
+
+		anyBuild := criteria["any_build"].(bool)
+		selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
+
+		if anyBuild == false && len(selectedBuilds) == 0 {
+			return fmt.Errorf("selected_builds cannot be empty when any_build is false")
+		}
+
+		return nil
+	}
+
+	var releaseBundleCriteriaValidation = func(criteria map[string]interface{}) error {
+		log.Print("[DEBUG] releaseBundleCriteriaValidation")
+
+		anyReleaseBundle := criteria["any_release_bundle"].(bool)
+		registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*schema.Set).List()
+
+		if anyReleaseBundle == false && len(registeredReleaseBundlesNames) == 0 {
+			return fmt.Errorf("registered_release_bundle_names cannot be empty when any_release_bundle is false")
+		}
+
+		return nil
+	}
+
+	var domainCriteriaValidationLookup = map[string]func(map[string]interface{}) error{
+		"artifact":                   repoCriteriaValidation,
+		"artifact_property":          repoCriteriaValidation,
+		"docker":                     repoCriteriaValidation,
+		"build":                      buildCriteriaValidation,
+		"release_bundle":             releaseBundleCriteriaValidation,
+		"distribution":               releaseBundleCriteriaValidation,
+		"artifactory_release_bundle": releaseBundleCriteriaValidation,
+	}
+
+	var eventTypesDiff = func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		log.Print("[DEBUG] eventTypesDiff")
+
+		eventTypes := diff.Get("event_types").(*schema.Set).List()
+		if len(eventTypes) == 0 {
+			return nil
+		}
+
+		domain := diff.Get("domain").(string)
+		eventTypesSupported := domainEventTypesSupported[domain]
+		for _, eventType := range eventTypes {
+			if !contains(eventTypesSupported, eventType.(string)) {
+				return fmt.Errorf("event_type %s not supported for domain %s", eventType, domain)
+			}
+		}
+		return nil
+	}
+
+	var criteriaDiff = func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		log.Print("[DEBUG] criteriaDiff")
+
+		criteria := diff.Get("criteria").(*schema.Set).List()
+		if len(criteria) == 0 {
+			return nil
+		}
+
+		domain := diff.Get("domain").(string)
+		return domainCriteriaValidationLookup[domain](criteria[0].(map[string]interface{}))
+	}
+
 	return &schema.Resource{
 		SchemaVersion: 1,
 		CreateContext: createWebhook,
@@ -544,7 +643,11 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      domainSchemaLookup[webhookType],
-		Description: "Provides an Artifactory webhook resource",
+		Schema:        domainSchemaLookup[webhookType],
+		CustomizeDiff: customdiff.All(
+			eventTypesDiff,
+			criteriaDiff,
+		),
+		Description:   "Provides an Artifactory webhook resource",
 	}
 }
