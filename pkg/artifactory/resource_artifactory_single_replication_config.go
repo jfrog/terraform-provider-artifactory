@@ -3,6 +3,7 @@ package artifactory
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -118,6 +119,10 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
 	// password comes back scrambled
 	if err != nil {
+		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 
