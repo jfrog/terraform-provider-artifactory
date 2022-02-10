@@ -109,7 +109,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringLenBetween(2, 200), validation.StringDoesNotContainAny(" "))),
-			Description:      "Name of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
+			Description:      "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
 		},
 		"description": {
 			Type:             schema.TypeString,
@@ -121,14 +121,14 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: "Status of webhook",
+			Description: "Status of webhook. Default to 'true'",
 		},
 		"event_types": {
 			Type:        schema.TypeSet,
 			Required:    true,
 			MinItems:    1,
 			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Displays the list of Events in Artifactory and Distribution that function as the event trigger for the Webhook.",
+			Description: "List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.",
 		},
 		"url": {
 			Type:             schema.TypeString,
@@ -140,7 +140,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Defines a secret authentication token that will be sent to the configured URL.",
+			Description:      "Secret authentication token that will be sent to the configured URL.",
 		},
 		"proxy": {
 			Type:             schema.TypeString,
@@ -152,7 +152,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: "Adds custom headers you wish to use to invoke the Webhook.",
+			Description: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
 		},
 	}
 
@@ -196,7 +196,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					},
 				}),
 			},
-			Description: "Specifies where the webhook will be applied on which repositories.\nNote: The supported format of includePatterns and excludePatterns is ANT pattern.",
+			Description: "Specifies where the webhook will be applied on which repositories.",
 		},
 	})
 
@@ -220,7 +220,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					},
 				}),
 			},
-			Description: "Specifies where the webhook will be applied on which builds.\nNote: The supported format of includePatterns and excludePatterns is ANT pattern.",
+			Description: "Specifies where the webhook will be applied on which builds.",
 		},
 	})
 
@@ -244,7 +244,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					},
 				}),
 			},
-			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.\nNote: The supported format of includePatterns and excludePatterns is ANT pattern.",
+			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
 		},
 	})
 
