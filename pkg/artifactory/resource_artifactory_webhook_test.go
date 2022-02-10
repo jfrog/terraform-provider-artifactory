@@ -194,6 +194,8 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				any_local  = {{ .anyLocal }}
 				any_remote = {{ .anyRemote }}
 				repo_keys  = ["{{ .repoName }}"]
+				include_patterns = ["foo/**"]
+				exclude_patterns = ["bar/**"]
 			}
 			url    = "http://tempurl.org"
 			secret = "fake-secret"
@@ -220,6 +222,10 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_local", fmt.Sprintf("%t", params["anyLocal"])),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_remote", fmt.Sprintf("%t", params["anyRemote"])),
 		resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.repo_keys.*", repoName),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo/**"),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "1"),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
 		resource.TestCheckResourceAttr(fqrn, "custom_http_header.#", "2"),
 		resource.TestCheckResourceAttr(fqrn, "custom_http_header.0.name", "header-1"),
 		resource.TestCheckResourceAttr(fqrn, "custom_http_header.0.value", "value-1"),

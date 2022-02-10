@@ -273,21 +273,21 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return map[string]interface{}{
 			"any_local":  artifactoryCriteria["anyLocal"].(bool),
 			"any_remote": artifactoryCriteria["anyRemote"].(bool),
-			"repo_keys":  artifactoryCriteria["repoKeys"].([]interface{}),
+			"repo_keys":  schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
 		}
 	}
 
 	var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 		return map[string]interface{}{
 			"any_build":       artifactoryCriteria["anyBuild"].(bool),
-			"selected_builds": artifactoryCriteria["selectedBuilds"].([]string),
+			"selected_builds": schema.NewSet(schema.HashString, artifactoryCriteria["selectedBuilds"].([]interface{})),
 		}
 	}
 
 	var packReleaseBundleCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 		return map[string]interface{}{
 			"any_release_bundle":              artifactoryCriteria["anyReleaseBundle"].(bool),
-			"registered_release_bundle_names": artifactoryCriteria["registeredReleaseBundlesNames"].([]string),
+			"registered_release_bundle_names": schema.NewSet(schema.HashString, artifactoryCriteria["registeredReleaseBundlesNames"].([]interface{})),
 		}
 	}
 
@@ -428,12 +428,13 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		domain := d.Get("domain").(string)
 
+		resource := domainSchemaLookup[domain]["criteria"].Elem.(*schema.Resource)
 		packedCriteria := domainPackLookup[domain](criteria)
 
-		packedCriteria["include_patterns"] = criteria["IncludePatterns"]
-		packedCriteria["exclude_patterns"] = criteria["ExcludePatterns"]
+		packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, criteria["includePatterns"].([]interface{}))
+		packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, criteria["excludePatterns"].([]interface{}))
 
-		return setValue("criteria", []interface{}{packedCriteria})
+		return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
 	}
 
 	var packCustomHeaders = func(d *schema.ResourceData, customHeaders []WebhookCustomHttpHeader) []error {
@@ -462,6 +463,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		errors = append(errors, setValue("domain", webhook.EventFilter.Domain)...)
 		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
 
+		log.Printf("webhook.EventFilter.Criteria %v", webhook.EventFilter.Criteria)
 		errors = append(errors, packCriteria(d, webhook.EventFilter.Criteria.(map[string]interface{}))...)
 
 		handler := webhook.Handlers[0]
