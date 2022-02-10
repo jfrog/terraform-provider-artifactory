@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -98,6 +99,10 @@ type WebhookCustomHttpHeader struct {
 	Value string `json:"value"`
 }
 
+const webhooksUrl = "/event/api/v1/subscriptions"
+
+const webhookUrl = webhooksUrl + "/{webhookKey}"
+
 func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var baseWebhookBaseSchema = map[string]*schema.Schema{
 		"key": {
@@ -149,26 +154,10 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      "Proxy key from Artifactory Proxies setting",
 		},
-		"custom_http_header": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			MinItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:             schema.TypeString,
-						Required:         true,
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-						Description:      "HTTP header name",
-					},
-					"value": {
-						Type:             schema.TypeString,
-						Required:         true,
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-						Description:      "HTTP header value",
-					},
-				},
-			},
+		"custom_http_headers": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: "Adds custom headers you wish to use to invoke the Webhook.",
 		},
 	}
@@ -264,10 +253,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.\nNote: The supported format of includePatterns and excludePatterns is ANT pattern.",
 		},
 	})
-
-	const webhooksUrl = "/event/api/v1/subscriptions"
-
-	const webhookUrl = webhooksUrl + "/{webhookKey}"
 
 	var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 		return map[string]interface{}{
@@ -382,14 +367,12 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		var unpackCustomHttpHeaders = func(d *ResourceData) []WebhookCustomHttpHeader {
 			var customHeaders []WebhookCustomHttpHeader
 
-			if v, ok := d.GetOkExists("custom_http_header"); ok {
-				headers := v.(*schema.Set).List()
-				for _, header := range headers {
-					id := header.(map[string]interface{})
-
+			if v, ok := d.GetOkExists("custom_http_headers"); ok {
+				headers := v.(map[string]interface{})
+				for key, value := range headers {
 					customHeader := WebhookCustomHttpHeader{
-						Name:  id["name"].(string),
-						Value: id["value"].(string),
+						Name:  key,
+						Value: value.(string),
 					}
 
 					customHeaders = append(customHeaders, customHeader)
@@ -440,16 +423,12 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var packCustomHeaders = func(d *schema.ResourceData, customHeaders []WebhookCustomHttpHeader) []error {
 		setValue := mkLens(d)
 
-		var headers []interface{}
+		headers := make(map[string]interface{})
 		for _, customHeader := range customHeaders {
-			header := map[string]interface{}{
-				"name":  customHeader.Name,
-				"value": customHeader.Value,
-			}
-			headers = append(headers, header)
+			headers[customHeader.Name] = customHeader.Value
 		}
 
-		return setValue("custom_http_header", headers)
+		return setValue("custom_http_headers", headers)
 	}
 
 	var packWebhook = func(d *schema.ResourceData, webhook WebhookBaseParams) diag.Diagnostics {
@@ -500,6 +479,12 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return packWebhook(data, webhook)
 	}
 
+	var retryOnProxyError = func(response *resty.Response, _r error) bool {
+		var proxyNotFoundRegex = regexp.MustCompile("proxy with key '.*' not found")
+
+		return proxyNotFoundRegex.MatchString(string(response.Body()[:]))
+	}
+
 	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		log.Printf("[DEBUG] createWebhook")
 
@@ -508,7 +493,10 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(*resty.Client).R().SetBody(webhook).Post(webhooksUrl)
+		_, err = m.(*resty.Client).R().
+			SetBody(webhook).
+			AddRetryCondition(retryOnProxyError).
+			Post(webhooksUrl)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -529,6 +517,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		_, err = m.(*resty.Client).R().
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
+			AddRetryCondition(retryOnProxyError).
 			Put(webhookUrl)
 		if err != nil {
 			return diag.FromErr(err)

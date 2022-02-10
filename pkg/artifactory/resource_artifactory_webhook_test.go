@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -199,13 +200,10 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 			}
 			url    = "http://tempurl.org"
 			secret = "fake-secret"
-			custom_http_header {
-				name  = "header-1"
-				value = "value-1"
-			}
-			custom_http_header {
-				name  = "header-2"
-				value = "value-2"
+
+			custom_http_headers = {
+				header-1 = "value-1"
+				header-2 = "value-2"
 			}
 
 			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
@@ -226,11 +224,9 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo/**"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_header.#", "2"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_header.0.name", "header-1"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_header.0.value", "value-1"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_header.1.name", "header-2"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_header.1.value", "value-2"),
+		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.%", "2"),
+		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.header-1", "value-1"),
+		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.header-2", "value-2"),
 	}
 
 	for _, eventType := range eventTypes {
@@ -240,7 +236,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 
 	return t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
-		CheckDestroy: verifyDeleted(fqrn, testCheckRepo),
+		CheckDestroy: verifyDeleted(fqrn, testCheckWebhook),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -250,4 +246,11 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 			},
 		},
 	}
+}
+
+func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error) {
+	return request.
+		SetPathParam("webhookKey", id).
+		AddRetryCondition(neverRetry).
+		Get(webhookUrl)
 }
