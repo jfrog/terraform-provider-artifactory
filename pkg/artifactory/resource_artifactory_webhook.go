@@ -123,12 +123,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Default:     true,
 			Description: "Status of webhook",
 		},
-		"domain": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(webhookTypesSupported, false)),
-			Description:      `Type of webhook. Must be one of "artifact", "artifact_property", "docker", "build", "release_bundle", "distribution", "artifactory_release_bundle"`,
-		},
 		"event_types": {
 			Type:        schema.TypeSet,
 			Required:    true,
@@ -344,7 +338,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var unpackWebhook = func(data *schema.ResourceData) (WebhookBaseParams, error) {
 		d := &ResourceData{data}
 
-		var unpackCriteria = func(d *ResourceData, domain string) interface{} {
+		var unpackCriteria = func(d *ResourceData, webhookType string) interface{} {
 			var webhookCriteria interface{}
 
 			if v, ok := d.GetOkExists("criteria"); ok {
@@ -357,7 +351,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 						ExcludePatterns: castToStringArr(id["exclude_patterns"].(*schema.Set).List()),
 					}
 
-					webhookCriteria = domainUnpackLookup[domain](id, baseCriteria)
+					webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
 				}
 			}
 
@@ -382,15 +376,14 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return customHeaders
 		}
 
-		domain := d.getString("domain", false)
 		webhook := WebhookBaseParams{
 			Key:         d.getString("key", false),
 			Description: d.getString("description", false),
 			Enabled:     d.getBool("enabled", false),
 			EventFilter: WebhookEventFilter{
-				Domain:     d.getString("domain", false),
+				Domain:     webhookType,
 				EventTypes: d.getSet("event_types"),
-				Criteria:   unpackCriteria(d, domain),
+				Criteria:   unpackCriteria(d, webhookType),
 			},
 			Handlers: []WebhookHandler{
 				WebhookHandler{
@@ -409,10 +402,8 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var packCriteria = func(d *schema.ResourceData, criteria map[string]interface{}) []error {
 		setValue := mkLens(d)
 
-		domain := d.Get("domain").(string)
-
-		resource := domainSchemaLookup[domain]["criteria"].Elem.(*schema.Resource)
-		packedCriteria := domainPackLookup[domain](criteria)
+		resource := domainSchemaLookup[webhookType]["criteria"].Elem.(*schema.Resource)
+		packedCriteria := domainPackLookup[webhookType](criteria)
 
 		packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, criteria["includePatterns"].([]interface{}))
 		packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, criteria["excludePatterns"].([]interface{}))
@@ -439,7 +430,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		errors = append(errors, setValue("key", webhook.Key)...)
 		errors = append(errors, setValue("description", webhook.Description)...)
 		errors = append(errors, setValue("enabled", webhook.Enabled)...)
-		errors = append(errors, setValue("domain", webhook.EventFilter.Domain)...)
 		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
 
 		log.Printf("webhook.EventFilter.Criteria %v", webhook.EventFilter.Criteria)
@@ -464,8 +454,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		webhook := WebhookBaseParams{}
 
-		domain := data.Get("domain").(string)
-		webhook.EventFilter.Criteria = domainCriteriaLookup[domain]
+		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
 		_, err := m.(*resty.Client).R().
 			SetPathParam("webhookKey", data.Id()).
@@ -601,11 +590,10 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return nil
 		}
 
-		domain := diff.Get("domain").(string)
-		eventTypesSupported := domainEventTypesSupported[domain]
+		eventTypesSupported := domainEventTypesSupported[webhookType]
 		for _, eventType := range eventTypes {
 			if !contains(eventTypesSupported, eventType.(string)) {
-				return fmt.Errorf("event_type %s not supported for domain %s", eventType, domain)
+				return fmt.Errorf("event_type %s not supported for domain %s", eventType, webhookType)
 			}
 		}
 		return nil
@@ -619,8 +607,7 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return nil
 		}
 
-		domain := diff.Get("domain").(string)
-		return domainCriteriaValidationLookup[domain](criteria[0].(map[string]interface{}))
+		return domainCriteriaValidationLookup[webhookType](criteria[0].(map[string]interface{}))
 	}
 
 	return &schema.Resource{

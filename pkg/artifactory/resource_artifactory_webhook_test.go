@@ -30,7 +30,6 @@ var repoTemplate = `
 	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
 		key         = "{{ .webhookName }}"
 		description = "test description"
-		domain      = "{{ .webhookType }}"
 		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
 		criteria {
 			any_local = false
@@ -45,7 +44,6 @@ var buildTemplate = `
 	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
 		key         = "{{ .webhookName }}"
 		description = "test description"
-		domain      = "{{ .webhookType }}"
 		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
 		criteria {
 			any_build = false
@@ -59,7 +57,6 @@ var releaseBundleTemplate = `
 	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
 		key         = "{{ .webhookName }}"
 		description = "test description"
-		domain      = "{{ .webhookType }}"
 		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
 		criteria {
 			any_release_bundle = false
@@ -128,7 +125,6 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
-			domain      = "artifact"
 			event_types = ["{{ .eventType }}"]
 			criteria {
 				any_local = true
@@ -189,7 +185,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
-			domain      = "{{ .webhookType }}"
 			event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
 			criteria {
 				any_local  = {{ .anyLocal }}
@@ -212,7 +207,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 
 	testChecks := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr(fqrn, "key", name),
-		resource.TestCheckResourceAttr(fqrn, "domain", webhookType),
 		resource.TestCheckResourceAttr(fqrn, "event_types.#", fmt.Sprintf("%d", len(eventTypes))),
 		resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
 		resource.TestCheckResourceAttr(fqrn, "secret", "fake-secret"),
