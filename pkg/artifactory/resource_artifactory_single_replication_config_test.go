@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"testing"
@@ -101,7 +102,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println("Delete repo ", name, " done.")
+		log.Printf("Delete repo %s done.", name)
 	}
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
