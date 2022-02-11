@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"testing"
@@ -86,6 +87,43 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSingleReplication_withDelRepo(t *testing.T) {
+	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
+	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+	var deleteRepo = func() {
+		restyClient := getTestResty(t)
+		_, err := restyClient.R().Delete("artifactory/api/repositories/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		log.Printf("Delete repo %s done.", name)
+	}
+	resource.Test(t, resource.TestCase{
+		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+				),
+			},
+			{
+				PreConfig: deleteRepo,
+				Config:    config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 				),
 			},
 		},

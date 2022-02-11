@@ -11,6 +11,12 @@ FEATURES:
   * `artifactory_distribution_webhook`
   * `artifactory_artifactory_release_bundle_webhook`
 
+## 2.16.2 (Feb, 10, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_single_replication_config: Fix for error when repository got externally removed, but replication resource configured. [GH-312]
+
 ## 2.16.1 (Feb, 7, 2022)
 
 BUG FIXES:
