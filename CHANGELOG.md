@@ -1,3 +1,9 @@
+## 3.0.0 (Apr 1, 2022)
+
+BREAKING CHANGES:
+
+* Resources `artifactory_xray_policy` and `artifactory_xray_watch` have been removed [GH-315]
+
 ## 2.25.0 (Mar 21, 2022)
 
 FEATURES:
