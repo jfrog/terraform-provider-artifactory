@@ -18,10 +18,10 @@ resource "artifactory_artifactory_release_bundle_webhook" "artifactory-release-b
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 }
 ```
 
