@@ -10,3 +10,4 @@ terraform.tfstate.backup
 lib/
 *.lic
 /resources/
+.DS_Store
