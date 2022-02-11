@@ -259,10 +259,10 @@ resource "artifactory_artifact_webhook" "artifact-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 
   depends_on = [artifactory_local_repository.local]
 }
@@ -281,10 +281,10 @@ resource "artifactory_artifact_property_webhook" "artifact-property-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 
   depends_on = [artifactory_local_repository.local]
 }
@@ -303,10 +303,10 @@ resource "artifactory_docker_webhook" "docker-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 
   depends_on = [artifactory_local_docker_v2_repository.foo]
 }
@@ -324,10 +324,10 @@ resource "artifactory_build_webhook" "build-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 }
 
 resource "artifactory_release_bundle_webhook" "release-bundle-webhook" {
@@ -343,10 +343,10 @@ resource "artifactory_release_bundle_webhook" "release-bundle-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 }
 
 resource "artifactory_distribution_webhook" "release-distribution-webhook" {
@@ -362,10 +362,10 @@ resource "artifactory_distribution_webhook" "release-distribution-webhook" {
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 }
 
 resource "artifactory_artifactory_release_bundle_webhook" "release-distribution-webhook" {
@@ -381,8 +381,8 @@ resource "artifactory_artifactory_release_bundle_webhook" "release-distribution-
   secret = "some-secret"
   proxy = "proxy-key"
 
-	custom_http_headers = {
-		header-1 = "value-1"
-		header-2 = "value-2"
-	}
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
 }
