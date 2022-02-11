@@ -14,34 +14,36 @@ type RepoWebhookCriteria struct {
 	RepoKeys  []string `json:"repoKeys"`
 }
 
-var repoWebhookSchema = mergeSchema(baseWebhookBaseSchema, map[string]*schema.Schema{
-	"criteria": {
-		Type:     schema.TypeSet,
-		Required: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: mergeSchema(baseCriteriaSchema, map[string]*schema.Schema{
-				"any_local": {
-					Type:        schema.TypeBool,
-					Required:    true,
-					Description: "Trigger on any local repositories",
-				},
-				"any_remote": {
-					Type:        schema.TypeBool,
-					Required:    true,
-					Description: "Trigger on any remote repositories",
-				},
-				"repo_keys": {
-					Type:        schema.TypeSet,
-					Required:    true,
-					Elem:        &schema.Schema{Type: schema.TypeString},
-					Description: "Trigger on this list of repository keys",
-				},
-			}),
+var repoWebhookSchema = func(webhookType string) map[string]*schema.Schema {
+	return mergeSchema(baseWebhookBaseSchema(webhookType), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: mergeSchema(baseCriteriaSchema, map[string]*schema.Schema{
+					"any_local": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any local repositories",
+					},
+					"any_remote": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any remote repositories",
+					},
+					"repo_keys": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of repository keys",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied on which repositories.",
 		},
-		Description: "Specifies where the webhook will be applied on which repositories.",
-	},
-})
+	})
+}
 
 var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{

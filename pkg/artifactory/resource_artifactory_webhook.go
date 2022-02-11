@@ -91,13 +91,13 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var domainSchemaLookup = map[string]map[string]*schema.Schema{
-		"artifact":                   repoWebhookSchema,
-		"artifact_property":          repoWebhookSchema,
-		"docker":                     repoWebhookSchema,
-		"build":                      buildWebhookSchema,
-		"release_bundle":             releaseBundleWebhookSchema,
-		"distribution":               releaseBundleWebhookSchema,
-		"artifactory_release_bundle": releaseBundleWebhookSchema,
+		"artifact":                   repoWebhookSchema(webhookType),
+		"artifact_property":          repoWebhookSchema(webhookType),
+		"docker":                     repoWebhookSchema(webhookType),
+		"build":                      buildWebhookSchema(webhookType),
+		"release_bundle":             releaseBundleWebhookSchema(webhookType),
+		"distribution":               releaseBundleWebhookSchema(webhookType),
+		"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType),
 	}
 
 	var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
@@ -217,7 +217,6 @@ func resourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		errors = append(errors, setValue("enabled", webhook.Enabled)...)
 		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
 
-		log.Printf("webhook.EventFilter.Criteria %v", webhook.EventFilter.Criteria)
 		errors = append(errors, packCriteria(d, webhook.EventFilter.Criteria.(map[string]interface{}))...)
 
 		handler := webhook.Handlers[0]
