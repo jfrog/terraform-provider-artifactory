@@ -7,24 +7,25 @@ import (
 
 var pypiRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 	"pypi_registry_url": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      "https://pypi.org",
-		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-		Description:  `This is the index url, expected to be a git repository. for remote artifactory use "arturl/git/repokey.git"`,
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          "https://pypi.org",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+		Description:      `(Optional) To configure the remote repo to proxy public external PyPI repository, or a PyPI repository hosted on another Artifactory server. See JFrog Pypi documentation for the usage details. Default value is 'https://pypi.org'.`,
 	},
 	"pypi_repository_suffix": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Default:     "simple",
-		Description: "Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          "simple",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      `(Optional) Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.`,
 	},
 })
 
 type PypiRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	RegistryUrl      string `hcl:"pypi_registry_url" json:"pyPIRegistryUrl"`
-	RepositorySuffix string `hcl:"pypi_repository_suffix" json:"pyPIRepositorySuffix"`
+	PypiRegistryUrl      string `json:"pyPIRegistryUrl"`
+	PypiRepositorySuffix string `json:"pyPIRepositorySuffix"`
 }
 
 func resourceArtifactoryRemotePypiRepository() *schema.Resource {
@@ -42,8 +43,8 @@ func unpackPypiRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 	d := &ResourceData{s}
 	repo := PypiRemoteRepo{
 		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, "pypi"),
-		RegistryUrl:                d.getString("pypi_registry_url", false),
-		RepositorySuffix:           d.getString("pypi_repository_suffix", false),
+		PypiRegistryUrl:            d.getString("pypi_registry_url", false),
+		PypiRepositorySuffix:       d.getString("pypi_repository_suffix", false),
 	}
 	return repo, repo.Id(), nil
 }

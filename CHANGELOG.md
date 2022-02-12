@@ -1,8 +1,8 @@
-## 2.16.3 (Feb, 11, 2022)
+## 2.17.0 (Feb, 12, 2022)
 
-BUG FIXES:
+IMPROVEMENTS:
 
-* resource/repositories: Fix for priority_resolution attribute support in (non-legacy) pypi, npm, cargo, docker and helm remote repositories. [GH-316]
+* resource/resource_artifactory_remote_pypi_repository: Added support for pypi remote repository with fix for priority_resolution attribute. [GH-316]
 
 ## 2.16.2 (Feb, 10, 2022)
 
