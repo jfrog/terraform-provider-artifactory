@@ -757,6 +757,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		EnableCookieManagement:            d.getBoolRef("enable_cookie_management", true),
 		BypassHeadRequests:                d.getBoolRef("bypass_head_requests", true),
 		ClientTlsCertificate:              d.getString("client_tls_certificate", true),
+		PriorityResolution:                d.getBool("priority_resolution", false),
 	}
 
 	if v, ok := d.GetOk("content_synchronisation"); ok {
