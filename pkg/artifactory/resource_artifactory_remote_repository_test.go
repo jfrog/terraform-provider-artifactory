@@ -131,6 +131,20 @@ func TestAccRemoteNpmRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemotePypiRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("pypi", t, map[string]interface{}{
+		"pypi_registry_url":           "https://pypi.org",
+		"priority_resolution":         true,
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `
@@ -650,7 +664,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			}
 
 			constructBody := map[string][]Proxy{
-				"proxies": []Proxy{testProxy},
+				"proxies": {testProxy},
 			}
 
 			body, err := yaml.Marshal(&constructBody)

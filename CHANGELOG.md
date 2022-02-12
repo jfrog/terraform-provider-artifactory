@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* resource/repositories: Fix for priority_resolution attribute support in (non-legacy) npm, cargo, docker and helm remote repositories. [GH-316]
+* resource/repositories: Fix for priority_resolution attribute support in (non-legacy) pypi, npm, cargo, docker and helm remote repositories. [GH-316]
 
 ## 2.16.2 (Feb, 10, 2022)
 
