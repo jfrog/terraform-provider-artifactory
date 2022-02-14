@@ -94,7 +94,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 	})
 }
 
-func TestAccRSAKeyPair(t *testing.T) {
+func TestAccKeyPairRSA(t *testing.T) {
 	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
@@ -169,7 +169,7 @@ func TestAccRSAKeyPair(t *testing.T) {
 	})
 }
 
-func TestAccGPGKeyPair(t *testing.T) {
+func TestAccKeyPairGPG(t *testing.T) {
 	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
