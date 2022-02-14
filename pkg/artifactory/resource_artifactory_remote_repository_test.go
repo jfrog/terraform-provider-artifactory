@@ -71,6 +71,7 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 		"external_dependencies_enabled":  true,
 		"enable_token_authentication":    true,
 		"block_pushing_schema1":          true,
+		"priority_resolution":            false,
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"content_synchronisation": map[string]interface{}{
@@ -87,6 +88,7 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 	_, testCase := mkNewRemoteTestCase("cargo", t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
+		"priority_resolution":         false,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
@@ -103,6 +105,7 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
+		"priority_resolution":            false,
 		"external_dependencies_patterns": []interface{}{"**github.com**"},
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
@@ -116,8 +119,23 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 func TestAccRemoteNpmRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("npm", t, map[string]interface{}{
 		"list_remote_folder_items":             true,
+		"priority_resolution":                  true,
 		"mismatching_mime_types_override_list": "application/json,application/xml",
 		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemotePypiRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("pypi", t, map[string]interface{}{
+		"pypi_registry_url":           "https://pypi.org",
+		"priority_resolution":         true,
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 			"statistics_enabled":              true,
@@ -620,10 +638,10 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	`, name, key)
 
 	type Proxy struct {
-		Key             string   `yaml:"key"`
-		Host            string   `yaml:"host"`
-		Port            int      `yaml:"port"`
-		PlatformDefault bool     `yaml:"platformDefault"`
+		Key             string `yaml:"key"`
+		Host            string `yaml:"host"`
+		Port            int    `yaml:"port"`
+		PlatformDefault bool   `yaml:"platformDefault"`
 	}
 
 	var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
@@ -646,7 +664,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			}
 
 			constructBody := map[string][]Proxy{
-				"proxies": []Proxy{testProxy},
+				"proxies": {testProxy},
 			}
 
 			body, err := yaml.Marshal(&constructBody)
