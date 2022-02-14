@@ -1,3 +1,9 @@
+## 2.18.1 (Feb, 12, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_keypair: Fix key pair not being stored in Terraform state correctly. [GH-317]
+
 ## 2.17.0 (Feb, 12, 2022)
 
 IMPROVEMENTS:
