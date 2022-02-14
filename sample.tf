@@ -244,3 +244,145 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
     enable = true
   }
 }
+
+resource "artifactory_artifact_webhook" "artifact-webhook" {
+  key = "artifact-webhook"
+  event_types = ["deployed", "deleted", "moved", "copied"]
+  criteria {
+    any_local = true
+    any_remote = false
+    repo_keys = [artifactory_local_repository.local.key]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+
+  depends_on = [artifactory_local_repository.local]
+}
+
+resource "artifactory_artifact_property_webhook" "artifact-property-webhook" {
+  key = "artifact-prop-webhook"
+  event_types = ["added", "deleted"]
+  criteria {
+    any_local = true
+    any_remote = false
+    repo_keys = [artifactory_local_repository.local.key]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+
+  depends_on = [artifactory_local_repository.local]
+}
+
+resource "artifactory_docker_webhook" "docker-webhook" {
+  key = "docker-webhook"
+  event_types = ["pushed", "deleted", "promoted"]
+  criteria {
+    any_local = true
+    any_remote = false
+    repo_keys = [artifactory_local_docker_v2_repository.foo.key]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+
+  depends_on = [artifactory_local_docker_v2_repository.foo]
+}
+
+resource "artifactory_build_webhook" "build-webhook" {
+  key = "build-webhook"
+  event_types = ["uploaded", "deleted", "promoted"]
+  criteria {
+    any_build = false
+    selected_builds = ["build-id"]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+}
+
+resource "artifactory_release_bundle_webhook" "release-bundle-webhook" {
+  key = "release-bundle-webhook"
+  event_types = ["created", "signed", "deleted"]
+  criteria {
+    any_release_bundle = false
+    registered_release_bundle_names = ["release-bundle-name"]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+}
+
+resource "artifactory_distribution_webhook" "release-distribution-webhook" {
+  key = "distribution-webhook"
+  event_types = ["distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"]
+  criteria {
+    any_release_bundle = false
+    registered_release_bundle_names = ["release-bundle-name"]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+}
+
+resource "artifactory_artifactory_release_bundle_webhook" "release-distribution-webhook" {
+  key = "artifactory-release-bundle-webhook"
+  event_types = ["received", "delete_started", "delete_completed", "delete_failed"]
+  criteria {
+    any_release_bundle = false
+    registered_release_bundle_names = ["release-bundle-name"]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+}
