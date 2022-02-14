@@ -70,6 +70,11 @@ func Provider() *schema.Provider {
 		resoucesMap[federatedResourceName] = resourceArtifactoryFederatedGenericRepository(repoType)
 	}
 
+	for _, webhookType := range webhookTypesSupported {
+		webhookResourceName := fmt.Sprintf("artifactory_%s_webhook", webhookType)
+		resoucesMap[webhookResourceName] = resourceArtifactoryWebhook(webhookType)
+	}
+
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {

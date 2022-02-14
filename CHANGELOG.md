@@ -1,3 +1,16 @@
+## 2.18.0 (Feb, 14, 2022)
+
+FEATURES:
+
+* **New Resources:** Webhook resources [GH-313]
+  * `artifactory_artifact_webhook`
+  * `artifactory_artifact_property_webhook`
+  * `artifactory_docker_webhook`
+  * `artifactory_build_webhook`
+  * `artifactory_release_bundle_webhook`
+  * `artifactory_distribution_webhook`
+  * `artifactory_artifactory_release_bundle_webhook`
+
 ## 2.17.0 (Feb, 12, 2022)
 
 IMPROVEMENTS:
