@@ -1,4 +1,4 @@
-## 2.17.0 (Feb, 12, 2022)
+## 2.17.1 (Feb, 14, 2022)
 
 FEATURES:
 
@@ -10,6 +10,12 @@ FEATURES:
   * `artifactory_release_bundle_webhook`
   * `artifactory_distribution_webhook`
   * `artifactory_artifactory_release_bundle_webhook`
+
+## 2.17.0 (Feb, 12, 2022)
+
+IMPROVEMENTS:
+
+* resource/resource_artifactory_remote_pypi_repository: Added support for pypi remote repository with fix for priority_resolution attribute. [GH-316]
 
 ## 2.16.2 (Feb, 10, 2022)
 
