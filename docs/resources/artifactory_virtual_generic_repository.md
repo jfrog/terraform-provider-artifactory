@@ -1,7 +1,7 @@
 # Artifactory Virtual Generic Repository Resource
 
 Provides an Artifactory virtual repository resource with generic package type. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`. 
+one-size-fits-all `artifactory_virtual_repository`.
 
 ## Example Usage
 
@@ -23,6 +23,8 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 * `key` - (Required)
 * `repositories` - (Required, but may be empty)
+* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `description` - (Optional)
 * `notes` - (Optional)
 * `includes_pattern` - (Optional)

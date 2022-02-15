@@ -1,7 +1,7 @@
 # Artifactory Remote Repository Resource
 
 Provides an Artifactory remote `helm` repository resource. This provides helm specific fields and is the only way to get them.
-Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Package+Management), 
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Package+Management),
 although helm is (currently) not listed as a supported format
 
 ## Example Usage
@@ -21,10 +21,12 @@ resource "artifactory_remote_helm_repository" "helm-remote" {
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 All generic repo arguments are supported, in addition to:
 
 * `key` - (Required) The repository identifier. Must be unique system-wide
+* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `helm_charts_base_url` - (Optional) - No documentation is available. Hopefully you know what this means
 * `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten.
 * `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external

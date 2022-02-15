@@ -18,6 +18,8 @@ const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type LocalRepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
+	ProjectKey             string   `json:"projectKey"`
+	ProjectEnvironments    []string `json:"environments"`
 	Rclass                 string   `json:"rclass"`
 	PackageType            string   `hcl:"package_type" json:"packageType,omitempty"`
 	Description            string   `hcl:"description" json:"description,omitempty"`
@@ -68,29 +70,31 @@ type ContentSynchronisationSource struct {
 }
 
 type RemoteRepositoryBaseParams struct {
-	Key                      string `hcl:"key" json:"key,omitempty"`
-	Rclass                   string `json:"rclass"`
-	PackageType              string `hcl:"package_type" json:"packageType,omitempty"`
-	Url                      string `hcl:"url" json:"url"`
-	Username                 string `hcl:"username" json:"username,omitempty"`
-	Password                 string `hcl:"password" json:"password,omitempty"`
-	Proxy                    string `hcl:"proxy" json:"proxy"`
-	Description              string `hcl:"description" json:"description,omitempty"`
-	Notes                    string `hcl:"notes" json:"notes,omitempty"`
-	IncludesPattern          string `hcl:"includes_pattern" json:"includesPattern,omitempty"`
-	ExcludesPattern          string `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
-	RepoLayoutRef            string `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
-	RemoteRepoLayoutRef      string `json:"remoteRepoLayoutRef"`
-	HardFail                 *bool  `hcl:"hard_fail" json:"hardFail,omitempty"`
-	Offline                  *bool  `hcl:"offline" json:"offline,omitempty"`
-	BlackedOut               *bool  `hcl:"blacked_out" json:"blackedOut,omitempty"`
-	XrayIndex                *bool  `hcl:"xray_index" json:"xrayIndex,omitempty"`
-	PropagateQueryParams     bool   `hcl:"propagate_query_params" json:"propagateQueryParams"`
-	PriorityResolution       bool   `hcl:"priority_resolution" json:"priorityResolution"`
-	StoreArtifactsLocally    *bool  `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
-	SocketTimeoutMillis      int    `hcl:"socket_timeout_millis" json:"socketTimeoutMillis,omitempty"`
-	LocalAddress             string `hcl:"local_address" json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs int    `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs,omitempty"`
+	Key                      string   `hcl:"key" json:"key,omitempty"`
+	ProjectKey               string   `json:"projectKey"`
+	ProjectEnvironments      []string `json:"environments"`
+	Rclass                   string   `json:"rclass"`
+	PackageType              string   `hcl:"package_type" json:"packageType,omitempty"`
+	Url                      string   `hcl:"url" json:"url"`
+	Username                 string   `hcl:"username" json:"username,omitempty"`
+	Password                 string   `hcl:"password" json:"password,omitempty"`
+	Proxy                    string   `hcl:"proxy" json:"proxy"`
+	Description              string   `hcl:"description" json:"description,omitempty"`
+	Notes                    string   `hcl:"notes" json:"notes,omitempty"`
+	IncludesPattern          string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
+	ExcludesPattern          string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	RepoLayoutRef            string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
+	RemoteRepoLayoutRef      string   `json:"remoteRepoLayoutRef"`
+	HardFail                 *bool    `hcl:"hard_fail" json:"hardFail,omitempty"`
+	Offline                  *bool    `hcl:"offline" json:"offline,omitempty"`
+	BlackedOut               *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
+	XrayIndex                *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
+	PropagateQueryParams     bool     `hcl:"propagate_query_params" json:"propagateQueryParams"`
+	PriorityResolution       bool     `hcl:"priority_resolution" json:"priorityResolution"`
+	StoreArtifactsLocally    *bool    `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis      int      `hcl:"socket_timeout_millis" json:"socketTimeoutMillis,omitempty"`
+	LocalAddress             string   `hcl:"local_address" json:"localAddress,omitempty"`
+	RetrievalCachePeriodSecs int      `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs,omitempty"`
 	// doesn't appear in the body when calling get. Hence no HCL
 	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
 	MissedRetrievalCachePeriodSecs    int                     `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
@@ -114,6 +118,8 @@ func (bp RemoteRepositoryBaseParams) Id() string {
 
 type VirtualRepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
+	ProjectKey                                    string   `json:"projectKey"`
+	ProjectEnvironments                           []string `json:"environments"`
 	Rclass                                        string   `json:"rclass"`
 	PackageType                                   string   `hcl:"package_type" json:"packageType,omitempty"`
 	Description                                   string   `hcl:"description" json:"description,omitempty"`
@@ -322,12 +328,29 @@ var repoTypesLikeGeneric = []string{
 	"vagrant",
 }
 
+var projectEnvironmentsSupported = []string{"DEV", "PROD"}
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: repoKeyValidator,
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MinItems:    1,
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
 	},
 	"package_type": {
 		Type:     schema.TypeString,
@@ -363,7 +386,6 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 		Default:  false,
 	},
-
 	"xray_index": {
 		Type:     schema.TypeBool,
 		Optional: true,
@@ -391,12 +413,27 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 }
+
 var baseRemoteSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: repoKeyValidator,
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
 	},
 	"package_type": {
 		Type:     schema.TypeString,
@@ -588,7 +625,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 	},
-
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -629,12 +665,27 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Default:  false,
 	},
 }
+
 var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
 		Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
 	},
 	"package_type": {
 		Type:        schema.TypeString,
@@ -704,6 +755,8 @@ func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 	return LocalRepositoryBaseParams{
 		Rclass:                 rclassType,
 		Key:                    d.getString("key", false),
+		ProjectKey:             d.getString("project_key", false),
+		ProjectEnvironments:    d.getSet("project_environments"),
 		PackageType:            packageType,
 		Description:            d.getString("description", false),
 		Notes:                  d.getString("notes", false),
@@ -718,14 +771,16 @@ func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		PriorityResolution:     d.getBool("priority_resolution", false),
 	}
 }
+
 func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
 	d := &ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
-		Rclass: "remote",
-		Key:    d.getString("key", false),
-		//must be set independently
-		PackageType:              packageType,
+		Rclass:                   "remote",
+		Key:                      d.getString("key", false),
+		ProjectKey:               d.getString("project_key", false),
+		ProjectEnvironments:      d.getSet("project_environments"),
+		PackageType:              packageType, // must be set independently
 		Url:                      d.getString("url", false),
 		Username:                 d.getString("username", true),
 		Password:                 d.getString("password", true),
@@ -803,13 +858,14 @@ func unpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 	d := &ResourceData{s}
 
 	return VirtualRepositoryBaseParams{
-		Key:    d.getString("key", false),
-		Rclass: "virtual",
-		//must be set independently
-		PackageType:     packageType,
-		IncludesPattern: d.getString("includes_pattern", false),
-		ExcludesPattern: d.getString("excludes_pattern", false),
-		RepoLayoutRef:   d.getString("repo_layout_ref", false),
+		Key:                 d.getString("key", false),
+		Rclass:              "virtual",
+		ProjectKey:          d.getString("project_key", false),
+		ProjectEnvironments: d.getSet("project_environments"),
+		PackageType:         packageType, // must be set independently
+		IncludesPattern:     d.getString("includes_pattern", false),
+		ExcludesPattern:     d.getString("excludes_pattern", false),
+		RepoLayoutRef:       d.getString("repo_layout_ref", false),
 		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.getBool("artifactory_requests_can_retrieve_remote_artifacts", false),
 		Repositories:          d.getList("repositories"),
 		Description:           d.getString("description", false),
@@ -1049,6 +1105,20 @@ func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 	}
 }
 
+func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, i interface{}) error {
+	if data, ok := diff.GetOk("project_environments"); ok {
+		projectEnvironments := data.(*schema.Set).List()
+
+		for _, projectEnvironment := range projectEnvironments {
+			if !contains(projectEnvironmentsSupported, projectEnvironment.(string)) {
+				return fmt.Errorf("project_environment %s not allowed", projectEnvironment)
+			}
+		}
+	}
+
+	return nil
+}
+
 func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack UnpackFunc, constructor Constructor) *schema.Resource {
 	var reader = mkRepoRead(packer, constructor)
 	return &schema.Resource{
@@ -1061,6 +1131,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 		},
 
 		Schema: skeema,
+		CustomizeDiff: projectEnvironmentsDiff,
 	}
 }
 

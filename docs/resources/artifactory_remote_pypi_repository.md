@@ -2,7 +2,7 @@
 
 Provides an Artifactory remote `pypi` repository resource. This provides pypi specific fields and is the only way to get them.
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Package+Management).
-Pypi specific documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/PyPI+Repositories). 
+Pypi specific documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/PyPI+Repositories).
 
 ## Example Usage
 Includes only new and relevant fields, for anything else, see: [generic repo](artifactory_remote_docker_repository.md).
@@ -17,10 +17,12 @@ resource "artifactory_remote_pypi_repository" "pypi-remote" {
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 All generic repo arguments are supported, in addition to:
 
 * `key` - (Required) The repository identifier. Must be unique system-wide
+* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `pypi_registry_url` - (Optional) To configure the remote repo to proxy public external PyPI repository, or a PyPI repository hosted on another Artifactory server. See JFrog Pypi documentation [here](https://www.jfrog.com/confluence/display/JFROG/PyPI+Repositories) for the usage details. Default value is 'https://pypi.org'.
 * `pypi_repository_suffix` - (Optional) Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.
 * `content_synchronisation` - (Optional) Reference [JFROG Smart Remote Repositories](https://www.jfrog.com/confluence/display/JFROG/Smart+Remote+Repositories)

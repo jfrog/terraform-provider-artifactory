@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"testing"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -109,4 +110,45 @@ func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 
 func testCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
 	return checkRepo(id, request.AddRetryCondition(neverRetry))
+}
+
+func createProject(t *testing.T, projectKey string) {
+	type AdminPrivileges struct {
+		ManageMembers   bool `json:"manage_members"`
+		ManageResources bool `json:"manage_resources"`
+		IndexResources  bool `json:"index_resources"`
+	}
+
+	type Project struct {
+		Key                    string          `json:"project_key"`
+		DisplayName            string          `json:"display_name"`
+		Description            string          `json:"description"`
+		AdminPrivileges        AdminPrivileges `json:"admin_privileges"`
+	}
+
+	restyClient := getTestResty(t)
+
+	project := Project{
+		Key: projectKey,
+		DisplayName: projectKey,
+		Description: fmt.Sprintf("%s description", projectKey),
+		AdminPrivileges: AdminPrivileges{
+			ManageMembers: true,
+			ManageResources: true,
+			IndexResources: true,
+		},
+	}
+
+	_, err := restyClient.R().SetBody(project).Post("/access/api/v1/projects")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func deleteProject(t *testing.T, projectKey string) {
+	restyClient := getTestResty(t)
+	_, err := restyClient.R().Delete("/access/api/v1/projects/" + projectKey)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

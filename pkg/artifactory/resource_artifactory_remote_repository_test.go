@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -717,6 +718,92 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			{
 				Config: remoteRepositoryResetProxyWithNoAttr,
 				Check:  resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+			},
+		},
+	})
+}
+
+func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", randomInt())
+	projectEnv := randSelect("DEV", "PROD").(string)
+	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+		"projectEnv": projectEnv,
+	}
+	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `
+		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+	 	  project_environments = ["{{ .projectEnv }}"]
+		  url                  = "http://tempurl.org"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", randomInt())
+	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `
+		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "invalid-project-key"
+		  url                  = "http://tempurl.org"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},
 	})

@@ -114,10 +114,10 @@ func getMD5Hash(o interface{}) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-var randomInt = func() func() int {
+func randomInt() int {
 	rand.Seed(time.Now().UnixNano())
-	return rand.Int
-}()
+	return rand.Intn(10000000)
+}
 
 func randBool() bool {
 	return randomInt()%2 == 0
