@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -328,6 +329,8 @@ var repoTypesLikeGeneric = []string{
 	"vagrant",
 }
 
+var projectEnvironmentsSupported = []string{"DEV", "PROD"}
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -338,14 +341,12 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		ValidateDiagFunc: validation.ToDiagFunc(
-			validation.StringMatch(regexp.MustCompile("^[a-z0-9]{3,10}$"), "key must be 3 - 10 lowercase alphanumeric characters"),
-		),
+		Description: "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
+		MinItems:    1,
 		MaxItems:    2,
 		Set:         schema.HashString,
 		Optional:    true,
@@ -424,9 +425,6 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		ValidateDiagFunc: validation.ToDiagFunc(
-			validation.StringMatch(regexp.MustCompile("^[a-z0-9]{3,10}$"), "key must be 3 - 10 lowercase alphanumeric characters"),
-		),
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,
@@ -678,9 +676,6 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		ValidateDiagFunc: validation.ToDiagFunc(
-			validation.StringMatch(regexp.MustCompile("^[a-z0-9]{3,10}$"), "key must be 3 - 10 lowercase alphanumeric characters"),
-		),
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,
@@ -1108,6 +1103,20 @@ func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 	}
 }
 
+func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if data, ok := diff.GetOk("project_environments"); ok {
+		projectEnvironments := data.(*schema.Set).List()
+
+		for _, projectEnvironment := range projectEnvironments {
+			if !contains(projectEnvironmentsSupported, projectEnvironment.(string)) {
+				return fmt.Errorf("project_environment %s not allowed", projectEnvironment)
+			}
+		}
+	}
+
+	return nil
+}
+
 func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack UnpackFunc, constructor Constructor) *schema.Resource {
 	var reader = mkRepoRead(packer, constructor)
 	return &schema.Resource{
@@ -1120,6 +1129,9 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 		},
 
 		Schema: skeema,
+		CustomizeDiff: customdiff.All(
+			projectEnvironmentsDiff,
+		),
 	}
 }
 

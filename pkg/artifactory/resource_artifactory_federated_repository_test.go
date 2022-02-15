@@ -132,7 +132,7 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 	}
 }
 
-func TestAccFederatedRepoWithProjectKeyGH318(t *testing.T) {
+func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	if skip, reason := skipFederatedRepo(); skip {
 		t.Skipf(reason)
 	}
@@ -146,15 +146,15 @@ func TestAccFederatedRepoWithProjectKeyGH318(t *testing.T) {
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	params := map[string]interface{}{
-		"name":         name,
-		"projectKey":  projectKey,
+		"name":       name,
+		"projectKey": projectKey,
 		"projectEnv": projectEnv,
-		"memberUrl":    federatedMemberUrl,
+		"memberUrl":  federatedMemberUrl,
 	}
 	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
-			key         = "{{ .name }}"
-			project_key = "{{ .projectKey }}"
+			key                  = "{{ .name }}"
+			project_key          = "{{ .projectKey }}"
 	 		project_environments = ["{{ .projectEnv }}"]
 
 			member {

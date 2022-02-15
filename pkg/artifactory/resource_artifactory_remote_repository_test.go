@@ -723,7 +723,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	})
 }
 
-func TestAccRemoteRepositoryWithProjectKeyGH318(t *testing.T) {
+func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
@@ -733,8 +733,8 @@ func TestAccRemoteRepositoryWithProjectKeyGH318(t *testing.T) {
 	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
 
 	params := map[string]interface{}{
-		"name":        name,
-		"projectKey":  projectKey,
+		"name":       name,
+		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
 	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `

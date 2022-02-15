@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -447,7 +448,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
-			priority_resolution = "{{ .priority_resolution }}"
+		  priority_resolution = "{{ .priority_resolution }}"
 		}
 	`, params)
 	resource.Test(t, resource.TestCase{
@@ -466,7 +467,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 	})
 }
 
-func TestAccLocalGenericRepositoryWithProjectKeyGH318(t *testing.T) {
+func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
@@ -476,8 +477,8 @@ func TestAccLocalGenericRepositoryWithProjectKeyGH318(t *testing.T) {
 	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
-		"name":        name,
-		"projectKey":  projectKey,
+		"name":       name,
+		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
 	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
@@ -507,6 +508,45 @@ func TestAccLocalGenericRepositoryWithProjectKeyGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+	 	  project_environments = ["Foo"]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
 			},
 		},
 	})

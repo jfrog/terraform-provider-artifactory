@@ -570,7 +570,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	})
 }
 
-func TestAccVirtualGenericRepositoryWithProjectKeyGH318(t *testing.T) {
+func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
@@ -580,8 +580,8 @@ func TestAccVirtualGenericRepositoryWithProjectKeyGH318(t *testing.T) {
 	_, fqrn, name := mkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
-		"name":        name,
-		"projectKey":  projectKey,
+		"name":       name,
+		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
 	virtualRepositoryBasic := executeTemplate("TestAccVirtualGenericRepository", `
