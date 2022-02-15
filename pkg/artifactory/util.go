@@ -123,14 +123,6 @@ func randBool() bool {
 	return randomInt()%2 == 0
 }
 
-func randProjectEnv() string {
-	if randomInt()%2 == 0 {
-		return "DEV"
-	} else {
-		return "PROD"
-	}
-}
-
 func randSelect(items ...interface{}) interface{} {
 	return items[randomInt()%len(items)]
 }

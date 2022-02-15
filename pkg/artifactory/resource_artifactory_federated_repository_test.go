@@ -134,13 +134,9 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 }
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
-	if skip, reason := skipFederatedRepo(); skip {
-		t.Skipf(reason)
-	}
-
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
-	projectEnv := randProjectEnv()
+	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_federated_generic_repository")
@@ -192,10 +188,6 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-	if skip, reason := skipFederatedRepo(); skip {
-		t.Skipf(reason)
-	}
-
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)

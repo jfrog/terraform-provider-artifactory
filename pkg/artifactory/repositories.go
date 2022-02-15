@@ -20,7 +20,7 @@ const repositoriesEndpoint = "artifactory/api/repositories/"
 type LocalRepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey             string   `json:"projectKey"`
-	ProjectEnvironments    []string `hcl:"project_environments" json:"environments"`
+	ProjectEnvironments    []string `json:"environments"`
 	Rclass                 string   `json:"rclass"`
 	PackageType            string   `hcl:"package_type" json:"packageType,omitempty"`
 	Description            string   `hcl:"description" json:"description,omitempty"`
@@ -73,7 +73,7 @@ type ContentSynchronisationSource struct {
 type RemoteRepositoryBaseParams struct {
 	Key                      string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey               string   `json:"projectKey"`
-	ProjectEnvironments      []string `hcl:"project_environments" json:"environments"`
+	ProjectEnvironments      []string `json:"environments"`
 	Rclass                   string   `json:"rclass"`
 	PackageType              string   `hcl:"package_type" json:"packageType,omitempty"`
 	Url                      string   `hcl:"url" json:"url"`
@@ -120,7 +120,7 @@ func (bp RemoteRepositoryBaseParams) Id() string {
 type VirtualRepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey                                    string   `json:"projectKey"`
-	ProjectEnvironments                           []string `hcl:"project_environments" json:"environments"`
+	ProjectEnvironments                           []string `json:"environments"`
 	Rclass                                        string   `json:"rclass"`
 	PackageType                                   string   `hcl:"package_type" json:"packageType,omitempty"`
 	Description                                   string   `hcl:"description" json:"description,omitempty"`

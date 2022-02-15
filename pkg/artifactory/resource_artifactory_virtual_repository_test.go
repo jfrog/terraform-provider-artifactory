@@ -575,7 +575,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
-	projectEnv := randProjectEnv()
+	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_virtual_generic_repository")

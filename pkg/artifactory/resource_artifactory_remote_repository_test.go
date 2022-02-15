@@ -727,7 +727,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
-	projectEnv := randProjectEnv()
+	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
