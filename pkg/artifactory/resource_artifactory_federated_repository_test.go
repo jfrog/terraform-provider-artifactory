@@ -6,7 +6,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -128,4 +130,62 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
 		})
 	}
+}
+
+func TestAccFederatedRepoWithProjectKeyGH318(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skipf(reason)
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectEnv := randProjectEnv()
+	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_federated_generic_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+
+	params := map[string]interface{}{
+		"name":         name,
+		"projectKey":  projectKey,
+		"projectEnv": projectEnv,
+		"memberUrl":    federatedMemberUrl,
+	}
+	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_federated_generic_repository" "{{ .name }}" {
+			key         = "{{ .name }}"
+			project_key = "{{ .projectKey }}"
+	 		project_environments = ["{{ .projectEnv }}"]
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: testAccProviders,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+				),
+			},
+		},
+	})
 }

@@ -5,7 +5,9 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -458,6 +460,52 @@ func TestAccLocalGenericRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "priority_resolution", fmt.Sprintf("%t", params["priority_resolution"])),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalGenericRepositoryWithProjectKeyGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectEnv := randProjectEnv()
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":        name,
+		"projectKey":  projectKey,
+		"projectEnv": projectEnv,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+	 	  project_environments = ["{{ .projectEnv }}"]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
 			},
 		},
