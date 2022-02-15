@@ -25,6 +25,8 @@ the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configur
 supported:
 
 * `key` - (Required) The repository identifier. Must be unique system-wide
+* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `url` - (Required) - the remote repo URL. You kinda don't have a remote repo without it
 * `block_pushing_schema1` - (Optional) When set, Artifactory will block the pulling of Docker images with manifest v2
   schema 1 from the remote repository (i.e. the upstream). It will be possible to pull images with manifest v2 schema 1
