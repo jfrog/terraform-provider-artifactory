@@ -62,7 +62,7 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 				Type:             schema.TypeString,
 				Sensitive:        true,
 				Required:         true,
-				DiffSuppressFunc: ignoreEmpty,
+				StateFunc:        stripTabs,
 				ValidateDiagFunc: validatePrivateKey,
 				Description:      "Artifactory doesn't return the value after creation",
 				ForceNew:         true,
@@ -78,7 +78,7 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 			"public_key": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: stripTabs,
+				StateFunc:        stripTabs,
 				ValidateDiagFunc: validatePublicKey,
 				ForceNew:         true,
 			},
@@ -90,6 +90,7 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 		},
 	}
 }
+
 func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 	stripped := strings.ReplaceAll(value.(string), "\t", "")
 	var err error
@@ -161,8 +162,8 @@ func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
 	return nil
 }
 
-func stripTabs(_, old, new string, _ *schema.ResourceData) bool {
-	return old == strings.ReplaceAll(new, "\t", "")
+func stripTabs(val interface{}) string {
+	return strings.ReplaceAll(val.(string), "\t", "")
 }
 
 func ignoreEmpty(_, old, new string, _ *schema.ResourceData) bool {
@@ -182,6 +183,8 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 	return &result, result.PairName, nil
 }
 
+var keyPairPacker = universalPack(ignoreHclPredicate("class", "rclass", "private_key"))
+
 func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
 
@@ -189,7 +192,7 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = defaultPacker(*keyPair.(*KeyPairPayLoad), d)
+	err = keyPairPacker(*keyPair.(*KeyPairPayLoad), d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -204,12 +207,13 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = defaultPacker(data, d)
+	err = keyPairPacker(data, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
 }
+
 func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(keypairEndPoint + d.Id())
 	if err != nil {
