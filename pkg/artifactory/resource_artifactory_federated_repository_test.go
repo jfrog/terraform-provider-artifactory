@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -185,6 +186,54 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skipf(reason)
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_federated_generic_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+		"memberUrl":  federatedMemberUrl,
+	}
+	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_federated_generic_repository" "{{ .name }}" {
+			key         = "{{ .name }}"
+		 	project_key = "invalid-project-key"
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryConfig,
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},
 	})

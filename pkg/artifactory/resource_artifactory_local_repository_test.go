@@ -513,6 +513,44 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 	})
 }
 
+func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "invalid-project-key"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
+			},
+		},
+	})
+}
+
 func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())

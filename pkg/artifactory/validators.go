@@ -470,7 +470,12 @@ var validLicenseTypes = []string{
 	"ZPL-2.0",
 	"ZPL-2.1",
 }
+
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
+
+var projectKeyValidator = validation.ToDiagFunc(
+	validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{3,10}$`), "project_key must be 3 - 10 lowercase alphanumeric characters"),
+)
 
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))

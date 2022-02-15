@@ -3,6 +3,7 @@ package artifactory
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -611,6 +612,44 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_virtual_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	virualRepositoryBasic := executeTemplate("TestAccVirtualGenericRepository", `
+		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "invalid-project-key"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: virualRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},
 	})

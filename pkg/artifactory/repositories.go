@@ -339,9 +339,10 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		ValidateFunc: repoKeyValidator,
 	},
 	"project_key": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,
@@ -422,9 +423,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		ValidateFunc: repoKeyValidator,
 	},
 	"project_key": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,
@@ -673,9 +675,10 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
 	},
 	"project_key": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:        schema.TypeSet,

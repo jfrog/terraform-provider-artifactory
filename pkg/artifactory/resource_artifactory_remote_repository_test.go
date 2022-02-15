@@ -769,3 +769,42 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
+
+	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `
+		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "invalid-project-key"
+		  url                  = "http://tempurl.org"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			createProject(t, projectKey)
+		},
+		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			deleteProject(t, projectKey)
+			return testCheckRepo(id, request)
+		}),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
+			},
+		},
+	})
+}
