@@ -470,7 +470,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -516,7 +516,7 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")
@@ -554,7 +554,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_local_generic_repository")

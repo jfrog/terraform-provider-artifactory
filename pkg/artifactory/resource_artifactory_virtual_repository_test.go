@@ -574,7 +574,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
@@ -620,7 +620,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_virtual_generic_repository")

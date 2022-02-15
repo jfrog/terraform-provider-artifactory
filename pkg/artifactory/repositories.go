@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -1106,7 +1105,7 @@ func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.R
 	}
 }
 
-func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, i interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
 
@@ -1132,9 +1131,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 		},
 
 		Schema: skeema,
-		CustomizeDiff: customdiff.All(
-			projectEnvironmentsDiff,
-		),
+		CustomizeDiff: projectEnvironmentsDiff,
 	}
 }
 

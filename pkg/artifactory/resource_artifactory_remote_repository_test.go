@@ -726,7 +726,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	projectEnv := randSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
@@ -773,7 +773,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", rand.Intn(100000000))
+	projectKey := fmt.Sprintf("t%d", randomInt())
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
 	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
