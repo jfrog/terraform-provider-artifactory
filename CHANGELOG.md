@@ -1,3 +1,9 @@
+## 2.19.0 (Feb, 16, 2022)
+
+IMPROVEMENTS:
+
+* Add `project_key` and `project_environments` to local, remote, virtual, and federated repository resources to support Artifactory Projects [GH-320]
+
 ## 2.18.1 (Feb, 14, 2022)
 
 BUG FIXES:
