@@ -146,6 +146,15 @@ func TestAccRemotePypiRepository(t *testing.T) {
 	}))
 }
 
+//Function to test custom PYPI Registry URL.
+//API "pyPIRegistryUrl": "https://pypi.org" (default)
+func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
+	extraFields := map[string]interface{}{
+		"pypi_registry_url": "https://custom.PYPI.registry.url",
+	}
+	resource.Test(mkNewRemoteTestCase("pypi", t, extraFields))
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `
@@ -802,7 +811,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: remoteRepositoryBasic,
+				Config:      remoteRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},

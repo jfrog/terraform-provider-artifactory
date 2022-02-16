@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "2.7.1"
+      version = "2.19.1"
     }
   }
 }
@@ -183,6 +183,12 @@ resource "artifactory_remote_repository" "npm-remote" {
   xray_index   = true
 }
 
+resource "artifactory_remote_pypi_repository" "pypi_remote" {
+  key               = "pypi-remote"
+  url               = "https://files.pythonhosted.org"
+  pypi_registry_url = "https://custom.PYPI.registry.url"
+}
+
 resource "artifactory_virtual_go_repository" "baz-go" {
   key                           = "baz-go"
   repo_layout_ref               = "go-default"
@@ -236,12 +242,12 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
 
   member {
     url    = "http://tempurl.org/artifactory/generic-federated-1"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/generic-federated-2"
-    enable = true
+    enabled = true
   }
 }
 
