@@ -1,3 +1,9 @@
+## 2.19.1 (Feb, 16, 2022)
+
+IMPROVEMENTS:
+
+* Add a test and update the sample TF for `artifactory_remote_pypi_repository` [GH-321]
+
 ## 2.19.0 (Feb, 16, 2022)
 
 IMPROVEMENTS:

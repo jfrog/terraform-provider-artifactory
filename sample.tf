@@ -219,8 +219,8 @@ resource "artifactory_virtual_maven_repository" "foo" {
   repositories                             = []
   description                              = "A test virtual repo"
   notes                                    = "Internal description"
-  includes_pattern                         = "com/jfrog*//**,cloud/jfrog*//**"
-  excludes_pattern                         = "com/google*//**"
+  includes_pattern                         = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern                         = "com/google/**"
   force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
