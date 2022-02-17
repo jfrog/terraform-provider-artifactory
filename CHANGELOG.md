@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* resource/artifactory_virtual_helm_repository: New resource for Helm repository type with namespaces support [GH-]
+* resource/artifactory_virtual_helm_repository: New resource for Helm repository type with namespaces support [GH-322]
 
 ## 2.19.1 (Feb 16, 2022)
 
