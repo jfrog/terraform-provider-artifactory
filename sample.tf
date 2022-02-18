@@ -237,6 +237,11 @@ resource "artifactory_virtual_rpm_repository" "rpm-virt-repo" {
   ]
 }
 
+resource "artifactory_virtual_helm_repository" "helm-virt-repo" {
+  key            = "helm-virt-repo"
+  use_namespaces = true
+}
+
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"
 

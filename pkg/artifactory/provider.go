@@ -40,6 +40,7 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_conan_repository":   resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs("conan"),
 		"artifactory_virtual_rpm_repository":     resourceArtifactoryRpmVirtualRepository(),
 		"artifactory_virtual_generic_repository": resourceArtifactoryVirtualGenericRepository("generic"),
+		"artifactory_virtual_helm_repository":    resourceArtifactoryHelmVirtualRepository(),
 		"artifactory_group":                      resourceArtifactoryGroup(),
 		"artifactory_user":                       resourceArtifactoryUser(),
 		"artifactory_permission_target":          resourceArtifactoryPermissionTarget(),

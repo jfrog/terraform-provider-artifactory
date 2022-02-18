@@ -254,6 +254,39 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccVirtualHelmRepository_basic(t *testing.T) {
+	_, fqrn, name := mkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
+	useNamespaces := randBool()
+
+	params := map[string]interface{}{
+		"name":          name,
+		"useNamespaces": useNamespaces,
+	}
+	virtualRepositoryBasic := executeTemplate("TestAccVirtualHelmRepository", `
+		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
+		  key            = "{{ .name }}"
+	 	  use_namespaces = {{ .useNamespaces }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "helm"),
+					resource.TestCheckResourceAttr(fqrn, "use_namespaces", fmt.Sprintf("%t", useNamespaces)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVirtualRpmRepository(t *testing.T) {
 	_, fqrn, name := mkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1-", "artifactory_keypair")
