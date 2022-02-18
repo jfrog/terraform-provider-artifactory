@@ -129,6 +129,7 @@ pipelines:
         type: Bash
         configuration:
           priority: 1
+          timeoutSeconds: 1200 // 20 minutes
           runtime:
             type: image
             image:
