@@ -49,7 +49,7 @@ attach:
 acceptance: fmtcheck
 	export TF_ACC=true && \
 		test -n ARTIFACTORY_USERNAME && test -n ARTIFACTORY_PASSWORD && test -n ARTIFACTORY_URL \
-		&& go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -parallel 20 ./pkg/...
+		&& go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -parallel 20 -timeout 20m ./pkg/...
 
 acceptance_federated:
 	export TF_ACC=true && \
