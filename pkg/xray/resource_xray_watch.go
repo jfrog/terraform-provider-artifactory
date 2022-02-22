@@ -44,8 +44,8 @@ func resourceXrayWatch() *schema.Resource {
 						"type": {
 							Type:             schema.TypeString,
 							Required:         true,
-							Description:      "Type of resource to be watched. Options: `all-repos`, `repository`, `build`, `project`, `all-projects`.",
-							ValidateDiagFunc: inList("all-repos", "repository", "build", "project", "all-projects"),
+							Description:      "Type of resource to be watched. Options: `all-repos`, `repository`, `all-builds`, `build`, `project`, `all-projects`.",
+							ValidateDiagFunc: inList("all-repos", "repository", "all-builds", "build", "project", "all-projects"),
 						},
 						"bin_mgr_id": {
 							Type:        schema.TypeString,
