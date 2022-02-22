@@ -1,6 +1,5 @@
 terraform-provider-xray
 dist/
-pkg/
 .idea/
 .github/
 .modules/
