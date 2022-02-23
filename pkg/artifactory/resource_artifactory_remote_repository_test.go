@@ -146,8 +146,6 @@ func TestAccRemotePypiRepository(t *testing.T) {
 	}))
 }
 
-//Function to test custom PYPI Registry URL.
-//API "pyPIRegistryUrl": "https://pypi.org" (default)
 func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
 	extraFields := map[string]interface{}{
 		"pypi_registry_url": "https://custom.PYPI.registry.url",
@@ -329,7 +327,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"hard_fail":                      true,
 		"offline":                        true,
 		"blacked_out":                    true,
-		"xray_index":                     true,
+		"xray_index":                     randBool(),
 		"store_artifacts_locally":        true,
 		"socket_timeout_millis":          25000,
 		"local_address":                  "",
