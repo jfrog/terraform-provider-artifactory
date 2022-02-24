@@ -1,12 +1,12 @@
 # Artifactory Local Cocoapods Repository Resource
 
-Creates a local cocoapods repository. 
+Creates a local cocoapods repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_cocoapods_repository" "terraform-local-test-cocoapods-repo" {
-  key                 = "terraform-local-test-cocoapods-repo"
+  key = "terraform-local-test-cocoapods-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Cocoapods repository type closely matches with arguments for Generic repository type. 
+Arguments for Cocoapods repository type closely matches with arguments for Generic repository type.

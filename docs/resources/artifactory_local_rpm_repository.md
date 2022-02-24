@@ -23,3 +23,5 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `calculate_yum_metadata` - (Optional)
 * `enable_file_lists_indexing` - (Optional)
 * `yum_group_file_names` - (Optional) - A list of XML file names containing RPM group component definitions. Artifactory includes the group definitions as part of the calculated RPM metadata, as well as automatically generating a gzipped version of the group files, if required.
+
+Arguments for RPM repository type closely matches with arguments for Generic repository type.

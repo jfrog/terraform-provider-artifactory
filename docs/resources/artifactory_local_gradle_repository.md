@@ -1,6 +1,6 @@
 # Artifactory Local Gradle Repository Resource
 
-Creates a local Gradle repository and allows for the creation of a 
+Creates a local Gradle repository
 
 ## Example Usage
 
@@ -18,7 +18,7 @@ resource "artifactory_local_gradle_repository" "terraform-local-test-gradle-repo
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported:
 
 * `key` - (Required) - the identity key of the repo
@@ -38,3 +38,5 @@ The following arguments are supported:
 * `suppress_pom_consistency_checks` - (Optional) By default, Artifactory keeps your repositories healthy by refusing POMs with incorrect coordinates (path).
   If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a "409 Conflict" error.
   You can disable this behavior by setting the Suppress POM Consistency Checks checkbox. True by default for Gradle repository.
+
+Arguments for Gradle repository type closely matches with arguments for Generic repository type.

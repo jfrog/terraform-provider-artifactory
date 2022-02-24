@@ -1,13 +1,13 @@
 # Artifactory Local Nuget Repository Resource
 
-Creates a local Nuget repository and allows for the creation of a 
+Creates a local Nuget repository
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_nuget_repository" "terraform-local-test-nuget-repo-basic" {
-  key                 = "terraform-local-test-nuget-repo-basic"
-  max_unique_snapshots = 5
+  key                        = "terraform-local-test-nuget-repo-basic"
+  max_unique_snapshots       = 5
   force_nuget_authentication = true
 }
 ```
@@ -21,3 +21,5 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
   Once the number of snapshots exceeds this setting, older versions are removed.
   A value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.
 * `force_nuget_authentication` - (Optional) - Force basic authentication credentials in order to use this repository.
+
+Arguments for Nuget repository type closely matches with arguments for Generic repository type.

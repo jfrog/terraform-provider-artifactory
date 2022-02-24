@@ -1,7 +1,7 @@
 # Artifactory Virtual Maven Repository Resource
 
 Provides an Artifactory virtual repository resource, but with specific maven feature. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`. 
+one-size-fits-all `artifactory_virtual_repository`.
 
 ## Example Usage
 
@@ -40,17 +40,11 @@ resource "artifactory_virtual_maven_repository" "foo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
 * `key` - (Required)
-* `repositories` - (Required, but may be empty)
-* `description` - (Optional)
-* `notes` - (Optional)
-* `includes_pattern` - (Optional)
-* `excludes_pattern` - (Optional)
-* `repo_layout_ref` - (Optional)
-* `artifactory_requests_can_retrieve_remote_artifacts` - (Optional)
-* `key_pair` - (Optional) - Key pair to use for... well, I'm not sure. Maybe ssh auth to remote repo?
 * `pom_repository_references_cleanup_policy` - (Optional). One of: `"discard_active_reference", "discard_any_reference", "nothing"`
 * `default_deployment_repo` - (Optional)
 * `force_maven_authentication` - (Optional) - forces authentication when fetching from remote repos
+
+Arguments for Maven repository type closely matches with arguments for Generic repository type. 
 
 ## Import
 

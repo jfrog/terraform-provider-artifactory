@@ -1,12 +1,12 @@
 # Artifactory Local Gitlfs Repository Resource
 
-Creates a local gitlfs repository. 
+Creates a local gitlfs repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_gitlfs_repository" "terraform-local-test-gitlfs-repo" {
-  key                 = "terraform-local-test-gitlfs-repo"
+  key = "terraform-local-test-gitlfs-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Gitlfs repository type closely matches with arguments for Generic repository type. 
+Arguments for Gitlfs repository type closely matches with arguments for Generic repository type.

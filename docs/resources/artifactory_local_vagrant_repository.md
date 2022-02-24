@@ -1,12 +1,12 @@
 # Artifactory Local Vagrant Repository Resource
 
-Creates a local vagrant repository. 
+Creates a local vagrant repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_vagrant_repository" "terraform-local-test-vagrant-repo" {
-  key                 = "terraform-local-test-vagrant-repo"
+  key = "terraform-local-test-vagrant-repo"
 }
 ```
 

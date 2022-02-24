@@ -60,6 +60,8 @@ Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `pa
 
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
 
+Arguments for RPM repository type closely matches with arguments for Generic repository type.
+
 ## Import
 
 Virtual repositories can be imported using their name, e.g.

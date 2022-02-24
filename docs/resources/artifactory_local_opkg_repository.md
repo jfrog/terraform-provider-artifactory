@@ -1,12 +1,12 @@
 # Artifactory Local Opkg Repository Resource
 
-Creates a local opkg repository. 
+Creates a local opkg repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_opkg_repository" "terraform-local-test-opkg-repo" {
-  key                 = "terraform-local-test-opkg-repo"
+  key = "terraform-local-test-opkg-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Opkg repository type closely matches with arguments for Generic repository type. 
+Arguments for Opkg repository type closely matches with arguments for Generic repository type.
