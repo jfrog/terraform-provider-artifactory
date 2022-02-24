@@ -13,21 +13,21 @@ import (
 func TestAccBackup_full(t *testing.T) {
 	const BackupTemplateFull = `
 resource "artifactory_backup" "backuptest" {
-	key = "backuptest"
-	enabled = true
+    key = "backuptest"
+    enabled = true
     cron_exp = "0 0 12 * * ?"
 }`
 
 	const BackupTemplateUpdate = `
 resource "artifactory_local_generic_repository" "test-backup-local1" {
-		  key = "test-backup-local1"
+    key = "test-backup-local1"
 }
 resource "artifactory_local_generic_repository" "test-backup-local2" {
-		  key = "test-backup-local2"
+    key = "test-backup-local2"
 }
 resource "artifactory_backup" "backuptest" {
-	key = "backuptest"
-	enabled = false
+    key = "backuptest"
+    enabled = false
     cron_exp = "0 0 12 * * ?"
     retention_period_hours = 1000
     excluded_repositories = [ "test-backup-local1", "test-backup-local2" ]
