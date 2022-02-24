@@ -194,7 +194,7 @@ func unmarshalLocalRepository(data *schema.ResourceData) (interface{}, string, e
 	repo.MaxUniqueSnapshots = d.getInt("max_unique_snapshots", false)
 	repo.SnapshotVersionBehavior = d.getString("snapshot_version_behavior", false)
 	repo.SuppressPomConsistencyChecks = d.getBoolRef("suppress_pom_consistency_checks", false)
-	repo.XrayIndex = d.getBoolRef("xray_index", false)
+	repo.XrayIndex = d.getBool("xray_index", false)
 	repo.ForceNugetAuthentication = d.getBool("force_nuget_authentication", false)
 
 	return repo, repo.Key, nil

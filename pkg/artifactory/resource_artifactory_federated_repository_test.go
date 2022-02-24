@@ -83,11 +83,13 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	name := fmt.Sprintf("terraform-federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
+	xrayIndex := randBool()
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	params := map[string]interface{}{
 		"resourceType": resourceType,
 		"name":         name,
+		"xrayIndex":    xrayIndex,
 		"memberUrl":    federatedMemberUrl,
 	}
 	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
@@ -95,6 +97,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
 			notes       = "Test federated repo for {{ .name }}"
+			xray_index  = {{ .xrayIndex }}
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -115,6 +118,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 
 					resource.TestCheckResourceAttr(resourceName, "member.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMemberUrl),
