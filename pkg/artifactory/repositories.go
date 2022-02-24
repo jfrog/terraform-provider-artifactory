@@ -28,7 +28,7 @@ type LocalRepositoryBaseParams struct {
 	ExcludesPattern        string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
 	RepoLayoutRef          string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
 	BlackedOut             *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
-	XrayIndex              *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
+	XrayIndex              bool     `json:"xrayIndex"`
 	PropertySets           []string `hcl:"property_sets" json:"propertySets,omitempty"`
 	ArchiveBrowsingEnabled *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
 	DownloadRedirect       *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
@@ -88,7 +88,7 @@ type RemoteRepositoryBaseParams struct {
 	HardFail                 *bool    `hcl:"hard_fail" json:"hardFail,omitempty"`
 	Offline                  *bool    `hcl:"offline" json:"offline,omitempty"`
 	BlackedOut               *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
-	XrayIndex                *bool    `hcl:"xray_index" json:"xrayIndex,omitempty"`
+	XrayIndex                bool     `json:"xrayIndex"`
 	PropagateQueryParams     bool     `hcl:"propagate_query_params" json:"propagateQueryParams"`
 	PriorityResolution       bool     `hcl:"priority_resolution" json:"priorityResolution"`
 	StoreArtifactsLocally    *bool    `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
@@ -387,9 +387,10 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Default:  false,
 	},
 	"xray_index": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
 	},
 	"priority_resolution": {
 		Type:        schema.TypeBool,
@@ -512,9 +513,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
 	},
 	"xray_index": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
 	},
 	"store_artifacts_locally": {
 		Type:        schema.TypeBool,
@@ -766,7 +768,7 @@ func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		BlackedOut:             d.getBoolRef("blacked_out", false),
 		ArchiveBrowsingEnabled: d.getBoolRef("archive_browsing_enabled", false),
 		PropertySets:           d.getSet("property_sets"),
-		XrayIndex:              d.getBoolRef("xray_index", false),
+		XrayIndex:              d.getBool("xray_index", false),
 		DownloadRedirect:       d.getBoolRef("download_direct", false),
 		PriorityResolution:     d.getBool("priority_resolution", false),
 	}
@@ -793,7 +795,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		HardFail:                 d.getBoolRef("hard_fail", true),
 		Offline:                  d.getBoolRef("offline", true),
 		BlackedOut:               d.getBoolRef("blacked_out", true),
-		XrayIndex:                d.getBoolRef("xray_index", true),
+		XrayIndex:                d.getBool("xray_index", true),
 		StoreArtifactsLocally:    d.getBoolRef("store_artifacts_locally", true),
 		SocketTimeoutMillis:      d.getInt("socket_timeout_millis", true),
 		LocalAddress:             d.getString("local_address", true),

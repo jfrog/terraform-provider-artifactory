@@ -30,5 +30,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `member` - (Required) - The list of Federated members and must contain this repository URL (configured base URL + `/artifactory/` + repo `key`). Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository) to set up Federated repositories correctly.
     * `url` - (Required) Full URL to ending with the repository name
     * `enabled` - (Required) Represents the active state of the federated member. It is supported to change the enabled status of my own member. The config will be updated on the other federated members automatically.
+* `xray_index` - (Optional, Default: false)  Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.
 
 Arguments for federated repository type closely matches the arguments for local generic repository type.

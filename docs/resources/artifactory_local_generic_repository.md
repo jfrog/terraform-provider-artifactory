@@ -6,7 +6,7 @@ Creates a local generic repository.
 
 ```hcl
 resource "artifactory_local_generic_repository" "terraform-local-test-generic-repo" {
-  key                 = "terraform-local-test-generic-repo"
+  key = "terraform-local-test-generic-repo"
 }
 ```
 
@@ -19,3 +19,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `notes` - (Optional)
 * `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
+* `xray_index` - (Optional, Default: false)  Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.

@@ -11,3 +11,5 @@ lib/
 *.lic
 /resources/
 .DS_Store
+*.crt
+*.backup
