@@ -2,9 +2,9 @@ package artifactory
 
 import (
 	"context"
-	"github.com/go-resty/resty/v2"
 	"gopkg.in/yaml.v2"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
