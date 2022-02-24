@@ -30,6 +30,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		"key": {
 			Type:             schema.TypeString,
 			Required:         true,
+			ForceNew:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      `(Required) Backup config name.`,
 		},

@@ -4,6 +4,13 @@ IMPROVEMENTS:
 
 * resource/artifactory_backup: Added support for system backup configuration. [GH-331]
 
+## 2.20.1 (Feb 25, 2022)
+
+IMPROVEMENTS:
+
+* Make `xray_index` attribute for local/remote/federated repository resources settable by users [GH-330]
+* Add documentation for `xray_index`  [GH-330]
+
 ## 2.20.0 (Feb 20, 2022)
 
 FEATURES:
