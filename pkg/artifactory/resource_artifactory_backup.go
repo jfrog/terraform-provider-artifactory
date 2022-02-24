@@ -15,36 +15,14 @@ type Backup struct {
 	CronExp                string   `xml:"cronExp" yaml:"cronExp"`
 	Enabled                bool     `xml:"enabled" yaml:"enabled"`
 	RetentionPeriodHours   int      `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
-	ExcludedRepositories   []string `xml:"excludedRepositories" yaml:"excludedRepositories"`
+	ExcludedRepositories   []string `xml:"excludedRepositories>repositoryRef" yaml:"excludedRepositories"`
 	CreateArchive          bool     `xml:"createArchive" yaml:"createArchive"`
 	ExcludeNewRepositories bool     `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
 	SendMailOnError        bool     `xml:"sendMailOnError" yaml:"sendMailOnError"`
 }
 
-/* EXPLANATION FOR BELOW EXTRA TYPE DEFINITION.
-There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
-GET call structure has "backups -> backup -> Array of backup config blocks (with list of 'RepositoryRef' tags for attribute excludedRepositories)".
-PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched (with array of strings for attribute excludedRepositories in yaml format)".
-Below type ie: 'BackupGet' will be used for parsing xml response correctly and will be translated to type 'Backup' for YAML PATCH calls.
-*/
-
-type BackupGet struct {
-	Key                    string        `xml:"key" yaml:"key"`
-	CronExp                string        `xml:"cronExp" yaml:"cronExp"`
-	Enabled                bool          `xml:"enabled" yaml:"enabled"`
-	RetentionPeriodHours   int           `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
-	ExcludedRepositories   RepositoryRef `xml:"excludedRepositories" yaml:"excludedRepositories"`
-	CreateArchive          bool          `xml:"createArchive" yaml:"createArchive"`
-	ExcludeNewRepositories bool          `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
-	SendMailOnError        bool          `xml:"sendMailOnError" yaml:"sendMailOnError"`
-}
-
-type RepositoryRef struct {
-	RepositoryRef []string `xml:"repositoryRef"`
-}
-
 type Backups struct {
-	BackupArr []BackupGet `xml:"backups>backup" yaml:"backup"`
+	BackupArr []Backup `xml:"backups>backup" yaml:"backup"`
 }
 
 func resourceArtifactoryBackup() *schema.Resource {
@@ -111,23 +89,13 @@ func resourceArtifactoryBackup() *schema.Resource {
 		matchedBackup := Backup{}
 		for _, iterBackup := range backups.BackupArr {
 			if iterBackup.Key == backup.Key {
-				matchedBackup.Key = iterBackup.Key
-				matchedBackup.Enabled = iterBackup.Enabled
-				matchedBackup.CronExp = iterBackup.CronExp
-				matchedBackup.ExcludeNewRepositories = iterBackup.ExcludeNewRepositories
-				matchedBackup.CreateArchive = iterBackup.CreateArchive
-				matchedBackup.RetentionPeriodHours = iterBackup.RetentionPeriodHours
-				matchedBackup.SendMailOnError = iterBackup.SendMailOnError
-				for _, repo := range iterBackup.ExcludedRepositories.RepositoryRef {
-					matchedBackup.ExcludedRepositories = append(matchedBackup.ExcludedRepositories, repo)
-				}
+				matchedBackup = iterBackup
 				break
 			}
 		}
-		var backupClass = ignoreHclPredicate("class", "rclass")
 		packer := universalPack(
 			allHclPredicate(
-				backupClass, schemaHasKey(backupSchema),
+				noClass, schemaHasKey(backupSchema),
 			),
 		)
 		return diag.FromErr(packer(&matchedBackup, d))
@@ -148,12 +116,12 @@ func resourceArtifactoryBackup() *schema.Resource {
 		content, err := yaml.Marshal(&constructBody)
 
 		if err != nil {
-			return diag.Errorf("failed to marshal backup config during Update")
+			return diag.FromErr(err)
 		}
 
 		err = sendConfigurationPatch(content, m)
 		if err != nil {
-			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
+			return diag.FromErr(err)
 		}
 
 		// we should only have one backup config resource, using same id
@@ -167,10 +135,10 @@ func resourceArtifactoryBackup() *schema.Resource {
 
 		response, err := m.(*resty.Client).R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {
-			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+			return diag.FromErr(err)
 		}
 		if response.IsError() {
-			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
+			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read. Response:%#v", response)
 		}
 
 		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
@@ -184,19 +152,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 
 		for _, iterBackup := range backups.BackupArr {
 			if iterBackup.Key != rsrcBackup.Key {
-				restoreBackup := Backup{
-					Key:                    iterBackup.Key,
-					Enabled:                iterBackup.Enabled,
-					CronExp:                iterBackup.CronExp,
-					RetentionPeriodHours:   iterBackup.RetentionPeriodHours,
-					ExcludeNewRepositories: iterBackup.ExcludeNewRepositories,
-					CreateArchive:          iterBackup.CreateArchive,
-					SendMailOnError:        iterBackup.SendMailOnError,
-				}
-				for _, repo := range iterBackup.ExcludedRepositories.RepositoryRef {
-					restoreBackup.ExcludedRepositories = append(restoreBackup.ExcludedRepositories, repo)
-				}
-				restoreBackups["backups"][restoreBackup.Key] = restoreBackup
+				restoreBackups["backups"][iterBackup.Key] = iterBackup
 			}
 		}
 
@@ -205,17 +161,17 @@ backups: ~
 `
 		err = sendConfigurationPatch([]byte(clearAllBackupConfigs), m)
 		if err != nil {
-			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all backup configs")
+			return diag.FromErr(err)
 		}
 
 		restoreRestOfBackups, err := yaml.Marshal(&restoreBackups)
 		if err != nil {
-			return diag.Errorf("failed to marshal backup configs during Update")
+			return diag.FromErr(err)
 		}
 
 		err = sendConfigurationPatch([]byte(restoreRestOfBackups), m)
 		if err != nil {
-			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of backup configs")
+			return diag.FromErr(err)
 		}
 		return nil
 	}

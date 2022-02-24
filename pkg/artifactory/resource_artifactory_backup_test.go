@@ -50,6 +50,8 @@ resource "artifactory_backup" "backuptest" {
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "enabled", "false"),
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "retention_period_hours", "1000"),
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.#", "2"),
+					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.0", "test-backup-local1"),
+					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.1", "test-backup-local2"),
 				),
 			},
 		},
@@ -69,10 +71,10 @@ func testAccBackupDestroy(id string) func(*terraform.State) error {
 
 		response, err := client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {
-			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+			return err
 		}
 		if response.IsError() {
-			return fmt.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
+			return fmt.Errorf("got error response for API: /artifactory/api/system/configuration request during Read. Response:%#v", response)
 		}
 
 		for _, iterBackup := range backups.BackupArr {
