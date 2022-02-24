@@ -7,11 +7,11 @@ When a artifactory_backup resource is configured and enabled to true, backup of 
 ## Example Usage
 
 ```hcl
-# Configure Artifactory LDAP setting
+# Configure Artifactory Backup system config
 resource "artifactory_backup" "backup_config_name" {
   key = "backup_config_name"
   enabled = true
-  cron_exp = "0 0 /12 * * ?"
+  cron_exp = "0 0 12 * * ?"
   retention_period_hours = 1000
   excluded_repositories = []
   create_archive = false

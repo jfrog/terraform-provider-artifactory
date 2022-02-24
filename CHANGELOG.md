@@ -1,3 +1,9 @@
+## 2.20.2 (Feb 25, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_backup: Added support for system backup configuration. [GH-331]
+
 ## 2.20.0 (Feb 20, 2022)
 
 FEATURES:
