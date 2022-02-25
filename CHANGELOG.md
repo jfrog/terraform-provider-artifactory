@@ -1,3 +1,8 @@
+## 2.20.2 (Feb 25, 2022)
+
+IMPROVEMENTS:
+* Repository Layout defaulted to as per Package Type provided `repo_layout_ref` is not set explicitly. [GH-335]
+
 ## 2.20.1 (Feb 25, 2022)
 
 IMPROVEMENTS:
