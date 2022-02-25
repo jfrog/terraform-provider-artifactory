@@ -37,7 +37,7 @@ All generic repo arguments are supported, in addition to:
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Repository layout key for the remote repository
 * `remote_repo_layout_ref` - (Optional) Repository layout key for the remote layout mapping
-* `hard_fail` - (Optional)
+* `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
 * `offline` - (Optional) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.
 * `helm_charts_base_url` - (Optional) - No documentation is available. Hopefully you know what this means
