@@ -7,9 +7,9 @@ import (
 
 func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
-	const pkt = "docker"
+	const packageType = "docker"
 
-	var dockerV2LocalSchema = mergeSchema(getBaseLocalRepoSchema(pkt), map[string]*schema.Schema{
+	var dockerV2LocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -48,7 +48,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "docker"),
+			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
 			MaxUniqueTags:             d.getInt("max_unique_tags", false),
 			DockerApiVersion:          "V2",
 			TagRetention:              d.getInt("tag_retention", false),
@@ -61,7 +61,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	return mkResourceSchema(dockerV2LocalSchema, packer, unPackLocalDockerV2Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: pkt,
+				PackageType: packageType,
 				Rclass:      "local",
 			},
 			DockerApiVersion:    "V2",
