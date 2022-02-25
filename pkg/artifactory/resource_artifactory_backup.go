@@ -78,6 +78,23 @@ func resourceArtifactoryBackup() *schema.Resource {
 			Description: `(Optional) If set to true, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is 'true'.`,
 		},
 	}
+	var findBackup = func(backups *Backups, key string) Backup {
+		for _, iterBackup := range backups.BackupArr {
+			if iterBackup.Key == key {
+				return iterBackup
+			}
+		}
+		return Backup{}
+	}
+	var filterBackups = func(backups *Backups, key string) map[string]Backup {
+		var filteredMap = map[string]Backup{}
+		for _, iterBackup := range backups.BackupArr {
+			if iterBackup.Key != key {
+				filteredMap[iterBackup.Key] = iterBackup
+			}
+		}
+		return filteredMap
+	}
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		backups := &Backups{}
 		backup := unpackBackup(d)
@@ -87,13 +104,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedBackup := Backup{}
-		for _, iterBackup := range backups.BackupArr {
-			if iterBackup.Key == backup.Key {
-				matchedBackup = iterBackup
-				break
-			}
-		}
+		matchedBackup := findBackup(backups, backup.Key)
 		packer := universalPack(
 			allHclPredicate(
 				noClass, schemaHasKey(backupSchema),
@@ -149,13 +160,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
 		*/
 		var restoreBackups = map[string]map[string]Backup{}
-		restoreBackups["backups"] = map[string]Backup{}
-
-		for _, iterBackup := range backups.BackupArr {
-			if iterBackup.Key != rsrcBackup.Key {
-				restoreBackups["backups"][iterBackup.Key] = iterBackup
-			}
-		}
+		restoreBackups["backups"] = filterBackups(backups, rsrcBackup.Key)
 
 		var clearAllBackupConfigs = `
 backups: ~
