@@ -6,7 +6,9 @@ import (
 )
 
 func resourceArtifactoryLocalRpmRepository() *schema.Resource {
-	var rpmLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	const pkt = "rpm"
+
+	var rpmLocalSchema = mergeSchema(getBaseLocalRepoSchema(pkt), map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
 			Optional:         true,
@@ -64,7 +66,7 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 	return mkResourceSchema(rpmLocalSchema, inSchema(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: "rpm",
+				PackageType: pkt,
 				Rclass:      "local",
 			},
 			RootDepth:               0,

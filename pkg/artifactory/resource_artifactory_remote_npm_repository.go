@@ -9,7 +9,9 @@ import (
 
 func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 
-	npmRemoteSchema := mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
+	const packageType = "npm"
+
+	npmRemoteSchema := mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
 		"list_remote_folder_items": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -33,7 +35,7 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	var unpack = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}
 		repo := NpmRemoteRepository{
-			RemoteRepositoryBaseParams:      unpackBaseRemoteRepo(s, "npm"),
+			RemoteRepositoryBaseParams:      unpackBaseRemoteRepo(s, packageType),
 			ListRemoteFolderItems:           d.getBool("list_remote_folder_items", false),
 			MismatchingMimeTypeOverrideList: d.getString("mismatching_mime_types_override_list", false),
 		}
@@ -44,9 +46,8 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 		return &NpmRemoteRepository{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:              "remote",
-				PackageType:         "npm",
+				PackageType:         packageType,
 				RemoteRepoLayoutRef: "npm-default",
-				RepoLayoutRef:       "npm-default",
 			},
 		}
 	})
