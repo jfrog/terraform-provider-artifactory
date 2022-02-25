@@ -6,7 +6,9 @@ import (
 
 func resourceArtifactoryHelmVirtualRepository() *schema.Resource {
 
-	helmVirtualSchema := mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	const packageType = "helm"
+
+	helmVirtualSchema := mergeSchema(getBaseVirtualRepoSchema(packageType), map[string]*schema.Schema{
 		"use_namespaces": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -35,7 +37,7 @@ func resourceArtifactoryHelmVirtualRepository() *schema.Resource {
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 					Rclass:      "virtual",
-					PackageType: "helm",
+					PackageType: packageType,
 				},
 			},
 			UseNamespaces: false,
