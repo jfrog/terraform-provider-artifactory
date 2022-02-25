@@ -1,6 +1,6 @@
-# Artifactory Local Gradle Repository Resource
+# Artifactory Local Maven Repository Resource
 
-Creates a local Maven repository and allows for the creation of a 
+Creates a local Maven repository
 
 ## Example Usage
 
@@ -18,7 +18,7 @@ resource "artifactory_local_maven_repository" "terraform-local-test-maven-repo-b
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported:
 
 * `key` - (Required) - the identity key of the repo
@@ -38,3 +38,5 @@ The following arguments are supported:
 * `suppress_pom_consistency_checks` - (Optional) By default, Artifactory keeps your repositories healthy by refusing POMs with incorrect coordinates (path).
   If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a "409 Conflict" error.
   You can disable this behavior by setting the Suppress POM Consistency Checks checkbox. False by default for Maven repository
+
+Arguments for Maven repository type closely match with arguments for Generic repository type.

@@ -29,4 +29,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
     * `url` - (Required) Full URL to ending with the repository name
     * `enabled` - (Required) Represents the active state of the federated member. It is supported to change the enabled status of my own member. The config will be updated on the other federated members automatically.
 
-Arguments for federated repository type closely matches the arguments for local generic repository type.
+Arguments for federated repository type closely match the arguments for local generic repository type.
