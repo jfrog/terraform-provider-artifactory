@@ -1,7 +1,7 @@
 # Artifactory Virtual Conan Repository Resource
 
 Provides an Artifactory virtual repository resource, but with specific conan features. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`. 
+one-size-fits-all `artifactory_virtual_repository`.
 
 ## Example Usage
 
@@ -25,12 +25,8 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `repositories` - (Required, but may be empty)
 * `description` - (Optional)
 * `notes` - (Optional)
-* `includes_pattern` - (Optional)
-* `excludes_pattern` - (Optional)
-* `repo_layout_ref` - (Optional)
-* `artifactory_requests_can_retrieve_remote_artifacts` - (Optional)
-* `default_deployment_repo` - (Optional)
-* `retrieval_cache_period_seconds` - (Optional) - This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
+
+Arguments for Conan repository type closely match with arguments for Generic repository type.
 
 ## Import
 

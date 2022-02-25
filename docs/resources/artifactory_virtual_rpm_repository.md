@@ -53,12 +53,14 @@ resource "artifactory_virtual_rpm_repository" "foo-rpm-virtual" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-VirtualRepository). The following arguments are supported:
 
 * `key` - (Required)
-* `primary_keypair_ref` - (Optional) - The primary GPG key to be used to sign packages
-* `secondary_keypair_ref` - (Optional) - The secondary GPG key to be used to sign packages
+* `primary_keypair_ref` - (Optional) The primary GPG key to be used to sign packages
+* `secondary_keypair_ref` - (Optional) The secondary GPG key to be used to sign packages
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
 
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
+
+Arguments for RPM repository type closely match with arguments for Generic repository type.
 
 ## Import
 

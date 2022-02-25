@@ -1,10 +1,16 @@
+## 2.20.3 (Feb 25, 2022)
+
+IMPROVEMENTS:
+
+* Add previously missing repository resource attributes to documentation [GH-332]
+
 ## 2.20.2 (Feb 25, 2022)
 
 IMPROVEMENTS:
 
 * resource/artifactory_backup: Added support for system backup configuration. [GH-331]
 
-## 2.20.1 (Feb 25, 2022)
+## 2.20.1 (Feb 24, 2022)
 
 IMPROVEMENTS:
 

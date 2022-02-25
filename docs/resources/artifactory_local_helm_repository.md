@@ -1,12 +1,12 @@
 # Artifactory Local Helm Repository Resource
 
-Creates a local helm repository. 
+Creates a local helm repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_helm_repository" "terraform-local-test-helm-repo" {
-  key                 = "terraform-local-test-helm-repo"
+  key = "terraform-local-test-helm-repo"
 }
 ```
 
@@ -17,5 +17,3 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `key` - (Required) - the identity key of the repo
 * `description` - (Optional)
 * `notes` - (Optional)
-
-Arguments for Helm repository type closely matches with arguments for Generic repository type. 

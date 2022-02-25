@@ -1,6 +1,6 @@
 # Artifactory Local Debian Repository Resource
 
-Creates a local Debian repository and allows for the creation of a GPG key 
+Creates a local Debian repository and allows for the creation of a GPG key
 
 ## Example Usage
 
@@ -52,4 +52,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `trivial_layout` - (Optional) - Apparently this is a deprecated repo layout
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
+
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
+
+Arguments for Debian repository type closely match with arguments for Generic repository type.
