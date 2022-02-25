@@ -55,4 +55,4 @@ Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `pa
 
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
 
-Arguments for Debian repository type closely matches with arguments for Generic repository type.
+Arguments for Debian repository type closely match with arguments for Generic repository type.

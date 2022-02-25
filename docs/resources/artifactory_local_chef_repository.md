@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Chef repository type closely matches with arguments for Generic repository type.
+Arguments for Chef repository type closely match with arguments for Generic repository type.

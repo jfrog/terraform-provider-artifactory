@@ -29,12 +29,11 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `key` - (Required)
 * `description` - (Optional)
 * `notes` - (Optional)
-* `repo_layout_ref` - (Optional)
-* `key_pair` - (Optional) - Key pair to use for... well, I'm not sure. Maybe ssh auth to remote repo?
-* `external_dependencies_enabled` - (Optional). Shorthand for "Enable 'go-import' Meta Tags" on the UI. This must be set to true in order to use the allow list
-* `external_dependencies_patterns` - (Optional) - 'go-import' Allow List on the UI.
+* `key_pair` - (Optional) Key pair to use for... well, I'm not sure. Maybe ssh auth to remote repo?
+* `external_dependencies_enabled` - (Optional) Shorthand for "Enable 'go-import' Meta Tags" on the UI. This must be set to true in order to use the allow list
+* `external_dependencies_patterns` - (Optional) 'go-import' Allow List on the UI.
 
-Arguments for Go repository type closely matches with arguments for Generic repository type.
+Arguments for Go repository type closely match with arguments for Generic repository type.
 
 ## Import
 

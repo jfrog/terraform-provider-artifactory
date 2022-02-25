@@ -36,6 +36,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
 
-Arguments for Alpine repository type closely matches with arguments for Generic repository type.
+Arguments for Alpine repository type closely match with arguments for Generic repository type.
 
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.

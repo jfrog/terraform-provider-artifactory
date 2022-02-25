@@ -41,10 +41,9 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 * `key` - (Required)
 * `pom_repository_references_cleanup_policy` - (Optional). One of: `"discard_active_reference", "discard_any_reference", "nothing"`
-* `default_deployment_repo` - (Optional)
 * `force_maven_authentication` - (Optional) - forces authentication when fetching from remote repos
 
-Arguments for Maven repository type closely matches with arguments for Generic repository type. 
+Arguments for Maven repository type closely match with arguments for Generic repository type.
 
 ## Import
 

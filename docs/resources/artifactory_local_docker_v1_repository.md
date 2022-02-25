@@ -16,4 +16,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 
 * `key` - (Required) - the identity key of the repo
 
-Arguments for Docker V1 repository type closely matches with arguments for Generic repository type.
+Arguments for Docker V1 repository type closely match with arguments for Generic repository type.

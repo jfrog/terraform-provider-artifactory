@@ -21,4 +21,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `tag_retention` - (Optional) - If greater than 1, overwritten tags will be saved by their digest, up to the set up number. This only applies to manifest V2
 * `max_unique_tags` - (Optional) - The maximum number of unique tags of a single Docker image to store in this repository. Once the number tags for an image exceeds this setting, older tags are removed. A value of 0 (default) indicates there is no limit. This only applies to manifest v2
 
-Arguments for Docker V2 repository type closely matches with arguments for Generic repository type. 
+Arguments for Docker V2 repository type closely match with arguments for Generic repository type. 

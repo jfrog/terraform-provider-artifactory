@@ -22,4 +22,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
   A value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.
 * `force_nuget_authentication` - (Optional) - Force basic authentication credentials in order to use this repository.
 
-Arguments for Nuget repository type closely matches with arguments for Generic repository type.
+Arguments for Nuget repository type closely match with arguments for Generic repository type.

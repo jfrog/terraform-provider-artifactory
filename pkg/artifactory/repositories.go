@@ -533,10 +533,12 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
+		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.",
 	},
 	"local_address": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
 	},
 	"retrieval_cache_period_seconds": {
 		Type:        schema.TypeInt,
@@ -559,7 +561,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
-		Description:  "This is actually the missedRetrievalCachePeriodSecs in the API",
+		Description:  "The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.",
 	},
 	"unused_artifacts_cleanup_period_enabled": {
 		Type:     schema.TypeBool,
@@ -571,6 +573,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
+		Description:  `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
 	},
 	"assumed_offline_period_secs": {
 		Type:         schema.TypeInt,

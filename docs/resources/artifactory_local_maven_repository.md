@@ -39,4 +39,4 @@ The following arguments are supported:
   If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a "409 Conflict" error.
   You can disable this behavior by setting the Suppress POM Consistency Checks checkbox. False by default for Maven repository
 
-Arguments for Maven repository type closely matches with arguments for Generic repository type.
+Arguments for Maven repository type closely match with arguments for Generic repository type.

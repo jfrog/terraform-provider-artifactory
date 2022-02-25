@@ -29,7 +29,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `notes` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
-* `repo_layout_ref` - (Optional)
+* `repo_layout_ref` - (Optional) Repository layout key for the virtual repository
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: false) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
 * `default_deployment_repo` - (Optional) Default repository to deploy artifacts.
 * `retrieval_cache_period_seconds` - (Optional, Default: 7200) - This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
