@@ -5,9 +5,9 @@ import (
 )
 
 func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
-	const pkt = "alpine"
+	const packageType = "alpine"
 
-	var alpineLocalSchema = mergeSchema(getBaseLocalRepoSchema(pkt), map[string]*schema.Schema{
+	var alpineLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -24,7 +24,7 @@ func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	var unPackLocalAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := AlpineLocalRepo{
-			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "alpine"),
+			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
 			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
 		}
 
@@ -34,7 +34,7 @@ func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	return mkResourceSchema(alpineLocalSchema, defaultPacker, unPackLocalAlpineRepository, func() interface{} {
 		return &AlpineLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: pkt,
+				PackageType: packageType,
 				Rclass:      "local",
 			},
 		}
