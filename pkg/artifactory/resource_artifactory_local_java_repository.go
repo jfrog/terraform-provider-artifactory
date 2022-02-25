@@ -6,7 +6,8 @@ import (
 )
 
 func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	var javaLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+
+	var javaLocalSchema = mergeSchema(getBaseLocalRepoSchema(repoType), map[string]*schema.Schema{
 		"checksum_policy_type": {
 			Type:             schema.TypeString,
 			Optional:         true,

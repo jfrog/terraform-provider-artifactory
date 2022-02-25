@@ -8,7 +8,8 @@ import (
 )
 
 func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
-	var federatedSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+
+	var federatedSchema = mergeSchema(getBaseFederatedRepoSchema(repoType), map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
 			Required: true,

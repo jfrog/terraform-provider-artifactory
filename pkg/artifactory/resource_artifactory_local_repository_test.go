@@ -544,7 +544,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: localRepositoryBasic,
+				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},
@@ -583,7 +583,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: localRepositoryBasic,
+				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
 			},
 		},
@@ -620,14 +620,14 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 	const localRepositoryConfigFull = `
-		resource "artifactory_local_%s_repository" "%s" {
-			key                             = "%s"
-			description                     = "Test repo for %s"
-			notes                           = "Test repo for %s"
+		resource "artifactory_local_%[1]s_repository" "%[2]s" {
+			key                             = "%[2]s"
+			description                     = "Test repo for %[2]s"
+			notes                           = "Test repo for %[2]s"
 		}
 	`
 
-	cfg := fmt.Sprintf(localRepositoryConfigFull, repoType, name, name, name, name)
+	cfg := fmt.Sprintf(localRepositoryConfigFull, repoType, name)
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -640,6 +640,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultLocalRepoLayoutRef(repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -651,6 +652,50 @@ func TestAccAllLegacyRepoTypesLocal(t *testing.T) {
 	for _, repo := range repoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 			resource.Test(mkTestCase(repo, t))
+		})
+	}
+}
+
+func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
+	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
+	repoLayoutRef := getDefaultLocalRepoLayoutRef(repoType, true)
+
+	const localRepositoryConfigFull = `
+		resource "artifactory_local_%[1]s_repository" "%[2]s" {
+			key                             = "%[2]s"
+			description                     = "Test repo for %[2]s"
+			notes                           = "Test repo for %[2]s"
+			repo_layout_ref                 = "%[3]s"
+		}
+	`
+
+	cfg := fmt.Sprintf(localRepositoryConfigFull, repoType, name, repoLayoutRef)
+	return t, resource.TestCase{
+		ProviderFactories: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "key", name),
+					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	}
+}
+
+//Test case to cover when repoLayoutRef not left as blank and set to some value other than default
+func TestAccAllLocalRepoTypes(t *testing.T) {
+
+	for _, repo := range repoTypesLikeGeneric {
+		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+			resource.Test(makeLocalRepoTestCase(repo, t))
 		})
 	}
 }

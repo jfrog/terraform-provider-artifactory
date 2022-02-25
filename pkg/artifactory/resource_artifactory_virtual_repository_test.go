@@ -109,10 +109,10 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 
 func TestAccVirtualGoRepository_basic(t *testing.T) {
 	_, fqrn, name := mkNames("foo", "artifactory_virtual_go_repository")
+	const packageType = "go"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
 		  key          = "%s"
-		  repo_layout_ref = "go-default"
 		  repositories = []
 		  description = "A test virtual repo"
 		  notes = "Internal description"
@@ -137,11 +137,12 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "go"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "**/github.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.1", "**/go.googlesource.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", getDefaultVirtualRepoLayoutRef(packageType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -184,10 +185,10 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 
 func TestAccVirtualGenericRepository_basic(t *testing.T) {
 	_, fqrn, name := mkNames("foo", "artifactory_virtual_generic_repository")
+	const packageType = "generic"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_generic_repository" "%s" {
 		  key          = "%s"
-		  repo_layout_ref = "simple-default"
 		  repositories = []
 		  description = "A test virtual repo"
 		  notes = "Internal description"
@@ -207,7 +208,8 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", getDefaultVirtualRepoLayoutRef(packageType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -215,13 +217,14 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
+	const packageType = "maven"
+
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
-			repo_layout_ref = "maven-2-default"
 			repositories = []
 			description = "A test virtual repo"
 			notes = "Internal description"
@@ -243,11 +246,12 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "force_maven_authentication", "true"),
 					// to test key pair, we'd have to be able to create them on the fly and we currently can't.
 					resource.TestCheckResourceAttr(fqrn, "key_pair", ""),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", getDefaultVirtualRepoLayoutRef(packageType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -255,6 +259,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRpmRepository(t *testing.T) {
+	const packageType = "rpm"
 	_, fqrn, name := mkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := mkNames("some-keypair2-", "artifactory_keypair")
@@ -382,9 +387,10 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 				Config: virtualRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "rpm"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", getDefaultVirtualRepoLayoutRef(packageType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -648,7 +654,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: virualRepositoryBasic,
+				Config:      virualRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
 			},
 		},
