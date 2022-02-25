@@ -5,9 +5,9 @@ import (
 )
 
 func resourceArtifactoryLocalDebianRepository() *schema.Resource {
-	const pkt = "debian"
+	const packageType = "debian"
 
-	var debianLocalSchema = mergeSchema(getBaseLocalRepoSchema(pkt), map[string]*schema.Schema{
+	var debianLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -37,7 +37,7 @@ func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := DebianLocalRepositoryParams{
-			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "debian"),
+			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
 			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
 			SecondaryKeyPairRef:       d.getString("secondary_keypair_ref", false),
 			TrivialLayout:             d.getBool("trivial_layout", false),
@@ -49,7 +49,7 @@ func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 	return mkResourceSchema(debianLocalSchema, defaultPacker, unPackLocalDebianRepository, func() interface{} {
 		return &DebianLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: pkt,
+				PackageType: packageType,
 				Rclass:      "local",
 			},
 		}
