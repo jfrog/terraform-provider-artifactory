@@ -153,6 +153,13 @@ func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("pypi", t, extraFields))
 }
 
+func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
+	extraFields := map[string]interface{}{
+		"list_remote_folder_items": true,
+	}
+	resource.Test(mkNewRemoteTestCase("docker", t, extraFields))
+}
+
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
 	const step1 = `
