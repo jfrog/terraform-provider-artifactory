@@ -678,9 +678,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		},
 	},
 	"propagate_query_params": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Default:  false,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 	},
 }
 
