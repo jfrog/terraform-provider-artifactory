@@ -18,12 +18,19 @@ var cargoRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
 			"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
 	},
+	"list_remote_folder_items": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
+	},
 })
 
 type CargoRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	RegistryUrl     string `hcl:"git_registry_url" json:"gitRegistryUrl"`
-	AnonymousAccess bool   `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
+	RegistryUrl           string `hcl:"git_registry_url" json:"gitRegistryUrl"`
+	AnonymousAccess       bool   `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
+	ListRemoteFolderItems bool   `json:"listRemoteFolderItems"`
 }
 
 func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
@@ -43,6 +50,7 @@ func unpackCargoRemoteRepo(s *schema.ResourceData) (interface{}, string, error) 
 		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, "cargo"),
 		RegistryUrl:                d.getString("git_registry_url", false),
 		AnonymousAccess:            d.getBool("anonymous_access", false),
+		ListRemoteFolderItems:      d.getBool("list_remote_folder_items", false),
 	}
 	return repo, repo.Id(), nil
 }
