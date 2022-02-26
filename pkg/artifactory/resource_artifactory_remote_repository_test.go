@@ -107,7 +107,6 @@ func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 
 func TestAccRemoteCargoRepository(t *testing.T) {
 	const packageType = "cargo"
-	//resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRemoteRepoLayoutRef(packageType), //Check to ensure repository layout is set as per default even when it is not passed.
 	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
