@@ -123,7 +123,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 					resource.TestCheckResourceAttr(resourceName, "member.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMemberUrl),
 					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultFederatedRepoLayoutRef(repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRepoLayoutRef("federated", repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},

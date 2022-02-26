@@ -6,9 +6,9 @@ import (
 
 func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 
-	const pkt = "nuget"
+	const packageType = "nuget"
 
-	var nugetLocalSchema = mergeSchema(getBaseLocalRepoSchema(pkt), map[string]*schema.Schema{
+	var nugetLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -34,7 +34,7 @@ func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "nuget"),
+			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
 			MaxUniqueSnapshots:        d.getInt("max_unique_snapshots", false),
 			ForceNugetAuthentication:  d.getBool("force_nuget_authentication", false),
 		}
@@ -45,7 +45,7 @@ func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 	return mkResourceSchema(nugetLocalSchema, defaultPacker, unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: pkt,
+				PackageType: packageType,
 				Rclass:      "local",
 			},
 			MaxUniqueSnapshots:       0,

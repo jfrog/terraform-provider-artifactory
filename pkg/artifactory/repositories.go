@@ -334,7 +334,7 @@ var projectEnvironmentsSupported = []string{"DEV", "PROD"}
 
 func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 
-	var baseLocalRepoSchema = map[string]*schema.Schema{
+	return map[string]*schema.Schema{
 		"key": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -384,7 +384,7 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultLocalRepoLayoutRef(packageType), nil
+				return getDefaultRepoLayoutRef("local", packageType), nil
 			},
 		},
 		"blacked_out": {
@@ -393,10 +393,10 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Default:  false,
 		},
 		"xray_index": {
-			Type:     schema.TypeBool,
-			Optional: true,
+			Type:        schema.TypeBool,
+			Optional:    true,
 			Default:     false,
-		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+			Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
 		},
 		"priority_resolution": {
 			Type:        schema.TypeBool,
@@ -420,12 +420,11 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Optional: true,
 		},
 	}
-	return baseLocalRepoSchema
 }
 
 func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 
-	var baseRemoteSchema = map[string]*schema.Schema{
+	return map[string]*schema.Schema{
 		"key": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -499,7 +498,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRemoteRepoLayoutRef(packageType), nil
+				return getDefaultRepoLayoutRef("remote", packageType), nil
 			},
 		},
 		"remote_repo_layout_ref": {
@@ -525,10 +524,10 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
 		},
 		"xray_index": {
-			Type:     schema.TypeBool,
-			Optional: true,
+			Type:        schema.TypeBool,
+			Optional:    true,
 			Default:     false,
-		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+			Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
 		},
 		"store_artifacts_locally": {
 			Type:        schema.TypeBool,
@@ -679,11 +678,10 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Default:  false,
 		},
 	}
-	return baseRemoteSchema
 }
 
 func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
-	var baseVirtualRepoSchema = map[string]*schema.Schema{
+	return map[string]*schema.Schema{
 		"key": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -738,7 +736,7 @@ func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultVirtualRepoLayoutRef(packageType), nil
+				return getDefaultRepoLayoutRef("virtual", packageType), nil
 			},
 			Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 		},
@@ -768,12 +766,11 @@ func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
 			ValidateFunc: validation.IntAtLeast(0),
 		},
 	}
-	return baseVirtualRepoSchema
 }
 
 func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
 
-	var baseFederatedRepoSchema = map[string]*schema.Schema{
+	return map[string]*schema.Schema{
 		"key": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -823,7 +820,7 @@ func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultFederatedRepoLayoutRef(packageType), nil
+				return getDefaultRepoLayoutRef("federated", packageType), nil
 			},
 		},
 		"blacked_out": {
@@ -858,7 +855,6 @@ func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
 			Optional: true,
 		},
 	}
-	return baseFederatedRepoSchema
 }
 
 func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
@@ -1271,199 +1267,52 @@ func isSelectRandom(opts ...bool) bool {
 	return selectRandomFlag
 }
 
-//Return the default repo layout of Local Repository type
-func getDefaultLocalRepoLayoutRef(repoType string, opts ...bool) string {
-
-	selectRandom := isSelectRandom(opts...)
-	const defaultRepoLayout = "simple-default"
-	repoLayout := defaultRepoLayout
-
-	localDefaultRepoLayoutMap := map[string]string{
-		"alpine":    "simple-default",
-		"bower":     "bower-default",
-		"cran":      "simple-default",
-		"cargo":     "simple-default",
-		"chef":      "simple-default",
-		"cocoapods": "simple-default",
-		"composer":  "composer-default",
-		"conan":     "conan-default",
-		"conda":     "simple-default",
-		"debian":    "simple-default",
-		"docker":    "simple-default",
-		"gems":      "simple-default",
-		"generic":   "simple-default",
-		"gitlfs":    "simple-default",
-		"go":        "go-default",
-		"gradle":    "maven-2-default",
-		"helm":      "simple-default",
-		"ivy":       "ivy-default",
-		"maven":     "maven-2-default",
-		"npm":       "npm-default",
-		"nuget":     "nuget-default",
-		"opkg":      "simple-default",
-		"pub":       "simple-default",
-		"puppet":    "puppet-default",
-		"pypi":      "simple-default",
-		"sbt":       "sbt-default",
-		"vagrant":   "simple-default",
-		"rpm":       "simple-default",
-	}
-
-	if selectRandom {
-		repoLayout = selectRandomFromMapOfStrings(localDefaultRepoLayoutMap)
-	} else {
-		if value, ok := localDefaultRepoLayoutMap[repoType]; ok {
-			repoLayout = value
-		}
-	}
-	return repoLayout
+type DefaultRepoLayoutStruct struct {
+	RepoLayoutRef      string
+	SupportedRepoTypes map[string]bool
 }
 
-//Return the default repo layout of Remote Repository type
-func getDefaultRemoteRepoLayoutRef(repoType string, opts ...bool) string {
-
-	selectRandom := isSelectRandom(opts...)
-	const defaultRepoLayout = "simple-default"
-	repoLayout := defaultRepoLayout
-
-	remoteDefaultRepoLayoutMap := map[string]string{
-		"alpine":    "simple-default",
-		"bower":     "bower-default",
-		"cran":      "simple-default",
-		"cargo":     "simple-default",
-		"chef":      "simple-default",
-		"cocoapods": "simple-default",
-		"composer":  "composer-default",
-		"conan":     "conan-default",
-		"conda":     "simple-default",
-		"debian":    "simple-default",
-		"docker":    "simple-default",
-		"gems":      "simple-default",
-		"generic":   "simple-default",
-		"gitlfs":    "simple-default",
-		"go":        "go-default",
-		"gradle":    "maven-2-default",
-		"helm":      "simple-default",
-		"ivy":       "ivy-default",
-		"maven":     "maven-2-default",
-		"npm":       "npm-default",
-		"nuget":     "nuget-default",
-		"opkg":      "simple-default",
-		"p2":        "simple-default",
-		"pub":       "simple-default",
-		"puppet":    "puppet-default",
-		"pypi":      "simple-default",
-		"sbt":       "sbt-default",
-		//"vagrant":   "simple-default", //currently not available
-		"vcs": "simple-default", //Type is only available in Remote Repository
-		"rpm": "simple-default",
-	}
-
-	if selectRandom {
-		repoLayout = selectRandomFromMapOfStrings(remoteDefaultRepoLayoutMap)
-	} else {
-		if value, ok := remoteDefaultRepoLayoutMap[repoType]; ok {
-			repoLayout = value
-		}
-	}
-	return repoLayout
+//Consolidated list of Default Repo Layout for all Package Types with active Repo Types
+var defaultRepoLayoutMap = map[string]DefaultRepoLayoutStruct{
+	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cran":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cargo":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"chef":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cocoapods": {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"composer":  {RepoLayoutRef: "composer-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conan":     {RepoLayoutRef: "conan-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conda":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"debian":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"docker":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gems":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"generic":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gitlfs":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"go":        {RepoLayoutRef: "go-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gradle":    {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"helm":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"ivy":       {RepoLayoutRef: "ivy-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"maven":     {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"npm":       {RepoLayoutRef: "npm-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"nuget":     {RepoLayoutRef: "nuget-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"opkg":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"p2":        {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true, "virtual": true}},
+	"pub":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"puppet":    {RepoLayoutRef: "puppet-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"pypi":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"sbt":       {RepoLayoutRef: "sbt-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"vagrant":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "federated": true}},
+	"vcs":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true}},
+	"rpm":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 }
 
-//Return the default repo layout of Virtual Repository type
-func getDefaultVirtualRepoLayoutRef(repoType string, opts ...bool) string {
-
-	selectRandom := isSelectRandom(opts...)
-	const defaultRepoLayout = "simple-default"
-	repoLayout := defaultRepoLayout
-
-	virtualDefaultRepoLayoutMap := map[string]string{
-		"alpine": "simple-default",
-		"bower":  "bower-default",
-		"cran":   "simple-default",
-		//"cargo":     "simple-default", //currently not available
-		"chef": "simple-default",
-		//"cocoapods": "simple-default", //currently not available
-		"composer": "composer-default",
-		"conan":    "conan-default",
-		"conda":    "simple-default",
-		"debian":   "simple-default",
-		"docker":   "simple-default",
-		"gems":     "simple-default",
-		"generic":  "simple-default",
-		"gitlfs":   "simple-default",
-		"go":       "go-default",
-		"gradle":   "maven-2-default",
-		"helm":     "simple-default",
-		"ivy":      "ivy-default",
-		"maven":    "maven-2-default",
-		"npm":      "npm-default",
-		"nuget":    "nuget-default",
-		"opkg":     "simple-default",
-		"p2":       "simple-default",
-		"pub":      "simple-default",
-		"puppet":   "puppet-default",
-		"pypi":     "simple-default",
-		"sbt":      "sbt-default",
-		//"vagrant":   "simple-default", //currently not available
-		"rpm": "simple-default",
-	}
-
-	if selectRandom {
-		repoLayout = selectRandomFromMapOfStrings(virtualDefaultRepoLayoutMap)
+//Return the default repo layout by Repository Type & Package Type
+func getDefaultRepoLayoutRef(repositoryType string, packageType string) string {
+	if defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType] == true {
+		return defaultRepoLayoutMap[packageType].RepoLayoutRef
 	} else {
-		if value, ok := virtualDefaultRepoLayoutMap[repoType]; ok {
-			repoLayout = value
-		}
+		panic(fmt.Errorf("Default Repo Layout not found for repository type: %s & package type: %s ", repositoryType, packageType))
 	}
-	return repoLayout
-}
-
-//Return the default repo layout of Federated Repository type
-func getDefaultFederatedRepoLayoutRef(repoType string, opts ...bool) string {
-
-	selectRandom := isSelectRandom(opts...)
-	const defaultRepoLayout = "simple-default"
-	repoLayout := defaultRepoLayout
-
-	federatedDefaultRepoLayoutMap := map[string]string{
-		"alpine":    "simple-default",
-		"bower":     "bower-default",
-		"cran":      "simple-default",
-		"cargo":     "simple-default",
-		"chef":      "simple-default",
-		"cocoapods": "simple-default",
-		"composer":  "composer-default",
-		"conan":     "conan-default",
-		"conda":     "simple-default",
-		"debian":    "simple-default",
-		"docker":    "simple-default",
-		"gems":      "simple-default",
-		"generic":   "simple-default",
-		"gitlfs":    "simple-default",
-		"go":        "go-default",
-		"gradle":    "maven-2-default",
-		"helm":      "simple-default",
-		"ivy":       "ivy-default",
-		"maven":     "maven-2-default",
-		"npm":       "npm-default",
-		"nuget":     "nuget-default",
-		"opkg":      "simple-default",
-		"pub":       "simple-default",
-		"puppet":    "puppet-default",
-		"pypi":      "simple-default",
-		"sbt":       "sbt-default",
-		"vagrant":   "simple-default",
-		"rpm":       "simple-default",
-	}
-
-	if selectRandom {
-		repoLayout = selectRandomFromMapOfStrings(federatedDefaultRepoLayoutMap)
-	} else {
-		if value, ok := federatedDefaultRepoLayoutMap[repoType]; ok {
-			repoLayout = value
-		}
-	}
-	return repoLayout
 }
 
 type Identifiable interface {

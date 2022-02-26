@@ -647,7 +647,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultLocalRepoLayoutRef(repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRepoLayoutRef("local", repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 				),
 			},
@@ -663,10 +663,19 @@ func TestAccLocalAllRepoTypes(t *testing.T) {
 	}
 }
 
+//Usage of the function is strictly restricted to Test Cases
+func getValidRandomDefaultRepoLayoutRef() string {
+	repoLayouts := []string{"simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default"}
+	repoLayoutsLen := len(repoLayouts)
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	return repoLayouts[r1.Intn(repoLayoutsLen)]
+}
+
 func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
-	repoLayoutRef := getDefaultLocalRepoLayoutRef(repoType, true)
+	repoLayoutRef := getValidRandomDefaultRepoLayoutRef()
 
 	const localRepositoryConfigFull = `
 		resource "artifactory_local_%[1]s_repository" "%[2]s" {
