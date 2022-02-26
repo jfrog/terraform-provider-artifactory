@@ -67,32 +67,6 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 	})
 }
 
-/*type TestCheckFunction func(string ...) resource.TestCheckFunc
-
-type FunStruct struct {
-	fieldName         string
-	testCheckFunction TestCheckFunction
-}*/
-//resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultLocalRepoLayoutRef(repoType)),
-
-/*func getTestCheckFuncs() func(int, int) int {
-	return func(x, y int) int {
-		return x * y
-	}
-}*/
-
-/*
-	funStructs := []FunStruct {
-		FunStruct{
-			fieldName: "repo_layout_ref",
-			testCheckFunction: func(resourceName string, fieldName string, repoType string) resource.TestCheckFunc {
-				return resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultLocalRepoLayoutRef(repoType))
-			},
-		},
-	}
-	fmt.Println(funStructs)
-*/
-
 func TestAccRemoteDockerRepository(t *testing.T) {
 	const packageType = "docker"
 	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
