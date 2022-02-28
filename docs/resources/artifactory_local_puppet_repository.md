@@ -1,12 +1,12 @@
 # Artifactory Local Puppet Repository Resource
 
-Creates a local puppet repository. 
+Creates a local puppet repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_puppet_repository" "terraform-local-test-puppet-repo" {
-  key                 = "terraform-local-test-puppet-repo"
+  key = "terraform-local-test-puppet-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Puppet repository type closely matches with arguments for Generic repository type. 
+Arguments for Puppet repository type closely match with arguments for Generic repository type.

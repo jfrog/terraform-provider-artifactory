@@ -340,7 +340,7 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Required:     true,
 			ForceNew:     true,
 			ValidateFunc: repoKeyValidator,
-		},
+		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.",},
 		"project_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -373,25 +373,26 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 		"includes_pattern": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Computed: true,
+			Computed: true,Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
 		},
 		"excludes_pattern": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",},
 		"repo_layout_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
 				return getDefaultRepoLayoutRef("local", packageType)
 			},
+		Description: "Repository layout key for the local repository",
 		},
 		"blacked_out": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
-		},
+		Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed.",},
 		"xray_index": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -409,7 +410,7 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Elem:     &schema.Schema{Type: schema.TypeString},
 			Set:      schema.HashString,
 			Optional: true,
-		},
+		Description: "List of property set name",},
 		"archive_browsing_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -418,7 +419,7 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 		"download_direct": {
 			Type:     schema.TypeBool,
 			Optional: true,
-		},
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",},
 	}
 }
 
@@ -488,28 +489,29 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
+		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",},
 		"excludes_pattern": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",},
 		"repo_layout_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
 				return getDefaultRepoLayoutRef("remote", packageType)
 			},
+		Description: "Repository layout key for the remote repository",
 		},
 		"remote_repo_layout_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
+		Description: "Repository layout key for the remote layout mapping",},
 		"hard_fail": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Computed: true,
+			Computed: true,Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
 		},
 		"offline": {
 			Type:        schema.TypeBool,
@@ -540,10 +542,10 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntAtLeast(0),
-		},
+		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.",},
 		"local_address": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Optional: true,Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
 		},
 		"retrieval_cache_period_seconds": {
 			Type:        schema.TypeInt,
@@ -566,7 +568,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntAtLeast(0),
-			Description:  "This is actually the missedRetrievalCachePeriodSecs in the API",
+			Description:  "The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.",
 		},
 		"unused_artifacts_cleanup_period_enabled": {
 			Type:     schema.TypeBool,
@@ -577,7 +579,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.IntAtLeast(0),
+			ValidateFunc: validation.IntAtLeast(0),Description:  `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
 		},
 		"assumed_offline_period_secs": {
 			Type:         schema.TypeInt,
@@ -607,7 +609,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeSet,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 			Set:      schema.HashString,
-			Optional: true,
+			Optional: true,Description: "List of property set name",
 		},
 		"allow_any_host_auth": {
 			Type:        schema.TypeBool,
@@ -676,7 +678,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
-		},
+		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",},
 	}
 }
 

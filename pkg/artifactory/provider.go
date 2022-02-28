@@ -58,6 +58,7 @@ func Provider() *schema.Provider {
 		"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":        resourceArtifactoryLdapGroupSetting(),
+		"artifactory_backup":                    resourceArtifactoryBackup(),
 		// Xray resources. Deprecated, moved to a separate provider
 		"artifactory_xray_policy": resourceXrayPolicy(),
 		"artifactory_xray_watch":  resourceXrayWatch(),

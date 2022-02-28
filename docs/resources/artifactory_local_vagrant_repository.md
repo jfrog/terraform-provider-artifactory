@@ -1,12 +1,12 @@
 # Artifactory Local Vagrant Repository Resource
 
-Creates a local vagrant repository. 
+Creates a local vagrant repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_vagrant_repository" "terraform-local-test-vagrant-repo" {
-  key                 = "terraform-local-test-vagrant-repo"
+  key = "terraform-local-test-vagrant-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Vagrant repository type closely matches with arguments for Generic repository type. 
+Arguments for Vagrant repository type closely match with arguments for Generic repository type. 

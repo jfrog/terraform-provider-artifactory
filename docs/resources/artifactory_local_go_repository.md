@@ -1,12 +1,12 @@
 # Artifactory Local Go Repository Resource
 
-Creates a local go repository. 
+Creates a local go repository.
 
 ## Example Usage
 
 ```hcl
 resource "artifactory_local_go_repository" "terraform-local-test-go-repo" {
-  key                 = "terraform-local-test-go-repo"
+  key = "terraform-local-test-go-repo"
 }
 ```
 
@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Go repository type closely matches with arguments for Generic repository type. 
+Arguments for Go repository type closely match with arguments for Generic repository type.
