@@ -384,7 +384,7 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("local", packageType), nil
+				return getDefaultRepoLayoutRef("local", packageType)
 			},
 		},
 		"blacked_out": {
@@ -498,7 +498,7 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("remote", packageType), nil
+				return getDefaultRepoLayoutRef("remote", packageType)
 			},
 		},
 		"remote_repo_layout_ref": {
@@ -736,7 +736,7 @@ func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("virtual", packageType), nil
+				return getDefaultRepoLayoutRef("virtual", packageType)
 			},
 			Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 		},
@@ -820,7 +820,7 @@ func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("federated", packageType), nil
+				return getDefaultRepoLayoutRef("federated", packageType)
 			},
 		},
 		"blacked_out": {
@@ -1307,11 +1307,11 @@ var defaultRepoLayoutMap = map[string]DefaultRepoLayoutStruct{
 }
 
 //Return the default repo layout by Repository Type & Package Type
-func getDefaultRepoLayoutRef(repositoryType string, packageType string) string {
+func getDefaultRepoLayoutRef(repositoryType string, packageType string) (string, error) {
 	if defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType] == true {
-		return defaultRepoLayoutMap[packageType].RepoLayoutRef
+		return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
 	} else {
-		panic(fmt.Errorf("Default Repo Layout not found for repository type: %s & package type: %s ", repositoryType, packageType))
+		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
 	}
 }
 

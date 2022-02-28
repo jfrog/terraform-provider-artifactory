@@ -50,14 +50,14 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 		d := &ResourceData{s}
 
 		repo := MavenVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, "maven"),
+			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, packageType),
 			CommonMavenGradleVirtualRepositoryParams: CommonMavenGradleVirtualRepositoryParams{
 				KeyPair:                              d.getString("key_pair", false),
 				ForceMavenAuthentication:             d.getBool("force_maven_authentication", false),
 				PomRepositoryReferencesCleanupPolicy: d.getString("pom_repository_references_cleanup_policy", false),
 			},
 		}
-		repo.PackageType = "maven"
+		repo.PackageType = packageType
 
 		return &repo, repo.Key, nil
 	}

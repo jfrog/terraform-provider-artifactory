@@ -519,7 +519,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	defaultChecks := mapToTestChecks(fqrn, allFields)
 
 	var addCheckFunctions = []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", getDefaultRepoLayoutRef("remote", repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
+		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("remote", repoType); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 	}
 
 	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)

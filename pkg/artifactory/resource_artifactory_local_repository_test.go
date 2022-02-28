@@ -647,7 +647,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRepoLayoutRef("local", repoType)), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", repoType); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 				),
 			},
