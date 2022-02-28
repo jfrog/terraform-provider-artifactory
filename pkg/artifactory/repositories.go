@@ -1267,13 +1267,13 @@ func isSelectRandom(opts ...bool) bool {
 	return selectRandomFlag
 }
 
-type DefaultRepoLayoutStruct struct {
+type SupportedRepoClasses struct {
 	RepoLayoutRef      string
 	SupportedRepoTypes map[string]bool
 }
 
 //Consolidated list of Default Repo Layout for all Package Types with active Repo Types
-var defaultRepoLayoutMap = map[string]DefaultRepoLayoutStruct{
+var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"cran":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
@@ -1308,7 +1308,7 @@ var defaultRepoLayoutMap = map[string]DefaultRepoLayoutStruct{
 
 //Return the default repo layout by Repository Type & Package Type
 func getDefaultRepoLayoutRef(repositoryType string, packageType string) (string, error) {
-	if defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType] == true {
+	if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
 		return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
 	} else {
 		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
