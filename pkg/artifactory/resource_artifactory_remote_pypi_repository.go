@@ -20,19 +20,12 @@ var pypiRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 		Description:      `(Optional) Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.`,
 	},
-	"list_remote_folder_items": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
-	},
 })
 
 type PypiRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	PypiRegistryUrl       string `json:"pyPIRegistryUrl"`
-	PypiRepositorySuffix  string `json:"pyPIRepositorySuffix"`
-	ListRemoteFolderItems bool   `json:"listRemoteFolderItems"`
+	PypiRegistryUrl      string `json:"pyPIRegistryUrl"`
+	PypiRepositorySuffix string `json:"pyPIRepositorySuffix"`
 }
 
 func resourceArtifactoryRemotePypiRepository() *schema.Resource {
@@ -52,7 +45,6 @@ func unpackPypiRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 		RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, "pypi"),
 		PypiRegistryUrl:            d.getString("pypi_registry_url", false),
 		PypiRepositorySuffix:       d.getString("pypi_repository_suffix", false),
-		ListRemoteFolderItems:      d.getBool("list_remote_folder_items", false),
 	}
 	return repo, repo.Id(), nil
 }

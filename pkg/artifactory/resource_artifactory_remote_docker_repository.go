@@ -10,7 +10,6 @@ type DockerRemoteRepository struct {
 	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 	EnableTokenAuthentication    bool     `hcl:"enable_token_authentication" json:"enableTokenAuthentication"`
 	BlockPushingSchema1          bool     `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
-	ListRemoteFolderItems        bool     `json:"listRemoteFolderItems"`
 }
 
 func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
@@ -44,12 +43,6 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +
 				"By default, this is set to '**', which means that remote modules may be downloaded from any external VCS source.",
 		},
-		"list_remote_folder_items": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
-		},
 	})
 	return mkResourceSchema(dockerRemoteSchema, defaultPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
@@ -69,7 +62,6 @@ func unpackDockerRemoteRepo(s *schema.ResourceData) (interface{}, string, error)
 		ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
 		BlockPushingSchema1:          d.getBool("block_pushing_schema1", false),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
-		ListRemoteFolderItems:        d.getBool("list_remote_folder_items", false),
 	}
 	return repo, repo.Id(), nil
 }

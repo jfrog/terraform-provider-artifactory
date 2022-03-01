@@ -33,12 +33,6 @@ var helmRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
 			"Note that the official documentation states the default is '**', " +
 			"which is correct when creating repositories in the UI, but incorrect for the API.",
 	},
-	"list_remote_folder_items": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
-	},
 })
 
 type HelmRemoteRepo struct {
@@ -46,7 +40,6 @@ type HelmRemoteRepo struct {
 	HelmChartsBaseURL            string   `hcl:"helm_charts_base_url" json:"chartsBaseUrl"`
 	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
-	ListRemoteFolderItems        bool     `json:"listRemoteFolderItems"`
 }
 
 func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
@@ -67,7 +60,6 @@ func unpackhelmRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
 		HelmChartsBaseURL:            d.getString("helm_charts_base_url", false),
 		ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
 		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
-		ListRemoteFolderItems:        d.getBool("list_remote_folder_items", false),
 	}
 	return repo, repo.Id(), nil
 }
