@@ -114,7 +114,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	return mkResourceSchema(skeema, defaultPacker, unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: "docker",
+				PackageType: packageType,
 				Rclass:      "local",
 			},
 			DockerApiVersion:    "V1",
