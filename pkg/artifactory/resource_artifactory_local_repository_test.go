@@ -91,6 +91,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "alpine"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -229,6 +230,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "debian"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -283,11 +285,13 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
 	})
 }
+
 func TestAccLocalDockerV2Repository(t *testing.T) {
 
 	_, fqrn, name := mkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
@@ -317,6 +321,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -348,6 +353,7 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "nuget"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -401,6 +407,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "maven"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
