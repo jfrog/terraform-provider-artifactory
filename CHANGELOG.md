@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Repository Layout defaulted to as per Package Type provided `repo_layout_ref` is not set explicitly. [GH-335]
+* Make repository layout to correct default value as per package type provided the `repo_layout_ref` attribute is not supplied explicitly in the resource. [GH-335]
 
 ## 2.20.3 (Feb 25, 2022)
 
