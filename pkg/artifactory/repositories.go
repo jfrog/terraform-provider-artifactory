@@ -381,11 +381,9 @@ func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
 			Computed:    true,
 			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
 		"repo_layout_ref": {
-			Type:     schema.TypeString,
-			Optional: true,
-			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("local", packageType)
-			},
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
 			Description: "Repository layout key for the local repository",
 		},
 		"blacked_out": {
@@ -496,11 +494,9 @@ func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
 			Computed:    true,
 			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
 		"repo_layout_ref": {
-			Type:     schema.TypeString,
-			Optional: true,
-			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("remote", packageType)
-			},
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
 			Description: "Repository layout key for the remote repository",
 		},
 		"remote_repo_layout_ref": {
@@ -735,11 +731,9 @@ func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
 				"By default no artifacts are excluded.",
 		},
 		"repo_layout_ref": {
-			Type:     schema.TypeString,
-			Optional: true,
-			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("virtual", packageType)
-			},
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
 			Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 		},
 		"repositories": {
@@ -819,11 +813,9 @@ func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
 			Computed: true,
 		},
 		"repo_layout_ref": {
-			Type:     schema.TypeString,
-			Optional: true,
-			DefaultFunc: func() (interface{}, error) {
-				return getDefaultRepoLayoutRef("federated", packageType)
-			},
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
 		},
 		"blacked_out": {
 			Type:     schema.TypeBool,
@@ -1309,11 +1301,13 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 }
 
 //Return the default repo layout by Repository Type & Package Type
-func getDefaultRepoLayoutRef(repositoryType string, packageType string) (string, error) {
-	if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
-		return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
+func getDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+	return func() (interface{}, error) {
+		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
+			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
+		}
+		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
 	}
-	return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
 }
 
 type Identifiable interface {
