@@ -44,14 +44,51 @@ type NugetRemoteRepositoryParams struct {
 	ForceNugetAuthentication *bool  `hcl:"force_nuget_authentication" json:"forceNugetAuthentication,omitempty"`
 }
 type MessyRemoteRepo struct {
-	RemoteRepositoryBaseParams
 	BowerRemoteRepositoryParams
 	CommonMavenGradleRemoteRepository
 	DockerRemoteRepository
 	VcsRemoteRepositoryParams
 	PypiRemoteRepositoryParams
 	NugetRemoteRepositoryParams
-	PropagateQueryParams bool `hcl:"propagate_query_params" json:"propagateQueryParams"`
+	Key                               string                  `hcl:"key" json:"key,omitempty"`
+	ProjectKey                        string                  `json:"projectKey"`
+	ProjectEnvironments               []string                `json:"environments"`
+	Rclass                            string                  `json:"rclass"`
+	PackageType                       string                  `hcl:"package_type" json:"packageType,omitempty"`
+	Url                               string                  `hcl:"url" json:"url"`
+	Username                          string                  `hcl:"username" json:"username,omitempty"`
+	Password                          string                  `hcl:"password" json:"password,omitempty"`
+	Proxy                             string                  `hcl:"proxy" json:"proxy"`
+	Description                       string                  `hcl:"description" json:"description,omitempty"`
+	Notes                             string                  `hcl:"notes" json:"notes,omitempty"`
+	IncludesPattern                   string                  `hcl:"includes_pattern" json:"includesPattern,omitempty"`
+	ExcludesPattern                   string                  `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	RepoLayoutRef                     string                  `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
+	RemoteRepoLayoutRef               string                  `json:"remoteRepoLayoutRef"`
+	HardFail                          *bool                   `hcl:"hard_fail" json:"hardFail,omitempty"`
+	Offline                           *bool                   `hcl:"offline" json:"offline,omitempty"`
+	BlackedOut                        *bool                   `hcl:"blacked_out" json:"blackedOut,omitempty"`
+	XrayIndex                         bool                    `json:"xrayIndex"`
+	PropagateQueryParams              bool                    `hcl:"propagate_query_params" json:"propagateQueryParams"`
+	PriorityResolution                bool                    `hcl:"priority_resolution" json:"priorityResolution"`
+	StoreArtifactsLocally             *bool                   `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis               int                     `hcl:"socket_timeout_millis" json:"socketTimeoutMillis,omitempty"`
+	LocalAddress                      string                  `hcl:"local_address" json:"localAddress,omitempty"`
+	RetrievalCachePeriodSecs          int                     `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs,omitempty"`
+	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	MissedRetrievalCachePeriodSecs    int                     `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
+	UnusedArtifactsCleanupEnabled     *bool                   `hcl:"unused_artifacts_cleanup_period_enabled" json:"unusedArtifactsCleanupEnabled,omitempty"`
+	UnusedArtifactsCleanupPeriodHours int                     `hcl:"unused_artifacts_cleanup_period_hours" json:"unusedArtifactsCleanupPeriodHours,omitempty"`
+	AssumedOfflinePeriodSecs          int                     `hcl:"assumed_offline_period_secs" json:"assumedOfflinePeriodSecs,omitempty"`
+	ShareConfiguration                *bool                   `hcl:"share_configuration" json:"shareConfiguration,omitempty"`
+	SynchronizeProperties             *bool                   `hcl:"synchronize_properties" json:"synchronizeProperties,omitempty"`
+	BlockMismatchingMimeTypes         *bool                   `hcl:"block_mismatching_mime_types" json:"blockMismatchingMimeTypes,omitempty"`
+	PropertySets                      []string                `hcl:"property_sets" json:"propertySets,omitempty"`
+	AllowAnyHostAuth                  *bool                   `hcl:"allow_any_host_auth" json:"allowAnyHostAuth,omitempty"`
+	EnableCookieManagement            *bool                   `hcl:"enable_cookie_management" json:"enableCookieManagement,omitempty"`
+	BypassHeadRequests                *bool                   `hcl:"bypass_head_requests" json:"bypassHeadRequests,omitempty"`
+	ClientTlsCertificate              string                  `hcl:"client_tls_certificate" json:"clientTlsCertificate,omitempty"`
+	ContentSynchronisation            *ContentSynchronisation `hcl:"content_synchronisation" json:"contentSynchronisation,omitempty"`
 }
 
 func (mr MessyRemoteRepo) Id() string {
@@ -346,9 +383,7 @@ func resourceArtifactoryRemoteRepository() *schema.Resource {
 	// appear in the HCL, such as 'Invalid address to set: []string{"external_dependencies_patterns"}' which is a docker field
 	return mkResourceSchema(legacyRemoteSchema, packLegacyRemoteRepo, unpackLegacyRemoteRepo, func() interface{} {
 		return &MessyRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
-				Rclass: "remote",
-			},
+			Rclass: "remote",
 		}
 	})
 }

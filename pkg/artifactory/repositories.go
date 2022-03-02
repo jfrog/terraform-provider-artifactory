@@ -110,6 +110,7 @@ type RemoteRepositoryBaseParams struct {
 	BypassHeadRequests                *bool                   `hcl:"bypass_head_requests" json:"bypassHeadRequests,omitempty"`
 	ClientTlsCertificate              string                  `hcl:"client_tls_certificate" json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `hcl:"content_synchronisation" json:"contentSynchronisation,omitempty"`
+	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
 }
 
 func (bp RemoteRepositoryBaseParams) Id() string {
@@ -683,6 +684,12 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 	},
+	"list_remote_folder_items": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
+	},
 }
 
 var baseVirtualRepoSchema = map[string]*schema.Schema{
@@ -831,6 +838,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		BypassHeadRequests:                d.getBoolRef("bypass_head_requests", true),
 		ClientTlsCertificate:              d.getString("client_tls_certificate", true),
 		PriorityResolution:                d.getBool("priority_resolution", false),
+		ListRemoteFolderItems:             d.getBool("list_remote_folder_items", false),
 	}
 
 	if v, ok := d.GetOk("content_synchronisation"); ok {
@@ -1148,7 +1156,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: skeema,
+		Schema:        skeema,
 		CustomizeDiff: projectEnvironmentsDiff,
 	}
 }

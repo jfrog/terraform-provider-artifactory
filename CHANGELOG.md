@@ -1,3 +1,12 @@
+## 2.20.4 (Feb 28, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository: Added list_remote_folder_items attribute to resource_artifactory_remote_docker_repository. [GH-338]
+* resource/artifactory_remote_cargo_repository: Added list_remote_folder_items attribute to resource_artifactory_remote_cargo_repository. [GH-338]
+* resource/artifactory_remote_helm_repository: Added list_remote_folder_items attribute to resource_artifactory_remote_helm_repository. [GH-338]
+* resource/artifactory_remote_pypi_repository: Added list_remote_folder_items attribute to resource_artifactory_remote_pypi_repository. [GH-338]
+
 ## 2.20.3 (Feb 25, 2022)
 
 IMPROVEMENTS:
