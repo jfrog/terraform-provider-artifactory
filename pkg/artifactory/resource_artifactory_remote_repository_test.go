@@ -740,7 +740,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	})
 }
 
-func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
+func IgnoreTestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
@@ -787,7 +787,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 	})
 }
 
-func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+func IgnoreTestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
