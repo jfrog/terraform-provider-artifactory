@@ -14,7 +14,7 @@ import (
 // Version for some reason isn't getting updated by the linker
 var Version = "2.6.18"
 
-// Provider Artifactory provider that supports configuration via username+password or a token
+// Provider Artifactory provider that supports configuration via Bearer token
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() *schema.Provider {
 	resoucesMap := map[string]*schema.Resource{
@@ -85,40 +85,12 @@ func Provider() *schema.Provider {
 				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
-			"username": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_USERNAME", nil),
-				ValidateFunc:  validation.StringIsNotEmpty,
-				ConflictsWith: []string{"api_key"},
-				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
-			},
-			"password": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_PASSWORD", nil),
-				ConflictsWith: []string{"access_token", "api_key"},
-				ValidateFunc:  validation.StringIsNotEmpty,
-				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
-				Description:   "Insider note: You may actually use an api_key as the password. This will get your around xray limitations instead of a bearer token",
-			},
-			"api_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
-				ConflictsWith: []string{"username", "access_token", "password"},
-				ValidateFunc:  validation.StringIsNotEmpty,
-				Deprecated:    "Xray and projects functionality will not work with any auth method other than access tokens (Bearer)",
-			},
 			"access_token": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
-				ConflictsWith: []string{"api_key", "password"},
-				Description:   "This is a bearer token that can be given to you by your admin under `Identity and Access`",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
+				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
 			},
 			"check_license": {
 				Type:        schema.TypeBool,
@@ -174,17 +146,11 @@ func buildResty(URL string) (*resty.Client, error) {
 	return restyBase, nil
 }
 
-func addAuthToResty(client *resty.Client, username, password, apiKey, accessToken string) (*resty.Client, error) {
+func addAuthToResty(client *resty.Client, accessToken string) (*resty.Client, error) {
 	if accessToken != "" {
 		return client.SetAuthToken(accessToken), nil
 	}
-	if apiKey != "" {
-		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
-	}
-	if username != "" && password != "" {
-		return client.SetBasicAuth(username, password), nil
-	}
-	return nil, fmt.Errorf("no authentication details supplied")
+	return nil, fmt.Errorf("no access key supplied")
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
@@ -198,12 +164,9 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
-	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	restyBase, err = addAuthToResty(restyBase, username, password, apiKey, accessToken)
+	restyBase, err = addAuthToResty(restyBase, accessToken)
 	if err != nil {
 		return nil, err
 	}
