@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type replicationBody struct {
+type ReplicationBody struct {
 	Username               string `json:"username"`
 	Password               string `json:"password"`
 	URL                    string `json:"url"`
@@ -28,12 +28,12 @@ type replicationBody struct {
 }
 
 type getReplicationBody struct {
-	replicationBody
+	ReplicationBody
 	ProxyRef string `json:"proxyRef"`
 }
 
 type updateReplicationBody struct {
-	replicationBody
+	ReplicationBody
 	Proxy string `json:"proxy"`
 }
 
