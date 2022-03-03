@@ -34,6 +34,8 @@ func Provider() *schema.Provider {
 		"artifactory_remote_helm_repository":     resourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_cargo_repository":    resourceArtifactoryRemoteCargoRepository(),
 		"artifactory_remote_pypi_repository":     resourceArtifactoryRemotePypiRepository(),
+		"artifactory_remote_maven_repository":    resourceArtifactoryRemoteJavaRepository("maven", false),
+		"artifactory_remote_gradle_repository":   resourceArtifactoryRemoteJavaRepository("gradle", true),
 		"artifactory_virtual_repository":         resourceArtifactoryVirtualRepository(),
 		"artifactory_virtual_maven_repository":   resourceArtifactoryMavenVirtualRepository(),
 		"artifactory_virtual_go_repository":      resourceArtifactoryGoVirtualRepository(),
