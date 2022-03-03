@@ -33,7 +33,7 @@ All generic repo arguments are supported, in addition to Maven specific argument
 * `proxy` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
-* `repo_layout_ref` - (Optional) Repository layout key for the remote repository
+* `repo_layout_ref` - (Optional, Default: 'maven-2-default') Repository layout key for the remote repository
 * `remote_repo_layout_ref` - (Optional) Repository layout key for the remote layout mapping
 * `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
 * `offline` - (Optional) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
