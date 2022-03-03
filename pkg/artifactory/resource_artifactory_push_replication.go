@@ -13,11 +13,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type PushReplication struct {
-	RepoKey                string                  `json:"-"`
-	CronExp                string                  `json:"cronExp,omitempty"`
-	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
+type GetPushReplication struct {
+	RepoKey                string                     `json:"-"`
+	CronExp                string                     `json:"cronExp,omitempty"`
+	EnableEventReplication bool                       `json:"enableEventReplication,omitempty"`
+	Replications           []utils.GetReplicationBody `json:"replications,omitempty"`
+}
+
+type UpdatePushReplication struct {
+	RepoKey                string                        `json:"-"`
+	CronExp                string                        `json:"cronExp,omitempty"`
+	EnableEventReplication bool                          `json:"enableEventReplication,omitempty"`
+	Replications           []utils.UpdateReplicationBody `json:"replications,omitempty"`
 }
 
 var pushReplicationSchemaCommon = map[string]*schema.Schema{
@@ -95,6 +102,10 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
 }
 
 func resourceArtifactoryPushReplication() *schema.Resource {
@@ -112,16 +123,16 @@ func resourceArtifactoryPushReplication() *schema.Resource {
 	}
 }
 
-func unpackPushReplication(s *schema.ResourceData) PushReplication {
+func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 	d := &ResourceData{s}
-	pushReplication := new(PushReplication)
+	pushReplication := new(UpdatePushReplication)
 
 	repo := d.getString("repo_key", false)
 
 	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.ReplicationBody, 0, len(arr))
+		tmp := make([]utils.UpdateReplicationBody, 0, len(arr))
 		pushReplication.Replications = tmp
 
 		for i, o := range arr {
@@ -133,7 +144,7 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.ReplicationBody
+			var replication utils.UpdateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -169,6 +180,10 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 				replication.PathPrefix = prefix.(string)
 			}
 
+			if proxy, ok := m["proxy"]; ok {
+				replication.Proxy = proxy.(string)
+			}
+
 			if pass, ok := m["password"]; ok {
 				replication.Password = pass.(string)
 			}
@@ -180,7 +195,7 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 	return *pushReplication
 }
 
-func packPushReplication(pushReplication *PushReplication, d *schema.ResourceData) diag.Diagnostics {
+func packPushReplication(pushReplication *GetPushReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
@@ -202,6 +217,7 @@ func packPushReplication(pushReplication *PushReplication, d *schema.ResourceDat
 			replication["sync_properties"] = repo.SyncProperties
 			replication["sync_statistics"] = repo.SyncStatistics
 			replication["path_prefix"] = repo.PathPrefix
+			replication["proxy"] = repo.ProxyRef
 			replications = append(replications, replication)
 		}
 
@@ -228,14 +244,14 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.ReplicationBody
+	var replications []utils.GetReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	repConfig := PushReplication{
+	repConfig := GetPushReplication{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}

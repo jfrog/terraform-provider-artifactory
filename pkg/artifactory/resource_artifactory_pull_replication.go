@@ -27,9 +27,9 @@ func resourceArtifactoryPullReplication() *schema.Resource {
 	}
 }
 
-func unpackPullReplication(s *schema.ResourceData) *utils.ReplicationBody {
+func unpackPullReplication(s *schema.ResourceData) *utils.UpdateReplicationBody {
 	d := &ResourceData{s}
-	replicationConfig := new(utils.ReplicationBody)
+	replicationConfig := new(utils.UpdateReplicationBody)
 
 	replicationConfig.RepoKey = d.getString("repo_key", false)
 	replicationConfig.CronExp = d.getString("cron_exp", false)

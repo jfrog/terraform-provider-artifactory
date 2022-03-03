@@ -33,9 +33,9 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.ReplicationBody {
+func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.UpdateReplicationBody {
 	d := &ResourceData{s}
-	replicationConfig := new(utils.ReplicationBody)
+	replicationConfig := new(utils.UpdateReplicationBody)
 
 	replicationConfig.RepoKey = d.getString("repo_key", false)
 	replicationConfig.CronExp = d.getString("cron_exp", false)
@@ -53,7 +53,7 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.ReplicationBod
 	return replicationConfig
 }
 
-func packPushReplicationBody(config utils.ReplicationBody, d *schema.ResourceData) diag.Diagnostics {
+func packPushReplicationBody(config utils.GetReplicationBody, d *schema.ResourceData) diag.Diagnostics {
 	setValue := mkLens(d)
 
 	setValue("repo_key", config.RepoKey)
@@ -131,7 +131,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 		if len(result.([]interface{})) > 1 {
 			return diag.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
 		}
-		var final []utils.ReplicationBody
+		var final []utils.GetReplicationBody
 		err = json.Unmarshal(resp.Body(), &final)
 		if err != nil {
 			return diag.FromErr(err)

@@ -58,6 +58,7 @@ The following arguments are supported:
 * `sync_properties` - (Optional)
 * `sync_statistics` - (Optional)
 * `path_prefix` - (Optional)
+* `proxy` - (Optional)
 
 ## Import
 

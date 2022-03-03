@@ -13,11 +13,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type ReplicationConfig struct {
-	RepoKey                string                  `json:"-"`
-	CronExp                string                  `json:"cronExp,omitempty"`
-	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
+type GetReplicationConfig struct {
+	RepoKey                string                     `json:"-"`
+	CronExp                string                     `json:"cronExp,omitempty"`
+	EnableEventReplication bool                       `json:"enableEventReplication,omitempty"`
+	Replications           []utils.GetReplicationBody `json:"replications,omitempty"`
+}
+
+type UpdateReplicationConfig struct {
+	RepoKey                string                        `json:"-"`
+	CronExp                string                        `json:"cronExp,omitempty"`
+	EnableEventReplication bool                          `json:"enableEventReplication,omitempty"`
+	Replications           []utils.UpdateReplicationBody `json:"replications,omitempty"`
 }
 
 var replicationSchemaCommon = map[string]*schema.Schema{
@@ -94,6 +101,10 @@ var replicationSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
 }
 
 func resourceArtifactoryReplicationConfig() *schema.Resource {
@@ -113,16 +124,16 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
+func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 	d := &ResourceData{s}
-	replicationConfig := new(ReplicationConfig)
+	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.getString("repo_key", false)
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.ReplicationBody, 0, len(arr))
+		tmp := make([]utils.UpdateReplicationBody, 0, len(arr))
 		replicationConfig.Replications = tmp
 
 		for i, o := range arr {
@@ -134,7 +145,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.ReplicationBody
+			var replication utils.UpdateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -170,6 +181,10 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 				replication.PathPrefix = prefix.(string)
 			}
 
+			if proxy, ok := m["proxy"]; ok {
+				replication.Proxy = proxy.(string)
+			}
+
 			if pass, ok := m["password"]; ok {
 				replication.Password = pass.(string)
 			}
@@ -181,7 +196,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 	return *replicationConfig
 }
 
-func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
+func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
@@ -203,6 +218,7 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 			replication["sync_properties"] = repo.SyncProperties
 			replication["sync_statistics"] = repo.SyncStatistics
 			replication["path_prefix"] = repo.PathPrefix
+			replication["proxy"] = repo.ProxyRef
 			replications = append(replications, replication)
 		}
 
@@ -229,14 +245,14 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.ReplicationBody
+	var replications []utils.GetReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	repConfig := ReplicationConfig{
+	repConfig := GetReplicationConfig{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}
