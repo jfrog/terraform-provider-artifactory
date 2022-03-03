@@ -137,7 +137,7 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 	}
 }
 
-func IgnoreTestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
+func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
 	projectEnv := randSelect("DEV", "PROD").(string)
@@ -191,7 +191,7 @@ func IgnoreTestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	})
 }
 
-func IgnoreTestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)

@@ -467,7 +467,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 	})
 }
 
-func IgnoreTestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
+func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
@@ -513,7 +513,7 @@ func IgnoreTestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T)
 	})
 }
 
-func IgnoreTestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
@@ -551,7 +551,7 @@ func IgnoreTestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T)
 	})
 }
 
-func IgnoreTestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
+func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
