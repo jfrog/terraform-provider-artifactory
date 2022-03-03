@@ -1,3 +1,11 @@
+## 2.21.0 (Mar 3, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following remote repository resources. [GH-343]
+  * "artifactory_remote_maven_repository"
+  * "artifactory_remote_gradle_repository"
+
 ## 2.20.4 (Feb 28, 2022)
 
 IMPROVEMENTS:
