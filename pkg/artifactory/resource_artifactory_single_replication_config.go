@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
 
 const replicationEndpoint = "artifactory/api/replications/"
@@ -33,9 +32,9 @@ func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.UpdateReplicationBody {
+func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBody {
 	d := &ResourceData{s}
-	replicationConfig := new(utils.UpdateReplicationBody)
+	replicationConfig := new(updateReplicationBody)
 
 	replicationConfig.RepoKey = d.getString("repo_key", false)
 	replicationConfig.CronExp = d.getString("cron_exp", false)
@@ -48,12 +47,13 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *utils.UpdateReplicat
 	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
 	replicationConfig.SyncStatistics = d.getBool("sync_statistics", false)
 	replicationConfig.PathPrefix = d.getString("path_prefix", false)
+	replicationConfig.Proxy = handleResetWithNonExistantValue(d, "proxy")
 	replicationConfig.Password = d.getString("password", false)
 
 	return replicationConfig
 }
 
-func packPushReplicationBody(config utils.GetReplicationBody, d *schema.ResourceData) diag.Diagnostics {
+func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) diag.Diagnostics {
 	setValue := mkLens(d)
 
 	setValue("repo_key", config.RepoKey)
@@ -72,7 +72,9 @@ func packPushReplicationBody(config utils.GetReplicationBody, d *schema.Resource
 	setValue("sync_properties", config.SyncProperties)
 	setValue("sync_statistics", config.SyncStatistics)
 
-	errors := setValue("path_prefix", config.PathPrefix)
+	setValue("path_prefix", config.PathPrefix)
+
+	errors := setValue("proxy", config.ProxyRef)
 
 	if errors != nil && len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
@@ -91,20 +93,6 @@ func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(replicationConfig.RepoKey)
 	return resourceSingleReplicationConfigRead(ctx, d, m)
-}
-
-// ReplicationSummary this is what you would get if you hit replications/
-type ReplicationSummary struct {
-	ReplicationType                 string `json:"replicationType"`
-	Enabled                         bool   `json:"enabled"`
-	CronExp                         string `json:"cronExp"`
-	SyncDeletes                     bool   `json:"syncDeletes"`
-	SyncProperties                  bool   `json:"syncProperties"`
-	PathPrefix                      string `json:"pathPrefix"`
-	RepoKey                         string `json:"repoKey"`
-	EnableEventReplication          bool   `json:"enableEventReplication"`
-	CheckBinaryExistenceInFileStore bool   `json:"checkBinaryExistenceInFilestore"`
-	SyncStatistics                  bool   `json:"syncStatistics"`
 }
 
 func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -131,7 +119,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 		if len(result.([]interface{})) > 1 {
 			return diag.Errorf("resource_single_replication_config does not support multiple replication config on a repo. Use resource_artifactory_replication_config instead")
 		}
-		var final []utils.GetReplicationBody
+		var final []getReplicationBody
 		err = json.Unmarshal(resp.Body(), &final)
 		if err != nil {
 			return diag.FromErr(err)

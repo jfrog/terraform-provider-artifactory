@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"gopkg.in/yaml.v2"
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
@@ -680,52 +679,6 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			url             = "https://gocenter.io"
 		}
 	`, name, key)
-
-	type Proxy struct {
-		Key             string `yaml:"key"`
-		Host            string `yaml:"host"`
-		Port            int    `yaml:"port"`
-		PlatformDefault bool   `yaml:"platformDefault"`
-	}
-
-	var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
-		body := getProxiesBody()
-		restyClient := getTestResty(t)
-
-		err := sendConfigurationPatch(body, restyClient)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	var createProxy = func(t *testing.T, proxyKey string) {
-		updateProxiesConfig(t, proxyKey, func() []byte {
-			testProxy := Proxy{
-				Key:             proxyKey,
-				Host:            "http://fake-proxy.org",
-				Port:            8080,
-				PlatformDefault: false,
-			}
-
-			constructBody := map[string][]Proxy{
-				"proxies": {testProxy},
-			}
-
-			body, err := yaml.Marshal(&constructBody)
-			if err != nil {
-				t.Errorf("failed to marshal proxies settings during Update")
-			}
-
-			return body
-		})
-	}
-
-	var deleteProxy = func(t *testing.T, proxyKey string) {
-		updateProxiesConfig(t, proxyKey, func() []byte {
-			// Return empty yaml to clean up all proxies
-			return []byte(`proxies: ~`)
-		})
-	}
 
 	testProxyKey := "test-proxy"
 

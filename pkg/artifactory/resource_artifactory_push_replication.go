@@ -2,29 +2,53 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type replicationBody struct {
+	Username               string `json:"username"`
+	Password               string `json:"password"`
+	URL                    string `json:"url"`
+	CronExp                string `json:"cronExp"`
+	RepoKey                string `json:"repoKey"`
+	EnableEventReplication bool   `json:"enableEventReplication"`
+	SocketTimeoutMillis    int    `json:"socketTimeoutMillis"`
+	Enabled                bool   `json:"enabled"`
+	SyncDeletes            bool   `json:"syncDeletes"`
+	SyncProperties         bool   `json:"syncProperties"`
+	SyncStatistics         bool   `json:"syncStatistics"`
+	PathPrefix             string `json:"pathPrefix"`
+}
+
+type getReplicationBody struct {
+	replicationBody
+	ProxyRef string `json:"proxyRef"`
+}
+
+type updateReplicationBody struct {
+	replicationBody
+	Proxy string `json:"proxy"`
+}
+
 type GetPushReplication struct {
-	RepoKey                string                     `json:"-"`
-	CronExp                string                     `json:"cronExp,omitempty"`
-	EnableEventReplication bool                       `json:"enableEventReplication,omitempty"`
-	Replications           []utils.GetReplicationBody `json:"replications,omitempty"`
+	RepoKey                string               `json:"-"`
+	CronExp                string               `json:"cronExp,omitempty"`
+	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
+	Replications           []getReplicationBody `json:"replications,omitempty"`
 }
 
 type UpdatePushReplication struct {
-	RepoKey                string                        `json:"-"`
-	CronExp                string                        `json:"cronExp,omitempty"`
-	EnableEventReplication bool                          `json:"enableEventReplication,omitempty"`
-	Replications           []utils.UpdateReplicationBody `json:"replications,omitempty"`
+	RepoKey                string                  `json:"-"`
+	CronExp                string                  `json:"cronExp,omitempty"`
+	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
+	Replications           []updateReplicationBody `json:"replications,omitempty"`
 }
 
 var pushReplicationSchemaCommon = map[string]*schema.Schema{
@@ -105,6 +129,7 @@ var pushReplicationSchema = map[string]*schema.Schema{
 	"proxy": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }
 
@@ -132,7 +157,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.UpdateReplicationBody, 0, len(arr))
+		tmp := make([]updateReplicationBody, 0, len(arr))
 		pushReplication.Replications = tmp
 
 		for i, o := range arr {
@@ -144,7 +169,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.UpdateReplicationBody
+			var replication updateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -180,8 +205,8 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 				replication.PathPrefix = prefix.(string)
 			}
 
-			if proxy, ok := m["proxy"]; ok {
-				replication.Proxy = proxy.(string)
+			if _, ok := m["proxy"]; ok {
+				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -244,7 +269,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.GetReplicationBody
+	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {

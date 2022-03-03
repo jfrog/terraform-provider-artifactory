@@ -2,29 +2,28 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type GetReplicationConfig struct {
-	RepoKey                string                     `json:"-"`
-	CronExp                string                     `json:"cronExp,omitempty"`
-	EnableEventReplication bool                       `json:"enableEventReplication,omitempty"`
-	Replications           []utils.GetReplicationBody `json:"replications,omitempty"`
+	RepoKey                string               `json:"-"`
+	CronExp                string               `json:"cronExp,omitempty"`
+	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
+	Replications           []getReplicationBody `json:"replications,omitempty"`
 }
 
 type UpdateReplicationConfig struct {
-	RepoKey                string                        `json:"-"`
-	CronExp                string                        `json:"cronExp,omitempty"`
-	EnableEventReplication bool                          `json:"enableEventReplication,omitempty"`
-	Replications           []utils.UpdateReplicationBody `json:"replications,omitempty"`
+	RepoKey                string                  `json:"-"`
+	CronExp                string                  `json:"cronExp,omitempty"`
+	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
+	Replications           []updateReplicationBody `json:"replications,omitempty"`
 }
 
 var replicationSchemaCommon = map[string]*schema.Schema{
@@ -104,6 +103,7 @@ var replicationSchema = map[string]*schema.Schema{
 	"proxy": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }
 
@@ -133,7 +133,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.UpdateReplicationBody, 0, len(arr))
+		tmp := make([]updateReplicationBody, 0, len(arr))
 		replicationConfig.Replications = tmp
 
 		for i, o := range arr {
@@ -145,7 +145,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.UpdateReplicationBody
+			var replication updateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -181,8 +181,8 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 				replication.PathPrefix = prefix.(string)
 			}
 
-			if proxy, ok := m["proxy"]; ok {
-				replication.Proxy = proxy.(string)
+			if _, ok := m["proxy"]; ok {
+				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -245,7 +245,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.GetReplicationBody
+	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
