@@ -1,7 +1,9 @@
 package artifactory
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,6 +33,9 @@ func TestDlFile(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
+			if err := copyFile("../../samples/crash.zip", "../../temp/crash.zip"); err != nil {
+				panic(err)
+			}
 		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
@@ -53,6 +58,45 @@ func TestDlFile(t *testing.T) {
 		},
 	})
 }
+
+//Creates new directory tree if not exist
+func createNewDir(srcPath string) error {
+	if _, err := os.Stat(srcPath); errors.Is(err, os.ErrNotExist) {
+		errMkDirAll := os.MkdirAll(srcPath, os.ModePerm)
+		if errMkDirAll != nil {
+			return errMkDirAll
+		}
+	}
+	return nil
+}
+
+//Copies file from source path to destination path
+func copyFile(srcPath string, destPath string) error {
+	destDir := filepath.Dir(destPath)
+	err := createNewDir(destDir)
+	if err != nil {
+		return err
+	}
+	fin, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer fin.Close()
+
+	fout, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer fout.Close()
+
+	_, err = io.Copy(fout, fin)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestFileExists(t *testing.T) {
 	tmpFile, err := CreateTempFile("test")
 
