@@ -149,7 +149,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 	})
 }
 
-func IgnoreTestAccWebhookAllTypes(t *testing.T) {
+func TestAccWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {

@@ -604,7 +604,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	})
 }
 
-func IgnoreTestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
+func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
@@ -650,7 +650,7 @@ func IgnoreTestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.
 	})
 }
 
-func IgnoreTestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", randomInt())
