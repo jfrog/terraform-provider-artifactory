@@ -130,6 +130,7 @@ func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 		"anonymous_access":            true,
 		"priority_resolution":         false,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"list_remote_folder_items":    true,
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 			"statistics_enabled":              true,
@@ -164,6 +165,7 @@ func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
 		"priority_resolution":            false,
+		"list_remote_folder_items":       true,
 		"external_dependencies_patterns": []interface{}{"**github.com**"},
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
@@ -227,6 +229,33 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 		"pypi_registry_url":           "https://pypi.org",
 		"priority_resolution":         true,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"list_remote_folder_items":    true,
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemoteMavenRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"list_remote_folder_items":    true,
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemoteGradleRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("gradle", t, map[string]interface{}{
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"list_remote_folder_items":    true,
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 			"statistics_enabled":              true,
@@ -242,6 +271,13 @@ func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
 		"pypi_registry_url": "https://custom.PYPI.registry.url",
 	}
 	resource.Test(mkNewRemoteTestCase(packageType, t, extraFields))
+}
+
+func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
+	extraFields := map[string]interface{}{
+		"list_remote_folder_items": true,
+	}
+	resource.Test(mkNewRemoteTestCase("docker", t, extraFields))
 }
 
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {

@@ -69,19 +69,23 @@ Requirements:
 - [Go](https://golang.org/doc/install) 1.15+ (to build the provider plugin)
 
 ## Testing
-How to run the tests isn't obvious.
 
-First, you need a running instance of the JFrog platform (RT and XR). However, there is no currently supported dockerized, local version. You can ask for an instance to test against in as part of your PR. Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh), which, if have a file in the same directory called `artifactory.lic`, you can start just an artifactory instance. The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development.
+First, you need a running instance of the JFrog Artifactory. 
+You can ask for an instance to test against it as part of your PR. Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh). 
+The script requires a valid license of a [supported type](https://github.com/jfrog/terraform-provider-artifactory#license-requirements), license should be saved in the file called `artifactory.lic` in the same directory as a script.
+With the script you can start one or two Artifactory instances using docker compose.   
+The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development. Make sure the license saved as a multi line text file. 
 
-Once you have that done you must set the following properties
-
-Then, you have to set some environment variables as this is how the acceptance tests pick up their config
+Currently, acceptance tests **require access key** and don't support basic authentication and API key. To generate access key, please refer to the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-GeneratingAdminTokens) 
+Then, you have to set some environment variables as this is how the acceptance tests pick up their config.
 ```sh
 ARTIFACTORY_URL=http://localhost:8082
 ARTIFACTORY_USERNAME=admin
-ARTIFACTORY_PASSWORD=password
+ARTIFACTORY_ACCESS_TOKEN=<your_access_token>
 TF_ACC=true
 ```
+`ARTIFACTORY_USERNAME` is not used in authentication, but used in several tests, related to replication functionality. 
+It should be hardcoded to `admin`, because it's a default user created in the Artifactory instance from the start. 
 A crucial, and very much hidden, env var to set is `TF_ACC=true` - you can literally set `TF_ACC` to anything you want, so long as it's set. The acceptance tests use terraform testing libraries that, if this flag isn't set, will skip all tests.
 
 You can then run the tests as
@@ -114,7 +118,7 @@ The [scripts/run-artifactory.sh](scripts/run-artifactory.sh) starts two Artifact
 
 Set the env var to the second Artifactory instance URL. This is the URL that will be accessible from `artifactory-1` container (not the URL from the Docker host):
 ```sh
-$ export ARTIFACTORY_URL_2=http://artifactory-2:8082
+$ export ARTIFACTORY_URL_2=http://localhost:9081
 ```
 
 Run all the acceptance tests as usual

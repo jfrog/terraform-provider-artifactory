@@ -1,28 +1,26 @@
-# Artifactory Remote Repository Resource
+# Artifactory Remote Maven Repository Resource
 
-Provides an Artifactory remote `helm` repository resource. This provides helm specific fields and is the only way to get them.
-Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Package+Management),
-although helm is (currently) not listed as a supported format
+Provides an Artifactory remote `maven` repository resource.
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Remote+Repositories).
 
 ## Example Usage
 Includes only new and relevant fields, for anything else, see: [generic repo](artifactory_remote_docker_repository.md).
 ```hcl
 
-resource "artifactory_remote_helm_repository" "helm-remote" {
-  key = "helm-remote-foo25"
-  url = "https://repo.chartcenter.io/"
-  helm_charts_base_url = "https://foo.com"
-  external_dependencies_enabled = true
-  external_dependencies_patterns = [
-    "**github.com**"
-  ]
+resource "artifactory_remote_maven_repository" "maven-remote" {
+  key = "maven-remote-foo"
+  url = "https://repo1.maven.org/maven2/"
+  fetch_jars_eagerly = true
+  fetch_sources_eagerly = false
+  suppress_pom_consistency_checks = false
+  reject_invalid_jars = true
 }
 ```
 
 ## Argument Reference
 
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
-All generic repo arguments are supported, in addition to:
+All generic repo arguments are supported, in addition to Maven specific arguments. [Reference](https://www.jfrog.com/confluence/display/JFROG/Remote+Repositories#RemoteRepositories-Maven,Gradle,IvyandSBTRepositories)
 
 * `key` - (Required) The repository identifier. Must be unique system-wide
 * `description` - (Optional)
@@ -35,17 +33,11 @@ All generic repo arguments are supported, in addition to:
 * `proxy` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
-* `repo_layout_ref` - (Optional) Repository layout key for the remote repository
+* `repo_layout_ref` - (Optional, Default: 'maven-2-default') Repository layout key for the remote repository
 * `remote_repo_layout_ref` - (Optional) Repository layout key for the remote layout mapping
 * `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
 * `offline` - (Optional) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.
-* `helm_charts_base_url` - (Optional) - No documentation is available. Hopefully you know what this means
-* `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten.
-* `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external
-  dependencies may be downloaded from. By default, this is an empty list which means that no dependencies may be downloaded
-  from external sources. Note that the official documentation states the default is '**', which is correct when creating
-  repositories in the UI, but incorrect for the API.
 * `xray_index` - (Optional, Default: false)  Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.
 * `store_artifacts_locally` - (Optional) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
 * `socket_timeout_millis` - (Optional) Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.
@@ -72,3 +64,10 @@ All generic repo arguments are supported, in addition to:
   * `source_origin_absence_detection` - (Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'
 * `propagate_query_params` - (Optional, Default: false) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
 * `list_remote_folder_items` - (Optional, Default: false) - Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
+* `fetch_jars_eagerly` - (Optional, Default: false) - When set, if a POM is requested, Artifactory attempts to fetch the corresponding jar in the background. This will accelerate first access time to the jar when it is subsequently requested. 
+* `fetch_sources_eagerly` - (Optional, Default: false) - When set, if a binaries jar is requested, Artifactory attempts to fetch the corresponding source jar in the background. This will accelerate first access time to the source jar when it is subsequently requested.
+* `remote_repo_checksum_policy_type` - (Optional, Default: 'generate-if-absent') - Checking the Checksum effectively verifies the integrity of a deployed resource. The Checksum Policy determines how the system behaves when a client checksum for a remote resource is missing or conflicts with the locally calculated checksum. Available policies are 'generate-if-absent', 'fail', 'ignore-and-generate', and 'pass-thru'.  
+* `handle_releases` - (Optional, Default: true) - If set, Artifactory allows you to deploy release artifacts into this repository.
+* `handle_snapshots` - (Optional, Default: true) - If set, Artifactory allows you to deploy snapshot artifacts into this repository.
+* `suppress_pom_consistency_checks` - (Optional, Default: false) - By default, the system keeps your repositories healthy by refusing POMs with incorrect coordinates (path). If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a "409 Conflict" error. You can disable this behavior by setting this attribute to 'true'.
+* `reject_invalid_jars` - (Optional, Default: false) - Reject the caching of jar files that are found to be invalid. For example, pseudo jars retrieved behind a "captive portal".

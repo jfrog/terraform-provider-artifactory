@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var domainRepoTypeLookup = map[string]string {
-	"artifact": "generic",
+var domainRepoTypeLookup = map[string]string{
+	"artifact":          "generic",
 	"artifact_property": "generic",
-	"docker": "docker_v2",
+	"docker":            "docker_v2",
 }
 
-var domainValidationErrorMessageLookup = map[string]string {
-	"artifact": "repo_keys cannot be empty when both any_local and any_remote are false",
-	"artifact_property": "repo_keys cannot be empty when both any_local and any_remote are false",
-	"docker": "repo_keys cannot be empty when both any_local and any_remote are false",
-	"build": "selected_builds cannot be empty when any_build is false",
-	"release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
-	"distribution": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+var domainValidationErrorMessageLookup = map[string]string{
+	"artifact":                   "repo_keys cannot be empty when both any_local and any_remote are false",
+	"artifact_property":          "repo_keys cannot be empty when both any_local and any_remote are false",
+	"docker":                     "repo_keys cannot be empty when both any_local and any_remote are false",
+	"build":                      "selected_builds cannot be empty when any_build is false",
+	"release_bundle":             "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+	"distribution":               "registered_release_bundle_names cannot be empty when any_release_bundle is false",
 	"artifactory_release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
 }
 
@@ -92,18 +92,18 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	params := map[string]interface{}{
 		"webhookType": webhookType,
 		"webhookName": name,
-		"eventTypes": domainEventTypesSupported[webhookType],
+		"eventTypes":  domainEventTypesSupported[webhookType],
 	}
 	webhookConfig := executeTemplate("TestAccWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-		CheckDestroy: verifyDeleted(fqrn, testCheckRepo),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
-				Config: webhookConfig,
+				Config:      webhookConfig,
 				ExpectError: regexp.MustCompile(domainValidationErrorMessageLookup[webhookType]),
 			},
 		},
@@ -119,7 +119,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 
 	params := map[string]interface{}{
 		"webhookName": name,
-		"eventType": wrongEventType,
+		"eventType":   wrongEventType,
 	}
 	webhookConfig := executeTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
@@ -136,13 +136,13 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-		CheckDestroy: verifyDeleted(fqrn, testCheckRepo),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
-				Config: webhookConfig,
+				Config:      webhookConfig,
 				ExpectError: regexp.MustCompile(fmt.Sprintf("event_type %s not supported for domain artifact", wrongEventType)),
 			},
 		},
@@ -229,14 +229,14 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	}
 
 	return t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-		CheckDestroy: verifyDeleted(fqrn, testCheckWebhook),
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckWebhook),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
 			{
 				Config: webhookConfig,
-				Check: resource.ComposeTestCheckFunc(testChecks...),
+				Check:  resource.ComposeTestCheckFunc(testChecks...),
 			},
 		},
 	}
