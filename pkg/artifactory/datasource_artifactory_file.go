@@ -118,11 +118,10 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	fileExists := FileExists(outputPath)
 	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 
-	/*
-		--File Download logic--
-		1. File doesn't exist
-		2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
-		3. File exists but check sum doesn't match
+	/*--File Download logic--
+	1. File doesn't exist
+	2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
+	3. File exists but check sum doesn't match
 	*/
 	if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
 		outdir := filepath.Dir(outputPath)
