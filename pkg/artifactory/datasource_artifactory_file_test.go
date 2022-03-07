@@ -16,44 +16,55 @@ import (
 )
 
 func TestDlFile(t *testing.T) {
+
 	// every instance of RT has this repo and file out-of-the-box
 	script := `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
 		  path            = "crash.zip"
-		  output_path     = "${path.cwd}/crash.zip"
+		  output_path     = "${path.root}/../../temp/crash.zip"
 		  force_overwrite = true
 		}
 	`
+	var downloadPreCheck = func() {
+		testAccPreCheck(t)
+		client := getTestResty(t)
+		err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
+		if err != nil {
+			panic(err)
+		}
+		/*copies the file at the same location where the file should be downloaded by DataSource. It will create the file
+		exist scenario.
+		*/
+		if err := copyFile("../../temp/crash.zip", "../../samples/crash.zip"); err != nil {
+			panic(err)
+		}
+		copiedFileInfo, err := os.Stat("../../temp/crash.zip")
+		fmt.Printf("in downloadPreCheck: %v\n", copiedFileInfo.ModTime())
+	}
+
+	var downloadCheck = func(state *terraform.State) error {
+		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
+		downloadedFileInfo, err := os.Stat(download)
+		fmt.Printf("in downloadCheck: %v\n", downloadedFileInfo.ModTime())
+		if err != nil {
+			return err
+		}
+		verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+
+		if !verified {
+			return fmt.Errorf("%s checksum does not have expected checksum", download)
+		}
+		return err
+	}
+
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			client := getTestResty(t)
-			err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
-			if err != nil {
-				panic(err)
-			}
-			if err := copyFile("../../samples/crash.zip", "../../temp/crash.zip"); err != nil {
-				panic(err)
-			}
-		},
+		PreCheck:          downloadPreCheck,
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: script,
-				Check: func(state *terraform.State) error {
-					download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
-					_, err := os.Stat(download)
-					if err != nil {
-						return err
-					}
-					verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
-
-					if !verified {
-						return fmt.Errorf("%s checksum does not have expected checksum", download)
-					}
-					return err
-				},
+				Check:  downloadCheck,
 			},
 		},
 	})
@@ -71,7 +82,7 @@ func createNewDir(srcPath string) error {
 }
 
 //Copies file from source path to destination path
-func copyFile(srcPath string, destPath string) error {
+func copyFile(destPath string, srcPath string) error {
 	destDir := filepath.Dir(destPath)
 	err := createNewDir(destDir)
 	if err != nil {
