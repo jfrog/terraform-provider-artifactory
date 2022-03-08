@@ -1,3 +1,9 @@
+## 2.22.0 (Mar 8, 2022)
+
+FEATURES:
+
+* Add support for specifying proxy on push replications. [GH-336]
+
 ## 2.21.0 (Mar 3, 2022)
 
 FEATURES:
