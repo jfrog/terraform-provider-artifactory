@@ -8,7 +8,7 @@ import (
 func resourceArtifactoryRemotePypiRepository() *schema.Resource {
 	const packageType = "pypi"
 
-	var pypiRemoteSchema = mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
+	var pypiRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"pypi_registry_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -23,7 +23,7 @@ func resourceArtifactoryRemotePypiRepository() *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      `(Optional) Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.`,
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 
 	type PypiRemoteRepo struct {
 		RemoteRepositoryBaseParams

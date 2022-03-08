@@ -9,7 +9,7 @@ func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 
 	const packageType = "rpm"
 
-	var rpmVirtualSchema = mergeSchema(getBaseVirtualRepoSchema(packageType), map[string]*schema.Schema{
+	var rpmVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -22,7 +22,7 @@ func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      "Secondary keypair used to sign artifacts.",
 		},
-	})
+	}, repoLayoutRefSchema("virtual", packageType))
 
 	type CommonRpmDebianVirtualRepositoryParams struct {
 		PrimaryKeyPairRef   string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`

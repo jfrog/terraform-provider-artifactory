@@ -15,7 +15,7 @@ type DockerRemoteRepository struct {
 func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	const packageType = "docker"
 
-	var dockerRemoteSchema = mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
+	var dockerRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -45,7 +45,7 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +
 				"By default, this is set to '**', which means that remote modules may be downloaded from any external VCS source.",
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}

@@ -20,7 +20,7 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 
 	const packageType = "maven"
 
-	var mavenVirtualSchema = mergeSchema(getBaseVirtualRepoSchema(packageType), map[string]*schema.Schema{
+	var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"force_maven_authentication": {
 			Type:        schema.TypeBool,
@@ -44,7 +44,7 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 			Optional:    true,
 			Description: "The keypair used to sign artifacts",
 		},
-	})
+	}, repoLayoutRefSchema("virtual", packageType))
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}

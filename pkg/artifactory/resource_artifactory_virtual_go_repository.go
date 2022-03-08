@@ -8,7 +8,7 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 
 	const packageType = "go"
 
-	var goVirtualSchema = mergeSchema(getBaseVirtualRepoSchema(packageType), map[string]*schema.Schema{
+	var goVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
@@ -28,7 +28,7 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +
 				"By default, this is set to '**', which means that remote modules may be downloaded from any external VCS source.",
 		},
-	})
+	}, repoLayoutRefSchema("virtual", packageType))
 
 	type GoVirtualRepositoryParams struct {
 		VirtualRepositoryBaseParams

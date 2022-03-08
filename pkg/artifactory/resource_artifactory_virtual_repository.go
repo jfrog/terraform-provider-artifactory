@@ -96,11 +96,12 @@ func resourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 		repo := unpackBaseVirtRepo(data, pkt)
 		return repo, repo.Id(), nil
 	}
-	return mkResourceSchema(getBaseVirtualRepoSchema(pkt), defaultPacker, unpack, constructor)
+
+	return mkResourceSchema(mergeSchema(baseVirtualRepoSchema, repoLayoutRefSchema("virtual", pkt)), defaultPacker, unpack, constructor)
 }
 
 func resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
-	var repoWithRetrivalCachePeriodSecsVirtualSchema = mergeSchema(getBaseVirtualRepoSchema(pkt), map[string]*schema.Schema{
+	var repoWithRetrivalCachePeriodSecsVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"retrieval_cache_period_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -108,7 +109,7 @@ func resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string
 			Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
 			ValidateFunc: validation.IntAtLeast(0),
 		},
-	})
+	}, repoLayoutRefSchema("virtual", pkt))
 	constructor := func() interface{} {
 		return &VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{

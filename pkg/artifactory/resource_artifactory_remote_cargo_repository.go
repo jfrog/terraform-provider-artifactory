@@ -14,7 +14,7 @@ type CargoRemoteRepo struct {
 func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	const packageType = "cargo"
 
-	var cargoRemoteSchema = mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
+	var cargoRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"git_registry_url": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -27,7 +27,7 @@ func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
 			Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
 				"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}

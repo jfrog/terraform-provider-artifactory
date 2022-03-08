@@ -11,7 +11,7 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 
 	const packageType = "npm"
 
-	npmRemoteSchema := mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
+	npmRemoteSchema := mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"mismatching_mime_types_override_list": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -22,7 +22,7 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 				return strings.Join(fields, ",")
 			},
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 	type NpmRemoteRepository struct {
 		RemoteRepositoryBaseParams
 		MismatchingMimeTypeOverrideList string `json:"mismatchingMimeTypesOverrideList"`

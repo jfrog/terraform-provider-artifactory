@@ -9,7 +9,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV2LocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
+	var dockerV2LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -37,7 +37,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 			Computed:    true,
 			Description: "The Docker API version to use. This cannot be set",
 		},
-	})
+	}, repoLayoutRefSchema("local", packageType))
 
 	packer := universalPack(
 		allHclPredicate(
@@ -76,7 +76,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV1LocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
+	var dockerV1LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -94,7 +94,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-	})
+	}, repoLayoutRefSchema("local", packageType))
 
 	// this is necessary because of the pointers
 	skeema := mergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)

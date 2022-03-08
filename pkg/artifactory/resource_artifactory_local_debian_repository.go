@@ -7,7 +7,7 @@ import (
 func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 	const packageType = "debian"
 
-	var debianLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
+	var debianLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -24,7 +24,7 @@ func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 			Description: "When set, the repository will use the deprecated trivial layout.",
 			Deprecated:  "You shouldn't be using this",
 		},
-	}, compressionFormats)
+	}, repoLayoutRefSchema("local", packageType), compressionFormats)
 
 	type DebianLocalRepositoryParams struct {
 		LocalRepositoryBaseParams

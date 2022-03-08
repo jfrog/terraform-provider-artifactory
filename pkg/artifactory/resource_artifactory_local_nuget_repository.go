@@ -8,7 +8,7 @@ func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	const packageType = "nuget"
 
-	var nugetLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
+	var nugetLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -23,7 +23,7 @@ func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 			Default:     false,
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
-	})
+	}, repoLayoutRefSchema("local", packageType))
 
 	type NugetLocalRepositoryParams struct {
 		LocalRepositoryBaseParams

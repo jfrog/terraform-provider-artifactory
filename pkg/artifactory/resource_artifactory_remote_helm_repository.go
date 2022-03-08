@@ -8,7 +8,7 @@ import (
 func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	const packageType = "helm"
 
-	var helmRemoteSchema = mergeSchema(getBaseRemoteRepoSchema(packageType), map[string]*schema.Schema{
+	var helmRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"helm_charts_base_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -36,7 +36,7 @@ func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 				"Note that the official documentation states the default is '**', " +
 				"which is correct when creating repositories in the UI, but incorrect for the API.",
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 
 	type HelmRemoteRepo struct {
 		RemoteRepositoryBaseParams

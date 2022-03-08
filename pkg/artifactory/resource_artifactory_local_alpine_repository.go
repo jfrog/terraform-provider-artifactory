@@ -7,14 +7,14 @@ import (
 func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	const packageType = "alpine"
 
-	var alpineLocalSchema = mergeSchema(getBaseLocalRepoSchema(packageType), map[string]*schema.Schema{
+	var alpineLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Description: "Used to sign index files in Alpine Linux repositories. " +
 				"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
 		},
-	}, compressionFormats)
+	}, repoLayoutRefSchema("local", packageType), compressionFormats)
 
 	type AlpineLocalRepo struct {
 		LocalRepositoryBaseParams

@@ -333,530 +333,531 @@ var repoTypesLikeGeneric = []string{
 
 var projectEnvironmentsSupported = []string{"DEV", "PROD"}
 
-func getBaseLocalRepoSchema(packageType string) map[string]*schema.Schema {
-
+func repoLayoutRefSchema(repositoryType string, packageType string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"key": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: repoKeyValidator,
-			Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters."},
-		"project_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: projectKeyValidator,
-			Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		},
-		"project_environments": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			MinItems:    1,
-			MaxItems:    2,
-			Set:         schema.HashString,
-			Optional:    true,
-			Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
-		},
-		"package_type": {
-			Type:     schema.TypeString,
-			Required: false,
-			Computed: true,
-			ForceNew: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"notes": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"includes_pattern": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true, Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
-		},
-		"excludes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
 		"repo_layout_ref": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
+			DefaultFunc: getDefaultRepoLayoutRef(repositoryType, packageType),
 			Description: "Repository layout key for the local repository",
 		},
-		"blacked_out": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed."},
-		"xray_index": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
-		},
-		"priority_resolution": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
-		},
-		"property_sets": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Set:         schema.HashString,
-			Optional:    true,
-			Description: "List of property set name"},
-		"archive_browsing_enabled": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
-		},
-		"download_direct": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only."},
 	}
 }
 
-func getBaseRemoteRepoSchema(packageType string) map[string]*schema.Schema {
+var baseLocalRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: repoKeyValidator,
+		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters."},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MinItems:    1,
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+	},
+	"package_type": {
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"notes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true, Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
+	"excludes_pattern": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
+	"repo_layout_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+	"blacked_out": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed."},
+	"xray_index": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+	},
+	"priority_resolution": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+	},
+	"property_sets": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: "List of property set name"},
+	"archive_browsing_enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
+	},
+	"download_direct": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only."},
+}
 
-	return map[string]*schema.Schema{
-		"key": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: repoKeyValidator,
+var baseRemoteRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: repoKeyValidator,
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+	},
+	"package_type": {
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
+	},
+	"url": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+	},
+	"username": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"password": {
+		Type:      schema.TypeString,
+		Optional:  true,
+		Sensitive: true,
+		StateFunc: getMD5Hash,
+	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+			// this is literally what comes back from the server
+			return old == fmt.Sprintf("%s (local file cache)", new)
 		},
-		"project_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: projectKeyValidator,
-			Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"notes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"includes_pattern": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*)."},
+	"excludes_pattern": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
+	"repo_layout_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+	"remote_repo_layout_ref": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "Repository layout key for the remote layout mapping"},
+	"hard_fail": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true, Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
+	},
+	"offline": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.",
+	},
+	"blacked_out": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
+	},
+	"xray_index": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+	},
+	"store_artifacts_locally": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.",
+	},
+	"socket_timeout_millis": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure."},
+	"local_address": {
+		Type:     schema.TypeString,
+		Optional: true, Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
+	},
+	"retrieval_cache_period_seconds": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Computed:    true,
+		Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
+		DefaultFunc: func() (interface{}, error) {
+			return 7200, nil
 		},
-		"project_environments": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			MaxItems:    2,
-			Set:         schema.HashString,
-			Optional:    true,
-			Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
-		},
-		"package_type": {
-			Type:     schema.TypeString,
-			Required: false,
-			Computed: true,
-			ForceNew: true,
-		},
-		"url": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-		},
-		"username": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"password": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
-			StateFunc: getMD5Hash,
-		},
-		"proxy": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-			DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-				// this is literally what comes back from the server
-				return old == fmt.Sprintf("%s (local file cache)", new)
-			},
-		},
-		"notes": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"includes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*)."},
-		"excludes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
-		"repo_layout_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
-			Description: "Repository layout key for the remote repository",
-		},
-		"remote_repo_layout_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Repository layout key for the remote layout mapping"},
-		"hard_fail": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true, Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
-		},
-		"offline": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.",
-		},
-		"blacked_out": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
-		},
-		"xray_index": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
-		},
-		"store_artifacts_locally": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.",
-		},
-		"socket_timeout_millis": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.IntAtLeast(0),
-			Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure."},
-		"local_address": {
-			Type:     schema.TypeString,
-			Optional: true, Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
-		},
-		"retrieval_cache_period_seconds": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Computed:    true,
-			Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
-			DefaultFunc: func() (interface{}, error) {
-				return 7200, nil
-			},
-			ValidateFunc: validation.IntAtLeast(0),
-		},
-		"failed_retrieval_cache_period_secs": {
-			Type:     schema.TypeInt,
-			Computed: true,
-			Deprecated: "This field is not returned in a get payload but is offered on the UI. " +
-				"It's inserted here for inclusive and informational reasons. It does not function",
-		},
-		"missed_cache_period_seconds": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.IntAtLeast(0),
-			Description:  "The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.",
-		},
-		"unused_artifacts_cleanup_period_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-		},
-		"unused_artifacts_cleanup_period_hours": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.IntAtLeast(0), Description: `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
-		},
-		"assumed_offline_period_secs": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      300,
-			ValidateFunc: validation.IntAtLeast(0),
-			Description:  "The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline. Default to 300.",
-		},
-		"share_configuration": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-		},
-		"synchronize_properties": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "When set, remote artifacts are fetched along with their properties.",
-		},
-		"block_mismatching_mime_types": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
-		},
-		"property_sets": {
-			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-			Optional: true, Description: "List of property set name",
-		},
-		"allow_any_host_auth": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.",
-		},
-		"enable_cookie_management": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enables cookie management if the remote repository uses cookies to manage client state.",
-		},
-		"bypass_head_requests": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
-		},
-		"priority_resolution": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
-		},
-		"client_tls_certificate": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"content_synchronisation": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"enabled": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: `(Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
-					},
-					"statistics_enabled": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: `(Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
-					},
-					"properties_enabled": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: `(Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
-					},
-					"source_origin_absence_detection": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: `(Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
-					},
+		ValidateFunc: validation.IntAtLeast(0),
+	},
+	"failed_retrieval_cache_period_secs": {
+		Type:     schema.TypeInt,
+		Computed: true,
+		Deprecated: "This field is not returned in a get payload but is offered on the UI. " +
+			"It's inserted here for inclusive and informational reasons. It does not function",
+	},
+	"missed_cache_period_seconds": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.",
+	},
+	"unused_artifacts_cleanup_period_enabled": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"unused_artifacts_cleanup_period_hours": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.IntAtLeast(0), Description: `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
+	},
+	"assumed_offline_period_secs": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      300,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline. Default to 300.",
+	},
+	"share_configuration": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"synchronize_properties": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "When set, remote artifacts are fetched along with their properties.",
+	},
+	"block_mismatching_mime_types": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
+	},
+	"property_sets": {
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+		Optional: true, Description: "List of property set name",
+	},
+	"allow_any_host_auth": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.",
+	},
+	"enable_cookie_management": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Enables cookie management if the remote repository uses cookies to manage client state.",
+	},
+	"bypass_head_requests": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
+	},
+	"priority_resolution": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Computed:    true,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+	},
+	"client_tls_certificate": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"content_synchronisation": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
+				},
+				"statistics_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
+				},
+				"properties_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
+				},
+				"source_origin_absence_detection": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: `(Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
 				},
 			},
 		},
-		"propagate_query_params": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository."
-		},
-		"list_remote_folder_items": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
-		},
-	}
+	},
+	"propagate_query_params": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
+	},
+	"list_remote_folder_items": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
+	},
 }
 
-func getBaseVirtualRepoSchema(packageType string) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"key": {
-			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
-		},
-		"project_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: projectKeyValidator,
-			Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		},
-		"project_environments": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			MaxItems:    2,
-			Set:         schema.HashString,
-			Optional:    true,
-			Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
-		},
-		"package_type": {
-			Type:        schema.TypeString,
-			Required:    false,
-			Computed:    true,
-			ForceNew:    true,
-			Description: "The Package Type. This must be specified when the repository is created, and once set, cannot be changed.",
-		},
-		"description": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A free text field that describes the content and purpose of the repository.\nIf you choose to insert a link into this field, clicking the link will prompt the user to confirm that they might be redirected to a new domain.",
-		},
-		"notes": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A free text field to add additional notes about the repository. These are only visible to the administrator.",
-		},
-		"includes_pattern": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "**/*",
-			Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
-				"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
-		},
-		"excludes_pattern": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
-				"By default no artifacts are excluded.",
-		},
-		"repo_layout_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
-			Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
-		},
-		"repositories": {
-			Type:        schema.TypeList,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Optional:    true,
-			Description: "The effective list of actual repositories included in this virtual repository.",
-		},
+var baseVirtualRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+	},
+	"package_type": {
+		Type:        schema.TypeString,
+		Required:    false,
+		Computed:    true,
+		ForceNew:    true,
+		Description: "The Package Type. This must be specified when the repository is created, and once set, cannot be changed.",
+	},
+	"description": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "A free text field that describes the content and purpose of the repository.\nIf you choose to insert a link into this field, clicking the link will prompt the user to confirm that they might be redirected to a new domain.",
+	},
+	"notes": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "A free text field to add additional notes about the repository. These are only visible to the administrator.",
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "**/*",
+		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
+			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
+	"excludes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
+			"By default no artifacts are excluded.",
+	},
+	"repo_layout_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+	"repositories": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "The effective list of actual repositories included in this virtual repository.",
+	},
 
-		"artifactory_requests_can_retrieve_remote_artifacts": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
-		},
-		"default_deployment_repo": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Default repository to deploy artifacts.",
-		},
-		"retrieval_cache_period_seconds": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      7200,
-			Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
-			ValidateFunc: validation.IntAtLeast(0),
-		},
-	}
+	"artifactory_requests_can_retrieve_remote_artifacts": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
+	},
+	"default_deployment_repo": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Default repository to deploy artifacts.",
+	},
+	"retrieval_cache_period_seconds": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      7200,
+		Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
+		ValidateFunc: validation.IntAtLeast(0),
+	},
 }
 
-func getBaseFederatedRepoSchema(packageType string) map[string]*schema.Schema {
-
-	return map[string]*schema.Schema{
-		"key": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: repoKeyValidator,
-		},
-		"project_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: projectKeyValidator,
-			Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-		},
-		"project_environments": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			MinItems:    1,
-			MaxItems:    2,
-			Set:         schema.HashString,
-			Optional:    true,
-			Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
-		},
-		"package_type": {
-			Type:     schema.TypeString,
-			Required: false,
-			Computed: true,
-			ForceNew: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"notes": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"includes_pattern": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"excludes_pattern": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"repo_layout_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: getDefaultRepoLayoutRef("local", packageType),
-		},
-		"blacked_out": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-		"xray_index": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-		},
-		"priority_resolution": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
-		},
-		"property_sets": {
-			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-			Optional: true,
-		},
-		"archive_browsing_enabled": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
-		},
-		"download_direct": {
-			Type:     schema.TypeBool,
-			Optional: true,
-		},
-	}
+var baseFederatedRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: repoKeyValidator,
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MinItems:    1,
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+	},
+	"package_type": {
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"notes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"excludes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"repo_layout_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+	"blacked_out": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+	},
+	"xray_index": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"priority_resolution": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+	},
+	"property_sets": {
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+		Optional: true,
+	},
+	"archive_browsing_enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
+	},
+	"download_direct": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
 }
 
 func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
