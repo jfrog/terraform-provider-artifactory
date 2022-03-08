@@ -2,7 +2,9 @@
 
 FEATURES:
 
-* Add support for specifying proxy on push replications. [GH-336]
+* resource/artifactory_push_replication: Add support for specifying proxy. [GH-337]
+* resource/artifactory_replication_config: Add support for specifying proxy. [GH-337]
+* resource/artifactory_single_replication: Add support for specifying proxy. [GH-337]
 
 ## 2.21.0 (Mar 3, 2022)
 
