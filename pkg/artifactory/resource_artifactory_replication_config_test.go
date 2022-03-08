@@ -70,6 +70,7 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 }
 
 func TestAccReplication_full(t *testing.T) {
+	const testProxy = "test-proxy"
 	const replicationConfigTemplate = `
 		resource "artifactory_local_repository" "lib-local" {
 			key = "lib-local"
@@ -84,12 +85,19 @@ func TestAccReplication_full(t *testing.T) {
 			replications {
 				url = "%s"
 				username = "%s"
+				proxy = "%s"
 			}
 		}
 	`
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy:      testAccCheckReplicationDestroy("artifactory_replication_config.lib-local"),
+		PreCheck: func() {
+			createProxy(t, testProxy)
+		},
+		CheckDestroy: func() func(*terraform.State) error {
+			deleteProxy(t, testProxy)
+			return testAccCheckReplicationDestroy("artifactory_replication_config.lib-local")
+		}(),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -98,12 +106,14 @@ func TestAccReplication_full(t *testing.T) {
 					replicationConfigTemplate,
 					os.Getenv("ARTIFACTORY_URL"),
 					os.Getenv("ARTIFACTORY_USERNAME"),
+					testProxy,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "repo_key", "lib-local"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.proxy", testProxy),
 				),
 			},
 		},
@@ -112,7 +122,6 @@ func TestAccReplication_full(t *testing.T) {
 
 func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)

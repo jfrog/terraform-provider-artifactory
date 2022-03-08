@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"math"
 	"net/http"
 	"reflect"
@@ -156,4 +157,53 @@ func deleteProject(t *testing.T, projectKey string) {
 //Usage of the function is strictly restricted to Test Cases
 func getValidRandomDefaultRepoLayoutRef() string {
 	return randSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+}
+
+// updateProxiesConfig is used by createProxy and deleteProxy to interact with a proxy on Artifactory
+var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
+	body := getProxiesBody()
+	restyClient := getTestResty(t)
+
+	err := sendConfigurationPatch(body, restyClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// createProxy creates a new proxy on Artifactory with the given key
+var createProxy = func(t *testing.T, proxyKey string) {
+	type proxy struct {
+		Key             string `yaml:"key"`
+		Host            string `yaml:"host"`
+		Port            int    `yaml:"port"`
+		PlatformDefault bool   `yaml:"platformDefault"`
+	}
+
+	updateProxiesConfig(t, proxyKey, func() []byte {
+		testProxy := proxy{
+			Key:             proxyKey,
+			Host:            "http://fake-proxy.org",
+			Port:            8080,
+			PlatformDefault: false,
+		}
+
+		constructBody := map[string][]proxy{
+			"proxies": {testProxy},
+		}
+
+		body, err := yaml.Marshal(&constructBody)
+		if err != nil {
+			t.Errorf("failed to marshal proxies settings during Update")
+		}
+
+		return body
+	})
+}
+
+// createProxy deletes an existing proxy on Artifactory with the given key
+var deleteProxy = func(t *testing.T, proxyKey string) {
+	updateProxiesConfig(t, proxyKey, func() []byte {
+		// Return empty yaml to clean up all proxies
+		return []byte(`proxies: ~`)
+	})
 }

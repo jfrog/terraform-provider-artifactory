@@ -2,22 +2,53 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type PushReplication struct {
+type ReplicationBody struct {
+	Username               string `json:"username"`
+	Password               string `json:"password"`
+	URL                    string `json:"url"`
+	CronExp                string `json:"cronExp"`
+	RepoKey                string `json:"repoKey"`
+	EnableEventReplication bool   `json:"enableEventReplication"`
+	SocketTimeoutMillis    int    `json:"socketTimeoutMillis"`
+	Enabled                bool   `json:"enabled"`
+	SyncDeletes            bool   `json:"syncDeletes"`
+	SyncProperties         bool   `json:"syncProperties"`
+	SyncStatistics         bool   `json:"syncStatistics"`
+	PathPrefix             string `json:"pathPrefix"`
+}
+
+type getReplicationBody struct {
+	ReplicationBody
+	ProxyRef string `json:"proxyRef"`
+}
+
+type updateReplicationBody struct {
+	ReplicationBody
+	Proxy string `json:"proxy"`
+}
+
+type GetPushReplication struct {
+	RepoKey                string               `json:"-"`
+	CronExp                string               `json:"cronExp,omitempty"`
+	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
+	Replications           []getReplicationBody `json:"replications,omitempty"`
+}
+
+type UpdatePushReplication struct {
 	RepoKey                string                  `json:"-"`
 	CronExp                string                  `json:"cronExp,omitempty"`
 	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
+	Replications           []updateReplicationBody `json:"replications,omitempty"`
 }
 
 var pushReplicationSchemaCommon = map[string]*schema.Schema{
@@ -95,6 +126,11 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
+	},
 }
 
 func resourceArtifactoryPushReplication() *schema.Resource {
@@ -112,16 +148,16 @@ func resourceArtifactoryPushReplication() *schema.Resource {
 	}
 }
 
-func unpackPushReplication(s *schema.ResourceData) PushReplication {
+func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 	d := &ResourceData{s}
-	pushReplication := new(PushReplication)
+	pushReplication := new(UpdatePushReplication)
 
 	repo := d.getString("repo_key", false)
 
 	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.ReplicationBody, 0, len(arr))
+		tmp := make([]updateReplicationBody, 0, len(arr))
 		pushReplication.Replications = tmp
 
 		for i, o := range arr {
@@ -133,7 +169,7 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.ReplicationBody
+			var replication updateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -169,6 +205,10 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 				replication.PathPrefix = prefix.(string)
 			}
 
+			if _, ok := m["proxy"]; ok {
+				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+			}
+
 			if pass, ok := m["password"]; ok {
 				replication.Password = pass.(string)
 			}
@@ -180,7 +220,7 @@ func unpackPushReplication(s *schema.ResourceData) PushReplication {
 	return *pushReplication
 }
 
-func packPushReplication(pushReplication *PushReplication, d *schema.ResourceData) diag.Diagnostics {
+func packPushReplication(pushReplication *GetPushReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
@@ -202,6 +242,7 @@ func packPushReplication(pushReplication *PushReplication, d *schema.ResourceDat
 			replication["sync_properties"] = repo.SyncProperties
 			replication["sync_statistics"] = repo.SyncStatistics
 			replication["path_prefix"] = repo.PathPrefix
+			replication["proxy"] = repo.ProxyRef
 			replications = append(replications, replication)
 		}
 
@@ -228,14 +269,14 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.ReplicationBody
+	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	repConfig := PushReplication{
+	repConfig := GetPushReplication{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}

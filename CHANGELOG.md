@@ -1,8 +1,16 @@
-## 2.21.1 (Mar 8, 2022)
+## 2.22.1 (Mar 8, 2022)
 
 IMPROVEMENTS:
 
 * Make repository layout to correct default value as per package type, provided the `repo_layout_ref` attribute is not supplied explicitly in the resource. [GH-335]
+
+## 2.22.0 (Mar 8, 2022)
+
+FEATURES:
+
+* resource/artifactory_push_replication: Add support for specifying proxy. [GH-337]
+* resource/artifactory_replication_config: Add support for specifying proxy. [GH-337]
+* resource/artifactory_single_replication: Add support for specifying proxy. [GH-337]
 
 ## 2.21.0 (Mar 3, 2022)
 
