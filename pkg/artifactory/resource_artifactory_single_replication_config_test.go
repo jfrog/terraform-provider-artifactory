@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"os"
 	"regexp"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func mkTclForRepConfg(name, cron, url string) string {
+func mkTclForRepConfg(name, cron, url, proxy string) string {
 	const tcl = `
 		resource "artifactory_local_repository" "%s" {
 			key = "%s"
@@ -23,6 +24,7 @@ func mkTclForRepConfg(name, cron, url string) string {
 			enable_event_replication = true
 			url = "%s"
 			username = "%s"
+			proxy = "%s"
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -33,12 +35,13 @@ func mkTclForRepConfg(name, cron, url string) string {
 		cron,
 		url,
 		os.Getenv("ARTIFACTORY_USERNAME"),
+		proxy,
 	)
 }
 func TestInvalidCronSingleReplication(t *testing.T) {
 
 	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
+	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"), "")
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
@@ -56,7 +59,7 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 func TestInvalidUrlSingleReplication(t *testing.T) {
 
 	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url")
+	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url", "")
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
@@ -72,10 +75,17 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 }
 
 func TestAccSingleReplication_full(t *testing.T) {
+	const testProxy = "testProxy"
 	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), testProxy)
 	resource.Test(t, resource.TestCase{
-		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
+		PreCheck: func() {
+			createProxy(t, testProxy)
+		},
+		CheckDestroy: func() func(*terraform.State) error {
+			deleteProxy(t, testProxy)
+			return testAccCheckReplicationDestroy(fqrn)
+		}(),
 		ProviderFactories: testAccProviders,
 
 		Steps: []resource.TestStep{
@@ -87,6 +97,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
 			},
 		},
@@ -95,7 +106,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 
 func TestAccSingleReplication_withDelRepo(t *testing.T) {
 	_, fqrn, name := mkNames("lib-local", "artifactory_single_replication_config")
-	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), "")
 	var deleteRepo = func() {
 		restyClient := getTestResty(t)
 		_, err := restyClient.R().Delete("artifactory/api/repositories/" + name)
@@ -117,6 +128,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 				),
 			},
 			{

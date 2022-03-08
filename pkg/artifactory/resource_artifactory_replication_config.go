@@ -2,22 +2,28 @@ package artifactory
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type ReplicationConfig struct {
+type GetReplicationConfig struct {
+	RepoKey                string               `json:"-"`
+	CronExp                string               `json:"cronExp,omitempty"`
+	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
+	Replications           []getReplicationBody `json:"replications,omitempty"`
+}
+
+type UpdateReplicationConfig struct {
 	RepoKey                string                  `json:"-"`
 	CronExp                string                  `json:"cronExp,omitempty"`
 	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []utils.ReplicationBody `json:"replications,omitempty"`
+	Replications           []updateReplicationBody `json:"replications,omitempty"`
 }
 
 var replicationSchemaCommon = map[string]*schema.Schema{
@@ -94,6 +100,11 @@ var replicationSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
+	},
 }
 
 func resourceArtifactoryReplicationConfig() *schema.Resource {
@@ -113,16 +124,16 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
+func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 	d := &ResourceData{s}
-	replicationConfig := new(ReplicationConfig)
+	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.getString("repo_key", false)
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]utils.ReplicationBody, 0, len(arr))
+		tmp := make([]updateReplicationBody, 0, len(arr))
 		replicationConfig.Replications = tmp
 
 		for i, o := range arr {
@@ -134,7 +145,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 
 			m := o.(map[string]interface{})
 
-			var replication utils.ReplicationBody
+			var replication updateReplicationBody
 
 			replication.RepoKey = repo
 
@@ -170,6 +181,10 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 				replication.PathPrefix = prefix.(string)
 			}
 
+			if _, ok := m["proxy"]; ok {
+				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+			}
+
 			if pass, ok := m["password"]; ok {
 				replication.Password = pass.(string)
 			}
@@ -181,7 +196,7 @@ func unpackReplicationConfig(s *schema.ResourceData) ReplicationConfig {
 	return *replicationConfig
 }
 
-func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
+func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := mkLens(d)
 
@@ -203,6 +218,7 @@ func packReplicationConfig(replicationConfig *ReplicationConfig, d *schema.Resou
 			replication["sync_properties"] = repo.SyncProperties
 			replication["sync_statistics"] = repo.SyncStatistics
 			replication["path_prefix"] = repo.PathPrefix
+			replication["proxy"] = repo.ProxyRef
 			replications = append(replications, replication)
 		}
 
@@ -229,14 +245,14 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []utils.ReplicationBody
+	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	repConfig := ReplicationConfig{
+	repConfig := GetReplicationConfig{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}
