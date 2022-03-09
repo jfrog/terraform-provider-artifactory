@@ -5,7 +5,7 @@ resources:
       gitProvider: Partnership_GitHub
       path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
-        include: pipelines-test
+        include: master
       buildOn:
         commit: false
         pullRequestCreate: true
