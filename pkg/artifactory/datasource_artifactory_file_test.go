@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,43 +17,62 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDlFile(t *testing.T) {
+func getDownloadPath(dir string) string {
+	return fmt.Sprintf("../../%s/crash.zip", dir)
+}
 
-	// every instance of RT has this repo and file out-of-the-box
-	script := `
-		data "artifactory_file" "example" {
-		  repository      = "example-repo-local"
-		  path            = "crash.zip"
-		  output_path     = "${path.root}/../../temp/crash.zip"
-		  force_overwrite = true
-		}
-	`
-	var downloadPreCheck = func() {
+func downloadPreCheck(t *testing.T, downloadPath string) func() {
+	return func() {
 		testAccPreCheck(t)
 		client := getTestResty(t)
 		err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
 		if err != nil {
 			panic(err)
 		}
-		/*copies the file at the same location where the file should be downloaded by DataSource. It will create the file
-		exist scenario.
-		*/
-		if err := copyFile("../../temp/crash.zip", "../../samples/crash.zip"); err != nil {
+		//copies the file at the same location where the file should be downloaded by DataSource. It will create the file exist scenario.
+		err = copyFile(downloadPath, "../../samples/crash.zip")
+		if err != nil {
 			panic(err)
 		}
-		copiedFileInfo, err := os.Stat("../../temp/crash.zip")
-		fmt.Printf("in downloadPreCheck: %v\n", copiedFileInfo.ModTime())
 	}
+}
+
+func cleanupDownloadedFile(downloadPath string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		downloadDir := filepath.Dir(downloadPath)
+		err := os.RemoveAll(downloadDir)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+/*
+Tests file downloads
+*/
+func TestDlFile(t *testing.T) {
+
+	randomizedDirName := strconv.Itoa(randomInt())
+	downloadPath := getDownloadPath(randomizedDirName)
+
+	// every instance of RT has this repo and file out-of-the-box
+	const script = `
+		data "artifactory_file" "example" {
+		  repository      = "example-repo-local"
+		  path            = "crash.zip"
+		  output_path     = "%s"
+		  force_overwrite = true
+		}
+	`
 
 	var downloadCheck = func(state *terraform.State) error {
 		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
-		downloadedFileInfo, err := os.Stat(download)
-		fmt.Printf("in downloadCheck: %v\n", downloadedFileInfo.ModTime())
+		_, err := os.Stat(download)
 		if err != nil {
 			return err
 		}
 		verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
-
 		if !verified {
 			return fmt.Errorf("%s checksum does not have expected checksum", download)
 		}
@@ -59,14 +80,47 @@ func TestDlFile(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          downloadPreCheck,
+		PreCheck:          downloadPreCheck(t, downloadPath),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: script,
+				Config: fmt.Sprintf(script, downloadPath),
 				Check:  downloadCheck,
 			},
 		},
+		//CheckDestroy: cleanupDownloadedFile(downloadPath),
+	})
+}
+
+/*
+Negative test case on file download skip
+When file is present at output_path, checksum of files at output_path & repository path matches
+artifactory_file datasource will skip the download.
+*/
+func TestFileDownloadSkipCheck(t *testing.T) {
+	randomizedDirName := strconv.Itoa(randomInt())
+	downloadPath := getDownloadPath(randomizedDirName)
+
+	// every instance of RT has this repo and file out-of-the-box
+	const script = `
+		data "artifactory_file" "example" {
+		  repository      = "example-repo-local"
+		  path            = "crash.zip"
+		  output_path     = "%s"
+		  force_overwrite = false
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          downloadPreCheck(t, downloadPath),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      fmt.Sprintf(script, downloadPath),
+				ExpectError: regexp.MustCompile("err001: file download skiped"),
+			},
+		},
+		//CheckDestroy: cleanupDownloadedFile(downloadPath),
 	})
 }
 

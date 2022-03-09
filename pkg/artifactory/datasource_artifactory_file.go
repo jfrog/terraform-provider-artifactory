@@ -1,9 +1,11 @@
 package artifactory
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"io"
 	"os"
 	"path/filepath"
@@ -36,7 +38,8 @@ type Checksums struct {
 
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFileRead,
+		ReadContext: dataSourceFileReader,
+		//Read: dataSourceFileRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
@@ -104,7 +107,55 @@ func dataSourceArtifactoryFile() *schema.Resource {
 	}
 }
 
-func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	repository := d.Get("repository").(string)
+	path := d.Get("path").(string)
+	outputPath := d.Get("output_path").(string)
+	forceOverwrite := d.Get("force_overwrite").(bool)
+	fileInfo := FileInfo{}
+	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	fileExists := FileExists(outputPath)
+	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+
+	/*--File Download logic--
+	1. File doesn't exist
+	2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
+	3. File exists but check sum doesn't match
+	*/
+	if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
+		outdir := filepath.Dir(outputPath)
+		err = os.MkdirAll(outdir, os.ModePerm)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		outFile, err := os.Create(outputPath)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		defer func(outFile *os.File) {
+			_ = outFile.Close()
+		}(outFile)
+	} else { //download not required
+		return diag.FromErr(fmt.Errorf("err001: file download skiped. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite))
+	}
+
+	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	if !chksMatches {
+		return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
+	}
+
+	return diag.FromErr(packFileInfo(fileInfo, d))
+}
+
+/*func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
@@ -118,11 +169,6 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	fileExists := FileExists(outputPath)
 	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 
-	/*--File Download logic--
-	1. File doesn't exist
-	2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
-	3. File exists but check sum doesn't match
-	*/
 	if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
 		outdir := filepath.Dir(outputPath)
 		err = os.MkdirAll(outdir, os.ModePerm)
@@ -150,7 +196,7 @@ func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return packFileInfo(fileInfo, d)
-}
+}*/
 
 func FileExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
