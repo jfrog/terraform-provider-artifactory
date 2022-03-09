@@ -1,3 +1,9 @@
+## 2.22.2 (Mar 9, 2022)
+
+IMPROVEMENTS:
+
+*Conditional file download depending on `force_overwrite` value of data source `artifactory_file`. [GH-352]
+
 ## 2.22.0 (Mar 8, 2022)
 
 FEATURES:
