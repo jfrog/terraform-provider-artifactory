@@ -39,8 +39,6 @@ type Checksums struct {
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFileReader,
-		//Read: dataSourceFileRead,
-
 		Schema: map[string]*schema.Schema{
 			"repository": {
 				Type:     schema.TypeString,
@@ -154,49 +152,6 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return diag.FromErr(packFileInfo(fileInfo, d))
 }
-
-/*func dataSourceFileRead(d *schema.ResourceData, m interface{}) error {
-	repository := d.Get("repository").(string)
-	path := d.Get("path").(string)
-	outputPath := d.Get("output_path").(string)
-	forceOverwrite := d.Get("force_overwrite").(bool)
-	fileInfo := FileInfo{}
-	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
-	if err != nil {
-		return err
-	}
-
-	fileExists := FileExists(outputPath)
-	chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-
-	if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
-		outdir := filepath.Dir(outputPath)
-		err = os.MkdirAll(outdir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		outFile, err := os.Create(outputPath)
-		if err != nil {
-			return err
-		}
-		defer func(outFile *os.File) {
-			_ = outFile.Close()
-		}(outFile)
-	} else { //download not required
-		return fmt.Errorf("download not required. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite)
-	}
-
-	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
-	if err != nil {
-		return err
-	}
-	chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-	if !chksMatches {
-		return fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
-	}
-
-	return packFileInfo(fileInfo, d)
-}*/
 
 func FileExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
