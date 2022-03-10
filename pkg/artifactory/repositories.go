@@ -350,7 +350,8 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: repoKeyValidator,
-		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters."},
+		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.",
+	},
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -389,7 +390,8 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
+	},
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -400,7 +402,8 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed."},
+		Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed.",
+	},
 	"xray_index": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -418,7 +421,8 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Set:         schema.HashString,
 		Optional:    true,
-		Description: "List of property set name"},
+		Description: "List of property set name",
+	},
 	"archive_browsing_enabled": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -427,7 +431,8 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"download_direct": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only."},
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
+	},
 }
 
 var baseRemoteRepoSchema = map[string]*schema.Schema{
@@ -494,12 +499,14 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*)."},
+		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
 	"excludes_pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded."},
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
+	},
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -510,7 +517,8 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "Repository layout key for the remote layout mapping"},
+		Description: "Repository layout key for the remote layout mapping",
+	},
 	"hard_fail": {
 		Type:     schema.TypeBool,
 		Optional: true,
@@ -545,7 +553,8 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Computed:     true,
 		ValidateFunc: validation.IntAtLeast(0),
-		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure."},
+		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.",
+	},
 	"local_address": {
 		Type:     schema.TypeString,
 		Optional: true, Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
