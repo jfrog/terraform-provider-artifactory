@@ -6,7 +6,7 @@ import (
 )
 
 func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	var javaRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
+	var javaRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"fetch_jars_eagerly": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -55,7 +55,7 @@ func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 			Default:     false,
 			Description: `(Optional) Reject the caching of jar files that are found to be invalid. For example, pseudo jars retrieved behind a "captive portal". Default value is 'false'.`,
 		},
-	})
+	}, repoLayoutRefSchema("remote", repoType))
 
 	type JavaRemoteRepo struct {
 		RemoteRepositoryBaseParams

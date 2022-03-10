@@ -121,22 +121,22 @@ func createProject(t *testing.T, projectKey string) {
 	}
 
 	type Project struct {
-		Key                    string          `json:"project_key"`
-		DisplayName            string          `json:"display_name"`
-		Description            string          `json:"description"`
-		AdminPrivileges        AdminPrivileges `json:"admin_privileges"`
+		Key             string          `json:"project_key"`
+		DisplayName     string          `json:"display_name"`
+		Description     string          `json:"description"`
+		AdminPrivileges AdminPrivileges `json:"admin_privileges"`
 	}
 
 	restyClient := getTestResty(t)
 
 	project := Project{
-		Key: projectKey,
+		Key:         projectKey,
 		DisplayName: projectKey,
 		Description: fmt.Sprintf("%s description", projectKey),
 		AdminPrivileges: AdminPrivileges{
-			ManageMembers: true,
+			ManageMembers:   true,
 			ManageResources: true,
-			IndexResources: true,
+			IndexResources:  true,
 		},
 	}
 
@@ -152,6 +152,11 @@ func deleteProject(t *testing.T, projectKey string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+//Usage of the function is strictly restricted to Test Cases
+func getValidRandomDefaultRepoLayoutRef() string {
+	return randSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }
 
 // updateProxiesConfig is used by createProxy and deleteProxy to interact with a proxy on Artifactory
