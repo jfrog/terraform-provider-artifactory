@@ -1,3 +1,9 @@
+## 2.22.1 (Mar 10, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_ldap_setting: Made user_dn_pattern attribute optional. [GH-356]
+
 ## 2.22.0 (Mar 8, 2022)
 
 FEATURES:
