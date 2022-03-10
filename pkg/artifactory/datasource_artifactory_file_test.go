@@ -17,7 +17,7 @@ func TestDlFile(t *testing.T) {
 	// every instance of RT has this repo and file out-of-the-box
 	script := `
 		data "artifactory_file" "example" {
-		  repository      = "example-repo-local"
+		  repository      =  "example-repo-local"
 		  path            = "crash.zip"
 		  output_path     = "${path.cwd}/crash.zip"
 		  force_overwrite = true
