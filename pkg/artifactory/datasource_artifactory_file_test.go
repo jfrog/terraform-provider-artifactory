@@ -16,12 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//Provides a temporary path. The directory is automatically removed by Cleanup
-//when the test and all its subtests complete.
-func getTempDownloadPath(t *testing.T) string {
-	return fmt.Sprintf("%s/crash.zip", t.TempDir())
-}
-
 func downloadPreCheck(t *testing.T, downloadPath string) func() {
 	return func() {
 		testAccPreCheck(t)
@@ -53,7 +47,7 @@ func cleanupDownloadedFile(downloadPath string) func(*terraform.State) error {
 Tests file downloads. Always downloads on force_overwrite = true
 */
 func TestDlFile(t *testing.T) {
-	downloadPath := getTempDownloadPath(t)
+	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
 
 	// every instance of RT has this repo and file out-of-the-box
 	const script = `
@@ -96,7 +90,7 @@ When file is present at output_path, checksum of files at output_path & reposito
 artifactory_file datasource will skip the download.
 */
 func TestFileDownloadSkipCheck(t *testing.T) {
-	downloadPath := getTempDownloadPath(t)
+	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
 
 	// every instance of RT has this repo and file out-of-the-box
 	const script = `
