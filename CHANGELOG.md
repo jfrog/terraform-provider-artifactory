@@ -1,8 +1,14 @@
-## 2.22.1 (Mar 10, 2022)
+## 2.22.2 (Mar 10, 2022)
 
 BUG FIXES:
 
 * resource/artifactory_ldap_setting: Made user_dn_pattern attribute optional. [GH-356]
+
+## 2.22.1 (Mar 8, 2022)
+
+IMPROVEMENTS:
+
+* Make repository layout to correct default value as per package type, provided the `repo_layout_ref` attribute is not supplied explicitly in the resource. [GH-335]
 
 ## 2.22.0 (Mar 8, 2022)
 
