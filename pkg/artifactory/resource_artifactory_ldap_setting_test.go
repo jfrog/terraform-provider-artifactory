@@ -139,6 +139,77 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 	})
 }
 
+func TestAccLdapSetting_user_dn_or_search_filter(t *testing.T) {
+	const LdapSettingTemplateUserDnNoSearchFilter = `
+resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
+	key = "ldaptestuserdnsearchfilter"
+	enabled = true
+	ldap_url = "ldap://ldaptestldap"
+	user_dn_pattern = "ou=People, uid={0}"
+}`
+
+	const LdapSettingTemplateSearchFilterNoUserDn = `
+resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
+	key = "ldaptestuserdnsearchfilter"
+	enabled = true
+	ldap_url = "ldap://ldaptestldap"
+	search_filter = "(uid={0})"
+}`
+
+	const LdapSettingTemplateUserDnAndSearchFilter = `
+resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
+	key = "ldaptestuserdnsearchfilter"
+	enabled = true
+	ldap_url = "ldap://ldaptestldap"
+	user_dn_pattern = "ou=People, uid={0}"
+    search_filter = "(uid={0})"
+}`
+
+	// Note: Artifactory REST API creates LDAP setting config even when both user_dn_pattern and search_filter are empty. In UI, User is prompted to specify values for either/both of these fields.
+	const LdapSettingTemplateNoUserDnNoSearchFilter = `
+resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
+	key = "ldaptestuserdnsearchfilter"
+	enabled = true
+	ldap_url = "ldap://ldaptestldap"
+}`
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy:      testAccLdapSettingDestroy("ldaptestuserdnsearchfilter"),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: LdapSettingTemplateUserDnNoSearchFilter,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "user_dn_pattern", "ou=People, uid={0}"),
+				),
+			},
+			{
+				Config: LdapSettingTemplateSearchFilterNoUserDn,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "search_filter", "(uid={0})"),
+				),
+			},
+			{
+				Config: LdapSettingTemplateUserDnAndSearchFilter,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "user_dn_pattern", "ou=People, uid={0}"),
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "search_filter", "(uid={0})"),
+				),
+			},
+			{
+				Config: LdapSettingTemplateNoUserDnNoSearchFilter,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := testAccProviders["artifactory"]()

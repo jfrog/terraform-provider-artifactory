@@ -68,9 +68,9 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 		},
 		"user_dn_pattern": {
 			Type:             schema.TypeString,
-			Required:         true,
+			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validateLdapDn)),
-			Description:      "(Required) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People",
+			Description:      "(Optional) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People. Default value is blank/empty.",
 		},
 		"auto_create_user": {
 			Type:        schema.TypeBool,
