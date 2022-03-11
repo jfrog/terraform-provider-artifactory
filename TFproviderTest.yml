@@ -49,7 +49,7 @@ pipelines:
             - >-
               if [ -d /usr/local/go ]; then
                 echo "Removing existing version of Go"
-                rm -rf /usr/local/go
+                rm -rf /usr/local/go || true
               fi
             - sudo mv -v go /usr/local
             - echo "export GOPATH=$HOME/go" >> ~/.bash_profile
