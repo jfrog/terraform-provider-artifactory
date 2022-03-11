@@ -30,6 +30,7 @@ pipelines:
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.35.1
+            GO_VERSION: 1.17.8
         execution:
           onStart:
             - echo "Preparing for work. Install Helm, Go and Teraform"
@@ -39,14 +40,19 @@ pipelines:
             - echo "Run Helm installation script" && ./get_helm.sh && rm get_helm.sh
             - helm version
             - apt update
-            - export GO_VERSION="1.17.8"
             - export GO_ARCH="amd64"
+            - rm -rf *.tar.gz go
             - curl -O -L "https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
             - ls -l
             - tar -xf "go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
             - sudo chown -R root:root ./go
+            - >-
+              if [ -d /usr/local/go ]; then
+                echo "Removing existing version of Go"
+                rm -rf /usr/local/go
+              fi
             - sudo mv -v go /usr/local
-            - echo "export GOPATH=$HOME/go" >> ~/.bash_profile1
+            - echo "export GOPATH=$HOME/go" >> ~/.bash_profile
             - echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.bash_profile
             - source ~/.bash_profile
             - cat ~/.bash_profile
@@ -60,7 +66,7 @@ pipelines:
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # since we run it on the host, we need to manually move into the resource path
-            - echo "Verify the code contents merged feature branch with development branch"
+            - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
             - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
