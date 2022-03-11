@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,30 +16,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func downloadPreCheck(t *testing.T, downloadPath string) func() {
+func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) func() {
 	return func() {
+		const localFilePath = "../../samples/crash.zip"
 		testAccPreCheck(t)
 		client := getTestResty(t)
-		err := uploadTestFile(client, "../../samples/crash.zip", "example-repo-local/crash.zip", "application/zip")
+		err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
 		if err != nil {
 			panic(err)
 		}
 		//copies the file at the same location where the file should be downloaded by DataSource. It will create the file exist scenario.
-		err = copyFile(downloadPath, "../../samples/crash.zip")
+		err = copyFile(downloadPath, localFilePath)
 		if err != nil {
 			panic(err)
 		}
-	}
-}
-
-func cleanupDownloadedFile(downloadPath string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		downloadDir := filepath.Dir(downloadPath)
-		err := os.RemoveAll(downloadDir)
-		if err != nil {
-			return err
-		}
-		return nil
+		stat, _ := os.Stat(downloadPath)
+		*localFileModTime = stat.ModTime()
 	}
 }
 
@@ -48,6 +40,7 @@ Tests file downloads. Always downloads on force_overwrite = true
 */
 func TestDlFile(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
+	localFileModTime := time.Time{}
 
 	// every instance of RT has this repo and file out-of-the-box
 	const script = `
@@ -73,7 +66,7 @@ func TestDlFile(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          downloadPreCheck(t, downloadPath),
+		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -91,6 +84,7 @@ artifactory_file datasource will skip the download.
 */
 func TestFileDownloadSkipCheck(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
+	localFileModTime := time.Time{}
 
 	// every instance of RT has this repo and file out-of-the-box
 	const script = `
@@ -102,13 +96,26 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 		}
 	`
 
+	var skipDownloadCheck = func(state *terraform.State) error {
+		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
+		downloadedFileStat, err := os.Stat(download)
+		if err != nil {
+			return err
+		}
+		downloadedFileModTime := downloadedFileStat.ModTime()
+		if downloadedFileModTime.After(localFileModTime) { //determines fresh download occurred during the test step
+			return fmt.Errorf("fresh download observed. Existing file modification time: %v. Fresh downloaded file modification time: %v", localFileModTime, downloadedFileModTime)
+		}
+		return nil
+	}
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:          downloadPreCheck(t, downloadPath),
+		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      fmt.Sprintf(script, downloadPath),
-				ExpectError: regexp.MustCompile("err001: file download skiped"),
+				Config: fmt.Sprintf(script, downloadPath),
+				Check:  skipDownloadCheck,
 			},
 		},
 	})
@@ -150,10 +157,14 @@ func copyFile(destPath string, srcPath string) error {
 	defer fout.Close()
 
 	_, err = io.Copy(fout, fin)
-
 	if err != nil {
 		return err
 	}
+	/*currenttime := time.Now().Local()
+	err = os.Chtimes(destPath, currenttime, currenttime)
+	if err != nil {
+		return err
+	}*/
 	return nil
 }
 

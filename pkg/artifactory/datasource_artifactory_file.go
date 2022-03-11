@@ -36,6 +36,10 @@ type Checksums struct {
 	Sha256 string `json:"sha256,omitempty"`
 }
 
+func (fi FileInfo) Id() string {
+	return fi.Repo + fi.Path
+}
+
 func dataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFileReader,
@@ -138,7 +142,13 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 			_ = outFile.Close()
 		}(outFile)
 	} else { //download not required
-		return diag.FromErr(fmt.Errorf("err001: file download skiped. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite))
+		d.SetId(fileInfo.Id())
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "WARN-001: file download skipped.",
+			Detail:   fmt.Sprintf("WARN-001: file download skipped. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite),
+		}}
+
 	}
 
 	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
