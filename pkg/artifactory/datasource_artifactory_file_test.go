@@ -173,11 +173,6 @@ func copyFile(destPath string, srcPath string) error {
 	if err != nil {
 		return err
 	}
-	/*currenttime := time.Now().Local()
-	err = os.Chtimes(destPath, currenttime, currenttime)
-	if err != nil {
-		return err
-	}*/
 	return nil
 }
 
