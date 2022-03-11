@@ -87,12 +87,20 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 	localFileModTime := time.Time{}
 
 	// every instance of RT has this repo and file out-of-the-box
-	const script = `
+	const noOverWriteForcedScript = `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
 		  path            = "crash.zip"
 		  output_path     = "%s"
 		  force_overwrite = false
+		}
+	`
+	const forceOverWriteScript = `
+		data "artifactory_file" "example" {
+		  repository      = "example-repo-local"
+		  path            = "crash.zip"
+		  output_path     = "%s"
+		  force_overwrite = true
 		}
 	`
 
@@ -109,13 +117,35 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 		return nil
 	}
 
+	var downloadCheck = func(state *terraform.State) error {
+		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
+		downloadedFileStat, err := os.Stat(download)
+		if err != nil {
+			return err
+		}
+		downloadedFileModTime := downloadedFileStat.ModTime()
+		verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+		if !verified {
+			return fmt.Errorf("%s checksum does not have expected checksum", download)
+		}
+		//makes sure download occurred.
+		if !downloadedFileModTime.After(localFileModTime) { //determines fresh download occurred during the test step
+			return fmt.Errorf("fresh download observed. Existing file modification time: %v. Fresh downloaded file modification time: %v", localFileModTime, downloadedFileModTime)
+		}
+		return err
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(script, downloadPath),
+				Config: fmt.Sprintf(noOverWriteForcedScript, downloadPath),
 				Check:  skipDownloadCheck,
+			},
+			{
+				Config: fmt.Sprintf(forceOverWriteScript, downloadPath),
+				Check:  downloadCheck,
 			},
 		},
 	})
