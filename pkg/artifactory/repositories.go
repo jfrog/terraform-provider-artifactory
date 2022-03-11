@@ -3,10 +3,12 @@ package artifactory
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -331,6 +333,17 @@ var repoTypesLikeGeneric = []string{
 
 var projectEnvironmentsSupported = []string{"DEV", "PROD"}
 
+func repoLayoutRefSchema(repositoryType string, packageType string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"repo_layout_ref": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: getDefaultRepoLayoutRef(repositoryType, packageType),
+			Description: "Repository layout key for the local repository",
+		},
+	}
+}
+
 var baseLocalRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -369,10 +382,9 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"includes_pattern": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true, Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
 	},
 	"excludes_pattern": {
 		Type:        schema.TypeString,
@@ -381,10 +393,10 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Repository layout key for the local repository",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
 		Type:        schema.TypeBool,
@@ -423,7 +435,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-var baseRemoteSchema = map[string]*schema.Schema{
+var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
 		Required:     true,
@@ -496,10 +508,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Repository layout key for the remote repository",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"remote_repo_layout_ref": {
 		Type:        schema.TypeString,
@@ -508,10 +520,9 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description: "Repository layout key for the remote layout mapping",
 	},
 	"hard_fail": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true, Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
 	},
 	"offline": {
 		Type:        schema.TypeBool,
@@ -545,9 +556,8 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.",
 	},
 	"local_address": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
+		Type:     schema.TypeString,
+		Optional: true, Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
 	},
 	"retrieval_cache_period_seconds": {
 		Type:        schema.TypeInt,
@@ -581,8 +591,7 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(0),
-		Description:  `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
+		ValidateFunc: validation.IntAtLeast(0), Description: `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
 	},
 	"assumed_offline_period_secs": {
 		Type:         schema.TypeInt,
@@ -609,11 +618,10 @@ var baseRemoteSchema = map[string]*schema.Schema{
 		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
 	},
 	"property_sets": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Set:         schema.HashString,
-		Optional:    true,
-		Description: "List of property set name",
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+		Optional: true, Description: "List of property set name",
 	},
 	"allow_any_host_auth": {
 		Type:        schema.TypeBool,
@@ -744,10 +752,10 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {
 		Type:        schema.TypeList,
@@ -755,6 +763,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The effective list of actual repositories included in this virtual repository.",
 	},
+
 	"artifactory_requests_can_retrieve_remote_artifacts": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -772,6 +781,91 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 		Default:      7200,
 		Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
 		ValidateFunc: validation.IntAtLeast(0),
+	},
+}
+
+var baseFederatedRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: repoKeyValidator,
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: projectKeyValidator,
+		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		MinItems:    1,
+		MaxItems:    2,
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+	},
+	"package_type": {
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"notes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"excludes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	"repo_layout_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+	"blacked_out": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+	},
+	"xray_index": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"priority_resolution": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+	},
+	"property_sets": {
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+		Optional: true,
+	},
+	"archive_browsing_enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
+	},
+	"download_direct": {
+		Type:     schema.TypeBool,
+		Optional: true,
 	},
 }
 
@@ -1158,6 +1252,80 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 
 		Schema:        skeema,
 		CustomizeDiff: projectEnvironmentsDiff,
+	}
+}
+
+//Returns random string from a map[string]string
+func selectRandomFromMapOfStrings(m map[string]string) string {
+	mapLength := len(m)
+	allValues := make([]string, 0, mapLength)
+	for _, value := range m {
+		allValues = append(allValues, value)
+	}
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	return allValues[r1.Intn(mapLength)]
+}
+
+func isSelectRandom(opts ...bool) bool {
+	selectRandomFlag := false
+	for i, val := range opts {
+		switch i {
+		case 0:
+			selectRandomFlag = val
+		default:
+			fmt.Printf("Option index is not defined. Index: %v, value: %v\n", i, val)
+		}
+	}
+	return selectRandomFlag
+}
+
+type SupportedRepoClasses struct {
+	RepoLayoutRef      string
+	SupportedRepoTypes map[string]bool
+}
+
+//Consolidated list of Default Repo Layout for all Package Types with active Repo Types
+var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
+	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cran":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cargo":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"chef":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cocoapods": {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"composer":  {RepoLayoutRef: "composer-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conan":     {RepoLayoutRef: "conan-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conda":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"debian":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"docker":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gems":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"generic":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gitlfs":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"go":        {RepoLayoutRef: "go-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gradle":    {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"helm":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"ivy":       {RepoLayoutRef: "ivy-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"maven":     {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"npm":       {RepoLayoutRef: "npm-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"nuget":     {RepoLayoutRef: "nuget-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"opkg":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"p2":        {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true, "virtual": true}},
+	"pub":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"puppet":    {RepoLayoutRef: "puppet-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"pypi":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"sbt":       {RepoLayoutRef: "sbt-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"vagrant":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "federated": true}},
+	"vcs":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true}},
+	"rpm":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+}
+
+//Return the default repo layout by Repository Type & Package Type
+func getDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+	return func() (interface{}, error) {
+		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
+			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
+		}
+		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
 	}
 }
 

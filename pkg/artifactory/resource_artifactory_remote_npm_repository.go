@@ -9,7 +9,9 @@ import (
 
 func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 
-	npmRemoteSchema := mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
+	const packageType = "npm"
+
+	npmRemoteSchema := mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"mismatching_mime_types_override_list": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -20,7 +22,7 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 				return strings.Join(fields, ",")
 			},
 		},
-	})
+	}, repoLayoutRefSchema("remote", packageType))
 	type NpmRemoteRepository struct {
 		RemoteRepositoryBaseParams
 		MismatchingMimeTypeOverrideList string `json:"mismatchingMimeTypesOverrideList"`
@@ -28,7 +30,7 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	var unpack = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}
 		repo := NpmRemoteRepository{
-			RemoteRepositoryBaseParams:      unpackBaseRemoteRepo(s, "npm"),
+			RemoteRepositoryBaseParams:      unpackBaseRemoteRepo(s, packageType),
 			MismatchingMimeTypeOverrideList: d.getString("mismatching_mime_types_override_list", false),
 		}
 		return repo, repo.Id(), nil
@@ -38,9 +40,8 @@ func resourceArtifactoryRemoteNpmRepository() *schema.Resource {
 		return &NpmRemoteRepository{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:              "remote",
-				PackageType:         "npm",
+				PackageType:         packageType,
 				RemoteRepoLayoutRef: "npm-default",
-				RepoLayoutRef:       "npm-default",
 			},
 		}
 	})

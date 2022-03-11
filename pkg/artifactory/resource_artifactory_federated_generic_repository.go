@@ -8,7 +8,8 @@ import (
 )
 
 func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
-	var federatedSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+
+	var federatedSchema = mergeSchema(baseFederatedRepoSchema, map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
 			Required: true,
@@ -34,7 +35,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 				},
 			},
 		},
-	})
+	}, repoLayoutRefSchema("federated", repoType))
 
 	type Member struct {
 		Url     string `hcl:"url" json:"url"`
