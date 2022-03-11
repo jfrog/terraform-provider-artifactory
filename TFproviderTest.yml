@@ -41,7 +41,7 @@ pipelines:
             - helm version
             - apt update
             - export GO_ARCH="amd64"
-            - rm -rf *.tar.gz go
+            - rm -rf go*.tar.gz go
             - curl -O -L "https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
             - ls -l
             - tar -xf "go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
