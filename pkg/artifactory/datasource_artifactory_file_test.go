@@ -1,7 +1,6 @@
 package artifactory
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -151,22 +150,10 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 	})
 }
 
-//Creates new directory tree if not exist
-func createNewDir(srcPath string) error {
-	_, err := os.Stat(srcPath)
-	if err == nil {
-		return err // path exists, nothing to do
-	}
-	if !errors.Is(err, os.ErrNotExist) {
-		return err // some other kind of non-recoverable error
-	}
-	return os.MkdirAll(srcPath, os.ModePerm)
-}
-
 //Copies file from source path to destination path
 func copyFile(destPath string, srcPath string) error {
 	destDir := filepath.Dir(destPath)
-	err := createNewDir(destDir)
+	err := os.MkdirAll(destDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
