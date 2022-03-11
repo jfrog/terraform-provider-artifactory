@@ -322,13 +322,17 @@ var repoTypesLikeGeneric = []string{
 	"gitlfs",
 	"go",
 	"helm",
-	"ivy",
 	"npm",
 	"opkg",
 	"puppet",
 	"pypi",
-	"sbt",
 	"vagrant",
+}
+
+var gradleLikeRepoTypes = []string{
+	"gradle",
+	"sbt",
+	"ivy",
 }
 
 var projectEnvironmentsSupported = []string{"DEV", "PROD"}
