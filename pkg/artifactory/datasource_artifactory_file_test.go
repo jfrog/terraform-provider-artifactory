@@ -155,7 +155,7 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 func createNewDir(srcPath string) error {
 	_, err := os.Stat(srcPath)
 	if err == nil {
-		return nil // path exists, nothing to do
+		return err // path exists, nothing to do
 	}
 	if !errors.Is(err, os.ErrNotExist) {
 		return err // some other kind of non-recoverable error
