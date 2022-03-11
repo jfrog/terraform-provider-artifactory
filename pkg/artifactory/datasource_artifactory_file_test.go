@@ -154,7 +154,7 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 //Creates new directory tree if not exist
 func createNewDir(srcPath string) error {
 	_, err := os.Stat(srcPath)
-	if err != nil {
+	if err == nil {
 		return nil // path exists, nothing to do
 	}
 	if !errors.Is(err, os.ErrNotExist) {
