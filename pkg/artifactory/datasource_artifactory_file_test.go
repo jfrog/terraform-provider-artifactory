@@ -125,16 +125,12 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 func createNewDir(srcPath string) error {
 	_, err := os.Stat(srcPath)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			errMkDirAll := os.MkdirAll(srcPath, os.ModePerm)
-			if errMkDirAll != nil {
-				return errMkDirAll
-			}
-		} else {
-			return err
-		}
+		return nil // path exists, nothing to do
 	}
-	return nil
+	if !errors.Is(err, os.ErrNotExist) {
+		return err // some other kind of non-recoverable error
+	}
+	return os.MkdirAll(srcPath, os.ModePerm)
 }
 
 //Copies file from source path to destination path
