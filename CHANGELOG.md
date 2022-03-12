@@ -1,3 +1,13 @@
+## 2.23.0 (Mar 11, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following local and remote repository resources in new implementation. [GH-360]
+  * "artifactory_local_sbt_repository"
+  * "artifactory_local_ivy_repository"
+  * "artifactory_remote_sbt_repository"
+  * "artifactory_remote_ivy_repository"
+
 ## 2.22.2 (Mar 10, 2022)
 
 BUG FIXES:
