@@ -414,37 +414,6 @@ func TestAccLocalMavenRepository(t *testing.T) {
 	})
 }
 
-func TestAccLocalGradleRepository(t *testing.T) {
-
-	_, fqrn, name := mkNames("gradle-local", "artifactory_local_gradle_repository")
-	tempStruct := make(map[string]interface{})
-	copyInterfaceMap(commonJavaParams, tempStruct)
-
-	tempStruct["name"] = name
-	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
-	tempStruct["suppress_pom_consistency_checks"] = true
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: executeTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
-					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
-					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
-					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
-					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
-				),
-			},
-		},
-	})
-}
-
 func TestAccLocalGenericRepository(t *testing.T) {
 
 	_, fqrn, name := mkNames("generic-local", "artifactory_local_generic_repository")
@@ -710,6 +679,46 @@ func TestAccAllLocalRepoTypes(t *testing.T) {
 	for _, repo := range repoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 			resource.Test(makeLocalRepoTestCase(repo, t))
+		})
+	}
+}
+
+func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("%s-local", repoType)
+	resourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+	_, fqrn, name := mkNames(name, resourceName)
+	tempStruct := make(map[string]interface{})
+	copyInterfaceMap(commonJavaParams, tempStruct)
+
+	tempStruct["name"] = name
+	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
+	tempStruct["suppress_pom_consistency_checks"] = true
+
+	return t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: executeTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
+				),
+			},
+		},
+	}
+}
+
+func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
+	for _, repoType := range gradleLikeRepoTypes {
+		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(makeLocalGradleLikeRepoTestCase(repoType, t))
 		})
 	}
 }
