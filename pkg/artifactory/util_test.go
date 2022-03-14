@@ -154,6 +154,44 @@ func deleteProject(t *testing.T, projectKey string) {
 	}
 }
 
+// Create a local repository with Xray indexing enabled. It will be used in the tests
+func testAccCreateRepos(t *testing.T, repo string, rclass string, packageType string,
+	handleReleases bool, handleSnapshots bool) {
+	restyClient := getTestResty(t)
+
+	type Repository struct {
+		Rclass                  string `json:"rclass"`
+		PackageType             string `json:"packageType"`
+		HandleReleases          bool   `json:"handleReleases"`
+		HandleSnapshots         bool   `json:"handleSnapshots"`
+		SnapshotVersionBehavior string `json:"snapshotVersionBehavior"`
+		XrayIndex               bool   `json:"xrayIndex"`
+	}
+
+	repository := Repository{}
+	repository.Rclass = rclass
+	repository.PackageType = packageType
+	repository.HandleReleases = handleReleases
+	repository.HandleSnapshots = handleSnapshots
+	repository.SnapshotVersionBehavior = "unique"
+	repository.XrayIndex = true
+	response, errRepo := restyClient.R().SetBody(repository).Put("artifactory/api/repositories/" + repo)
+	//Artifactory can return 400 for several reasons, this is why we are checking the response body
+	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
+	if !repoExists && response.StatusCode() != http.StatusOK {
+		t.Error(errRepo)
+	}
+}
+
+func testAccDeleteRepo(t *testing.T, repo string) {
+	restyClient := getTestResty(t)
+
+	response, errRepo := restyClient.R().Delete("artifactory/api/repositories/" + repo)
+	if errRepo != nil || response.StatusCode() != http.StatusOK {
+		t.Logf("The repository %s doesn't exist", repo)
+	}
+}
+
 //Usage of the function is strictly restricted to Test Cases
 func getValidRandomDefaultRepoLayoutRef() string {
 	return randSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)

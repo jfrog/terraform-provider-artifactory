@@ -34,6 +34,20 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 	}
 }
 
+func uploadMavenArtifacts(t *testing.T) {
+	const localOlderFilePath = "../../samples/multi1-3.7-20220310.233748-1.jar"
+	const localNewerFilePath = "../../samples/multi1-3.7-20220310.233859-2.jar"
+	client := getTestResty(t)
+	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
+	if err != nil {
+		panic(err)
+	}
+	err = uploadTestFile(client, localNewerFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
+	if err != nil {
+		panic(err)
+	}
+}
+
 /*
 Tests file downloads. Always downloads on force_overwrite = true
 */
@@ -66,6 +80,57 @@ func TestDlFile(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(script, downloadPath),
+				Check:  downloadCheck,
+			},
+		},
+	})
+}
+
+/*
+Tests the latest artifact download functionality.
+For this test we create maven repository, upload 2 jars with different timestamps to the repo.
+Then download the latest artifact (using SNAPSHOT instead of the actual timestamp)
+and compare sha256 to match with the file with the latest timestamp.
+*/
+func TestDownloadLatestFile(t *testing.T) {
+	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
+
+	const script = `
+	data "artifactory_file" "example" {
+		  repository      = "my-maven-local"
+		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+		  output_path     = "%s"
+		  force_overwrite = true
+          download_latest_artifact = true
+		}
+	`
+
+	var downloadCheck = func(state *terraform.State) error {
+		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
+		_, err := os.Stat(download)
+		if err != nil {
+			return err
+		}
+		verified, err := VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
+		if !verified {
+			return fmt.Errorf("%s checksum does not match", download)
+		}
+		return err
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccDeleteRepo(t, "my-maven-local")
+			testAccCreateRepos(t, "my-maven-local", "local",
+				"maven", true, true)
+			uploadMavenArtifacts(t)
+		},
+
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
