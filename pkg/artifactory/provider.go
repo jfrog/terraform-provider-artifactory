@@ -22,7 +22,6 @@ func Provider() *schema.Provider {
 		"artifactory_local_repository":           resourceArtifactoryLocalRepository(),
 		"artifactory_local_nuget_repository":     resourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":     resourceArtifactoryLocalJavaRepository("maven", false),
-		"artifactory_local_gradle_repository":    resourceArtifactoryLocalJavaRepository("gradle", true),
 		"artifactory_local_alpine_repository":    resourceArtifactoryLocalAlpineRepository(),
 		"artifactory_local_debian_repository":    resourceArtifactoryLocalDebianRepository(),
 		"artifactory_local_docker_v2_repository": resourceArtifactoryLocalDockerV2Repository(),
@@ -35,7 +34,6 @@ func Provider() *schema.Provider {
 		"artifactory_remote_cargo_repository":    resourceArtifactoryRemoteCargoRepository(),
 		"artifactory_remote_pypi_repository":     resourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_maven_repository":    resourceArtifactoryRemoteJavaRepository("maven", false),
-		"artifactory_remote_gradle_repository":   resourceArtifactoryRemoteJavaRepository("gradle", true),
 		"artifactory_virtual_repository":         resourceArtifactoryVirtualRepository(),
 		"artifactory_virtual_maven_repository":   resourceArtifactoryMavenVirtualRepository(),
 		"artifactory_virtual_go_repository":      resourceArtifactoryGoVirtualRepository(),
@@ -68,6 +66,12 @@ func Provider() *schema.Provider {
 	for _, repoType := range repoTypesLikeGeneric {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = resourceArtifactoryLocalGenericRepository(repoType)
+	}
+	for _, repoType := range gradleLikeRepoTypes {
+		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+		resoucesMap[localResourceName] = resourceArtifactoryLocalJavaRepository(repoType, true)
+		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
+		resoucesMap[remoteResourceName] = resourceArtifactoryRemoteJavaRepository(repoType, true)
 	}
 	for _, repoType := range federatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)

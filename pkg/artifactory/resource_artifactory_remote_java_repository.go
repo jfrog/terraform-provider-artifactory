@@ -46,7 +46,7 @@ func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 		"suppress_pom_consistency_checks": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Default:     suppressPom,
 			Description: `(Optional) By default, the system keeps your repositories healthy by refusing POMs with incorrect coordinates (path). If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a "409 Conflict" error. You can disable this behavior by setting this attribute to 'true'. Default value is 'false'.`,
 		},
 		"reject_invalid_jars": {

@@ -52,7 +52,7 @@ func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 		"suppress_pom_consistency_checks": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Default:  false,
+			Default:  suppressPom,
 			Description: "By default, Artifactory keeps your repositories healthy by refusing POMs with incorrect " +
 				"coordinates (path).\n  If the groupId:artifactId:version information inside the POM does not match the " +
 				"deployed path, Artifactory rejects the deployment with a \"409 Conflict\" error.\n  You can disable this " +
