@@ -124,7 +124,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Description: "If set to `true`, HCL will send the artifact path directly to Artifactory without verification " +
+				Description: "If set to `true`, the provider will send the artifact path directly to Artifactory without verification " +
 					"if the file exists. Used in maven repositories, where handling releases and snapshots enabled. For example, " +
 					"if there is a jar file in the repo, called `3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar`, " +
 					"user can download it by setting the path to `3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar`",
@@ -141,11 +141,8 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 	downloadLatest := d.Get("download_latest_artifact").(bool)
 	fileInfo := FileInfo{}
 
-	if downloadLatest == false {
-		response, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
-		path := (fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
-		fmt.Printf(path)
-		fmt.Print(response.StatusCode())
+	if !downloadLatest {
+		_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
 		}
