@@ -3,7 +3,7 @@
 IMPROVEMENTS:
 
 * Datasource `datasource_artifactory_file`, added a parameter `download_latest_artifact`, 
-  which allows users to download the latest artifacts from maven-like repositories [GH-227]
+  which allows users to download the latest artifacts from maven-like repositories [GH-361]
 
 ## 2.23.0 (Mar 11, 2022)
 
