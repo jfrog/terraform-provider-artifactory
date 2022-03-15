@@ -125,9 +125,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Optional: true,
 				Default:  false,
 				Description: "If set to `true`, the provider will send the artifact path directly to Artifactory without verification " +
-					"if the file exists. Used in maven repositories, where handling releases and snapshots enabled. For example, " +
-					"if there is a jar file in the repo, called `3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar`, " +
-					"user can download it by setting the path to `3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar`",
+					"if the file exists. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)",
 			},
 		},
 	}
