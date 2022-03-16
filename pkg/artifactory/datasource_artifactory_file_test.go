@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
@@ -34,7 +35,7 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 	}
 }
 
-func uploadMavenArtifacts(t *testing.T) {
+func uploadTwoArtifacts(t *testing.T) {
 	const localOlderFilePath = "../../samples/multi1-3.7-20220310.233748-1.jar"
 	const localNewerFilePath = "../../samples/multi1-3.7-20220310.233859-2.jar"
 	client := getTestResty(t)
@@ -91,21 +92,21 @@ func TestDlFile(t *testing.T) {
 }
 
 /*
-Tests the latest artifact download functionality.
+Tests the artifact download functionality using dereference.
 For this test we create maven repository, upload 2 jars with different timestamps to the repo.
-Then download the latest artifact (using SNAPSHOT instead of the actual timestamp)
-and compare sha256 to match with the file with the latest timestamp.
+Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
+Compare sha256 to match with the file with the latest timestamp.
 */
-func TestDownloadLatestFile(t *testing.T) {
+func TestDownloadFileWithDereference(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
 	const script = `
 	data "artifactory_file" "example" {
 		  repository      = "my-maven-local"
 		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
-		  output_path     = "%s"
+          output_path     = "%s"
 		  force_overwrite = true
-          download_latest_artifact = true
+          dereference     = true
 		}
 	`
 
@@ -128,7 +129,7 @@ func TestDownloadLatestFile(t *testing.T) {
 			testAccDeleteRepo(t, "my-maven-local")
 			testAccCreateRepos(t, "my-maven-local", "local",
 				"maven", true, true)
-			uploadMavenArtifacts(t)
+			uploadTwoArtifacts(t)
 		},
 
 		ProviderFactories: testAccProviders,
@@ -136,6 +137,44 @@ func TestDownloadLatestFile(t *testing.T) {
 			{
 				Config: fmt.Sprintf(script, downloadPath),
 				Check:  downloadCheck,
+			},
+		},
+	})
+}
+
+/*
+Tests the artifact download functionality using dereference.
+For this test we create maven repository, upload 2 jars with different timestamps to the repo.
+Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
+dereference parameter is set to `false`, so provider will send try to find exact filename with `SNAPSHOT`
+in the filename and will fail.
+*/
+func TestDownloadFileWithDereferenceNegative(t *testing.T) {
+	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
+
+	const script = `
+	data "artifactory_file" "example" {
+		  repository      = "my-maven-local"
+		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+          output_path     = "%s"
+		  force_overwrite = true
+          dereference     = false
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccDeleteRepo(t, "my-maven-local")
+			testAccCreateRepos(t, "my-maven-local", "local",
+				"maven", true, true)
+			uploadTwoArtifacts(t)
+		},
+
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      fmt.Sprintf(script, downloadPath),
+				ExpectError: regexp.MustCompile(".*Unable to find item.*"),
 			},
 		},
 	})

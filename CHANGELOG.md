@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Datasource `datasource_artifactory_file`, added a parameter `download_latest_artifact`, 
+* Datasource `datasource_artifactory_file`, added a parameter `dereference`, 
   which allows users to download the latest artifacts from repositories [GH-361]
 
 ## 2.23.0 (Mar 11, 2022)

@@ -120,7 +120,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Default:     false,
 				Description: "If set to `true`, an existing file in the output_path will be overwritten.",
 			},
-			"download_latest_artifact": {
+			"dereference": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -136,10 +136,10 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
-	downloadLatest := d.Get("download_latest_artifact").(bool)
+	dereference := d.Get("dereference").(bool)
 	fileInfo := FileInfo{}
 
-	if !downloadLatest {
+	if !dereference {
 		_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
@@ -184,10 +184,34 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 		if !chksMatches {
 			return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
 		}
-	} else { // if we download the latest artifact, we don't have all the date for the fileInfo struct, because no GET call was sent.
+	} else { // if we download the latest artifact (use dereference), we don't have all the data for the fileInfo struct, because no GET call was sent.
 		fileInfo.Repo = repository
 		fileInfo.Path = path
 		d.SetId(fileInfo.Path)
+		fileExists := FileExists(outputPath)
+
+		if !fileExists || forceOverwrite {
+			outdir := filepath.Dir(outputPath)
+			err := os.MkdirAll(outdir, os.ModePerm)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			outFile, err := os.Create(outputPath)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			defer func(outFile *os.File) {
+				_ = outFile.Close()
+			}(outFile)
+		} else { //download not required
+			d.SetId(fileInfo.Path)
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "WARN-001: file download skipped.",
+				Detail:   fmt.Sprintf("WARN-001: file download skipped. fileExists: %v, forceOverwrite: %v", fileExists, forceOverwrite),
+			}}
+
+		}
 		_, err := m.(*resty.Client).R().SetOutput(outputPath).Get(fmt.Sprintf("artifactory/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
