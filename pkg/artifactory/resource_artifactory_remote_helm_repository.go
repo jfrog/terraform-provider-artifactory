@@ -32,9 +32,7 @@ func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 			},
 			RequiredWith: []string{"external_dependencies_enabled"},
 			Description: "An Allow List of Ant-style path expressions that specify where external dependencies may be downloaded from. " +
-				"By default, this is set to ** which means that dependencies may be downloaded from any external source. " +
-				"Note that the official documentation states the default is '**', " +
-				"which is correct when creating repositories in the UI, but incorrect for the API.",
+				"By default, this is set to ** which means that dependencies may be downloaded from any external source.",
 		},
 	}, repoLayoutRefSchema("remote", packageType))
 
