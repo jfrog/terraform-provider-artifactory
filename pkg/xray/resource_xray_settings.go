@@ -12,7 +12,7 @@ import (
 
 func resourceXraySettings() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceXrayDbSyncTimeCreate,
+		CreateContext: resourceXrayDbSyncTimeUpdate,
 		ReadContext:   resourceXrayDbSyncTimeRead,
 		UpdateContext: resourceXrayDbSyncTimeUpdate,
 		DeleteContext: resourceXrayDbSyncTimeDelete,
@@ -26,7 +26,7 @@ func resourceXraySettings() *schema.Resource {
 			"db_sync_updates_time": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Description:      "The time of the Xray DB sync daily update job.",
+				Description:      "The time of the Xray DB sync daily update job. Format HH:mm",
 				ValidateDiagFunc: matchesHoursMinutesTime,
 			},
 		},
@@ -52,23 +52,12 @@ func packDBSyncTime(dbSyncTime DbSyncDailyUpdatesTime, d *schema.ResourceData) d
 	return nil
 }
 
-func getDbSyncTime(client *resty.Client) (DbSyncDailyUpdatesTime, *resty.Response, error) {
-	dbSyncTime := DbSyncDailyUpdatesTime{}
-	resp, err := client.R().SetResult(&dbSyncTime).Get("xray/api/v1/configuration/dbsync/time")
-	return dbSyncTime, resp, err
-}
-
-// No create functionality provided by API. DB sync time exists by default and can only be modified
-func resourceXrayDbSyncTimeCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return resourceXrayDbSyncTimeUpdate(ctx, d, m)
-}
-
 func resourceXrayDbSyncTimeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	dbSyncTime, resp, err := getDbSyncTime(m.(*resty.Client))
+	dbSyncTime := DbSyncDailyUpdatesTime{}
+	resp, err := m.(*resty.Client).R().SetResult(&dbSyncTime).Get("xray/api/v1/configuration/dbsync/time")
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			log.Printf("[WARN] DB sync settings (%s) not found, removing from state", d.Id())
-			d.SetId("")
+		if resp != nil && resp.StatusCode() != http.StatusOK {
+			log.Printf("Critical error. DB sync settings (%s) not found.", d.Id())
 		}
 		return diag.FromErr(err)
 	}
