@@ -251,6 +251,62 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 	}))
 }
 
+func TestAccAllRemoteRepository(t *testing.T) {
+	for _, repoType := range remoteRepoTypesLikeGeneric {
+		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
+				"missed_cache_period_seconds": 1800,
+			}))
+		})
+	}
+}
+
+func TestAccRemoteGoRepository(t *testing.T) {
+	const packageType = "go"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://proxy.golang.org/",
+		"vcs_git_provider":            "ARTIFACTORY",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteCocoapodsRepository(t *testing.T) {
+	const packageType = "cocoapods"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteComposerRepository(t *testing.T) {
+	const packageType = "composer"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"composer_registry_url":       "https://packagist1.org",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteBowerRepository(t *testing.T) {
+	const packageType = "bower"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"bower_registry_url":          "https://registry1.bower.io",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteNugetRepository(t *testing.T) {
+	const packageType = "nuget"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://www.nuget.org/",
+		"download_context_path":       "api/v2/package",
+		"force_nuget_authentication":  true,
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
 func TestAccAllRemoteGradleLikeRepository(t *testing.T) {
 	for _, repoType := range gradleLikeRepoTypes {
 		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
