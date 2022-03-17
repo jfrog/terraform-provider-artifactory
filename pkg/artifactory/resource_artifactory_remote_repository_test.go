@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -203,11 +202,9 @@ func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if queryRepoResponse.ExternalDependenciesPatterns != nil &&
-				len(queryRepoResponse.ExternalDependenciesPatterns) == 1 &&
-				queryRepoResponse.ExternalDependenciesPatterns[0] == "**" {
-				log.Printf("[INFO] external_dependencies_patterns attribute default value '**' set as expected")
-			} else {
+			if queryRepoResponse.ExternalDependenciesPatterns == nil ||
+				len(queryRepoResponse.ExternalDependenciesPatterns) != 1 ||
+				queryRepoResponse.ExternalDependenciesPatterns[0] != "**" {
 				return fmt.Errorf("error: external_dependencies_patterns attribute = %v instead of default '**'", queryRepoResponse.ExternalDependenciesPatterns)
 			}
 			return err
