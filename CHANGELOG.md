@@ -3,7 +3,7 @@
 IMPROVEMENTS:
 
 * Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`, 
-  which allows users to download the latest artifacts from repositories [GH-361]
+  assumes that the path supplied is an alias for the most recent version of the artifact and doesn't try to resolve it to a specific, timestamped, artifact
 
 ## 2.23.1 (Mar 15, 2022)
 
