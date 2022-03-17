@@ -56,10 +56,21 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 			BlockPushingSchema1:          d.getBool("block_pushing_schema1", false),
 			ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 		}
+		if len(repo.ExternalDependenciesPatterns) == 0 {
+			repo.ExternalDependenciesPatterns = []string{"**"}
+		}
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(dockerRemoteSchema, defaultPacker, unpackDockerRemoteRepo, func() interface{} {
+	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
+	dockerRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			ignoreHclPredicate("class", "rclass", "external_dependencies_patterns"),
+			schemaHasKey(dockerRemoteSchema),
+		),
+	)
+
+	return mkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",

@@ -1,3 +1,10 @@
+## 2.23.1 (Mar 15, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+* resource/artifactory_remote_helm_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+
 ## 2.23.0 (Mar 11, 2022)
 
 FEATURES:
