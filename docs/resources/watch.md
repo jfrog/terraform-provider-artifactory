@@ -191,7 +191,7 @@ Required:
 
 Required:
 
-- **type** (String) Type of resource to be watched. Options: `all-repos`, `repository`, `build`, `project`, `all-projects`.
+- **type** (String) Type of resource to be watched. Options: `all-repos`, `repository`, `all-builds`, `build`, `project`, `all-projects`.
 
 Optional:
 

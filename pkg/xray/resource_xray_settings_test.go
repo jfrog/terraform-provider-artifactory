@@ -9,7 +9,7 @@ import (
 )
 
 func TestDbSyncTime(t *testing.T) {
-	_, fqrn, resourceName := mkNames("db_sync-", "xray_db_sync_time")
+	_, fqrn, resourceName := mkNames("db_sync-", "xray_settings")
 	time := "18:45"
 
 	resource.Test(t, resource.TestCase{
@@ -25,7 +25,7 @@ func TestDbSyncTime(t *testing.T) {
 }
 
 func TestDbSyncTimeNegative(t *testing.T) {
-	_, _, resourceName := mkNames("db_sync-", "xray_db_sync_time")
+	_, _, resourceName := mkNames("db_sync-", "xray_settings")
 	time := "18:455"
 
 	resource.Test(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestDbSyncTimeNegative(t *testing.T) {
 
 func dbSyncTime(resourceName string, time string) string {
 	return fmt.Sprintf(`
-		resource "xray_db_sync_time" "%s" {
+		resource "xray_settings" "%s" {
 			db_sync_updates_time = "%s"
 		}
 `, resourceName, time)

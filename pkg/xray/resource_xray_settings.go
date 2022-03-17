@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceXrayDbSyncTime() *schema.Resource {
+func resourceXraySettings() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceXrayDbSyncTimeCreate,
 		ReadContext:   resourceXrayDbSyncTimeRead,
@@ -26,7 +26,7 @@ func resourceXrayDbSyncTime() *schema.Resource {
 			"db_sync_updates_time": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Description:      "The time of the DB sync daily update job.",
+				Description:      "The time of the Xray DB sync daily update job.",
 				ValidateDiagFunc: matchesHoursMinutesTime,
 			},
 		},
