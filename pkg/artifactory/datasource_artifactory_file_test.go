@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
@@ -31,6 +32,20 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 		}
 		stat, _ := os.Stat(downloadPath)
 		*localFileModTime = stat.ModTime()
+	}
+}
+
+func uploadTwoArtifacts(t *testing.T) {
+	const localOlderFilePath = "../../samples/multi1-3.7-20220310.233748-1.jar"
+	const localNewerFilePath = "../../samples/multi1-3.7-20220310.233859-2.jar"
+	client := getTestResty(t)
+	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
+	if err != nil {
+		panic(err)
+	}
+	err = uploadTestFile(client, localNewerFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -71,6 +86,95 @@ func TestDlFile(t *testing.T) {
 			{
 				Config: fmt.Sprintf(script, downloadPath),
 				Check:  downloadCheck,
+			},
+		},
+	})
+}
+
+/*
+Tests the artifact download functionality using path_is_aliased.
+For this test we create maven repository, upload 2 jars with different timestamps to the repo.
+Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
+Compare sha256 to match with the file with the latest timestamp.
+*/
+func TestDownloadFileWithPath_is_aliased(t *testing.T) {
+	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
+
+	const script = `
+	data "artifactory_file" "example" {
+		  repository      = "my-maven-local"
+		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+          output_path     = "%s"
+		  force_overwrite = true
+          path_is_aliased = true
+		}
+	`
+
+	var downloadCheck = func(state *terraform.State) error {
+		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
+		_, err := os.Stat(download)
+		if err != nil {
+			return err
+		}
+		verified, err := VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
+		if !verified {
+			return fmt.Errorf("%s checksum does not match", download)
+		}
+		return err
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccDeleteRepo(t, "my-maven-local")
+			testAccCreateRepos(t, "my-maven-local", "local",
+				"maven", true, true)
+			uploadTwoArtifacts(t)
+		},
+
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(script, downloadPath),
+				Check:  downloadCheck,
+			},
+		},
+	})
+}
+
+/*
+Tests the artifact download functionality using path_is_aliased.
+For this test we create maven repository, upload 2 jars with different timestamps to the repo.
+Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
+path_is_aliased parameter is set to `false`, so provider will send try to find exact filename with `SNAPSHOT`
+in the filename and will fail.
+*/
+func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
+	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
+
+	const script = `
+	data "artifactory_file" "example" {
+		  repository      = "my-maven-local"
+		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+          output_path     = "%s"
+		  force_overwrite = true
+          path_is_aliased = false
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccDeleteRepo(t, "my-maven-local")
+			testAccCreateRepos(t, "my-maven-local", "local",
+				"maven", true, true)
+			uploadTwoArtifacts(t)
+		},
+
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      fmt.Sprintf(script, downloadPath),
+				ExpectError: regexp.MustCompile(".*Unable to find item.*"),
 			},
 		},
 	})
