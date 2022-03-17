@@ -92,12 +92,12 @@ func TestDlFile(t *testing.T) {
 }
 
 /*
-Tests the artifact download functionality using dereference.
+Tests the artifact download functionality using path_is_aliased.
 For this test we create maven repository, upload 2 jars with different timestamps to the repo.
 Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
 Compare sha256 to match with the file with the latest timestamp.
 */
-func TestDownloadFileWithDereference(t *testing.T) {
+func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
 	const script = `
@@ -106,7 +106,7 @@ func TestDownloadFileWithDereference(t *testing.T) {
 		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
           output_path     = "%s"
 		  force_overwrite = true
-          dereference     = true
+          path_is_aliased = true
 		}
 	`
 
@@ -143,13 +143,13 @@ func TestDownloadFileWithDereference(t *testing.T) {
 }
 
 /*
-Tests the artifact download functionality using dereference.
+Tests the artifact download functionality using path_is_aliased.
 For this test we create maven repository, upload 2 jars with different timestamps to the repo.
 Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
-dereference parameter is set to `false`, so provider will send try to find exact filename with `SNAPSHOT`
+path_is_aliased parameter is set to `false`, so provider will send try to find exact filename with `SNAPSHOT`
 in the filename and will fail.
 */
-func TestDownloadFileWithDereferenceNegative(t *testing.T) {
+func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
 	const script = `
@@ -158,7 +158,7 @@ func TestDownloadFileWithDereferenceNegative(t *testing.T) {
 		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
           output_path     = "%s"
 		  force_overwrite = true
-          dereference     = false
+          path_is_aliased = false
 		}
 	`
 	resource.Test(t, resource.TestCase{

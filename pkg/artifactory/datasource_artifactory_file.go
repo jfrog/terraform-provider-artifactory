@@ -120,7 +120,7 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Default:     false,
 				Description: "If set to `true`, an existing file in the output_path will be overwritten.",
 			},
-			"dereference": {
+			"path_is_aliased": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -136,10 +136,10 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
-	dereference := d.Get("dereference").(bool)
+	pathIsAliased := d.Get("path_is_aliased").(bool)
 	fileInfo := FileInfo{}
 
-	if !dereference {
+	if !pathIsAliased {
 		_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
@@ -184,7 +184,7 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 		if !chksMatches {
 			return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
 		}
-	} else { // if we download the latest artifact (use dereference), we don't have all the data for the fileInfo struct, because no GET call was sent.
+	} else { // if we download the latest artifact (use path_is_aliased), we don't have all the data for the fileInfo struct, because no GET call was sent.
 		fileInfo.Repo = repository
 		fileInfo.Path = path
 		d.SetId(fileInfo.Path)

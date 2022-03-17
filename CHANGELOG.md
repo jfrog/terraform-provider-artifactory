@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Datasource `datasource_artifactory_file`, added a parameter `dereference`, 
+* Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`, 
   which allows users to download the latest artifacts from repositories [GH-361]
 
 ## 2.23.1 (Mar 15, 2022)
