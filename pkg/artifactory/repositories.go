@@ -117,6 +117,11 @@ type RemoteRepositoryBaseParams struct {
 	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
 }
 
+type RemoteRepositoryVcsParams struct {
+	VcsGitProvider    string `json:"vcsGitProvider"`
+	VcsGitDownloadUrl string `json:"vcsGitDownloadUrl"`
+}
+
 func (bp RemoteRepositoryBaseParams) Id() string {
 	return bp.Key
 }
@@ -730,6 +735,23 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 			sort.Strings(fields)
 			return strings.Join(fields, ",")
 		},
+		Description: `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
+	},
+}
+
+var vcsRemoteRepoSchema = map[string]*schema.Schema{
+	"vcs_git_provider": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          "ARTIFACTORY",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"}, false)),
+		Description:      `(Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
+	},
+	"vcs_git_download_url": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.IsURLWithHTTPorHTTPS)),
+		Description:      `(Optional) This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
 	},
 }
 
@@ -987,6 +1009,15 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 				OriginAbsenceDetection: sourceOriginAbsenceDetection,
 			},
 		}
+	}
+	return repo
+}
+
+func unpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
+	d := &ResourceData{s}
+	repo := RemoteRepositoryVcsParams{
+		VcsGitProvider:    d.getString("vcs_git_provider", false),
+		VcsGitDownloadUrl: d.getString("vcs_git_download_url", false),
 	}
 	return repo
 }

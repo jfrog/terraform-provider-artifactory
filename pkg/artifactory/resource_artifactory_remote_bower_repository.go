@@ -7,36 +7,14 @@ import (
 
 type BowerRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	VcsType           string `json:"vcsType"`
-	VcsGitProvider    string `json:"vcsGitProvider"`
-	VcsGitDownloadUrl string `json:"vcsGitDownloadUrl"`
-	BowerRegistryUrl  string `json:"bowerRegistryUrl"`
+	RemoteRepositoryVcsParams
+	BowerRegistryUrl string `json:"bowerRegistryUrl"`
 }
 
 func resourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	const packageType = "bower"
 
-	var bowerRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
-		"vcs_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "GIT",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GIT"}, false)),
-			Description:      `(Optional) Artifactory supports proxying the Git providers. Default value is "GIT".`,
-		},
-		"vcs_git_provider": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "ARTIFACTORY",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"}, false)),
-			Description:      `(Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
-		},
-		"vcs_git_download_url": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.IsURLWithHTTPorHTTPS)),
-			Description:      `(Optional) This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
-		},
+	var bowerRemoteSchema = mergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
 		"bower_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -50,9 +28,7 @@ func resourceArtifactoryRemoteBowerRepository() *schema.Resource {
 		d := &ResourceData{s}
 		repo := BowerRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
-			VcsType:                    d.getString("vcs_type", false),
-			VcsGitProvider:             d.getString("vcs_git_provider", false),
-			VcsGitDownloadUrl:          d.getString("vcs_git_download_url", false),
+			RemoteRepositoryVcsParams:  unpackVcsRemoteRepo(s),
 			BowerRegistryUrl:           d.getString("bower_registry_url", false),
 		}
 		return repo, repo.Id(), nil

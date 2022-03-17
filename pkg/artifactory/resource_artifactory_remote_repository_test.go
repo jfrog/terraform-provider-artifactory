@@ -274,6 +274,7 @@ func TestAccRemoteCocoapodsRepository(t *testing.T) {
 	const packageType = "cocoapods"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
+		"vcs_git_provider":            "GITHUB",
 		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
 		"missed_cache_period_seconds": 1800,
 	}))
@@ -283,6 +284,7 @@ func TestAccRemoteComposerRepository(t *testing.T) {
 	const packageType = "composer"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
+		"vcs_git_provider":            "GITHUB",
 		"composer_registry_url":       "https://packagist1.org",
 		"missed_cache_period_seconds": 1800,
 	}))
@@ -292,6 +294,7 @@ func TestAccRemoteBowerRepository(t *testing.T) {
 	const packageType = "bower"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
+		"vcs_git_provider":            "ARTIFACTORY",
 		"bower_registry_url":          "https://registry1.bower.io",
 		"missed_cache_period_seconds": 1800,
 	}))
