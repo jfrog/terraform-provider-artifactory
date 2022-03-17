@@ -124,8 +124,8 @@ func dataSourceArtifactoryFile() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Description: "If set to `true`, the provider will get the artifact path directly from Artifactory without verification " +
-					"or de aliasing. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)",
+				Description: "If set to `true`, the provider will get the artifact path directly from Artifactory without attempting to resolve " +
+					"it or verify it and will delegate this to artifactory if the file exists. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)",
 			},
 		},
 	}
