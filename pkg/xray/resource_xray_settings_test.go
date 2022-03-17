@@ -1,0 +1,49 @@
+package xray
+
+import (
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+func TestDbSyncTime(t *testing.T) {
+	_, fqrn, resourceName := mkNames("db_sync-", "xray_db_sync_time")
+	time := "18:45"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders(),
+		Steps: []resource.TestStep{
+			{
+				Config: dbSyncTime(resourceName, time),
+				Check:  resource.TestCheckResourceAttr(fqrn, "db_sync_updates_time", time),
+			},
+		},
+	})
+}
+
+func TestDbSyncTimeNegative(t *testing.T) {
+	_, _, resourceName := mkNames("db_sync-", "xray_db_sync_time")
+	time := "18:455"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders(),
+		Steps: []resource.TestStep{
+			{
+				Config:      dbSyncTime(resourceName, time),
+				ExpectError: regexp.MustCompile("Wrong format input, expected valid hour:minutes form"),
+			},
+		},
+	})
+}
+
+func dbSyncTime(resourceName string, time string) string {
+	return fmt.Sprintf(`
+		resource "xray_db_sync_time" "%s" {
+			db_sync_updates_time = "%s"
+		}
+`, resourceName, time)
+}
