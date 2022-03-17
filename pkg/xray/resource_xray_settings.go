@@ -67,15 +67,10 @@ func resourceXrayDbSyncTimeRead(ctx context.Context, d *schema.ResourceData, m i
 
 func resourceXrayDbSyncTimeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	dbSyncTime := unpackDBSyncTime(d)
-	resp, err := m.(*resty.Client).R().SetBody(dbSyncTime).Put("xray/api/v1/configuration/dbsync/time")
+	_, err := m.(*resty.Client).R().SetBody(dbSyncTime).Put("xray/api/v1/configuration/dbsync/time")
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			log.Printf("[WARN] DB sync settings (%s) not found, removing from state", d.Id())
-			d.SetId("")
-		}
 		return diag.FromErr(err)
 	}
-
 	d.SetId(dbSyncTime.DbSyncTime)
 	return resourceXrayDbSyncTimeRead(ctx, d, m)
 }

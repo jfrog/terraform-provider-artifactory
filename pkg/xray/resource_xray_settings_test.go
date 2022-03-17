@@ -26,7 +26,7 @@ func TestDbSyncTime(t *testing.T) {
 
 func TestDbSyncTimeNegative(t *testing.T) {
 	_, _, resourceName := mkNames("db_sync-", "xray_settings")
-	var invalidTime = []string{"24:00", "24:55", "", "12:0", "string", "12pm"}
+	var invalidTime = []string{"24:00", "24:55", "", "12:0", "string", "12pm", "9:00"}
 	for _, time := range invalidTime {
 		resource.Test(t, resource.TestCase{
 			PreCheck:          func() { testAccPreCheck(t) },
@@ -34,7 +34,7 @@ func TestDbSyncTimeNegative(t *testing.T) {
 			Steps: []resource.TestStep{
 				{
 					Config:      dbSyncTime(resourceName, time),
-					ExpectError: regexp.MustCompile("Wrong format input, expected valid hour:minutes form"),
+					ExpectError: regexp.MustCompile("Wrong format input, expected valid hour:minutes \\(HH:mm\\) form"),
 				},
 			},
 		})
