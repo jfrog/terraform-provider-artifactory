@@ -1,20 +1,14 @@
-# Artifactory Remote npm Repository Resource
+# Artifactory Remote Generic Repository Resource
 
-Provides an Artifactory remote `npm` repository resource. This provides npm specific fields and is the only way to get them
-Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/npm+Registry)
-
+Creates a remote Generic repository.
 
 ## Example Usage
-Create a new Artifactory remote npm repository called my-remote-npm
-for brevity sake, only npm specific fields are included; for other fields see documentation for
-[generic repo](artifactory_remote_docker_repository.md).
-```hcl
+To create a new Artifactory remote Generic repository called my-remote-generic.
 
-resource "artifactory_remote_npm_repository" "thing" {
-  key                         = "remote-thing-npm"
-  url                         = "https://registry.npmjs.org/"
-  list_remote_folder_items    = true
-  mismatching_mime_types_override_list = "application/json,application/xml"
+```hcl
+resource "artifactory_remote_generic_repository" "my-remote-generic" {
+  key                         = "my-remote-generic"
+  url                         = "http://testartifactory.io/artifactory/example-generic/"
 }
 ```
 
@@ -22,6 +16,7 @@ resource "artifactory_remote_npm_repository" "thing" {
 
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
+All generic repo arguments are supported, in addition to:
 * `key` - (Required) The repository identifier. Must be unique system-wide
 * `description` - (Optional)
 * `notes` - (Optional)
@@ -38,8 +33,6 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
 * `offline` - (Optional) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.
-* `list_remote_folder_items` - (Optional, Default: false) - Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
-* `mismatching_mime_types_override_list` - (Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty. 
 * `xray_index` - (Optional, Default: false)  Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.
 * `store_artifacts_locally` - (Optional) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
 * `socket_timeout_millis` - (Optional) Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.
@@ -53,6 +46,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `share_configuration` - (Optional)
 * `synchronize_properties` - (Optional) When set, remote artifacts are fetched along with their properties.
 * `block_mismatching_mime_types` - (Optional) Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.
+* `mismatching_mime_types_override_list` - (Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.
 * `property_sets` - (Optional) List of property set name
 * `allow_any_host_auth` - (Optional) Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.
 * `enable_cookie_management` - (Optional) Enables cookie management if the remote repository uses cookies to manage client state.
@@ -60,8 +54,9 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `priority_resolution` - (Optional) Setting repositories with priority will cause metadata to be merged only from repositories set with this field
 * `client_tls_certificate` - (Optional)
 * `content_synchronisation` - (Optional) Reference [JFROG Smart Remote Repositories](https://www.jfrog.com/confluence/display/JFROG/Smart+Remote+Repositories)
-    * `enabled` - (Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.
-    * `statistics_enabled` - (Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.
-    * `properties_enabled` - (Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.
-    * `source_origin_absence_detection` - (Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'
+  * `enabled` - (Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.
+  * `statistics_enabled` - (Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.
+  * `properties_enabled` - (Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.
+  * `source_origin_absence_detection` - (Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'
 * `propagate_query_params` - (Optional, Default: false) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
+* `list_remote_folder_items` - (Optional, Default: false) - Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
