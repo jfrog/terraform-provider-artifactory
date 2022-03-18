@@ -201,6 +201,10 @@ resource "xray_watch" "project" {
 
   watch_recipients = ["test@email.com", "test1@email.com"]
 }
+
+resource "xray_settings" "db_sync" {
+  db_sync_updates_time = "18:40"
+}
 ```
 
 ## Authentication
