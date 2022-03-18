@@ -1,3 +1,27 @@
+## 2.24.0 (Mar 18, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following remote repository resources in new implementation. [GH-364]
+  * "artifactory_remote_alpine_repository"
+  * "artifactory_remote_bower_repository"
+  * "artifactory_remote_chef_repository"
+  * "artifactory_remote_cocoapods_repository"
+  * "artifactory_remote_conda_repository"
+  * "artifactory_remote_conan_repository"
+  * "artifactory_remote_composer_repository"
+  * "artifactory_remote_cran_repository"
+  * "artifactory_remote_debian_repository"
+  * "artifactory_remote_gems_repository"
+  * "artifactory_remote_go_repository"
+  * "artifactory_remote_generic_repository"
+  * "artifactory_remote_gitlfs_repository"
+  * "artifactory_remote_opkg_repository"
+  * "artifactory_remote_p2_repository"
+  * "artifactory_remote_puppet_repository"
+  * "artifactory_remote_rpm_repository"
+  * "artifactory_remote_nuget_repository"
+  
 ## 2.23.2 (Mar 17, 2022)
 
 IMPROVEMENTS:
