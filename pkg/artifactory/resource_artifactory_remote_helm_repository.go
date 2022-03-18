@@ -32,9 +32,7 @@ func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 			},
 			RequiredWith: []string{"external_dependencies_enabled"},
 			Description: "An Allow List of Ant-style path expressions that specify where external dependencies may be downloaded from. " +
-				"By default, this is an empty list which means that no dependencies may be downloaded from external sources. " +
-				"Note that the official documentation states the default is '**', " +
-				"which is correct when creating repositories in the UI, but incorrect for the API.",
+				"By default, this is set to ** which means that dependencies may be downloaded from any external source.",
 		},
 	}, repoLayoutRefSchema("remote", packageType))
 
@@ -53,10 +51,21 @@ func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 			ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
 			ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
 		}
+		if len(repo.ExternalDependenciesPatterns) == 0 {
+			repo.ExternalDependenciesPatterns = []string{"**"}
+		}
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(helmRemoteSchema, defaultPacker, unpackHelmRemoteRepo, func() interface{} {
+	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
+	helmRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			ignoreHclPredicate("class", "rclass", "external_dependencies_patterns"),
+			schemaHasKey(helmRemoteSchema),
+		),
+	)
+
+	return mkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, func() interface{} {
 		return &HelmRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",

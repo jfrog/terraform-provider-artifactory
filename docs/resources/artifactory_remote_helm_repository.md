@@ -43,9 +43,8 @@ All generic repo arguments are supported, in addition to:
 * `helm_charts_base_url` - (Optional) - No documentation is available. Hopefully you know what this means
 * `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten.
 * `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external
-  dependencies may be downloaded from. By default, this is an empty list which means that no dependencies may be downloaded
-  from external sources. Note that the official documentation states the default is '**', which is correct when creating
-  repositories in the UI, but incorrect for the API.
+  dependencies may be downloaded from. By default, this is set to ** which means that dependencies may be downloaded
+  from any external source.
 * `xray_index` - (Optional, Default: false)  Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.
 * `store_artifacts_locally` - (Optional) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
 * `socket_timeout_millis` - (Optional) Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.

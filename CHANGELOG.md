@@ -1,4 +1,4 @@
-## 2.24.0 (Mar 17, 2022)
+## 2.24.0 (Mar 18, 2022)
 
 FEATURES:
 
@@ -22,6 +22,20 @@ FEATURES:
   * "artifactory_remote_rpm_repository"
   * "artifactory_remote_nuget_repository"
   
+## 2.23.2 (Mar 17, 2022)
+
+IMPROVEMENTS:
+
+* Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`, 
+  assumes that the path supplied is an alias for the most recent version of the artifact and doesn't try to resolve it to a specific, timestamped, artifact
+
+## 2.23.1 (Mar 15, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+* resource/artifactory_remote_helm_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+
 ## 2.23.0 (Mar 11, 2022)
 
 FEATURES:

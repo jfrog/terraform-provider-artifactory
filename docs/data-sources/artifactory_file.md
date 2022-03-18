@@ -21,6 +21,8 @@ The following arguments are supported:
 * `path` - (Required) The path to the file within the repository.
 * `output_path` - (Required) The local path the file should be downloaded to.
 * `force_overwrite` - (Optional) If set to true, an existing file in the output_path will be overwritten. Default: false
+* `path_is_aliased` - (Optional) If set to `true`, the provider will get the artifact directly from Artifactory without attempting to resolve it or verify it and will delegate this to artifactory
+  if the file exists. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)
 
 ## Attribute Reference
 

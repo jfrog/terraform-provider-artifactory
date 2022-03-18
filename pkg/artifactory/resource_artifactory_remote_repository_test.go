@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
@@ -173,6 +174,60 @@ func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"source_origin_absence_detection": true,
 		},
 	}))
+}
+
+func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
+	repoTypes := []string{"helm", "docker"}
+	const remoteRepoExternalDependenciesDefaults = `
+		resource "artifactory_remote_%s_repository" "%s" {
+			key 				            = "%s"
+            url                             = "https://testrepo.io/"
+            external_dependencies_enabled   = true
+		}
+	    `
+	type ExternalDependenciesRemoteRepo struct {
+		ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
+		ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns"`
+	}
+
+	for _, repoType := range repoTypes {
+		id := rand.Int()
+		name := fmt.Sprintf("terraform-remote-test-%s-repo%d", repoType, id)
+		fqrn := fmt.Sprintf("artifactory_remote_%s_repository.%s", repoType, name)
+
+		var externalDependenciesCheck = func(state *terraform.State) error {
+			restyClient := getTestResty(t)
+			queryRepoResponse := &ExternalDependenciesRemoteRepo{}
+			_, err := restyClient.R().SetResult(&queryRepoResponse).Get("artifactory/api/repositories/" + name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if queryRepoResponse.ExternalDependenciesPatterns == nil ||
+				len(queryRepoResponse.ExternalDependenciesPatterns) != 1 ||
+				queryRepoResponse.ExternalDependenciesPatterns[0] != "**" {
+				return fmt.Errorf("error: external_dependencies_patterns attribute = %v instead of default '**'", queryRepoResponse.ExternalDependenciesPatterns)
+			}
+			return err
+		}
+
+		t.Run(fmt.Sprintf("TestRemote%sRepo_ExternalDependenciesDefaults", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck:          func() { testAccPreCheck(t) },
+				CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+				ProviderFactories: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: fmt.Sprintf(remoteRepoExternalDependenciesDefaults, repoType, name, name),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(fqrn, "key", name),
+							resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+							externalDependenciesCheck,
+						),
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccRemoteNpmRepository(t *testing.T) {
