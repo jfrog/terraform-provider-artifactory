@@ -1,3 +1,27 @@
+## 2.25.0 (Mar 21, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following virtual repository resources in new implementation. [GH-365]
+  * "artifactory_virtual_alpine_repository"
+  * "artifactory_virtual_bower_repository"
+  * "artifactory_virtual_chef_repository"
+  * "artifactory_virtual_conda_repository"
+  * "artifactory_virtual_composer_repository"
+  * "artifactory_virtual_cran_repository"
+  * "artifactory_virtual_debian_repository"
+  * "artifactory_virtual_docker_repository"
+  * "artifactory_virtual_gems_repository"
+  * "artifactory_virtual_gitlfs_repository"
+  * "artifactory_virtual_gradle_repository"
+  * "artifactory_virtual_ivy_repository"
+  * "artifactory_virtual_npm_repository"
+  * "artifactory_virtual_nuget_repository"
+  * "artifactory_virtual_p2_repository"
+  * "artifactory_virtual_puppet_repository"
+  * "artifactory_virtual_pypi_repository"
+  * "artifactory_virtual_sbt_repository"
+
 ## 2.24.0 (Mar 18, 2022)
 
 FEATURES:
