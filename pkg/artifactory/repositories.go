@@ -353,6 +353,25 @@ var remoteRepoTypesLikeGeneric = []string{
 	"rpm",
 }
 
+var virtualRepoTypesLikeGeneric = []string{
+	"docker",
+	"gems",
+	"generic",
+	"gitlfs",
+	"composer",
+	"p2",
+	"puppet",
+	"pypi",
+}
+
+var virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+	"chef",
+	"conan",
+	"conda",
+	"cran",
+	"npm",
+}
+
 var gradleLikeRepoTypes = []string{
 	"gradle",
 	"sbt",

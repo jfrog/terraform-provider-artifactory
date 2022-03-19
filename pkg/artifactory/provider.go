@@ -39,11 +39,13 @@ func Provider() *schema.Provider {
 		"artifactory_remote_pypi_repository":      resourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_maven_repository":     resourceArtifactoryRemoteJavaRepository("maven", false),
 		"artifactory_virtual_repository":          resourceArtifactoryVirtualRepository(),
-		"artifactory_virtual_maven_repository":    resourceArtifactoryMavenVirtualRepository(),
+		"artifactory_virtual_alpine_repository":   resourceArtifactoryAlpineVirtualRepository(),
+		"artifactory_virtual_bower_repository":    resourceArtifactoryBowerVirtualRepository(),
+		"artifactory_virtual_debian_repository":   resourceArtifactoryDebianVirtualRepository(),
+		"artifactory_virtual_maven_repository":    resourceArtifactoryJavaVirtualRepository("maven"),
+		"artifactory_virtual_nuget_repository":    resourceArtifactoryNugetVirtualRepository(),
 		"artifactory_virtual_go_repository":       resourceArtifactoryGoVirtualRepository(),
-		"artifactory_virtual_conan_repository":    resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs("conan"),
 		"artifactory_virtual_rpm_repository":      resourceArtifactoryRpmVirtualRepository(),
-		"artifactory_virtual_generic_repository":  resourceArtifactoryVirtualGenericRepository("generic"),
 		"artifactory_virtual_helm_repository":     resourceArtifactoryHelmVirtualRepository(),
 		"artifactory_group":                       resourceArtifactoryGroup(),
 		"artifactory_user":                        resourceArtifactoryUser(),
@@ -80,6 +82,16 @@ func Provider() *schema.Provider {
 		resoucesMap[localResourceName] = resourceArtifactoryLocalJavaRepository(repoType, true)
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
 		resoucesMap[remoteResourceName] = resourceArtifactoryRemoteJavaRepository(repoType, true)
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryJavaVirtualRepository(repoType)
+	}
+	for _, repoType := range virtualRepoTypesLikeGeneric {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualGenericRepository(repoType)
+	}
+	for _, repoType := range virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}
 	for _, repoType := range federatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
