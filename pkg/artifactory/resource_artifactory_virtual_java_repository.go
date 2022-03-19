@@ -6,9 +6,9 @@ import (
 )
 
 type CommonJavaVirtualRepositoryParams struct {
-	ForceMavenAuthentication             bool   `json:"forceMavenAuthentication"`
-	PomRepositoryReferencesCleanupPolicy string `hcl:"pom_repository_references_cleanup_policy" json:"pomRepositoryReferencesCleanupPolicy"`
-	KeyPair                              string `hcl:"key_pair" json:"keyPair"`
+	ForceMavenAuthentication             bool   `json:"forceMavenAuthentication,omitempty"`
+	PomRepositoryReferencesCleanupPolicy string `hcl:"pom_repository_references_cleanup_policy" json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
+	KeyPair                              string `hcl:"key_pair" json:"keyPair,omitempty"`
 }
 
 type JavaVirtualRepositoryParams struct {
