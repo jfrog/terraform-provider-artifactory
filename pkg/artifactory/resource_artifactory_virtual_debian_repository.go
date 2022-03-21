@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"regexp"
-	"sort"
-	"strings"
 )
 
 func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
@@ -26,24 +24,27 @@ func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
 			Description:      "(Optional) Secondary keypair used to sign artifacts. Default is empty.",
 		},
 		"optional_index_compression_formats": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			MinItems:    0,
-			Computed:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: `(Optional) Index file formats you would like to create in addition to the default Gzip (.gzip extension). `,
+			Type:     schema.TypeSet,
+			Optional: true,
+			MinItems: 0,
+			Computed: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{
+					"bz2",
+					"lzma",
+					"xz",
+				}, false),
+			},
+			Description: `(Optional) Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
 		},
 		"debian_default_architectures": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "amd64,i386",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-			StateFunc: func(thing interface{}) string {
-				fields := strings.Fields(thing.(string))
-				sort.Strings(fields)
-				return strings.Join(fields, ",")
-			},
-			Description: `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
+			StateFunc:        formatCommaSeparatedString,
+			Description:      `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
 	}, repoLayoutRefSchema("virtual", packageType))
 

@@ -698,14 +698,14 @@ func TestAccAllVirtualRepository(t *testing.T) {
 	for _, repoType := range virtualRepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description": "The virtual repository public description testing",
+				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 			}))
 		})
 	}
 	for _, repoType := range virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description":                    "The virtual repository public description testing",
+				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"retrieval_cache_period_seconds": 7100,
 			}))
 		})
@@ -716,7 +716,7 @@ func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 	for _, repoType := range gradleLikeRepoTypes {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description": "The virtual repository public description testing",
+				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
 			}))
 		})
@@ -767,20 +767,20 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 
 func TestAccVirtualAlpineRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
-		"description": "The virtual repository public description testing",
+		"description": "alpine virtual repository public description testing.",
 	}))
 }
 
 func TestAccVirtualNugetRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("nuget", t, map[string]interface{}{
-		"description":                "The virtual repository public description testing",
+		"description":                "nuget virtual repository public description testing.",
 		"force_nuget_authentication": true,
 	}))
 }
 
 func TestAccVirtualBowerRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("bower", t, map[string]interface{}{
-		"description":                   "The virtual repository public description testing",
+		"description":                   "bower virtual repository public description testing.",
 		"external_dependencies_enabled": false,
 	}))
 }
@@ -793,7 +793,7 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 		resource "artifactory_virtual_debian_repository" "%s" {
 			key          = "%s"
 			repositories = []
-            debian_default_architectures = "i386"
+            debian_default_architectures = "i386,amd64"
             optional_index_compression_formats = [
                 "bz2",
                 "xz",
