@@ -29,12 +29,8 @@ func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
 			MinItems: 0,
 			Computed: true,
 			Elem: &schema.Schema{
-				Type: schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{
-					"bz2",
-					"lzma",
-					"xz",
-				}, false),
+				Type:             schema.TypeString,
+				ValidateDiagFunc: validateTypeSetStringList([]string{"bz2", "lzma", "xz"}),
 			},
 			Description: `(Optional) Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
 		},
