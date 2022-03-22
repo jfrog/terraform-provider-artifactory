@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/mail"
 	"os"
 	"regexp"
@@ -534,21 +533,5 @@ func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 			return nil, []error{fmt.Errorf("password must be atleast %d characters long", length)}
 		}
 		return nil, nil
-	}
-}
-
-func validateTypeSetStringList(valid []string) schema.SchemaValidateDiagFunc {
-	return func(v interface{}, p cty.Path) diag.Diagnostics {
-		value := v.(string)
-		var diags diag.Diagnostics
-		if !contains(valid, value) {
-			diagMsg := diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "incorrect value",
-				Detail:   fmt.Sprintf("%v is not expected", value),
-			}
-			diags = append(diags, diagMsg)
-		}
-		return diags
 	}
 }
