@@ -5,20 +5,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type CommonMavenGradleVirtualRepositoryParams struct {
+type CommonJavaVirtualRepositoryParams struct {
 	ForceMavenAuthentication             bool   `json:"forceMavenAuthentication,omitempty"`
 	PomRepositoryReferencesCleanupPolicy string `hcl:"pom_repository_references_cleanup_policy" json:"pomRepositoryReferencesCleanupPolicy,omitempty"`
 	KeyPair                              string `hcl:"key_pair" json:"keyPair,omitempty"`
 }
 
-type MavenVirtualRepositoryParams struct {
+type JavaVirtualRepositoryParams struct {
 	VirtualRepositoryBaseParams
-	CommonMavenGradleVirtualRepositoryParams
+	CommonJavaVirtualRepositoryParams
 }
 
-func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
-
-	const packageType = "maven"
+func resourceArtifactoryJavaVirtualRepository(repoType string) *schema.Resource {
 
 	var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
@@ -44,29 +42,29 @@ func resourceArtifactoryMavenVirtualRepository() *schema.Resource {
 			Optional:    true,
 			Description: "The keypair used to sign artifacts",
 		},
-	}, repoLayoutRefSchema("virtual", packageType))
+	}, repoLayoutRefSchema("virtual", repoType))
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{s}
 
-		repo := MavenVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, packageType),
-			CommonMavenGradleVirtualRepositoryParams: CommonMavenGradleVirtualRepositoryParams{
+		repo := JavaVirtualRepositoryParams{
+			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, repoType),
+			CommonJavaVirtualRepositoryParams: CommonJavaVirtualRepositoryParams{
 				KeyPair:                              d.getString("key_pair", false),
 				ForceMavenAuthentication:             d.getBool("force_maven_authentication", false),
 				PomRepositoryReferencesCleanupPolicy: d.getString("pom_repository_references_cleanup_policy", false),
 			},
 		}
-		repo.PackageType = packageType
+		repo.PackageType = repoType
 
 		return &repo, repo.Key, nil
 	}
 
 	return mkResourceSchema(mavenVirtualSchema, defaultPacker, unpackMavenVirtualRepository, func() interface{} {
-		return &MavenVirtualRepositoryParams{
+		return &JavaVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",
-				PackageType: packageType,
+				PackageType: repoType,
 			},
 		}
 	})

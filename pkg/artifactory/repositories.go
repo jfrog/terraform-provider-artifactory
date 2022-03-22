@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -351,6 +350,25 @@ var remoteRepoTypesLikeGeneric = []string{
 	"p2",
 	"puppet",
 	"rpm",
+}
+
+var virtualRepoTypesLikeGeneric = []string{
+	"docker",
+	"gems",
+	"generic",
+	"gitlfs",
+	"composer",
+	"p2",
+	"puppet",
+	"pypi",
+}
+
+var virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+	"chef",
+	"conan",
+	"conda",
+	"cran",
+	"npm",
 }
 
 var gradleLikeRepoTypes = []string{
@@ -730,12 +748,8 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: commaSeperatedList,
-		StateFunc: func(thing interface{}) string {
-			fields := strings.Fields(thing.(string))
-			sort.Strings(fields)
-			return strings.Join(fields, ",")
-		},
-		Description: `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
+		StateFunc:        formatCommaSeparatedString,
+		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }
 
