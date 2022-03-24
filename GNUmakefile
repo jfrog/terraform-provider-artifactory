@@ -13,6 +13,7 @@ install:
 	mkdir -p ${BUILD_PATH} && \
 		(test -f ${BINARY_NAME} || go build -o ./${BINARY_NAME} -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv ${BINARY_NAME} ${BUILD_PATH} && \
+		rm -f .terraform.lock.hcl && \
 		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
 
@@ -23,6 +24,11 @@ clean:
 release:
 	@git tag v${NEXT_VERSION} && git push --mirror
 	@echo "Pushed v${NEXT_VERSION}"
+	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/${BINARY_NAME}@v${NEXT_VERSION}
+	@echo "Updated pkg cache"
+
+update_pkg_cache:
+	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/${BINARY_NAME}@v${VERSION}
 
 build: fmtcheck
 	go build -ldflags="-X 'xray.Version=${NEXT_VERSION}'"
