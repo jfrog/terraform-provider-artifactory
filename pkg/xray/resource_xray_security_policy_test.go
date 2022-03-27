@@ -44,7 +44,7 @@ func TestAccSecurityPolicy_badTypeInSecurityPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXraySecurityPolicy_badSecurityType(policyName, policyDesc, ruleName, rangeTo),
-				ExpectError: regexp.MustCompile("\"error\":\"Found Invalid Policy\""),
+				ExpectError: regexp.MustCompile("Found Invalid Policy"),
 			},
 		},
 	})
@@ -92,7 +92,7 @@ func TestAccSecurityPolicy_badGracePeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      executeTemplate(fqrn, securityPolicyCVSS, testData),
-				ExpectError: regexp.MustCompile("\"error\":\"Found Invalid Policy\""),
+				ExpectError: regexp.MustCompile("Found Invalid Policy"),
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func TestAccSecurityPolicy_blockMismatchCVSS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      executeTemplate(fqrn, securityPolicyCVSS, testData),
-				ExpectError: regexp.MustCompile("\"error\":\"Found Invalid Policy\""),
+				ExpectError: regexp.MustCompile("Found Invalid Policy"),
 			},
 		},
 	})

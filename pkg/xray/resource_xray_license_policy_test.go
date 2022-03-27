@@ -49,7 +49,7 @@ func TestAccLicensePolicy_badLicenseCriteria(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccXrayLicensePolicy_badLicense(resourceName, policyName, policyDesc, ruleName, rangeTo),
-				ExpectError: regexp.MustCompile("\"error\":\"Found Invalid Policy\""),
+				ExpectError: regexp.MustCompile("Found Invalid Policy"),
 			},
 		},
 	})
@@ -74,7 +74,7 @@ func TestAccLicensePolicy_badGracePeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      executeTemplate(fqrn, licensePolicyTemplate, testData),
-				ExpectError: regexp.MustCompile("\"error\":\"Found Invalid Policy\""),
+				ExpectError: regexp.MustCompile("Found Invalid Policy"),
 			},
 		},
 	})
