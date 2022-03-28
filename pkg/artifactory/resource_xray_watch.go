@@ -112,11 +112,11 @@ func resourceXrayWatch() *schema.Resource {
 }
 
 func resourceXrayWatchCreate(d *schema.ResourceData, m interface{}) error {
-	return errors.New("Use Xray provider resource instead")
+	return errors.New("Use Xray provider (https://github.com/jfrog/terraform-provider-xray) resource instead. Also see https://www.terraform.io/plugin/sdkv2/best-practices/deprecations#provider-data-source-or-resource-removal for resource removal process.")
 }
 
 func resourceXrayWatchRead(d *schema.ResourceData, m interface{}) error {
-	return errors.New("Use Xray provider resource instead")
+	return errors.New("Use Xray provider (https://github.com/jfrog/terraform-provider-xray) resource instead. Also see https://www.terraform.io/plugin/sdkv2/best-practices/deprecations#provider-data-source-or-resource-removal for resource removal process.")
 }
 
 func resourceXrayWatchDelete(d *schema.ResourceData, m interface{}) error {
