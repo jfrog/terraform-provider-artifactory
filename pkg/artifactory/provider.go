@@ -65,18 +65,18 @@ func Provider() *schema.Provider {
 		"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":        resourceArtifactoryLdapGroupSetting(),
 		"artifactory_backup":                    resourceArtifactoryBackup(),
-		// Xray resources. Deprecated, moved to a separate provider
-		"artifactory_xray_policy": resourceXrayPolicy(),
-		"artifactory_xray_watch":  resourceXrayWatch(),
 	}
+
 	for _, repoType := range repoTypesLikeGeneric {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = resourceArtifactoryLocalGenericRepository(repoType)
 	}
+
 	for _, repoType := range remoteRepoTypesLikeGeneric {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
 		resoucesMap[remoteResourceName] = resourceArtifactoryRemoteGenericRepository(repoType)
 	}
+
 	for _, repoType := range gradleLikeRepoTypes {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = resourceArtifactoryLocalJavaRepository(repoType, true)
@@ -85,6 +85,7 @@ func Provider() *schema.Provider {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resoucesMap[virtualResourceName] = resourceArtifactoryJavaVirtualRepository(repoType)
 	}
+
 	for _, repoType := range virtualRepoTypesLikeGeneric {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualGenericRepository(repoType)
@@ -93,6 +94,7 @@ func Provider() *schema.Provider {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}
+
 	for _, repoType := range federatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resoucesMap[federatedResourceName] = resourceArtifactoryFederatedGenericRepository(repoType)
