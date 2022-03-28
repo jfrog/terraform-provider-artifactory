@@ -1,3 +1,9 @@
+## 2.25.1 (Mar 28, 2022)
+
+BUG FIXES:
+
+* Fix retrieval_cache_period_seconds to be set to 0 for artifactory_*_repository resources. [GH-371]
+
 ## 2.25.0 (Mar 21, 2022)
 
 FEATURES:
