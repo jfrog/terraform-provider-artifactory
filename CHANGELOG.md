@@ -1,3 +1,9 @@
+## 3.0.1 (Mar 28, 2022)
+
+BUG FIXES:
+
+* Fix retrieval_cache_period_seconds to be set to 0 for artifactory_remote_*_repository resources. [GH-373]
+
 ## 3.0.0 (Apr 1, 2022)
 
 BREAKING CHANGES:
