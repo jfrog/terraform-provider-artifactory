@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* **New Resources:** Added following local repository resources in new implementation. [GH-377]
+* **New Resources:** Added following local repository resources in new implementation. [GH-378]
   * "artifactory_local_cargo_repository"
   * "artifactory_local_conda_repository"
 
