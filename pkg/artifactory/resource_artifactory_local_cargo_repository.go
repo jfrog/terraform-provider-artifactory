@@ -18,14 +18,14 @@ func resourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	type CargoLocalRepo struct {
 		LocalRepositoryBaseParams
-		CargoAnonymousAccess bool `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
+		AnonymousAccess bool `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
 	}
 
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
-			CargoAnonymousAccess:      d.getBool("anonymous_access", false),
+			AnonymousAccess:           d.getBool("anonymous_access", false),
 		}
 
 		return repo, repo.Id(), nil
