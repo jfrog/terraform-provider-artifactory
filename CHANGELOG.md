@@ -1,8 +1,14 @@
-## 2.25.1 (Mar 28, 2022)
+## 3.0.1 (Mar 28, 2022)
 
 BUG FIXES:
 
-* Fix retrieval_cache_period_seconds to be set to 0 for artifactory_*_repository resources. [GH-373]
+* Fix retrieval_cache_period_seconds to be set to 0 for artifactory_remote_*_repository resources. [GH-373]
+
+## 3.0.0 (Apr 1, 2022)
+
+BREAKING CHANGES:
+
+* Resources `artifactory_xray_policy` and `artifactory_xray_watch` have been removed [GH-315]
 
 ## 2.25.0 (Mar 21, 2022)
 
