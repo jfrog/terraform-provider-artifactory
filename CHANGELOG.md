@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Update module path to `/v3` in `go.mod` and `main.go` [GH-]
+* Update module path to `/v3` in `go.mod` and `main.go` [GH-374]
 
 ## 3.0.1 (Mar 28, 2022)
 
