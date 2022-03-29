@@ -1,3 +1,9 @@
+## 3.0.3 (Mar 30, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_local_docker_v1_repository: Fix `max_unique_tags` with value 0 being ignored. [GH-]
+
 ## 3.0.2 (Mar 29, 2022)
 
 IMPROVEMENTS:
@@ -92,7 +98,7 @@ FEATURES:
 
 BUG FIXES:
 
-*Conditional file download depending on `force_overwrite` value of data source `artifactory_file`. [GH-352]
+* Conditional file download depending on `force_overwrite` value of data source `artifactory_file`. [GH-352]
 
 ## 2.22.2 (Mar 10, 2022)
 
