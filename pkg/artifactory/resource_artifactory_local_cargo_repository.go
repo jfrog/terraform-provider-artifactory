@@ -18,7 +18,7 @@ func resourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	type CargoLocalRepo struct {
 		LocalRepositoryBaseParams
-		AnonymousAccess bool `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
+		AnonymousAccess bool `json:"cargoAnonymousAccess"`
 	}
 
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
