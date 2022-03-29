@@ -1,10 +1,16 @@
+## 3.0.2 (Mar 29, 2022)
+
+IMPROVEMENTS:
+
+* Update module path to `/v3` in `go.mod` and `main.go` [GH-374]
+
 ## 3.0.1 (Mar 28, 2022)
 
 BUG FIXES:
 
 * Fix retrieval_cache_period_seconds to be set to 0 for artifactory_remote_*_repository resources. [GH-373]
 
-## 3.0.0 (Apr 1, 2022)
+## 3.0.0 (Mar 28, 2022)
 
 BREAKING CHANGES:
 
@@ -57,12 +63,12 @@ FEATURES:
   * "artifactory_remote_puppet_repository"
   * "artifactory_remote_rpm_repository"
   * "artifactory_remote_nuget_repository"
-  
+
 ## 2.23.2 (Mar 17, 2022)
 
 IMPROVEMENTS:
 
-* Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`, 
+* Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`,
   assumes that the path supplied is an alias for the most recent version of the artifact and doesn't try to resolve it to a specific, timestamped, artifact
 
 ## 2.23.1 (Mar 15, 2022)

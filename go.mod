@@ -1,6 +1,7 @@
-module github.com/jfrog/terraform-provider-artifactory/v2
+module github.com/jfrog/terraform-provider-artifactory/v3
 
 require (
+	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/go-resty/resty/v2 v2.6.1-0.20210916045937-1792d629c3c6
 	github.com/google/go-querystring v1.1.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
