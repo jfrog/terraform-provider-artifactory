@@ -751,3 +751,33 @@ func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
 		})
 	}
 }
+
+func TestAccLocalCargoRepository(t *testing.T) {
+
+	_, fqrn, name := mkNames("cargo-local", "artifactory_local_cargo_repository")
+	params := map[string]interface{}{
+		"anonymous_access": randBool(),
+		"name":             name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalCargoRepository", `
+		resource "artifactory_local_cargo_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  anonymous_access = {{ .anonymous_access }}
+		}
+	`, params)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}

@@ -1,8 +1,16 @@
-## 3.0.3 (Mar 30, 2022)
+## 3.1.1 (Mar 30, 2022)
 
 BUG FIXES:
 
 * resource/artifactory_local_docker_v1_repository: Fix `max_unique_tags` with value 0 being ignored. [GH-376]
+
+## 3.1.0 (Mar 29, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following local repository resources in new implementation. [GH-378]
+  * "artifactory_local_cargo_repository"
+  * "artifactory_local_conda_repository"
 
 ## 3.0.2 (Mar 29, 2022)
 
