@@ -22,6 +22,7 @@ func Provider() *schema.Provider {
 		"artifactory_local_nuget_repository":      resourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":      resourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":     resourceArtifactoryLocalAlpineRepository(),
+		"artifactory_local_cargo_repository":      resourceArtifactoryLocalCargoRepository(),
 		"artifactory_local_debian_repository":     resourceArtifactoryLocalDebianRepository(),
 		"artifactory_local_docker_v2_repository":  resourceArtifactoryLocalDockerV2Repository(),
 		"artifactory_local_docker_v1_repository":  resourceArtifactoryLocalDockerV1Repository(),

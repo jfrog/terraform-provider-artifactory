@@ -13,7 +13,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Computed: false,
+			Default:  0,
 			Description: "The maximum number of unique tags of a single Docker image to store in this repository.\n" +
 				"Once the number tags for an image exceeds this setting, older tags are removed. A value of 0 (default) indicates there is no limit.\n" +
 				"This only applies to manifest v2",
@@ -127,7 +127,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 type DockerLocalRepositoryParams struct {
 	LocalRepositoryBaseParams
-	MaxUniqueTags       int    `hcl:"max_unique_tags" json:"maxUniqueTags,omitempty"`
+	MaxUniqueTags       int    `hcl:"max_unique_tags" json:"maxUniqueTags"`
 	DockerApiVersion    string `hcl:"api_version" json:"dockerApiVersion"`
 	TagRetention        int    `hcl:"tag_retention" json:"dockerTagRetention"`
 	BlockPushingSchema1 bool   `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`

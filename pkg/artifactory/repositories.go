@@ -96,7 +96,7 @@ type RemoteRepositoryBaseParams struct {
 	StoreArtifactsLocally    *bool    `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
 	SocketTimeoutMillis      int      `hcl:"socket_timeout_millis" json:"socketTimeoutMillis,omitempty"`
 	LocalAddress             string   `hcl:"local_address" json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs int      `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs,omitempty"`
+	RetrievalCachePeriodSecs int      `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs"`
 	// doesn't appear in the body when calling get. Hence no HCL
 	FailedRetrievalCachePeriodSecs    int                     `json:"failedRetrievalCachePeriodSecs,omitempty"`
 	MissedRetrievalCachePeriodSecs    int                     `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
@@ -322,6 +322,7 @@ var repoTypesLikeGeneric = []string{
 	"cocoapods",
 	"composer",
 	"conan",
+	"conda",
 	"cran",
 	"gems",
 	"generic",
