@@ -9,9 +9,8 @@ import (
 )
 
 const permissionNoIncludes = `
-	//resource "artifactory_local_repository" "{{ .repo_name }}" {
+	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
 	//	key 	     = "{{ .repo_name }}"
-	//	package_type = "docker"
 	//}
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
 		name = "{{ .permission_name }}"
@@ -24,15 +23,14 @@ const permissionNoIncludes = `
 				}
 			}
 		}
-     //depends_on = [artifactory_local_repository.{{ .repo_name }}]
+     //depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
 
 	}
 `
 
 const permissionJustBuild = `
-	//resource "artifactory_local_repository" "{{ .repo_name }}" {
+	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
 	//	key 	     = "{{ .repo_name }}"
-	//	package_type = "docker"
 	//}
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
 		name = "{{ .permission_name }}"
@@ -46,16 +44,15 @@ const permissionJustBuild = `
 				}
 			}
 		}
-		//depends_on = [artifactory_local_repository.{{ .repo_name }}]
+		//depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
 
 	}
 `
 
 const permissionFull = `
 // we can't auto create the repo because of race conditions'
-	//resource "artifactory_local_repository" "{{ .repo_name }}" {
+	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
 	//	key 	     = "{{ .repo_name }}"
-	//	package_type = "docker"
 	//}
 	
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
@@ -97,18 +94,17 @@ const permissionFull = `
 		  }
 		}
 	  }
-     //depends_on = [artifactory_local_repository.{{ .repo_name }}]
+     //depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
 	}
 `
 
 func TestGitHubIssue126(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")
+	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 	_, _, username := mkNames("artifactory_user", "artifactory_user")
 	testConfig := `
-		resource "artifactory_local_repository" "{{ .repo_name }}" {
+		resource "artifactory_local_generic_repository" "{{ .repo_name }}" {
 		  key             = "{{ .repo_name }}"
-		  package_type    = "generic"
 		  repo_layout_ref = "simple-default"
 		}
 		
@@ -162,7 +158,7 @@ func TestGitHubIssue126(test *testing.T) {
 }
 func TestAccPermissionTarget_full(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")
+	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local",
@@ -196,7 +192,7 @@ func TestAccPermissionTarget_full(test *testing.T) {
 
 func TestAccPermissionTarget_addBuild(t *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_repository")
+	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local", // because of race conditions in artifactory, this repo must first exist
