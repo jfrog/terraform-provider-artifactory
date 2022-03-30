@@ -13,6 +13,7 @@ install:
 	mkdir -p ${BUILD_PATH} && \
 		(test -f ${BINARY_NAME} || go build -o ./${BINARY_NAME} -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
 		mv ${BINARY_NAME} ${BUILD_PATH} && \
+		rm -f .terraform.lock.hcl && \
 		sed -i 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && \
 		terraform init
 
