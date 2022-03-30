@@ -322,6 +322,7 @@ var repoTypesLikeGeneric = []string{
 	"cocoapods",
 	"composer",
 	"conan",
+	"conda",
 	"cran",
 	"gems",
 	"generic",
