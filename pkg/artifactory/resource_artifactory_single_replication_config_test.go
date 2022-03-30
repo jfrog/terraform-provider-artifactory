@@ -13,13 +13,12 @@ import (
 
 func mkTclForRepConfg(name, cron, url, proxy string) string {
 	const tcl = `
-		resource "artifactory_local_repository" "%s" {
+		resource "artifactory_local_maven_repository" "%s" {
 			key = "%s"
-			package_type = "maven"
 		}
 
 		resource "artifactory_single_replication_config" "%s" {
-			repo_key = "${artifactory_local_repository.%s.key}"
+			repo_key = "${artifactory_local_maven_repository.%s.key}"
 			cron_exp = "%s"
 			enable_event_replication = true
 			url = "%s"
@@ -34,7 +33,7 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 		name,
 		cron,
 		url,
-		os.Getenv("ARTIFACTORY_USERNAME"),
+		rtDefaultUser,
 		proxy,
 	)
 }
@@ -96,7 +95,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
 			},
@@ -127,7 +126,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 				),
 			},
@@ -144,11 +143,10 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 
 func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	_, fqrn, name := mkNames("lib-remote", "artifactory_single_replication_config")
-	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
+	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
-		resource "artifactory_remote_repository" "{{ .remote_name }}" {
+		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
-			package_type          = "maven"
 			url                   = "https://repo1.maven.org/maven2/"
 			repo_layout_ref       = "maven-2-default"
 		}
@@ -159,7 +157,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			enable_event_replication = false
 			url = "https://repo1.maven.org/maven2/"
 			username = "{{ .username }}"
-			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
+			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
 	tcl = executeTemplate("foo", tcl, map[string]string{

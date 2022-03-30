@@ -12,7 +12,7 @@ resource "artifactory_certificate" "my-cert" {
 }
 
 # This can then be used by a remote repository
-resource "artifactory_remote_repository" "my-remote" {
+resource "artifactory_remote_maven_repository" "my-remote" {
   // more code
   client_tls_certificate = "${artifactory_certificate.my-cert.alias}"
   // more code

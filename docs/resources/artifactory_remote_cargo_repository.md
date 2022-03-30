@@ -3,6 +3,17 @@
 Provides an Artifactory remote `cargo` repository resource. This provides cargo specific fields and is the only way to get them
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Cargo+Registry)
 
+### Passwords
+Passwords can only be used when encryption is turned off (https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption).
+Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
+
+To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible,
+the password diff can be disabled per resource with-- noting that this will require resources to be tainted for an update:
+```hcl
+lifecycle {
+    ignore_changes = ["password"]
+}
+``` 
 
 ## Example Usage
 Create a new Artifactory remote cargo repository called my-remote-cargo
@@ -13,6 +24,7 @@ for brevity sake, only cargo specific fields are included; for other fields see 
 resource "artifactory_remote_cargo_repository" "my-remote-cargo" {
   key                 = "my-remote-cargo"
   anonymous_access    = true
+  url                 = "https://github.com/"
   git_registry_url    = "https://github.com/rust-lang/foo.index"
 }
 ```
@@ -31,7 +43,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `url` - (Required) the remote repo URL. You kinda don't have a remote repo without it
 * `username` - (Optional)
-* `password` - (Optional)
+* `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
 * `proxy` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.

@@ -6,9 +6,8 @@ Provides an Artifactory local repository resource. This can be used to create an
 
 ```hcl
 # Create a new Artifactory local repository called my-local
-resource "artifactory_local_repository" "my-local" {
+resource "artifactory_local_npm_repository" "my-local" {
   key          = "my-local"
-  package_type = "npm"
 }
 ```
 
@@ -17,7 +16,6 @@ resource "artifactory_local_repository" "my-local" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported:
 
 * `key` - (Required)
-* `package_type` - (Required)
 * `description` - (Optional)
 * `notes` - (Optional)
 * `includes_pattern` - (Optional)
@@ -45,5 +43,5 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 Local repositories can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_local_repository.my-local my-local
+$ terraform import artifactory_local_maven_repository.my-local my-local
 ```

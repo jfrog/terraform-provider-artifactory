@@ -13,13 +13,12 @@ import (
 
 func mkTclForPullRepConfg(name, cron, url string) string {
 	const tcl = `
-		resource "artifactory_local_repository" "%s" {
+		resource "artifactory_local_maven_repository" "%s" {
 			key = "%s"
-			package_type = "maven"
 		}
 
 		resource "artifactory_pull_replication" "%s" {
-			repo_key = "${artifactory_local_repository.%s.key}"
+			repo_key = "${artifactory_local_maven_repository.%s.key}"
 			cron_exp = "%s"
 			enable_event_replication = true
 			url = "%s"
@@ -33,7 +32,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 		name,
 		cron,
 		url,
-		os.Getenv("ARTIFACTORY_USERNAME"),
+		rtDefaultUser,
 	)
 }
 func TestInvalidCronPullReplication(t *testing.T) {
@@ -91,11 +90,10 @@ func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 }
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
 	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_repository")
+	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
-		resource "artifactory_remote_repository" "{{ .remote_name }}" {
+		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
-			package_type          = "maven"
 			url                   = "https://repo1.maven.org/maven2/"
 			repo_layout_ref       = "maven-2-default"
 		}
@@ -104,7 +102,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			repo_key = "{{ .remote_name }}"
 			cron_exp = "0 0 12 ? * MON *"
 			enable_event_replication = false
-			depends_on = [artifactory_remote_repository.{{ .remote_name }}]
+			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
 	tcl = executeTemplate("foo", tcl, map[string]string{

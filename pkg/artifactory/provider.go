@@ -19,7 +19,6 @@ var Version = "2.6.18"
 func Provider() *schema.Provider {
 	resoucesMap := map[string]*schema.Resource{
 		"artifactory_keypair":                     resourceArtifactoryKeyPair(),
-		"artifactory_local_repository":            resourceArtifactoryLocalRepository(),
 		"artifactory_local_nuget_repository":      resourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":      resourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":     resourceArtifactoryLocalAlpineRepository(),
@@ -28,7 +27,6 @@ func Provider() *schema.Provider {
 		"artifactory_local_docker_v2_repository":  resourceArtifactoryLocalDockerV2Repository(),
 		"artifactory_local_docker_v1_repository":  resourceArtifactoryLocalDockerV1Repository(),
 		"artifactory_local_rpm_repository":        resourceArtifactoryLocalRpmRepository(),
-		"artifactory_remote_repository":           resourceArtifactoryRemoteRepository(),
 		"artifactory_remote_docker_repository":    resourceArtifactoryRemoteDockerRepository(),
 		"artifactory_remote_helm_repository":      resourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_cargo_repository":     resourceArtifactoryRemoteCargoRepository(),
@@ -39,7 +37,6 @@ func Provider() *schema.Provider {
 		"artifactory_remote_nuget_repository":     resourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_pypi_repository":      resourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_maven_repository":     resourceArtifactoryRemoteJavaRepository("maven", false),
-		"artifactory_virtual_repository":          resourceArtifactoryVirtualRepository(),
 		"artifactory_virtual_alpine_repository":   resourceArtifactoryAlpineVirtualRepository(),
 		"artifactory_virtual_bower_repository":    resourceArtifactoryBowerVirtualRepository(),
 		"artifactory_virtual_debian_repository":   resourceArtifactoryDebianVirtualRepository(),

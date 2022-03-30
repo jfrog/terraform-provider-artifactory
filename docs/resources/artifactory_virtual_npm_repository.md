@@ -1,7 +1,6 @@
 # Artifactory Virtual NPM Repository Resource
 
-Provides an Artifactory virtual repository resource, but with specific npm features. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`.
+Provides an Artifactory virtual repository resource with specific npm features.
 
 ## Example Usage
 

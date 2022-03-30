@@ -1,7 +1,6 @@
 # Artifactory Virtual Go Repository Resource
 
-Provides an Artifactory virtual repository resource, but with specific go lang features. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`.
+Provides an Artifactory virtual repository resource with specific go lang features. 
 
 ## Example Usage
 

@@ -1,20 +1,17 @@
 # Artifactory Virtual Maven Repository Resource
 
-Provides an Artifactory virtual repository resource, but with specific maven feature. This should be preferred over the original
-one-size-fits-all `artifactory_virtual_repository`.
+Provides an Artifactory virtual repository resource with specific maven feature.
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_repository" "bar" {
+resource "artifactory_local_maven_repository" "bar" {
   key = "bar"
-  package_type = "maven"
   repo_layout_ref = "maven-2-default"
 }
 
-resource "artifactory_remote_repository" "baz" {
+resource "artifactory_remote_maven_repository" "baz" {
   key             = "baz"
-  package_type    = "maven"
   url             = "https://search.maven.com/"
   repo_layout_ref = "maven-2-default"
 }
@@ -23,8 +20,8 @@ resource "artifactory_virtual_maven_repository" "foo" {
   key          = "maven-virt-repo"
   repo_layout_ref = "maven-2-default"
   repositories = [
-    "${artifactory_local_repository.bar.key}",
-    "${artifactory_local_repository.baz.key}"
+    "${artifactory_local_maven_repository.bar.key}",
+    "${artifactory_local_maven_repository.baz.key}"
   ]
   description = "A test virtual repo"
   notes = "Internal description"

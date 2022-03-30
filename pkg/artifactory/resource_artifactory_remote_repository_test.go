@@ -14,13 +14,12 @@ import (
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_repository")
+	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
 
 	key := fmt.Sprintf("debian-remote.teleport_%d", randomInt())
 	localRepositoryBasic := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_debian_repository" "%s" {
 			key              = "%s"
-			package_type     = "debian"
 			repo_layout_ref  = "simple-default"
 			url              = "https://deb.releases.teleport.dev/"
 			notes            = "managed by terraform"
@@ -46,9 +45,8 @@ func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 
 func TestKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
-		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
+		resource "artifactory_remote_npm_repository" "terraform-remote-test-repo-basic" {
 			key                     = "IHave++special,Chars"
-			package_type            = "npm"
 			url                     = "https://registry.npmjs.org/"
 			repo_layout_ref         = "npm-default"
 			propagate_query_params  = true
@@ -398,7 +396,7 @@ func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
 }
 
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
-	_, fqrn, name := mkNames("github-remote", "artifactory_remote_repository")
+	_, fqrn, name := mkNames("github-remote", "artifactory_remote_generic_repository")
 	const step1 = `
 		locals {
 		  allowed_github_repos = [
@@ -406,9 +404,8 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 			"nats-io/gnatsd/releases/download/v*/gnatsd-*"
 		  ]
 		}
-		resource "artifactory_remote_repository" "{{ .name }}" {
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
-		  package_type = "generic"
 		  url = "https://github.com"
 		  repo_layout_ref = "simple-default"
 		  notes = "managed by terraform"
@@ -428,9 +425,8 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 			"quixoten/gotee/releases/download/v*/gotee-*"
 		  ]
 		}
-		resource "artifactory_remote_repository" "{{ .name }}" {
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
-		  package_type = "generic"
 		  url = "https://github.com"
 		  repo_layout_ref = "simple-default"
 		  notes = "managed by terraform"
@@ -476,11 +472,10 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 func TestAccRemoteRepository_basic(t *testing.T) {
 	id := rand.Int()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_remote_npm_repository.%s", name)
 	const remoteRepoBasic = `
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_npm_repository" "%s" {
 			key 				  = "%s"
-			package_type          = "npm"
 			url                   = "https://registry.npmjs.org/"
 			repo_layout_ref       = "npm-default"
 			content_synchronisation {
@@ -508,11 +503,10 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 
 func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	const remoteRepoNuget = `
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_nuget_repository" "%s" {
 			key               		   = "%s"
 			url               		   = "https://www.nuget.org/"
 			repo_layout_ref   		   = "nuget-default"
-			package_type      		   = "nuget"
 			download_context_path	   = "Download"
 			feed_context_path 		   = "/api/notdefault"
 			force_nuget_authentication = true
@@ -520,7 +514,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	`
 	id := randomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
@@ -530,25 +524,13 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 				Config: fmt.Sprintf(remoteRepoNuget, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", ""),
+					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", "https://api.nuget.org/v3/index.json"),
 					resource.TestCheckResourceAttr(fqrn, "feed_context_path", "/api/notdefault"),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
 				),
 			},
 		},
 	})
-}
-
-func TestAllLegacyRemoteRepoTypes(t *testing.T) {
-	//
-	for _, repo := range repoTypesSupported {
-		if repo != "nuget" { // this requires special testing
-			t.Run(fmt.Sprintf("TestLegacyRemote%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
-				// NuGet Repository configuration is missing mandatory field downloadContextPath
-				resource.Test(mkLegacyRemoteTestCase(repo, t))
-			})
-		}
-	}
 }
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
@@ -563,7 +545,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		//"password":                           "foo",
 		"proxy": "",
 
-		//"description":                        "foo", // the server returns this suffixed. Test seperate
+		//"description":                        "foo", // the server returns this suffixed. Test separate
 		"notes":                          "notes",
 		"includes_pattern":               "**/*.js",
 		"excludes_pattern":               "**/*.jsx",
@@ -691,134 +673,22 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	}
 }
 
-func mkLegacyRemoteTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
-	const remoteRepoFull = `
-		resource "artifactory_remote_repository" "%s" {
-			key                             	  = "%s"
-			package_type                          = "%s"
-			url                                   = "https://registry.npmjs.org/"
-			username                              = "user"
-			proxy                                 = ""
-			description                           = "desc"
-			notes                                 = "notes"
-			includes_pattern                      = "**/*.js"
-			excludes_pattern                      = "**/*.jsx"
-			repo_layout_ref                       = "npm-default"
-			handle_releases                       = true
-			handle_snapshots                      = true
-			max_unique_snapshots                  = 15
-			suppress_pom_consistency_checks       = true
-			hard_fail                             = true
-			offline                               = true
-			blacked_out                           = false
-			store_artifacts_locally               = true
-			socket_timeout_millis                 = 25000
-			local_address                         = ""
-			retrieval_cache_period_seconds        = 70
-			missed_cache_period_seconds           = 2500
-			unused_artifacts_cleanup_period_hours = 96
-			fetch_jars_eagerly                    = true
-			fetch_sources_eagerly                 = true
-			share_configuration                   = true
-			synchronize_properties                = true
-			block_mismatching_mime_types		  = true
-			property_sets                         = ["artifactory"]
-			allow_any_host_auth                   = false
-			enable_cookie_management              = true
-			remote_repo_checksum_policy_type      = "ignore-and-generate"
-			client_tls_certificate				  = ""
-		}
-	`
-
-	_, fqrn, name := mkNames("terraform-remote-test-repo-full", "artifactory_remote_repository")
-	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(remoteRepoFull, name, name, repoType),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", repoType),
-					resource.TestCheckResourceAttr(fqrn, "url", "https://registry.npmjs.org/"),
-					resource.TestCheckResourceAttr(fqrn, "username", "user"),
-					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
-					resource.TestCheckResourceAttr(fqrn, "description", "desc (local file cache)"),
-					resource.TestCheckResourceAttr(fqrn, "notes", "notes"),
-					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "**/*.js"),
-					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "**/*.jsx"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "npm-default"),
-					resource.TestCheckResourceAttr(fqrn, "handle_releases", "true"),
-					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", "true"),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", "15"),
-					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", "true"),
-					resource.TestCheckResourceAttr(fqrn, "hard_fail", "true"),
-					resource.TestCheckResourceAttr(fqrn, "offline", "true"),
-					resource.TestCheckResourceAttr(fqrn, "blacked_out", "false"),
-					resource.TestCheckResourceAttr(fqrn, "store_artifacts_locally", "true"),
-					resource.TestCheckResourceAttr(fqrn, "socket_timeout_millis", "25000"),
-					resource.TestCheckResourceAttr(fqrn, "local_address", ""),
-					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "70"),
-					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "2500"),
-					resource.TestCheckResourceAttr(fqrn, "unused_artifacts_cleanup_period_hours", "96"),
-					resource.TestCheckResourceAttr(fqrn, "fetch_jars_eagerly", "true"),
-					resource.TestCheckResourceAttr(fqrn, "fetch_sources_eagerly", "true"),
-					resource.TestCheckResourceAttr(fqrn, "share_configuration", "true"),
-					resource.TestCheckResourceAttr(fqrn, "synchronize_properties", "true"),
-					resource.TestCheckResourceAttr(fqrn, "block_mismatching_mime_types", "true"),
-					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "property_sets.0", "artifactory"),
-					resource.TestCheckResourceAttr(fqrn, "allow_any_host_auth", "false"),
-					resource.TestCheckResourceAttr(fqrn, "enable_cookie_management", "true"),
-					resource.TestCheckResourceAttr(fqrn, "client_tls_certificate", ""),
-					resource.TestCheckResourceAttr(fqrn, "remote_repo_checksum_policy_type", "ignore-and-generate"),
-				),
-			},
-		},
-	}
-}
-
-func TestAccRemoteRepository_npm_with_propagate(t *testing.T) {
-	const remoteNpmRepoBasicWithPropagate = `
-		resource "artifactory_remote_repository" "terraform-remote-test-repo-basic" {
-			key                     = "terraform-remote-test-repo-basic"
-			package_type            = "npm"
-			url                     = "https://registry.npmjs.org/"
-			repo_layout_ref         = "npm-default"
-			propagate_query_params  = true
-			retrieval_cache_period_seconds        = 70
-		}
-	`
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      remoteNpmRepoBasicWithPropagate,
-				ExpectError: regexp.MustCompile(".*cannot use propagate_query_params with repository type npm.*"),
-			},
-		},
-	})
-}
-
 func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 
 	const remoteGenericRepoBasicWithPropagate = `
-		resource "artifactory_remote_repository" "%s" {
-			key                     = "%s"
-			description = "This is a test"
-			package_type            = "generic"
-			url                     = "https://registry.npmjs.org/"
-			repo_layout_ref         = "simple-default"
-			propagate_query_params  = true
-			retrieval_cache_period_seconds        = 70
+		resource "artifactory_remote_generic_repository" "%s" {
+			key                     		= "%s"
+			description 					= "This is a test"
+			url                     		= "https://registry.npmjs.org/"
+			repo_layout_ref         		= "simple-default"
+			propagate_query_params  		= true
+			retrieval_cache_period_seconds  = 70
 
 		}
 	`
 	id := randomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
@@ -837,14 +707,13 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 }
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-func TestAccRemoteLegacyRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-basic", "artifactory_remote_repository")
+func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-basic", "artifactory_remote_cran_repository")
 
 	key := fmt.Sprintf("cran-remote-%d", randomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_cran_repository" "%s" {
 			key              = "%s"
-			package_type     = "cran"
 			repo_layout_ref  = "bower-default"
 			url              = "https://cran.r-project.org/"
 			notes            = "managed by terraform"
@@ -856,9 +725,8 @@ func TestAccRemoteLegacyRepository_MissedRetrievalCachePeriodSecs_retained_betwe
 	`, name, key)
 
 	remoteRepositoryUpdate := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_cran_repository" "%s" {
 			key              = "%s"
-			package_type     = "cran"
 			repo_layout_ref  = "simple-default"
 			url              = "https://cran.r-project.org/"
 			notes            = "managed by terraform"
@@ -926,15 +794,14 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 }
 
 func TestAccRemoteProxyUpdateGH2(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-proxy", "artifactory_remote_repository")
+	_, fqrn, name := mkNames("terraform-remote-test-repo-proxy", "artifactory_remote_go_repository")
 
 	key := fmt.Sprintf("go-remote.proxy_%d", randomInt())
 	fakeProxy := "test-proxy"
 
 	remoteRepositoryWithProxy := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_go_repository" "%s" {
 			key             = "%s"
-			package_type    = "go"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
 			proxy           = "%s"
@@ -942,9 +809,8 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	`, name, key, fakeProxy)
 
 	remoteRepositoryResetProxyWithEmptyString := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_go_repository" "%s" {
 			key             = "%s"
-			package_type    = "go"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
 			proxy           = ""
@@ -952,9 +818,8 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	`, name, key)
 
 	remoteRepositoryResetProxyWithNoAttr := fmt.Sprintf(`
-		resource "artifactory_remote_repository" "%s" {
+		resource "artifactory_remote_go_repository" "%s" {
 			key             = "%s"
-			package_type    = "go"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
 		}

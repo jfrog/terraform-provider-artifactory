@@ -237,31 +237,6 @@ func TestAccLocalDebianRepository(t *testing.T) {
 	})
 }
 
-func TestAccLegacyLocalRepository_basic(t *testing.T) {
-	name := fmt.Sprintf("terraform-local-test-repo-basic%d", rand.Int())
-	resourceName := fmt.Sprintf("artifactory_local_repository.%s", name)
-	localRepositoryBasic := fmt.Sprintf(`
-		resource "artifactory_local_repository" "%s" {
-			key 	     = "%s"
-			package_type = "docker"
-		}
-	`, name, name) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
-		ProviderFactories: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: localRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", "docker"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccLocalDockerV1Repository(t *testing.T) {
 
 	_, fqrn, name := mkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
