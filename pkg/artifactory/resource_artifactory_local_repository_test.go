@@ -327,6 +327,35 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
+
+	_, fqrn, name := mkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
+	params := map[string]interface{}{
+		"name":  name,
+	}
+	localRepositoryBasic := executeTemplate("TestAccLocalDockerV2Repository", `
+		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLocalNugetRepository(t *testing.T) {
 
 	_, fqrn, name := mkNames("nuget-local", "artifactory_local_nuget_repository")
