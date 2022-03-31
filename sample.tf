@@ -17,10 +17,10 @@ resource "artifactory_local_bower_repository" "bower-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
-#resource "artifactory_local_cargo_repository" "cargo-local" {
-#  key          = "cargo-local"
-#  description  = "Repo created by Terraform Provider Artifactory"
-#}
+resource "artifactory_local_cargo_repository" "cargo-local" {
+  key          = "cargo-local"
+  description  = "Repo created by Terraform Provider Artifactory"
+}
 
 resource "artifactory_local_chef_repository" "chef-local" {
   key         = "chef-local"
@@ -42,10 +42,10 @@ resource "artifactory_local_conan_repository" "conan-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
-#resource "artifactory_local_conda_repository" "conda-local" {
-#  key         = "conda-local"
-#  description = "Repo created by Terraform Provider Artifactory"
-#}
+resource "artifactory_local_conda_repository" "conda-local" {
+  key         = "conda-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
 
 resource "artifactory_local_cran_repository" "cran-local" {
   key         = "cran-local"
