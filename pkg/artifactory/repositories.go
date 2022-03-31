@@ -973,7 +973,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		Url:                      d.getString("url", false),
 		Username:                 d.getString("username", true),
 		Password:                 d.getString("password", true),
-		Proxy:                    d.getString("proxy", true),
+		Proxy:                    d.getString("proxy", false),
 		Description:              d.getString("description", true),
 		Notes:                    d.getString("notes", true),
 		IncludesPattern:          d.getString("includes_pattern", true),
