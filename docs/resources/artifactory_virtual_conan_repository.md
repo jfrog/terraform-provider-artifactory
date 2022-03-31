@@ -25,6 +25,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `repositories` - (Required, but may be empty)
 * `description` - (Optional)
 * `notes` - (Optional)
+* `retrieval_cache_period_seconds` - (Optional) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default value is 7200.
 
 Arguments for Conan repository type closely match with arguments for Generic repository type.
 

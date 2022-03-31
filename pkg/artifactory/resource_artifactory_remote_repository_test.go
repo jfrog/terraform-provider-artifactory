@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"gopkg.in/yaml.v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
@@ -68,7 +68,27 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 }
 
 func TestAccRemoteDockerRepository(t *testing.T) {
-	_, testCase := mkNewRemoteTestCase("docker", t, map[string]interface{}{
+	const packageType = "docker"
+	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"external_dependencies_enabled":  true,
+		"enable_token_authentication":    true,
+		"block_pushing_schema1":          true,
+		"priority_resolution":            false,
+		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	})
+	resource.Test(t, testCase)
+}
+
+func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
+	const packageType = "docker"
+	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"external_dependencies_enabled":  true,
 		"enable_token_authentication":    true,
 		"block_pushing_schema1":          true,
@@ -86,7 +106,26 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 }
 
 func TestAccRemoteCargoRepository(t *testing.T) {
-	_, testCase := mkNewRemoteTestCase("cargo", t, map[string]interface{}{
+	const packageType = "cargo"
+	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"git_registry_url":            "https://github.com/rust-lang/foo.index",
+		"anonymous_access":            true,
+		"priority_resolution":         false,
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	})
+	resource.Test(t, testCase)
+}
+
+func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
+	const packageType = "cargo"
+	//resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRemoteRepoLayoutRef(packageType), //Check to ensure repository layout is set as per default even when it is not passed.
+	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
 		"priority_resolution":         false,
@@ -103,7 +142,25 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 }
 
 func TestAccRemoteHelmRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("helm", t, map[string]interface{}{
+	const packageType = "helm"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
+		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"external_dependencies_enabled":  true,
+		"priority_resolution":            false,
+		"external_dependencies_patterns": []interface{}{"**github.com**"},
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
+	const packageType = "helm"
+	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
@@ -119,8 +176,79 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
+	repoTypes := []string{"helm", "docker"}
+	const remoteRepoExternalDependenciesDefaults = `
+		resource "artifactory_remote_%s_repository" "%s" {
+			key 				            = "%s"
+            url                             = "https://testrepo.io/"
+            external_dependencies_enabled   = true
+		}
+	    `
+	type ExternalDependenciesRemoteRepo struct {
+		ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
+		ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns"`
+	}
+
+	for _, repoType := range repoTypes {
+		id := rand.Int()
+		name := fmt.Sprintf("terraform-remote-test-%s-repo%d", repoType, id)
+		fqrn := fmt.Sprintf("artifactory_remote_%s_repository.%s", repoType, name)
+
+		var externalDependenciesCheck = func(state *terraform.State) error {
+			restyClient := getTestResty(t)
+			queryRepoResponse := &ExternalDependenciesRemoteRepo{}
+			_, err := restyClient.R().SetResult(&queryRepoResponse).Get("artifactory/api/repositories/" + name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if queryRepoResponse.ExternalDependenciesPatterns == nil ||
+				len(queryRepoResponse.ExternalDependenciesPatterns) != 1 ||
+				queryRepoResponse.ExternalDependenciesPatterns[0] != "**" {
+				return fmt.Errorf("error: external_dependencies_patterns attribute = %v instead of default '**'", queryRepoResponse.ExternalDependenciesPatterns)
+			}
+			return err
+		}
+
+		t.Run(fmt.Sprintf("TestRemote%sRepo_ExternalDependenciesDefaults", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck:          func() { testAccPreCheck(t) },
+				CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+				ProviderFactories: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: fmt.Sprintf(remoteRepoExternalDependenciesDefaults, repoType, name, name),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(fqrn, "key", name),
+							resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+							externalDependenciesCheck,
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccRemoteNpmRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("npm", t, map[string]interface{}{
+	const packageType = "npm"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"list_remote_folder_items":             true,
+		"priority_resolution":                  true,
+		"mismatching_mime_types_override_list": "application/json,application/xml",
+		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemoteNpmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
+	const packageType = "npm"
+	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"list_remote_folder_items":             true,
 		"priority_resolution":                  true,
 		"mismatching_mime_types_override_list": "application/json,application/xml",
@@ -135,7 +263,23 @@ func TestAccRemoteNpmRepository(t *testing.T) {
 }
 
 func TestAccRemotePypiRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("pypi", t, map[string]interface{}{
+	const packageType = "pypi"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"pypi_registry_url":           "https://pypi.org",
+		"priority_resolution":         true,
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
+	const packageType = "pypi"
+	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"pypi_registry_url":           "https://pypi.org",
 		"priority_resolution":         true,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
@@ -149,11 +293,101 @@ func TestAccRemotePypiRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteMavenRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
+		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"list_remote_folder_items":    true,
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccAllRemoteRepository(t *testing.T) {
+	for _, repoType := range remoteRepoTypesLikeGeneric {
+		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
+				"missed_cache_period_seconds": 1800,
+			}))
+		})
+	}
+}
+
+func TestAccRemoteGoRepository(t *testing.T) {
+	const packageType = "go"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://proxy.golang.org/",
+		"vcs_git_provider":            "ARTIFACTORY",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteCocoapodsRepository(t *testing.T) {
+	const packageType = "cocoapods"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"vcs_git_provider":            "GITHUB",
+		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteComposerRepository(t *testing.T) {
+	const packageType = "composer"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"vcs_git_provider":            "GITHUB",
+		"composer_registry_url":       "https://packagist1.org",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteBowerRepository(t *testing.T) {
+	const packageType = "bower"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://github.com/",
+		"vcs_git_provider":            "ARTIFACTORY",
+		"bower_registry_url":          "https://registry1.bower.io",
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteNugetRepository(t *testing.T) {
+	const packageType = "nuget"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                         "https://www.nuget.org/",
+		"download_context_path":       "api/v2/package",
+		"force_nuget_authentication":  true,
+		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccAllRemoteGradleLikeRepository(t *testing.T) {
+	for _, repoType := range gradleLikeRepoTypes {
+		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
+				"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+				"list_remote_folder_items":    true,
+				"content_synchronisation": map[string]interface{}{
+					"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+					"statistics_enabled":              true,
+					"properties_enabled":              true,
+					"source_origin_absence_detection": true,
+				},
+			}))
+		})
+	}
+}
+
 func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
+	const packageType = "pypi"
 	extraFields := map[string]interface{}{
 		"pypi_registry_url": "https://custom.PYPI.registry.url",
 	}
-	resource.Test(mkNewRemoteTestCase("pypi", t, extraFields))
+	resource.Test(mkNewRemoteTestCase(packageType, t, extraFields))
 }
 
 func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
@@ -371,6 +605,77 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	defaultChecks := mapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
+	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
+
+	return t, resource.TestCase{
+		ProviderFactories: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(checks...),
+			},
+		},
+	}
+}
+
+func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+
+	defaultFields := map[string]interface{}{
+		"key":      name,
+		"url":      "https://registry.npmjs.org/",
+		"username": "user",
+		// This returns encrypted. Can't be tested
+		//"password":                           "foo",
+		"proxy": "",
+
+		//"description":                        "foo", // the server returns this suffixed. Test seperate
+		"notes":                          "notes",
+		"includes_pattern":               "**/*.js",
+		"excludes_pattern":               "**/*.jsx",
+		"hard_fail":                      true,
+		"offline":                        true,
+		"blacked_out":                    true,
+		"xray_index":                     true,
+		"store_artifacts_locally":        true,
+		"socket_timeout_millis":          25000,
+		"local_address":                  "",
+		"retrieval_cache_period_seconds": 70,
+		// this doesn't get returned on a GET
+		//"failed_retrieval_cache_period_secs": 140,
+		"missed_cache_period_seconds":             2500,
+		"unused_artifacts_cleanup_period_enabled": true,
+		"unused_artifacts_cleanup_period_hours":   96,
+		"assumed_offline_period_secs":             96,
+		"share_configuration":                     true,
+		"synchronize_properties":                  true,
+		"block_mismatching_mime_types":            true,
+		"property_sets":                           []interface{}{"artifactory"},
+		"allow_any_host_auth":                     true,
+		"enable_cookie_management":                true,
+		"bypass_head_requests":                    true,
+		"client_tls_certificate":                  "",
+		"content_synchronisation": map[string]interface{}{
+			"enabled": false, // even when set to true, it seems to come back as false on the wire
+		},
+	}
+	allFields := mergeMaps(defaultFields, extraFields)
+	allFieldsHcl := fmtMapToHcl(allFields)
+	const remoteRepoFull = `
+		resource "artifactory_remote_%s_repository" "%s" {
+%s
+		}
+	`
+	extraChecks := mapToTestChecks(fqrn, extraFields)
+	defaultChecks := mapToTestChecks(fqrn, allFields)
+
+	var addCheckFunctions = []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("remote", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+	}
+
+	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
 	return t, resource.TestCase{
@@ -654,52 +959,6 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			url             = "https://gocenter.io"
 		}
 	`, name, key)
-
-	type Proxy struct {
-		Key             string `yaml:"key"`
-		Host            string `yaml:"host"`
-		Port            int    `yaml:"port"`
-		PlatformDefault bool   `yaml:"platformDefault"`
-	}
-
-	var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
-		body := getProxiesBody()
-		restyClient := getTestResty(t)
-
-		err := sendConfigurationPatch(body, restyClient)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	var createProxy = func(t *testing.T, proxyKey string) {
-		updateProxiesConfig(t, proxyKey, func() []byte {
-			testProxy := Proxy{
-				Key:             proxyKey,
-				Host:            "http://fake-proxy.org",
-				Port:            8080,
-				PlatformDefault: false,
-			}
-
-			constructBody := map[string][]Proxy{
-				"proxies": {testProxy},
-			}
-
-			body, err := yaml.Marshal(&constructBody)
-			if err != nil {
-				t.Errorf("failed to marshal proxies settings during Update")
-			}
-
-			return body
-		})
-	}
-
-	var deleteProxy = func(t *testing.T, proxyKey string) {
-		updateProxiesConfig(t, proxyKey, func() []byte {
-			// Return empty yaml to clean up all proxies
-			return []byte(`proxies: ~`)
-		})
-	}
 
 	testProxyKey := "test-proxy"
 

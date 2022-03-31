@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
 
 func resourceArtifactoryPullReplication() *schema.Resource {
@@ -27,9 +26,9 @@ func resourceArtifactoryPullReplication() *schema.Resource {
 	}
 }
 
-func unpackPullReplication(s *schema.ResourceData) *utils.ReplicationBody {
+func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	d := &ResourceData{s}
-	replicationConfig := new(utils.ReplicationBody)
+	replicationConfig := new(ReplicationBody)
 
 	replicationConfig.RepoKey = d.getString("repo_key", false)
 	replicationConfig.CronExp = d.getString("cron_exp", false)

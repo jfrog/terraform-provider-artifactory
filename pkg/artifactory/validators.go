@@ -2,6 +2,8 @@ package artifactory
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/mail"
 	"os"
 	"regexp"
@@ -476,6 +478,16 @@ var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 var projectKeyValidator = validation.ToDiagFunc(
 	validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{3,10}$`), "project_key must be 3 - 10 lowercase alphanumeric characters"),
 )
+
+func repoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Always override repo_layout_ref attribute in the schema",
+			Detail:   "Always override repo_layout_ref attribute in the schema on top of base schema",
+		},
+	}
+}
 
 func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))

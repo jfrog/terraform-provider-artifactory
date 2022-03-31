@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"math"
 	"net/http"
 	"reflect"
@@ -120,22 +121,22 @@ func createProject(t *testing.T, projectKey string) {
 	}
 
 	type Project struct {
-		Key                    string          `json:"project_key"`
-		DisplayName            string          `json:"display_name"`
-		Description            string          `json:"description"`
-		AdminPrivileges        AdminPrivileges `json:"admin_privileges"`
+		Key             string          `json:"project_key"`
+		DisplayName     string          `json:"display_name"`
+		Description     string          `json:"description"`
+		AdminPrivileges AdminPrivileges `json:"admin_privileges"`
 	}
 
 	restyClient := getTestResty(t)
 
 	project := Project{
-		Key: projectKey,
+		Key:         projectKey,
 		DisplayName: projectKey,
 		Description: fmt.Sprintf("%s description", projectKey),
 		AdminPrivileges: AdminPrivileges{
-			ManageMembers: true,
+			ManageMembers:   true,
 			ManageResources: true,
-			IndexResources: true,
+			IndexResources:  true,
 		},
 	}
 
@@ -151,4 +152,96 @@ func deleteProject(t *testing.T, projectKey string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+// Create a local repository with Xray indexing enabled. It will be used in the tests
+func testAccCreateRepos(t *testing.T, repo string, rclass string, packageType string,
+	handleReleases bool, handleSnapshots bool) {
+	restyClient := getTestResty(t)
+
+	type Repository struct {
+		Rclass                  string `json:"rclass"`
+		PackageType             string `json:"packageType"`
+		HandleReleases          bool   `json:"handleReleases"`
+		HandleSnapshots         bool   `json:"handleSnapshots"`
+		SnapshotVersionBehavior string `json:"snapshotVersionBehavior"`
+		XrayIndex               bool   `json:"xrayIndex"`
+	}
+
+	repository := Repository{}
+	repository.Rclass = rclass
+	repository.PackageType = packageType
+	repository.HandleReleases = handleReleases
+	repository.HandleSnapshots = handleSnapshots
+	repository.SnapshotVersionBehavior = "unique"
+	repository.XrayIndex = true
+	response, errRepo := restyClient.R().SetBody(repository).Put("artifactory/api/repositories/" + repo)
+	//Artifactory can return 400 for several reasons, this is why we are checking the response body
+	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
+	if !repoExists && response.StatusCode() != http.StatusOK {
+		t.Error(errRepo)
+	}
+}
+
+func testAccDeleteRepo(t *testing.T, repo string) {
+	restyClient := getTestResty(t)
+
+	response, errRepo := restyClient.R().Delete("artifactory/api/repositories/" + repo)
+	if errRepo != nil || response.StatusCode() != http.StatusOK {
+		t.Logf("The repository %s doesn't exist", repo)
+	}
+}
+
+//Usage of the function is strictly restricted to Test Cases
+func getValidRandomDefaultRepoLayoutRef() string {
+	return randSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+}
+
+// updateProxiesConfig is used by createProxy and deleteProxy to interact with a proxy on Artifactory
+var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
+	body := getProxiesBody()
+	restyClient := getTestResty(t)
+
+	err := sendConfigurationPatch(body, restyClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// createProxy creates a new proxy on Artifactory with the given key
+var createProxy = func(t *testing.T, proxyKey string) {
+	type proxy struct {
+		Key             string `yaml:"key"`
+		Host            string `yaml:"host"`
+		Port            int    `yaml:"port"`
+		PlatformDefault bool   `yaml:"platformDefault"`
+	}
+
+	updateProxiesConfig(t, proxyKey, func() []byte {
+		testProxy := proxy{
+			Key:             proxyKey,
+			Host:            "http://fake-proxy.org",
+			Port:            8080,
+			PlatformDefault: false,
+		}
+
+		constructBody := map[string][]proxy{
+			"proxies": {testProxy},
+		}
+
+		body, err := yaml.Marshal(&constructBody)
+		if err != nil {
+			t.Errorf("failed to marshal proxies settings during Update")
+		}
+
+		return body
+	})
+}
+
+// createProxy deletes an existing proxy on Artifactory with the given key
+var deleteProxy = func(t *testing.T, proxyKey string) {
+	updateProxiesConfig(t, proxyKey, func() []byte {
+		// Return empty yaml to clean up all proxies
+		return []byte(`proxies: ~`)
+	})
 }

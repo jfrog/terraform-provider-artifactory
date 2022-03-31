@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"sort"
+	"strings"
 	"text/template"
 	"time"
 
@@ -208,3 +210,9 @@ func IntPtr(v int) *int { return &v }
 func Int64Ptr(v int64) *int64 { return &v }
 
 func StringPtr(v string) *string { return &v }
+
+func formatCommaSeparatedString(thing interface{}) string {
+	fields := strings.Fields(thing.(string))
+	sort.Strings(fields)
+	return strings.Join(fields, ",")
+}

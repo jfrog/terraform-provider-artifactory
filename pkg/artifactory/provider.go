@@ -18,40 +18,47 @@ var Version = "2.6.18"
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() *schema.Provider {
 	resoucesMap := map[string]*schema.Resource{
-		"artifactory_keypair":                    resourceArtifactoryKeyPair(),
-		"artifactory_local_repository":           resourceArtifactoryLocalRepository(),
-		"artifactory_local_nuget_repository":     resourceArtifactoryLocalNugetRepository(),
-		"artifactory_local_maven_repository":     resourceArtifactoryLocalJavaRepository("maven", false),
-		"artifactory_local_gradle_repository":    resourceArtifactoryLocalJavaRepository("gradle", true),
-		"artifactory_local_alpine_repository":    resourceArtifactoryLocalAlpineRepository(),
-		"artifactory_local_debian_repository":    resourceArtifactoryLocalDebianRepository(),
-		"artifactory_local_docker_v2_repository": resourceArtifactoryLocalDockerV2Repository(),
-		"artifactory_local_docker_v1_repository": resourceArtifactoryLocalDockerV1Repository(),
-		"artifactory_local_rpm_repository":       resourceArtifactoryLocalRpmRepository(),
-		"artifactory_remote_repository":          resourceArtifactoryRemoteRepository(),
-		"artifactory_remote_npm_repository":      resourceArtifactoryRemoteNpmRepository(),
-		"artifactory_remote_docker_repository":   resourceArtifactoryRemoteDockerRepository(),
-		"artifactory_remote_helm_repository":     resourceArtifactoryRemoteHelmRepository(),
-		"artifactory_remote_cargo_repository":    resourceArtifactoryRemoteCargoRepository(),
-		"artifactory_remote_pypi_repository":     resourceArtifactoryRemotePypiRepository(),
-		"artifactory_virtual_repository":         resourceArtifactoryVirtualRepository(),
-		"artifactory_virtual_maven_repository":   resourceArtifactoryMavenVirtualRepository(),
-		"artifactory_virtual_go_repository":      resourceArtifactoryGoVirtualRepository(),
-		"artifactory_virtual_conan_repository":   resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs("conan"),
-		"artifactory_virtual_rpm_repository":     resourceArtifactoryRpmVirtualRepository(),
-		"artifactory_virtual_generic_repository": resourceArtifactoryVirtualGenericRepository("generic"),
-		"artifactory_virtual_helm_repository":    resourceArtifactoryHelmVirtualRepository(),
-		"artifactory_group":                      resourceArtifactoryGroup(),
-		"artifactory_user":                       resourceArtifactoryUser(),
-		"artifactory_permission_target":          resourceArtifactoryPermissionTarget(),
-		"artifactory_pull_replication":           resourceArtifactoryPullReplication(),
-		"artifactory_push_replication":           resourceArtifactoryPushReplication(),
-		"artifactory_certificate":                resourceArtifactoryCertificate(),
-		"artifactory_api_key":                    resourceArtifactoryApiKey(),
-		"artifactory_access_token":               resourceArtifactoryAccessToken(),
-		"artifactory_general_security":           resourceArtifactoryGeneralSecurity(),
-		"artifactory_oauth_settings":             resourceArtifactoryOauthSettings(),
-		"artifactory_saml_settings":              resourceArtifactorySamlSettings(),
+		"artifactory_keypair":                     resourceArtifactoryKeyPair(),
+		"artifactory_local_repository":            resourceArtifactoryLocalRepository(),
+		"artifactory_local_nuget_repository":      resourceArtifactoryLocalNugetRepository(),
+		"artifactory_local_maven_repository":      resourceArtifactoryLocalJavaRepository("maven", false),
+		"artifactory_local_alpine_repository":     resourceArtifactoryLocalAlpineRepository(),
+		"artifactory_local_cargo_repository":      resourceArtifactoryLocalCargoRepository(),
+		"artifactory_local_debian_repository":     resourceArtifactoryLocalDebianRepository(),
+		"artifactory_local_docker_v2_repository":  resourceArtifactoryLocalDockerV2Repository(),
+		"artifactory_local_docker_v1_repository":  resourceArtifactoryLocalDockerV1Repository(),
+		"artifactory_local_rpm_repository":        resourceArtifactoryLocalRpmRepository(),
+		"artifactory_remote_repository":           resourceArtifactoryRemoteRepository(),
+		"artifactory_remote_docker_repository":    resourceArtifactoryRemoteDockerRepository(),
+		"artifactory_remote_helm_repository":      resourceArtifactoryRemoteHelmRepository(),
+		"artifactory_remote_cargo_repository":     resourceArtifactoryRemoteCargoRepository(),
+		"artifactory_remote_bower_repository":     resourceArtifactoryRemoteBowerRepository(),
+		"artifactory_remote_go_repository":        resourceArtifactoryRemoteGoRepository(),
+		"artifactory_remote_cocoapods_repository": resourceArtifactoryRemoteCocoapodsRepository(),
+		"artifactory_remote_composer_repository":  resourceArtifactoryRemoteComposerRepository(),
+		"artifactory_remote_nuget_repository":     resourceArtifactoryRemoteNugetRepository(),
+		"artifactory_remote_pypi_repository":      resourceArtifactoryRemotePypiRepository(),
+		"artifactory_remote_maven_repository":     resourceArtifactoryRemoteJavaRepository("maven", false),
+		"artifactory_virtual_repository":          resourceArtifactoryVirtualRepository(),
+		"artifactory_virtual_alpine_repository":   resourceArtifactoryAlpineVirtualRepository(),
+		"artifactory_virtual_bower_repository":    resourceArtifactoryBowerVirtualRepository(),
+		"artifactory_virtual_debian_repository":   resourceArtifactoryDebianVirtualRepository(),
+		"artifactory_virtual_maven_repository":    resourceArtifactoryJavaVirtualRepository("maven"),
+		"artifactory_virtual_nuget_repository":    resourceArtifactoryNugetVirtualRepository(),
+		"artifactory_virtual_go_repository":       resourceArtifactoryGoVirtualRepository(),
+		"artifactory_virtual_rpm_repository":      resourceArtifactoryRpmVirtualRepository(),
+		"artifactory_virtual_helm_repository":     resourceArtifactoryHelmVirtualRepository(),
+		"artifactory_group":                       resourceArtifactoryGroup(),
+		"artifactory_user":                        resourceArtifactoryUser(),
+		"artifactory_permission_target":           resourceArtifactoryPermissionTarget(),
+		"artifactory_pull_replication":            resourceArtifactoryPullReplication(),
+		"artifactory_push_replication":            resourceArtifactoryPushReplication(),
+		"artifactory_certificate":                 resourceArtifactoryCertificate(),
+		"artifactory_api_key":                     resourceArtifactoryApiKey(),
+		"artifactory_access_token":                resourceArtifactoryAccessToken(),
+		"artifactory_general_security":            resourceArtifactoryGeneralSecurity(),
+		"artifactory_oauth_settings":              resourceArtifactoryOauthSettings(),
+		"artifactory_saml_settings":               resourceArtifactorySamlSettings(),
 		// Deprecated. Remove in V3
 		"artifactory_permission_targets":        resourceArtifactoryPermissionTargets(),
 		"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
@@ -59,14 +66,36 @@ func Provider() *schema.Provider {
 		"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":        resourceArtifactoryLdapGroupSetting(),
 		"artifactory_backup":                    resourceArtifactoryBackup(),
-		// Xray resources. Deprecated, moved to a separate provider
-		"artifactory_xray_policy": resourceXrayPolicy(),
-		"artifactory_xray_watch":  resourceXrayWatch(),
 	}
+
 	for _, repoType := range repoTypesLikeGeneric {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = resourceArtifactoryLocalGenericRepository(repoType)
 	}
+
+	for _, repoType := range remoteRepoTypesLikeGeneric {
+		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
+		resoucesMap[remoteResourceName] = resourceArtifactoryRemoteGenericRepository(repoType)
+	}
+
+	for _, repoType := range gradleLikeRepoTypes {
+		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+		resoucesMap[localResourceName] = resourceArtifactoryLocalJavaRepository(repoType, true)
+		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
+		resoucesMap[remoteResourceName] = resourceArtifactoryRemoteJavaRepository(repoType, true)
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryJavaVirtualRepository(repoType)
+	}
+
+	for _, repoType := range virtualRepoTypesLikeGeneric {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualGenericRepository(repoType)
+	}
+	for _, repoType := range virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
+		resoucesMap[virtualResourceName] = resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
+	}
+
 	for _, repoType := range federatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resoucesMap[federatedResourceName] = resourceArtifactoryFederatedGenericRepository(repoType)

@@ -26,3 +26,6 @@ Current general security settings can be imported using `security` as the `ID`, 
 ```
 $ terraform import artifactory_general_security.security security
 ```
+
+**NOTE:** The artifactory_general_security resource uses endpoints that are undocumented and may not work with SaaS
+environments, or may change without notice.

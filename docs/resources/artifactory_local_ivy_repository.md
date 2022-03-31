@@ -18,4 +18,4 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Ivy repository type closely match with arguments for Generic repository type.
+Arguments for Ivy repository type closely match with arguments for Gradle repository type.

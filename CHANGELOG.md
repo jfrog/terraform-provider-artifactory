@@ -1,3 +1,159 @@
+## 3.1.4 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix blank password getting sent to Artifactory when updating other attributes of `artifactory_user` resource. [GH-383]
+
+## 3.1.3 (Mar 31, 2022)
+
+IMPROVEMENTS:
+
+* Documentation improved for `artifactory_general_security` resource. [GH-367]
+
+## 3.1.2 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix proxy getting unset after modifying existing artifactory_remote_*_repository resources. [GH-381]
+
+## 3.1.1 (Mar 30, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_local_docker_v2_repository: Fix `max_unique_tags` with value 0 being ignored. [GH-376]
+
+## 3.1.0 (Mar 29, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following local repository resources in new implementation. [GH-378]
+  * "artifactory_local_cargo_repository"
+  * "artifactory_local_conda_repository"
+
+## 3.0.2 (Mar 29, 2022)
+
+IMPROVEMENTS:
+
+* Update module path to `/v3` in `go.mod` and `main.go` [GH-374]
+
+## 3.0.1 (Mar 28, 2022)
+
+BUG FIXES:
+
+* Fix retrieval_cache_period_seconds to be set to 0 for artifactory_remote_*_repository resources. [GH-373]
+
+## 3.0.0 (Mar 28, 2022)
+
+BREAKING CHANGES:
+
+* Resources `artifactory_xray_policy` and `artifactory_xray_watch` have been removed [GH-315]
+
+## 2.25.0 (Mar 21, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following virtual repository resources in new implementation. [GH-365]
+  * "artifactory_virtual_alpine_repository"
+  * "artifactory_virtual_bower_repository"
+  * "artifactory_virtual_chef_repository"
+  * "artifactory_virtual_conda_repository"
+  * "artifactory_virtual_composer_repository"
+  * "artifactory_virtual_cran_repository"
+  * "artifactory_virtual_debian_repository"
+  * "artifactory_virtual_docker_repository"
+  * "artifactory_virtual_gems_repository"
+  * "artifactory_virtual_gitlfs_repository"
+  * "artifactory_virtual_gradle_repository"
+  * "artifactory_virtual_ivy_repository"
+  * "artifactory_virtual_npm_repository"
+  * "artifactory_virtual_nuget_repository"
+  * "artifactory_virtual_p2_repository"
+  * "artifactory_virtual_puppet_repository"
+  * "artifactory_virtual_pypi_repository"
+  * "artifactory_virtual_sbt_repository"
+
+## 2.24.0 (Mar 18, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following remote repository resources in new implementation. [GH-364]
+  * "artifactory_remote_alpine_repository"
+  * "artifactory_remote_bower_repository"
+  * "artifactory_remote_chef_repository"
+  * "artifactory_remote_cocoapods_repository"
+  * "artifactory_remote_conda_repository"
+  * "artifactory_remote_conan_repository"
+  * "artifactory_remote_composer_repository"
+  * "artifactory_remote_cran_repository"
+  * "artifactory_remote_debian_repository"
+  * "artifactory_remote_gems_repository"
+  * "artifactory_remote_go_repository"
+  * "artifactory_remote_generic_repository"
+  * "artifactory_remote_gitlfs_repository"
+  * "artifactory_remote_opkg_repository"
+  * "artifactory_remote_p2_repository"
+  * "artifactory_remote_puppet_repository"
+  * "artifactory_remote_rpm_repository"
+  * "artifactory_remote_nuget_repository"
+
+## 2.23.2 (Mar 17, 2022)
+
+IMPROVEMENTS:
+
+* Datasource `datasource_artifactory_file`, added a parameter `path_is_aliased`,
+  assumes that the path supplied is an alias for the most recent version of the artifact and doesn't try to resolve it to a specific, timestamped, artifact
+
+## 2.23.1 (Mar 15, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+* resource/artifactory_remote_helm_repository: Setting default value '**' for external_dependencies_patterns field. [GH-363]
+
+## 2.23.0 (Mar 11, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following local and remote repository resources in new implementation. [GH-360]
+  * "artifactory_local_sbt_repository"
+  * "artifactory_local_ivy_repository"
+  * "artifactory_remote_sbt_repository"
+  * "artifactory_remote_ivy_repository"
+
+## 2.22.3 (Mar 10, 2022)
+
+BUG FIXES:
+
+* Conditional file download depending on `force_overwrite` value of data source `artifactory_file`. [GH-352]
+
+## 2.22.2 (Mar 10, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_ldap_setting: Made user_dn_pattern attribute optional. [GH-356]
+
+## 2.22.1 (Mar 8, 2022)
+
+IMPROVEMENTS:
+
+* Make repository layout to correct default value as per package type, provided the `repo_layout_ref` attribute is not supplied explicitly in the resource. [GH-335]
+
+## 2.22.0 (Mar 8, 2022)
+
+FEATURES:
+
+* resource/artifactory_push_replication: Add support for specifying proxy. [GH-337]
+* resource/artifactory_replication_config: Add support for specifying proxy. [GH-337]
+* resource/artifactory_single_replication: Add support for specifying proxy. [GH-337]
+
+## 2.21.0 (Mar 3, 2022)
+
+FEATURES:
+
+* **New Resources:** Added following remote repository resources. [GH-343]
+  * "artifactory_remote_maven_repository"
+  * "artifactory_remote_gradle_repository"
+
 ## 2.20.4 (Feb 28, 2022)
 
 IMPROVEMENTS:

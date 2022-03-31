@@ -6,6 +6,7 @@ import (
 )
 
 func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
+
 	var javaLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"checksum_policy_type": {
 			Type:             schema.TypeString,
@@ -51,13 +52,13 @@ func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 		"suppress_pom_consistency_checks": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Default:  false,
+			Default:  suppressPom,
 			Description: "By default, Artifactory keeps your repositories healthy by refusing POMs with incorrect " +
 				"coordinates (path).\n  If the groupId:artifactId:version information inside the POM does not match the " +
 				"deployed path, Artifactory rejects the deployment with a \"409 Conflict\" error.\n  You can disable this " +
 				"behavior by setting the Suppress POM Consistency Checks checkbox.",
 		},
-	})
+	}, repoLayoutRefSchema("local", repoType))
 	type JavaLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
 		ChecksumPolicyType           string `hcl:"checksum_policy_type" json:"checksumPolicyType"`

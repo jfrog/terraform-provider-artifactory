@@ -109,10 +109,10 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 
 func TestAccVirtualGoRepository_basic(t *testing.T) {
 	_, fqrn, name := mkNames("foo", "artifactory_virtual_go_repository")
+	const packageType = "go"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
 		  key          = "%s"
-		  repo_layout_ref = "go-default"
 		  repositories = []
 		  description = "A test virtual repo"
 		  notes = "Internal description"
@@ -137,11 +137,12 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "go"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "**/github.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.1", "**/go.googlesource.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -184,10 +185,10 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 
 func TestAccVirtualGenericRepository_basic(t *testing.T) {
 	_, fqrn, name := mkNames("foo", "artifactory_virtual_generic_repository")
+	const packageType = "generic"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_generic_repository" "%s" {
 		  key          = "%s"
-		  repo_layout_ref = "simple-default"
 		  repositories = []
 		  description = "A test virtual repo"
 		  notes = "Internal description"
@@ -207,7 +208,8 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -215,13 +217,14 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
+	const packageType = "maven"
+
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
-			repo_layout_ref = "maven-2-default"
 			repositories = []
 			description = "A test virtual repo"
 			notes = "Internal description"
@@ -243,11 +246,12 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 				// we check to make sure some of the base params are picked up
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "force_maven_authentication", "true"),
 					// to test key pair, we'd have to be able to create them on the fly and we currently can't.
 					resource.TestCheckResourceAttr(fqrn, "key_pair", ""),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -288,6 +292,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRpmRepository(t *testing.T) {
+	const packageType = "rpm"
 	_, fqrn, name := mkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := mkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := mkNames("some-keypair2-", "artifactory_keypair")
@@ -415,9 +420,10 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 				Config: virtualRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "rpm"),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -683,6 +689,130 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 			{
 				Config:      virualRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
+			},
+		},
+	})
+}
+
+func TestAccAllVirtualRepository(t *testing.T) {
+	for _, repoType := range virtualRepoTypesLikeGeneric {
+		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
+				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
+			}))
+		})
+	}
+	for _, repoType := range virtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
+				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
+				"retrieval_cache_period_seconds": 7100,
+			}))
+		})
+	}
+}
+
+func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
+	for _, repoType := range gradleLikeRepoTypes {
+		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
+				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
+				"pom_repository_references_cleanup_policy": "discard_active_reference",
+			}))
+		})
+	}
+}
+
+// if you wish to override any of the default fields, just pass it as "extraFields" as these will overwrite
+func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := mkNames("terraform-virtual-test-repo-full", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
+	remoteRepoName := fmt.Sprintf("%s-local", name)
+	defaultFields := map[string]interface{}{
+		"key":         name,
+		"description": "A test virtual repo",
+		"notes":       "Internal description",
+	}
+	allFields := mergeMaps(defaultFields, extraFields)
+	allFieldsHcl := fmtMapToHcl(allFields)
+	const virtualRepoFull = `
+        resource "artifactory_remote_%[1]s_repository" "%[3]s" {
+			key = "%[3]s"
+            url = "http://tempurl.org"
+		}
+
+		resource "artifactory_virtual_%[1]s_repository" "%[2]s" {
+%[4]s
+            repositories = ["%[3]s"]
+            depends_on = [artifactory_remote_%[1]s_repository.%[3]s]
+		}
+	`
+	extraChecks := mapToTestChecks(fqrn, extraFields)
+	defaultChecks := mapToTestChecks(fqrn, allFields)
+
+	checks := append(defaultChecks, extraChecks...)
+	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
+
+	return t, resource.TestCase{
+		ProviderFactories: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(checks...),
+			},
+		},
+	}
+}
+
+func TestAccVirtualAlpineRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
+		"description": "alpine virtual repository public description testing.",
+	}))
+}
+
+func TestAccVirtualNugetRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("nuget", t, map[string]interface{}{
+		"description":                "nuget virtual repository public description testing.",
+		"force_nuget_authentication": true,
+	}))
+}
+
+func TestAccVirtualBowerRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("bower", t, map[string]interface{}{
+		"description":                   "bower virtual repository public description testing.",
+		"external_dependencies_enabled": false,
+	}))
+}
+
+func TestAccVirtualDebianRepository_full(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("foo%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_debian_repository.%s", name)
+	const virtualRepositoryBasic = `
+		resource "artifactory_virtual_debian_repository" "%s" {
+			key          = "%s"
+			repositories = []
+            debian_default_architectures = "i386,amd64"
+            optional_index_compression_formats = [
+                "bz2",
+                "xz",
+            ]
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		ProviderFactories: testAccProviders,
+
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(virtualRepositoryBasic, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "debian"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
+				),
 			},
 		},
 	})

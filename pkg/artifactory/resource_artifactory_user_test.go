@@ -11,6 +11,65 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
+	id := randomInt()
+	name := fmt.Sprintf("user-%d", id)
+	fqrn := fmt.Sprintf("artifactory_user.%s", name)
+
+	email := fmt.Sprintf("dummy%d@a.com", id)
+	password := "Password1"
+
+	params := map[string]interface{}{
+		"name":     name,
+		"email":    email,
+		"password": password,
+	}
+	userInitial := executeTemplate("TestUser", `
+		resource "artifactory_user" "{{ .name }}" {
+			name              = "{{ .name }}"
+			email             = "{{ .email }}"
+			password          = "{{ .password }}"
+			groups            = [ "readers" ]
+			disable_ui_access = false
+		}
+	`, params)
+	userUpdated := executeTemplate("TestUser", `
+		resource "artifactory_user" "{{ .name }}" {
+			name              = "{{ .name }}"
+			email             = "{{ .email }}"
+			password          = "{{ .password }}"
+			groups            = [ "readers" ]
+			disable_ui_access = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: userInitial,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "email", email),
+					resource.TestCheckResourceAttr(fqrn, "password", password),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+				),
+			},
+			{
+				Config: userUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "email", email),
+					resource.TestCheckResourceAttr(fqrn, "password", password),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccUser_basic(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_user" "%s" {

@@ -13,7 +13,9 @@ type DockerRemoteRepository struct {
 }
 
 func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
-	var dockerRemoteSchema = mergeSchema(baseRemoteSchema, map[string]*schema.Schema{
+	const packageType = "docker"
+
+	var dockerRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -43,25 +45,37 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +
 				"By default, this is set to '**', which means that remote modules may be downloaded from any external VCS source.",
 		},
-	})
-	return mkResourceSchema(dockerRemoteSchema, defaultPacker, unpackDockerRemoteRepo, func() interface{} {
+	}, repoLayoutRefSchema("remote", packageType))
+
+	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
+		d := &ResourceData{s}
+		repo := DockerRemoteRepository{
+			RemoteRepositoryBaseParams:   unpackBaseRemoteRepo(s, packageType),
+			EnableTokenAuthentication:    d.getBool("enable_token_authentication", false),
+			ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
+			BlockPushingSchema1:          d.getBool("block_pushing_schema1", false),
+			ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
+		}
+		if len(repo.ExternalDependenciesPatterns) == 0 {
+			repo.ExternalDependenciesPatterns = []string{"**"}
+		}
+		return repo, repo.Id(), nil
+	}
+
+	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
+	dockerRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			ignoreHclPredicate("class", "rclass", "external_dependencies_patterns"),
+			schemaHasKey(dockerRemoteSchema),
+		),
+	)
+
+	return mkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",
-				PackageType: "docker",
+				PackageType: packageType,
 			},
 		}
 	})
-}
-
-func unpackDockerRemoteRepo(s *schema.ResourceData) (interface{}, string, error) {
-	d := &ResourceData{s}
-	repo := DockerRemoteRepository{
-		RemoteRepositoryBaseParams:   unpackBaseRemoteRepo(s, "docker"),
-		EnableTokenAuthentication:    d.getBool("enable_token_authentication", false),
-		ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
-		BlockPushingSchema1:          d.getBool("block_pushing_schema1", false),
-		ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
-	}
-	return repo, repo.Id(), nil
 }
