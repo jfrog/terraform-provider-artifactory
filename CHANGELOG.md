@@ -1,3 +1,9 @@
+## 3.1.3 (Mar 31, 2022)
+
+IMPROVEMENTS:
+
+* Documentation improved for `artifactory_general_security` resource. [GH-367]
+
 ## 3.1.2 (Mar 31, 2022)
 
 BUG FIXES:
