@@ -987,7 +987,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		StoreArtifactsLocally:    d.getBoolRef("store_artifacts_locally", true),
 		SocketTimeoutMillis:      d.getInt("socket_timeout_millis", true),
 		LocalAddress:             d.getString("local_address", true),
-		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", true),
+		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
 		// Not returned in the GET
 		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
 		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", false),

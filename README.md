@@ -84,8 +84,6 @@ ARTIFACTORY_USERNAME=admin
 ARTIFACTORY_ACCESS_TOKEN=<your_access_token>
 TF_ACC=true
 ```
-`ARTIFACTORY_USERNAME` is not used in authentication, but used in several tests, related to replication functionality. 
-It should be hardcoded to `admin`, because it's a default user created in the Artifactory instance from the start. 
 A crucial, and very much hidden, env var to set is `TF_ACC=true` - you can literally set `TF_ACC` to anything you want, so long as it's set. The acceptance tests use terraform testing libraries that, if this flag isn't set, will skip all tests.
 
 You can then run the tests as

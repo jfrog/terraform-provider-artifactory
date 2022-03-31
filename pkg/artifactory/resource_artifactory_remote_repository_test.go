@@ -747,6 +747,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", key),
 					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
 				),
 			},
 			{
@@ -754,6 +755,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", key),
 					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
 				),
 			},
 		},
