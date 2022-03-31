@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* Fix blank password getting sent to Artifactory when updating other attributes of `artifactory_user` resource. [GH-]
+* Fix blank password getting sent to Artifactory when updating other attributes of `artifactory_user` resource. [GH-383]
 
 ## 3.1.2 (Mar 31, 2022)
 
