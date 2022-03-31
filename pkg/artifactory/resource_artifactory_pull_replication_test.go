@@ -33,7 +33,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 		name,
 		cron,
 		url,
-		os.Getenv("ARTIFACTORY_USERNAME"),
+		rtDefaultUser,
 	)
 }
 func TestInvalidCronPullReplication(t *testing.T) {

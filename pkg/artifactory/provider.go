@@ -191,7 +191,7 @@ func addAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Cl
 	if apiKey != "" {
 		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
 	}
-	return nil, fmt.Errorf("no authentication details suppliedaccessToken := d.Get(\"access_token\").(string)")
+	return nil, fmt.Errorf("no authentication details supplied")
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set

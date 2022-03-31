@@ -34,7 +34,7 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 		name,
 		cron,
 		url,
-		os.Getenv("ARTIFACTORY_USERNAME"),
+		rtDefaultUser,
 		proxy,
 	)
 }
@@ -96,7 +96,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", os.Getenv("ARTIFACTORY_USERNAME")),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 				),
 			},
@@ -165,7 +165,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	tcl = executeTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
-		"username":        os.Getenv("ARTIFACTORY_USERNAME"),
+		"username":        rtDefaultUser,
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(

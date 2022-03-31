@@ -105,7 +105,7 @@ func TestAccPushReplication_full(t *testing.T) {
 				Config: fmt.Sprintf(
 					replicationConfigTemplate,
 					os.Getenv("ARTIFACTORY_URL"),
-					os.Getenv("ARTIFACTORY_USERNAME"),
+					rtDefaultUser,
 					testProxy,
 				),
 				Check: resource.ComposeTestCheckFunc(

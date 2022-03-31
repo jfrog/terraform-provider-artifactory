@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const rtDefaultUser = "admin"
+
 var testAccProviders = func() map[string]func() (*schema.Provider, error) {
 	provider := Provider()
 	return map[string]func() (*schema.Provider, error){
