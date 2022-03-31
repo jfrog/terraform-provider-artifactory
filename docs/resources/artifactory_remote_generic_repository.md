@@ -2,18 +2,6 @@
 
 Creates a remote Generic repository.
 
-### Passwords
-Passwords can only be used when encryption is turned off (https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption).
-Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
-
-To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible,
-the password diff can be disabled per resource with-- noting that this will require resources to be tainted for an update:
-```hcl
-lifecycle {
-    ignore_changes = ["password"]
-}
-``` 
-
 ## Example Usage
 To create a new Artifactory remote Generic repository called my-remote-generic.
 
@@ -36,7 +24,7 @@ All generic repo arguments are supported, in addition to:
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `url` - (Required) - the remote repo URL. You kinda don't have a remote repo without it
 * `username` - (Optional)
-* `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
+* `password` - (Optional)
 * `proxy` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.

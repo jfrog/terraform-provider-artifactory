@@ -1,9 +1,16 @@
-## 4.0.0 (Mar 30, 2022)
+## 4.0.0 (Mar 31, 2022)
 
 BREAKING CHANGES:
 
 * `artifactory_local_repository`, `artifactory_remote_repository` and `artifactory_virtual_repository` were removed
-from the provider. Please use resources with package-specific names, like `artifactory_local_cargo_repository` [GH-377]
+  from the provider. Please use resources with package-specific names, like `artifactory_local_cargo_repository` [GH-377]
+
+
+## 3.1.2 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix proxy getting unset after modifying existing artifactory_remote_*_repository resources. [GH-381]
 
 ## 3.1.1 (Mar 30, 2022)
 
