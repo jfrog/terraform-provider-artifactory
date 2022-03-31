@@ -1,8 +1,6 @@
 package artifactory
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -94,15 +92,6 @@ func resourceArtifactoryUser() *schema.Resource {
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 				Description: "Password for the user. Password validation is not done by the provider and is " +
 					"offloaded onto the Artifactory.",
-				StateFunc: func(str interface{}) string {
-					// Avoid storing the actual value in the state and instead store the hash of it
-					value, ok := str.(string)
-					if !ok {
-						panic(fmt.Errorf("'str' is not a string %s", str))
-					}
-					hash := sha256.Sum256([]byte(value))
-					return base64.StdEncoding.EncodeToString(hash[:])
-				},
 			},
 		},
 	}
@@ -130,7 +119,7 @@ func unpackUser(s *schema.ResourceData) User {
 	return User{
 		Name:                     d.getString("name", false),
 		Email:                    d.getString("email", false),
-		Password:                 d.getString("password", true),
+		Password:                 d.getString("password", false),
 		Admin:                    d.getBool("admin", false),
 		ProfileUpdatable:         d.getBool("profile_updatable", false),
 		DisableUIAccess:          d.getBool("disable_ui_access", false),
