@@ -14,7 +14,7 @@ import (
 // Version for some reason isn't getting updated by the linker
 var Version = "2.6.18"
 
-// Provider Artifactory provider that supports configuration via Bearer token
+// Provider Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() *schema.Provider {
 	resoucesMap := map[string]*schema.Resource{
@@ -85,12 +85,21 @@ func Provider() *schema.Provider {
 				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
+			"api_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				DefaultFunc:   schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
+				ConflictsWith: []string{"access_token"},
+				ValidateFunc:  validation.StringIsNotEmpty,
+				Description:   "API token. Projects functionality will not work with any auth method other than access tokens",
+			},
 			"access_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
-				Description: "This is a bearer token that can be given to you by your admin under `Identity and Access`",
+				Description: "This is a access token that can be given to you by your admin under `Identity and Access`",
 			},
 			"check_license": {
 				Type:        schema.TypeBool,
@@ -146,11 +155,14 @@ func buildResty(URL string) (*resty.Client, error) {
 	return restyBase, nil
 }
 
-func addAuthToResty(client *resty.Client, accessToken string) (*resty.Client, error) {
+func addAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Client, error) {
 	if accessToken != "" {
 		return client.SetAuthToken(accessToken), nil
 	}
-	return nil, fmt.Errorf("no access key supplied")
+	if apiKey != "" {
+		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
+	}
+	return nil, fmt.Errorf("no authentication details suppliedaccessToken := d.Get(\"access_token\").(string)")
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
@@ -164,9 +176,10 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
+	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	restyBase, err = addAuthToResty(restyBase, accessToken)
+	restyBase, err = addAuthToResty(restyBase, apiKey, accessToken)
 	if err != nil {
 		return nil, err
 	}

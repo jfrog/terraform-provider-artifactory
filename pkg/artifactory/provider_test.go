@@ -50,7 +50,8 @@ func getTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
-	restyClient, err = addAuthToResty(restyClient, accessToken)
+	api := os.Getenv("ARTIFACTORY_APIKEY")
+	restyClient, err = addAuthToResty(restyClient, api, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

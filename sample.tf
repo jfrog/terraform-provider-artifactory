@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "artifactory" {
-  //  supply ARTIFACTORY_ACCESS_TOKEN and ARTIFACTORY_URL as env vars
+  //  supply ARTIFACTORY_ACCESS_TOKEN / _API_KEY and ARTIFACTORY_URL as env vars
 }
 
 resource "artifactory_local_nuget_repository" "my-nuget-local" {

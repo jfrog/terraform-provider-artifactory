@@ -57,10 +57,12 @@ resource "artifactory_local_repository" "pypi-libs" {
 ```
 
 ## Authentication
+The Artifactory provider supports two ways of authentication. The following methods are supported:
 
-The Artifactory provider supports Bearer Token authentication. 
+    * Access Token
+    * JFrog API Key Header
 
-### Bearer Token
+### Access Token
 Artifactory access tokens may be used via the Authorization header by providing the `access_token` field to the provider
 block. Getting this value from the environment is supported with the `ARTIFACTORY_ACCESS_TOKEN` variable
 
@@ -73,11 +75,25 @@ provider "artifactory" {
 }
 ```
 
+### JFrog API Key Header
+Artifactory API keys may be used via the `X-JFrog-Art-Api` header by providing the `api_key` field in the provider block.
+Getting this value from the environment is supported with the `ARTIFACTORY_API_KEY` variable
+
+Usage:
+```hcl
+# Configure the Artifactory provider
+provider "artifactory" {
+  url = "artifactory.site.com/artifactory"
+  api_key = "abc...xy"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `url` - (Optional) URL of Artifactory. This can also be sourced from the `ARTIFACTORY_URL` environment variable.
-* `access_token` - (Optional) API key for token auth. Uses `Authorization: Bearer` header. 
-  This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
+* `access_token` - (Optional) This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
+* `api_key` - (Optional) API key for api auth. Uses `X-JFrog-Art-Api` header.
+  Conflicts with `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
 * `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.

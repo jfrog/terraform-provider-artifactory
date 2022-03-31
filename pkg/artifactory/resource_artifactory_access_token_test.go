@@ -450,7 +450,7 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 			return err
 		}
 		accessToken := rs.Primary.Attributes["access_token"]
-		resty, err = addAuthToResty(resty, accessToken)
+		resty, err = addAuthToResty(resty, "", accessToken)
 		if err != nil {
 			return err
 		}
