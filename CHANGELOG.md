@@ -1,3 +1,9 @@
+## 3.1.2 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix proxy getting unset after modifying existing artifactory_remote_*_repository resources. [GH-381]
+
 ## 3.1.1 (Mar 30, 2022)
 
 BUG FIXES:
