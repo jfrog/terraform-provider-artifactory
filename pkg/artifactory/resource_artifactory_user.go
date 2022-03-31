@@ -2,12 +2,16 @@ package artifactory
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/sethvargo/go-password/password"
 )
 
 type User struct {
@@ -25,10 +29,10 @@ type User struct {
 
 func resourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
+		DeleteContext: resourceUserDelete,
 		Exists: resourceUserExists,
 
 		Importer: &schema.ResourceImporter{
@@ -88,10 +92,19 @@ func resourceArtifactoryUser() *schema.Resource {
 			"password": {
 				Type:             schema.TypeString,
 				Sensitive:        true,
-				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-				Description: "Password for the user. Password validation is not done by the provider and is " +
-					"offloaded onto the Artifactory.",
+				Optional:         true,
+				// ValidateDiagFunc: validation.ToDiagFunc(defaultPassValidation),
+				Description:      "(Optional) Password for the user. When omitted, a random password is generated according to Artifactory password policy.",
+				StateFunc:        func(str interface{}) string {
+					// tflog.Debug("password string: %s", str)
+					// Avoid storing the actual value in the state and instead store the hash of it
+					value, ok := str.(string)
+					if !ok {
+						panic(fmt.Errorf("'str' is not a string %s", str))
+					}
+					hash := sha256.Sum256([]byte(value))
+					return base64.StdEncoding.EncodeToString(hash[:])
+				},
 			},
 		},
 	}
@@ -101,11 +114,8 @@ func resourceUserExists(data *schema.ResourceData, m interface{}) (bool, error) 
 
 	d := &ResourceData{data}
 	name := d.Id()
-	return userExists(m.(*resty.Client), name)
-}
 
-func userExists(client *resty.Client, userName string) (bool, error) {
-	resp, err := client.R().Head("artifactory/api/security/users/" + userName)
+	resp, err := m.(*resty.Client).R().Head("artifactory/api/security/users/" + name)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream user has been manually removed
 		return false, nil
@@ -128,7 +138,7 @@ func unpackUser(s *schema.ResourceData) User {
 	}
 }
 
-func packUser(user User, d *schema.ResourceData) error {
+func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 
 	setValue := mkLens(d)
 
@@ -144,29 +154,41 @@ func packUser(user User, d *schema.ResourceData) error {
 	}
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack user %q", errors)
+		return diag.Errorf("failed to pack user %q", errors)
 	}
 
 	return nil
 }
 
-func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 
-	if user.Name == "" {
-		return fmt.Errorf("user name cannot be empty")
-	}
+	log.Println("boom")
+	tflog.Debug(ctx, "foo")
 
 	if user.Password == "" {
-		return fmt.Errorf("no password supplied. Please use any of the terraform random password generators")
+		tflog.Warn(ctx, "No password supplied. One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this can fail as your RT password policy can't be known here")
+		// Generate a password that is 10 characters long with 1 digit, 1 symbol,
+		// allowing upper and lower case letters, disallowing repeat characters.
+		res, err := password.Generate(10, 1, 1, false, false)
+		if err != nil {
+			return diag.Errorf("failed to generate password. %v", err)
+		}
+		tflog.Debug(ctx, "generated password", map[string]interface{}{
+			"password": res,
+			"err": err,
+		})
+		user.Password = res
 	}
+
 	_, err := m.(*resty.Client).R().SetBody(user).Put("artifactory/api/security/users/" + user.Name)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(user.Name)
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+
+	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		result := &User{}
 		resp, e := m.(*resty.Client).R().SetResult(result).Get("artifactory/api/security/users/" + user.Name)
 
@@ -179,9 +201,15 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 
 		return nil
 	})
+
+	if retryError != nil {
+		return diag.FromErr(retryError)
+	}
+
+	return nil
 }
 
-func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
+func resourceUserRead(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d := &ResourceData{rd}
 
 	userName := d.Id()
@@ -193,30 +221,33 @@ func resourceUserRead(rd *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 	return packUser(*user, rd)
 }
 
-func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 	_, err := m.(*resty.Client).R().SetBody(user).Post("artifactory/api/security/users/" + user.Name)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(user.Name)
-	return resourceUserRead(d, m)
+	return resourceUserRead(ctx, d, m)
 }
 
-func resourceUserDelete(rd *schema.ResourceData, m interface{}) error {
+func resourceUserDelete(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d := &ResourceData{rd}
 	userName := d.getString("name", false)
 
 	_, err := m.(*resty.Client).R().Delete("artifactory/api/security/users/" + userName)
 	if err != nil {
-		return fmt.Errorf("user %s not deleted. %s", userName, err)
+		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}
+
+	d.SetId("")
+
 	return nil
 }

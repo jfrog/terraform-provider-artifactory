@@ -2,14 +2,14 @@ package artifactory
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/mail"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/gorhill/cronexpr"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/ldap.v2"
 )
@@ -521,16 +521,16 @@ func fileExist(value interface{}, _ string) ([]string, []error) {
 }
 
 var defaultPassValidation = validation.All(
-	validation.StringMatch(regexp.MustCompile("[0-9]+"), "password must contain at least 1 digit case char"),
-	validation.StringMatch(regexp.MustCompile("[a-z]+"), "password must contain at least 1 lower case char"),
-	validation.StringMatch(regexp.MustCompile("[A-Z]+"), "password must contain at least 1 upper case char"),
+	validation.StringMatch(regexp.MustCompile("[0-9]+"), "password must contain at least 1 digits"),
+	validation.StringMatch(regexp.MustCompile("[a-z]+"), "password must contain at least 1 lower case letter"),
+	validation.StringMatch(regexp.MustCompile("[A-Z]+"), "password must contain at least 1 upper case letter"),
 	minLength(8),
 )
 
 func minLength(length int) func(i interface{}, k string) ([]string, []error) {
 	return func(value interface{}, k string) ([]string, []error) {
 		if len(value.(string)) < length {
-			return nil, []error{fmt.Errorf("password must be atleast %d characters long", length)}
+			return nil, []error{fmt.Errorf("password must be at least %d characters long", length)}
 		}
 		return nil, nil
 	}
