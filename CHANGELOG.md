@@ -1,3 +1,9 @@
+## 3.1.4 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix blank password getting sent to Artifactory when updating other attributes of `artifactory_user` resource. [GH-383]
+
 ## 3.1.3 (Mar 31, 2022)
 
 IMPROVEMENTS:
