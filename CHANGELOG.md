@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* Fix remote repos' `password` attribute always being updated after initial `terraform apply` [GH-]
+* Fix remote repos' `password` attribute always being updated after initial `terraform apply` [GH-385]
 
 ## 4.0.0 (Mar 31, 2022)
 
