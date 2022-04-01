@@ -1,3 +1,9 @@
+## 4.0.0 (Mar 31, 2022)
+
+BREAKING CHANGE:
+
+* Basic authentication with username and password is removed from the provider.
+
 ## 3.1.4 (Mar 31, 2022)
 
 BUG FIXES:

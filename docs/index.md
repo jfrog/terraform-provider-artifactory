@@ -44,8 +44,7 @@ terraform {
 # Configure the Artifactory provider
 provider "artifactory" {
   url = "${var.artifactory_url}/artifactory"
-  username = "${var.artifactory_username}"
-  password = "${var.artifactory_password}"
+  access_token = "${var.artifactory_access_token}"
 }
 
 # Create a new repository
@@ -58,27 +57,12 @@ resource "artifactory_local_repository" "pypi-libs" {
 ```
 
 ## Authentication
-The Artifactory provider supports multiple means of authentication. The following methods are supported:
+The Artifactory provider supports two ways of authentication. The following methods are supported:
 
-    * Basic Auth
-    * Bearer Token
+    * Access Token
     * JFrog API Key Header
 
-### Basic Auth
-Basic auth may be used by adding a `username` and `password` field to the provider block
-Getting this value from the environment is supported with the `ARTIFACTORY_USERNAME` and `ARITFACTORY_PASSWORD` variable
-
-Usage:
-```hcl
-# Configure the Artifactory provider
-provider "artifactory" {
-  url = "artifactory.site.com/"
-  username = "myusername"
-  password = "mypassword"
-}
-```
-
-### Bearer Token
+### Access Token
 Artifactory access tokens may be used via the Authorization header by providing the `access_token` field to the provider
 block. Getting this value from the environment is supported with the `ARTIFACTORY_ACCESS_TOKEN` variable
 
@@ -108,13 +92,8 @@ provider "artifactory" {
 
 The following arguments are supported:
 
-* `url` - (Required) URL of Artifactory. This can also be sourced from the `ARTIFACTORY_URL` environment variable.
-* `username` - (Optional) Username for basic auth. Requires `password` to be set.
-    Conflicts with `api_key`, and `access_token`. This can also be sourced from the `ARTIFACTORY_USERNAME` environment variable.
-* `password` - (Optional) Password for basic auth. Requires `username` to be set.
-    Conflicts with `api_key`, and `access_token`. This can also be sourced from the `ARTIFACTORY_PASSWORD` environment variable.
+* `url` - (Optional) URL of Artifactory. This can also be sourced from the `ARTIFACTORY_URL` environment variable.
+* `access_token` - (Optional) This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
 * `api_key` - (Optional) API key for api auth. Uses `X-JFrog-Art-Api` header.
-    Conflicts with `username`, `password`, and `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
-* `access_token` - (Optional) API key for token auth. Uses `Authorization: Bearer` header. For xray functionality, this is the only auth method accepted
-    Conflicts with `username` and `password`, and `api_key`. This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
+  Conflicts with `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
 * `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.
