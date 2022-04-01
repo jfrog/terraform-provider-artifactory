@@ -1,10 +1,27 @@
-## 4.0.0 (Mar 31, 2022)
+## 5.0.0 (Mar 31, 2022)
 
 BREAKING CHANGES:
 
 * `artifactory_local_repository`, `artifactory_remote_repository` and `artifactory_virtual_repository` were removed
   from the provider. Please use resources with package-specific names, like `artifactory_local_cargo_repository` [GH-380]
 
+## 4.0.0 (Mar 31, 2022)
+
+BREAKING CHANGE:
+
+* Basic authentication with username and password is removed from the provider. [GH-344]
+
+## 3.1.4 (Mar 31, 2022)
+
+BUG FIXES:
+
+* Fix blank password getting sent to Artifactory when updating other attributes of `artifactory_user` resource. [GH-383]
+
+## 3.1.3 (Mar 31, 2022)
+
+IMPROVEMENTS:
+
+* Documentation improved for `artifactory_general_security` resource. [GH-367]
 
 ## 3.1.2 (Mar 31, 2022)
 
