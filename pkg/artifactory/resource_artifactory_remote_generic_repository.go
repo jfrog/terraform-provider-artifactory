@@ -13,10 +13,20 @@ func resourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 			RemoteRepoLayoutRef: repoLayout.(string),
 		}
 	}
+
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := unpackBaseRemoteRepo(data, pkt)
 		return repo, repo.Id(), nil
 	}
+
 	mergedRemoteRepoSchema := mergeSchema(baseRemoteRepoSchema, repoLayoutRefSchema("remote", pkt))
-	return mkResourceSchema(mergedRemoteRepoSchema, inSchema(mergedRemoteRepoSchema), unpack, constructor)
+
+	genericRepoPacker := universalPack(
+		allHclPredicate(
+			noPassword,
+			schemaHasKey(mergedRemoteRepoSchema),
+		),
+	)
+
+	return mkResourceSchema(mergedRemoteRepoSchema, genericRepoPacker, unpack, constructor)
 }

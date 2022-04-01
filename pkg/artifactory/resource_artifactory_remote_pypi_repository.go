@@ -41,7 +41,7 @@ func resourceArtifactoryRemotePypiRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(pypiRemoteSchema, defaultPacker, unpackPypiRemoteRepo, func() interface{} {
+	return mkResourceSchema(pypiRemoteSchema, noPasswordPacker, unpackPypiRemoteRepo, func() interface{} {
 		return &PypiRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",
