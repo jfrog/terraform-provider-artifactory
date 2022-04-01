@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## 5.0.0 (Mar 31, 2022)
 
 BREAKING CHANGES:

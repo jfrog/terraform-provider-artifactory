@@ -158,7 +158,6 @@ func TestGitHubIssue126(test *testing.T) {
 }
 func TestAccPermissionTarget_full(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local",
@@ -192,7 +191,6 @@ func TestAccPermissionTarget_full(test *testing.T) {
 
 func TestAccPermissionTarget_addBuild(t *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	//_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local", // because of race conditions in artifactory, this repo must first exist
