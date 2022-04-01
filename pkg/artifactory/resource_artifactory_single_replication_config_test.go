@@ -163,7 +163,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 	tcl = executeTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
-		"username":        os.Getenv("ARTIFACTORY_USERNAME"),
+		"username":        rtDefaultUser,
 	})
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(

@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "artifactory" {
-  //  supply ARTIFACTORY_USERNAME, _PASSWORD and _URL as env vars
+  //  supply ARTIFACTORY_ACCESS_TOKEN / ARTIFACTORY_API_KEY and ARTIFACTORY_URL as env vars
 }
 
 resource "artifactory_local_bower_repository" "bower-local" {
