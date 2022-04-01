@@ -1,3 +1,9 @@
+## 4.0.1 (Apr 4, 2022)
+
+BUG FIXES:
+
+* Fix remote repos' `password` attribute always being updated after initial `terraform apply` [GH-]
+
 ## 4.0.0 (Mar 31, 2022)
 
 BREAKING CHANGE:
