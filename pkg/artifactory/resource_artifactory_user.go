@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 type User struct {
 	Name                     string   `json:"name"`
 	Email                    string   `json:"email"`
-	Password                 string   `json:"password"`
+	Password                 string   `json:"password,omitempty"`
 	Admin                    bool     `json:"admin"`
 	ProfileUpdatable         bool     `json:"profileUpdatable"`
 	DisableUIAccess          bool     `json:"disableUIAccess"`
@@ -95,16 +96,6 @@ func resourceArtifactoryUser() *schema.Resource {
 				Optional:         true,
 				// ValidateDiagFunc: validation.ToDiagFunc(defaultPassValidation),
 				Description:      "(Optional) Password for the user. When omitted, a random password is generated according to Artifactory password policy.",
-				StateFunc:        func(str interface{}) string {
-					// tflog.Debug("password string: %s", str)
-					// Avoid storing the actual value in the state and instead store the hash of it
-					value, ok := str.(string)
-					if !ok {
-						panic(fmt.Errorf("'str' is not a string %s", str))
-					}
-					hash := sha256.Sum256([]byte(value))
-					return base64.StdEncoding.EncodeToString(hash[:])
-				},
 			},
 		},
 	}
@@ -163,22 +154,18 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 
-	log.Println("boom")
-	tflog.Debug(ctx, "foo")
+	tflog.Debug(ctx, "Boom!")
 
 	if user.Password == "" {
 		tflog.Warn(ctx, "No password supplied. One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this can fail as your RT password policy can't be known here")
 		// Generate a password that is 10 characters long with 1 digit, 1 symbol,
 		// allowing upper and lower case letters, disallowing repeat characters.
-		res, err := password.Generate(10, 1, 1, false, false)
+		randomPassword, err := password.Generate(10, 1, 1, false, false)
 		if err != nil {
 			return diag.Errorf("failed to generate password. %v", err)
 		}
-		tflog.Debug(ctx, "generated password", map[string]interface{}{
-			"password": res,
-			"err": err,
-		})
-		user.Password = res
+
+		user.Password = randomPassword
 	}
 
 	_, err := m.(*resty.Client).R().SetBody(user).Put("artifactory/api/security/users/" + user.Name)
@@ -198,6 +185,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 			}
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
+
+		packUser(*result, d)
 
 		return nil
 	})
