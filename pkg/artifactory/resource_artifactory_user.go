@@ -3,11 +3,9 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -154,10 +152,15 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 
-	tflog.Debug(ctx, "Boom!")
+	var diags diag.Diagnostics
 
 	if user.Password == "" {
-		tflog.Warn(ctx, "No password supplied. One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this can fail as your RT password policy can't be known here")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "No password supplied",
+			Detail:   "One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this can fail as your RT password policy can't be known here",
+		})
+
 		// Generate a password that is 10 characters long with 1 digit, 1 symbol,
 		// allowing upper and lower case letters, disallowing repeat characters.
 		randomPassword, err := password.Generate(10, 1, 1, false, false)
@@ -195,7 +198,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(retryError)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceUserRead(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
