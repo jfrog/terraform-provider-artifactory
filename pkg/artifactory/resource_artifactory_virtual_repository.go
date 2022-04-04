@@ -72,7 +72,7 @@ var legacyVirtualSchema = map[string]*schema.Schema{
 }
 
 func resourceArtifactoryVirtualRepository() *schema.Resource {
-	skeema := mkResourceSchema(legacyVirtualSchema, inSchema(legacyVirtualSchema), unpackVirtualRepository, func() interface{} {
+	skeema := mkResourceSchema(legacyVirtualSchema, universalPack(legacyVirtualSchema), unpackVirtualRepository, func() interface{} {
 		return &MessyVirtualRepo{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass: "virtual",

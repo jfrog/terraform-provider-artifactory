@@ -34,12 +34,7 @@ func resourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	cocapodsRemoteRepoPacker := universalPack(
-		allHclPredicate(
-			noPassword,
-			schemaHasKey(cocoapodsRemoteSchema),
-		),
-	)
+	cocapodsRemoteRepoPacker := universalPack(cocoapodsRemoteSchema, noPassword)
 
 	return mkResourceSchema(cocoapodsRemoteSchema, cocapodsRemoteRepoPacker, unpackCocoapodsRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()

@@ -63,13 +63,7 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}
 
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
-	dockerRemoteRepoPacker := universalPack(
-		allHclPredicate(
-			noPassword,
-			ignoreHclPredicate("external_dependencies_patterns"),
-			schemaHasKey(dockerRemoteSchema),
-		),
-	)
+	dockerRemoteRepoPacker := universalPack(dockerRemoteSchema, noPassword, ignoreHclPredicate("external_dependencies_patterns"))
 
 	return mkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{

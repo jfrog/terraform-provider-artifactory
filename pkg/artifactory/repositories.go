@@ -1272,25 +1272,26 @@ func composePacker(packers ...PackFunc) PackFunc {
 	}
 }
 
-var defaultPacker = universalPack(noClass)
-
-func inSchema(skeema map[string]*schema.Schema) func(payload interface{}, d *schema.ResourceData) error {
-	return universalPack(schemaHasKey(skeema))
-}
+var defaultPacker = universalPack(nil, noClass)
 
 // universalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
-func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.ResourceData) error {
+func universalPack(skeema map[string]*schema.Schema, predicates ...HclPredicate) func(payload interface{}, d *schema.ResourceData) error {
+	if skeema != nil && len(skeema) > 0 {
+		predicates = append(predicates, schemaHasKey(skeema))
+	}
+
+	allPredicates := allHclPredicate(predicates...)
 
 	return func(payload interface{}, d *schema.ResourceData) error {
 		setValue := mkLens(d)
 
 		var errors []error
 
-		values := lookup(payload, predicate)
+		values := lookup(payload, allPredicates)
 
 		for hcl, value := range values {
-			if predicate != nil && predicate(hcl) {
+			if allPredicates(hcl) {
 				errors = setValue(hcl, value)
 			}
 		}

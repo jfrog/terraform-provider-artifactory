@@ -115,11 +115,8 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 				break
 			}
 		}
-		packer := universalPack(
-			allHclPredicate(
-				noClass, schemaHasKey(ldapGroupSettingsSchema),
-			),
-		)
+		packer := universalPack(ldapGroupSettingsSchema, noClass)
+
 		return diag.FromErr(packer(&matchedLdapGroupSetting, d))
 	}
 

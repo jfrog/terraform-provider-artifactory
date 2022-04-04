@@ -26,6 +26,57 @@ type KeyPairPayLoad struct {
 	Unavailable bool   `hcl:"unavailable" json:"unavailable"`
 }
 
+var keyPairSchema = map[string]*schema.Schema{
+	"pair_name": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+	"pair_type": {
+		Type: schema.TypeString,
+		// working sample PGP key is checked in but not tested
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"RSA", "GPG"}, false)),
+		Required:         true,
+		Description:      "Let's RT know what kind of key pair you're supplying. RT also supports GPG, but that's for a later day",
+		ForceNew:         true,
+	},
+	"alias": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Will be used as a filename when retrieving the public key via REST API",
+		ForceNew:    true,
+	},
+	"private_key": {
+		Type:             schema.TypeString,
+		Sensitive:        true,
+		Required:         true,
+		StateFunc:        stripTabs,
+		ValidateDiagFunc: validatePrivateKey,
+		Description:      "Artifactory doesn't return the value after creation",
+		ForceNew:         true,
+	},
+	"passphrase": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: ignoreEmpty,
+		Description: "Used to decrypt the private key (if applicable). Will be verified server side. " +
+			"Artifactory doesn't return the value after creation",
+		ForceNew: true,
+	},
+	"public_key": {
+		Type:             schema.TypeString,
+		Required:         true,
+		StateFunc:        stripTabs,
+		ValidateDiagFunc: validatePublicKey,
+		ForceNew:         true,
+	},
+	"unavailable": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Unknown usage. Returned in the json payload and cannot be set.",
+	},
+}
+
 func resourceArtifactoryKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: createKeyPair,
@@ -38,56 +89,7 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 		Description: "Manage the GPG signing keys used to sign packages for authentication and the RSA keys used to sign and verify the Alpine Linux Index files\n" +
 			"https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateKeyPair",
 
-		Schema: map[string]*schema.Schema{
-			"pair_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"pair_type": {
-				Type: schema.TypeString,
-				// working sample PGP key is checked in but not tested
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"RSA", "GPG"}, false)),
-				Required:         true,
-				Description:      "Let's RT know what kind of key pair you're supplying. RT also supports GPG, but that's for a later day",
-				ForceNew:         true,
-			},
-			"alias": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Will be used as a filename when retrieving the public key via REST API",
-				ForceNew:    true,
-			},
-			"private_key": {
-				Type:             schema.TypeString,
-				Sensitive:        true,
-				Required:         true,
-				StateFunc:        stripTabs,
-				ValidateDiagFunc: validatePrivateKey,
-				Description:      "Artifactory doesn't return the value after creation",
-				ForceNew:         true,
-			},
-			"passphrase": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: ignoreEmpty,
-				Description: "Used to decrypt the private key (if applicable). Will be verified server side. " +
-					"Artifactory doesn't return the value after creation",
-				ForceNew: true,
-			},
-			"public_key": {
-				Type:             schema.TypeString,
-				Required:         true,
-				StateFunc:        stripTabs,
-				ValidateDiagFunc: validatePublicKey,
-				ForceNew:         true,
-			},
-			"unavailable": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Unknown usage. Returned in the json payload and cannot be set.",
-			},
-		},
+		Schema: keyPairSchema,
 	}
 }
 
@@ -183,7 +185,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 	return &result, result.PairName, nil
 }
 
-var keyPairPacker = universalPack(ignoreHclPredicate("class", "rclass", "private_key"))
+var keyPairPacker = universalPack(keyPairSchema, ignoreHclPredicate("class", "rclass", "private_key"))
 
 func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)

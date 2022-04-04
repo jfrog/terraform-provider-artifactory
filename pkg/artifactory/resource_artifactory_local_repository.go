@@ -126,7 +126,7 @@ var legacyLocalSchema = mergeSchema(map[string]*schema.Schema{
 }, compressionFormats)
 
 func resourceArtifactoryLocalRepository() *schema.Resource {
-	return mkResourceSchema(legacyLocalSchema, inSchema(legacyLocalSchema), unmarshalLocalRepository, func() interface{} {
+	return mkResourceSchema(legacyLocalSchema, universalPack(legacyLocalSchema), unmarshalLocalRepository, func() interface{} {
 		return &MessyLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				Rclass: "local",
