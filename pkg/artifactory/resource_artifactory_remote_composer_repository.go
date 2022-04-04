@@ -34,7 +34,14 @@ func resourceArtifactoryRemoteComposerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(composerRemoteSchema, noPasswordPacker, unpackComposerRemoteRepo, func() interface{} {
+	composerRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			noPassword,
+			schemaHasKey(composerRemoteSchema),
+		),
+	)
+
+	return mkResourceSchema(composerRemoteSchema, composerRemoteRepoPacker, unpackComposerRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()
 		return &ComposerRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

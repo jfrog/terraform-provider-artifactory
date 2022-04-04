@@ -57,7 +57,14 @@ func resourceArtifactoryRemoteNugetRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(nugetRemoteSchema, noPasswordPacker, unpackNugetRemoteRepo, func() interface{} {
+	nugetRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			noPassword,
+			schemaHasKey(nugetRemoteSchema),
+		),
+	)
+
+	return mkResourceSchema(nugetRemoteSchema, nugetRemoteRepoPacker, unpackNugetRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()
 		return &NugetRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

@@ -1273,7 +1273,6 @@ func composePacker(packers ...PackFunc) PackFunc {
 }
 
 var defaultPacker = universalPack(noClass)
-var noPasswordPacker = universalPack(noPassword)
 
 func inSchema(skeema map[string]*schema.Schema) func(payload interface{}, d *schema.ResourceData) error {
 	return universalPack(schemaHasKey(skeema))
