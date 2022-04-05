@@ -46,7 +46,7 @@ func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(debianLocalSchema, defaultPacker, unPackLocalDebianRepository, func() interface{} {
+	return mkResourceSchema(debianLocalSchema, defaultPacker(debianLocalSchema), unPackLocalDebianRepository, func() interface{} {
 		return &DebianLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: packageType,

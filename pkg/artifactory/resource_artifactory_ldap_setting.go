@@ -160,12 +160,13 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 				break
 			}
 		}
-		var ldapSettingClass = ignoreHclPredicate("class", "rclass", "manager_password")
+
 		packer := universalPack(
 			allHclPredicate(
-				ldapSettingClass, schemaHasKey(ldapSettingsSchema),
+				ignoreHclPredicate("class", "rclass", "manager_password"), schemaHasKey(ldapSettingsSchema),
 			),
 		)
+
 		return diag.FromErr(packer(&matchedLdapSetting, d))
 	}
 

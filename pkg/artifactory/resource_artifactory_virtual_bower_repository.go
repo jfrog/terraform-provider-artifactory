@@ -56,7 +56,7 @@ func resourceArtifactoryBowerVirtualRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(bowerVirtualSchema, defaultPacker, unpackBowerVirtualRepository, func() interface{} {
+	return mkResourceSchema(bowerVirtualSchema, defaultPacker(bowerVirtualSchema), unpackBowerVirtualRepository, func() interface{} {
 		return &BowerVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

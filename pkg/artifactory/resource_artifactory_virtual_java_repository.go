@@ -60,7 +60,7 @@ func resourceArtifactoryJavaVirtualRepository(repoType string) *schema.Resource 
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(mavenVirtualSchema, defaultPacker, unpackMavenVirtualRepository, func() interface{} {
+	return mkResourceSchema(mavenVirtualSchema, defaultPacker(mavenVirtualSchema), unpackMavenVirtualRepository, func() interface{} {
 		return &JavaVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

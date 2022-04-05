@@ -4,6 +4,12 @@ BREAKING CHANGE:
 
 * resource/artifactory_user: Attribute `password` is optional again. If it is omitted in the HCL, a random password is generated automatically for Artifactory user. This password is not stored in the Terraform state file and thus will not trigger a state drift. [GH-390]
 
+## 4.0.1 (Apr 4, 2022)
+
+BUG FIXES:
+
+* Fix remote repos' `password` attribute always being updated after initial `terraform apply` [GH-385]
+
 ## 4.0.0 (Mar 31, 2022)
 
 BREAKING CHANGE:
