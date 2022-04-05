@@ -158,7 +158,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "No password supplied",
-			Detail:   "One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this can fail as your RT password policy can't be known here",
+			Detail:   "One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this may fail as your Artifactory password policy can't be determined by the provider.",
 		})
 
 		// Generate a password that is 10 characters long with 1 digit, 1 symbol,

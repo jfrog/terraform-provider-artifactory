@@ -105,7 +105,7 @@ func TestAccUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUserWithoutPasswordShouldCreate(t *testing.T) {
+func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_user" "%s" {
 			name  	= "dummy_user%d"
