@@ -39,9 +39,7 @@ func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	cargoRemoteRepoPacker := universalPack(cargoRemoteSchema, noPassword)
-
-	return mkResourceSchema(cargoRemoteSchema, cargoRemoteRepoPacker, unpackCargoRemoteRepo, func() interface{} {
+	return mkResourceSchema(cargoRemoteSchema, defaultPacker(cargoRemoteSchema), unpackCargoRemoteRepo, func() interface{} {
 		return &CargoRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",

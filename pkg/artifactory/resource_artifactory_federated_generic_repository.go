@@ -105,7 +105,7 @@ func resourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	packer := composePacker(
-		universalPack(federatedSchema, ignoreHclPredicate("class", "rclass", "member")),
+		universalPack(ignoreHclPredicate("class", "rclass", "member")),
 		packMembers,
 	)
 

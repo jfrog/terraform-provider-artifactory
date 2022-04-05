@@ -105,7 +105,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		}
 
 		matchedBackup := findBackup(backups, backup.Key)
-		packer := universalPack(backupSchema, noClass)
+		packer := defaultPacker(backupSchema)
 
 		return diag.FromErr(packer(&matchedBackup, d))
 	}

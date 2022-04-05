@@ -32,9 +32,7 @@ func resourceArtifactoryRemoteGoRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	goRemoteRepoPacker := universalPack(goRemoteSchema, noPassword)
-
-	return mkResourceSchema(goRemoteSchema, goRemoteRepoPacker, unpackGoRemoteRepo, func() interface{} {
+	return mkResourceSchema(goRemoteSchema, defaultPacker(goRemoteSchema), unpackGoRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()
 		return &GoRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

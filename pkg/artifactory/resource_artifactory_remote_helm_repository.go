@@ -58,7 +58,13 @@ func resourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	}
 
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
-	helmRemoteRepoPacker := universalPack(helmRemoteSchema, noPassword, ignoreHclPredicate("external_dependencies_patterns"))
+	helmRemoteRepoPacker := universalPack(
+		allHclPredicate(
+			schemaHasKey(helmRemoteSchema),
+			noPassword,
+			ignoreHclPredicate("external_dependencies_patterns"),
+		),
+	)
 
 	return mkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, func() interface{} {
 		return &HelmRemoteRepo{

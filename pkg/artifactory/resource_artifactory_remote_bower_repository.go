@@ -34,9 +34,7 @@ func resourceArtifactoryRemoteBowerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	bowerRemoteRepoPacker := universalPack(bowerRemoteSchema, noPassword)
-
-	return mkResourceSchema(bowerRemoteSchema, bowerRemoteRepoPacker, unpackBowerRemoteRepo, func() interface{} {
+	return mkResourceSchema(bowerRemoteSchema, defaultPacker(bowerRemoteSchema), unpackBowerRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()
 		return &BowerRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

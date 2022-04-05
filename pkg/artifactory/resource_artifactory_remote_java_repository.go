@@ -83,9 +83,7 @@ func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 		return repo, repo.Id(), nil
 	}
 
-	javaRemoteRepoPacker := universalPack(javaRemoteSchema, noPassword)
-
-	return mkResourceSchema(javaRemoteSchema, javaRemoteRepoPacker, unpackJavaRemoteRepo, func() interface{} {
+	return mkResourceSchema(javaRemoteSchema, defaultPacker(javaRemoteSchema), unpackJavaRemoteRepo, func() interface{} {
 		return &JavaRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:      "remote",

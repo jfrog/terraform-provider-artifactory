@@ -63,7 +63,7 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(rpmLocalSchema, universalPack(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
+	return mkResourceSchema(rpmLocalSchema, defaultPacker(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: packageType,

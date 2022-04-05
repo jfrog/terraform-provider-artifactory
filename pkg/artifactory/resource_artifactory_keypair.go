@@ -185,7 +185,11 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 	return &result, result.PairName, nil
 }
 
-var keyPairPacker = universalPack(keyPairSchema, ignoreHclPredicate("class", "rclass", "private_key"))
+var keyPairPacker = universalPack(
+	allHclPredicate(
+		ignoreHclPredicate("private_key"), schemaHasKey(keyPairSchema),
+	),
+)
 
 func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
