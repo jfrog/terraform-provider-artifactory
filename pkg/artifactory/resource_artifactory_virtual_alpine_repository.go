@@ -34,7 +34,7 @@ func resourceArtifactoryAlpineVirtualRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(alpineVirtualSchema, defaultPacker, unpackAlpineVirtualRepository, func() interface{} {
+	return mkResourceSchema(alpineVirtualSchema, defaultPacker(alpineVirtualSchema), unpackAlpineVirtualRepository, func() interface{} {
 		return &AlpineVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{

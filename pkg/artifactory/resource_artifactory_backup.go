@@ -105,11 +105,8 @@ func resourceArtifactoryBackup() *schema.Resource {
 		}
 
 		matchedBackup := findBackup(backups, backup.Key)
-		packer := universalPack(
-			allHclPredicate(
-				noClass, schemaHasKey(backupSchema),
-			),
-		)
+		packer := defaultPacker(backupSchema)
+
 		return diag.FromErr(packer(&matchedBackup, d))
 	}
 

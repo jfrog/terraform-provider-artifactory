@@ -39,11 +39,7 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		},
 	}, repoLayoutRefSchema("local", packageType))
 
-	packer := universalPack(
-		allHclPredicate(
-			noClass, schemaHasKey(dockerV2LocalSchema),
-		),
-	)
+	packer := defaultPacker(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &ResourceData{ResourceData: data}
@@ -111,7 +107,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(skeema, defaultPacker, unPackLocalDockerV1Repository, func() interface{} {
+	return mkResourceSchema(skeema, defaultPacker(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: packageType,

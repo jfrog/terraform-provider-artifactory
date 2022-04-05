@@ -79,7 +79,7 @@ type RemoteRepositoryBaseParams struct {
 	PackageType              string   `hcl:"package_type" json:"packageType,omitempty"`
 	Url                      string   `hcl:"url" json:"url"`
 	Username                 string   `hcl:"username" json:"username,omitempty"`
-	Password                 string   `hcl:"password" json:"password,omitempty"`
+	Password                 string   `json:"password"`
 	Proxy                    string   `hcl:"proxy" json:"proxy"`
 	Description              string   `hcl:"description" json:"description,omitempty"`
 	Notes                    string   `hcl:"notes" json:"notes,omitempty"`
@@ -522,7 +522,6 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:      schema.TypeString,
 		Optional:  true,
 		Sensitive: true,
-		StateFunc: getMD5Hash,
 	},
 	"proxy": {
 		Type:     schema.TypeString,
@@ -972,7 +971,7 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		PackageType:              packageType, // must be set independently
 		Url:                      d.getString("url", false),
 		Username:                 d.getString("username", true),
-		Password:                 d.getString("password", true),
+		Password:                 d.getString("password", false),
 		Proxy:                    d.getString("proxy", false),
 		Description:              d.getString("description", true),
 		Notes:                    d.getString("notes", true),
@@ -1092,11 +1091,7 @@ func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{},
 		t = t.Elem()
 		v = v.Elem()
 	}
-	//lookup := map[reflect.Kind]func(field, val reflect.Value) {
-	//	reflect.String: func(field, val reflect.Value)  {
-	//		val.SetString(field.String())
-	//	},
-	//}
+
 	for i := 0; i < t.NumField(); i++ {
 		thing := v.Field(i)
 
@@ -1130,6 +1125,7 @@ func checkForHcl(mapper AutoMapper) AutoMapper {
 		return map[string]interface{}{}
 	}
 }
+
 func findInspector(kind reflect.Kind) AutoMapper {
 	switch kind {
 	case reflect.Struct:
@@ -1242,6 +1238,7 @@ func allHclPredicate(predicates ...HclPredicate) HclPredicate {
 }
 
 var noClass = ignoreHclPredicate("class", "rclass")
+var noPassword = ignoreHclPredicate("class", "rclass", "password")
 
 var allowAllPredicate = func(hcl string) bool {
 	return true
@@ -1275,15 +1272,13 @@ func composePacker(packers ...PackFunc) PackFunc {
 	}
 }
 
-var defaultPacker = universalPack(noClass)
-
-func inSchema(skeema map[string]*schema.Schema) func(payload interface{}, d *schema.ResourceData) error {
-	return universalPack(schemaHasKey(skeema))
+func defaultPacker(skeema map[string]*schema.Schema) PackFunc {
+	return universalPack(allHclPredicate(schemaHasKey(skeema), noPassword))
 }
 
 // universalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
-func universalPack(predicate HclPredicate) func(payload interface{}, d *schema.ResourceData) error {
+func universalPack(predicate HclPredicate) PackFunc {
 
 	return func(payload interface{}, d *schema.ResourceData) error {
 		setValue := mkLens(d)

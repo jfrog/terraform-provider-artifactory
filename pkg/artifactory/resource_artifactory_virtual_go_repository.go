@@ -48,7 +48,7 @@ func resourceArtifactoryGoVirtualRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(goVirtualSchema, defaultPacker, unpackGoVirtualRepository, func() interface{} {
+	return mkResourceSchema(goVirtualSchema, defaultPacker(goVirtualSchema), unpackGoVirtualRepository, func() interface{} {
 		return &GoVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

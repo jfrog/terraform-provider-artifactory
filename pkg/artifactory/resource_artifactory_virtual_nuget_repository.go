@@ -33,7 +33,7 @@ func resourceArtifactoryNugetVirtualRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(nugetVirtualSchema, defaultPacker, unpackNugetVirtualRepository, func() interface{} {
+	return mkResourceSchema(nugetVirtualSchema, defaultPacker(nugetVirtualSchema), unpackNugetVirtualRepository, func() interface{} {
 		return &NugetVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",
