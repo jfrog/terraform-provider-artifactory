@@ -92,8 +92,8 @@ func resourceArtifactoryUser() *schema.Resource {
 				Type:             schema.TypeString,
 				Sensitive:        true,
 				Optional:         true,
-				// ValidateDiagFunc: validation.ToDiagFunc(defaultPassValidation),
-				Description:      "(Optional) Password for the user. When omitted, a random password is generated according to Artifactory password policy.",
+				ValidateDiagFunc: validation.ToDiagFunc(defaultPassValidation),
+				Description:      "(Optional) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.",
 			},
 		},
 	}
