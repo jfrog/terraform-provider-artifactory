@@ -10,12 +10,12 @@ resource "artifactory_federated_chef_repository" "terraform-federated-test-chef-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-chef-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-chef-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

@@ -10,12 +10,12 @@ resource "artifactory_federated_docker_repository" "terraform-federated-test-doc
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-docker-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-docker-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

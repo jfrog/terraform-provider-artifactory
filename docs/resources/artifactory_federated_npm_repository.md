@@ -10,12 +10,12 @@ resource "artifactory_federated_npm_repository" "terraform-federated-test-npm-re
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-npm-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-npm-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

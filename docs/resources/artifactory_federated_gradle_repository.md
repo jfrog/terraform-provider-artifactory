@@ -10,12 +10,12 @@ resource "artifactory_federated_gradle_repository" "terraform-federated-test-gra
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-gradle-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-gradle-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

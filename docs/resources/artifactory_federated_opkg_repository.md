@@ -10,12 +10,12 @@ resource "artifactory_federated_opkg_repository" "terraform-federated-test-opkg-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-opkg-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-opkg-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

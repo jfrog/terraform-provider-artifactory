@@ -10,12 +10,12 @@ resource "artifactory_federated_sbt_repository" "terraform-federated-test-sbt-re
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-sbt-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-sbt-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```
