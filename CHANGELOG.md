@@ -1,3 +1,9 @@
+## 4.0.2 (Apr 6, 2022)
+
+BUG FIXES:
+
+* Fix typos in `artifactory_federated_*_repository` resources documentation.
+
 ## 4.0.1 (Apr 4, 2022)
 
 BUG FIXES:
