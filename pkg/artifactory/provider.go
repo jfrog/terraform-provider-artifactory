@@ -48,6 +48,8 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_helm_repository":     resourceArtifactoryHelmVirtualRepository(),
 		"artifactory_group":                       resourceArtifactoryGroup(),
 		"artifactory_user":                        resourceArtifactoryUser(),
+		"artifactory_unmanaged_user":              resourceArtifactoryUser(), // alias of artifactory_user
+		"artifactory_managed_user":                resourceArtifactoryManagedUser(),
 		"artifactory_permission_target":           resourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":            resourceArtifactoryPullReplication(),
 		"artifactory_push_replication":            resourceArtifactoryPushReplication(),
