@@ -541,8 +541,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"key":      name,
 		"url":      "https://registry.npmjs.org/",
 		"username": "user",
-		// This returns encrypted. Can't be tested
-		//"password":                           "foo",
+		"password": "Password1",
 		"proxy": "",
 
 		//"description":                        "foo", // the server returns this suffixed. Test separate
@@ -609,8 +608,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		"key":      name,
 		"url":      "https://registry.npmjs.org/",
 		"username": "user",
-		// This returns encrypted. Can't be tested
-		//"password":                           "foo",
+		"password": "Password1",
 		"proxy": "",
 
 		//"description":                        "foo", // the server returns this suffixed. Test seperate

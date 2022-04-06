@@ -31,7 +31,7 @@ func resourceArtifactoryLocalCargoRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(cargoLocalSchema, defaultPacker, unPackLocalCargoRepository, func() interface{} {
+	return mkResourceSchema(cargoLocalSchema, defaultPacker(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
 		return &CargoLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: packageType,

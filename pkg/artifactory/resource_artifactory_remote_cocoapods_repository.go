@@ -34,7 +34,7 @@ func resourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(cocoapodsRemoteSchema, defaultPacker, unpackCocoapodsRemoteRepo, func() interface{} {
+	return mkResourceSchema(cocoapodsRemoteSchema, defaultPacker(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, func() interface{} {
 		repoLayout, _ := getDefaultRepoLayoutRef("remote", packageType)()
 		return &CocoapodsRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

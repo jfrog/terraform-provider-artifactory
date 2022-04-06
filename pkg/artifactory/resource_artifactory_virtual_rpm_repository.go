@@ -49,7 +49,7 @@ func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return mkResourceSchema(rpmVirtualSchema, defaultPacker, unpackRpmVirtualRepository, func() interface{} {
+	return mkResourceSchema(rpmVirtualSchema, defaultPacker(rpmVirtualSchema), unpackRpmVirtualRepository, func() interface{} {
 		return &RpmVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

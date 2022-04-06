@@ -10,12 +10,12 @@ resource "artifactory_federated_composer_repository" "terraform-federated-test-c
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-composer-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-composer-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

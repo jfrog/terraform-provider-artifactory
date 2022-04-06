@@ -42,7 +42,7 @@ func resourceArtifactoryLocalNugetRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(nugetLocalSchema, defaultPacker, unPackLocalNugetRepository, func() interface{} {
+	return mkResourceSchema(nugetLocalSchema, defaultPacker(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: packageType,

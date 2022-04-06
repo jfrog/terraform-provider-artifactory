@@ -10,12 +10,12 @@ resource "artifactory_federated_cargo_repository" "terraform-federated-test-carg
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-cargo-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-cargo-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

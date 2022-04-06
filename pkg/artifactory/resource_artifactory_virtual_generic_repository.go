@@ -17,7 +17,9 @@ func resourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return mkResourceSchema(mergeSchema(baseVirtualRepoSchema, repoLayoutRefSchema("virtual", pkt)), defaultPacker, unpack, constructor)
+	genericSchema := mergeSchema(baseVirtualRepoSchema, repoLayoutRefSchema("virtual", pkt))
+
+	return mkResourceSchema(genericSchema, defaultPacker(genericSchema), unpack, constructor)
 }
 
 func resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
@@ -42,5 +44,5 @@ func resourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string
 		repo := unpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, pkt)
 		return repo, repo.Id(), nil
 	}
-	return mkResourceSchema(repoWithRetrivalCachePeriodSecsVirtualSchema, defaultPacker, unpack, constructor)
+	return mkResourceSchema(repoWithRetrivalCachePeriodSecsVirtualSchema, defaultPacker(repoWithRetrivalCachePeriodSecsVirtualSchema), unpack, constructor)
 }
