@@ -9,8 +9,9 @@ Includes only new and relevant fields, for anything else, see: [generic repo](ar
 ```hcl
 
 resource "artifactory_remote_pypi_repository" "pypi-remote" {
-  key = "pypi-remote-foo"
-  pypi_registry_url = "https://pypi.org"
+  key                    = "pypi-remote-foo"
+  url                    = "https://files.pythonhosted.org"
+  pypi_registry_url      = "https://pypi.org"
   pypi_repository_suffix = "simple"
 }
 ```

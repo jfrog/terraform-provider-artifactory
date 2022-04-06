@@ -15,11 +15,10 @@ import (
 func TestAccVirtualRepository_basic(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryBasic = `
-		resource "artifactory_virtual_repository" "%s" {
+		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
-			package_type = "maven"
 			repositories = []
 		}
 	`
@@ -45,32 +44,28 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
 	localRepoName := fmt.Sprintf("%s-local", name)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryWithDefaultDeploymentRepo = `
-		resource "artifactory_local_repository" "%[1]s" {
+		resource "artifactory_local_maven_repository" "%[1]s" {
 			key = "%[1]s"
-			package_type = "maven"
 		}
 
-		resource "artifactory_virtual_repository" "%[2]s" {
+		resource "artifactory_virtual_maven_repository" "%[2]s" {
 			key          = "%[2]s"
-			package_type = "maven"
 			repositories = ["%[1]s"]
 			default_deployment_repo = "%[1]s"
-			depends_on = [artifactory_local_repository.%[1]s]
+			depends_on = [artifactory_local_maven_repository.%[1]s]
 		}
 	`
 	const virtualRepositoryWithoutDefaultDeploymentRepo = `
-		resource "artifactory_local_repository" "%[1]s" {
+		resource "artifactory_local_maven_repository" "%[1]s" {
 			key = "%[1]s"
-			package_type = "maven"
 		}
 
-		resource "artifactory_virtual_repository" "%[2]s" {
+		resource "artifactory_virtual_maven_repository" "%[2]s" {
 			key          = "%[2]s"
-			package_type = "maven"
 			repositories = ["%[1]s"]
-			depends_on = [artifactory_local_repository.%[1]s]
+			depends_on = [artifactory_local_maven_repository.%[1]s]
 		}
 	`
 	resource.Test(t, resource.TestCase{
@@ -433,20 +428,18 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 func TestAccVirtualRepository_update(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryUpdateBefore = `
-		resource "artifactory_virtual_repository" "%s" {
+		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
 			description  = "Before"
-			package_type = "maven"
 			repositories = []
 		}
 	`
 	const virtualRepositoryUpdateAfter = `
-		resource "artifactory_virtual_repository" "%s" {
+		resource "artifactory_virtual_maven_repository" "%s" {
 			key          = "%s"
 			description  = "After"
-			package_type = "maven"
 			repositories = []
 		}
 	`
@@ -477,67 +470,14 @@ func TestAccVirtualRepository_update(t *testing.T) {
 		},
 	})
 }
-func TestAllPackageTypes(t *testing.T) {
-	for _, repo := range repoTypesSupported {
-		if repo != "nuget" { // this requires special testing
-			t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
-				// NuGet Repository configuration is missing mandatory field downloadContextPath
-				resource.Test(mkVirtualTestCase(repo, t))
-			})
-		}
-	}
-}
-
-func mkVirtualTestCase(repo string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := randomInt()
-	name := fmt.Sprintf("%s%d", repo, id)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
-	const virtualRepositoryFull = `
-		resource "artifactory_virtual_repository" "%s" {
-			key = "%s"
-			package_type = "%s"
-			repo_layout_ref = "maven-1-default"
-			repositories = []
-			description = "A test virtual repo"
-			notes = "Internal description"
-			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
-			excludes_pattern = "com/google/**"
-			artifactory_requests_can_retrieve_remote_artifacts = true
-			pom_repository_references_cleanup_policy = "discard_active_reference"
-		}
-	`
-	return t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
-
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(virtualRepositoryFull, name, name, repo),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", repo),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "maven-1-default"),
-					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
-					resource.TestCheckResourceAttr(fqrn, "description", "A test virtual repo"),
-					resource.TestCheckResourceAttr(fqrn, "notes", "Internal description"),
-					resource.TestCheckResourceAttr(fqrn, "includes_pattern", "com/jfrog/**,cloud/jfrog/**"),
-					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "com/google/**"),
-					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
-				),
-			},
-		},
-	}
-}
 
 func TestNugetPackageCreationFull(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_nuget_repository.%s", name)
 	const virtualRepositoryFull = `
-		resource "artifactory_virtual_repository" "%s" {
+		resource "artifactory_virtual_nuget_repository" "%s" {
 			key = "%s"
-			package_type = "nuget"
 			repo_layout_ref = "nuget-default"
 			repositories = []
 			description = "A test virtual repo"
@@ -545,7 +485,6 @@ func TestNugetPackageCreationFull(t *testing.T) {
 			includes_pattern = "com/jfrog/**,cloud/jfrog/**"
 			excludes_pattern = "com/google/**"
 			artifactory_requests_can_retrieve_remote_artifacts = true
-			pom_repository_references_cleanup_policy = "discard_active_reference"
 			force_nuget_authentication	= true
 		}
 	`
@@ -571,11 +510,10 @@ func TestNugetPackageCreationFull(t *testing.T) {
 func TestAccVirtualRepository_full(t *testing.T) {
 	id := randomInt()
 	name := fmt.Sprintf("foo%d", id)
-	fqrn := fmt.Sprintf("artifactory_virtual_repository.%s", name)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryFull = `
-		resource "artifactory_virtual_repository" "%s" {
+		resource "artifactory_virtual_maven_repository" "%s" {
 			key = "%s"
-			package_type = "maven"
 			repo_layout_ref = "maven-1-default"
 			repositories = []
 			description = "A test virtual repo"

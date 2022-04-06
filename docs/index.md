@@ -48,9 +48,8 @@ provider "artifactory" {
 }
 
 # Create a new repository
-resource "artifactory_local_repository" "pypi-libs" {
+resource "artifactory_local_pypi_repository" "pypi-libs" {
   key             = "pypi-libs"
-  package_type    = "pypi"
   repo_layout_ref = "simple-default"
   description     = "A pypi repository for python packages"
 }

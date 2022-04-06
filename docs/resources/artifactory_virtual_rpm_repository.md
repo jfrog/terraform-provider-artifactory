@@ -1,6 +1,6 @@
 # Artifactory Virtual Rpm Repository Resource
 
-Provides an Artifactory virtual repository resource with Rpm package type. This should be preferred over the original one-size-fits-all `artifactory_virtual_repository`.
+Provides an Artifactory virtual repository resource with Rpm package type.
 
 ## Example Usage
 

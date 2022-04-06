@@ -12,13 +12,12 @@ import (
 
 func TestInvalidPushCronFails(t *testing.T) {
 	const invalidCron = `
-		resource "artifactory_local_repository" "lib-local" {
+		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
-			package_type = "maven"
 		}
 		
 		resource "artifactory_push_replication" "lib-local" {
-			repo_key = "${artifactory_local_repository.lib-local.key}"
+			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
 			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
 			
@@ -42,13 +41,12 @@ func TestInvalidPushCronFails(t *testing.T) {
 
 func TestInvalidPushReplicationUrlFails(t *testing.T) {
 	const invalidUrl = `
-		resource "artifactory_local_repository" "lib-local" {
+		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
-			package_type = "maven"
 		}
 		
 		resource "artifactory_push_replication" "lib-local" {
-			repo_key = "${artifactory_local_repository.lib-local.key}"
+			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 			
@@ -72,13 +70,12 @@ func TestInvalidPushReplicationUrlFails(t *testing.T) {
 func TestAccPushReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
 	const replicationConfigTemplate = `
-		resource "artifactory_local_repository" "lib-local" {
+		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
-			package_type = "maven"
 		}
 
 		resource "artifactory_push_replication" "lib-local" {
-			repo_key = "${artifactory_local_repository.lib-local.key}"
+			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 

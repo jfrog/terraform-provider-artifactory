@@ -18,18 +18,16 @@ lifecycle {
 
 ```hcl
 # Create a replication between two artifactory local repositories
-resource "artifactory_local_repository" "provider_test_source" {
+resource "artifactory_local_maven_repository" "provider_test_source" {
 	key = "provider_test_source"
-	package_type = "maven"
 }
 
-resource "artifactory_local_repository" "provider_test_dest" {
+resource "artifactory_local_maven_repository" "provider_test_dest" {
 	key = "provider_test_dest"
-	package_type = "maven"
 }
 
 resource "artifactory_replication_config" "foo-rep" {
-	repo_key = "${artifactory_local_repository.provider_test_source.key}"
+	repo_key = "${artifactory_local_maven_repository.provider_test_source.key}"
 	cron_exp = "0 0 * * * ?"
 	enable_event_replication = true
 	

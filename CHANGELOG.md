@@ -1,3 +1,9 @@
+## 6.0.0 (Apr 6, 2022)
+
+BREAKING CHANGES:
+
+* `artifactory_local_repository`, `artifactory_remote_repository` and `artifactory_virtual_repository` were removed from the provider. Please use resources with package-specific names, like `artifactory_local_cargo_repository` [GH-380]
+
 ## 5.0.0 (Apr 6, 2022)
 
 BREAKING CHANGE:
@@ -20,7 +26,7 @@ BUG FIXES:
 
 BREAKING CHANGE:
 
-* Basic authentication with username and password is removed from the provider.
+* Basic authentication with username and password is removed from the provider. [GH-344]
 
 ## 3.1.4 (Mar 31, 2022)
 

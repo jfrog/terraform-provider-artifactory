@@ -13,6 +13,7 @@ for brevity sake, only cargo specific fields are included; for other fields see 
 resource "artifactory_remote_cargo_repository" "my-remote-cargo" {
   key                 = "my-remote-cargo"
   anonymous_access    = true
+  url                 = "https://github.com/"
   git_registry_url    = "https://github.com/rust-lang/foo.index"
 }
 ```

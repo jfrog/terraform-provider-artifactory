@@ -524,9 +524,9 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Sensitive: true,
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Proxy key from Artifactory Proxies setting",
 	},
 	"description": {
 		Type:     schema.TypeString,
@@ -982,10 +982,11 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		Offline:                  d.getBoolRef("offline", true),
 		BlackedOut:               d.getBoolRef("blacked_out", true),
 		XrayIndex:                d.getBool("xray_index", true),
+		PropagateQueryParams:     d.getBool("propagate_query_params", true),
 		StoreArtifactsLocally:    d.getBoolRef("store_artifacts_locally", true),
 		SocketTimeoutMillis:      d.getInt("socket_timeout_millis", true),
 		LocalAddress:             d.getString("local_address", true),
-		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", true),
+		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
 		// Not returned in the GET
 		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
 		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", false),
@@ -1004,7 +1005,6 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 		ListRemoteFolderItems:             d.getBool("list_remote_folder_items", false),
 		MismatchingMimeTypeOverrideList:   d.getString("mismatching_mime_types_override_list", false),
 	}
-
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
