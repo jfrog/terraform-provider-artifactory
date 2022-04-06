@@ -73,9 +73,9 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 func TestAccUser_basic(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_user" "%s" {
-			name  	= "the.dude%d"
+			name  	= "dummy_user%d"
 			password = "Password1"
-			email 	= "the.dude%d@domain.com"
+			email 	= "dummy_user%d@a.com"
 			groups  = [ "readers" ]
 		}
 	`
@@ -90,8 +90,42 @@ func TestAccUser_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(userBasic, name, id, id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("the.dude%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("the.dude%d@domain.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
+			},
+		},
+	})
+}
+
+func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
+	const userBasic = `
+		resource "artifactory_user" "%s" {
+			name  	= "dummy_user%d"
+			email 	= "dummy_user%d@a.com"
+			groups  = [ "readers" ]
+		}
+	`
+	id := randomInt()
+	name := fmt.Sprintf("foobar-%d", id)
+	fqrn := fmt.Sprintf("artifactory_user.%s", name)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(userBasic, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},

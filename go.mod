@@ -1,4 +1,4 @@
-module github.com/jfrog/terraform-provider-artifactory/v4
+module github.com/jfrog/terraform-provider-artifactory/v5
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/terraform-json v0.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
 	github.com/jfrog/jfrog-client-go v0.27.0
+	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/tools v0.1.5 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
