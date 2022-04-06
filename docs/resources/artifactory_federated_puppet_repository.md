@@ -10,12 +10,12 @@ resource "artifactory_federated_puppet_repository" "terraform-federated-test-pup
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-puppet-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-puppet-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

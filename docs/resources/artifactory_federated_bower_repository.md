@@ -10,12 +10,12 @@ resource "artifactory_federated_bower_repository" "terraform-federated-test-bowe
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-bower-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-bower-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

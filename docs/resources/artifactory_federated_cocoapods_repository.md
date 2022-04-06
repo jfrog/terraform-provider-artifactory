@@ -10,12 +10,12 @@ resource "artifactory_federated_cocoapods_repository" "terraform-federated-test-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-cocoapods-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-cocoapods-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

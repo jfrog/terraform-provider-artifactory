@@ -10,12 +10,12 @@ resource "artifactory_federated_nuget_repository" "terraform-federated-test-nuge
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-nuget-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-nuget-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

@@ -10,12 +10,12 @@ resource "artifactory_federated_gitlfs_repository" "terraform-federated-test-git
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-gitlfs-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-gitlfs-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

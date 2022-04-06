@@ -10,12 +10,12 @@ resource "artifactory_federated_cran_repository" "terraform-federated-test-cran-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-cran-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-cran-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

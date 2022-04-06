@@ -10,12 +10,12 @@ resource "artifactory_federated_helm_repository" "terraform-federated-test-helm-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-helm-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-helm-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```

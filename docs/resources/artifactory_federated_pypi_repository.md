@@ -10,12 +10,12 @@ resource "artifactory_federated_pypi_repository" "terraform-federated-test-pypi-
 
   member {
     url    = "http://tempurl.org/artifactory/terraform-federated-test-pypi-repo"
-    enable = true
+    enabled = true
   }
 
   member {
     url    = "http://tempurl2.org/artifactory/terraform-federated-test-pypi-repo-2"
-    enable = true
+    enabled = true
   }
 }
 ```
