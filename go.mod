@@ -1,4 +1,4 @@
-module github.com/jfrog/terraform-provider-artifactory/v5
+module github.com/jfrog/terraform-provider-artifactory/v6
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
