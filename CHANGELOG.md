@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* Fix typos in `artifactory_federated_*_repository` resources documentation.
+* Fix typos in `artifactory_federated_*_repository` resources documentation. [GH-391]
 
 ## 4.0.1 (Apr 4, 2022)
 
