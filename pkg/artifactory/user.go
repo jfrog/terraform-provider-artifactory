@@ -102,9 +102,14 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	setValue("disable_ui_access", user.DisableUIAccess)
 	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
 
+	// When user belongs to no groups, the API payload omits the "groups" field which translate to nil in code,
+	// and null in TF state file. This is not the same as empty slice/array so we need to translate nil
+	// to empty slice for packing
+	groups := []interface{}{}
 	if user.Groups != nil {
-		errors = setValue("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups)))
+		groups = castToInterfaceArr(user.Groups)
 	}
+	errors = setValue("groups", schema.NewSet(schema.HashString, groups))
 
 	if errors != nil && len(errors) > 0 {
 		return diag.Errorf("failed to pack user %q", errors)
