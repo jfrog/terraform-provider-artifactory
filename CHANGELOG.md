@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Added VCS remote repository resource - `artifactory_remote_vcs_repository` [GH-392]
+* Added VCS remote repository resource - `artifactory_remote_vcs_repository` [GH-394]
 
 ## 6.0.0 (Apr 6, 2022)
 
