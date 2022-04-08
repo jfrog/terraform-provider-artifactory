@@ -2,27 +2,18 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type VcsRemoteRepo struct {
 	RemoteRepositoryBaseParams
-	VcsGitProvider     string `json:"vcsGitProvider"`
-	MaxUniqueSnapshots int    `json:"maxUniqueSnapshots"`
+	RemoteRepositoryVcsParams
+	MaxUniqueSnapshots int `json:"maxUniqueSnapshots"`
 }
 
 func resourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	const packageType = "vcs"
 
-	var vcsRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
-		"vcs_git_provider": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "GITHUB",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"}, false)),
-			Description: "Artifactory supports proxying the following Git providers out-of-the-box: GitHub, Bitbucket, " +
-				"Stash, a remote Artifactory instance or a custom Git repository. Default value is 'GITHUB'.",
-		},
+	var vcsRemoteSchema = mergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -37,7 +28,7 @@ func resourceArtifactoryRemoteVcsRepository() *schema.Resource {
 		d := &ResourceData{s}
 		repo := VcsRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
-			VcsGitProvider:             d.getString("vcs_git_provider", false),
+			RemoteRepositoryVcsParams:  unpackVcsRemoteRepo(s),
 			MaxUniqueSnapshots:         d.getInt("max_unique_snapshots", false),
 		}
 		return repo, repo.Id(), nil

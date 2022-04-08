@@ -327,8 +327,9 @@ func TestAccRemoteVcsRepository(t *testing.T) {
 	const packageType = "vcs"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"url":                  "https://github.com/",
-		"vcs_git_provider":     "GITHUB",
-		"max_unique_snapshots": 1,
+		"vcs_git_provider":     "CUSTOM",
+		"vcs_git_download_url": "https://www.customrepo.com",
+		"max_unique_snapshots": 5,
 	}))
 }
 
