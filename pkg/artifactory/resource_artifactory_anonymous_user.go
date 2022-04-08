@@ -2,86 +2,85 @@ package artifactory
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryAnonymousUser() *schema.Resource {
-	managedUserSchema := map[string]*schema.Schema{
+
+	type AnonymousUser struct {
+		Name string `json:"name"`
+	}
+
+	anonymousUserSchema := map[string]*schema.Schema{
+		// This isn't necessary in theory but Terraform doesn't like schema with no attributes
 		"name": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			Description:  "Username for user.",
+			Description:  "Username for anonymous user. This should not be set in the HCL, or change after importing into Terraform state.",
 		},
-		"email": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			Description:  "Email for user.",
-		},
-		"admin": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "When enabled, this user is an administrator with all the ensuing privileges.",
-		},
-		"profile_updatable": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-			Description: "When enabled, this user can update their profile details (except for the password. " +
-				"Only an administrator can update the password). There may be cases in which you want to leave " +
-				"this unset to prevent users from updating their profile. For example, a departmental user with " +
-				"a single password shared between all department members.",
-		},
-		"disable_ui_access": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-			Description: "When enabled, this user can only access the system through the REST API." +
-				" This option cannot be set if the user has Admin privileges.",
-		},
-		"internal_password_disabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Computed: true,
-			Description: "When enabled, disables the fallback mechanism for using an internal password when " +
-				"external authentication (such as LDAP) is enabled.",
-		},
-		"groups": {
-			Type:        schema.TypeSet,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Set:         schema.HashString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of groups this user is a part of.",
-		},
-		"password": {
-			Type:        schema.TypeString,
-			Sensitive:   true,
-			Optional:    true,
-			Computed:    true,
-			Description: "Password for the user.",
-		},
+	}
+
+	packAnonymousUser := func(user AnonymousUser, d *schema.ResourceData) diag.Diagnostics {
+
+		setValue := mkLens(d)
+
+		errors := setValue("name", user.Name)
+
+		if errors != nil && len(errors) > 0 {
+			return diag.Errorf("failed to pack anonymous user %q", errors)
+		}
+
+		return nil
+	}
+
+	resourceAnonymousUserRead := func(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
+		d := &ResourceData{rd}
+
+		userName := d.Id()
+		user := &AnonymousUser{}
+		resp, err := m.(*resty.Client).R().SetResult(user).Get(usersEndpointPath + userName)
+
+		if err != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+
+		return packAnonymousUser(*user, rd)
+	}
+
+	resourceAnonymousUserCreate := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		return diag.Errorf("Anonymous Artifactory user cannot be created. Use `terraform import` instead.")
+	}
+
+	resourceAnonymousUserUpdate := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		return diag.Errorf("Anonymous Artifactory user cannot be updated. Use `terraform import` instead.")
+	}
+
+	resourceAnonymousUserDelete := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		return diag.Errorf("Anonymous Artifactory user cannot be deleted. Use `terraform state rm` instead.")
 	}
 
 	return &schema.Resource{
 		CreateContext: resourceAnonymousUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		ReadContext:   resourceAnonymousUserRead,
+		UpdateContext: resourceAnonymousUserUpdate,
+		DeleteContext: resourceAnonymousUserDelete,
 		Exists:        resourceUserExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: managedUserSchema,
-	}
-}
+		Schema: anonymousUserSchema,
 
-func resourceAnonymousUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return resourceBaseUserCreate(ctx, d, m, nil)
+		Description: "Provides an Artifactory anonymouse user resource. This only supports importing from Artifactory through `terraform import` command. This cannot be created from scratch, nor updated/deleted once imported into Terraform state.",
+	}
 }

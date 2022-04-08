@@ -1,6 +1,6 @@
-# Artifactory User Resource
+# Artifactory Unmanaged User Resource
 
-Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
+Provides an Artifactory unmanaged user resource. This can be used to create and maintain Artifactory users.
 
 Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by directly through Terraform. However, it is possible to store a "known" state for the password and make changes if it's updated in Terraform. Removing the password argument does not reset the password; it just removes Terraform from storing the "known" state.
 
@@ -8,7 +8,7 @@ Note: User passwords are never returned through the API. Since they are never re
 
 ```hcl
 # Create a new Artifactory user called terraform
-resource "artifactory_user" "test-user" {
+resource "artifactory_unmanaged_user" "test-user" {
   name     = "terraform"
   email    = "test-user@artifactory-terraform.com"
   groups   = ["logged-in-users", "readers"]
@@ -34,5 +34,5 @@ The following arguments are supported:
 Users can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_user.test-user myusername
+$ terraform import artifactory_unmanaged_user.test-user myusername
 ```

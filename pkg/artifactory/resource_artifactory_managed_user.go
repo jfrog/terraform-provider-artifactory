@@ -31,6 +31,8 @@ func resourceArtifactoryManagedUser() *schema.Resource {
 		},
 
 		Schema: managedUserSchema,
+
+		Description: "Provides an Artifactory managed user resource. This can be used to create and manage Artifactory users.",
 	}
 }
 

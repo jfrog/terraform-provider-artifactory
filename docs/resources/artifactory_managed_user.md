@@ -1,6 +1,6 @@
-# Artifactory User Resource
+# Artifactory Managed User Resource
 
-Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
+Provides an Artifactory managed user resource. This can be used to create and maintain Artifactory users.
 
 Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by directly through Terraform. However, it is possible to store a "known" state for the password and make changes if it's updated in Terraform. Removing the password argument does not reset the password; it just removes Terraform from storing the "known" state.
 
@@ -8,7 +8,7 @@ Note: User passwords are never returned through the API. Since they are never re
 
 ```hcl
 # Create a new Artifactory user called terraform
-resource "artifactory_user" "test-user" {
+resource "artifactory_managed_user" "test-user" {
   name     = "terraform"
   email    = "test-user@artifactory-terraform.com"
   groups   = ["logged-in-users", "readers"]
@@ -22,7 +22,7 @@ The following arguments are supported:
 
 * `name` - (Required) Username for user.
 * `email` - (Required) Email for user.
-* `password` - (Optional) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.
+* `password` - (Required) Password for the user.
 * `admin` - (Optional) When enabled, this user is an administrator with all the ensuing privileges. Default value is `false`.
 * `profile_updatable` - (Optional) When set, this user can update his profile details (except for the password. Only an administrator can update the password). Default value is `true`.
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges. Default value is `true`.
@@ -34,5 +34,5 @@ The following arguments are supported:
 Users can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_user.test-user myusername
+$ terraform import artifactory_managed_user.test-user myusername
 ```

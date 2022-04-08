@@ -32,6 +32,8 @@ func resourceArtifactoryUser() *schema.Resource {
 		},
 
 		Schema: userSchema,
+
+		Description: "Provides an Artifactory unmanaged user resource. This can be used to create and manage Artifactory users. Password is optional and one will be automatically generated.",
 	}
 }
 
