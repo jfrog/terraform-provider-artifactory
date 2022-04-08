@@ -323,6 +323,16 @@ func TestAccRemoteGoRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteVcsRepository(t *testing.T) {
+	const packageType = "vcs"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                  "https://github.com/",
+		"vcs_git_provider":     "CUSTOM",
+		"vcs_git_download_url": "https://www.customrepo.com",
+		"max_unique_snapshots": 5,
+	}))
+}
+
 func TestAccRemoteCocoapodsRepository(t *testing.T) {
 	const packageType = "cocoapods"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
@@ -542,7 +552,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"url":      "https://registry.npmjs.org/",
 		"username": "user",
 		"password": "Password1",
-		"proxy": "",
+		"proxy":    "",
 
 		//"description":                        "foo", // the server returns this suffixed. Test separate
 		"notes":                          "notes",
@@ -609,7 +619,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		"url":      "https://registry.npmjs.org/",
 		"username": "user",
 		"password": "Password1",
-		"proxy": "",
+		"proxy":    "",
 
 		//"description":                        "foo", // the server returns this suffixed. Test seperate
 		"notes":                          "notes",
