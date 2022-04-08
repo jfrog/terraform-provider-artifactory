@@ -6,7 +6,7 @@ FEATURES:
 * Added new `artifactory_unmanaged_user` resource with `password` attribute being required and no automatic password generation.
 * Added new `artifactory_anonymous_user` resource which allows importing of Artifactory 'anonymous' user into Terraform state.
 
-[GH-]
+[GH-396]
 
 ## 6.1.0 (Apr 11, 2022)
 
