@@ -1,3 +1,9 @@
+## 6.0.2 (Apr 11, 2022)
+
+BUG FIXES:
+
+* Added gpg keypair attributes for `artifactory_local_rpm_repository` resource [GH-397]
+
 ## 6.0.1 (Apr 7, 2022)
 
 IMPROVEMENTS:
