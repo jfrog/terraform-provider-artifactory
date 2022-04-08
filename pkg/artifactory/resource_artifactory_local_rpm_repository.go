@@ -18,19 +18,16 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 				"This is useful when your repository contains multiple RPM repositories under parallel hierarchies. " +
 				"For example, if your RPMs are stored under 'fedora/linux/$releasever/$basearch', specify a depth of 4.",
 		},
-
 		"calculate_yum_metadata": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-
 		"enable_file_lists_indexing": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-
 		"yum_group_file_names": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -40,6 +37,18 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
 		},
+		"primary_keypair_ref": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "Primary keypair used to sign artifacts.",
+		},
+		"secondary_keypair_ref": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "Secondary keypair used to sign artifacts.",
+		},
 	}, repoLayoutRefSchema("local", packageType))
 
 	type RpmLocalRepositoryParams struct {
@@ -48,6 +57,8 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 		CalculateYumMetadata    bool   `hcl:"calculate_yum_metadata" json:"calculateYumMetadata"`
 		EnableFileListsIndexing bool   `hcl:"enable_file_lists_indexing" json:"enableFileListsIndexing"`
 		GroupFileNames          string `hcl:"yum_group_file_names" json:"yumGroupFileNames"`
+		PrimaryKeyPairRef       string `json:"primaryKeyPairRef"`
+		SecondaryKeyPairRef     string `json:"secondaryKeyPairRef"`
 	}
 
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
@@ -58,6 +69,8 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 			CalculateYumMetadata:      d.getBool("calculate_yum_metadata", false),
 			EnableFileListsIndexing:   d.getBool("enable_file_lists_indexing", false),
 			GroupFileNames:            d.getString("yum_group_file_names", false),
+			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:       d.getString("secondary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil
