@@ -70,10 +70,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
-			depends_on = [
-				artifactory_keypair.{{ .kp_name }},
-				artifactory_keypair.{{ .kp_name2 }},
-			]
+			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
