@@ -70,7 +70,10 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
 			key 	     = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -201,7 +204,10 @@ func TestAccLocalDebianRepository(t *testing.T) {
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
 			trivial_layout = true
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -338,10 +344,13 @@ func TestAccLocalRpmRepository(t *testing.T) {
 			key 	     = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
-            yum_root_depth = 1
-            enable_file_lists_indexing = true
-            calculate_yum_metadata = true
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
+			yum_root_depth = 1
+			enable_file_lists_indexing = true
+			calculate_yum_metadata = true
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,

@@ -13,9 +13,13 @@ resource "artifactory_local_rpm_repository" "terraform-local-test-rpm-repo-basic
   yum_group_file_names       = "file-1.xml,file-2.xml"
   primary_keypair_ref        = artifactory_keypair.some-keypairGPG1.pair_name
   secondary_keypair_ref      = artifactory_keypair.some-keypairGPG2.pair_name
-  depends_on                 = [artifactory_keypair.some-keypairGPG1, artifactory_keypair.some-keypairGPG2]
+  depends_on                 = [
+    artifactory_keypair.some-keypair-gpg-1, 
+    artifactory_keypair.some-keypair-gpg-2
+  ]
 }
-resource "artifactory_keypair" "some-keypairGPG1" {
+
+resource "artifactory_keypair" "some-keypair-gpg-1" {
   pair_name   = "some-keypair${random_id.randid.id}"
   pair_type   = "GPG"
   alias       = "foo-alias1"
@@ -28,7 +32,8 @@ resource "artifactory_keypair" "some-keypairGPG1" {
     ]
   }
 }
-resource "artifactory_keypair" "some-keypairGPG2" {
+
+resource "artifactory_keypair" "some-keypair-gpg-2" {
   pair_name   = "some-keypair${random_id.randid.id}"
   pair_type   = "GPG"
   alias       = "foo-alias2"
