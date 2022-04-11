@@ -28,16 +28,17 @@ type KeyPairPayLoad struct {
 
 var keyPairSchema = map[string]*schema.Schema{
 	"pair_name": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "A unique identifier for the Key Pair record.",
 	},
 	"pair_type": {
 		Type: schema.TypeString,
 		// working sample PGP key is checked in but not tested
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"RSA", "GPG"}, false)),
 		Required:         true,
-		Description:      "Let's RT know what kind of key pair you're supplying. RT also supports GPG, but that's for a later day",
+		Description:      "Key Pair type. Supported types - GPG and RSA.",
 		ForceNew:         true,
 	},
 	"alias": {
@@ -52,16 +53,15 @@ var keyPairSchema = map[string]*schema.Schema{
 		Required:         true,
 		StateFunc:        stripTabs,
 		ValidateDiagFunc: validatePrivateKey,
-		Description:      "Artifactory doesn't return the value after creation",
+		Description:      "Private key. PEM format will be validated.",
 		ForceNew:         true,
 	},
 	"passphrase": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreEmpty,
-		Description: "Used to decrypt the private key (if applicable). Will be verified server side. " +
-			"Artifactory doesn't return the value after creation",
-		ForceNew: true,
+		Description:      "Passphrase will be used to decrypt the private key. Validated server side",
+		ForceNew:         true,
 	},
 	"public_key": {
 		Type:             schema.TypeString,
@@ -69,6 +69,7 @@ var keyPairSchema = map[string]*schema.Schema{
 		StateFunc:        stripTabs,
 		ValidateDiagFunc: validatePublicKey,
 		ForceNew:         true,
+		Description:      "Public key. PEM format will be validated.",
 	},
 	"unavailable": {
 		Type:        schema.TypeBool,
@@ -86,8 +87,11 @@ func resourceArtifactoryKeyPair() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Description: "Manage the GPG signing keys used to sign packages for authentication and the RSA keys used to sign and verify the Alpine Linux Index files\n" +
-			"https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateKeyPair",
+		Description: "RSA key pairs are used to sign and verify the Alpine Linux index files in JFrog Artifactory, " +
+			"while GPG key pairs are used to sign and validate packages integrity in JFrog Distribution. " +
+			"The JFrog Platform enables you to manage multiple RSA and GPG signing keys through the Keys Management UI " +
+			"and REST API. The JFrog Platform supports managing multiple pairs of GPG signing keys to sign packages for" +
+			" authentication of several package types such as Debian, Opkg, and RPM through the Keys Management UI and REST API.",
 
 		Schema: keyPairSchema,
 	}
