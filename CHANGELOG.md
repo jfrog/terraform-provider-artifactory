@@ -1,3 +1,9 @@
+## 6.1.2 (Apr 11, 2022)
+
+IMPROVEMENTS:
+
+* Documentation changes for `artifactory_keypair` resource [GH-402]
+
 ## 6.1.1 (Apr 11, 2022)
 
 BUG FIXES:

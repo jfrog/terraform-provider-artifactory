@@ -1,8 +1,11 @@
 # Artifactory keypair Resource
 
-Creates an RSA Keypair resource - suitable for signing alpine indices. 
-- Currently, only RSA is supported.
-- Passphrases are not currently supported, though they exist in the API
+RSA key pairs are used to sign and verify the Alpine Linux index files in JFrog Artifactory, while GPG key pairs are 
+used to sign and validate packages integrity in JFrog Distribution. The JFrog Platform enables you to manage multiple 
+RSA and GPG signing keys through the Keys Management UI and REST API. The JFrog Platform supports managing multiple 
+pairs of GPG signing keys to sign packages for authentication of several package types such as Debian, Opkg, and RPM 
+through the Keys Management UI and REST API.
+Passphrases are not currently supported, though they exist in the API.
 
 
 ## Example Usage
@@ -35,13 +38,21 @@ resource "artifactory_keypair" "some-keypair6543461672124900137" {
 
 The following arguments are supported:
 
-* `pair_name` - (Required) name of the key pair and the identity of the resource.
-* `pair_type` - (Required) RT requires this - presumably for verification purposes.
-* `alias` - (Required) Required but for unknown reasons
-* `private_key` - (Required)  - duh! This will have it's pem format validated
-* `passphrase` - (Optional/Questionable)  - This will be used to decrypt the private key. Validated server side.
-* `public_key` - (Required)  - duh! This will have it's pem format validated
-* `unavailable` - (Computed) - it's unknown what this does, but, it's returned in the payload and there is no known place to set it in the UI
+* `pair_name` - (Required) A unique identifier for the Key Pair record.
+* `pair_type` - (Required) Key Pair type. Supported types - GPG and RSA.
+* `alias` - (Required) Will be used as a filename when retrieving the public key via REST API.
+* `private_key` - (Required, Sensitive)  - Private key. PEM format will be validated.
+* `passphrase` - (Optional)  - Passphrase will be used to decrypt the private key. Validated server side.
+* `public_key` - (Required)  - Public key. PEM format will be validated.
+* `unavailable` - (Computed) - Unknown usage. Returned in the json payload and cannot be set.
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
-The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state. 
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
+
+## Import
+
+Keypair can be imported using their name, e.g.
+
+```
+$ terraform import artifactory_keypair.my-keypair my-keypair
+```
