@@ -11,6 +11,40 @@ resource "artifactory_local_rpm_repository" "terraform-local-test-rpm-repo-basic
   calculate_yum_metadata     = true
   enable_file_lists_indexing = true
   yum_group_file_names       = "file-1.xml,file-2.xml"
+  primary_keypair_ref        = artifactory_keypair.some-keypairGPG1.pair_name
+  secondary_keypair_ref      = artifactory_keypair.some-keypairGPG2.pair_name
+  depends_on                 = [
+    artifactory_keypair.some-keypair-gpg-1, 
+    artifactory_keypair.some-keypair-gpg-2
+  ]
+}
+
+resource "artifactory_keypair" "some-keypair-gpg-1" {
+  pair_name   = "some-keypair${random_id.randid.id}"
+  pair_type   = "GPG"
+  alias       = "foo-alias1"
+  private_key = file("samples/gpg.priv")
+  public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
+}
+
+resource "artifactory_keypair" "some-keypair-gpg-2" {
+  pair_name   = "some-keypair${random_id.randid.id}"
+  pair_type   = "GPG"
+  alias       = "foo-alias2"
+  private_key = file("samples/gpg.priv")
+  public_key  = file("samples/gpg.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 ```
 
@@ -23,5 +57,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `calculate_yum_metadata` - (Optional)
 * `enable_file_lists_indexing` - (Optional)
 * `yum_group_file_names` - (Optional) - A list of XML file names containing RPM group component definitions. Artifactory includes the group definitions as part of the calculated RPM metadata, as well as automatically generating a gzipped version of the group files, if required.
+* `primary_keypair_ref` - (Optional) The primary GPG key to be used to sign packages
+* `secondary_keypair_ref` - (Optional) The secondary GPG key to be used to sign packages
 
 Arguments for RPM repository type closely match with arguments for Generic repository type.
