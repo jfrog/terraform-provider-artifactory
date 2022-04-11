@@ -30,7 +30,7 @@ pipelines:
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.35.1
-            GO_VERSION: 1.17.8
+            GO_VERSION: 1.18
         execution:
           onStart:
             - echo "Preparing for work. Install Helm, Go and Teraform"
