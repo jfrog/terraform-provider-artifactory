@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* resource/artifactory_push_replication: unable to update resource after creation [GH-]
+* resource/artifactory_push_replication: unable to update resource after creation [GH-400]
 
 ## 6.1.0 (Apr 11, 2022)
 
