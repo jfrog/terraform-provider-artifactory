@@ -1,8 +1,8 @@
 # Artifactory keypair Resource
 
-Creates an RSA Keypair resource - suitable for signing alpine indices. 
+Creates an RSA Keypair resource - suitable for signing Alpine Linux indices. 
 - Currently, only RSA is supported.
-- Passphrases are not currently supported, though they exist in the API
+- Passphrases are not currently supported, though they exist in the API.
 
 
 ## Example Usage
@@ -35,13 +35,21 @@ resource "artifactory_keypair" "some-keypair6543461672124900137" {
 
 The following arguments are supported:
 
-* `pair_name` - (Required) name of the key pair and the identity of the resource.
-* `pair_type` - (Required) RT requires this - presumably for verification purposes.
-* `alias` - (Required) Required but for unknown reasons
-* `private_key` - (Required)  - duh! This will have it's pem format validated
-* `passphrase` - (Optional/Questionable)  - This will be used to decrypt the private key. Validated server side.
-* `public_key` - (Required)  - duh! This will have it's pem format validated
-* `unavailable` - (Computed) - it's unknown what this does, but, it's returned in the payload and there is no known place to set it in the UI
+* `pair_name` - (Required) A unique identifier for the Key Pair record.
+* `pair_type` - (Required) Artifactory requires this - presumably for verification purposes. ?????
+* `alias` - (Required) Will be used as a filename when retrieving the public key via REST API.
+* `private_key` - (Required, Sensitive)  - Private key. Pem format will be validated.
+* `passphrase` - (Optional)  - This will be used to decrypt the private key. Validated server side.
+* `public_key` - (Required)  - Public key. Pem format will be validated.
+* `unavailable` - (Computed) - This field will be returned in the payload and there is no known place to set it in the UI.
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
-The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state. 
+The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
+
+## Import
+
+Keypair can be imported using their name, e.g.
+
+```
+$ terraform import artifactory_keypair.my-keypair my-keypair
+```
