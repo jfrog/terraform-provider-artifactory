@@ -113,7 +113,7 @@ pipelines:
               #- sudo curl http://localhost:8082/router/api/v1/system/health
               #- >-
               #  export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
-            #               --header "accept: application/json, text/plain, */*" \
+              #               --header "accept: application/json, text/plain, */*" \
             #               --header "content-type: application/json;charset=UTF-8" \
             #               --header "x-requested-with: XMLHttpRequest" \
             #                -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
