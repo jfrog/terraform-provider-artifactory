@@ -2,7 +2,7 @@ resources:
   - name: GitHubTFProviderRepoJFrog
     type: GitRepo
     configuration:
-      gitProvider: Partnership_GitHub
+      gitProvider: Partnership_GitHub1
       path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
         include: master
@@ -12,7 +12,7 @@ resources:
       cancelPendingRunsOn:
         pullRequestUpdate: true
 pipelines:
-  - name: tf_provider_artifactory
+  - name: tf_provider_artifactory_test
     steps:
       - name: build_and_run_tf_provider
         type: Bash
@@ -23,7 +23,7 @@ pipelines:
             type: host
           integrations:
             - name: partnersSlack
-            - name: Partnership_GitHub
+            - name: Partnership_GitHub1
             - name: PartnershipArtifactory
           inputResources:
             - name: GitHubTFProviderRepoJFrog
@@ -145,7 +145,7 @@ pipelines:
           integrations:
             - name: partnersSlack
             - name: partnership_jfrog_io
-            - name: Partnership_GitHub
+            - name: Partnership_GitHub1
           inputSteps:
             - name: build_and_run_tf_provider
           inputResources:
