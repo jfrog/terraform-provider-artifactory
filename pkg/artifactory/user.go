@@ -27,17 +27,17 @@ type User struct {
 
 var baseUserSchema = map[string]*schema.Schema{
 	"name": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringIsNotEmpty,
-		Description:  "Username for user.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Required) Username for user.",
 	},
 	"email": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validateIsEmail,
-		Description:  "Email for user.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validateIsEmail),
+		Description:      "(Required) Email for user.",
 	},
 	"admin": {
 		Type:        schema.TypeBool,

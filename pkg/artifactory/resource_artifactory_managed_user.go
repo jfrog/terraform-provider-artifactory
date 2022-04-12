@@ -5,16 +5,18 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/maps"
 )
 
 func resourceArtifactoryManagedUser() *schema.Resource {
 	managedUserSchema := map[string]*schema.Schema{
 		"password": {
-			Type:        schema.TypeString,
-			Sensitive:   true,
-			Required:    true,
-			Description: "(Required) Password for the user.",
+			Type:             schema.TypeString,
+			Sensitive:        true,
+			Required:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "(Required) Password for the user.",
 		},
 	}
 	maps.Copy(managedUserSchema, baseUserSchema)
