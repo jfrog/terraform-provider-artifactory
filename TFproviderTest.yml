@@ -85,49 +85,49 @@ pipelines:
             - ls -al && pwd
             - cp scripts/native-steps/license/artifactory.cluster.license scripts/artifactory.lic
             - echo "Set Artifactory version, run RT in a container"
-            - >-
-              if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
-               helm repo add artifactory https://charts.jfrog.io
-               helm repo update
-               add_run_variables ARTIFACTORY_VERSION=$(helm search repo | grep "artifactory " | awk '{$1=$1};1' |  cut -f3 -d " ")
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              else
-               add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              fi
-            - >-
-              docker run -i -t -d --rm -v "${res_GitHubTFProviderRepoJFrog1_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-                    -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
-            - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
-            - >-
-              until curl -sf -u admin:password http://localhost:8081/artifactory/api/system/licenses/; do
-                  printf '.'
-                  sleep 4
-              done
+           # - >-
+            #  if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
+            #   helm repo add artifactory https://charts.jfrog.io
+            #   helm repo update
+            #   add_run_variables ARTIFACTORY_VERSION=$(helm search repo | grep "artifactory " | awk '{$1=$1};1' |  cut -f3 -d " ")
+            #   echo "Artifactory version: "${ARTIFACTORY_VERSION}
+           #   else
+           #    add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
+           #    echo "Artifactory version: "${ARTIFACTORY_VERSION}
+           #   fi
+           # - >-
+           #   docker run -i -t -d --rm -v "${res_GitHubTFProviderRepoJFrog1_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
+           #         -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+           # - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
+           # - >-
+            #  until curl -sf -u admin:password http://localhost:8081/artifactory/api/system/licenses/; do
+            #      printf '.'
+            #      sleep 4
+            #  done
             - echo "Add variables needed to run Terraform Provider"
             - export ARTIFACTORY_URL="http://localhost:8082"
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=password
             - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
-            - sleep 180
-            - sudo curl http://localhost:8082/router/api/v1/system/health
-            - >-
-              export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
-                            --header "accept: application/json, text/plain, */*" \
-                            --header "content-type: application/json;charset=UTF-8" \
-                            --header "x-requested-with: XMLHttpRequest" \
-                            -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
-            - export REFRESHTOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
-            - export ACCESSTOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $14 }') # awk returns null on Mac, and the actual key on Ubuntu
-            - >-
-              export ACCESS_KEY=$(curl -g --request GET "${ARTIFACTORY_URL}/ui/api/v1/system/security/token?services[]=all" \
-                                  --header "accept: application/json, text/plain, */*" \
-                                  --header "x-requested-with: XMLHttpRequest" \
-                                  --header "cookie: ACCESSTOKEN=${ACCESSTOKEN}; REFRESHTOKEN=${REFRESHTOKEN}")
-            - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
-            - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
-            - unset ARTIFACTORY_PASSWORD
-            - export TF_ACC=true
+            #- sleep 180
+            #- sudo curl http://localhost:8082/router/api/v1/system/health
+            #- >-
+            #  export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
+             #               --header "accept: application/json, text/plain, */*" \
+             #               --header "content-type: application/json;charset=UTF-8" \
+             #               --header "x-requested-with: XMLHttpRequest" \
+            #                -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
+            #- export REFRESHTOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
+            #- export ACCESSTOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $14 }') # awk returns null on Mac, and the actual key on Ubuntu
+            #- >-
+            #  export ACCESS_KEY=$(curl -g --request GET "${ARTIFACTORY_URL}/ui/api/v1/system/security/token?services[]=all" \
+            #                      --header "accept: application/json, text/plain, */*" \
+            #                      --header "x-requested-with: XMLHttpRequest" \
+            #                      --header "cookie: ACCESSTOKEN=${ACCESSTOKEN}; REFRESHTOKEN=${REFRESHTOKEN}")
+            #- add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
+            #- echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
+            #- unset ARTIFACTORY_PASSWORD
+            #- export TF_ACC=true
             #- make acceptance
             #- make install
           onSuccess:
