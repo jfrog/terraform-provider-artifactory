@@ -176,7 +176,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	// Artifactory PUT call for creating user with groups attribute set to empty/null always sets groups to "readers".
-	// Because of this behavior, we use following POST call to update the user's groups config to empty group.
+	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
+	// Workaround: We use following POST call to update the user's groups config to empty group.
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if user.Groups == nil {
 		user.Groups = []string{}
