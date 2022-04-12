@@ -167,6 +167,7 @@ pipelines:
               fi
             - >-
               if [[ "${PR_URL}" != null ]]; then
+                cd ${res_GitHubTFProviderRepoJFrog1_resourcePath}
                 cat CHANGELOG.md
                 sed -i "s/tested on Artifactory.*/tested on Artifactory ${ARTIFACTORY_VERSION} ###/" CHANGELOG.md
                 git status
