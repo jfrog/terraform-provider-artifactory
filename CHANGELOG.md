@@ -1,3 +1,9 @@
+## 6.1.3 (Apr 12, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_user: Fix to persist changes to groups [GH-406]
+
 ## 6.1.2 (Apr 11, 2022)
 
 IMPROVEMENTS:
