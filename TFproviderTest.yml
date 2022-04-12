@@ -171,7 +171,7 @@ pipelines:
                 sed -i "s/tested on Artifactory.*/tested on Artifactory ${ARTIFACTORY_VERSION} ###/" CHANGELOG.md
                 git status
                 git add CHANGELOG.md
-                git commit -m "JFrog Pipelines: Add Artifactory version to CHANGELOG.md"
+                git commit -m "JFrog Pipelines -Add Artifactory version to CHANGELOG.md"
                 git push origin
               fi
           onSuccess:
