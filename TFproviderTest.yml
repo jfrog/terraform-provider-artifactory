@@ -128,8 +128,8 @@ pipelines:
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
             - export TF_ACC=true
-            - make acceptance
-            - make install
+            #- make acceptance
+            #- make install
           onSuccess:
             - echo "Success"
             - send_notification partnersSlack --text "Terraform Provider run is completed. Version ${NEXT_PROVIDER_VERSION}."
