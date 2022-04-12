@@ -15,7 +15,7 @@ func resourceArtifactoryUser() *schema.Resource {
 			Type:        schema.TypeString,
 			Sensitive:   true,
 			Optional:    true,
-			Description: "(Optional) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.",
+			Description: "(Optional, Sensitive) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.",
 		},
 	}
 	maps.Copy(userSchema, baseUserSchema)

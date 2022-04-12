@@ -14,7 +14,7 @@ func resourceArtifactoryManagedUser() *schema.Resource {
 			Type:        schema.TypeString,
 			Sensitive:   true,
 			Required:    true,
-			Description: "Password for the user.",
+			Description: "(Required) Password for the user.",
 		},
 	}
 	maps.Copy(managedUserSchema, baseUserSchema)
@@ -32,7 +32,7 @@ func resourceArtifactoryManagedUser() *schema.Resource {
 
 		Schema: managedUserSchema,
 
-		Description: "Provides an Artifactory managed user resource. This can be used to create and manage Artifactory users.",
+		Description: "Provides an Artifactory managed user resource. This can be used to create and manage Artifactory users. For example, service account where password is known and managed externally.",
 	}
 }
 

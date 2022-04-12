@@ -21,7 +21,7 @@ func resourceArtifactoryAnonymousUser() *schema.Resource {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			Description:  "Username for anonymous user. This should not be set in the HCL, or change after importing into Terraform state.",
+			Description:  "(Optional) Username for anonymous user. This should not be set in the HCL, or change after importing into Terraform state.",
 		},
 	}
 

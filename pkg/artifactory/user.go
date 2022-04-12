@@ -43,13 +43,13 @@ var baseUserSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "When enabled, this user is an administrator with all the ensuing privileges.",
+		Description: "(Optional, Default: false) When enabled, this user is an administrator with all the ensuing privileges.",
 	},
 	"profile_updatable": {
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
-		Description: "When enabled, this user can update their profile details (except for the password. " +
+		Description: "(Optional, Default: false) When enabled, this user can update their profile details (except for the password. " +
 			"Only an administrator can update the password). There may be cases in which you want to leave " +
 			"this unset to prevent users from updating their profile. For example, a departmental user with " +
 			"a single password shared between all department members.",
@@ -58,14 +58,14 @@ var baseUserSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
-		Description: "When enabled, this user can only access the system through the REST API." +
+		Description: "(Optional, Default: false) When enabled, this user can only access the system through the REST API." +
 			" This option cannot be set if the user has Admin privileges.",
 	},
 	"internal_password_disabled": {
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  false,
-		Description: "When enabled, disables the fallback mechanism for using an internal password when " +
+		Description: "(Optional, Default: false) When enabled, disables the fallback mechanism for using an internal password when " +
 			"external authentication (such as LDAP) is enabled.",
 	},
 	"groups": {
@@ -73,7 +73,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Set:         schema.HashString,
 		Optional:    true,
-		Description: "List of groups this user is a part of.",
+		Description: "(Optional) List of groups this user is a part of.",
 	},
 }
 
