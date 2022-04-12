@@ -1,4 +1,4 @@
-## Latest version of the provider was tested on Artifactory 8.888.8 ##
+## Latest version of the provider was tested on Artifactory 
 
 
 
