@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const replicationEndpoint = "artifactory/api/replications/"
-
 func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceSingleReplicationConfigCreate,
@@ -86,7 +84,7 @@ func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) 
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -104,7 +102,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	// an entirely different resource because values like "url" are never available after submit.
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -137,7 +135,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 
 func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}

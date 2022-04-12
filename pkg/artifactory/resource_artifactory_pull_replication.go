@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -35,6 +34,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
 	replicationConfig.URL = d.getString("url", false)
 	replicationConfig.Username = d.getString("username", false)
+	replicationConfig.Password = d.getString("password", false)
 	replicationConfig.Enabled = d.getBool("enabled", false)
 	replicationConfig.SyncDeletes = d.getBool("sync_deletes", false)
 	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
@@ -63,10 +63,11 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 
 	return nil
 }
+
 func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -86,13 +87,14 @@ type PullReplication struct {
 	ReplicationKey         string `json:"replicationKey"`
 	EnableEventReplication bool   `json:"enableEventReplication"`
 	Username               string `json:"username"`
+	Password               string `json:"password"`
 	URL                    string `json:"url"`
 }
 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -121,7 +123,7 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
