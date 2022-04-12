@@ -3,13 +3,11 @@ package artifactory
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"golang.org/x/exp/slices"
 )
 
 type GetReplicationConfig struct {
@@ -52,10 +50,11 @@ var repMultipleSchema = map[string]*schema.Schema{
 		},
 	},
 }
+
 var replicationSchema = map[string]*schema.Schema{
 	"url": {
 		Type:         schema.TypeString,
-		Required:     true,
+		Optional:     true,
 		ForceNew:     true,
 		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 	},
@@ -67,12 +66,12 @@ var replicationSchema = map[string]*schema.Schema{
 	},
 	"username": {
 		Type:     schema.TypeString,
-		Required: true,
+		Optional: true,
 	},
 	"password": {
 		Type:      schema.TypeString,
-		Required:  true,
-		// Sensitive: true,
+		Computed:  true,
+		Sensitive: true,
 		Description: "If a password is used to create the resource, it will be returned as encrypted and this will become the new state." +
 			"Practically speaking, what this means is that, the password can only be set, not gotten. ",
 	},
@@ -205,30 +204,13 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 	errors = setValue("enable_event_replication", replicationConfig.EnableEventReplication)
 
 	if replicationConfig.Replications != nil {
-
-		var rs []interface{}
-		if v, ok := d.GetOkExists("replications"); ok {
-			rs = v.([]interface{})
-		}
-
 		var replications []map[string]interface{}
 		for _, repl := range replicationConfig.Replications {
-			existingReplicationIndex := slices.IndexFunc(rs, func(r interface{}) bool {
-				return r.(map[string]interface{})["url"] == repl.URL
-			})
-			log.Printf("existingReplicationIndex: %d", existingReplicationIndex)
-			log.Printf("rs[existingReplicationIndex]: %v", rs[existingReplicationIndex])
-			existingPassword := rs[existingReplicationIndex].(map[string]interface{})["password"]
-			log.Printf("existingPassword: %s", existingPassword)
-
 			replication := make(map[string]interface{})
 
 			replication["url"] = repl.URL
 			replication["socket_timeout_millis"] = repl.SocketTimeoutMillis
 			replication["username"] = repl.Username
-			if existingPassword != nil {
-				replication["password"] = existingPassword
-			}
 			replication["enabled"] = repl.Enabled
 			replication["sync_deletes"] = repl.SyncDeletes
 			replication["sync_properties"] = repl.SyncProperties

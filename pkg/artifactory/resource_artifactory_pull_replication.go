@@ -7,7 +7,66 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var pullReplicationSchema = map[string]*schema.Schema{
+	"url": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+		Description:      "(Optional) URL for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"socket_timeout_millis": {
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+	},
+	"username": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Optional) Username for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"password": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Optional) Password for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"enabled": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_deletes": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_properties": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_statistics": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"path_prefix": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
+	},
+}
 
 func resourceArtifactoryPullReplication() *schema.Resource {
 	return &schema.Resource{
@@ -20,8 +79,8 @@ func resourceArtifactoryPullReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      mergeSchema(replicationSchemaCommon, replicationSchema),
-		Description: "Used for configuring pull replication on remote repos.",
+		Schema:      mergeSchema(replicationSchemaCommon, pullReplicationSchema),
+		Description: "Used for configuring pull replication on local or remote repos.",
 	}
 }
 
@@ -50,7 +109,7 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
 	setValue("enable_event_replication", config.EnableEventReplication)
-
+	setValue("username", config.Username)
 	setValue("enabled", config.Enabled)
 	setValue("sync_deletes", config.SyncDeletes)
 	setValue("sync_properties", config.SyncProperties)

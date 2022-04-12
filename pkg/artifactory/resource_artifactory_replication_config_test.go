@@ -52,7 +52,6 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 
 			replications {
 				url = "not a URL"
-				password = "Password1"
 				username = "%s"
 			}
 		}
@@ -83,7 +82,6 @@ func TestAccReplication_full(t *testing.T) {
 			replications {
 				url = "%s"
 				username = "%s"
-				password = "Password1"
 				proxy = "%s"
 			}
 		}
@@ -113,7 +111,6 @@ func TestAccReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.username", rtDefaultUser),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.password", "Password1"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.proxy", testProxy),
 				),
 			},

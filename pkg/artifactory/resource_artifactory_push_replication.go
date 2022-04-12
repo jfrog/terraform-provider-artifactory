@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/exp/slices"
 )
 
 type ReplicationBody struct {
@@ -55,9 +56,9 @@ var pushReplicationSchemaCommon = map[string]*schema.Schema{
 		Required: true,
 	},
 	"cron_exp": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validateCron,
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validateCron),
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
@@ -78,27 +79,29 @@ var pushRepMultipleSchema = map[string]*schema.Schema{
 
 var pushReplicationSchema = map[string]*schema.Schema{
 	"url": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 	},
 	"socket_timeout_millis": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(0),
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 	},
 	"username": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Required) Username for push replication",
 	},
 	"password": {
-		Type:      schema.TypeString,
-		Computed:  true,
-		Sensitive: true,
-		Description: "If a password is used to create the resource, it will be returned as encrypted and this will become the new state." +
-			"Practically speaking, what this means is that, the password can only be set, not gotten. ",
+		Type:             schema.TypeString,
+		Required:         true,
+		Sensitive:        true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Required) Password for push replication",
 	},
 	"enabled": {
 		Type:     schema.TypeBool,
@@ -228,20 +231,38 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 	errors = setValue("enable_event_replication", pushReplication.EnableEventReplication)
 
 	if pushReplication.Replications != nil {
+
+		// Get replications from TF state
+		var tfReplications []interface{}
+		if v, ok := d.GetOkExists("replications"); ok {
+			tfReplications = v.([]interface{})
+		}
+
 		var replications []map[string]interface{}
-		for _, repo := range pushReplication.Replications {
+		for _, repl := range pushReplication.Replications {
 			replication := make(map[string]interface{})
 
-			replication["url"] = repo.URL
-			replication["socket_timeout_millis"] = repo.SocketTimeoutMillis
-			replication["username"] = repo.Username
-			replication["password"] = repo.Password
-			replication["enabled"] = repo.Enabled
-			replication["sync_deletes"] = repo.SyncDeletes
-			replication["sync_properties"] = repo.SyncProperties
-			replication["sync_statistics"] = repo.SyncStatistics
-			replication["path_prefix"] = repo.PathPrefix
-			replication["proxy"] = repo.ProxyRef
+			replication["url"] = repl.URL
+			replication["socket_timeout_millis"] = repl.SocketTimeoutMillis
+			replication["username"] = repl.Username
+
+			// find the matching replication from current state
+			tfReplicationIndex := slices.IndexFunc(tfReplications, func(r interface{}) bool {
+				return r.(map[string]interface{})["url"] == repl.URL
+			})
+			if tfReplicationIndex != -1 {
+				// set password from current state to avoid state drift
+				// from missing password in Artifactory API response
+				existingPassword := tfReplications[tfReplicationIndex].(map[string]interface{})["password"]
+				replication["password"] = existingPassword
+			}
+
+			replication["enabled"] = repl.Enabled
+			replication["sync_deletes"] = repl.SyncDeletes
+			replication["sync_properties"] = repl.SyncProperties
+			replication["sync_statistics"] = repl.SyncStatistics
+			replication["path_prefix"] = repl.PathPrefix
+			replication["proxy"] = repl.ProxyRef
 			replications = append(replications, replication)
 		}
 
@@ -293,8 +314,6 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	// d.SetId(pushReplication.RepoKey)
 
 	return resourcePushReplicationRead(ctx, d, m)
 }
