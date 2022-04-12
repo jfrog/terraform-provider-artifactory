@@ -114,7 +114,7 @@ pipelines:
               #- >-
               #  export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
               #               --header "accept: application/json, text/plain, */*" \
-            #               --header "content-type: application/json;charset=UTF-8" \
+              #               --header "content-type: application/json;charset=UTF-8" \
             #               --header "x-requested-with: XMLHttpRequest" \
             #                -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
             #- export REFRESHTOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
@@ -180,11 +180,11 @@ pipelines:
             #- send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog1_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
           onFailure:
             - echo "Failure"
-          #            - >-
-          #              if [[ "${PR_URL}" == null ]]; then
-          #                send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
-          #              else
-          #                send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
-          #              fi
+#            - >-
+#              if [[ "${PR_URL}" == null ]]; then
+#                send_notification partnersSlack --text "${step_name} step is failed. PR was not created (already exists from this head branch?)"
+#              else
+#                send_notification partnersSlack --text "Pipeline failed on <${step_url}|${step_name}> step"
+#              fi
           onComplete:
             - echo "Cleaning up"
