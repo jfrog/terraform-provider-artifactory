@@ -15,12 +15,12 @@ func TestInvalidPushCronFails(t *testing.T) {
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
-		
+
 		resource "artifactory_push_replication" "lib-local" {
 			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
 			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
-			
+
 			replications {
 				url = "http://localhost:8080"
 				username = "%s"
@@ -44,12 +44,12 @@ func TestInvalidPushReplicationUrlFails(t *testing.T) {
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
-		
+
 		resource "artifactory_push_replication" "lib-local" {
 			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
-			
+
 			replications {
 				url = "not a URL"
 				username = "%s"
@@ -69,7 +69,13 @@ func TestInvalidPushReplicationUrlFails(t *testing.T) {
 
 func TestAccPushReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	const replicationConfigTemplate = `
+
+	params := map[string]interface{}{
+		"url":      os.Getenv("ARTIFACTORY_URL"),
+		"username": rtDefaultUser,
+		"proxy":    testProxy,
+	}
+	replicationConfig := executeTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
@@ -80,12 +86,31 @@ func TestAccPushReplication_full(t *testing.T) {
 			enable_event_replication = true
 
 			replications {
-				url = "%s"
-				username = "%s"
-				proxy = "%s"
+				url = "{{ .url }}"
+				username = "{{ .username }}"
+				proxy = "{{ .proxy }}"
 			}
 		}
-	`
+	`, params)
+
+	replicationUpdateConfig := executeTemplate("TestAccPushReplication", `
+		resource "artifactory_local_maven_repository" "lib-local" {
+			key = "lib-local"
+		}
+
+		resource "artifactory_push_replication" "lib-local" {
+			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
+			cron_exp = "0 0 * * * ?"
+			enable_event_replication = true
+
+			replications {
+				url = "{{ .url }}"
+				username = "{{ .username }}"
+				proxy = "{{ .proxy }}"
+				enabled = true
+			}
+		}
+	`, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -99,18 +124,26 @@ func TestAccPushReplication_full(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(
-					replicationConfigTemplate,
-					os.Getenv("ARTIFACTORY_URL"),
-					rtDefaultUser,
-					testProxy,
+				Config: replicationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "repo_key", "lib-local"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", rtDefaultUser),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
 				),
+			},
+			{
+				Config: replicationUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "repo_key", "lib-local"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.enabled", "true"),
 				),
 			},
 		},

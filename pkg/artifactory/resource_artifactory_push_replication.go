@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/go-resty/resty/v2"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -127,8 +125,8 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }
@@ -172,6 +170,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 			var replication updateReplicationBody
 
 			replication.RepoKey = repo
+			replication.CronExp = d.getString("cron_exp", false)
 
 			if v, ok = m["url"]; ok {
 				replication.URL = v.(string)
@@ -255,10 +254,12 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 	return nil
 }
 
+const apiPath = "artifactory/api/replications/"
+
 func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put("artifactory/api/replications/multiple/" + pushReplication.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put(apiPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -270,7 +271,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
+	_, err := c.R().SetResult(&replications).Get(apiPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -290,22 +291,22 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post("/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post(apiPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(pushReplication.RepoKey)
+	// d.SetId(pushReplication.RepoKey)
 
 	return resourcePushReplicationRead(ctx, d, m)
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete("artifactory/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().Delete(apiPath + d.Id())
 	return diag.FromErr(err)
 }
 
 func repConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head("artifactory/api/replications/" + id)
+	_, err := m.(*resty.Client).R().Head(apiPath + id)
 	return err == nil, err
 }

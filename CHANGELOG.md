@@ -8,6 +8,18 @@ FEATURES:
 
 [GH-396]
 
+## 6.1.2 (Apr 11, 2022)
+
+IMPROVEMENTS:
+
+* Documentation changes for `artifactory_keypair` resource [GH-402]
+
+## 6.1.1 (Apr 11, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_push_replication: unable to update resource after creation [GH-400]
+
 ## 6.1.0 (Apr 11, 2022)
 
 IMPROVEMENTS:
