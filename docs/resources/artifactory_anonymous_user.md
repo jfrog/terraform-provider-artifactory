@@ -7,8 +7,8 @@ Note: Anonymous user cannot be altered once imported into Terraform state.
 ## Example Usage
 
 ```hcl
-# Create a new Artifactory user called terraform
-resource "artifactory_anonymous_user" "anonymous-user" {
+# Define a new Artifactory 'anonymous' user for import
+resource "artifactory_anonymous_user" "anonymous" {
 }
 ```
 

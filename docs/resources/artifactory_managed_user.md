@@ -1,8 +1,8 @@
 # Artifactory Managed User Resource
 
-Provides an Artifactory managed user resource. This can be used to create and maintain Artifactory users.
+Provides an Artifactory managed user resource. This can be used to create and maintain Artifactory users. For example, service account where password is known and managed externally.
 
-Note: User passwords are never returned through the API. Since they are never returned they cannot be managed by directly through Terraform. However, it is possible to store a "known" state for the password and make changes if it's updated in Terraform. Removing the password argument does not reset the password; it just removes Terraform from storing the "known" state.
+Unlike `artifactory_unmanaged_user` and `artifactory_user`, the `password` attribute is required and cannot be empty.
 
 ## Example Usage
 
