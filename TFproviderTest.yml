@@ -168,11 +168,10 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog1_resourcePath}
             - git checkout -b ${res_GitHubTFProviderRepoJFrog1_headCommitRef}
             - sed -i "s/tested on Artifactory.*/tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
-            - git config --global user.name jfrogsolutioncicd
             - git status
             - git add CHANGELOG.md
             - git commit -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
-            - git push --set-upstream origin ${res_GitHubTFProviderRepoJFrog1_headCommitRef}
+            - git push --set-upstream origin https://${res_GitHubTFProviderRepoJFrog1_gitProvider_token}${TFProviderRepo}
           onSuccess:
             - echo "Success"
             #- send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog1_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
