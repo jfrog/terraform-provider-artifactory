@@ -32,7 +32,7 @@ func resourceArtifactoryUser() *schema.Resource {
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
-		Exists: resourceUserExists,
+		Exists:        resourceUserExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -86,13 +86,13 @@ func resourceArtifactoryUser() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
 				Optional:    true,
-				Description: "List of groups this user is a part of.",
+				Description: "(Optional) List of groups this user is a part of. Default is empty list.",
 			},
 			"password": {
-				Type:             schema.TypeString,
-				Sensitive:        true,
-				Optional:         true,
-				Description:      "(Optional) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.",
+				Type:        schema.TypeString,
+				Sensitive:   true,
+				Optional:    true,
+				Description: "(Optional) Password for the user. When omitted, a random password is generated according to default Artifactory password policy.",
 			},
 		},
 	}
@@ -173,6 +173,17 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	_, err := m.(*resty.Client).R().SetBody(user).Put("artifactory/api/security/users/" + user.Name)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Artifactory PUT call for creating user with groups attribute set to empty/null always sets groups to "readers".
+	// Because of this behavior, we use following POST call to update the user's groups config to empty group.
+	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
+	if user.Groups == nil {
+		user.Groups = []string{}
+		_, errGroupUpdate := m.(*resty.Client).R().SetBody(user).Post("artifactory/api/security/users/" + user.Name)
+		if errGroupUpdate != nil {
+			return diag.FromErr(errGroupUpdate)
+		}
 	}
 
 	d.SetId(user.Name)
