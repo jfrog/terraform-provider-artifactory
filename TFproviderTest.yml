@@ -3,7 +3,7 @@ resources:
     type: GitRepo
     configuration:
       gitProvider: Partnership_GitHub
-      path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc 1
+      path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
         include: tested-on-rt-version
       buildOn:
