@@ -168,6 +168,7 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog1_resourcePath}
             - git checkout -b ${res_GitHubTFProviderRepoJFrog1_headCommitRef}
             - sed -i "s/tested on Artifactory.*/tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
+            - git config --global user.name jfrogsolutioncicd
             - git status
             - git add CHANGELOG.md
             - git commit -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
