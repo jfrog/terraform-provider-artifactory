@@ -62,7 +62,7 @@ func TestAccPushReplicationInvalidUrlFails(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
-				ExpectError: regexp.MustCompile(`.*expected "replications.0.url" to have a host, got not a URL.*`),
+				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got not a URL.*`),
 			},
 		},
 	})

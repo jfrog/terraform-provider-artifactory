@@ -106,7 +106,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	return replicationConfig
 }
 
-func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
+func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
 	setValue := mkLens(d)
 
 	setValue("repo_key", config.RepoKey)
@@ -172,14 +172,14 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		return packPullReplicationBody(final[0], d)
+		return packPullReplication(final[0], d)
 	default:
 		final := PullReplication{}
 		err = json.Unmarshal(resp.Body(), &final)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		return packPullReplicationBody(final, d)
+		return packPullReplication(final, d)
 	}
 }
 

@@ -81,6 +81,26 @@ func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) 
 	return nil
 }
 
+func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
+	setValue := mkLens(d)
+
+	setValue("repo_key", config.RepoKey)
+	setValue("cron_exp", config.CronExp)
+	setValue("enable_event_replication", config.EnableEventReplication)
+	setValue("enabled", config.Enabled)
+	setValue("sync_deletes", config.SyncDeletes)
+	setValue("sync_properties", config.SyncProperties)
+
+	errors := setValue("path_prefix", config.PathPrefix)
+
+	if errors != nil && len(errors) > 0 {
+		return diag.Errorf("failed to pack replication config %q", errors)
+	}
+
+	return nil
+}
+
+
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
