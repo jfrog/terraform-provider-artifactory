@@ -1,4 +1,4 @@
-## Latest version of the provider was tested on Artifactory 
+## Latest version of the provider was tested on Artifactory 7.35.2
 
 
 
