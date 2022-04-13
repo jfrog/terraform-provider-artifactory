@@ -197,6 +197,55 @@ func TestAccUser_full(t *testing.T) {
 	})
 }
 
+func TestAccUser_NoGroups(t *testing.T) {
+	const userNoGroups = `
+		resource "artifactory_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+		}
+	`
+	id, FQRN, name := mkNames("foobar-", "artifactory_user")
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(FQRN),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(userNoGroups, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccUser_EmptyGroups(t *testing.T) {
+	const userEmptyGroups = `
+		resource "artifactory_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+			groups      		= []
+		}
+	`
+	id, FQRN, name := mkNames("foobar-", "artifactory_user")
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckUserDestroy(FQRN),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := testAccProviders["artifactory"]()

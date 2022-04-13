@@ -146,6 +146,18 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
+	// Artifactory PUT call for creating user with groups attribute set to empty/null always sets groups to "readers".
+	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
+	// Workaround: We use following POST call to update the user's groups config to empty group.
+	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
+	if user.Groups == nil {
+		user.Groups = []string{}
+		_, errGroupUpdate := m.(*resty.Client).R().SetBody(user).Post(usersEndpointPath + user.Name)
+		if errGroupUpdate != nil {
+			return diag.FromErr(errGroupUpdate)
+		}
+	}
+
 	d.SetId(user.Name)
 
 	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
