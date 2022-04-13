@@ -1,3 +1,9 @@
+## 6.1.3 (Apr 13, 2022)
+
+IMPROVEMENTS:
+
+* Resources added for Pub package type of Local Repository  [GH-409]
+
 ## 6.1.2 (Apr 11, 2022)
 
 IMPROVEMENTS:
