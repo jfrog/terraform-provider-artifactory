@@ -10,6 +10,58 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+
+func TestAccManagedUser_NoGroups(t *testing.T) {
+	const userNoGroups = `
+		resource "artifactory_managed_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+			password			= "Password1"
+		}
+	`
+	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(userNoGroups, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccManagedUser_EmptyGroups(t *testing.T) {
+	const userEmptyGroups = `
+		resource "artifactory_managed_user" "%s" {
+			name        		= "dummy_user%d"
+			email       		= "dummy%d@a.com"
+			password			= "Password1"
+			groups      		= []
+		}
+	`
+	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccManagedUser(t *testing.T) {
 	const userFull = `
 		resource "artifactory_managed_user" "%s" {
