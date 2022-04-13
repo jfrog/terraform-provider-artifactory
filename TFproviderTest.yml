@@ -159,7 +159,7 @@ pipelines:
             - export PR_URL=${res_GitHubTFProviderRepoJFrog1_commitUrl}
             - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog1_committerLogin}
             - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog1_headCommitRef}
-            - export PR_TITLE=${res_GitHubTFProviderRepoJFrog1_commitMessage}
+            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog1_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 echo "PR was not created (already exists from this head branch?). PR link is empty!"
