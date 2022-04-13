@@ -15,6 +15,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
+		RequiredWith:     []string{"username", "password"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 		Description:      "(Optional) URL for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
@@ -27,6 +28,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 	"username": {
 		Type:             schema.TypeString,
 		Optional:         true,
+		RequiredWith:     []string{"url", "password"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 		Description:      "(Optional) Username for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
@@ -34,6 +36,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
+		RequiredWith:     []string{"url", "username"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 		Description:      "(Optional) Password for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
