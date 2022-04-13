@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "3.1.3"
+      version = "6.0.2"
     }
   }
 }
@@ -126,6 +126,11 @@ resource "artifactory_local_nuget_repository" "my-nuget-local" {
 
 resource "artifactory_local_opkg_repository" "opkg-local" {
   key         = "opkg-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+resource "artifactory_local_pub_repository" "pub-local" {
+  key         = "pub-local"
   description = "Repo created by Terraform Provider Artifactory"
 }
 

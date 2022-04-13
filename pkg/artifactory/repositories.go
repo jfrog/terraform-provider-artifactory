@@ -331,6 +331,7 @@ var repoTypesLikeGeneric = []string{
 	"helm",
 	"npm",
 	"opkg",
+	"pub",
 	"puppet",
 	"pypi",
 	"vagrant",
