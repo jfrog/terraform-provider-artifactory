@@ -31,6 +31,7 @@ The following arguments are supported:
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges. Default value is `true`.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
 * `groups` - (Optional) List of groups this user is a part of.
+    - Note: If "groups" attribute is not specified then user's group membership set to empty. User will not be part of default "readers" group automatically. 
 
 ## Import
 
