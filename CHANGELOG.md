@@ -1,3 +1,5 @@
+## Latest version of the provider was tested on Artifactory 7.32.1
+
 ## 6.1.2 (Apr 11, 2022)
 
 IMPROVEMENTS:

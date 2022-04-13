@@ -139,7 +139,7 @@ pipelines:
           onComplete:
             - echo "Complete"
 
-      - name: create_pr_to_master_branch
+      - name: pr_info_add_rt_version
         type: Bash
         configuration:
           integrations:
@@ -159,11 +159,25 @@ pipelines:
             - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
             - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
             - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
-            - export PR_TITLE=${res_GitHubTFProviderRepoJFrog_commitMessage}
+            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 echo "PR was not created (already exists from this head branch?). PR link is empty!"
                 exit 1
+              fi
+            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
+            - git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
+            - sed -i "s/tested on Artifactory.*/tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
+            - git add CHANGELOG.md
+            - export REGEX="Changes to be committed*"
+            - export GIT_STATUS=$(git status)
+            - >-
+              if [[ ${GIT_STATUS} =~ ${REGEX} ]]; then
+                echo "Adding Artifactory version to CHANGELOG.md"
+                git commit -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
+                git push https://${res_GitHubTFProviderRepoJFrog_gitProvider_token}${TFProviderRepo}
+              else
+                echo "There is nothing to commit, Artifactory version didn't change since last commit"
               fi
           onSuccess:
             - echo "Success"
