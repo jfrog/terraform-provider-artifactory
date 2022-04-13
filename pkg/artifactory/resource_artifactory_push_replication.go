@@ -253,8 +253,7 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 			if tfReplicationIndex != -1 {
 				// set password from current state to avoid state drift
 				// from missing password in Artifactory API response
-				existingPassword := tfReplications[tfReplicationIndex].(map[string]interface{})["password"]
-				replication["password"] = existingPassword
+				replication["password"] = tfReplications[tfReplicationIndex].(map[string]interface{})["password"]
 			}
 
 			replication["enabled"] = repl.Enabled
