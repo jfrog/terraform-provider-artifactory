@@ -115,7 +115,7 @@ func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
 		  admin                      = false
 		  disable_ui_access          = true
 		  internal_password_disabled = true
-		  password 					 = "Password1"
+		  password 					 = "Passw0rd!"
 		}
 
 		resource "artifactory_permission_target" "{{ .perm_name }}" {
