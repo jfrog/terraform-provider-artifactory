@@ -54,40 +54,40 @@ const permissionFull = `
 	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
 	//	key 	     = "{{ .repo_name }}"
 	//}
-	
+
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
 	  name = "{{ .permission_name }}"
-	
+
 	  repo {
 		includes_pattern = ["foo/**"]
 		excludes_pattern = ["bar/**"]
 		repositories     = ["{{ .repo_name }}"]
-	
+
 		actions {
 		  users {
 			name        = "anonymous"
 			permissions = ["read", "write"]
 		  }
-	
+
 		  groups {
 			name        = "readers"
 			permissions = ["read"]
 		  }
 		}
 	  }
-	
+
 	  build {
 		includes_pattern = ["foo/**"]
 		excludes_pattern = ["bar/**"]
 		repositories     = ["artifactory-build-info"]
-	
+
 		actions {
 		  users {
 			name        = "anonymous"
 			permissions = ["read", "write"]
 		  }
-		  
-		  
+
+
 		  groups {
 			name        = "readers"
 			permissions = ["read"]
@@ -98,7 +98,7 @@ const permissionFull = `
 	}
 `
 
-func TestGitHubIssue126(test *testing.T) {
+func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
 	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
 	_, _, username := mkNames("artifactory_user", "artifactory_user")
@@ -107,7 +107,7 @@ func TestGitHubIssue126(test *testing.T) {
 		  key             = "{{ .repo_name }}"
 		  repo_layout_ref = "simple-default"
 		}
-		
+
 		resource "artifactory_user" "{{ .username }}" {
 		  name                       = "{{ .username }}"
 		  email                      = "example@example.com"
@@ -117,7 +117,7 @@ func TestGitHubIssue126(test *testing.T) {
 		  internal_password_disabled = true
 		  password 					 = "Password1"
 		}
-		
+
 		resource "artifactory_permission_target" "{{ .perm_name }}" {
 		  name = "{{ .perm_name }}"
 		  repo {
@@ -156,6 +156,7 @@ func TestGitHubIssue126(test *testing.T) {
 		},
 	})
 }
+
 func TestAccPermissionTarget_full(test *testing.T) {
 	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
 

@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -22,6 +20,27 @@ const (
 
 	PERMISSION_SCHEMA = "application/vnd.org.jfrog.artifactory.security.PermissionTargetV2+json"
 )
+
+// Using struct pointers to keep the fields null if they are empty.
+// Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
+type PermissionTargetParams struct {
+	Name          string                   `json:"name"`
+	Repo          *PermissionTargetSection `json:"repo,omitempty"`
+	Build         *PermissionTargetSection `json:"build,omitempty"`
+	ReleaseBundle *PermissionTargetSection `json:"releaseBundle,omitempty"`
+}
+
+type PermissionTargetSection struct {
+	IncludePatterns []string `json:"include-patterns,omitempty"`
+	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
+	Repositories    []string `json:"repositories"`
+	Actions         *Actions `json:"actions,omitempty"`
+}
+
+type Actions struct {
+	Users  map[string][]string `json:"users,omitempty"`
+	Groups map[string][]string `json:"groups,omitempty"`
+}
 
 func resourceArtifactoryPermissionTargets() *schema.Resource {
 	target := resourceArtifactoryPermissionTarget()
@@ -137,11 +156,11 @@ func hashPrincipal(o interface{}) int {
 	return part1 * part3
 }
 
-func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetParams {
+func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 	d := &ResourceData{s}
 
-	unpackPermission := func(rawPermissionData interface{}) *services.PermissionTargetSection {
-		unpackEntity := func(rawEntityData interface{}) *services.Actions {
+	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {
+		unpackEntity := func(rawEntityData interface{}) *Actions {
 			unpackPermMap := func(rawPermSet interface{}) map[string][]string {
 				permList := rawPermSet.(*schema.Set).List()
 				if len(permList) == 0 {
@@ -163,7 +182,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetPa
 			}
 
 			entityData := entityDataList[0].(map[string]interface{})
-			return &services.Actions{
+			return &Actions{
 				Users:  unpackPermMap(entityData["users"]),
 				Groups: unpackPermMap(entityData["groups"]),
 			}
@@ -176,7 +195,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetPa
 		// It is safe to unpack the zeroth element immediately since permission targets have min size of 1
 		permissionData := rawPermissionData.([]interface{})[0].(map[string]interface{})
 
-		permission := new(services.PermissionTargetSection)
+		permission := new(PermissionTargetSection)
 
 		// This will always exist
 		{
@@ -208,7 +227,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetPa
 		return permission
 	}
 
-	pTarget := new(services.PermissionTargetParams)
+	pTarget := new(PermissionTargetParams)
 
 	pTarget.Name = d.getString("name", false)
 
@@ -223,8 +242,8 @@ func unpackPermissionTarget(s *schema.ResourceData) *services.PermissionTargetPa
 	return pTarget
 }
 
-func packPermissionTarget(permissionTarget *services.PermissionTargetParams, d *schema.ResourceData) error {
-	packPermission := func(p *services.PermissionTargetSection) []interface{} {
+func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) error {
+	packPermission := func(p *PermissionTargetSection) []interface{} {
 		packPermMap := func(e map[string][]string) []interface{} {
 			perm := make([]interface{}, len(e))
 
@@ -303,7 +322,7 @@ func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
-	permissionTarget := new(services.PermissionTargetParams)
+	permissionTarget := new(PermissionTargetParams)
 	resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {

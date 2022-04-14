@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/jfrog/jfrog-client-go/artifactory/services"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -309,7 +308,7 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		group := services.Group{}
+		group := Group{}
 		_, err := client.R().SetResult(&group).Get(groupsEndpoint + rs.Primary.ID + "?includeUsers=true")
 		if err != nil {
 			return err
