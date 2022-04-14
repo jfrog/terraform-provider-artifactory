@@ -17,7 +17,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 
 	email := fmt.Sprintf("dummy%d@a.com", id)
-	password := "Password1"
+	password := "Passsw0rd!"
 
 	params := map[string]interface{}{
 		"name":     name,
@@ -74,7 +74,7 @@ func TestAccUser_basic(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_user" "%s" {
 			name  	= "dummy_user%d"
-			password = "Password1"
+			password = "Passsw0rd!"
 			email 	= "dummy_user%d@a.com"
 			groups  = [ "readers" ]
 		}
@@ -144,7 +144,7 @@ func TestAccUser_full(t *testing.T) {
 		resource "artifactory_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 			admin    			= true
 			profile_updatable   = true
 			disable_ui_access	= false
@@ -155,7 +155,7 @@ func TestAccUser_full(t *testing.T) {
 		resource "artifactory_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 			admin    			= false
 			profile_updatable   = false
 			groups      		= [ "readers" ]

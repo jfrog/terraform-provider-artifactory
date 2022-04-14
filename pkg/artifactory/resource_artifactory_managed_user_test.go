@@ -16,7 +16,7 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 		}
 	`
 	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
@@ -41,7 +41,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 			groups      		= []
 		}
 	`
@@ -67,7 +67,7 @@ func TestAccManagedUser(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 			admin    			= true
 			profile_updatable   = true
 			disable_ui_access	= false
@@ -78,7 +78,7 @@ func TestAccManagedUser(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "dummy_user%d"
 			email       		= "dummy%d@a.com"
-			password			= "Password1"
+			password			= "Passsw0rd!"
 			admin    			= false
 			profile_updatable   = false
 			groups      		= [ "readers" ]
