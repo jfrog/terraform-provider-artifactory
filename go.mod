@@ -9,7 +9,7 @@ require (
 	github.com/jfrog/jfrog-client-go v0.27.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/exp v0.0.0-20220328175248-053ad81199eb
+	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.3.0
 )

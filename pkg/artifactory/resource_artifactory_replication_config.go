@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/go-resty/resty/v2"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -52,6 +50,7 @@ var repMultipleSchema = map[string]*schema.Schema{
 		},
 	},
 }
+
 var replicationSchema = map[string]*schema.Schema{
 	"url": {
 		Type:         schema.TypeString,
@@ -206,19 +205,19 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 
 	if replicationConfig.Replications != nil {
 		var replications []map[string]interface{}
-		for _, repo := range replicationConfig.Replications {
+		for _, repl := range replicationConfig.Replications {
 			replication := make(map[string]interface{})
 
-			replication["url"] = repo.URL
-			replication["socket_timeout_millis"] = repo.SocketTimeoutMillis
-			replication["username"] = repo.Username
-			replication["password"] = repo.Password
-			replication["enabled"] = repo.Enabled
-			replication["sync_deletes"] = repo.SyncDeletes
-			replication["sync_properties"] = repo.SyncProperties
-			replication["sync_statistics"] = repo.SyncStatistics
-			replication["path_prefix"] = repo.PathPrefix
-			replication["proxy"] = repo.ProxyRef
+			replication["url"] = repl.URL
+			replication["socket_timeout_millis"] = repl.SocketTimeoutMillis
+			replication["username"] = repl.Username
+			replication["enabled"] = repl.Enabled
+			replication["sync_deletes"] = repl.SyncDeletes
+			replication["sync_properties"] = repl.SyncProperties
+			replication["sync_statistics"] = repl.SyncStatistics
+			replication["path_prefix"] = repl.PathPrefix
+			replication["proxy"] = repl.ProxyRef
+
 			replications = append(replications, replication)
 		}
 
@@ -231,10 +230,12 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 	return nil
 }
 
+const replicationEndpointPath = "artifactory/api/replications/"
+
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put("artifactory/api/replications/multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -246,7 +247,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get("artifactory/api/replications/" + d.Id())
+	_, err := c.R().SetResult(&replications).Get(replicationEndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -266,7 +267,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post("/api/replications/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
