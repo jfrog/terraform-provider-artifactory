@@ -1,3 +1,13 @@
+## 6.3.0 (Apr 18, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_targets: Add deprecation message
+
+NOTES:
+
+* Resource `artifactory_permission_targets` is deprecated and will be removed in next major release. Resource `artifactory_permission_target` (singular) has identical schema which will allow straightforward migration. 
+
 ## 6.2.0 (Apr 15, 2022). Tested on Artifactory 7.35.2
 
 BUG FIXES:

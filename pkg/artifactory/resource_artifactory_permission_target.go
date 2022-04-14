@@ -21,6 +21,8 @@ const (
 	PERMISSION_SCHEMA = "application/vnd.org.jfrog.artifactory.security.PermissionTargetV2+json"
 )
 
+// Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
+//
 // Using struct pointers to keep the fields null if they are empty.
 // Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
 type PermissionTargetParams struct {
@@ -44,6 +46,7 @@ type Actions struct {
 
 func resourceArtifactoryPermissionTargets() *schema.Resource {
 	target := resourceArtifactoryPermissionTarget()
+	target.DeprecationMessage = "This resource has been deprecated in favour of artifactory_permission_target resource."
 	return target
 }
 
