@@ -110,6 +110,7 @@ func TestAccReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.username", rtDefaultUser),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.proxy", testProxy),
 				),
 			},

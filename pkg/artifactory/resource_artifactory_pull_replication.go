@@ -4,11 +4,72 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var pullReplicationSchema = map[string]*schema.Schema{
+	"url": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		RequiredWith:     []string{"username", "password"},
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+		Description:      "(Optional) URL for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"socket_timeout_millis": {
+		Type:             schema.TypeInt,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+	},
+	"username": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		RequiredWith:     []string{"url", "password"},
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Optional) Username for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"password": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		RequiredWith:     []string{"url", "username"},
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "(Optional) Password for local repository replication. Required for local repository, but not needed for remote repository.",
+	},
+	"enabled": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_deletes": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_properties": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_statistics": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"path_prefix": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"proxy": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Proxy key from Artifactory Proxies setting",
+	},
+}
 
 func resourceArtifactoryPullReplication() *schema.Resource {
 	return &schema.Resource{
@@ -21,8 +82,8 @@ func resourceArtifactoryPullReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      mergeSchema(replicationSchemaCommon, replicationSchema),
-		Description: "Used for configuring pull replication on remote repos.",
+		Schema:      mergeSchema(replicationSchemaCommon, pullReplicationSchema),
+		Description: "Used for configuring pull replication on local or remote repos.",
 	}
 }
 
@@ -35,6 +96,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
 	replicationConfig.URL = d.getString("url", false)
 	replicationConfig.Username = d.getString("username", false)
+	replicationConfig.Password = d.getString("password", false)
 	replicationConfig.Enabled = d.getBool("enabled", false)
 	replicationConfig.SyncDeletes = d.getBool("sync_deletes", false)
 	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
@@ -44,13 +106,13 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	return replicationConfig
 }
 
-func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
+func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
 	setValue := mkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
 	setValue("enable_event_replication", config.EnableEventReplication)
-
+	setValue("username", config.Username)
 	setValue("enabled", config.Enabled)
 	setValue("sync_deletes", config.SyncDeletes)
 	setValue("sync_properties", config.SyncProperties)
@@ -63,10 +125,11 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 
 	return nil
 }
+
 func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -86,13 +149,14 @@ type PullReplication struct {
 	ReplicationKey         string `json:"replicationKey"`
 	EnableEventReplication bool   `json:"enableEventReplication"`
 	Username               string `json:"username"`
+	Password               string `json:"password"`
 	URL                    string `json:"url"`
 }
 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -108,20 +172,20 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		return packPullReplicationBody(final[0], d)
+		return packPullReplication(final[0], d)
 	default:
 		final := PullReplication{}
 		err = json.Unmarshal(resp.Body(), &final)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		return packPullReplicationBody(final, d)
+		return packPullReplication(final, d)
 	}
 }
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
