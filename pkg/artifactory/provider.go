@@ -57,13 +57,12 @@ func Provider() *schema.Provider {
 		"artifactory_general_security":            resourceArtifactoryGeneralSecurity(),
 		"artifactory_oauth_settings":              resourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":               resourceArtifactorySamlSettings(),
-		// Deprecated. Remove in V3
-		"artifactory_permission_targets":        resourceArtifactoryPermissionTargets(),
-		"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
-		"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
-		"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
-		"artifactory_ldap_group_setting":        resourceArtifactoryLdapGroupSetting(),
-		"artifactory_backup":                    resourceArtifactoryBackup(),
+		"artifactory_permission_targets":          resourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
+		"artifactory_replication_config":          resourceArtifactoryReplicationConfig(),
+		"artifactory_single_replication_config":   resourceArtifactorySingleReplicationConfig(),
+		"artifactory_ldap_setting":                resourceArtifactoryLdapSetting(),
+		"artifactory_ldap_group_setting":          resourceArtifactoryLdapGroupSetting(),
+		"artifactory_backup":                      resourceArtifactoryBackup(),
 	}
 
 	for _, repoType := range repoTypesLikeGeneric {
