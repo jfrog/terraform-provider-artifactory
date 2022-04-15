@@ -2,8 +2,6 @@ package artifactory
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -17,12 +15,6 @@ import (
 
 type ResourceData struct{ *schema.ResourceData }
 
-func (d *ResourceData) getStringRef(key string, onlyIfChanged bool) *string {
-	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return StringPtr(v.(string))
-	}
-	return nil
-}
 func (d *ResourceData) getString(key string, onlyIfChanged bool) string {
 	if v, ok := d.GetOk(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return v.(string)
@@ -44,13 +36,6 @@ func (d *ResourceData) getBool(key string, onlyIfChanged bool) bool {
 	return false
 }
 
-func (d *ResourceData) getIntRef(key string, onlyIfChanged bool) *int {
-	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
-		return IntPtr(v.(int))
-	}
-	return nil
-}
-
 func (d *ResourceData) getInt(key string, onlyIfChanged bool) int {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
 		return v.(int)
@@ -58,13 +43,6 @@ func (d *ResourceData) getInt(key string, onlyIfChanged bool) int {
 	return 0
 }
 
-func (d *ResourceData) getSetRef(key string) *[]string {
-	if v, ok := d.GetOkExists(key); ok {
-		arr := castToStringArr(v.(*schema.Set).List())
-		return &arr
-	}
-	return new([]string)
-}
 func (d *ResourceData) getSet(key string) []string {
 	if v, ok := d.GetOkExists(key); ok {
 		arr := castToStringArr(v.(*schema.Set).List())
@@ -78,13 +56,6 @@ func (d *ResourceData) getList(key string) []string {
 		return arr
 	}
 	return []string{}
-}
-func (d *ResourceData) getListRef(key string) *[]string {
-	if v, ok := d.GetOkExists(key); ok {
-		arr := castToStringArr(v.([]interface{}))
-		return &arr
-	}
-	return new([]string)
 }
 
 func castToStringArr(arr []interface{}) []string {
@@ -103,17 +74,6 @@ func castToInterfaceArr(arr []string) []interface{} {
 	}
 
 	return cpy
-}
-
-func getMD5Hash(o interface{}) string {
-	if len(o.(string)) == 0 { // Don't hash empty strings
-		return ""
-	}
-
-	hasher := sha256.New()
-	hasher.Write([]byte(o.(string)))
-	hasher.Write([]byte("OQ9@#9i4$c8g$4^n%PKT8hUva3CC^5"))
-	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func randomInt() int {
@@ -204,12 +164,6 @@ func sendConfigurationPatch(content []byte, m interface{}) error {
 }
 
 func BoolPtr(v bool) *bool { return &v }
-
-func IntPtr(v int) *int { return &v }
-
-func Int64Ptr(v int64) *int64 { return &v }
-
-func StringPtr(v string) *string { return &v }
 
 func formatCommaSeparatedString(thing interface{}) string {
 	fields := strings.Fields(thing.(string))
