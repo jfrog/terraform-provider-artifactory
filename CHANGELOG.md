@@ -1,4 +1,6 @@
-## 6.3.1 (Apr 18, 2022). Tested on Artifactory 7.37.13
+## 6.3.1 (Apr 18, 2022). Tested on Artifactory 7.37.1
+
+* some info
 
 
 ## 6.3.0 (Apr 18, 2022). Tested on Artifactory 7.37.13
