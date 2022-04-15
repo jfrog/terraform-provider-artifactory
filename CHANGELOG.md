@@ -7,7 +7,7 @@ IMPROVEMENTS:
 
 NOTES:
 
-* Resource `artifactory_permission_targets` is deprecated and will be removed in next major release. Resource `artifactory_permission_target` (singular) has identical schema which will allow straightforward migration.
+* Resource `artifactory_permission_targets` is deprecated and will be removed in the next major release. Resource `artifactory_permission_target` (singular) has an identical schema which will allow straightforward migration.
 
 ## 6.2.0 (Apr 15, 2022). Tested on Artifactory 7.35.2
 
