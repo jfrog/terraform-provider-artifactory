@@ -2,7 +2,10 @@
 
 IMPROVEMENTS:
 
-* Resources added for Pub package type of Local Repository  [GH-409]
+* Resources added for Pub package type of Local Repository [GH-409]
+* Resources added for Pub package type of Remote Repository [GH-409]
+* Resources added for Pub package type of Virtual Repository [GH-409]
+* Acceptance test case enhanced with Client TLS Certificate [GH-409]
 
 ## 6.4.0 (Apr 15, 2022). Tested on Artifactory 7.37.13
 
