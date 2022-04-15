@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestInvalidPushCronFails(t *testing.T) {
+func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
 	const invalidCron = `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
@@ -39,7 +39,7 @@ func TestInvalidPushCronFails(t *testing.T) {
 	})
 }
 
-func TestInvalidPushReplicationUrlFails(t *testing.T) {
+func TestAccPushReplicationInvalidUrlFails(t *testing.T) {
 	const invalidUrl = `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
@@ -53,6 +53,7 @@ func TestInvalidPushReplicationUrlFails(t *testing.T) {
 			replications {
 				url = "not a URL"
 				username = "%s"
+				password = "Password1"
 			}
 		}
 	`
@@ -61,7 +62,7 @@ func TestInvalidPushReplicationUrlFails(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
-				ExpectError: regexp.MustCompile(`.*expected "replications.0.url" to have a host, got not a URL.*`),
+				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got not a URL.*`),
 			},
 		},
 	})
@@ -88,6 +89,7 @@ func TestAccPushReplication_full(t *testing.T) {
 			replications {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
+				password = "Password1"
 				proxy = "{{ .proxy }}"
 			}
 		}
@@ -106,6 +108,7 @@ func TestAccPushReplication_full(t *testing.T) {
 			replications {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
+				password = "Password1"
 				proxy = "{{ .proxy }}"
 				enabled = true
 			}
@@ -132,6 +135,7 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", rtDefaultUser),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Password1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
 				),
 			},
@@ -142,6 +146,8 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", rtDefaultUser),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Password1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.enabled", "true"),
 				),

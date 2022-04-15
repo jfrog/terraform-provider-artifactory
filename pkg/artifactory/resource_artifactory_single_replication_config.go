@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const replicationEndpoint = "artifactory/api/replications/"
-
 func resourceArtifactorySingleReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceSingleReplicationConfigCreate,
@@ -83,10 +81,30 @@ func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) 
 	return nil
 }
 
+func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
+	setValue := mkLens(d)
+
+	setValue("repo_key", config.RepoKey)
+	setValue("cron_exp", config.CronExp)
+	setValue("enable_event_replication", config.EnableEventReplication)
+	setValue("enabled", config.Enabled)
+	setValue("sync_deletes", config.SyncDeletes)
+	setValue("sync_properties", config.SyncProperties)
+
+	errors := setValue("path_prefix", config.PathPrefix)
+
+	if errors != nil && len(errors) > 0 {
+		return diag.Errorf("failed to pack replication config %q", errors)
+	}
+
+	return nil
+}
+
+
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -104,7 +122,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	// an entirely different resource because values like "url" are never available after submit.
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(replicationEndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -137,7 +155,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 
 func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpoint + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}

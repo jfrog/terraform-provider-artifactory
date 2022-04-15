@@ -1,7 +1,7 @@
 # Artifactory Pull Replication Resource
 
 Provides an Artifactory pull replication resource. This can be used to create and manage pull replication in Artifactory
-for a remote repo.
+for a local or remote repo.
 
 ## Example Usage
 
@@ -18,10 +18,10 @@ resource "artifactory_remote_maven_repository" "provider_test_dest" {
 	password     = "bar"
 }
 
-resource "artifactory_pull_replication" "foo-rep" {
+resource "artifactory_pull_replication" "remote-rep" {
 	repo_key                 = "${artifactory_remote_maven_repository.provider_test_dest.key}"
 	cron_exp                 = "0 0 * * * ?"
-	enable_event_replication = true	
+	enable_event_replication = true
 }
 ```
 
@@ -32,6 +32,9 @@ The following arguments are supported:
 * `repo_key` - (Required)
 * `cron_exp` - (Required)
 * `enable_event_replication` - (Optional)
+* `url` - (Optional) Required for local repository, but not needed for remote repository.
+* `username` - (Optional) Required for local repository, but not needed for remote repository.
+* `password` - (Optional) Required for local repository, but not needed for remote repository.
 * `enabled` - (Optional)
 * `sync_deletes` - (Optional)
 * `sync_properties` - (Optional)

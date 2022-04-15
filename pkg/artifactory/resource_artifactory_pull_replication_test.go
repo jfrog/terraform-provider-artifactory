@@ -23,6 +23,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 			enable_event_replication = true
 			url = "%s"
 			username = "%s"
+			password = "Password1"
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -35,7 +36,8 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 		rtDefaultUser,
 	)
 }
-func TestInvalidCronPullReplication(t *testing.T) {
+
+func TestAccPullReplicationInvalidCron(t *testing.T) {
 
 	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
@@ -53,9 +55,10 @@ func TestInvalidCronPullReplication(t *testing.T) {
 	})
 }
 
-func TestAccPullReplication_full(t *testing.T) {
+func TestAccPullReplicationLocalRepo(t *testing.T) {
 	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		ProviderFactories: testAccProviders,
@@ -67,6 +70,18 @@ func TestAccPullReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "password", "Password1"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "1 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "password", "Password1"),
 				),
 			},
 		},
@@ -88,6 +103,7 @@ func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 		return nil
 	}
 }
+
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
 	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication")
 	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_maven_repository")
