@@ -547,6 +547,8 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
 	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
+	certificateAlias := "certificate" + randSeq(10)
+
 	defaultFields := map[string]interface{}{
 		"key":      name,
 		"url":      "https://registry.npmjs.org/",
@@ -580,7 +582,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"allow_any_host_auth":                     true,
 		"enable_cookie_management":                true,
 		"bypass_head_requests":                    true,
-		"client_tls_certificate":                  "",
+		"client_tls_certificate":                  certificateAlias,
 		"content_synchronisation": map[string]interface{}{
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
@@ -598,10 +600,20 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	var preCheckFunc = func() {
+		addTestCertificate(t, certificateAlias)
+		testAccPreCheck(t)
+	}
+
+	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
+		deleteTestCertificate(t, certificateAlias)
+		return checkRepo(id, request.AddRetryCondition(neverRetry))
+	}
+
 	return t, resource.TestCase{
 		ProviderFactories: testAccProviders,
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		PreCheck:          preCheckFunc,
+		CheckDestroy:      verifyDeleted(fqrn, delCertTestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

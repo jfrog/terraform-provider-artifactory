@@ -2,12 +2,14 @@ package artifactory
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"reflect"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -244,4 +246,31 @@ var deleteProxy = func(t *testing.T, proxyKey string) {
 		// Return empty yaml to clean up all proxies
 		return []byte(`proxies: ~`)
 	})
+}
+
+func addTestCertificate(t *testing.T, certificateAlias string) {
+	restyClient := getTestResty(t)
+
+	certFileBytes, err := ioutil.ReadFile("../../samples/cert.pem")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = restyClient.R().
+		SetBody(certFileBytes).
+		SetContentLength(true).
+		Post(fmt.Sprintf("%s%s", endpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func deleteTestCertificate(t *testing.T, certificateAlias string) {
+	restyClient := getTestResty(t)
+
+	_, err := restyClient.R().
+		Delete(fmt.Sprintf("%s%s", endpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
+	}
 }

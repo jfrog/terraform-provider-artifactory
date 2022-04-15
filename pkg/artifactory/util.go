@@ -116,6 +116,17 @@ func getMD5Hash(o interface{}) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func randomInt() int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(10000000)

@@ -350,6 +350,7 @@ var remoteRepoTypesLikeGeneric = []string{
 	"npm",
 	"opkg",
 	"p2",
+	"pub",
 	"puppet",
 	"rpm",
 }
@@ -361,6 +362,7 @@ var virtualRepoTypesLikeGeneric = []string{
 	"gitlfs",
 	"composer",
 	"p2",
+	"pub",
 	"puppet",
 	"pypi",
 }
