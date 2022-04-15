@@ -53,7 +53,7 @@ func TestAccPushReplicationInvalidUrlFails(t *testing.T) {
 			replications {
 				url = "not a URL"
 				username = "%s"
-				password = "Password1"
+				password = "Passw0rd!"
 			}
 		}
 	`
@@ -89,7 +89,7 @@ func TestAccPushReplication_full(t *testing.T) {
 			replications {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
-				password = "Password1"
+				password = "Passw0rd!"
 				proxy = "{{ .proxy }}"
 			}
 		}
@@ -108,7 +108,7 @@ func TestAccPushReplication_full(t *testing.T) {
 			replications {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
-				password = "Password1"
+				password = "Passw0rd!"
 				proxy = "{{ .proxy }}"
 				enabled = true
 			}
@@ -135,7 +135,7 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.url", os.Getenv("ARTIFACTORY_URL")),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", rtDefaultUser),
-					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Password1"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Passw0rd!"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
 				),
 			},
@@ -147,7 +147,7 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", rtDefaultUser),
-					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Password1"),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Passw0rd!"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.enabled", "true"),
 				),

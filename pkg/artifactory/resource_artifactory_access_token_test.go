@@ -19,7 +19,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 			email = "existinguser@a.com"
 			admin = false
 			groups = ["readers"]
-			password = "Passsw0rd!"
+			password = "Passw0rd!"
 		}
 
 		resource "artifactory_access_token" "foobar" {
@@ -49,7 +49,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 			email = "existinguser@a.com"
 			admin = false
 			groups = ["readers"]
-			password = "Passsw0rd!"
+			password = "Passw0rd!"
 		}
 
 		resource "artifactory_access_token" "foobar" {
@@ -86,7 +86,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -127,7 +127,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -164,7 +164,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -195,7 +195,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -228,7 +228,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -322,7 +322,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -354,7 +354,7 @@ resource "artifactory_user" "existinguser" {
   email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
@@ -395,7 +395,7 @@ resource "artifactory_user" "existinguser" {
     email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
-	password = "Passsw0rd!"
+	password = "Passw0rd!"
 }
 
 resource "artifactory_access_token" "foobar" {
