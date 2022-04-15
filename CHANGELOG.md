@@ -1,3 +1,14 @@
+## 6.3.0 (Apr 18, 2022). Tested on Artifactory 7.37.13
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_targets: Add deprecation message [GH-413]
+* Removed dependency on `jfrog-client-go` package [GH-413]
+
+NOTES:
+
+* Resource `artifactory_permission_targets` is deprecated and will be removed in the next major release. Resource `artifactory_permission_target` (singular) has an identical schema which will allow straightforward migration.
+
 ## 6.2.0 (Apr 15, 2022). Tested on Artifactory 7.35.2
 
 BUG FIXES:
