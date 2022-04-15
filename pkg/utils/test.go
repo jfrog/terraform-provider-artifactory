@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"text/template"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -87,6 +89,38 @@ func toHclFormat(thing interface{}) string {
 	default:
 		return fmt.Sprintf("%v", thing)
 	}
+}
+
+func ExecuteTemplate(name, temp string, fields interface{}) string {
+	var tpl bytes.Buffer
+	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
+		panic(err)
+	}
+
+	return tpl.String()
+}
+
+func MergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+	for _, schma := range schemata {
+		for k, v := range schma {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+func CopyInterfaceMap(source map[string]interface{}, target map[string]interface{}) map[string]interface{} {
+	for k, v := range source {
+		target[k] = v
+	}
+	return target
+}
+
+func MkNames(name, resource string) (int, string, string) {
+	id := RandomInt()
+	n := fmt.Sprintf("%s%d", name, id)
+	return id, fmt.Sprintf("%s.%s", resource, n), n
 }
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)

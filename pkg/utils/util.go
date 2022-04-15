@@ -1,14 +1,12 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -23,6 +21,8 @@ func (d *ResourceData) GetString(key string, onlyIfChanged bool) string {
 	}
 	return ""
 }
+
+func BoolPtr(v bool) *bool { return &v }
 
 func (d *ResourceData) GetBoolRef(key string, onlyIfChanged bool) *bool {
 	if v, ok := d.GetOkExists(key); ok && (!onlyIfChanged || d.HasChange(key)) {
@@ -91,23 +91,6 @@ func RandSelect(items ...interface{}) interface{} {
 	return items[RandomInt()%len(items)]
 }
 
-func MergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
-	result := map[string]interface{}{}
-	for _, schma := range schemata {
-		for k, v := range schma {
-			result[k] = v
-		}
-	}
-	return result
-}
-
-func CopyInterfaceMap(source map[string]interface{}, target map[string]interface{}) map[string]interface{} {
-	for k, v := range source {
-		target[k] = v
-	}
-	return target
-}
-
 func MergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schema {
 	result := map[string]*schema.Schema{}
 	for _, schma := range schemata {
@@ -116,21 +99,6 @@ func MergeSchema(schemata ...map[string]*schema.Schema) map[string]*schema.Schem
 		}
 	}
 	return result
-}
-
-func ExecuteTemplate(name, temp string, fields interface{}) string {
-	var tpl bytes.Buffer
-	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
-		panic(err)
-	}
-
-	return tpl.String()
-}
-
-func MkNames(name, resource string) (int, string, string) {
-	id := RandomInt()
-	n := fmt.Sprintf("%s%d", name, id)
-	return id, fmt.Sprintf("%s.%s", resource, n), n
 }
 
 type Lens func(key string, value interface{}) []error
@@ -163,8 +131,6 @@ func SendConfigurationPatch(content []byte, m interface{}) error {
 
 	return err
 }
-
-func BoolPtr(v bool) *bool { return &v }
 
 func FormatCommaSeparatedString(thing interface{}) string {
 	fields := strings.Fields(thing.(string))
