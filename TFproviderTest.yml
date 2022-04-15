@@ -180,7 +180,9 @@ pipelines:
                 echo "Adding Artifactory version to CHANGELOG.md"
                 git config --global user.name 'JFrog CI'
                 git config --global user.email 'jfrog-solutions-ci+1@jfrog.com'
-                git commit -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
+                git config --get user.name
+                git config --get user.email
+                git commit --author="JFrog CI <jfrog-solutions-ci+1@jfrog.com>" -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
                 git push https://${res_GitHubTFProviderRepoJFrog1_gitProvider_token}${TFProviderRepo}
               else
                 echo "There is nothing to commit, Artifactory version didn't change since last commit"
