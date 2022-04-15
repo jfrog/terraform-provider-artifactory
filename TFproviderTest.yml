@@ -171,6 +171,7 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog1_resourcePath}
             - git checkout -b ${res_GitHubTFProviderRepoJFrog1_headCommitRef}
             - sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
+            - head -10 CHANGELOG.md
             - git add CHANGELOG.md
             - export REGEX="Changes to be committed*"
             - export GIT_STATUS=$(git status)
