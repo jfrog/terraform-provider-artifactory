@@ -1,5 +1,5 @@
 resources:
-  - name: GitHubTFProviderRepoJFrog
+  - name: GitHubTFProviderRepoJFrog1
     type: GitRepo
     configuration:
       gitProvider: Partnership_GitHub
@@ -12,7 +12,7 @@ resources:
       cancelPendingRunsOn:
         pullRequestUpdate: true
 pipelines:
-  - name: tf_provider_artifactory
+  - name: tf_provider_artifactory_test
     steps:
       - name: build_and_run_tf_provider
         type: Bash
@@ -26,7 +26,7 @@ pipelines:
             - name: Partnership_GitHub
             - name: PartnershipArtifactory
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderRepoJFrog1
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.35.1
@@ -62,10 +62,10 @@ pipelines:
             - sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt install terraform && terraform -version
           onExecute:
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
+            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog1_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # since we run it on the host, we need to manually move into the resource path
+            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog1_gitRepoFullName}" | sed -e 's/.*\///g')
+            - cd ${res_GitHubTFProviderRepoJFrog1_resourcePath} # since we run it on the host, we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
@@ -96,7 +96,7 @@ pipelines:
                echo "Artifactory version: "${ARTIFACTORY_VERSION}
               fi
             - >-
-              docker run -i -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
+              docker run -i -t -d --rm -v "${res_GitHubTFProviderRepoJFrog1_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
                     -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
             - >-
@@ -149,24 +149,27 @@ pipelines:
           inputSteps:
             - name: build_and_run_tf_provider
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderRepoJFrog1
         execution:
           onStart:
             - echo "Preparing for work..."
             - echo "Create and push a new tag, associated with the lates changes on develpment branch"
+            - echo "Set GitHub username and email as jfrogsolutioncicd"
+            - git config --global user.name 'JFrog CI'
+            - git config --global user.email 'jfrog-solutions-ci+1@jfrog.com'
           onExecute:
             - printenv
-            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
-            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
-            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
-            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
+            - export PR_URL=${res_GitHubTFProviderRepoJFrog1_commitUrl}
+            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog1_committerLogin}
+            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog1_headCommitRef}
+            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog1_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 echo "PR was not created (already exists from this head branch?). PR link is empty!"
                 exit 1
               fi
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
-            - git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
+            - cd ${res_GitHubTFProviderRepoJFrog1_resourcePath}
+            - git checkout -b ${res_GitHubTFProviderRepoJFrog1_headCommitRef}
             - sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
             - git add CHANGELOG.md
             - export REGEX="Changes to be committed*"
@@ -175,13 +178,13 @@ pipelines:
               if [[ ${GIT_STATUS} =~ ${REGEX} ]]; then
                 echo "Adding Artifactory version to CHANGELOG.md"
                 git commit -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
-                git push https://${res_GitHubTFProviderRepoJFrog_gitProvider_token}${TFProviderRepo}
+                git push https://${res_GitHubTFProviderRepoJFrog1_gitProvider_token}${TFProviderRepo}
               else
                 echo "There is nothing to commit, Artifactory version didn't change since last commit"
               fi
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog1_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
           onFailure:
             - >-
               if [[ "${PR_URL}" == null ]]; then
