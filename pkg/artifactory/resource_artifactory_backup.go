@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"context"
-	"gopkg.in/yaml.v2"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"gopkg.in/yaml.v2"
 )
 
 type Backup struct {
@@ -43,7 +44,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		"cron_exp": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validateCron),
+			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateCron),
 			Description:      `(Required) Cron expression to control the backup frequency.`,
 		},
 		"retention_period_hours": {

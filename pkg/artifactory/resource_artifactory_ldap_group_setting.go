@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type LdapGroupSetting struct {
@@ -55,7 +56,7 @@ func resourceArtifactoryLdapGroupSetting() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(validateLdapDn),
+			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
 			Description:      `(Optional) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
 		},
 		"group_name_attribute": {
@@ -79,7 +80,7 @@ func resourceArtifactoryLdapGroupSetting() *schema.Resource {
 		"filter": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validateLdapFilter)),
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapFilter)),
 			Description:      `(Required) The LDAP filter used to search for group entries. Used for importing groups.`,
 		},
 		"description_attribute": {

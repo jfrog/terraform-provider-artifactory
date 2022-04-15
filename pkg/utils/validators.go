@@ -1,9 +1,8 @@
-package artifactory
+package utils
 
 import (
 	"fmt"
 	"net/mail"
-	"os"
 	"regexp"
 	"strings"
 
@@ -14,7 +13,7 @@ import (
 	"gopkg.in/ldap.v2"
 )
 
-func validateLowerCase(value interface{}, key string) (ws []string, es []error) {
+func ValidateLowerCase(value interface{}, key string) (ws []string, es []error) {
 	m := value.(string)
 	low := strings.ToLower(m)
 
@@ -24,7 +23,7 @@ func validateLowerCase(value interface{}, key string) (ws []string, es []error) 
 	return
 }
 
-func validateCron(value interface{}, key string) (ws []string, es []error) {
+func ValidateCron(value interface{}, key string) (ws []string, es []error) {
 	_, err := cronexpr.Parse(value.(string))
 	if err != nil {
 		return nil, []error{err}
@@ -32,7 +31,7 @@ func validateCron(value interface{}, key string) (ws []string, es []error) {
 	return nil, nil
 }
 
-var commaSeperatedList = validation.ToDiagFunc(
+var CommaSeperatedList = validation.ToDiagFunc(
 	validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"),
 )
 
@@ -475,11 +474,11 @@ var validLicenseTypes = []string{
 
 var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
 
-var projectKeyValidator = validation.ToDiagFunc(
+var ProjectKeyValidator = validation.ToDiagFunc(
 	validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{3,10}$`), "project_key must be 3 - 10 lowercase alphanumeric characters"),
 )
 
-func repoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagnostics {
+func RepoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagnostics {
 	return diag.Diagnostics{
 		diag.Diagnostic{
 			Severity: diag.Error,
@@ -489,7 +488,7 @@ func repoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagno
 	}
 }
 
-func validateIsEmail(address interface{}, _ string) ([]string, []error) {
+func ValidateIsEmail(address interface{}, _ string) ([]string, []error) {
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
 		return nil, []error{fmt.Errorf("%s is not a valid address: %s", address, err)}
@@ -497,7 +496,7 @@ func validateIsEmail(address interface{}, _ string) ([]string, []error) {
 	return nil, nil
 }
 
-func validateLdapDn(value interface{}, _ string) ([]string, []error) {
+func ValidateLdapDn(value interface{}, _ string) ([]string, []error) {
 	_, err := ldap.ParseDN(value.(string))
 	if err != nil {
 		return nil, []error{err}
@@ -505,16 +504,9 @@ func validateLdapDn(value interface{}, _ string) ([]string, []error) {
 	return nil, nil
 }
 
-func validateLdapFilter(value interface{}, _ string) ([]string, []error) {
+func ValidateLdapFilter(value interface{}, _ string) ([]string, []error) {
 	_, err := ldap.CompileFilter(value.(string))
 	if err != nil {
-		return nil, []error{err}
-	}
-	return nil, nil
-}
-
-func fileExist(value interface{}, _ string) ([]string, []error) {
-	if _, err := os.Stat(value.(string)); err != nil {
 		return nil, []error{err}
 	}
 	return nil, nil

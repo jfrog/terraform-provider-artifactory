@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type GetReplicationConfig struct {
@@ -32,7 +33,7 @@ var replicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:         schema.TypeString,
 		Required:     true,
-		ValidateFunc: validateCron,
+		ValidateFunc: utils.ValidateCron,
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,

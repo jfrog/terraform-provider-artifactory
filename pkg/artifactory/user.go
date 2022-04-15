@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type User struct {
@@ -36,7 +37,7 @@ var baseUserSchema = map[string]*schema.Schema{
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validateIsEmail),
+		ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateIsEmail),
 		Description:      "(Required) Email for user.",
 	},
 	"admin": {

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const repositoriesEndpoint = "artifactory/api/repositories/"
@@ -402,7 +403,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -442,7 +443,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
@@ -492,7 +493,7 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -556,7 +557,7 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"remote_repo_layout_ref": {
@@ -747,7 +748,7 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: commaSeperatedList,
+		ValidateDiagFunc: utils.CommaSeperatedList,
 		StateFunc:        formatCommaSeparatedString,
 		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
@@ -779,7 +780,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -823,7 +824,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {
@@ -863,7 +864,7 @@ var baseFederatedRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -902,7 +903,7 @@ var baseFederatedRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {

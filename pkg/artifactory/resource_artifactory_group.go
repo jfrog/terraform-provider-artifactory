@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const groupsEndpoint = "artifactory/api/security/groups/"
@@ -50,7 +50,7 @@ func resourceArtifactoryGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateLowerCase,
+				ValidateFunc: utils.ValidateLowerCase,
 			},
 			"realm_attributes": {
 				Type:     schema.TypeString,
