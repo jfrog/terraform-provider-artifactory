@@ -1,6 +1,6 @@
-# Artifactory User Resource
+# Artifactory Unmanaged User Resource
 
-Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
+Provides an Artifactory unmanaged user resource. This can be used to create and maintain Artifactory users.
 
 When the optional attribute `password` is omitted, a random password is generated according to current Artifactory password policy.
 
@@ -8,7 +8,7 @@ When the optional attribute `password` is omitted, a random password is generate
 
 ```hcl
 # Create a new Artifactory user called terraform
-resource "artifactory_user" "test-user" {
+resource "artifactory_unmanaged_user" "test-user" {
   name     = "terraform"
   email    = "test-user@artifactory-terraform.com"
   groups   = ["logged-in-users", "readers"]
@@ -28,12 +28,11 @@ The following arguments are supported:
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges. Default value is `true`.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
 * `groups` - (Optional) List of groups this user is a part of.
-    - Note: If "groups" attribute is not specified then user's group membership set to empty. User will not be part of default "readers" group automatically.
 
 ## Import
 
 Users can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_user.test-user myusername
+$ terraform import artifactory_unmanaged_user.test-user myusername
 ```

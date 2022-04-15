@@ -1,8 +1,29 @@
-## 6.3.0 (Apr 15, 2022)
+## 6.5.0 (Apr 15, 2022)
 
 IMPROVEMENTS:
 
 * Resources added for Pub package type of Local Repository  [GH-409]
+
+## 6.4.0 (Apr 15, 2022). Tested on Artifactory 7.37.13
+
+FEATURES:
+
+* Added new `artifactory_unmanaged_user` resource which is an alias of existing `artifactory_user`.
+* Added new `artifactory_managed_user` resource with `password` attribute being required and no automatic password generation.
+* Added new `artifactory_anonymous_user` resource which allows importing of Artifactory 'anonymous' user into Terraform state.
+
+[GH-396]
+
+## 6.3.0 (Apr 15, 2022). Tested on Artifactory 7.37.13
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_targets: Add deprecation message [GH-413]
+* Removed dependency on `jfrog-client-go` package [GH-413]
+
+NOTES:
+
+* Resource `artifactory_permission_targets` is deprecated and will be removed in the next major release. Resource `artifactory_permission_target` (singular) has an identical schema which will allow straightforward migration.
 
 ## 6.2.0 (Apr 15, 2022). Tested on Artifactory 7.35.2
 

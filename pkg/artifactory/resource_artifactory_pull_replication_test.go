@@ -23,7 +23,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 			enable_event_replication = true
 			url = "%s"
 			username = "%s"
-			password = "Password1"
+			password = "Passw0rd!"
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -71,7 +71,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
-					resource.TestCheckResourceAttr(fqrn, "password", "Password1"),
+					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 				),
 			},
 			{
@@ -81,7 +81,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "1 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
-					resource.TestCheckResourceAttr(fqrn, "password", "Password1"),
+					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 				),
 			},
 		},

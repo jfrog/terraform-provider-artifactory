@@ -48,6 +48,9 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_helm_repository":     resourceArtifactoryHelmVirtualRepository(),
 		"artifactory_group":                       resourceArtifactoryGroup(),
 		"artifactory_user":                        resourceArtifactoryUser(),
+		"artifactory_unmanaged_user":              resourceArtifactoryUser(), // alias of artifactory_user
+		"artifactory_managed_user":                resourceArtifactoryManagedUser(),
+		"artifactory_anonymous_user":              resourceArtifactoryAnonymousUser(),
 		"artifactory_permission_target":           resourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":            resourceArtifactoryPullReplication(),
 		"artifactory_push_replication":            resourceArtifactoryPushReplication(),
@@ -57,13 +60,12 @@ func Provider() *schema.Provider {
 		"artifactory_general_security":            resourceArtifactoryGeneralSecurity(),
 		"artifactory_oauth_settings":              resourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":               resourceArtifactorySamlSettings(),
-		// Deprecated. Remove in V3
-		"artifactory_permission_targets":        resourceArtifactoryPermissionTargets(),
-		"artifactory_replication_config":        resourceArtifactoryReplicationConfig(),
-		"artifactory_single_replication_config": resourceArtifactorySingleReplicationConfig(),
-		"artifactory_ldap_setting":              resourceArtifactoryLdapSetting(),
-		"artifactory_ldap_group_setting":        resourceArtifactoryLdapGroupSetting(),
-		"artifactory_backup":                    resourceArtifactoryBackup(),
+		"artifactory_permission_targets":          resourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
+		"artifactory_replication_config":          resourceArtifactoryReplicationConfig(),
+		"artifactory_single_replication_config":   resourceArtifactorySingleReplicationConfig(),
+		"artifactory_ldap_setting":                resourceArtifactoryLdapSetting(),
+		"artifactory_ldap_group_setting":          resourceArtifactoryLdapGroupSetting(),
+		"artifactory_backup":                      resourceArtifactoryBackup(),
 	}
 
 	for _, repoType := range repoTypesLikeGeneric {
