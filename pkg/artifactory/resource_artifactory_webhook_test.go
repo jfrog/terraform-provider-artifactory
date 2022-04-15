@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 var domainRepoTypeLookup = map[string]string{
@@ -75,7 +76,7 @@ func TestAccWebhookCriteriaValidation(t *testing.T) {
 }
 
 func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -94,7 +95,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		"webhookName": name,
 		"eventTypes":  domainEventTypesSupported[webhookType],
 	}
-	webhookConfig := executeTemplate("TestAccWebhookCriteriaValidation", template, params)
+	webhookConfig := utils.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -111,7 +112,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 }
 
 func TestAccWebhookEventTypesValidation(t *testing.T) {
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
 
@@ -121,7 +122,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 		"webhookName": name,
 		"eventType":   wrongEventType,
 	}
-	webhookConfig := executeTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := utils.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -160,7 +161,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 }
 
 func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -174,10 +175,10 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"webhookType": webhookType,
 		"webhookName": name,
 		"eventTypes":  eventTypes,
-		"anyLocal":    randBool(),
-		"anyRemote":   randBool(),
+		"anyLocal":    utils.RandBool(),
+		"anyRemote":   utils.RandBool(),
 	}
-	webhookConfig := executeTemplate("TestAccWebhook{{ .webhookType }}Type", `
+	webhookConfig := utils.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
 			key = "{{ .repoName }}"
 		}

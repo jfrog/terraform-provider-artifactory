@@ -2,7 +2,6 @@ package artifactory
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"math"
 	"net/http"
 	"reflect"
@@ -12,6 +11,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"gopkg.in/yaml.v2"
 )
 
 func fmtMapToHcl(fields map[string]interface{}) string {
@@ -194,7 +195,7 @@ func testAccDeleteRepo(t *testing.T, repo string) {
 
 //Usage of the function is strictly restricted to Test Cases
 func getValidRandomDefaultRepoLayoutRef() string {
-	return randSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+	return utils.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }
 
 // updateProxiesConfig is used by createProxy and deleteProxy to interact with a proxy on Artifactory
@@ -202,7 +203,7 @@ var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody fun
 	body := getProxiesBody()
 	restyClient := getTestResty(t)
 
-	err := sendConfigurationPatch(body, restyClient)
+	err := utils.SendConfigurationPatch(body, restyClient)
 	if err != nil {
 		t.Fatal(err)
 	}

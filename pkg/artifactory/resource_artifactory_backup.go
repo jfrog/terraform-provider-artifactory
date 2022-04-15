@@ -129,7 +129,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		err = sendConfigurationPatch(content, m)
+		err = utils.SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -163,7 +163,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		var clearAllBackupConfigs = `
 backups: ~
 `
-		err = sendConfigurationPatch([]byte(clearAllBackupConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(clearAllBackupConfigs), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -173,7 +173,7 @@ backups: ~
 			return diag.FromErr(err)
 		}
 
-		err = sendConfigurationPatch([]byte(restoreRestOfBackups), m)
+		err = utils.SendConfigurationPatch([]byte(restoreRestOfBackups), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -196,16 +196,16 @@ backups: ~
 }
 
 func unpackBackup(s *schema.ResourceData) Backup {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	backup := Backup{
-		Key:                    d.getString("key", false),
-		Enabled:                d.getBool("enabled", false),
-		CronExp:                d.getString("cron_exp", false),
-		RetentionPeriodHours:   d.getInt("retention_period_hours", false),
-		CreateArchive:          d.getBool("create_archive", false),
-		ExcludeNewRepositories: d.getBool("exclude_new_repositories", false),
-		SendMailOnError:        d.getBool("send_mail_on_error", false),
-		ExcludedRepositories:   d.getList("excluded_repositories"),
+		Key:                    d.GetString("key", false),
+		Enabled:                d.GetBool("enabled", false),
+		CronExp:                d.GetString("cron_exp", false),
+		RetentionPeriodHours:   d.GetInt("retention_period_hours", false),
+		CreateArchive:          d.GetBool("create_archive", false),
+		ExcludeNewRepositories: d.GetBool("exclude_new_repositories", false),
+		SendMailOnError:        d.GetBool("send_mail_on_error", false),
+		ExcludedRepositories:   d.GetList("excluded_repositories"),
 	}
 	return backup
 }

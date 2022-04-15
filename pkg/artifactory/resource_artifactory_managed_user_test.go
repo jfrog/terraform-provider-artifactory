@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 
@@ -19,7 +20,7 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 			password			= "Passsw0rd!"
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
@@ -45,7 +46,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
@@ -84,7 +85,7 @@ func TestAccManagedUser(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),

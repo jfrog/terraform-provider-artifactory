@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type VcsRemoteRepo struct {
@@ -13,7 +14,7 @@ type VcsRemoteRepo struct {
 func resourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	const packageType = "vcs"
 
-	var vcsRemoteSchema = mergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
+	var vcsRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -25,11 +26,11 @@ func resourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackVcsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := VcsRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
 			RemoteRepositoryVcsParams:  unpackVcsRemoteRepo(s),
-			MaxUniqueSnapshots:         d.getInt("max_unique_snapshots", false),
+			MaxUniqueSnapshots:         d.GetInt("max_unique_snapshots", false),
 		}
 		return repo, repo.Id(), nil
 	}

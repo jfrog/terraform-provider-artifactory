@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -72,7 +71,7 @@ func resourceGeneralSecurityUpdate(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("failed to marshal general security settings during Update")
 	}
 
-	err = sendConfigurationPatch(content, m)
+	err = utils.SendConfigurationPatch(content, m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
@@ -88,7 +87,7 @@ security:
   anonAccessEnabled: false
 `
 
-	err := sendConfigurationPatch([]byte(content), m)
+	err := utils.SendConfigurationPatch([]byte(content), m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}
@@ -97,11 +96,11 @@ security:
 }
 
 func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	security := *new(GeneralSecurity)
 
 	settings := GeneralSettings{
-		AnonAccessEnabled: d.getBool("enable_anonymous_access", false),
+		AnonAccessEnabled: d.GetBool("enable_anonymous_access", false),
 	}
 
 	security.GeneralSettings = settings
@@ -109,7 +108,7 @@ func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
 }
 
 func packGeneralSecurity(s *GeneralSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	errors := setValue("enable_anonymous_access", s.GeneralSettings.AnonAccessEnabled)
 

@@ -11,12 +11,13 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
+	_, fqrn, name := utils.MkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
 
-	key := fmt.Sprintf("debian-remote.teleport_%d", randomInt())
+	key := fmt.Sprintf("debian-remote.teleport_%d", utils.RandomInt())
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_debian_repository" "%s" {
 			key              = "%s"
@@ -406,7 +407,7 @@ func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
 }
 
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
-	_, fqrn, name := mkNames("github-remote", "artifactory_remote_generic_repository")
+	_, fqrn, name := utils.MkNames("github-remote", "artifactory_remote_generic_repository")
 	const step1 = `
 		locals {
 		  allowed_github_repos = [
@@ -456,7 +457,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate("one", step1, map[string]interface{}{
+				Config: utils.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -466,7 +467,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				),
 			},
 			{
-				Config: executeTemplate("two", step2, map[string]interface{}{
+				Config: utils.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -522,7 +523,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 			force_nuget_authentication = true
 		}
 	`
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -545,7 +546,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -562,7 +563,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"hard_fail":                      true,
 		"offline":                        true,
 		"blacked_out":                    true,
-		"xray_index":                     randBool(),
+		"xray_index":                     utils.RandBool(),
 		"store_artifacts_locally":        true,
 		"socket_timeout_millis":          25000,
 		"local_address":                  "",
@@ -585,7 +586,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 	}
-	allFields := mergeMaps(defaultFields, extraFields)
+	allFields := utils.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := fmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
@@ -612,7 +613,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 }
 
 func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -651,7 +652,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 	}
-	allFields := mergeMaps(defaultFields, extraFields)
+	allFields := utils.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := fmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
@@ -694,7 +695,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 
 		}
 	`
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -716,9 +717,9 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-basic", "artifactory_remote_cran_repository")
+	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-basic", "artifactory_remote_cran_repository")
 
-	key := fmt.Sprintf("cran-remote-%d", randomInt())
+	key := fmt.Sprintf("cran-remote-%d", utils.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
 			key              = "%s"
@@ -772,9 +773,9 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/241
 func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
+	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
 
-	key := fmt.Sprintf("docker-remote-%d", randomInt())
+	key := fmt.Sprintf("docker-remote-%d", utils.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_docker_repository" "%s" {
 			key                                   = "%s"
@@ -804,9 +805,9 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 }
 
 func TestAccRemoteProxyUpdateGH2(t *testing.T) {
-	_, fqrn, name := mkNames("terraform-remote-test-repo-proxy", "artifactory_remote_go_repository")
+	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-proxy", "artifactory_remote_go_repository")
 
-	key := fmt.Sprintf("go-remote.proxy_%d", randomInt())
+	key := fmt.Sprintf("go-remote.proxy_%d", utils.RandomInt())
 	fakeProxy := "test-proxy"
 
 	remoteRepositoryWithProxy := fmt.Sprintf(`
@@ -877,18 +878,18 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", randomInt())
-	projectEnv := randSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
+	projectEnv := utils.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
-	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
+	_, fqrn, name := utils.MkNames(repoName, "artifactory_remote_pypi_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := utils.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -924,16 +925,16 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", randomInt())
+	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
-	_, fqrn, name := mkNames(repoName, "artifactory_remote_pypi_repository")
+	_, fqrn, name := utils.MkNames(repoName, "artifactory_remote_pypi_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	remoteRepositoryBasic := executeTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := utils.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key"

@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type BowerRemoteRepo struct {
@@ -14,7 +15,7 @@ type BowerRemoteRepo struct {
 func resourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	const packageType = "bower"
 
-	var bowerRemoteSchema = mergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
+	var bowerRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
 		"bower_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -25,11 +26,11 @@ func resourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := BowerRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
 			RemoteRepositoryVcsParams:  unpackVcsRemoteRepo(s),
-			BowerRegistryUrl:           d.getString("bower_registry_url", false),
+			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
 		}
 		return repo, repo.Id(), nil
 	}

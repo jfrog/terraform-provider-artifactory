@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func skipFederatedRepo() (bool, string) {
@@ -38,7 +39,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		"member1Url":   federatedMember1Url,
 		"member2Url":   federatedMember2Url,
 	}
-	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+	federatedRepositoryConfig := utils.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
@@ -83,7 +84,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	name := fmt.Sprintf("terraform-federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
-	xrayIndex := randBool()
+	xrayIndex := utils.RandBool()
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	params := map[string]interface{}{
@@ -92,7 +93,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		"xrayIndex":    xrayIndex,
 		"memberUrl":    federatedMemberUrl,
 	}
-	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := utils.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
@@ -140,11 +141,11 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", randomInt())
-	projectEnv := randSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
+	projectEnv := utils.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := mkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := utils.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	params := map[string]interface{}{
@@ -153,7 +154,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 		"projectEnv": projectEnv,
 		"memberUrl":  federatedMemberUrl,
 	}
-	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := utils.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
 			key                  = "{{ .name }}"
 			project_key          = "{{ .projectKey }}"
@@ -194,10 +195,10 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 
 func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", randomInt())
+	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := mkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := utils.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
 
 	params := map[string]interface{}{
@@ -205,7 +206,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"memberUrl":  federatedMemberUrl,
 	}
-	federatedRepositoryConfig := executeTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := utils.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
 			key         = "{{ .name }}"
 		 	project_key = "invalid-project-key"

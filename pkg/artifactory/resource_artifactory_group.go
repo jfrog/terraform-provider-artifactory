@@ -88,19 +88,19 @@ func resourceArtifactoryGroup() *schema.Resource {
 }
 
 func groupParams(s *schema.ResourceData) (Group, bool, error) {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 
 	group := Group{
-		Name:            d.getString("name", false),
-		Description:     d.getString("description", false),
-		AutoJoin:        d.getBool("auto_join", false),
-		AdminPrivileges: d.getBool("admin_privileges", false),
-		Realm:           d.getString("realm", false),
-		RealmAttributes: d.getString("realm_attributes", false),
-		UsersNames:      d.getSet("users_names"),
-		WatchManager:    d.getBool("watch_manager", false),
-		PolicyManager:   d.getBool("policy_manager", false),
-		ReportsManager:  d.getBool("reports_manager", false),
+		Name:            d.GetString("name", false),
+		Description:     d.GetString("description", false),
+		AutoJoin:        d.GetBool("auto_join", false),
+		AdminPrivileges: d.GetBool("admin_privileges", false),
+		Realm:           d.GetString("realm", false),
+		RealmAttributes: d.GetString("realm_attributes", false),
+		UsersNames:      d.GetSet("users_names"),
+		WatchManager:    d.GetBool("watch_manager", false),
+		PolicyManager:   d.GetBool("policy_manager", false),
+		ReportsManager:  d.GetBool("reports_manager", false),
 	}
 
 	// Validator
@@ -114,7 +114,7 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	// so it also changes the update from put to post to prevent detaching all existing users
 	// without an explict instruction
 
-	includeUsers := len(group.UsersNames) > 0 || d.getBool("detach_all_users", false)
+	includeUsers := len(group.UsersNames) > 0 || d.GetBool("detach_all_users", false)
 	return group, includeUsers, nil
 }
 
@@ -168,7 +168,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 	setValue("name", group.Name)
 	setValue("description", group.Description)
 	setValue("auto_join", group.AutoJoin)
@@ -178,7 +178,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	setValue("watch_manager", group.WatchManager)
 	setValue("policy_manager", group.PolicyManager)
 	setValue("reports_manager", group.ReportsManager)
-	errors := setValue("users_names", schema.NewSet(schema.HashString, castToInterfaceArr(group.UsersNames)))
+	errors := setValue("users_names", schema.NewSet(schema.HashString, utils.CastToInterfaceArr(group.UsersNames)))
 	if errors != nil && len(errors) > 0 {
 		return fmt.Errorf("failed saving state for groups %q", errors)
 	}

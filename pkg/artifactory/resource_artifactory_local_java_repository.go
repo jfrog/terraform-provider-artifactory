@@ -3,11 +3,12 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 
-	var javaLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var javaLocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"checksum_policy_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -70,15 +71,15 @@ func resourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 	}
 
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := JavaLocalRepositoryParams{
 			LocalRepositoryBaseParams:    unpackBaseRepo("local", data, repoType),
-			ChecksumPolicyType:           d.getString("checksum_policy_type", false),
-			SnapshotVersionBehavior:      d.getString("snapshot_version_behavior", false),
-			MaxUniqueSnapshots:           d.getInt("max_unique_snapshots", false),
-			HandleReleases:               d.getBool("handle_releases", false),
-			HandleSnapshots:              d.getBool("handle_snapshots", false),
-			SuppressPomConsistencyChecks: d.getBool("suppress_pom_consistency_checks", false),
+			ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
+			SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
+			MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
+			HandleReleases:               d.GetBool("handle_releases", false),
+			HandleSnapshots:              d.GetBool("handle_snapshots", false),
+			SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
 		}
 
 		return repo, repo.Id(), nil

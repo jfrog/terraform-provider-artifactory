@@ -2,13 +2,14 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryHelmVirtualRepository() *schema.Resource {
 
 	const packageType = "helm"
 
-	helmVirtualSchema := mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	helmVirtualSchema := utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"use_namespaces": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -23,10 +24,10 @@ func resourceArtifactoryHelmVirtualRepository() *schema.Resource {
 	}
 
 	unpackHelmVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{data}
+		d := &utils.ResourceData{data}
 		repo := HelmVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: unpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
-			UseNamespaces: d.getBool("use_namespaces", false),
+			UseNamespaces: d.GetBool("use_namespaces", false),
 		}
 
 		return repo, repo.Id(), nil

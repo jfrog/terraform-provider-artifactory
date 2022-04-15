@@ -140,7 +140,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 			return diag.Errorf("failed to marshal ldap group settings during Update")
 		}
 
-		err = sendConfigurationPatch(content, m)
+		err = utils.SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -183,7 +183,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 security:
   ldapGroupSettings: ~
 `
-		err = sendConfigurationPatch([]byte(clearAllLdapGroupSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(clearAllLdapGroupSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all Ldap Group Settings")
 		}
@@ -193,7 +193,7 @@ security:
 			return diag.Errorf("failed to marshal ldap group settings during Update")
 		}
 
-		err = sendConfigurationPatch([]byte(restoreRestOfLdapGroupSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(restoreRestOfLdapGroupSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Group Settings")
 		}
@@ -216,17 +216,17 @@ security:
 }
 
 func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	ldapGroupSetting := LdapGroupSetting{
-		Name:                 d.getString("name", false),
-		EnabledLdap:          d.getString("ldap_setting_key", false),
-		GroupBaseDn:          d.getString("group_base_dn", false),
-		GroupNameAttribute:   d.getString("group_name_attribute", false),
-		GroupMemberAttribute: d.getString("group_member_attribute", false),
-		SubTree:              d.getBool("sub_tree", false),
-		Filter:               d.getString("filter", false),
-		DescriptionAttribute: d.getString("description_attribute", false),
-		Strategy:             d.getString("strategy", false),
+		Name:                 d.GetString("name", false),
+		EnabledLdap:          d.GetString("ldap_setting_key", false),
+		GroupBaseDn:          d.GetString("group_base_dn", false),
+		GroupNameAttribute:   d.GetString("group_name_attribute", false),
+		GroupMemberAttribute: d.GetString("group_member_attribute", false),
+		SubTree:              d.GetBool("sub_tree", false),
+		Filter:               d.GetString("filter", false),
+		DescriptionAttribute: d.GetString("description_attribute", false),
+		Strategy:             d.GetString("strategy", false),
 	}
 	return ldapGroupSetting
 }

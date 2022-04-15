@@ -79,22 +79,22 @@ var baseUserSchema = map[string]*schema.Schema{
 }
 
 func unpackUser(s *schema.ResourceData) User {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	return User{
-		Name:                     d.getString("name", false),
-		Email:                    d.getString("email", false),
-		Password:                 d.getString("password", false),
-		Admin:                    d.getBool("admin", false),
-		ProfileUpdatable:         d.getBool("profile_updatable", false),
-		DisableUIAccess:          d.getBool("disable_ui_access", false),
-		InternalPasswordDisabled: d.getBool("internal_password_disabled", false),
-		Groups:                   d.getSet("groups"),
+		Name:                     d.GetString("name", false),
+		Email:                    d.GetString("email", false),
+		Password:                 d.GetString("password", false),
+		Admin:                    d.GetBool("admin", false),
+		ProfileUpdatable:         d.GetBool("profile_updatable", false),
+		DisableUIAccess:          d.GetBool("disable_ui_access", false),
+		InternalPasswordDisabled: d.GetBool("internal_password_disabled", false),
+		Groups:                   d.GetSet("groups"),
 	}
 }
 
 func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("name", user.Name)
 	setValue("email", user.Email)
@@ -104,7 +104,7 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		errors = setValue("groups", schema.NewSet(schema.HashString, castToInterfaceArr(user.Groups)))
+		errors = setValue("groups", schema.NewSet(schema.HashString, utils.CastToInterfaceArr(user.Groups)))
 	}
 
 	if errors != nil && len(errors) > 0 {
@@ -117,7 +117,7 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 const usersEndpointPath = "artifactory/api/security/users/"
 
 func resourceUserRead(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-	d := &ResourceData{rd}
+	d := &utils.ResourceData{rd}
 
 	userName := d.Id()
 	user := &User{}
@@ -197,8 +197,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceUserDelete(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-	d := &ResourceData{rd}
-	userName := d.getString("name", false)
+	d := &utils.ResourceData{rd}
+	userName := d.GetString("name", false)
 
 	_, err := m.(*resty.Client).R().Delete(usersEndpointPath + userName)
 	if err != nil {
@@ -211,7 +211,7 @@ func resourceUserDelete(ctx context.Context, rd *schema.ResourceData, m interfac
 }
 
 func resourceUserExists(data *schema.ResourceData, m interface{}) (bool, error) {
-	d := &ResourceData{data}
+	d := &utils.ResourceData{data}
 	name := d.Id()
 
 	resp, err := m.(*resty.Client).R().Head(usersEndpointPath + name)

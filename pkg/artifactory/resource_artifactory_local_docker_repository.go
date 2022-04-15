@@ -3,13 +3,14 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV2LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var dockerV2LocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -42,13 +43,13 @@ func resourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	packer := defaultPacker(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
-			MaxUniqueTags:             d.getInt("max_unique_tags", false),
+			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
 			DockerApiVersion:          "V2",
-			TagRetention:              d.getInt("tag_retention", false),
-			BlockPushingSchema1:       d.getBool("block_pushing_schema1", false),
+			TagRetention:              d.GetInt("tag_retention", false),
+			BlockPushingSchema1:       d.GetBool("block_pushing_schema1", false),
 		}
 
 		return repo, repo.Id(), nil
@@ -72,7 +73,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV1LocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var dockerV1LocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -93,7 +94,7 @@ func resourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	}, repoLayoutRefSchema("local", packageType))
 
 	// this is necessary because of the pointers
-	skeema := mergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
+	skeema := utils.MergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{

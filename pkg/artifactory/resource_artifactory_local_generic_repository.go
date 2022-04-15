@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalGenericRepository(pkt string) *schema.Resource {
@@ -15,6 +16,6 @@ func resourceArtifactoryLocalGenericRepository(pkt string) *schema.Resource {
 		repo := unpackBaseRepo("local", data, pkt)
 		return repo, repo.Id(), nil
 	}
-	mergedLocalRepoSchema := mergeSchema(baseLocalRepoSchema, repoLayoutRefSchema("local", pkt))
+	mergedLocalRepoSchema := utils.MergeSchema(baseLocalRepoSchema, repoLayoutRefSchema("local", pkt))
 	return mkResourceSchema(mergedLocalRepoSchema, defaultPacker(mergedLocalRepoSchema), unpack, constructor)
 }

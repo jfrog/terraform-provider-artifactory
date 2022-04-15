@@ -118,17 +118,17 @@ func resourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: mergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: utils.MergeSchema(replicationSchemaCommon, repMultipleSchema),
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
 			"artifactory_push_replication resource.",
 	}
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	replicationConfig := new(UpdateReplicationConfig)
 
-	repo := d.getString("repo_key", false)
+	repo := d.GetString("repo_key", false)
 
 	if v, ok := d.GetOkExists("replications"); ok {
 		arr := v.([]interface{})
@@ -139,8 +139,8 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 		for i, o := range arr {
 			if i == 0 {
 				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.getString("cron_exp", false)
-				replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
+				replicationConfig.CronExp = d.GetString("cron_exp", false)
+				replicationConfig.EnableEventReplication = d.GetBool("enable_event_replication", false)
 			}
 
 			m := o.(map[string]interface{})
@@ -198,7 +198,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 
 func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("repo_key", replicationConfig.RepoKey)
 	setValue("cron_exp", replicationConfig.CronExp)

@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const endpoint = "artifactory/api/system/security/certificates/"
@@ -195,7 +195,7 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if cert != nil {
-		setValue := mkLens(d)
+		setValue := utils.MkLens(d)
 
 		setValue("alias", (*cert).CertificateAlias)
 		setValue("fingerprint", (*cert).FingerPrint)

@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type NugetRemoteRepo struct {
@@ -16,7 +17,7 @@ type NugetRemoteRepo struct {
 func resourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	const packageType = "nuget"
 
-	var nugetRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
+	var nugetRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"feed_context_path": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -46,13 +47,13 @@ func resourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := NugetRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
-			FeedContextPath:            d.getString("feed_context_path", false),
-			DownloadContextPath:        d.getString("download_context_path", false),
-			V3FeedUrl:                  d.getString("v3_feed_url", false),
-			ForceNugetAuthentication:   d.getBool("force_nuget_authentication", false),
+			FeedContextPath:            d.GetString("feed_context_path", false),
+			DownloadContextPath:        d.GetString("download_context_path", false),
+			V3FeedUrl:                  d.GetString("v3_feed_url", false),
+			ForceNugetAuthentication:   d.GetBool("force_nuget_authentication", false),
 		}
 		return repo, repo.Id(), nil
 	}

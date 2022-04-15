@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 var pullReplicationSchema = map[string]*schema.Schema{
@@ -82,32 +83,32 @@ func resourceArtifactoryPullReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      mergeSchema(replicationSchemaCommon, pullReplicationSchema),
+		Schema:      utils.MergeSchema(replicationSchemaCommon, pullReplicationSchema),
 		Description: "Used for configuring pull replication on local or remote repos.",
 	}
 }
 
 func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	replicationConfig := new(ReplicationBody)
 
-	replicationConfig.RepoKey = d.getString("repo_key", false)
-	replicationConfig.CronExp = d.getString("cron_exp", false)
-	replicationConfig.EnableEventReplication = d.getBool("enable_event_replication", false)
-	replicationConfig.URL = d.getString("url", false)
-	replicationConfig.Username = d.getString("username", false)
-	replicationConfig.Password = d.getString("password", false)
-	replicationConfig.Enabled = d.getBool("enabled", false)
-	replicationConfig.SyncDeletes = d.getBool("sync_deletes", false)
-	replicationConfig.SyncProperties = d.getBool("sync_properties", false)
-	replicationConfig.SyncStatistics = d.getBool("sync_statistics", false)
-	replicationConfig.PathPrefix = d.getString("path_prefix", false)
+	replicationConfig.RepoKey = d.GetString("repo_key", false)
+	replicationConfig.CronExp = d.GetString("cron_exp", false)
+	replicationConfig.EnableEventReplication = d.GetBool("enable_event_replication", false)
+	replicationConfig.URL = d.GetString("url", false)
+	replicationConfig.Username = d.GetString("username", false)
+	replicationConfig.Password = d.GetString("password", false)
+	replicationConfig.Enabled = d.GetBool("enabled", false)
+	replicationConfig.SyncDeletes = d.GetBool("sync_deletes", false)
+	replicationConfig.SyncProperties = d.GetBool("sync_properties", false)
+	replicationConfig.SyncStatistics = d.GetBool("sync_statistics", false)
+	replicationConfig.PathPrefix = d.GetString("path_prefix", false)
 
 	return replicationConfig
 }
 
 func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)

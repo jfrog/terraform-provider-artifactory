@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type ApiKey struct {
@@ -37,7 +37,7 @@ func resourceArtifactoryApiKey() *schema.Resource {
 
 func packApiKey(apiKey string, d *schema.ResourceData) error {
 
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	errors := setValue("api_key", apiKey)
 

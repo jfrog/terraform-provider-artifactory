@@ -164,7 +164,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 
 		packer := universalPack(
 			allHclPredicate(
-				ignoreHclPredicate("class", "rclass", "manager_password"), schemaHasKey(ldapSettingsSchema),
+				ignoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 
@@ -190,7 +190,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = sendConfigurationPatch(content, m)
+		err = utils.SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -233,7 +233,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 security:
   ldapSettings: ~
 `
-		err = sendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all Ldap Settings")
 		}
@@ -243,7 +243,7 @@ security:
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = sendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Settings")
 		}
@@ -266,23 +266,23 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	ldapSetting := LdapSetting{
-		Key:                      d.getString("key", false),
-		Enabled:                  d.getBool("enabled", false),
-		LdapUrl:                  d.getString("ldap_url", false),
-		AutoCreateUser:           d.getBool("auto_create_user", false),
-		LdapPoisoningProtection:  d.getBool("ldap_poisoning_protection", false),
-		PagingSupportEnabled:     d.getBool("paging_support_enabled", false),
-		AllowUserToAccessProfile: d.getBool("allow_user_to_access_profile", false),
-		UserDnPattern:            d.getString("user_dn_pattern", false),
-		EmailAttribute:           d.getString("email_attribute", false),
+		Key:                      d.GetString("key", false),
+		Enabled:                  d.GetBool("enabled", false),
+		LdapUrl:                  d.GetString("ldap_url", false),
+		AutoCreateUser:           d.GetBool("auto_create_user", false),
+		LdapPoisoningProtection:  d.GetBool("ldap_poisoning_protection", false),
+		PagingSupportEnabled:     d.GetBool("paging_support_enabled", false),
+		AllowUserToAccessProfile: d.GetBool("allow_user_to_access_profile", false),
+		UserDnPattern:            d.GetString("user_dn_pattern", false),
+		EmailAttribute:           d.GetString("email_attribute", false),
 		Search: LdapSearchType{
-			SearchSubTree:   d.getBool("search_sub_tree", false),
-			SearchBase:      d.getString("search_base", false),
-			SearchFilter:    d.getString("search_filter", false),
-			ManagerDn:       d.getString("manager_dn", false),
-			ManagerPassword: d.getString("manager_password", true),
+			SearchSubTree:   d.GetBool("search_sub_tree", false),
+			SearchBase:      d.GetString("search_base", false),
+			SearchFilter:    d.GetString("search_filter", false),
+			ManagerDn:       d.GetString("manager_dn", false),
+			ManagerPassword: d.GetString("manager_password", true),
 		},
 	}
 	return ldapSetting

@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type DockerRemoteRepository struct {
@@ -15,7 +16,7 @@ type DockerRemoteRepository struct {
 func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	const packageType = "docker"
 
-	var dockerRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
+	var dockerRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -48,13 +49,13 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := DockerRemoteRepository{
 			RemoteRepositoryBaseParams:   unpackBaseRemoteRepo(s, packageType),
-			EnableTokenAuthentication:    d.getBool("enable_token_authentication", false),
-			ExternalDependenciesEnabled:  d.getBool("external_dependencies_enabled", false),
-			BlockPushingSchema1:          d.getBool("block_pushing_schema1", false),
-			ExternalDependenciesPatterns: d.getList("external_dependencies_patterns"),
+			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
+			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
+			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
+			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 		}
 		if len(repo.ExternalDependenciesPatterns) == 0 {
 			repo.ExternalDependenciesPatterns = []string{"**"}
@@ -65,7 +66,7 @@ func resourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
 	dockerRemoteRepoPacker := universalPack(
 		allHclPredicate(
-			schemaHasKey(dockerRemoteSchema),
+			utils.SchemaHasKey(dockerRemoteSchema),
 			noPassword,
 			ignoreHclPredicate("external_dependencies_patterns"),
 		),

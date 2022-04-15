@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
@@ -76,7 +77,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		"username": rtDefaultUser,
 		"proxy":    testProxy,
 	}
-	replicationConfig := executeTemplate("TestAccPushReplication", `
+	replicationConfig := utils.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
@@ -95,7 +96,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := executeTemplate("TestAccPushReplication", `
+	replicationUpdateConfig := utils.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}

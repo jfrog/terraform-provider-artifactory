@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -157,7 +157,7 @@ func resourceSamlSettingsUpdate(ctx context.Context, d *schema.ResourceData, m i
 		return diag.Errorf("failed to marshal saml settings during Update")
 	}
 
-	err = sendConfigurationPatch(content, m)
+	err = utils.SendConfigurationPatch(content, m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
@@ -173,7 +173,7 @@ security:
   samlSettings: ~
 `
 
-	err := sendConfigurationPatch([]byte(content), m)
+	err := utils.SendConfigurationPatch([]byte(content), m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}
@@ -182,23 +182,23 @@ security:
 }
 
 func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	security := *new(SamlSecurity)
 
 	settings := SamlSettings{
-		EnableIntegration:         d.getBool("enable", false),
-		Certificate:               d.getString("certificate", false),
-		EmailAttribute:            d.getString("email_attribute", false),
-		GroupAttribute:            d.getString("group_attribute", false),
-		LoginUrl:                  d.getString("login_url", false),
-		LogoutUrl:                 d.getString("logout_url", false),
-		NoAutoUserCreation:        d.getBool("no_auto_user_creation", false),
-		ServiceProviderName:       d.getString("service_provider_name", false),
-		AllowUserToAccessProfile:  d.getBool("allow_user_to_access_profile", false),
-		AutoRedirect:              d.getBool("auto_redirect", false),
-		SyncGroups:                d.getBool("sync_groups", false),
-		VerifyAudienceRestriction: d.getBool("verify_audience_restriction", false),
-		UseEncryptedAssertion:     d.getBool("use_encrypted_assertion", false),
+		EnableIntegration:         d.GetBool("enable", false),
+		Certificate:               d.GetString("certificate", false),
+		EmailAttribute:            d.GetString("email_attribute", false),
+		GroupAttribute:            d.GetString("group_attribute", false),
+		LoginUrl:                  d.GetString("login_url", false),
+		LogoutUrl:                 d.GetString("logout_url", false),
+		NoAutoUserCreation:        d.GetBool("no_auto_user_creation", false),
+		ServiceProviderName:       d.GetString("service_provider_name", false),
+		AllowUserToAccessProfile:  d.GetBool("allow_user_to_access_profile", false),
+		AutoRedirect:              d.GetBool("auto_redirect", false),
+		SyncGroups:                d.GetBool("sync_groups", false),
+		VerifyAudienceRestriction: d.GetBool("verify_audience_restriction", false),
+		UseEncryptedAssertion:     d.GetBool("use_encrypted_assertion", false),
 	}
 
 	security.Saml.Settings = settings
@@ -206,7 +206,7 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 }
 
 func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("enable", s.Saml.Settings.EnableIntegration)
 	setValue("certificate", s.Saml.Settings.Certificate)

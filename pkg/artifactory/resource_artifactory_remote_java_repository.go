@@ -3,10 +3,11 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	var javaRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
+	var javaRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"fetch_jars_eagerly": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -69,16 +70,16 @@ func resourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 	}
 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{data}
+		d := &utils.ResourceData{data}
 		repo := JavaRemoteRepo{
 			RemoteRepositoryBaseParams:   unpackBaseRemoteRepo(data, repoType),
-			FetchJarsEagerly:             d.getBool("fetch_jars_eagerly", false),
-			FetchSourcesEagerly:          d.getBool("fetch_sources_eagerly", false),
-			RemoteRepoChecksumPolicyType: d.getString("remote_repo_checksum_policy_type", false),
-			HandleReleases:               d.getBool("handle_releases", false),
-			HandleSnapshots:              d.getBool("handle_snapshots", false),
-			SuppressPomConsistencyChecks: d.getBool("suppress_pom_consistency_checks", false),
-			RejectInvalidJars:            d.getBool("reject_invalid_jars", false),
+			FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),
+			FetchSourcesEagerly:          d.GetBool("fetch_sources_eagerly", false),
+			RemoteRepoChecksumPolicyType: d.GetString("remote_repo_checksum_policy_type", false),
+			HandleReleases:               d.GetBool("handle_releases", false),
+			HandleSnapshots:              d.GetBool("handle_snapshots", false),
+			SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
+			RejectInvalidJars:            d.GetBool("reject_invalid_jars", false),
 		}
 		return repo, repo.Id(), nil
 	}

@@ -9,16 +9,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	_, rfqn, groupName := mkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := utils.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := executeTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := utils.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -36,7 +37,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_full(t *testing.T) {
-	_, rfqn, groupName := mkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := utils.MkNames("test-group-full", "artifactory_group")
 
 	templates := []string{
 		`
@@ -120,7 +121,7 @@ func TestAccGroup_full(t *testing.T) {
 
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, executeTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+		configs = append(configs, utils.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
 	}
 
@@ -199,7 +200,7 @@ func TestAccGroup_full(t *testing.T) {
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, rfqn, groupName := mkNames("test-group-unmanagedmembers", "artifactory_group")
+	_, rfqn, groupName := utils.MkNames("test-group-unmanagedmembers", "artifactory_group")
 
 	templates := []string{
 		`
@@ -237,7 +238,7 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	}
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, executeTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+		configs = append(configs, utils.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
 	}
 	resource.Test(t, resource.TestCase{

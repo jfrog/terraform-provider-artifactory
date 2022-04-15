@@ -3,13 +3,14 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryBowerVirtualRepository() *schema.Resource {
 
 	const packageType = "bower"
 
-	var bowerVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var bowerVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Default:     false,
@@ -44,13 +45,13 @@ func resourceArtifactoryBowerVirtualRepository() *schema.Resource {
 	}
 
 	var unpackBowerVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := BowerVirtualRepositoryParams{
 			VirtualRepositoryBaseParams:    unpackBaseVirtRepo(s, packageType),
-			ExternalDependenciesEnabled:    d.getBool("external_dependencies_enabled", false),
-			ExternalDependenciesRemoteRepo: d.getString("external_dependencies_remote_repo", false),
-			ExternalDependenciesPatterns:   d.getList("external_dependencies_patterns"),
+			ExternalDependenciesEnabled:    d.GetBool("external_dependencies_enabled", false),
+			ExternalDependenciesRemoteRepo: d.GetString("external_dependencies_remote_repo", false),
+			ExternalDependenciesPatterns:   d.GetList("external_dependencies_patterns"),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

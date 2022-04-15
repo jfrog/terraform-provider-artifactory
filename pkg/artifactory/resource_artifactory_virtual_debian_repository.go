@@ -1,16 +1,18 @@
 package artifactory
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"regexp"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
 
 	const packageType = "debian"
 
-	var debianVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var debianVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -39,7 +41,7 @@ func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "amd64,i386",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-			StateFunc:        formatCommaSeparatedString,
+			StateFunc:        utils.FormatCommaSeparatedString,
 			Description:      `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
 	}, repoLayoutRefSchema("virtual", packageType))
@@ -53,14 +55,14 @@ func resourceArtifactoryDebianVirtualRepository() *schema.Resource {
 	}
 
 	var unpackDebianVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := DebianVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: unpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
-			OptionalIndexCompressionFormats:                         d.getSet("optional_index_compression_formats"),
-			PrimaryKeyPairRef:                                       d.getString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:                                     d.getString("secondary_keypair_ref", false),
-			DebianDefaultArchitectures:                              d.getString("debian_default_architectures", false),
+			OptionalIndexCompressionFormats:                         d.GetSet("optional_index_compression_formats"),
+			PrimaryKeyPairRef:                                       d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:                                     d.GetString("secondary_keypair_ref", false),
+			DebianDefaultArchitectures:                              d.GetString("debian_default_architectures", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

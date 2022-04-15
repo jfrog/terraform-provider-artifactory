@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type CargoRemoteRepo struct {
@@ -14,7 +15,7 @@ type CargoRemoteRepo struct {
 func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	const packageType = "cargo"
 
-	var cargoRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
+	var cargoRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"git_registry_url": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -30,11 +31,11 @@ func resourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := CargoRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
-			RegistryUrl:                d.getString("git_registry_url", false),
-			AnonymousAccess:            d.getBool("anonymous_access", false),
+			RegistryUrl:                d.GetString("git_registry_url", false),
+			AnonymousAccess:            d.GetBool("anonymous_access", false),
 		}
 		return repo, repo.Id(), nil
 	}

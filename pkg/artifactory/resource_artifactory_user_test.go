@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 
@@ -24,7 +24,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := executeTemplate("TestUser", `
+	userInitial := utils.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -33,7 +33,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := executeTemplate("TestUser", `
+	userUpdated := utils.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -79,7 +79,7 @@ func TestAccUser_basic(t *testing.T) {
 			groups  = [ "readers" ]
 		}
 	`
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -113,7 +113,7 @@ func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
 			groups  = [ "readers" ]
 		}
 	`
-	id := randomInt()
+	id := utils.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -161,7 +161,7 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),
@@ -204,7 +204,7 @@ func TestAccUser_NoGroups(t *testing.T) {
 			email       		= "dummy%d@a.com"
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),
@@ -229,7 +229,7 @@ func TestAccUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),

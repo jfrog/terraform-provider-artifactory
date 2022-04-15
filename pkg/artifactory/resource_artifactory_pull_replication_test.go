@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -39,7 +39,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := utils.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 }
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
-	_, fqrn, name := mkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := utils.MkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
@@ -105,8 +105,8 @@ func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 }
 
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := mkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repo_name := mkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := utils.MkNames("lib-remote", "artifactory_pull_replication")
+	_, fqrepoName, repo_name := utils.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -121,7 +121,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = executeTemplate("foo", tcl, map[string]string{
+	tcl = utils.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
 	})

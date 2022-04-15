@@ -9,7 +9,7 @@ import (
 func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 	const packageType = "rpm"
 
-	var rpmLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var rpmLocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
 			Optional:         true,
@@ -63,15 +63,15 @@ func resourceArtifactoryLocalRpmRepository() *schema.Resource {
 	}
 
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, "rpm"),
-			RootDepth:                 d.getInt("yum_root_depth", false),
-			CalculateYumMetadata:      d.getBool("calculate_yum_metadata", false),
-			EnableFileListsIndexing:   d.getBool("enable_file_lists_indexing", false),
-			GroupFileNames:            d.getString("yum_group_file_names", false),
-			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.getString("secondary_keypair_ref", false),
+			RootDepth:                 d.GetInt("yum_root_depth", false),
+			CalculateYumMetadata:      d.GetBool("calculate_yum_metadata", false),
+			EnableFileListsIndexing:   d.GetBool("enable_file_lists_indexing", false),
+			GroupFileNames:            d.GetString("yum_group_file_names", false),
+			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil
