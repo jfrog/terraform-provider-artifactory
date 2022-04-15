@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"text/template"
@@ -168,4 +170,54 @@ func FormatCommaSeparatedString(thing interface{}) string {
 	fields := strings.Fields(thing.(string))
 	sort.Strings(fields)
 	return strings.Join(fields, ",")
+}
+
+func BuildResty(URL, version string) (*resty.Client, error) {
+	u, err := url.ParseRequestURI(URL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	baseUrl := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+
+	restyBase := resty.New().SetHostURL(baseUrl).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
+		if response == nil {
+			return fmt.Errorf("no response found")
+		}
+
+		if response.StatusCode() >= http.StatusBadRequest {
+			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(), response.Request.Method, response.Request.URL, string(response.Body()[:]))
+		}
+		return nil
+	}).
+		SetHeader("content-type", "application/json").
+		SetHeader("accept", "*/*").
+		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+version).
+		SetRetryCount(5)
+
+	restyBase.DisableWarn = true
+
+	return restyBase, nil
+}
+
+func AddAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Client, error) {
+	if accessToken != "" {
+		return client.SetAuthToken(accessToken), nil
+	}
+	if apiKey != "" {
+		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
+	}
+	return nil, fmt.Errorf("no authentication details supplied")
+}
+
+var NeverRetry = func(response *resty.Response, err error) bool {
+	return false
+}
+
+const RepositoriesEndpoint = "artifactory/api/repositories/"
+
+func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	// artifactory returns 400 instead of 404. but regardless, it's an error
+	return request.Head(RepositoriesEndpoint + id)
 }

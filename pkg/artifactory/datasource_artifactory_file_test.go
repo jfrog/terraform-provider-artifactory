@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +20,7 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 	return func() {
 		const localFilePath = "../../samples/crash.zip"
 		testAccPreCheck(t)
-		client := getTestResty(t)
+		client := utils.GetTestResty(t)
 		err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
 		if err != nil {
 			panic(err)
@@ -38,7 +38,7 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 func uploadTwoArtifacts(t *testing.T) {
 	const localOlderFilePath = "../../samples/multi1-3.7-20220310.233748-1.jar"
 	const localNewerFilePath = "../../samples/multi1-3.7-20220310.233859-2.jar"
-	client := getTestResty(t)
+	client := utils.GetTestResty(t)
 	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
 		panic(err)
@@ -81,7 +81,7 @@ func TestDlFile(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(script, downloadPath),
@@ -126,13 +126,13 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccDeleteRepo(t, "my-maven-local")
-			testAccCreateRepos(t, "my-maven-local", "local",
+			utils.TestAccDeleteRepo(t, "my-maven-local")
+			utils.TestAccCreateRepos(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
 
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(script, downloadPath),
@@ -164,13 +164,13 @@ func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccDeleteRepo(t, "my-maven-local")
-			testAccCreateRepos(t, "my-maven-local", "local",
+			utils.TestAccDeleteRepo(t, "my-maven-local")
+			utils.TestAccCreateRepos(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
 
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      fmt.Sprintf(script, downloadPath),
@@ -240,7 +240,7 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(noOverWriteForcedScript, downloadPath),

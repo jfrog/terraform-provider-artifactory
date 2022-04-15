@@ -20,7 +20,7 @@ func TestHasFileAndContentFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      conflictsResource,
@@ -39,7 +39,7 @@ func TestAccCertWithFileMissing(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckCertificateDestroy("artifactory_certificate.fail"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      certWithMissingFile,
@@ -62,7 +62,7 @@ func TestAccCertWithFile(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckCertificateDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(certWithFile, name, name),
@@ -127,7 +127,7 @@ func TestAccCertificate_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckCertificateDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: cleansed,
@@ -151,7 +151,8 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		cert, err := findCertificate(id, provider.Meta())
 		if err != nil {
 			return err

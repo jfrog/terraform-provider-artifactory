@@ -24,7 +24,7 @@ func TestAccGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -128,7 +128,7 @@ func TestAccGroup_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -244,7 +244,7 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -279,7 +279,8 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
@@ -301,7 +302,8 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]

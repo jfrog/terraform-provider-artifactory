@@ -97,10 +97,12 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	}
 	webhookConfig := utils.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -136,10 +138,12 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -229,10 +233,12 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		testChecks = append(testChecks, eventTypeCheck)
 	}
 
+	provider := Provider()
+
 	return t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckWebhook),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, testCheckWebhook),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -246,6 +252,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error) {
 	return request.
 		SetPathParam("webhookKey", id).
-		AddRetryCondition(neverRetry).
+		AddRetryCondition(utils.NeverRetry).
 		Get(webhookUrl)
 }

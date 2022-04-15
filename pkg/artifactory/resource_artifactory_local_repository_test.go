@@ -78,13 +78,16 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		"kp_name":   kpName,
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrn, testCheckRepo),
-			verifyDeleted(kpFqrn, verifyKeyPair),
+			utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+			utils.VerifyDeleted(kpFqrn, provider, verifyKeyPair),
 		),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -214,14 +217,17 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		"kp_name2":  kpName2,
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrn, testCheckRepo),
-			verifyDeleted(kpFqrn, verifyKeyPair),
-			verifyDeleted(kpFqrn2, verifyKeyPair),
+			utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+			utils.VerifyDeleted(kpFqrn, provider, verifyKeyPair),
+			utils.VerifyDeleted(kpFqrn2, provider, verifyKeyPair),
 		),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -357,14 +363,17 @@ func TestAccLocalRpmRepository(t *testing.T) {
 		"kp_name2":  kpName2,
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrn, testCheckRepo),
-			verifyDeleted(kpFqrn, verifyKeyPair),
-			verifyDeleted(kpFqrn2, verifyKeyPair),
+			utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+			utils.VerifyDeleted(kpFqrn, provider, verifyKeyPair),
+			utils.VerifyDeleted(kpFqrn2, provider, verifyKeyPair),
 		),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -394,10 +403,13 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 			key 	     = "{{ .name }}"
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -430,10 +442,13 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 			block_pushing_schema1 = {{ .block }}
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -461,10 +476,12 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -492,10 +509,13 @@ func TestAccLocalNugetRepository(t *testing.T) {
 		  force_nuget_authentication = {{ .force_nuget_authentication }}
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -542,10 +562,12 @@ func TestAccLocalMavenRepository(t *testing.T) {
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = false
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: utils.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -577,10 +599,13 @@ func TestAccLocalGenericRepository(t *testing.T) {
 		  priority_resolution = "{{ .priority_resolution }}"
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -615,16 +640,18 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -658,16 +685,18 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      localRepositoryBasic,
@@ -697,16 +726,18 @@ func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      localRepositoryBasic,
@@ -727,10 +758,13 @@ func TestAccLocalNpmRepository(t *testing.T) {
 		  key                 = "{{ .name }}"
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -761,10 +795,12 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(resourceName, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -792,7 +828,7 @@ func TestAccLocalAllRepoTypes(t *testing.T) {
 func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
-	repoLayoutRef := getValidRandomDefaultRepoLayoutRef()
+	repoLayoutRef := utils.GetValidRandomDefaultRepoLayoutRef()
 
 	const localRepositoryConfigFull = `
 		resource "artifactory_local_%[1]s_repository" "%[2]s" {
@@ -804,10 +840,13 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 	`
 
 	cfg := fmt.Sprintf(localRepositoryConfigFull, repoType, name, repoLayoutRef)
+
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(resourceName, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -844,10 +883,12 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = true
 
+	provider := Provider()
+
 	return t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: utils.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -886,10 +927,13 @@ func TestAccLocalCargoRepository(t *testing.T) {
 		  anonymous_access = {{ .anonymous_access }}
 		}
 	`, params)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,

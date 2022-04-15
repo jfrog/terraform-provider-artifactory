@@ -31,10 +31,13 @@ func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 			}
 		}
 	`, name, key)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -54,9 +57,12 @@ func TestKeyHasSpecialCharsFails(t *testing.T) {
 			retrieval_cache_period_seconds        = 70
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      failKey,
@@ -195,7 +201,7 @@ func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
 		fqrn := fmt.Sprintf("artifactory_remote_%s_repository.%s", repoType, name)
 
 		var externalDependenciesCheck = func(state *terraform.State) error {
-			restyClient := getTestResty(t)
+			restyClient := utils.GetTestResty(t)
 			queryRepoResponse := &ExternalDependenciesRemoteRepo{}
 			_, err := restyClient.R().SetResult(&queryRepoResponse).Get("artifactory/api/repositories/" + name)
 			if err != nil {
@@ -209,11 +215,13 @@ func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
 			return err
 		}
 
+		provider := Provider()
+
 		t.Run(fmt.Sprintf("TestRemote%sRepo_ExternalDependenciesDefaults", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck:          func() { testAccPreCheck(t) },
-				CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-				ProviderFactories: testAccProviders,
+				CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+				ProviderFactories: utils.TestAccProviders(provider),
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf(remoteRepoExternalDependenciesDefaults, repoType, name, name),
@@ -451,10 +459,13 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		  includes_pattern = join(", ", local.allowed_github_repos)
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: utils.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -494,10 +505,13 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 			}
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoBasic, name, name),
@@ -526,10 +540,13 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	id := utils.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoNuget, name, name),
@@ -587,22 +604,24 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		},
 	}
 	allFields := utils.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := fmtMapToHcl(allFields)
+	allFieldsHcl := utils.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
 		}
 	`
-	extraChecks := mapToTestChecks(fqrn, extraFields)
-	defaultChecks := mapToTestChecks(fqrn, allFields)
+	extraChecks := utils.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := utils.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -653,14 +672,14 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		},
 	}
 	allFields := utils.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := fmtMapToHcl(allFields)
+	allFieldsHcl := utils.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
 		}
 	`
-	extraChecks := mapToTestChecks(fqrn, extraFields)
-	defaultChecks := mapToTestChecks(fqrn, allFields)
+	extraChecks := utils.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := utils.MapToTestChecks(fqrn, allFields)
 
 	var addCheckFunctions = []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := getDefaultRepoLayoutRef("remote", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
@@ -669,10 +688,12 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -698,10 +719,13 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 	id := utils.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate, name, name),
@@ -746,10 +770,12 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 		}
 	`, name, key)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -788,10 +814,12 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 		}
 	`, name, key)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -838,16 +866,18 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 
 	testProxyKey := "test-proxy"
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProxy(t, testProxyKey)
+			utils.CreateProxy(t, testProxyKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProxy(t, testProxyKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProxy(t, testProxyKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryWithProxy,
@@ -898,16 +928,18 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryBasic,
@@ -942,16 +974,18 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      remoteRepositoryBasic,

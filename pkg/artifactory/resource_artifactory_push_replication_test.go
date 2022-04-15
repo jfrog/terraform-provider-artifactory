@@ -30,7 +30,7 @@ func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -59,7 +59,7 @@ func TestAccPushReplicationInvalidUrlFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -118,13 +118,13 @@ func TestAccPushReplication_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			createProxy(t, testProxy)
+			utils.CreateProxy(t, testProxy)
 		},
 		CheckDestroy: func() func(*terraform.State) error {
-			deleteProxy(t, testProxy)
+			utils.DeleteProxy(t, testProxy)
 			return testAccCheckPushReplicationDestroy("artifactory_push_replication.lib-local")
 		}(),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -163,7 +163,8 @@ func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error 
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		exists, _ := repConfigExists(rs.Primary.ID, provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)

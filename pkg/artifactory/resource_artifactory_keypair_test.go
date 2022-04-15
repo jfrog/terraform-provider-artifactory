@@ -30,10 +30,13 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 		EOF
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -82,10 +85,13 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 			public_key = "not a key"
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -150,10 +156,13 @@ func TestAccKeyPairRSA(t *testing.T) {
 			}
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,
@@ -273,10 +282,13 @@ func TestAccKeyPairGPG(t *testing.T) {
 		EOF
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,

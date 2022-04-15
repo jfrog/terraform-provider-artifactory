@@ -45,7 +45,7 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -61,7 +61,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -125,13 +125,16 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
 	})
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrepoName, testCheckRepo),
+			utils.VerifyDeleted(fqrepoName, provider, utils.TestCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{

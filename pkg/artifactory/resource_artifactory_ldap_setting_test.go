@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccLdapSetting_full(t *testing.T) {
@@ -40,7 +41,7 @@ resource "artifactory_ldap_setting" "ldaptest" {
 }`
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptest"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -104,7 +105,7 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptestemailattr"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -175,7 +176,7 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptestuserdnsearchfilter"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -212,7 +213,8 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		client := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources["artifactory_ldap_setting."+id]

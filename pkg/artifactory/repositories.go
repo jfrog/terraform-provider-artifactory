@@ -17,8 +17,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-const repositoriesEndpoint = "artifactory/api/repositories/"
-
 type LocalRepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey             string   `json:"projectKey"`
@@ -176,7 +174,7 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Put(repositoriesEndpoint + key)
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Put(utils.RepositoriesEndpoint + key)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -190,7 +188,7 @@ func mkRepoRead(pack PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo := construct()
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().SetResult(repo).Get(repositoriesEndpoint + d.Id())
+		resp, err := m.(*resty.Client).R().SetResult(repo).Get(utils.RepositoriesEndpoint + d.Id())
 
 		if err != nil {
 			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -210,7 +208,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Post(repositoriesEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Post(utils.RepositoriesEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -221,7 +219,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete(repositoriesEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete(utils.RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -230,21 +228,12 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 	return diag.FromErr(err)
 }
 
-var neverRetry = func(response *resty.Response, err error) bool {
-	return false
-}
-
 var retry400 = func(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
-func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
-	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.Head(repositoriesEndpoint + id)
-}
-
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
+	_, err := utils.CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
 	return err == nil, err
 }
 

@@ -57,10 +57,12 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(resourceName, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
@@ -107,10 +109,12 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		}
 	`, params)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(resourceName, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(resourceName, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
@@ -167,15 +171,17 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -218,16 +224,18 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      federatedRepositoryConfig,

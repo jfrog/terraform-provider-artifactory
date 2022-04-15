@@ -2,13 +2,12 @@ package artifactory
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 	"regexp"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 // Version for some reason isn't getting updated by the linker
@@ -157,43 +156,6 @@ func Provider() *schema.Provider {
 	return p
 }
 
-func buildResty(URL string) (*resty.Client, error) {
-
-	u, err := url.ParseRequestURI(URL)
-
-	if err != nil {
-		return nil, err
-	}
-	baseUrl := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
-	restyBase := resty.New().SetHostURL(baseUrl).OnAfterResponse(func(client *resty.Client, response *resty.Response) error {
-		if response == nil {
-			return fmt.Errorf("no response found")
-		}
-
-		if response.StatusCode() >= http.StatusBadRequest {
-			return fmt.Errorf("\n%d %s %s\n%s", response.StatusCode(), response.Request.Method, response.Request.URL, string(response.Body()[:]))
-		}
-		return nil
-	}).
-		SetHeader("content-type", "application/json").
-		SetHeader("accept", "*/*").
-		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+Version).
-		SetRetryCount(5)
-	restyBase.DisableWarn = true
-
-	return restyBase, nil
-}
-
-func addAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Client, error) {
-	if accessToken != "" {
-		return client.SetAuthToken(accessToken), nil
-	}
-	if apiKey != "" {
-		return client.SetHeader("X-JFrog-Art-Api", apiKey), nil
-	}
-	return nil, fmt.Errorf("no authentication details supplied")
-}
-
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	URL, ok := d.GetOk("url")
@@ -201,14 +163,14 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, fmt.Errorf("you must supply a URL")
 	}
 
-	restyBase, err := buildResty(URL.(string))
+	restyBase, err := utils.BuildResty(URL.(string), Version)
 	if err != nil {
 		return nil, err
 	}
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	restyBase, err = addAuthToResty(restyBase, apiKey, accessToken)
+	restyBase, err = utils.AddAuthToResty(restyBase, apiKey, accessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +190,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 
 	return restyBase, nil
-
 }
 
 func checkArtifactoryLicense(client *resty.Client) error {

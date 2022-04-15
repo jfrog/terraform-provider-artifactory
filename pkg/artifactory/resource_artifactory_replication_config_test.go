@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestInvalidCronFails(t *testing.T) {
@@ -29,7 +30,7 @@ func TestInvalidCronFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -57,7 +58,7 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -89,13 +90,13 @@ func TestAccReplication_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			createProxy(t, testProxy)
+			utils.CreateProxy(t, testProxy)
 		},
 		CheckDestroy: func() func(*terraform.State) error {
-			deleteProxy(t, testProxy)
+			utils.DeleteProxy(t, testProxy)
 			return testAccCheckReplicationDestroy("artifactory_replication_config.lib-local")
 		}(),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +125,8 @@ func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		exists, _ := repConfigExists(rs.Primary.ID, provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)

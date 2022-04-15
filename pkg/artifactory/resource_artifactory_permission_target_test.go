@@ -143,7 +143,7 @@ func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
 	resource.Test(test, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(test) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: foo,
@@ -169,7 +169,7 @@ func TestAccPermissionTarget_full(test *testing.T) {
 	resource.Test(test, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(test) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: utils.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
@@ -202,7 +202,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: utils.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
@@ -255,7 +255,8 @@ func testPermissionTargetCheckDestroy(id ...string) func(*terraform.State) error
 			if !ok {
 				return fmt.Errorf("err: Resource id[%s] not found", id)
 			}
-			provider, _ := testAccProviders["artifactory"]()
+			provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+			utils.ConfigureProvider(provider)
 			exists, _ := permTargetExists(rs.Primary.ID, provider.Meta())
 			if !exists {
 				return nil

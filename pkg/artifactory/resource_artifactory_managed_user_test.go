@@ -24,7 +24,7 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userNoGroups, name, id, id),
@@ -50,7 +50,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
@@ -89,7 +89,7 @@ func TestAccManagedUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, id, id),
@@ -123,7 +123,8 @@ func TestAccManagedUser(t *testing.T) {
 
 func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		utils.ConfigureProvider(provider)
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]

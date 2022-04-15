@@ -1,21 +1,23 @@
-package artifactory
+package utils
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
-func fmtMapToHcl(fields map[string]interface{}) string {
+func FmtMapToHcl(fields map[string]interface{}) string {
 	var allPairs []string
 	max := float64(0)
 	for key := range fields {
@@ -29,6 +31,7 @@ func fmtMapToHcl(fields map[string]interface{}) string {
 
 	return strings.Join(allPairs, "\n")
 }
+
 func toHclFormatString(tabs, max int, value interface{}) string {
 	prefix := ""
 	suffix := ""
@@ -40,7 +43,8 @@ func toHclFormatString(tabs, max int, value interface{}) string {
 	}
 	return fmt.Sprintf("%s%%-%ds %s %s%s%s", strings.Repeat("\t", tabs), max, delimeter, prefix, "%s", suffix)
 }
-func mapToTestChecks(fqrn string, fields map[string]interface{}) []resource.TestCheckFunc {
+
+func MapToTestChecks(fqrn string, fields map[string]interface{}) []resource.TestCheckFunc {
 	var result []resource.TestCheckFunc
 	for key, value := range fields {
 		switch reflect.TypeOf(value).Kind() {
@@ -67,6 +71,7 @@ func mapToTestChecks(fqrn string, fields map[string]interface{}) []resource.Test
 	}
 	return result
 }
+
 func toHclFormat(thing interface{}) string {
 	switch thing.(type) {
 	case string:
@@ -78,7 +83,7 @@ func toHclFormat(thing interface{}) string {
 		}
 		return fmt.Sprintf("[%s]", strings.Join(result, ","))
 	case map[string]interface{}:
-		return fmt.Sprintf("\n\t%s\n\t\t\t\t", fmtMapToHcl(thing.(map[string]interface{})))
+		return fmt.Sprintf("\n\t%s\n\t\t\t\t", FmtMapToHcl(thing.(map[string]interface{})))
 	default:
 		return fmt.Sprintf("%v", thing)
 	}
@@ -86,16 +91,35 @@ func toHclFormat(thing interface{}) string {
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
+var TestAccProviders = func(provider *schema.Provider) map[string]func() (*schema.Provider, error) {
+	return map[string]func() (*schema.Provider, error){
+		"artifactory": func() (*schema.Provider, error) {
+			return provider, nil
+		},
+	}
+}
+
+var ConfigureProvider = func(provider *schema.Provider) error {
+	ctx := context.Background()
+	configErr := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if configErr != nil {
+		return fmt.Errorf("error: Failed to configure provider %v", configErr)
+	}
+
+	return nil
+}
+
+func VerifyDeleted(id string, provider *schema.Provider, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[id]
-
 		if !ok {
 			return fmt.Errorf("error: Resource id [%s] not found", id)
 		}
-		provider, _ := testAccProviders["artifactory"]()
+
+		provider, _ := TestAccProviders(provider)["artifactory"]()
+		ConfigureProvider(provider)
 		client := provider.Meta().(*resty.Client)
+
 		resp, err := check(rs.Primary.ID, client.R())
 		if err != nil {
 			if resp != nil {
@@ -110,11 +134,11 @@ func verifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 	}
 }
 
-func testCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	return checkRepo(id, request.AddRetryCondition(neverRetry))
+func TestCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	return CheckRepo(id, request.AddRetryCondition(NeverRetry))
 }
 
-func createProject(t *testing.T, projectKey string) {
+func CreateProject(t *testing.T, projectKey string) {
 	type AdminPrivileges struct {
 		ManageMembers   bool `json:"manage_members"`
 		ManageResources bool `json:"manage_resources"`
@@ -128,7 +152,7 @@ func createProject(t *testing.T, projectKey string) {
 		AdminPrivileges AdminPrivileges `json:"admin_privileges"`
 	}
 
-	restyClient := getTestResty(t)
+	restyClient := GetTestResty(t)
 
 	project := Project{
 		Key:         projectKey,
@@ -147,8 +171,8 @@ func createProject(t *testing.T, projectKey string) {
 	}
 }
 
-func deleteProject(t *testing.T, projectKey string) {
-	restyClient := getTestResty(t)
+func DeleteProject(t *testing.T, projectKey string) {
+	restyClient := GetTestResty(t)
 	_, err := restyClient.R().Delete("/access/api/v1/projects/" + projectKey)
 	if err != nil {
 		t.Fatal(err)
@@ -156,9 +180,9 @@ func deleteProject(t *testing.T, projectKey string) {
 }
 
 // Create a local repository with Xray indexing enabled. It will be used in the tests
-func testAccCreateRepos(t *testing.T, repo string, rclass string, packageType string,
+func TestAccCreateRepos(t *testing.T, repo string, rclass string, packageType string,
 	handleReleases bool, handleSnapshots bool) {
-	restyClient := getTestResty(t)
+	restyClient := GetTestResty(t)
 
 	type Repository struct {
 		Rclass                  string `json:"rclass"`
@@ -184,8 +208,8 @@ func testAccCreateRepos(t *testing.T, repo string, rclass string, packageType st
 	}
 }
 
-func testAccDeleteRepo(t *testing.T, repo string) {
-	restyClient := getTestResty(t)
+func TestAccDeleteRepo(t *testing.T, repo string) {
+	restyClient := GetTestResty(t)
 
 	response, errRepo := restyClient.R().Delete("artifactory/api/repositories/" + repo)
 	if errRepo != nil || response.StatusCode() != http.StatusOK {
@@ -194,23 +218,23 @@ func testAccDeleteRepo(t *testing.T, repo string) {
 }
 
 //Usage of the function is strictly restricted to Test Cases
-func getValidRandomDefaultRepoLayoutRef() string {
-	return utils.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+func GetValidRandomDefaultRepoLayoutRef() string {
+	return RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }
 
-// updateProxiesConfig is used by createProxy and deleteProxy to interact with a proxy on Artifactory
+// updateProxiesConfig is used by utils.CreateProxy and utils.DeleteProxy to interact with a proxy on Artifactory
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
-	restyClient := getTestResty(t)
+	restyClient := GetTestResty(t)
 
-	err := utils.SendConfigurationPatch(body, restyClient)
+	err := SendConfigurationPatch(body, restyClient)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-// createProxy creates a new proxy on Artifactory with the given key
-var createProxy = func(t *testing.T, proxyKey string) {
+// CreateProxy creates a new proxy on Artifactory with the given key
+var CreateProxy = func(t *testing.T, proxyKey string) {
 	type proxy struct {
 		Key             string `yaml:"key"`
 		Host            string `yaml:"host"`
@@ -239,10 +263,27 @@ var createProxy = func(t *testing.T, proxyKey string) {
 	})
 }
 
-// createProxy deletes an existing proxy on Artifactory with the given key
-var deleteProxy = func(t *testing.T, proxyKey string) {
+// DeleteProxy deletes an existing proxy on Artifactory with the given key
+var DeleteProxy = func(t *testing.T, proxyKey string) {
 	updateProxiesConfig(t, proxyKey, func() []byte {
 		// Return empty yaml to clean up all proxies
 		return []byte(`proxies: ~`)
 	})
+}
+
+func GetTestResty(t *testing.T) *resty.Client {
+	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
+		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
+	}
+	restyClient, err := BuildResty(os.Getenv("ARTIFACTORY_URL"), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
+	api := os.Getenv("ARTIFACTORY_API_KEY")
+	restyClient, err = AddAuthToResty(restyClient, api, accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return restyClient
 }

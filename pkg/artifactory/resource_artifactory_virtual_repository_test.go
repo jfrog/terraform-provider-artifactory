@@ -23,10 +23,13 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 			repositories = []
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -69,10 +72,13 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 			depends_on = [artifactory_local_maven_repository.%[1]s]
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -122,10 +128,12 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 		}
 	`, name, name)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -160,10 +168,12 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 		}
 	`, name, name)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -193,10 +203,12 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 		}
 	`, name, name)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -231,10 +243,12 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 		}
 	`, name, name)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -269,10 +283,12 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -403,14 +419,16 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 		"repo_name": name,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrn, testCheckRepo),
-			verifyDeleted(kpFqrn, verifyKeyPair),
-			verifyDeleted(kpFqrn2, verifyKeyPair),
+			utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+			utils.VerifyDeleted(kpFqrn, provider, verifyKeyPair),
+			utils.VerifyDeleted(kpFqrn2, provider, verifyKeyPair),
 		),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: virtualRepositoryBasic,
@@ -444,10 +462,13 @@ func TestAccVirtualRepository_update(t *testing.T) {
 			repositories = []
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -489,10 +510,13 @@ func TestNugetPackageCreationFull(t *testing.T) {
 			force_nuget_authentication	= true
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -525,10 +549,13 @@ func TestAccVirtualRepository_full(t *testing.T) {
 			pom_repository_references_cleanup_policy = "discard_active_reference"
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
@@ -571,16 +598,18 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: virtualRepositoryBasic,
@@ -614,16 +643,18 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		}
 	`, params)
 
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			createProject(t, projectKey)
+			utils.CreateProject(t, projectKey)
 		},
-		CheckDestroy: verifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			deleteProject(t, projectKey)
-			return testCheckRepo(id, request)
+		CheckDestroy: utils.VerifyDeleted(fqrn, provider, func(id string, request *resty.Request) (*resty.Response, error) {
+			utils.DeleteProject(t, projectKey)
+			return utils.TestCheckRepo(id, request)
 		}),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      virualRepositoryBasic,
@@ -672,7 +703,7 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 		"notes":       "Internal description",
 	}
 	allFields := utils.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := fmtMapToHcl(allFields)
+	allFieldsHcl := utils.FmtMapToHcl(allFields)
 	const virtualRepoFull = `
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
@@ -685,16 +716,18 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
             depends_on = [artifactory_remote_%[1]s_repository.%[3]s]
 		}
 	`
-	extraChecks := mapToTestChecks(fqrn, extraFields)
-	defaultChecks := mapToTestChecks(fqrn, allFields)
+	extraChecks := utils.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := utils.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
 
+	provider := Provider()
+
 	return t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -739,10 +772,13 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
             ]
 		}
 	`
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, testCheckRepo),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{

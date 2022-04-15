@@ -46,7 +46,7 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -64,7 +64,7 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -80,13 +80,13 @@ func TestAccSingleReplication_full(t *testing.T) {
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), testProxy)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			createProxy(t, testProxy)
+			utils.CreateProxy(t, testProxy)
 		},
 		CheckDestroy: func() func(*terraform.State) error {
-			deleteProxy(t, testProxy)
+			utils.DeleteProxy(t, testProxy)
 			return testAccCheckReplicationDestroy(fqrn)
 		}(),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 	_, fqrn, name := utils.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), "")
 	var deleteRepo = func() {
-		restyClient := getTestResty(t)
+		restyClient := utils.GetTestResty(t)
 		_, err := restyClient.R().Delete("artifactory/api/repositories/" + name)
 		if err != nil {
 			t.Fatal(err)
@@ -117,7 +117,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 	}
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -166,13 +166,16 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 		"remote_name":     repo_name,
 		"username":        rtDefaultUser,
 	})
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: compositeCheckDestroy(
-			verifyDeleted(fqrepoName, testCheckRepo),
+			utils.VerifyDeleted(fqrepoName, provider, utils.TestCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{
