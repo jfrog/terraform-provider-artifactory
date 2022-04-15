@@ -257,7 +257,7 @@ func addTestCertificate(t *testing.T, certificateAlias string) {
 	}
 
 	_, err = restyClient.R().
-		SetBody(certFileBytes).
+		SetBody(string(certFileBytes)).
 		SetContentLength(true).
 		Post(fmt.Sprintf("%s%s", endpoint, certificateAlias))
 	if err != nil {
