@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+
 * resource/artifactory_permission_targets: Add deprecation message [GH-413]
 * Removed dependency on `jfrog-client-go` package [GH-413]
 
