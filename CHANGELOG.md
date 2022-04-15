@@ -107,6 +107,8 @@ BUG FIXES:
 
 ## 3.1.1 (Mar 30, 2022)
 
+1
+
 BUG FIXES:
 
 * resource/artifactory_local_docker_v2_repository: Fix `max_unique_tags` with value 0 being ignored. [GH-376]
