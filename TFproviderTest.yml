@@ -54,7 +54,7 @@ pipelines:
             - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # since we run it on the host, we need to manually move into the resource path
+            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - export PROVIDER_VERSION=$(git tag --sort=-v:refname | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
