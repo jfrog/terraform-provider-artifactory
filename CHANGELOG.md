@@ -8,8 +8,6 @@ IMPROVEMENTS:
 * Acceptance test case enhanced with Client TLS Certificate
 
 [GH-409](https://github.com/jfrog/terraform-provider-artifactory/pull/409)
-or
-[Issue-408](https://github.com/jfrog/terraform-provider-artifactory/issues/408)
 
 ## 6.4.1 (Apr 18, 2022). Tested on Artifactory 7.37.14
 
