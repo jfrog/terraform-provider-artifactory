@@ -268,7 +268,7 @@ var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody fun
 }
 
 // CreateProxy creates a new proxy on Artifactory with the given key
-var CreateProxy = func(t *testing.T, proxyKey string) {
+func CreateProxy(t *testing.T, proxyKey string) {
 	type proxy struct {
 		Key             string `yaml:"key"`
 		Host            string `yaml:"host"`
@@ -298,7 +298,7 @@ var CreateProxy = func(t *testing.T, proxyKey string) {
 }
 
 // DeleteProxy deletes an existing proxy on Artifactory with the given key
-var DeleteProxy = func(t *testing.T, proxyKey string) {
+func DeleteProxy(t *testing.T, proxyKey string) {
 	updateProxiesConfig(t, proxyKey, func() []byte {
 		// Return empty yaml to clean up all proxies
 		return []byte(`proxies: ~`)
