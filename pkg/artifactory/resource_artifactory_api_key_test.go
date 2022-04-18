@@ -34,13 +34,17 @@ func TestAccApiKey(t *testing.T) {
 func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 		rs, ok := s.RootModule().Resources[id]
-
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
+
 		data := make(map[string]string)
 
 		_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)

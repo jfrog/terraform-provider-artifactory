@@ -35,7 +35,11 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]

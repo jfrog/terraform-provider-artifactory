@@ -280,7 +280,11 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
@@ -303,7 +307,11 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]

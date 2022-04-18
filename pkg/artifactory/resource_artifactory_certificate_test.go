@@ -152,7 +152,11 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		cert, err := findCertificate(id, provider.Meta())
 		if err != nil {
 			return err

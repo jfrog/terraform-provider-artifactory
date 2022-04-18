@@ -133,14 +133,14 @@ var TestAccProviders = func(provider *schema.Provider) map[string]func() (*schem
 	}
 }
 
-var ConfigureProvider = func(provider *schema.Provider) error {
+func ConfigureProvider(provider *schema.Provider) (*schema.Provider, error) {
 	ctx := context.Background()
 	configErr := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
 	if configErr != nil {
-		return fmt.Errorf("error: Failed to configure provider %v", configErr)
+		return nil, fmt.Errorf("error: Failed to configure provider %v", configErr)
 	}
 
-	return nil
+	return provider, nil
 }
 
 func VerifyDeleted(id string, provider *schema.Provider, check CheckFun) func(*terraform.State) error {

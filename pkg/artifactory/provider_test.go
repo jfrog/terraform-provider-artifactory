@@ -42,7 +42,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 
 	provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-	oldErr := utils.ConfigureProvider(provider)
+	_, oldErr := utils.ConfigureProvider(provider)
 	if oldErr != nil {
 		t.Fatal(oldErr)
 	}

@@ -58,7 +58,11 @@ func TestAccSamlSettings_full(t *testing.T) {
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		utils.ConfigureProvider(provider)
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		c := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]
