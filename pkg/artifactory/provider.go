@@ -126,7 +126,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("ARTIFACTORY_ACCESS_TOKEN", nil),
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN"}, ""),
 				Description: "This is a access token that can be given to you by your admin under `Identity and Access`",
 			},
 			"check_license": {

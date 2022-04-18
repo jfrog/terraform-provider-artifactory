@@ -63,7 +63,7 @@ The Artifactory provider supports two ways of authentication. The following meth
 
 ### Access Token
 Artifactory access tokens may be used via the Authorization header by providing the `access_token` field to the provider
-block. Getting this value from the environment is supported with the `ARTIFACTORY_ACCESS_TOKEN` variable
+block. Getting this value from the environment is supported with `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` variables
 
 Usage:
 ```hcl
@@ -92,7 +92,7 @@ provider "artifactory" {
 The following arguments are supported:
 
 * `url` - (Optional) URL of Artifactory. This can also be sourced from the `ARTIFACTORY_URL` environment variable.
-* `access_token` - (Optional) This can also be sourced from the `ARTIFACTORY_ACCESS_TOKEN` environment variable.
+* `access_token` - (Optional) This can also be sourced from `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variables.
 * `api_key` - (Optional) API key for api auth. Uses `X-JFrog-Art-Api` header.
   Conflicts with `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
 * `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.
