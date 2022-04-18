@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "6.2.1"
+      version = "6.4.1"
     }
   }
 }
@@ -376,6 +376,11 @@ resource "artifactory_remote_p2_repository" "my-remote-p2" {
   url = "http://testartifactory.io/artifactory/example-p2/"
 }
 
+resource "artifactory_remote_pub_repository" "my-remote-pub" {
+  key         = "my-remote-pub"
+  url = "https://pub.dartlang.org"
+}
+
 resource "artifactory_remote_puppet_repository" "my-remote-puppet" {
   key = "my-remote-puppet"
   url = "https://forgeapi.puppetlabs.com/"
@@ -590,6 +595,15 @@ resource "artifactory_virtual_nuget_repository" "foo-nuget" {
 
 resource "artifactory_virtual_p2_repository" "foo-p2" {
   key              = "foo-p2"
+  repositories     = []
+  description      = "A test virtual repo"
+  notes            = "Internal description"
+  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern = "com/google/**"
+}
+
+resource "artifactory_virtual_pub_repository" "foo-pub" {
+  key              = "foo-pub"
   repositories     = []
   description      = "A test virtual repo"
   notes            = "Internal description"

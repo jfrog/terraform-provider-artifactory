@@ -259,7 +259,7 @@ func addTestCertificate(t *testing.T, certificateAlias string) {
 	_, err = restyClient.R().
 		SetBody(string(certFileBytes)).
 		SetContentLength(true).
-		Post(fmt.Sprintf("%s%s", endpoint, certificateAlias))
+		Post(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -269,7 +269,7 @@ func deleteTestCertificate(t *testing.T, certificateAlias string) {
 	restyClient := getTestResty(t)
 
 	_, err := restyClient.R().
-		Delete(fmt.Sprintf("%s%s", endpoint, certificateAlias))
+		Delete(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const endpoint = "artifactory/api/system/security/certificates/"
+const certificateEndpoint = "artifactory/api/system/security/certificates/"
 
 // CertificateDetails this type doesn't even exist in the new go client. In fact, the whole API call doesn't
 type CertificateDetails struct {
@@ -167,7 +167,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 func findCertificate(alias string, m interface{}) (*CertificateDetails, error) {
 	c := m.(*resty.Client)
 	certificates := new([]CertificateDetails)
-	_, err := c.R().SetResult(certificates).Get(endpoint)
+	_, err := c.R().SetResult(certificates).Get(certificateEndpoint)
 
 	if err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(endpoint + d.Id())
+	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(certificateEndpoint + d.Id())
 
 	if err != nil {
 		return err
@@ -268,7 +268,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete(endpoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(certificateEndpoint + d.Id())
 	if err != nil {
 		return err
 	}

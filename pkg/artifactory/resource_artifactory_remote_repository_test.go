@@ -547,7 +547,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
 	_, fqrn, name := mkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
-	certificateAlias := "certificate" + randSeq(10)
+	certificateAlias := fmt.Sprintf("certificate-%d", randomInt())
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
