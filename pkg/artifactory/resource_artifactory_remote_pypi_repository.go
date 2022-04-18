@@ -3,12 +3,13 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryRemotePypiRepository() *schema.Resource {
 	const packageType = "pypi"
 
-	var pypiRemoteSchema = mergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
+	var pypiRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, map[string]*schema.Schema{
 		"pypi_registry_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -32,11 +33,11 @@ func resourceArtifactoryRemotePypiRepository() *schema.Resource {
 	}
 
 	var unpackPypiRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := PypiRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
-			PypiRegistryUrl:            d.getString("pypi_registry_url", false),
-			PypiRepositorySuffix:       d.getString("pypi_repository_suffix", false),
+			PypiRegistryUrl:            d.GetString("pypi_registry_url", false),
+			PypiRepositorySuffix:       d.GetString("pypi_repository_suffix", false),
 		}
 		return repo, repo.Id(), nil
 	}

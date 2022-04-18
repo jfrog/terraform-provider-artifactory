@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccApiKey(t *testing.T) {
@@ -18,7 +19,7 @@ func TestAccApiKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: apiKey,
@@ -32,13 +33,18 @@ func TestAccApiKey(t *testing.T) {
 
 func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 		rs, ok := s.RootModule().Resources[id]
-
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
+
 		data := make(map[string]string)
 
 		_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)

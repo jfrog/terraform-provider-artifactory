@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type ComposerRemoteRepo struct {
@@ -14,7 +15,7 @@ type ComposerRemoteRepo struct {
 func resourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	const packageType = "composer"
 
-	var composerRemoteSchema = mergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
+	var composerRemoteSchema = utils.MergeSchema(baseRemoteRepoSchema, vcsRemoteRepoSchema, map[string]*schema.Schema{
 		"composer_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -25,11 +26,11 @@ func resourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	}, repoLayoutRefSchema("remote", packageType))
 
 	var unpackComposerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 		repo := ComposerRemoteRepo{
 			RemoteRepositoryBaseParams: unpackBaseRemoteRepo(s, packageType),
 			RemoteRepositoryVcsParams:  unpackVcsRemoteRepo(s),
-			ComposerRegistryUrl:        d.getString("composer_registry_url", false),
+			ComposerRegistryUrl:        d.GetString("composer_registry_url", false),
 		}
 		return repo, repo.Id(), nil
 	}

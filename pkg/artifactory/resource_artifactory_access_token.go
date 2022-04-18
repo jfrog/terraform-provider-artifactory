@@ -14,6 +14,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 // AccessTokenRevokeOptions jfrog client go has no v1 code and moving to v2 would be a lot of work.
@@ -164,7 +165,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	grantType := "client_credentials" // client_credentials is the only supported type
 
 	tokenOptions := AccessTokenOptions{}
-	resourceData := &ResourceData{d}
+	resourceData := &utils.ResourceData{d}
 
 	date, expiresIn, err := getDate(d)
 	if err != nil {
@@ -183,7 +184,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	tokenOptions.Audience = audience
 	tokenOptions.GrantType = grantType
 	tokenOptions.Refreshable = strconv.FormatBool(refreshable)
-	tokenOptions.Username = resourceData.getString("username", false)
+	tokenOptions.Username = resourceData.GetString("username", false)
 
 	username := resourceData.Get("username").(string)
 	userExists, _ := checkUserExists(client, username)

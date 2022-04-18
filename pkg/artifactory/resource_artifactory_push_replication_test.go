@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -58,7 +59,7 @@ func TestAccPushReplicationInvalidUrlFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -76,7 +77,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		"username": rtDefaultUser,
 		"proxy":    testProxy,
 	}
-	replicationConfig := executeTemplate("TestAccPushReplication", `
+	replicationConfig := utils.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
@@ -95,7 +96,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := executeTemplate("TestAccPushReplication", `
+	replicationUpdateConfig := utils.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
 		}
@@ -117,13 +118,13 @@ func TestAccPushReplication_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			createProxy(t, testProxy)
+			utils.CreateProxy(t, testProxy)
 		},
 		CheckDestroy: func() func(*terraform.State) error {
-			deleteProxy(t, testProxy)
+			utils.DeleteProxy(t, testProxy)
 			return testAccCheckPushReplicationDestroy("artifactory_push_replication.lib-local")
 		}(),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +163,12 @@ func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error 
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		exists, _ := repConfigExists(rs.Primary.ID, provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type LdapSetting struct {
@@ -69,7 +70,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 		"user_dn_pattern": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validateLdapDn)),
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapDn)),
 			Description:      "(Optional) A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People. Default value is blank/empty.",
 		},
 		"auto_create_user": {
@@ -113,14 +114,14 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 		"search_filter": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validateLdapFilter)),
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapFilter)),
 			Description:      "(Optional) A filter expression used to search for the user DN used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, and is denoted by '{0}'. Possible examples are: (uid={0}) - This searches for a username match on the attribute. Authentication to LDAP is performed from the DN found if successful.",
 		},
 		"search_base": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(validateLdapDn),
+			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
 			Description:      "(Optional) A context name to search in relative to the base DN of the LDAP URL. For example, 'ou=users' With the LDAP Group Add-on enabled, it is possible to enter multiple search base entries separated by a pipe ('|') character.",
 		},
 		"search_sub_tree": {
@@ -133,7 +134,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(validateLdapDn),
+			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
 			Description:      `(Optional) The full DN of the user that binds to the LDAP server to perform user searches. Only used with "search" authentication.`,
 		},
 		"manager_password": {
@@ -163,7 +164,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 
 		packer := universalPack(
 			allHclPredicate(
-				ignoreHclPredicate("class", "rclass", "manager_password"), schemaHasKey(ldapSettingsSchema),
+				ignoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 
@@ -189,7 +190,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = sendConfigurationPatch(content, m)
+		err = utils.SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -232,7 +233,7 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 security:
   ldapSettings: ~
 `
-		err = sendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all Ldap Settings")
 		}
@@ -242,7 +243,7 @@ security:
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = sendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
+		err = utils.SendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Settings")
 		}
@@ -265,23 +266,23 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	ldapSetting := LdapSetting{
-		Key:                      d.getString("key", false),
-		Enabled:                  d.getBool("enabled", false),
-		LdapUrl:                  d.getString("ldap_url", false),
-		AutoCreateUser:           d.getBool("auto_create_user", false),
-		LdapPoisoningProtection:  d.getBool("ldap_poisoning_protection", false),
-		PagingSupportEnabled:     d.getBool("paging_support_enabled", false),
-		AllowUserToAccessProfile: d.getBool("allow_user_to_access_profile", false),
-		UserDnPattern:            d.getString("user_dn_pattern", false),
-		EmailAttribute:           d.getString("email_attribute", false),
+		Key:                      d.GetString("key", false),
+		Enabled:                  d.GetBool("enabled", false),
+		LdapUrl:                  d.GetString("ldap_url", false),
+		AutoCreateUser:           d.GetBool("auto_create_user", false),
+		LdapPoisoningProtection:  d.GetBool("ldap_poisoning_protection", false),
+		PagingSupportEnabled:     d.GetBool("paging_support_enabled", false),
+		AllowUserToAccessProfile: d.GetBool("allow_user_to_access_profile", false),
+		UserDnPattern:            d.GetString("user_dn_pattern", false),
+		EmailAttribute:           d.GetString("email_attribute", false),
 		Search: LdapSearchType{
-			SearchSubTree:   d.getBool("search_sub_tree", false),
-			SearchBase:      d.getString("search_base", false),
-			SearchFilter:    d.getString("search_filter", false),
-			ManagerDn:       d.getString("manager_dn", false),
-			ManagerPassword: d.getString("manager_password", true),
+			SearchSubTree:   d.GetBool("search_sub_tree", false),
+			SearchBase:      d.GetString("search_base", false),
+			SearchFilter:    d.GetString("search_filter", false),
+			ManagerDn:       d.GetString("manager_dn", false),
+			ManagerPassword: d.GetString("manager_password", true),
 		},
 	}
 	return ldapSetting

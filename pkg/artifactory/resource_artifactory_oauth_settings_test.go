@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const OauthSettingsTemplateFull = `
@@ -31,7 +32,7 @@ resource "artifactory_oauth_settings" "oauth" {
 func TestAccOauthSettings_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccOauthSettingsDestroy("artifactory_oauth_settings.oauth"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +81,7 @@ resource "artifactory_oauth_settings" "oauth" {
 func TestAccOauthSettings_multipleProviders(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		CheckDestroy:      testAccOauthSettingsDestroy("artifactory_oauth_settings.oauth"),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +99,12 @@ func TestAccOauthSettings_multipleProviders(t *testing.T) {
 
 func testAccOauthSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]

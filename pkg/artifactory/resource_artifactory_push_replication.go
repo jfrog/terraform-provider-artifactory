@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"golang.org/x/exp/slices"
 )
 
@@ -58,7 +59,7 @@ var pushReplicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validateCron),
+		ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateCron),
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
@@ -145,15 +146,15 @@ func resourceArtifactoryPushReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: mergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
+		Schema: utils.MergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
 	}
 }
 
 func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	pushReplication := new(UpdatePushReplication)
 
-	repo := d.getString("repo_key", false)
+	repo := d.GetString("repo_key", false)
 
 	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
@@ -164,8 +165,8 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 		for i, o := range arr {
 			if i == 0 {
 				pushReplication.RepoKey = repo
-				pushReplication.CronExp = d.getString("cron_exp", false)
-				pushReplication.EnableEventReplication = d.getBool("enable_event_replication", false)
+				pushReplication.CronExp = d.GetString("cron_exp", false)
+				pushReplication.EnableEventReplication = d.GetBool("enable_event_replication", false)
 			}
 
 			m := o.(map[string]interface{})
@@ -173,7 +174,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 			var replication updateReplicationBody
 
 			replication.RepoKey = repo
-			replication.CronExp = d.getString("cron_exp", false)
+			replication.CronExp = d.GetString("cron_exp", false)
 
 			if v, ok = m["url"]; ok {
 				replication.URL = v.(string)
@@ -224,7 +225,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 
 func packPushReplication(pushReplication *GetPushReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("repo_key", pushReplication.RepoKey)
 	setValue("cron_exp", pushReplication.CronExp)

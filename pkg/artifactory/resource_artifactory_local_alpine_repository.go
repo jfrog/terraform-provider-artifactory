@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	const packageType = "alpine"
 
-	var alpineLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var alpineLocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -22,10 +23,10 @@ func resourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	}
 
 	var unPackLocalAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := AlpineLocalRepo{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
-			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
+			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil

@@ -3,6 +3,7 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type CommonJavaVirtualRepositoryParams struct {
@@ -18,7 +19,7 @@ type JavaVirtualRepositoryParams struct {
 
 func resourceArtifactoryJavaVirtualRepository(repoType string) *schema.Resource {
 
-	var mavenVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var mavenVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"force_maven_authentication": {
 			Type:        schema.TypeBool,
@@ -45,14 +46,14 @@ func resourceArtifactoryJavaVirtualRepository(repoType string) *schema.Resource 
 	}, repoLayoutRefSchema("virtual", repoType))
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := JavaVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, repoType),
 			CommonJavaVirtualRepositoryParams: CommonJavaVirtualRepositoryParams{
-				KeyPair:                              d.getString("key_pair", false),
-				ForceMavenAuthentication:             d.getBool("force_maven_authentication", false),
-				PomRepositoryReferencesCleanupPolicy: d.getString("pom_repository_references_cleanup_policy", false),
+				KeyPair:                              d.GetString("key_pair", false),
+				ForceMavenAuthentication:             d.GetBool("force_maven_authentication", false),
+				PomRepositoryReferencesCleanupPolicy: d.GetString("pom_repository_references_cleanup_policy", false),
 			},
 		}
 		repo.PackageType = repoType

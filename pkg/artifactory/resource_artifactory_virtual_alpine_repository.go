@@ -3,13 +3,14 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryAlpineVirtualRepository() *schema.Resource {
 
 	const packageType = "alpine"
 
-	var alpineVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var alpineVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -24,11 +25,11 @@ func resourceArtifactoryAlpineVirtualRepository() *schema.Resource {
 	}
 
 	var unpackAlpineVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := AlpineVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: unpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
-			PrimaryKeyPairRef: d.getString("primary_keypair_ref", false),
+			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

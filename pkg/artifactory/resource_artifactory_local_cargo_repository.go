@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalCargoRepository() *schema.Resource {
 	const packageType = "cargo"
 
-	var cargoLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var cargoLocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"anonymous_access": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -22,10 +23,10 @@ func resourceArtifactoryLocalCargoRepository() *schema.Resource {
 	}
 
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
-			AnonymousAccess:           d.getBool("anonymous_access", false),
+			AnonymousAccess:           d.GetBool("anonymous_access", false),
 		}
 
 		return repo, repo.Id(), nil

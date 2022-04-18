@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -162,7 +162,7 @@ func resourceOauthSettingsUpdate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.Errorf("failed to marshal oauth settings during Update")
 	}
 
-	err = sendConfigurationPatch(content, m)
+	err = utils.SendConfigurationPatch(content, m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
@@ -178,7 +178,7 @@ security:
   oauthSettings: ~
 `
 
-	err := sendConfigurationPatch([]byte(content), m)
+	err := utils.SendConfigurationPatch([]byte(content), m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}
@@ -186,13 +186,13 @@ security:
 }
 
 func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	security := new(OauthSecurity)
 
 	settings := OauthSettings{
-		EnableIntegration:        d.getBool("enable", false),
-		PersistUsers:             d.getBool("persist_users", false),
-		AllowUserToAccessProfile: d.getBool("allow_user_to_access_profile", false),
+		EnableIntegration:        d.GetBool("enable", false),
+		PersistUsers:             d.GetBool("persist_users", false),
+		AllowUserToAccessProfile: d.GetBool("allow_user_to_access_profile", false),
 	}
 
 	if v, ok := d.GetOkExists("oauth_provider"); ok {
@@ -220,7 +220,7 @@ func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
 }
 
 func packOauthSecurity(s *OauthSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := mkLens(d)
+	setValue := utils.MkLens(d)
 
 	setValue("enable", s.Oauth.Settings.EnableIntegration)
 	setValue("persist_users", s.Oauth.Settings.PersistUsers)

@@ -3,13 +3,14 @@ package artifactory
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 
 	const packageType = "rpm"
 
-	var rpmVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var rpmVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -35,13 +36,13 @@ func resourceArtifactoryRpmVirtualRepository() *schema.Resource {
 	}
 
 	var unpackRpmVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := RpmVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, "rpm"),
 			CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
-				PrimaryKeyPairRef:   d.getString("primary_keypair_ref", false),
-				SecondaryKeyPairRef: d.getString("secondary_keypair_ref", false),
+				PrimaryKeyPairRef:   d.GetString("primary_keypair_ref", false),
+				SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
 			},
 		}
 		repo.PackageType = "rpm"

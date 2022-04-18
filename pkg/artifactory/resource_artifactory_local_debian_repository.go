@@ -2,12 +2,13 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 	const packageType = "debian"
 
-	var debianLocalSchema = mergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
+	var debianLocalSchema = utils.MergeSchema(baseLocalRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -35,13 +36,13 @@ func resourceArtifactoryLocalDebianRepository() *schema.Resource {
 	}
 
 	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{ResourceData: data}
+		d := &utils.ResourceData{ResourceData: data}
 		repo := DebianLocalRepositoryParams{
 			LocalRepositoryBaseParams: unpackBaseRepo("local", data, packageType),
-			PrimaryKeyPairRef:         d.getString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.getString("secondary_keypair_ref", false),
-			TrivialLayout:             d.getBool("trivial_layout", false),
-			IndexCompressionFormats:   d.getSet("index_compression_formats"),
+			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
+			TrivialLayout:             d.GetBool("trivial_layout", false),
+			IndexCompressionFormats:   d.GetSet("index_compression_formats"),
 		}
 		return repo, repo.Id(), nil
 	}

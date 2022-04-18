@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const permissionNoIncludes = `
@@ -99,9 +100,9 @@ const permissionFull = `
 `
 
 func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
-	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
-	_, _, repoName := mkNames("test-perm-repo", "artifactory_local_generic_repository")
-	_, _, username := mkNames("artifactory_user", "artifactory_user")
+	_, permFqrn, permName := utils.MkNames("test-perm", "artifactory_permission_target")
+	_, _, repoName := utils.MkNames("test-perm-repo", "artifactory_local_generic_repository")
+	_, _, username := utils.MkNames("artifactory_user", "artifactory_user")
 	testConfig := `
 		resource "artifactory_local_generic_repository" "{{ .repo_name }}" {
 		  key             = "{{ .repo_name }}"
@@ -138,11 +139,11 @@ func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
 		"username":  username,
 		"repo_name": repoName,
 	}
-	foo := executeTemplate(permFqrn, testConfig, variables)
+	foo := utils.ExecuteTemplate(permFqrn, testConfig, variables)
 	resource.Test(test, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(test) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: foo,
@@ -158,7 +159,7 @@ func TestTestAccPermissionTarget_GitHubIssue126(test *testing.T) {
 }
 
 func TestAccPermissionTarget_full(test *testing.T) {
-	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
+	_, permFqrn, permName := utils.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local",
@@ -168,10 +169,10 @@ func TestAccPermissionTarget_full(test *testing.T) {
 	resource.Test(test, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(test) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(permFqrn, permissionFull, tempStruct),
+				Config: utils.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -191,7 +192,7 @@ func TestAccPermissionTarget_full(test *testing.T) {
 }
 
 func TestAccPermissionTarget_addBuild(t *testing.T) {
-	_, permFqrn, permName := mkNames("test-perm", "artifactory_permission_target")
+	_, permFqrn, permName := utils.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local", // because of race conditions in artifactory, this repo must first exist
@@ -201,10 +202,10 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
-				Config: executeTemplate(permFqrn, permissionNoIncludes, tempStruct),
+				Config: utils.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -215,7 +216,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: executeTemplate(permFqrn, permissionJustBuild, tempStruct),
+				Config: utils.ExecuteTemplate(permFqrn, permissionJustBuild, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
@@ -227,7 +228,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: executeTemplate(permFqrn, permissionFull, tempStruct),
+				Config: utils.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -254,7 +255,12 @@ func testPermissionTargetCheckDestroy(id ...string) func(*terraform.State) error
 			if !ok {
 				return fmt.Errorf("err: Resource id[%s] not found", id)
 			}
-			provider, _ := testAccProviders["artifactory"]()
+			provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+			provider, err := utils.ConfigureProvider(provider)
+			if err != nil {
+				return err
+			}
+
 			exists, _ := permTargetExists(rs.Primary.ID, provider.Meta())
 			if !exists {
 				return nil

@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
-	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := utils.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -29,10 +30,13 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 		EOF
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -43,7 +47,7 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 }
 
 func TestAccKeyPairFailPubCertCheck(t *testing.T) {
-	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := utils.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -81,10 +85,13 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 			public_key = "not a key"
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -95,7 +102,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 }
 
 func TestAccKeyPairRSA(t *testing.T) {
-	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := utils.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -149,10 +156,13 @@ func TestAccKeyPairRSA(t *testing.T) {
 			}
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,
@@ -170,7 +180,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 }
 
 func TestAccKeyPairGPG(t *testing.T) {
-	id, fqrn, name := mkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := utils.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -272,10 +282,13 @@ func TestAccKeyPairGPG(t *testing.T) {
 		EOF
 		}
 	`, name, name, id)
+
+	provider := Provider()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      verifyDeleted(fqrn, verifyKeyPair),
-		ProviderFactories: testAccProviders,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, verifyKeyPair),
+		ProviderFactories: utils.TestAccProviders(provider),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,

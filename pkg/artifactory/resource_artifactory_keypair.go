@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 const keypairEndPoint = "artifactory/api/security/keypair/"
@@ -177,21 +178,21 @@ func ignoreEmpty(_, old, new string, _ *schema.ResourceData) bool {
 }
 
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	result := KeyPairPayLoad{
-		PairName:    d.getString("pair_name", false),
-		PairType:    d.getString("pair_type", false),
-		Alias:       d.getString("alias", false),
-		PrivateKey:  strings.ReplaceAll(d.getString("private_key", false), "\t", ""),
-		PublicKey:   strings.ReplaceAll(d.getString("public_key", false), "\t", ""),
-		Unavailable: d.getBool("unavailable", false),
+		PairName:    d.GetString("pair_name", false),
+		PairType:    d.GetString("pair_type", false),
+		Alias:       d.GetString("alias", false),
+		PrivateKey:  strings.ReplaceAll(d.GetString("private_key", false), "\t", ""),
+		PublicKey:   strings.ReplaceAll(d.GetString("public_key", false), "\t", ""),
+		Unavailable: d.GetBool("unavailable", false),
 	}
 	return &result, result.PairName, nil
 }
 
 var keyPairPacker = universalPack(
 	allHclPredicate(
-		ignoreHclPredicate("private_key"), schemaHasKey(keyPairSchema),
+		ignoreHclPredicate("private_key"), utils.SchemaHasKey(keyPairSchema),
 	),
 )
 

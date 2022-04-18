@@ -2,13 +2,14 @@ package artifactory
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 func resourceArtifactoryNugetVirtualRepository() *schema.Resource {
 
 	const packageType = "nuget"
 
-	var nugetVirtualSchema = mergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
+	var nugetVirtualSchema = utils.MergeSchema(baseVirtualRepoSchema, map[string]*schema.Schema{
 		"force_nuget_authentication": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -23,11 +24,11 @@ func resourceArtifactoryNugetVirtualRepository() *schema.Resource {
 	}
 
 	var unpackNugetVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &ResourceData{s}
+		d := &utils.ResourceData{s}
 
 		repo := NugetVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: unpackBaseVirtRepo(s, packageType),
-			ForceNugetAuthentication:    d.getBool("force_nuget_authentication", false),
+			ForceNugetAuthentication:    d.GetBool("force_nuget_authentication", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

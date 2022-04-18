@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
-
-const repositoriesEndpoint = "artifactory/api/repositories/"
 
 type LocalRepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
@@ -175,7 +174,7 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Put(repositoriesEndpoint + key)
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Put(utils.RepositoriesEndpoint + key)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -189,7 +188,7 @@ func mkRepoRead(pack PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo := construct()
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().SetResult(repo).Get(repositoriesEndpoint + d.Id())
+		resp, err := m.(*resty.Client).R().SetResult(repo).Get(utils.RepositoriesEndpoint + d.Id())
 
 		if err != nil {
 			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -209,7 +208,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Post(repositoriesEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).SetBody(repo).Post(utils.RepositoriesEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -220,7 +219,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete(repositoriesEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().AddRetryCondition(retryOnMergeError).Delete(utils.RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -229,21 +228,12 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 	return diag.FromErr(err)
 }
 
-var neverRetry = func(response *resty.Response, err error) bool {
-	return false
-}
-
 var retry400 = func(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
-func checkRepo(id string, request *resty.Request) (*resty.Response, error) {
-	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.Head(repositoriesEndpoint + id)
-}
-
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := checkRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
+	_, err := utils.CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(retry400))
 	return err == nil, err
 }
 
@@ -402,7 +392,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -442,7 +432,7 @@ var baseLocalRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
@@ -492,7 +482,7 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -556,7 +546,7 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"remote_repo_layout_ref": {
@@ -747,8 +737,8 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: commaSeperatedList,
-		StateFunc:        formatCommaSeparatedString,
+		ValidateDiagFunc: utils.CommaSeperatedList,
+		StateFunc:        utils.FormatCommaSeparatedString,
 		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }
@@ -779,7 +769,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -823,7 +813,7 @@ var baseVirtualRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {
@@ -863,7 +853,7 @@ var baseFederatedRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: projectKeyValidator,
+		ValidateDiagFunc: utils.ProjectKeyValidator,
 		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -902,7 +892,7 @@ var baseFederatedRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
@@ -939,71 +929,71 @@ var baseFederatedRepoSchema = map[string]*schema.Schema{
 }
 
 func unpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	return LocalRepositoryBaseParams{
 		Rclass:                 rclassType,
-		Key:                    d.getString("key", false),
-		ProjectKey:             d.getString("project_key", false),
-		ProjectEnvironments:    d.getSet("project_environments"),
+		Key:                    d.GetString("key", false),
+		ProjectKey:             d.GetString("project_key", false),
+		ProjectEnvironments:    d.GetSet("project_environments"),
 		PackageType:            packageType,
-		Description:            d.getString("description", false),
-		Notes:                  d.getString("notes", false),
-		IncludesPattern:        d.getString("includes_pattern", false),
-		ExcludesPattern:        d.getString("excludes_pattern", false),
-		RepoLayoutRef:          d.getString("repo_layout_ref", false),
-		BlackedOut:             d.getBoolRef("blacked_out", false),
-		ArchiveBrowsingEnabled: d.getBoolRef("archive_browsing_enabled", false),
-		PropertySets:           d.getSet("property_sets"),
-		XrayIndex:              d.getBool("xray_index", false),
-		DownloadRedirect:       d.getBoolRef("download_direct", false),
-		PriorityResolution:     d.getBool("priority_resolution", false),
+		Description:            d.GetString("description", false),
+		Notes:                  d.GetString("notes", false),
+		IncludesPattern:        d.GetString("includes_pattern", false),
+		ExcludesPattern:        d.GetString("excludes_pattern", false),
+		RepoLayoutRef:          d.GetString("repo_layout_ref", false),
+		BlackedOut:             d.GetBoolRef("blacked_out", false),
+		ArchiveBrowsingEnabled: d.GetBoolRef("archive_browsing_enabled", false),
+		PropertySets:           d.GetSet("property_sets"),
+		XrayIndex:              d.GetBool("xray_index", false),
+		DownloadRedirect:       d.GetBoolRef("download_direct", false),
+		PriorityResolution:     d.GetBool("priority_resolution", false),
 	}
 }
 
 func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
 		Rclass:                   "remote",
-		Key:                      d.getString("key", false),
-		ProjectKey:               d.getString("project_key", false),
-		ProjectEnvironments:      d.getSet("project_environments"),
+		Key:                      d.GetString("key", false),
+		ProjectKey:               d.GetString("project_key", false),
+		ProjectEnvironments:      d.GetSet("project_environments"),
 		PackageType:              packageType, // must be set independently
-		Url:                      d.getString("url", false),
-		Username:                 d.getString("username", true),
-		Password:                 d.getString("password", false),
-		Proxy:                    d.getString("proxy", false),
-		Description:              d.getString("description", true),
-		Notes:                    d.getString("notes", true),
-		IncludesPattern:          d.getString("includes_pattern", true),
-		ExcludesPattern:          d.getString("excludes_pattern", true),
-		RepoLayoutRef:            d.getString("repo_layout_ref", true),
-		HardFail:                 d.getBoolRef("hard_fail", true),
-		Offline:                  d.getBoolRef("offline", true),
-		BlackedOut:               d.getBoolRef("blacked_out", true),
-		XrayIndex:                d.getBool("xray_index", true),
-		PropagateQueryParams:     d.getBool("propagate_query_params", true),
-		StoreArtifactsLocally:    d.getBoolRef("store_artifacts_locally", true),
-		SocketTimeoutMillis:      d.getInt("socket_timeout_millis", true),
-		LocalAddress:             d.getString("local_address", true),
-		RetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
+		Url:                      d.GetString("url", false),
+		Username:                 d.GetString("username", true),
+		Password:                 d.GetString("password", false),
+		Proxy:                    d.GetString("proxy", false),
+		Description:              d.GetString("description", true),
+		Notes:                    d.GetString("notes", true),
+		IncludesPattern:          d.GetString("includes_pattern", true),
+		ExcludesPattern:          d.GetString("excludes_pattern", true),
+		RepoLayoutRef:            d.GetString("repo_layout_ref", true),
+		HardFail:                 d.GetBoolRef("hard_fail", true),
+		Offline:                  d.GetBoolRef("offline", true),
+		BlackedOut:               d.GetBoolRef("blacked_out", true),
+		XrayIndex:                d.GetBool("xray_index", true),
+		PropagateQueryParams:     d.GetBool("propagate_query_params", true),
+		StoreArtifactsLocally:    d.GetBoolRef("store_artifacts_locally", true),
+		SocketTimeoutMillis:      d.GetInt("socket_timeout_millis", true),
+		LocalAddress:             d.GetString("local_address", true),
+		RetrievalCachePeriodSecs: d.GetInt("retrieval_cache_period_seconds", false),
 		// Not returned in the GET
-		//FailedRetrievalCachePeriodSecs:    d.getInt("failed_retrieval_cache_period_secs", true),
-		MissedRetrievalCachePeriodSecs:    d.getInt("missed_cache_period_seconds", false),
-		UnusedArtifactsCleanupEnabled:     d.getBoolRef("unused_artifacts_cleanup_period_enabled", true),
-		UnusedArtifactsCleanupPeriodHours: d.getInt("unused_artifacts_cleanup_period_hours", true),
-		AssumedOfflinePeriodSecs:          d.getInt("assumed_offline_period_secs", true),
-		ShareConfiguration:                d.getBoolRef("share_configuration", true),
-		SynchronizeProperties:             d.getBoolRef("synchronize_properties", true),
-		BlockMismatchingMimeTypes:         d.getBoolRef("block_mismatching_mime_types", true),
-		PropertySets:                      d.getSet("property_sets"),
-		AllowAnyHostAuth:                  d.getBoolRef("allow_any_host_auth", true),
-		EnableCookieManagement:            d.getBoolRef("enable_cookie_management", true),
-		BypassHeadRequests:                d.getBoolRef("bypass_head_requests", true),
-		ClientTlsCertificate:              d.getString("client_tls_certificate", true),
-		PriorityResolution:                d.getBool("priority_resolution", false),
-		ListRemoteFolderItems:             d.getBool("list_remote_folder_items", false),
-		MismatchingMimeTypeOverrideList:   d.getString("mismatching_mime_types_override_list", false),
+		//FailedRetrievalCachePeriodSecs:    d.GetInt("failed_retrieval_cache_period_secs", true),
+		MissedRetrievalCachePeriodSecs:    d.GetInt("missed_cache_period_seconds", false),
+		UnusedArtifactsCleanupEnabled:     d.GetBoolRef("unused_artifacts_cleanup_period_enabled", true),
+		UnusedArtifactsCleanupPeriodHours: d.GetInt("unused_artifacts_cleanup_period_hours", true),
+		AssumedOfflinePeriodSecs:          d.GetInt("assumed_offline_period_secs", true),
+		ShareConfiguration:                d.GetBoolRef("share_configuration", true),
+		SynchronizeProperties:             d.GetBoolRef("synchronize_properties", true),
+		BlockMismatchingMimeTypes:         d.GetBoolRef("block_mismatching_mime_types", true),
+		PropertySets:                      d.GetSet("property_sets"),
+		AllowAnyHostAuth:                  d.GetBoolRef("allow_any_host_auth", true),
+		EnableCookieManagement:            d.GetBoolRef("enable_cookie_management", true),
+		BypassHeadRequests:                d.GetBoolRef("bypass_head_requests", true),
+		ClientTlsCertificate:              d.GetString("client_tls_certificate", true),
+		PriorityResolution:                d.GetBool("priority_resolution", false),
+		ListRemoteFolderItems:             d.GetBool("list_remote_folder_items", false),
+		MismatchingMimeTypeOverrideList:   d.GetString("mismatching_mime_types_override_list", false),
 	}
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
@@ -1028,10 +1018,10 @@ func unpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 }
 
 func unpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	repo := RemoteRepositoryVcsParams{
-		VcsGitProvider:    d.getString("vcs_git_provider", false),
-		VcsGitDownloadUrl: d.getString("vcs_git_download_url", false),
+		VcsGitProvider:    d.GetString("vcs_git_provider", false),
+		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),
 	}
 	return repo
 }
@@ -1041,50 +1031,50 @@ func unpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
 // Artifactory REST API will not accept empty string or null to reset value to not set
 // Instead, using a non-existant value works as a workaround
 // To ensure we don't accidentally set the value to a valid value, we use a UUID v4 string
-func handleResetWithNonExistantValue(d *ResourceData, key string) string {
-	value := d.getString(key, false)
+func handleResetWithNonExistantValue(d *utils.ResourceData, key string) string {
+	value := d.GetString(key, false)
 
 	// When value has changed and is empty string, then it has been removed from
 	// the Terraform configuration.
 	if value == "" && d.HasChange(key) {
-		return fmt.Sprintf("non-existant-value-%d", randomInt())
+		return fmt.Sprintf("non-existant-value-%d", utils.RandomInt())
 	}
 
 	return value
 }
 
 func unpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParams {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 
 	return VirtualRepositoryBaseParams{
-		Key:                 d.getString("key", false),
+		Key:                 d.GetString("key", false),
 		Rclass:              "virtual",
-		ProjectKey:          d.getString("project_key", false),
-		ProjectEnvironments: d.getSet("project_environments"),
+		ProjectKey:          d.GetString("project_key", false),
+		ProjectEnvironments: d.GetSet("project_environments"),
 		PackageType:         packageType, // must be set independently
-		IncludesPattern:     d.getString("includes_pattern", false),
-		ExcludesPattern:     d.getString("excludes_pattern", false),
-		RepoLayoutRef:       d.getString("repo_layout_ref", false),
-		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.getBool("artifactory_requests_can_retrieve_remote_artifacts", false),
-		Repositories:          d.getList("repositories"),
-		Description:           d.getString("description", false),
-		Notes:                 d.getString("notes", false),
+		IncludesPattern:     d.GetString("includes_pattern", false),
+		ExcludesPattern:     d.GetString("excludes_pattern", false),
+		RepoLayoutRef:       d.GetString("repo_layout_ref", false),
+		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.GetBool("artifactory_requests_can_retrieve_remote_artifacts", false),
+		Repositories:          d.GetList("repositories"),
+		Description:           d.GetString("description", false),
+		Notes:                 d.GetString("notes", false),
 		DefaultDeploymentRepo: handleResetWithNonExistantValue(d, "default_deployment_repo"),
 	}
 }
 
 func unpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 
 	return VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 		VirtualRepositoryBaseParams:     unpackBaseVirtRepo(s, packageType),
-		VirtualRetrievalCachePeriodSecs: d.getInt("retrieval_cache_period_seconds", false),
+		VirtualRetrievalCachePeriodSecs: d.GetInt("retrieval_cache_period_seconds", false),
 	}
 }
 
 // universalUnpack - todo implement me
 func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{}, string, error) {
-	d := &ResourceData{s}
+	d := &utils.ResourceData{s}
 	var t = reflect.TypeOf(payload)
 	var v = reflect.ValueOf(payload)
 	if t.Kind() == reflect.Ptr {
@@ -1105,12 +1095,12 @@ func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{},
 		}
 	}
 	result := KeyPairPayLoad{
-		PairName:    d.getString("pair_name", false),
-		PairType:    d.getString("pair_type", false),
-		Alias:       d.getString("alias", false),
-		PrivateKey:  strings.ReplaceAll(d.getString("private_key", false), "\t", ""),
-		PublicKey:   strings.ReplaceAll(d.getString("public_key", false), "\t", ""),
-		Unavailable: d.getBool("unavailable", false),
+		PairName:    d.GetString("pair_name", false),
+		PairType:    d.GetString("pair_type", false),
+		Alias:       d.GetString("alias", false),
+		PrivateKey:  strings.ReplaceAll(d.GetString("private_key", false), "\t", ""),
+		PublicKey:   strings.ReplaceAll(d.GetString("public_key", false), "\t", ""),
+		Unavailable: d.GetBool("unavailable", false),
 	}
 	return &result, result.PairName, nil
 }
@@ -1149,7 +1139,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 	case reflect.Slice:
 		return func(field reflect.StructField, thing reflect.Value) map[string]interface{} {
 			return map[string]interface{}{
-				fieldToHcl(field): castToInterfaceArr(thing.Interface().([]string)),
+				fieldToHcl(field): utils.CastToInterfaceArr(thing.Interface().([]string)),
 			}
 		}
 	}
@@ -1180,7 +1170,7 @@ func fieldToHcl(field reflect.StructField) string {
 	return result
 }
 
-func lookup(payload interface{}, predicate HclPredicate) map[string]interface{} {
+func lookup(payload interface{}, predicate utils.HclPredicate) map[string]interface{} {
 
 	if predicate == nil {
 		predicate = allowAllPredicate
@@ -1215,7 +1205,7 @@ func lookup(payload interface{}, predicate HclPredicate) map[string]interface{} 
 	return values
 }
 
-func anyHclPredicate(predicates ...HclPredicate) HclPredicate {
+func anyuHclPredicate(predicates ...utils.HclPredicate) utils.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if predicate(hcl) {
@@ -1226,7 +1216,7 @@ func anyHclPredicate(predicates ...HclPredicate) HclPredicate {
 	}
 }
 
-func allHclPredicate(predicates ...HclPredicate) HclPredicate {
+func allHclPredicate(predicates ...utils.HclPredicate) utils.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if !predicate(hcl) {
@@ -1244,7 +1234,7 @@ var allowAllPredicate = func(hcl string) bool {
 	return true
 }
 
-func ignoreHclPredicate(names ...string) HclPredicate {
+func ignoreHclPredicate(names ...string) utils.HclPredicate {
 	set := map[string]interface{}{}
 	for _, name := range names {
 		set[name] = nil
@@ -1273,15 +1263,15 @@ func composePacker(packers ...PackFunc) PackFunc {
 }
 
 func defaultPacker(skeema map[string]*schema.Schema) PackFunc {
-	return universalPack(allHclPredicate(schemaHasKey(skeema), noPassword))
+	return universalPack(allHclPredicate(utils.SchemaHasKey(skeema), noPassword))
 }
 
 // universalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
-func universalPack(predicate HclPredicate) PackFunc {
+func universalPack(predicate utils.HclPredicate) PackFunc {
 
 	return func(payload interface{}, d *schema.ResourceData) error {
-		setValue := mkLens(d)
+		setValue := utils.MkLens(d)
 
 		var errors []error
 

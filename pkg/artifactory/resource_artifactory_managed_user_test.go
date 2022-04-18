@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 
@@ -19,11 +20,11 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 			password			= "Passsw0rd!"
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userNoGroups, name, id, id),
@@ -45,11 +46,11 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
@@ -84,11 +85,11 @@ func TestAccManagedUser(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := mkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := utils.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
-		ProviderFactories: testAccProviders,
+		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, id, id),
@@ -122,7 +123,12 @@ func TestAccManagedUser(t *testing.T) {
 
 func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := testAccProviders["artifactory"]()
+		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
+		provider, err := utils.ConfigureProvider(provider)
+		if err != nil {
+			return err
+		}
+
 		client := provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
