@@ -19,3 +19,11 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `notes` - (Optional)
 
 Arguments for Pub repository type closely match with arguments for Generic repository type.
+
+## Import
+
+Local repositories can be imported using their name, e.g.
+
+```
+$ terraform import artifactory_local_pub_repository.terraform-local-test-pub-repo terraform-local-test-pub-repo
+```
