@@ -1,3 +1,9 @@
+## 6.4.1 (Apr 18, 2022). Tested on Artifactory 7.37.14
+
+IMPROVEMENTS:
+
+* provider: Support `JFROG_ACCESS_TOKEN` environment variable source for 'access_token' attribute. [GH-418]
+
 ## 6.4.0 (Apr 15, 2022). Tested on Artifactory 7.37.13
 
 FEATURES:
