@@ -377,7 +377,7 @@ resource "artifactory_remote_p2_repository" "my-remote-p2" {
 }
 
 resource "artifactory_remote_pub_repository" "my-remote-pub" {
-  key         = "my-remote-pub"
+  key = "my-remote-pub"
   url = "https://pub.dartlang.org"
 }
 
