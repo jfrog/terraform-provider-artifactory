@@ -11,6 +11,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -564,6 +565,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
 	_, fqrn, name := utils.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	certificateAlias := fmt.Sprintf("certificate-%d", utils.RandomInt())
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -598,7 +600,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"allow_any_host_auth":                     true,
 		"enable_cookie_management":                true,
 		"bypass_head_requests":                    true,
-		"client_tls_certificate":                  "",
+		"client_tls_certificate":                  certificateAlias,
 		"content_synchronisation": map[string]interface{}{
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
@@ -616,12 +618,22 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	var preCheckFunc = func() {
+		utils.AddTestCertificate(t, certificateAlias, certificateEndpoint)
+		testAccPreCheck(t)
+	}
+
+	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
+		utils.DeleteTestCertificate(t, certificateAlias, certificateEndpoint)
+		return utils.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
+	}
+
 	provider := Provider()
 
 	return t, resource.TestCase{
 		ProviderFactories: utils.TestAccProviders(provider),
-		PreCheck:          func() { testAccPreCheck(t) },
-		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, utils.TestCheckRepo),
+		PreCheck:          preCheckFunc,
+		CheckDestroy:      utils.VerifyDeleted(fqrn, provider, delCertTestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
