@@ -28,22 +28,20 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 	return err
 }
 
-func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) func() {
-	return func() {
-		const localFilePath = "../../samples/crash.zip"
-		client := acctest.GetTestResty(t)
-		err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
-		if err != nil {
-			t.Fatal(err)
-		}
-		//copies the file at the same location where the file should be downloaded by DataSource. It will create the file exist scenario.
-		err = copyFile(downloadPath, localFilePath)
-		if err != nil {
-			t.Fatal(err)
-		}
-		stat, _ := os.Stat(downloadPath)
-		*localFileModTime = stat.ModTime()
+func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) {
+	const localFilePath = "../../samples/crash.zip"
+	client := acctest.GetTestResty(t)
+	err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
+	if err != nil {
+		t.Fatal(err)
 	}
+	//copies the file at the same location where the file should be downloaded by DataSource. It will create the file exist scenario.
+	err = copyFile(downloadPath, localFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stat, _ := os.Stat(downloadPath)
+	*localFileModTime = stat.ModTime()
 }
 
 func uploadTwoArtifacts(t *testing.T) {
@@ -52,11 +50,11 @@ func uploadTwoArtifacts(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	err = uploadTestFile(client, localNewerFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 }
 
