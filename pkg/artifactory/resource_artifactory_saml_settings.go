@@ -34,7 +34,7 @@ type SamlSettings struct {
 	UseEncryptedAssertion     bool   `yaml:"useEncryptedAssertion" json:"useEncryptedAssertion"`
 }
 
-func resourceArtifactorySamlSettings() *schema.Resource {
+func ResourceArtifactorySamlSettings() *schema.Resource {
 	return &schema.Resource{
 		UpdateContext: resourceSamlSettingsUpdate,
 		CreateContext: resourceSamlSettingsUpdate,

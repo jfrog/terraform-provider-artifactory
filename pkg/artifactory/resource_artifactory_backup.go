@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
@@ -26,7 +27,7 @@ type Backups struct {
 	BackupArr []Backup `xml:"backups>backup" yaml:"backup"`
 }
 
-func resourceArtifactoryBackup() *schema.Resource {
+func ResourceArtifactoryBackup() *schema.Resource {
 	var backupSchema = map[string]*schema.Schema{
 		"key": {
 			Type:             schema.TypeString,
@@ -106,7 +107,7 @@ func resourceArtifactoryBackup() *schema.Resource {
 		}
 
 		matchedBackup := findBackup(backups, backup.Key)
-		packer := defaultPacker(backupSchema)
+		packer := repository.DefaultPacker(backupSchema)
 
 		return diag.FromErr(packer(&matchedBackup, d))
 	}

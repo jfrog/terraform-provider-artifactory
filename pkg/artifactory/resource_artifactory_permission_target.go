@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -45,13 +46,13 @@ type Actions struct {
 	Groups map[string][]string `json:"groups,omitempty"`
 }
 
-func resourceArtifactoryPermissionTargets() *schema.Resource {
-	target := resourceArtifactoryPermissionTarget()
+func ResourceArtifactoryPermissionTargets() *schema.Resource {
+	target := ResourceArtifactoryPermissionTarget()
 	target.DeprecationMessage = "This resource has been deprecated in favour of artifactory_permission_target resource."
 	return target
 }
 
-func resourceArtifactoryPermissionTarget() *schema.Resource {
+func ResourceArtifactoryPermissionTarget() *schema.Resource {
 	actionSchema := schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -317,7 +318,7 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(*resty.Client).R().AddRetryCondition(retry400).SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(*resty.Client).R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
 		return err
 	}
 
@@ -357,10 +358,10 @@ func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return permTargetExists(d.Id(), m)
+	return PermTargetExists(d.Id(), m)
 }
 
-func permTargetExists(id string, m interface{}) (bool, error) {
+func PermTargetExists(id string, m interface{}) (bool, error) {
 	resp, err := m.(*resty.Client).R().Head(permissionsEndPoint + id)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream permission has been manually removed

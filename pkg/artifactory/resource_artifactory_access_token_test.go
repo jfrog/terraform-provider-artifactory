@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -31,9 +33,9 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      audienceBad,
@@ -61,9 +63,9 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: audienceGood,
@@ -98,9 +100,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenExistingUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: existingUser,
@@ -140,9 +142,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fixedDateGood(),
@@ -176,9 +178,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenFixedDateBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      fixedDateBad,
@@ -211,9 +213,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenAdminToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      adminToken,
@@ -241,9 +243,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: refreshableToken,
@@ -272,9 +274,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingUserBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      missingUserBad,
@@ -296,9 +298,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingUserGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: missingUserGood,
@@ -337,9 +339,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      missingGroup,
@@ -369,9 +371,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: wildcardGroupGood,
@@ -407,9 +409,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: nonExpiringToken,
@@ -481,8 +483,8 @@ func testAccCheckAccessTokenNotCreated(id string) func(*terraform.State) error {
 }
 
 func TestTokenOptsToValuesNonExpiring(t *testing.T) {
-	tOpts := AccessTokenOptions{Username: "existinguser", ExpiresIn: 0}
-	values, _ := tokenOptsToValues(tOpts)
+	tOpts := artifactory.AccessTokenOptions{Username: "existinguser", ExpiresIn: 0}
+	values, _ := artifactory.TokenOptsToValues(tOpts)
 	if values.Get("expires_in") != "0" {
 		t.Error("`expires_in` not correctly set when creating non-expiring tokens")
 	}

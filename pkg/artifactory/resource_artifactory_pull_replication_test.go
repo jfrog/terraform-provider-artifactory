@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -6,9 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -33,19 +32,19 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 		name,
 		cron,
 		url,
-		rtDefaultUser,
+		acctest.RtDefaultUser,
 	)
 }
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -56,12 +55,13 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 }
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +70,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "1 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 				),
 			},
@@ -88,25 +88,9 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 	})
 }
 
-func compositeCheckDestroy(funcs ...func(state *terraform.State) error) func(state *terraform.State) error {
-	return func(state *terraform.State) error {
-		var errors []error
-		for _, f := range funcs {
-			err := f(state)
-			if err != nil {
-				errors = append(errors, err)
-			}
-		}
-		if len(errors) > 0 {
-			return fmt.Errorf("%q", errors)
-		}
-		return nil
-	}
-}
-
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := utils.MkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repo_name := utils.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := acctest.MkNames("lib-remote", "artifactory_pull_replication")
+	_, fqrepoName, repo_name := acctest.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -121,20 +105,18 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = utils.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = acctest.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
 	})
 
-	provider := Provider()
-
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: compositeCheckDestroy(
-			utils.VerifyDeleted(fqrepoName, provider, utils.TestCheckRepo),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: acctest.CompositeCheckDestroy(
+			acctest.VerifyDeleted(fqrepoName, acctest.TestCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
-
-		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{

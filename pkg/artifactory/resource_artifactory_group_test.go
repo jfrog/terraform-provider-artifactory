@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -9,22 +9,23 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	_, rfqn, groupName := utils.MkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := utils.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := acctest.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -37,7 +38,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_full(t *testing.T) {
-	_, rfqn, groupName := utils.MkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
 
 	templates := []string{
 		`
@@ -121,14 +122,14 @@ func TestAccGroup_full(t *testing.T) {
 
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, utils.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -200,7 +201,7 @@ func TestAccGroup_full(t *testing.T) {
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, rfqn, groupName := utils.MkNames("test-group-unmanagedmembers", "artifactory_group")
+	_, rfqn, groupName := acctest.MkNames("test-group-unmanagedmembers", "artifactory_group")
 
 	templates := []string{
 		`
@@ -238,13 +239,13 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	}
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, utils.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -279,20 +280,14 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		resp, err := client.R().Head(groupsEndpoint + rs.Primary.ID)
+		resp, err := client.R().Head(artifactory.GroupsEndpoint + rs.Primary.ID)
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
 				return nil
@@ -306,21 +301,15 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		group := Group{}
-		_, err := client.R().SetResult(&group).Get(groupsEndpoint + rs.Primary.ID + "?includeUsers=true")
+		group := artifactory.Group{}
+		_, err := client.R().SetResult(&group).Get(artifactory.GroupsEndpoint + rs.Primary.ID + "?includeUsers=true")
 		if err != nil {
 			return err
 		}

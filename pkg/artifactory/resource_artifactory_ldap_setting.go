@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -47,7 +48,7 @@ type XmlLdapConfig struct {
 	Security SecurityLdapSettings `xml:"security"`
 }
 
-func resourceArtifactoryLdapSetting() *schema.Resource {
+func ResourceArtifactoryLdapSetting() *schema.Resource {
 	var ldapSettingsSchema = map[string]*schema.Schema{
 		"key": {
 			Type:             schema.TypeString,
@@ -162,9 +163,9 @@ func resourceArtifactoryLdapSetting() *schema.Resource {
 			}
 		}
 
-		packer := universalPack(
-			allHclPredicate(
-				ignoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
+		packer := repository.UniversalPack(
+			repository.AllHclPredicate(
+				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 

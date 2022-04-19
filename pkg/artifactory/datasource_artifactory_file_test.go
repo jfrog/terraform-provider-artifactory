@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -10,25 +10,36 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
+func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
+	body, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		return err
+	}
+	uri := "/artifactory/" + remotePath
+	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
+	return err
+}
+
 func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) func() {
 	return func() {
 		const localFilePath = "../../samples/crash.zip"
-		testAccPreCheck(t)
-		client := utils.GetTestResty(t)
+		client := acctest.GetTestResty(t)
 		err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		//copies the file at the same location where the file should be downloaded by DataSource. It will create the file exist scenario.
 		err = copyFile(downloadPath, localFilePath)
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		stat, _ := os.Stat(downloadPath)
 		*localFileModTime = stat.ModTime()
@@ -38,7 +49,7 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 func uploadTwoArtifacts(t *testing.T) {
 	const localOlderFilePath = "../../samples/multi1-3.7-20220310.233748-1.jar"
 	const localNewerFilePath = "../../samples/multi1-3.7-20220310.233859-2.jar"
-	client := utils.GetTestResty(t)
+	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
 		panic(err)
@@ -52,7 +63,7 @@ func uploadTwoArtifacts(t *testing.T) {
 /*
 Tests file downloads. Always downloads on force_overwrite = true
 */
-func TestDlFile(t *testing.T) {
+func TestDownloadFile(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
 	localFileModTime := time.Time{}
 
@@ -72,7 +83,7 @@ func TestDlFile(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+		verified, err := utils.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
 		if !verified {
 			return fmt.Errorf("%s checksum does not have expected checksum", download)
 		}
@@ -80,8 +91,11 @@ func TestDlFile(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		PreCheck:          func() {
+			acctest.PreCheck(t)
+			downloadPreCheck(t, downloadPath, &localFileModTime)
+		},
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(script, downloadPath),
@@ -116,7 +130,7 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		verified, err := VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
+		verified, err := utils.VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
 		if !verified {
 			return fmt.Errorf("%s checksum does not match", download)
 		}
@@ -125,14 +139,16 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			utils.TestAccDeleteRepo(t, "my-maven-local")
-			utils.TestAccCreateRepos(t, "my-maven-local", "local",
+			acctest.PreCheck(t)
+			acctest.TestAccCreateRepos(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
-
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		CheckDestroy: func(_ *terraform.State) error {
+			acctest.TestAccDeleteRepo(t, "my-maven-local")
+			return nil
+		},
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(script, downloadPath),
@@ -163,14 +179,16 @@ func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			utils.TestAccDeleteRepo(t, "my-maven-local")
-			utils.TestAccCreateRepos(t, "my-maven-local", "local",
+			acctest.PreCheck(t)
+			acctest.TestAccCreateRepos(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
-
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: func(_ *terraform.State) error {
+			acctest.TestAccDeleteRepo(t, "my-maven-local")
+			return nil
+		},
 		Steps: []resource.TestStep{
 			{
 				Config:      fmt.Sprintf(script, downloadPath),
@@ -185,7 +203,7 @@ Negative test case on file download skip
 When file is present at output_path, checksum of files at output_path & repository path matches
 artifactory_file datasource will skip the download.
 */
-func TestFileDownloadSkipCheck(t *testing.T) {
+func TestDownloadFileSkipCheck(t *testing.T) {
 	downloadPath := fmt.Sprintf("%s/crash.zip", t.TempDir())
 	localFileModTime := time.Time{}
 
@@ -227,7 +245,7 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 			return err
 		}
 		downloadedFileModTime := downloadedFileStat.ModTime()
-		verified, err := VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+		verified, err := utils.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
 		if !verified {
 			return fmt.Errorf("%s checksum does not have expected checksum", download)
 		}
@@ -239,8 +257,11 @@ func TestFileDownloadSkipCheck(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          downloadPreCheck(t, downloadPath, &localFileModTime),
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			downloadPreCheck(t, downloadPath, &localFileModTime)
+		},
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(noOverWriteForcedScript, downloadPath),
@@ -280,7 +301,7 @@ func copyFile(destPath string, srcPath string) error {
 	return nil
 }
 
-func TestFileExists(t *testing.T) {
+func TestDownloadFileExists(t *testing.T) {
 	tmpFile, err := CreateTempFile("test")
 
 	assert.Nil(t, err)
@@ -290,11 +311,11 @@ func TestFileExists(t *testing.T) {
 	existingPath, _ := filepath.Abs(tmpFile.Name())
 	nonExistingPath := existingPath + "-doesnt-exist"
 
-	assert.Equal(t, true, FileExists(existingPath))
-	assert.Equal(t, false, FileExists(nonExistingPath))
+	assert.Equal(t, true, utils.FileExists(existingPath))
+	assert.Equal(t, false, utils.FileExists(nonExistingPath))
 }
 
-func TestVerifySha256Checksum(t *testing.T) {
+func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 	const testString = "test content"
 	const expectedSha256 = "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72"
 
@@ -306,7 +327,7 @@ func TestVerifySha256Checksum(t *testing.T) {
 
 	filePath, _ := filepath.Abs(file.Name())
 
-	sha256Verified, err := VerifySha256Checksum(filePath, expectedSha256)
+	sha256Verified, err := utils.VerifySha256Checksum(filePath, expectedSha256)
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, sha256Verified)

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -38,7 +39,7 @@ type XmlLdapGroupConfig struct {
 	Security SecurityLdapGroupSettings `xml:"security"`
 }
 
-func resourceArtifactoryLdapGroupSetting() *schema.Resource {
+func ResourceArtifactoryLdapGroupSetting() *schema.Resource {
 	var ldapGroupSettingsSchema = map[string]*schema.Schema{
 		"name": {
 			Type:             schema.TypeString,
@@ -116,7 +117,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 				break
 			}
 		}
-		packer := defaultPacker(ldapGroupSettingsSchema)
+		packer := repository.DefaultPacker(ldapGroupSettingsSchema)
 
 		return diag.FromErr(packer(&matchedLdapGroupSetting, d))
 	}

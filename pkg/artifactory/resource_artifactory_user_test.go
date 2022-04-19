@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -24,7 +25,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := utils.ExecuteTemplate("TestUser", `
+	userInitial := acctest.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -33,7 +34,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := utils.ExecuteTemplate("TestUser", `
+	userUpdated := acctest.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -44,9 +45,9 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(fqrn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: userInitial,
@@ -83,9 +84,9 @@ func TestAccUser_basic(t *testing.T) {
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(fqrn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userBasic, name, id, id),
@@ -117,9 +118,9 @@ func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_user.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(fqrn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userBasic, name, id, id),
@@ -161,11 +162,11 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, id, id),
@@ -204,11 +205,11 @@ func TestAccUser_NoGroups(t *testing.T) {
 			email       		= "dummy%d@a.com"
 		}
 	`
-	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userNoGroups, name, id, id),
@@ -229,11 +230,11 @@ func TestAccUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := utils.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(FQRN),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
@@ -248,13 +249,7 @@ func TestAccUser_EmptyGroups(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 

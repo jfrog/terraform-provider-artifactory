@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestAccApiKey(t *testing.T) {
@@ -17,9 +18,9 @@ func TestAccApiKey(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config: apiKey,
@@ -33,13 +34,7 @@ func TestAccApiKey(t *testing.T) {
 
 func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
@@ -47,11 +42,11 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 
 		data := make(map[string]string)
 
-		_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)
-
+		_, err := client.R().SetResult(&data).Get(artifactory.ApiKeyEndpoint)
 		if err != nil {
 			return err
 		}
+
 		if _, ok = data["apiKey"]; ok {
 			return fmt.Errorf("error: API key %s still exists", rs.Primary.ID)
 		}

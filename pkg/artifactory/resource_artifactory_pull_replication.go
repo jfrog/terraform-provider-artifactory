@@ -72,7 +72,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceArtifactoryPullReplication() *schema.Resource {
+func ResourceArtifactoryPullReplication() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePullReplicationCreate,
 		ReadContext:   resourcePullReplicationRead,

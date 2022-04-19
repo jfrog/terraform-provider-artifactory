@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 )
 
 func mkTclForRepConfg(name, cron, url, proxy string) string {
@@ -34,19 +34,19 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 		name,
 		cron,
 		url,
-		rtDefaultUser,
+		acctest.RtDefaultUser,
 		proxy,
 	)
 }
 func TestInvalidCronSingleReplication(t *testing.T) {
 
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"), "")
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -58,13 +58,13 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 
 func TestInvalidUrlSingleReplication(t *testing.T) {
 
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url", "")
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: utils.TestAccProviders(Provider()),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
@@ -76,17 +76,18 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 
 func TestAccSingleReplication_full(t *testing.T) {
 	const testProxy = "testProxy"
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), testProxy)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			utils.CreateProxy(t, testProxy)
+			acctest.PreCheck(t)
+			acctest.CreateProxy(t, testProxy)
 		},
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func() func(*terraform.State) error {
-			utils.DeleteProxy(t, testProxy)
+			acctest.DeleteProxy(t, testProxy)
 			return testAccCheckReplicationDestroy(fqrn)
 		}(),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +97,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
 			},
@@ -105,10 +106,10 @@ func TestAccSingleReplication_full(t *testing.T) {
 }
 
 func TestAccSingleReplication_withDelRepo(t *testing.T) {
-	_, fqrn, name := utils.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), "")
 	var deleteRepo = func() {
-		restyClient := utils.GetTestResty(t)
+		restyClient := acctest.GetTestResty(t)
 		_, err := restyClient.R().Delete("artifactory/api/repositories/" + name)
 		if err != nil {
 			t.Fatal(err)
@@ -116,8 +117,9 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 		log.Printf("Delete repo %s done.", name)
 	}
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +129,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
-					resource.TestCheckResourceAttr(fqrn, "username", rtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 				),
 			},
@@ -143,8 +145,8 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 }
 
 func TestAccSingleReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := utils.MkNames("lib-remote", "artifactory_single_replication_config")
-	_, fqrepoName, repo_name := utils.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := acctest.MkNames("lib-remote", "artifactory_single_replication_config")
+	_, fqrepoName, repo_name := acctest.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -161,21 +163,19 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = utils.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = acctest.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
-		"username":        rtDefaultUser,
+		"username":        acctest.RtDefaultUser,
 	})
 
-	provider := Provider()
-
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: compositeCheckDestroy(
-			utils.VerifyDeleted(fqrepoName, provider, utils.TestCheckRepo),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: acctest.CompositeCheckDestroy(
+			acctest.VerifyDeleted(fqrepoName, acctest.TestCheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
-
-		ProviderFactories: utils.TestAccProviders(provider),
 
 		Steps: []resource.TestStep{
 			{

@@ -46,7 +46,7 @@ type OauthType struct {
 	FieldValues     []string
 }
 
-func resourceArtifactoryOauthSettings() *schema.Resource {
+func ResourceArtifactoryOauthSettings() *schema.Resource {
 	return &schema.Resource{
 		UpdateContext: resourceOauthSettingsUpdate,
 		CreateContext: resourceOauthSettingsUpdate,

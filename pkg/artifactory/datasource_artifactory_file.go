@@ -2,17 +2,14 @@ package artifactory
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/go-resty/resty/v2"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
 type FileInfo struct {
@@ -30,6 +27,7 @@ type FileInfo struct {
 	OriginalChecksums Checksums `json:"originalChecksums,omitempty"`
 	Uri               string    `json:"uri,omitempty"`
 }
+
 type Checksums struct {
 	Md5    string `json:"md5,omitempty"`
 	Sha1   string `json:"sha1,omitempty"`
@@ -40,7 +38,7 @@ func (fi FileInfo) Id() string {
 	return fi.Repo + fi.Path
 }
 
-func dataSourceArtifactoryFile() *schema.Resource {
+func DataSourceArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFileReader,
 		Schema: map[string]*schema.Schema{
@@ -145,8 +143,8 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		fileExists := FileExists(outputPath)
-		chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		fileExists := utils.FileExists(outputPath)
+		chksMatches, _ := utils.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 
 		/*--File Download logic--
 		1. File doesn't exist
@@ -180,7 +178,7 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		chksMatches, _ = utils.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 		if !chksMatches {
 			return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
 		}
@@ -188,7 +186,7 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 		fileInfo.Repo = repository
 		fileInfo.Path = path
 		d.SetId(fileInfo.Path)
-		fileExists := FileExists(outputPath)
+		fileExists := utils.FileExists(outputPath)
 
 		if !fileExists || forceOverwrite {
 			outdir := filepath.Dir(outputPath)
@@ -220,31 +218,4 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	return diag.FromErr(packFileInfo(fileInfo, d))
-}
-
-func FileExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
-}
-
-func VerifySha256Checksum(path string, expectedSha256 string) (bool, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return false, err
-	}
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
-
-	hasher := sha256.New()
-
-	if _, err := io.Copy(hasher, f); err != nil {
-		return false, err
-	}
-
-	return hex.EncodeToString(hasher.Sum(nil)) == expectedSha256, nil
 }

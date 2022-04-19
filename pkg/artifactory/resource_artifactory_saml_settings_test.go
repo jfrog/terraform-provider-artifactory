@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 const SamlSettingsTemplateFull = `
@@ -29,8 +30,9 @@ resource "artifactory_saml_settings" "saml" {
 
 func TestAccSamlSettings_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccSamlSettingsDestroy("artifactory_saml_settings.saml"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -57,19 +59,13 @@ func TestAccSamlSettings_full(t *testing.T) {
 
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		c := provider.Meta().(*resty.Client)
+		c := acctest.Provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		samlSettings := SamlSettings{}
+		samlSettings := artifactory.SamlSettings{}
 
 		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {

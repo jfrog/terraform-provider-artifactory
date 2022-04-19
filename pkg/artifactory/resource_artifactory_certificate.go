@@ -29,7 +29,7 @@ type CertificateDetails struct {
 	FingerPrint      string `json:"fingerPrint,omitempty"`
 }
 
-func resourceArtifactoryCertificate() *schema.Resource {
+func ResourceArtifactoryCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCertificateCreate,
 		Read:   resourceCertificateRead,
@@ -164,7 +164,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 	return formatFingerPrint(fingerprint[:]), nil
 }
 
-func findCertificate(alias string, m interface{}) (*CertificateDetails, error) {
+func FindCertificate(alias string, m interface{}) (*CertificateDetails, error) {
 	c := m.(*resty.Client)
 	certificates := new([]CertificateDetails)
 	_, err := c.R().SetResult(certificates).Get(endpoint)
@@ -189,7 +189,7 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
-	cert, err := findCertificate(d.Id(), m)
+	cert, err := FindCertificate(d.Id(), m)
 	if err != nil {
 		return err
 	}
@@ -279,6 +279,6 @@ func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCertificateExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	cert, err := findCertificate(d.Id(), m)
+	cert, err := FindCertificate(d.Id(), m)
 	return err == nil && cert != nil, err
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"golang.org/x/exp/slices"
 )
@@ -135,7 +136,7 @@ var pushReplicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceArtifactoryPushReplication() *schema.Resource {
+func ResourceArtifactoryPushReplication() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePushReplicationCreate,
 		ReadContext:   resourcePushReplicationRead,
@@ -209,7 +210,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 			}
 
 			if _, ok := m["proxy"]; ok {
-				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+				replication.Proxy = repository.HandleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -323,7 +324,7 @@ func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m inte
 	return diag.FromErr(err)
 }
 
-func repConfigExists(id string, m interface{}) (bool, error) {
+func RepConfigExists(id string, m interface{}) (bool, error) {
 	_, err := m.(*resty.Client).R().Head(replicationEndpointPath + id)
 	return err == nil, err
 }

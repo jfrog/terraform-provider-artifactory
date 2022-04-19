@@ -9,7 +9,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func resourceArtifactoryManagedUser() *schema.Resource {
+func ResourceArtifactoryManagedUser() *schema.Resource {
 	managedUserSchema := map[string]*schema.Schema{
 		"password": {
 			Type:             schema.TypeString,

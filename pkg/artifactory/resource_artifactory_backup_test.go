@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestAccBackup_full(t *testing.T) {
@@ -34,8 +35,9 @@ resource "artifactory_backup" "backuptest" {
     depends_on = [ artifactory_local_generic_repository.test-backup-local1, artifactory_local_generic_repository.test-backup-local2 ]
 }`
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccBackupDestroy("backuptest"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -60,19 +62,13 @@ resource "artifactory_backup" "backuptest" {
 
 func testAccBackupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources["artifactory_backup."+id]
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		backups := &Backups{}
+		backups := &artifactory.Backups{}
 
 		response, err := client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {

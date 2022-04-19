@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -107,7 +108,7 @@ var replicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceArtifactoryReplicationConfig() *schema.Resource {
+func ResourceArtifactoryReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceReplicationConfigCreate,
 		ReadContext:   resourceReplicationConfigRead,
@@ -182,7 +183,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 			}
 
 			if _, ok := m["proxy"]; ok {
-				replication.Proxy = handleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+				replication.Proxy = repository.HandleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {

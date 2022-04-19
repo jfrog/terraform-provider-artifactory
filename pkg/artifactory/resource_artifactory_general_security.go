@@ -18,7 +18,7 @@ type GeneralSettings struct {
 	AnonAccessEnabled bool `yaml:"anonAccessEnabled" json:"anonAccessEnabled"`
 }
 
-func resourceArtifactoryGeneralSecurity() *schema.Resource {
+func ResourceArtifactoryGeneralSecurity() *schema.Resource {
 	return &schema.Resource{
 		UpdateContext: resourceGeneralSecurityUpdate,
 		CreateContext: resourceGeneralSecurityUpdate,

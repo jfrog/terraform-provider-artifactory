@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-func resourceArtifactoryAnonymousUser() *schema.Resource {
+func ResourceArtifactoryAnonymousUser() *schema.Resource {
 
 	type AnonymousUser struct {
 		Name string `json:"name"`

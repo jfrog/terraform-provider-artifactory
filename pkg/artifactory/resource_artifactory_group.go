@@ -11,9 +11,9 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-const groupsEndpoint = "artifactory/api/security/groups/"
+const GroupsEndpoint = "artifactory/api/security/groups/"
 
-func resourceArtifactoryGroup() *schema.Resource {
+func ResourceArtifactoryGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
@@ -123,7 +123,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	_, err = m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + group.Name)
+	_, err = m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + group.Name)
 
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func resourceGroupGet(d *schema.ResourceData, m interface{}) (*Group, error) {
 	}
 
 	group := Group{}
-	url := fmt.Sprintf("%s%s?includeUsers=%t", groupsEndpoint, d.Id(), includeUsers)
+	url := fmt.Sprintf("%s%s?includeUsers=%t", GroupsEndpoint, d.Id(), includeUsers)
 	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
 	return &group, err
 }
@@ -197,12 +197,12 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	// this results in a group where users are not managed by artifactory if users_names is not set.
 
 	if includeUsers {
-		_, err := m.(*resty.Client).R().SetBody(group).Put(groupsEndpoint + d.Id())
+		_, err := m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + d.Id())
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err = m.(*resty.Client).R().SetBody(group).Post(groupsEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().SetBody(group).Post(GroupsEndpoint + d.Id())
 		if err != nil {
 			return err
 		}
@@ -213,7 +213,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete(groupsEndpoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(GroupsEndpoint + d.Id())
 	return err
 }
 
@@ -222,7 +222,7 @@ func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
 }
 
 func groupExists(client *resty.Client, groupName string) (bool, error) {
-	resp, err := client.R().Head(groupsEndpoint + groupName)
+	resp, err := client.R().Head(GroupsEndpoint + groupName)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream user has been manually removed
 		return false, nil

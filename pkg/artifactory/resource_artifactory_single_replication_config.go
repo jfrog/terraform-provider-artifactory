@@ -8,10 +8,11 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-func resourceArtifactorySingleReplicationConfig() *schema.Resource {
+func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceSingleReplicationConfigCreate,
 		ReadContext:   resourceSingleReplicationConfigRead,
@@ -45,7 +46,7 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBod
 	replicationConfig.SyncProperties = d.GetBool("sync_properties", false)
 	replicationConfig.SyncStatistics = d.GetBool("sync_statistics", false)
 	replicationConfig.PathPrefix = d.GetString("path_prefix", false)
-	replicationConfig.Proxy = handleResetWithNonExistantValue(d, "proxy")
+	replicationConfig.Proxy = repository.HandleResetWithNonExistantValue(d, "proxy")
 	replicationConfig.Password = d.GetString("password", false)
 
 	return replicationConfig

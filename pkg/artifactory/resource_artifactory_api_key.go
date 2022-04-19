@@ -9,13 +9,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
+const ApiKeyEndpoint = "artifactory/api/security/apiKey"
+
 type ApiKey struct {
 	ApiKey string `json:"apiKey"`
 }
 
-const apiKeyEndpoint = "artifactory/api/security/apiKey"
-
-func resourceArtifactoryApiKey() *schema.Resource {
+func ResourceArtifactoryApiKey() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceApiKeyCreate,
 		Read:   resourceApiKeyRead,
@@ -51,7 +51,7 @@ func packApiKey(apiKey string, d *schema.ResourceData) error {
 func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 	data := make(map[string]string)
 
-	_, err := m.(*resty.Client).R().SetResult(&data).Post(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 	data := make(map[string]string)
-	_, err := m.(*resty.Client).R().SetResult(&data).Get(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
 		return err
 	}
@@ -78,6 +78,6 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func apiKeyRevoke(_ *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete(apiKeyEndpoint)
+	_, err := m.(*resty.Client).R().Delete(ApiKeyEndpoint)
 	return err
 }

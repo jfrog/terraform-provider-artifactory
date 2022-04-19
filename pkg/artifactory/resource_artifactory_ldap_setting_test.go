@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestAccLdapSetting_full(t *testing.T) {
@@ -40,8 +41,9 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	manager_password = "testmgrpaswd"
 }`
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptest"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -104,8 +106,9 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 }`
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptestemailattr"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -175,8 +178,9 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 }`
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccLdapSettingDestroy("ldaptestuserdnsearchfilter"),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
@@ -213,19 +217,13 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
-
-		client := provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(*resty.Client)
 
 		_, ok := s.RootModule().Resources["artifactory_ldap_setting."+id]
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		ldapConfigs := &XmlLdapConfig{}
+		ldapConfigs := &artifactory.XmlLdapConfig{}
 
 		response, err := client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {

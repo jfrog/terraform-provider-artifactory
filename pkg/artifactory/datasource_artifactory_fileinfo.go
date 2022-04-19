@@ -5,10 +5,11 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-func dataSourceArtifactoryFileInfo() *schema.Resource {
+func DataSourceArtifactoryFileInfo() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceFileInfoRead,
 
@@ -16,7 +17,7 @@ func dataSourceArtifactoryFileInfo() *schema.Resource {
 			"repository": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: repoKeyValidator,
+				ValidateFunc: repository.RepoKeyValidator,
 			},
 			"path": {
 				Type:     schema.TypeString,

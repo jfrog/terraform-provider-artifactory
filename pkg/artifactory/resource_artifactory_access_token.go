@@ -54,7 +54,7 @@ type AccessToken struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
-func resourceArtifactoryAccessToken() *schema.Resource {
+func ResourceArtifactoryAccessToken() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAccessTokenCreate,
 		Read:   resourceAccessTokenRead,
@@ -204,7 +204,7 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	accessToken := AccessToken{}
-	values, err := tokenOptsToValues(tokenOptions)
+	values, err := TokenOptsToValues(tokenOptions)
 	if err != nil {
 		return err
 	}
@@ -353,7 +353,7 @@ func checkUserExists(client *resty.Client, name string) (bool, error) {
 }
 
 func checkGroupExists(client *resty.Client, name string) (bool, error) {
-	resp, err := client.R().Head(groupsEndpoint + name)
+	resp, err := client.R().Head(GroupsEndpoint + name)
 	// If there is an error, it possible the group does not exist.
 	if err != nil {
 		if resp != nil {
@@ -410,6 +410,6 @@ func getDate(d *schema.ResourceData) (time.Time, int, error) {
 	return endDate, differenceInSeconds, nil
 }
 
-func tokenOptsToValues(t AccessTokenOptions) (url.Values, error) {
+func TokenOptsToValues(t AccessTokenOptions) (url.Values, error) {
 	return query.Values(t)
 }

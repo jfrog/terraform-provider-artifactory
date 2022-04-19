@@ -1,4 +1,4 @@
-package artifactory
+package artifactory_test
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestInvalidCronFails(t *testing.T) {
@@ -30,7 +31,8 @@ func TestInvalidCronFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -58,7 +60,8 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: utils.TestAccProviders(Provider()),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -90,20 +93,21 @@ func TestAccReplication_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			utils.CreateProxy(t, testProxy)
+			acctest.PreCheck(t)
+			acctest.CreateProxy(t, testProxy)
 		},
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func() func(*terraform.State) error {
-			utils.DeleteProxy(t, testProxy)
+			acctest.DeleteProxy(t, testProxy)
 			return testAccCheckReplicationDestroy("artifactory_replication_config.lib-local")
 		}(),
-		ProviderFactories: utils.TestAccProviders(Provider()),
 
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(
 					replicationConfigTemplate,
 					os.Getenv("ARTIFACTORY_URL"),
-					rtDefaultUser,
+					acctest.RtDefaultUser,
 					testProxy,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -111,7 +115,7 @@ func TestAccReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.username", rtDefaultUser),
+					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.proxy", testProxy),
 				),
 			},
@@ -125,13 +129,8 @@ func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		provider, _ := utils.TestAccProviders(Provider())["artifactory"]()
-		provider, err := utils.ConfigureProvider(provider)
-		if err != nil {
-			return err
-		}
 
-		exists, _ := repConfigExists(rs.Primary.ID, provider.Meta())
+		exists, _ := artifactory.RepConfigExists(rs.Primary.ID, acctest.Provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)
 		}
