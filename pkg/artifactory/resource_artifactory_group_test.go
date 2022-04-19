@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -320,7 +321,7 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 		}
 
 		group := Group{}
-		_, err := client.R().SetResult(&group).Get(groupsEndpoint + rs.Primary.ID + "?includeUsers=true")
+		_, err = client.R().SetResult(&group).Get(groupsEndpoint + rs.Primary.ID + "?includeUsers=true")
 		if err != nil {
 			return err
 		}

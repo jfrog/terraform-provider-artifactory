@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -47,7 +48,7 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 
 		data := make(map[string]string)
 
-		_, err := client.R().SetResult(&data).Get(apiKeyEndpoint)
+		_, err = client.R().SetResult(&data).Get(apiKeyEndpoint)
 
 		if err != nil {
 			return err

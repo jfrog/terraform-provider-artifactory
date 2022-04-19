@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -321,6 +322,7 @@ var repoTypesLikeGeneric = []string{
 	"helm",
 	"npm",
 	"opkg",
+	"pub",
 	"puppet",
 	"pypi",
 	"vagrant",
@@ -339,6 +341,7 @@ var remoteRepoTypesLikeGeneric = []string{
 	"npm",
 	"opkg",
 	"p2",
+	"pub",
 	"puppet",
 	"rpm",
 }
@@ -350,6 +353,7 @@ var virtualRepoTypesLikeGeneric = []string{
 	"gitlfs",
 	"composer",
 	"p2",
+	"pub",
 	"puppet",
 	"pypi",
 }

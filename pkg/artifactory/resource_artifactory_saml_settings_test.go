@@ -7,6 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -71,7 +72,7 @@ func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 		}
 		samlSettings := SamlSettings{}
 
-		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
+		_, err = c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
 		}

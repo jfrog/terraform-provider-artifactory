@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -48,7 +49,7 @@ func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 		}
 
 		generalSettings := GeneralSettings{}
-		_, err := client.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
+		_, err = client.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read")
 		}

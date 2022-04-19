@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
-	"text/template"
 	"testing"
+	"text/template"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -320,4 +321,31 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 	return restyClient
+}
+
+func AddTestCertificate(t *testing.T, certificateAlias string, certificateEndpoint string) {
+	restyClient := GetTestResty(t)
+
+	certFileBytes, err := ioutil.ReadFile("../../samples/cert.pem")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = restyClient.R().
+		SetBody(string(certFileBytes)).
+		SetContentLength(true).
+		Post(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func DeleteTestCertificate(t *testing.T, certificateAlias string, certificateEndpoint string) {
+	restyClient := GetTestResty(t)
+
+	_, err := restyClient.R().
+		Delete(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
+	}
 }
