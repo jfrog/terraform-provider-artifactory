@@ -105,7 +105,10 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(ReplicationEndpointPath + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().
+		SetBody(replicationConfig).
+		AddRetryCondition(utils.RetryOnMergeError).
+		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -156,7 +159,10 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 
 func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(ReplicationEndpointPath + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().
+		SetBody(replicationConfig).
+		AddRetryCondition(utils.RetryOnMergeError).
+		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -40,19 +40,12 @@ var testAccProviderConfigure sync.Once
 func init() {
 	Provider = provider.Provider()
 
-	// Always allocate a new provider instance each invocation, otherwise gRPC
-	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
 		"artifactory": func() (*schema.Provider, error) { return provider.Provider(), nil },
 	}
 }
 
-// This PreCheck function should be present in every acceptance test. It allows
-// test configurations to omit a provider configuration with region and ensures
-// testing functions that attempt to call AWS APIs are previously configured.
-//
-// These verifications and configuration are preferred at this level to prevent
-// provider developers from experiencing less clear errors for every test.
+// This PreCheck function should be present in every acceptance test.
 func PreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
@@ -242,7 +235,6 @@ func CreateProject(t *testing.T, projectKey string) {
 
 	_, err := restyClient.R().
 		SetBody(project).
-		AddRetryCondition(repository.Retry503).
 		Post("/access/api/v1/projects")
 	if err != nil {
 		t.Fatal(err)
@@ -251,9 +243,7 @@ func CreateProject(t *testing.T, projectKey string) {
 
 func DeleteProject(t *testing.T, projectKey string) {
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().
-		AddRetryCondition(repository.Retry503).
-		Delete("/access/api/v1/projects/" + projectKey)
+	_, err := restyClient.R().Delete("/access/api/v1/projects/" + projectKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,8 +272,7 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	r.XrayIndex = true
 	response, errRepo := restyClient.R().
 		SetBody(r).
-		AddRetryCondition(repository.RetryOnMergeError).
-		AddRetryCondition(repository.Retry503).
+		AddRetryCondition(utils.RetryOnMergeError).
 		Put("artifactory/api/repositories/" + repo)
 	//Artifactory can return 400 for several reasons, this is why we are checking the response body
 	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
@@ -296,8 +285,7 @@ func DeleteRepo(t *testing.T, repo string) {
 	restyClient := GetTestResty(t)
 
 	response, errRepo := restyClient.R().
-		AddRetryCondition(repository.RetryOnMergeError).
-		AddRetryCondition(repository.Retry503).
+		AddRetryCondition(utils.RetryOnMergeError).
 		Delete("artifactory/api/repositories/" + repo)
 	if errRepo != nil || response.StatusCode() != http.StatusOK {
 		t.Logf("The repository %s doesn't exist", repo)

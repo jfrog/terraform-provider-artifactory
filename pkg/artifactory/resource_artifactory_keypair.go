@@ -198,7 +198,10 @@ var keyPairPacker = repository.UniversalPack(
 func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
 
-	_, err := m.(*resty.Client).R().AddRetryCondition(repository.RetryOnMergeError).SetBody(keyPair).Post(utils.KeypairEndPoint)
+	_, err := m.(*resty.Client).R().
+		AddRetryCondition(utils.RetryOnMergeError).
+		SetBody(keyPair).
+		Post(utils.KeypairEndPoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -131,6 +132,7 @@ func MkLens(d *schema.ResourceData) Lens {
 func SendConfigurationPatch(content []byte, m interface{}) error {
 	_, err := m.(*resty.Client).R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
+		AddRetryCondition(RetryOnMergeError).
 		Patch("artifactory/api/system/configuration")
 
 	return err
@@ -164,7 +166,7 @@ func BuildResty(URL, version string) (*resty.Client, error) {
 		SetHeader("content-type", "application/json").
 		SetHeader("accept", "*/*").
 		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+version).
-		SetRetryCount(5)
+		SetRetryCount(20)
 
 	restyBase.DisableWarn = true
 
@@ -181,8 +183,14 @@ func AddAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Cl
 	return nil, fmt.Errorf("no authentication details supplied")
 }
 
-var NeverRetry = func(response *resty.Response, err error) bool {
+func NeverRetry(response *resty.Response, err error) bool {
 	return false
+}
+
+var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
+
+func RetryOnMergeError(response *resty.Response, _r error) bool {
+	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
 }
 
 func FileExists(path string) bool {

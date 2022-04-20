@@ -10,7 +10,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
@@ -216,7 +215,6 @@ func checkArtifactoryLicense(client *resty.Client) error {
 	licensesWrapper := LicensesWrapper{}
 	_, err := client.R().
 		SetResult(&licensesWrapper).
-		AddRetryCondition(repository.Retry503).
 		Get("/artifactory/api/system/license")
 
 	if err != nil {
@@ -245,15 +243,17 @@ func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{
 		ProductId string    `json:"productId"`
 		Features  []Feature `json:"features"`
 	}
+
+	usage := UsageStruct{
+		"terraform-provider-artifactory/" + Version,
+		[]Feature{
+			{FeatureId: "Partner/ACC-007450"},
+			{FeatureId: "Terraform/" + terraformVersion},
+		},
+	}
+
 	_, err := restyBase.R().
-		SetBody(UsageStruct{
-			"terraform-provider-artifactory/" + Version,
-			[]Feature{
-				{FeatureId: "Partner/ACC-007450"},
-				{FeatureId: "Terraform/" + terraformVersion},
-			},
-		}).
-		AddRetryCondition(repository.Retry503).
+		SetBody(usage).
 		Post("artifactory/api/system/usage")
 
 	if err != nil {

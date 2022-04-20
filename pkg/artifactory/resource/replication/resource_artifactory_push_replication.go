@@ -279,7 +279,9 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put(ReplicationEndpointPath + "multiple/" + pushReplication.RepoKey)
+	_, err := m.(*resty.Client).R().
+		SetBody(pushReplication).
+		Put(ReplicationEndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -311,7 +313,10 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post(ReplicationEndpointPath + "multiple/" + d.Id())
+	_, err := m.(*resty.Client).R().
+		SetBody(pushReplication).
+		AddRetryCondition(utils.RetryOnMergeError).
+		Post(ReplicationEndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -320,6 +325,8 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(ReplicationEndpointPath + d.Id())
+	_, err := m.(*resty.Client).R().
+		AddRetryCondition(utils.RetryOnMergeError).
+		Delete(ReplicationEndpointPath + d.Id())
 	return diag.FromErr(err)
 }

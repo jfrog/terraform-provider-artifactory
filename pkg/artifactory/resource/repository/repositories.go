@@ -58,12 +58,6 @@ type UnpackFunc func(s *schema.ResourceData) (interface{}, string, error)
 
 type PackFunc func(repo interface{}, d *schema.ResourceData) error
 
-var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
-
-func RetryOnMergeError(response *resty.Response, _r error) bool {
-	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
-}
-
 func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
 
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -72,7 +66,10 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Put(RepositoriesEndpoint + key)
+		_, err = m.(*resty.Client).R().
+			AddRetryCondition(utils.RetryOnMergeError).
+			SetBody(repo).
+			Put(RepositoriesEndpoint + key)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -106,7 +103,10 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Post(RepositoriesEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().
+			AddRetryCondition(utils.RetryOnMergeError).
+			SetBody(repo).
+			Post(RepositoriesEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -117,7 +117,9 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).Delete(RepositoriesEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().
+		AddRetryCondition(utils.RetryOnMergeError).
+		Delete(RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -127,11 +129,7 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 }
 
 func Retry400(response *resty.Response, err error) bool {
-	return response.StatusCode() == 400
-}
-
-func Retry503(response *resty.Response, err error) bool {
-	return response.StatusCode() == 503
+	return response.StatusCode() == http.StatusBadRequest
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
