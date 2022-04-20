@@ -1,4 +1,4 @@
-package artifactory
+package datasource
 
 import (
 	"fmt"

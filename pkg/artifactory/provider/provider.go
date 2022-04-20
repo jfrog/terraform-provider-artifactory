@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
@@ -146,8 +147,8 @@ func Provider() *schema.Provider {
 		ResourcesMap: resoucesMap,
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"artifactory_file":     artifactory.DataSourceArtifactoryFile(),
-			"artifactory_fileinfo": artifactory.DataSourceArtifactoryFileInfo(),
+			"artifactory_file":     datasource.DataSourceArtifactoryFile(),
+			"artifactory_fileinfo": datasource.DataSourceArtifactoryFileInfo(),
 		},
 	}
 
