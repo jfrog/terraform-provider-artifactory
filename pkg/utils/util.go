@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -179,15 +178,6 @@ var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descr
 
 func RetryOnMergeError(response *resty.Response, _r error) bool {
 	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
-}
-
-func FileExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
 }
 
 type SupportedRepoClasses struct {

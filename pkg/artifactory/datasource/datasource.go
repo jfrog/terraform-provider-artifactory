@@ -24,3 +24,12 @@ func VerifySha256Checksum(path string, expectedSha256 string) (bool, error) {
 
 	return hex.EncodeToString(hasher.Sum(nil)) == expectedSha256, nil
 }
+
+func FileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}

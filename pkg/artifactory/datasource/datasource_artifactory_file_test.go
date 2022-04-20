@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -310,8 +309,8 @@ func TestDownloadFileExists(t *testing.T) {
 	existingPath, _ := filepath.Abs(tmpFile.Name())
 	nonExistingPath := existingPath + "-doesnt-exist"
 
-	assert.Equal(t, true, utils.FileExists(existingPath))
-	assert.Equal(t, false, utils.FileExists(nonExistingPath))
+	assert.Equal(t, true, datasource.FileExists(existingPath))
+	assert.Equal(t, false, datasource.FileExists(nonExistingPath))
 }
 
 func TestDownloadFileVerifySha256Checksum(t *testing.T) {
