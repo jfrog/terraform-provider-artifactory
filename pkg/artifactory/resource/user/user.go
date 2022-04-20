@@ -1,4 +1,4 @@
-package artifactory
+package user
 
 import (
 	"context"

@@ -13,6 +13,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
@@ -53,10 +54,10 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_rpm_repository":      virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":     virtual.ResourceArtifactoryVirtualHelmRepository(),
 		"artifactory_group":                       artifactory.ResourceArtifactoryGroup(),
-		"artifactory_user":                        artifactory.ResourceArtifactoryUser(),
-		"artifactory_unmanaged_user":              artifactory.ResourceArtifactoryUser(), // alias of artifactory_user
-		"artifactory_managed_user":                artifactory.ResourceArtifactoryManagedUser(),
-		"artifactory_anonymous_user":              artifactory.ResourceArtifactoryAnonymousUser(),
+		"artifactory_user":                        user.ResourceArtifactoryUser(),
+		"artifactory_unmanaged_user":              user.ResourceArtifactoryUser(), // alias of artifactory_user
+		"artifactory_managed_user":                user.ResourceArtifactoryManagedUser(),
+		"artifactory_anonymous_user":              user.ResourceArtifactoryAnonymousUser(),
 		"artifactory_permission_target":           artifactory.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":            artifactory.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":            artifactory.ResourceArtifactoryPushReplication(),
