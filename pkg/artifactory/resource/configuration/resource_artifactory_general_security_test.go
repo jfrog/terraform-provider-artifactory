@@ -1,15 +1,14 @@
-package artifactory_test
+package configuration_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 )
 
 const GeneralSecurityTemplateFull = `
@@ -43,7 +42,7 @@ func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
-		generalSettings := artifactory.GeneralSettings{}
+		generalSettings := configuration.GeneralSettings{}
 		_, err := client.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read")

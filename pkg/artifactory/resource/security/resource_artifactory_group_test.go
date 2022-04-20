@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 )
 
 func TestAccGroup_basic(t *testing.T) {
@@ -287,7 +287,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		resp, err := client.R().Head(artifactory.GroupsEndpoint + rs.Primary.ID)
+		resp, err := client.R().Head(security.GroupsEndpoint + rs.Primary.ID)
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
 				return nil
@@ -308,8 +308,8 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		group := artifactory.Group{}
-		_, err := client.R().SetResult(&group).Get(artifactory.GroupsEndpoint + rs.Primary.ID + "?includeUsers=true")
+		group := security.Group{}
+		_, err := client.R().SetResult(&group).Get(security.GroupsEndpoint + rs.Primary.ID + "?includeUsers=true")
 		if err != nil {
 			return err
 		}

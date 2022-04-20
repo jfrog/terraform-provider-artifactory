@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -56,7 +56,7 @@ func TestAccCertWithFile(t *testing.T) {
 	const certWithFile = `
 		resource "artifactory_certificate" "%s" {
 			alias   = "%s"
-			file = "../../samples/cert.pem"
+			file = "../../../../samples/cert.pem"
 		}
 	`
 	id := utils.RandomInt()
@@ -155,7 +155,7 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		cert, err := artifactory.FindCertificate(id, acctest.Provider.Meta())
+		cert, err := security.FindCertificate(id, acctest.Provider.Meta())
 		if err != nil {
 			return err
 		}

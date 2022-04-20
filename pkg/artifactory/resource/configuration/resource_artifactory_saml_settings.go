@@ -1,4 +1,4 @@
-package artifactory
+package configuration
 
 import (
 	"context"

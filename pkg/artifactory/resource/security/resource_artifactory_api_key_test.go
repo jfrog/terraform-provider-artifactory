@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 )
 
 func TestAccApiKey(t *testing.T) {
@@ -42,7 +42,7 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 
 		data := make(map[string]string)
 
-		_, err := client.R().SetResult(&data).Get(artifactory.ApiKeyEndpoint)
+		_, err := client.R().SetResult(&data).Get(security.ApiKeyEndpoint)
 		if err != nil {
 			return err
 		}

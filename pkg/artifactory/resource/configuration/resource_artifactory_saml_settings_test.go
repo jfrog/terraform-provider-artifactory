@@ -1,4 +1,4 @@
-package artifactory_test
+package configuration_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 )
 
 const SamlSettingsTemplateFull = `
@@ -65,7 +65,7 @@ func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		samlSettings := artifactory.SamlSettings{}
+		samlSettings := configuration.SamlSettings{}
 
 		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {

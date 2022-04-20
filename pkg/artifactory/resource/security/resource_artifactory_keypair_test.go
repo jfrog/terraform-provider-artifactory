@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"

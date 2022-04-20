@@ -1,4 +1,4 @@
-package artifactory_test
+package configuration_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 )
 
 func TestAccLdapSetting_full(t *testing.T) {
@@ -223,7 +223,7 @@ func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		ldapConfigs := &artifactory.XmlLdapConfig{}
+		ldapConfigs := &configuration.XmlLdapConfig{}
 
 		response, err := client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {

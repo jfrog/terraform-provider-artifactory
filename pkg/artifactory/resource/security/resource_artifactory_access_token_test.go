@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
@@ -483,8 +483,8 @@ func testAccCheckAccessTokenNotCreated(id string) func(*terraform.State) error {
 }
 
 func TestTokenOptsToValuesNonExpiring(t *testing.T) {
-	tOpts := artifactory.AccessTokenOptions{Username: "existinguser", ExpiresIn: 0}
-	values, _ := artifactory.TokenOptsToValues(tOpts)
+	tOpts := security.AccessTokenOptions{Username: "existinguser", ExpiresIn: 0}
+	values, _ := security.TokenOptsToValues(tOpts)
 	if values.Get("expires_in") != "0" {
 		t.Error("`expires_in` not correctly set when creating non-expiring tokens")
 	}

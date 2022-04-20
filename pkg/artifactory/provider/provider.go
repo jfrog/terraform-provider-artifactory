@@ -7,13 +7,14 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
@@ -26,7 +27,7 @@ var Version = "2.6.18"
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() *schema.Provider {
 	resoucesMap := map[string]*schema.Resource{
-		"artifactory_keypair":                     artifactory.ResourceArtifactoryKeyPair(),
+		"artifactory_keypair":                     security.ResourceArtifactoryKeyPair(),
 		"artifactory_local_nuget_repository":      local.ResourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":      local.ResourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":     local.ResourceArtifactoryLocalAlpineRepository(),
@@ -54,26 +55,26 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_go_repository":       virtual.ResourceArtifactoryVirtualGoRepository(),
 		"artifactory_virtual_rpm_repository":      virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":     virtual.ResourceArtifactoryVirtualHelmRepository(),
-		"artifactory_group":                       artifactory.ResourceArtifactoryGroup(),
+		"artifactory_group":                       security.ResourceArtifactoryGroup(),
 		"artifactory_user":                        user.ResourceArtifactoryUser(),
 		"artifactory_unmanaged_user":              user.ResourceArtifactoryUser(), // alias of artifactory_user
 		"artifactory_managed_user":                user.ResourceArtifactoryManagedUser(),
 		"artifactory_anonymous_user":              user.ResourceArtifactoryAnonymousUser(),
-		"artifactory_permission_target":           artifactory.ResourceArtifactoryPermissionTarget(),
+		"artifactory_permission_target":           security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":            replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":            replication.ResourceArtifactoryPushReplication(),
-		"artifactory_certificate":                 artifactory.ResourceArtifactoryCertificate(),
-		"artifactory_api_key":                     artifactory.ResourceArtifactoryApiKey(),
-		"artifactory_access_token":                artifactory.ResourceArtifactoryAccessToken(),
-		"artifactory_general_security":            artifactory.ResourceArtifactoryGeneralSecurity(),
-		"artifactory_oauth_settings":              artifactory.ResourceArtifactoryOauthSettings(),
-		"artifactory_saml_settings":               artifactory.ResourceArtifactorySamlSettings(),
-		"artifactory_permission_targets":          artifactory.ResourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
+		"artifactory_certificate":                 security.ResourceArtifactoryCertificate(),
+		"artifactory_api_key":                     security.ResourceArtifactoryApiKey(),
+		"artifactory_access_token":                security.ResourceArtifactoryAccessToken(),
+		"artifactory_general_security":            configuration.ResourceArtifactoryGeneralSecurity(),
+		"artifactory_oauth_settings":              security.ResourceArtifactoryOauthSettings(),
+		"artifactory_saml_settings":               configuration.ResourceArtifactorySamlSettings(),
+		"artifactory_permission_targets":          security.ResourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
 		"artifactory_replication_config":          replication.ResourceArtifactoryReplicationConfig(),
 		"artifactory_single_replication_config":   replication.ResourceArtifactorySingleReplicationConfig(),
-		"artifactory_ldap_setting":                artifactory.ResourceArtifactoryLdapSetting(),
-		"artifactory_ldap_group_setting":          artifactory.ResourceArtifactoryLdapGroupSetting(),
-		"artifactory_backup":                      artifactory.ResourceArtifactoryBackup(),
+		"artifactory_ldap_setting":                configuration.ResourceArtifactoryLdapSetting(),
+		"artifactory_ldap_group_setting":          configuration.ResourceArtifactoryLdapGroupSetting(),
+		"artifactory_backup":                      configuration.ResourceArtifactoryBackup(),
 	}
 
 	for _, repoType := range local.RepoTypesLikeGeneric {

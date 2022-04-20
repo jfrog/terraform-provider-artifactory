@@ -1,4 +1,4 @@
-package artifactory_test
+package security_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 )
 
 const OauthSettingsTemplateFull = `
@@ -108,7 +108,7 @@ func testAccOauthSettingsDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		oauthSettings := artifactory.OauthSettings{}
+		oauthSettings := security.OauthSettings{}
 		_, err := client.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/oauth during Read")
