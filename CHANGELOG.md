@@ -1,4 +1,10 @@
-## 6.5.0 (Apr 15, 2022). Tested on Artifactory 7.37.14
+## 6.5.1 (Apr 20, 2022). Tested on Artifactory 7.37.14
+
+BUG FIXES:
+
+* provider:  Setting the right default value for 'access_token' attribute. PR: [GH-426](https://github.com/jfrog/terraform-provider-artifactory/pull/426). Issue [#425](https://github.com/jfrog/terraform-provider-artifactory/issues/425)
+
+## 6.5.0 (Apr 19, 2022). Tested on Artifactory 7.37.14
 
 IMPROVEMENTS:
 
