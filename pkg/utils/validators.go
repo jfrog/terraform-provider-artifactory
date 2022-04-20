@@ -488,12 +488,17 @@ func RepoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagno
 	}
 }
 
-func ValidateIsEmail(address interface{}, _ string) ([]string, []error) {
+func ValidateIsEmail(address interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
-		return nil, []error{fmt.Errorf("%s is not a valid address: %s", address, err)}
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Email",
+			Detail:   fmt.Sprintf("%s is not a valid address: %s", address, err),
+		})
 	}
-	return nil, nil
+	return diags
 }
 
 func ValidateLdapDn(value interface{}, _ string) ([]string, []error) {

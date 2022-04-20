@@ -37,7 +37,7 @@ var baseUserSchema = map[string]*schema.Schema{
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateIsEmail),
+		ValidateDiagFunc: utils.ValidateIsEmail,
 		Description:      "(Required) Email for user.",
 	},
 	"admin": {
