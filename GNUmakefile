@@ -1,7 +1,7 @@
 TEST?=./...
 TARGET_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
 PKG_NAME=pkg/artifactory
-PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/${PKG_NAME}
+PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/${PKG_NAME}/provider
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/${TARGET_ARCH}

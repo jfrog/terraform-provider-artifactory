@@ -37,7 +37,7 @@ func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -217,7 +217,7 @@ func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck:          func() { acctest.PreCheck(t) },
 				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+				CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf(remoteRepoExternalDependenciesDefaults, repoType, name, name),
@@ -459,7 +459,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -503,7 +503,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoBasic, name, name),
@@ -536,7 +536,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoNuget, name, name),
@@ -609,7 +609,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -679,7 +679,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -709,7 +709,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate, name, name),
@@ -757,7 +757,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -799,7 +799,7 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -854,7 +854,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProxy(t, testProxyKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -913,7 +913,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		},
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
@@ -957,7 +957,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		},
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{

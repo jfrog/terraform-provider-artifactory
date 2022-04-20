@@ -114,7 +114,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrepoName, acctest.TestCheckRepo),
+			acctest.VerifyDeleted(fqrepoName, acctest.CheckRepo),
 			testAccCheckReplicationDestroy(fqrn),
 		),
 

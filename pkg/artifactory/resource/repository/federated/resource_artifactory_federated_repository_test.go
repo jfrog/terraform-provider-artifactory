@@ -62,7 +62,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
@@ -112,7 +112,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
@@ -177,7 +177,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -228,7 +228,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{

@@ -185,13 +185,6 @@ var NeverRetry = func(response *resty.Response, err error) bool {
 	return false
 }
 
-const RepositoriesEndpoint = "artifactory/api/repositories/"
-
-func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.Head(RepositoriesEndpoint + id)
-}
-
 func FileExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {

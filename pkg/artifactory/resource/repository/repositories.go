@@ -72,7 +72,7 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Put(utils.RepositoriesEndpoint + key)
+		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Put(RepositoriesEndpoint + key)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -86,7 +86,7 @@ func mkRepoRead(pack PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo := construct()
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().SetResult(repo).Get(utils.RepositoriesEndpoint + d.Id())
+		resp, err := m.(*resty.Client).R().SetResult(repo).Get(RepositoriesEndpoint + d.Id())
 
 		if err != nil {
 			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -106,7 +106,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Post(utils.RepositoriesEndpoint + d.Id())
+		_, err = m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).SetBody(repo).Post(RepositoriesEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -117,7 +117,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).Delete(utils.RepositoriesEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().AddRetryCondition(RetryOnMergeError).Delete(RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -131,7 +131,7 @@ func Retry400(response *resty.Response, err error) bool {
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := utils.CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(Retry400))
+	_, err := CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(Retry400))
 	return err == nil, err
 }
 
@@ -479,4 +479,11 @@ func isSelectRandom(opts ...bool) bool {
 
 type Identifiable interface {
 	Id() string
+}
+
+const RepositoriesEndpoint = "artifactory/api/repositories/"
+
+func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	// artifactory returns 400 instead of 404. but regardless, it's an error
+	return request.Head(RepositoriesEndpoint + id)
 }

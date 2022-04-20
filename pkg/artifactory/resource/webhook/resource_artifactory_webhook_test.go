@@ -102,7 +102,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

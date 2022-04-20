@@ -138,12 +138,12 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.TestAccCreateRepos(t, "my-maven-local", "local",
+			acctest.CreateRepo(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
 		CheckDestroy: func(_ *terraform.State) error {
-			acctest.TestAccDeleteRepo(t, "my-maven-local")
+			acctest.DeleteRepo(t, "my-maven-local")
 			return nil
 		},
 		ProviderFactories: acctest.ProviderFactories,
@@ -178,13 +178,13 @@ func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.TestAccCreateRepos(t, "my-maven-local", "local",
+			acctest.CreateRepo(t, "my-maven-local", "local",
 				"maven", true, true)
 			uploadTwoArtifacts(t)
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(_ *terraform.State) error {
-			acctest.TestAccDeleteRepo(t, "my-maven-local")
+			acctest.DeleteRepo(t, "my-maven-local")
 			return nil
 		},
 		Steps: []resource.TestStep{

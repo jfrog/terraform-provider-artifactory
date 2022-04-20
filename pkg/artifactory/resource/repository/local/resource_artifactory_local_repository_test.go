@@ -85,7 +85,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, utils.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
@@ -222,7 +222,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, utils.VerifyKeyPair),
 			acctest.VerifyDeleted(kpFqrn2, utils.VerifyKeyPair),
 		),
@@ -366,7 +366,7 @@ func TestAccLocalRpmRepository(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, utils.VerifyKeyPair),
 			acctest.VerifyDeleted(kpFqrn2, utils.VerifyKeyPair),
 		),
@@ -403,7 +403,7 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -440,7 +440,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -471,7 +471,7 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -503,7 +503,7 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -553,7 +553,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -589,7 +589,7 @@ func TestAccLocalGenericRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -632,7 +632,7 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -675,7 +675,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -714,7 +714,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return acctest.TestCheckRepo(id, request)
+			return acctest.CheckRepo(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -740,7 +740,7 @@ func TestAccLocalNpmRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -774,7 +774,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -818,7 +818,7 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: cfg,
@@ -858,7 +858,7 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -901,7 +901,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.TestCheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,

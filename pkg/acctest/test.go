@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
@@ -58,16 +59,19 @@ func PreCheck(t *testing.T) {
 	testAccProviderConfigure.Do(func() {
 		restyClient := GetTestResty(t)
 
-		// Set customer base URL so repos that relies on it will work
+		// Set custom base URL so repos that relies on it will work
 		// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
-		_, err := restyClient.R().SetBody(os.Getenv("ARTIFACTORY_URL")).SetHeader("Content-Type", "text/plain").Put("/artifactory/api/system/configuration/baseUrl")
+		_, err := restyClient.R().
+			SetBody(os.Getenv("ARTIFACTORY_URL")).
+			SetHeader("Content-Type", "text/plain").
+			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Failed to set custom base URL: %v", err)
 		}
 
 		configErr := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 		if configErr != nil {
-			t.Fatal(fmt.Errorf("error: Failed to configure provider %v", configErr))
+			t.Fatalf("Failed to configure provider %v", configErr)
 		}
 	})
 }
@@ -205,8 +209,8 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 	}
 }
 
-func TestCheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	return utils.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
+func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
+	return repository.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
 }
 
 func CreateProject(t *testing.T, projectKey string) {
@@ -251,7 +255,7 @@ func DeleteProject(t *testing.T, projectKey string) {
 }
 
 // Create a local repository with Xray indexing enabled. It will be used in the tests
-func TestAccCreateRepos(t *testing.T, repo string, rclass string, packageType string,
+func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	handleReleases bool, handleSnapshots bool) {
 	restyClient := GetTestResty(t)
 
@@ -279,7 +283,7 @@ func TestAccCreateRepos(t *testing.T, repo string, rclass string, packageType st
 	}
 }
 
-func TestAccDeleteRepo(t *testing.T, repo string) {
+func DeleteRepo(t *testing.T, repo string) {
 	restyClient := GetTestResty(t)
 
 	response, errRepo := restyClient.R().Delete("artifactory/api/repositories/" + repo)
