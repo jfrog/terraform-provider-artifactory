@@ -39,6 +39,7 @@ var VirtualRepoTypesLikeGeneric = []string{
 	"gitlfs",
 	"composer",
 	"p2",
+	"pub",
 	"puppet",
 	"pypi",
 }

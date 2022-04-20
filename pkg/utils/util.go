@@ -230,7 +230,8 @@ func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (
 }
 
 const (
-	KeypairEndPoint = "artifactory/api/security/keypair/"
+	CertificateEndpoint = "artifactory/api/system/security/certificates/"
+	KeypairEndPoint     = "artifactory/api/security/keypair/"
 )
 
 func VerifyKeyPair(id string, request *resty.Request) (*resty.Response, error) {

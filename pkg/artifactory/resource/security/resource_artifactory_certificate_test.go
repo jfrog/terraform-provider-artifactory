@@ -13,7 +13,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 )
 
-func TestHasFileAndContentFails(t *testing.T) {
+func TestAccCertHasFileAndContentFails(t *testing.T) {
 	const conflictsResource = `
 		resource "artifactory_certificate" "fail" {
 			alias   = "fail"

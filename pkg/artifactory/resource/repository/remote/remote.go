@@ -76,6 +76,7 @@ var RemoteRepoTypesLikeGeneric = []string{
 	"npm",
 	"opkg",
 	"p2",
+	"pub",
 	"puppet",
 	"rpm",
 }

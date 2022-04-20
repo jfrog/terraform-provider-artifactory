@@ -2,6 +2,7 @@ package remote_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -554,6 +555,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
 	_, fqrn, name := acctest.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	certificateAlias := fmt.Sprintf("certificate-%d", utils.RandomInt())
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -588,7 +590,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"allow_any_host_auth":                     true,
 		"enable_cookie_management":                true,
 		"bypass_head_requests":                    true,
-		"client_tls_certificate":                  "",
+		"client_tls_certificate":                  certificateAlias,
 		"content_synchronisation": map[string]interface{}{
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
@@ -606,16 +608,51 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
+		deleteTestCertificate(t, certificateAlias, utils.CertificateEndpoint)
+		return acctest.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
+	}
+
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck:          func() {
+			acctest.PreCheck(t)
+			addTestCertificate(t, certificateAlias, utils.CertificateEndpoint)
+		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, delCertTestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
 		},
+	}
+}
+
+func addTestCertificate(t *testing.T, certificateAlias string, certificateEndpoint string) {
+	restyClient := acctest.GetTestResty(t)
+
+	certFileBytes, err := ioutil.ReadFile("../../../../../samples/cert.pem")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = restyClient.R().
+		SetBody(string(certFileBytes)).
+		SetContentLength(true).
+		Post(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func deleteTestCertificate(t *testing.T, certificateAlias string, certificateEndpoint string) {
+	restyClient := acctest.GetTestResty(t)
+
+	_, err := restyClient.R().
+		Delete(fmt.Sprintf("%s%s", certificateEndpoint, certificateAlias))
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
