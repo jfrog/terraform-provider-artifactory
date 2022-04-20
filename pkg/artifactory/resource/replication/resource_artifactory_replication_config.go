@@ -1,4 +1,4 @@
-package artifactory
+package replication
 
 import (
 	"context"
@@ -232,12 +232,10 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 	return nil
 }
 
-const replicationEndpointPath = "artifactory/api/replications/"
-
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(replicationEndpointPath + "multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(ReplicationEndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -249,7 +247,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get(replicationEndpointPath + d.Id())
+	_, err := c.R().SetResult(&replications).Get(ReplicationEndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -269,7 +267,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(replicationEndpointPath + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(ReplicationEndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

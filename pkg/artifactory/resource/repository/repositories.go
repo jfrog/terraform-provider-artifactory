@@ -130,6 +130,10 @@ func Retry400(response *resty.Response, err error) bool {
 	return response.StatusCode() == 400
 }
 
+func Retry503(response *resty.Response, err error) bool {
+	return response.StatusCode() == 503
+}
+
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	_, err := CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(Retry400))
 	return err == nil, err

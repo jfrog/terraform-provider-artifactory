@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
@@ -59,8 +61,8 @@ func Provider() *schema.Provider {
 		"artifactory_managed_user":                user.ResourceArtifactoryManagedUser(),
 		"artifactory_anonymous_user":              user.ResourceArtifactoryAnonymousUser(),
 		"artifactory_permission_target":           artifactory.ResourceArtifactoryPermissionTarget(),
-		"artifactory_pull_replication":            artifactory.ResourceArtifactoryPullReplication(),
-		"artifactory_push_replication":            artifactory.ResourceArtifactoryPushReplication(),
+		"artifactory_pull_replication":            replication.ResourceArtifactoryPullReplication(),
+		"artifactory_push_replication":            replication.ResourceArtifactoryPushReplication(),
 		"artifactory_certificate":                 artifactory.ResourceArtifactoryCertificate(),
 		"artifactory_api_key":                     artifactory.ResourceArtifactoryApiKey(),
 		"artifactory_access_token":                artifactory.ResourceArtifactoryAccessToken(),
@@ -68,8 +70,8 @@ func Provider() *schema.Provider {
 		"artifactory_oauth_settings":              artifactory.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":               artifactory.ResourceArtifactorySamlSettings(),
 		"artifactory_permission_targets":          artifactory.ResourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
-		"artifactory_replication_config":          artifactory.ResourceArtifactoryReplicationConfig(),
-		"artifactory_single_replication_config":   artifactory.ResourceArtifactorySingleReplicationConfig(),
+		"artifactory_replication_config":          replication.ResourceArtifactoryReplicationConfig(),
+		"artifactory_single_replication_config":   replication.ResourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":                artifactory.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":          artifactory.ResourceArtifactoryLdapGroupSetting(),
 		"artifactory_backup":                      artifactory.ResourceArtifactoryBackup(),
@@ -214,6 +216,7 @@ func checkArtifactoryLicense(client *resty.Client) error {
 	licensesWrapper := LicensesWrapper{}
 	_, err := client.R().
 		SetResult(&licensesWrapper).
+		AddRetryCondition(repository.Retry503).
 		Get("/artifactory/api/system/license")
 
 	if err != nil {
@@ -242,13 +245,16 @@ func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{
 		ProductId string    `json:"productId"`
 		Features  []Feature `json:"features"`
 	}
-	_, err := restyBase.R().SetBody(UsageStruct{
-		"terraform-provider-artifactory/" + Version,
-		[]Feature{
-			{FeatureId: "Partner/ACC-007450"},
-			{FeatureId: "Terraform/" + terraformVersion},
-		},
-	}).Post("artifactory/api/system/usage")
+	_, err := restyBase.R().
+		SetBody(UsageStruct{
+			"terraform-provider-artifactory/" + Version,
+			[]Feature{
+				{FeatureId: "Partner/ACC-007450"},
+				{FeatureId: "Terraform/" + terraformVersion},
+			},
+		}).
+		AddRetryCondition(repository.Retry503).
+		Post("artifactory/api/system/usage")
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to report usage %s", err)

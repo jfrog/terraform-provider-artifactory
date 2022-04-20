@@ -1,4 +1,4 @@
-package artifactory_test
+package replication_test
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory"
 )
 
 func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
@@ -168,7 +167,7 @@ func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error 
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		exists, _ := artifactory.RepConfigExists(rs.Primary.ID, acctest.Provider.Meta())
+		exists, _ := repConfigExists(rs.Primary.ID, acctest.Provider.Meta())
 		if exists {
 			return fmt.Errorf("error: Replication %s still exists", id)
 		}

@@ -1,4 +1,4 @@
-package artifactory
+package replication
 
 import (
 	"context"
@@ -279,7 +279,7 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put(replicationEndpointPath + "multiple/" + pushReplication.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Put(ReplicationEndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -291,7 +291,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get(replicationEndpointPath + d.Id())
+	_, err := c.R().SetResult(&replications).Get(ReplicationEndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -311,7 +311,7 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post(replicationEndpointPath + "multiple/" + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(pushReplication).Post(ReplicationEndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -320,11 +320,6 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(replicationEndpointPath + d.Id())
+	_, err := m.(*resty.Client).R().Delete(ReplicationEndpointPath + d.Id())
 	return diag.FromErr(err)
-}
-
-func RepConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(replicationEndpointPath + id)
-	return err == nil, err
 }

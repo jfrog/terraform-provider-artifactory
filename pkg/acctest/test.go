@@ -240,7 +240,10 @@ func CreateProject(t *testing.T, projectKey string) {
 		},
 	}
 
-	_, err := restyClient.R().SetBody(project).Post("/access/api/v1/projects")
+	_, err := restyClient.R().
+		SetBody(project).
+		AddRetryCondition(repository.Retry503).
+		Post("/access/api/v1/projects")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +251,9 @@ func CreateProject(t *testing.T, projectKey string) {
 
 func DeleteProject(t *testing.T, projectKey string) {
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().Delete("/access/api/v1/projects/" + projectKey)
+	_, err := restyClient.R().
+		AddRetryCondition(repository.Retry503).
+		Delete("/access/api/v1/projects/" + projectKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -268,14 +273,18 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 		XrayIndex               bool   `json:"xrayIndex"`
 	}
 
-	repository := Repository{}
-	repository.Rclass = rclass
-	repository.PackageType = packageType
-	repository.HandleReleases = handleReleases
-	repository.HandleSnapshots = handleSnapshots
-	repository.SnapshotVersionBehavior = "unique"
-	repository.XrayIndex = true
-	response, errRepo := restyClient.R().SetBody(repository).Put("artifactory/api/repositories/" + repo)
+	r := Repository{}
+	r.Rclass = rclass
+	r.PackageType = packageType
+	r.HandleReleases = handleReleases
+	r.HandleSnapshots = handleSnapshots
+	r.SnapshotVersionBehavior = "unique"
+	r.XrayIndex = true
+	response, errRepo := restyClient.R().
+		SetBody(r).
+		AddRetryCondition(repository.RetryOnMergeError).
+		AddRetryCondition(repository.Retry503).
+		Put("artifactory/api/repositories/" + repo)
 	//Artifactory can return 400 for several reasons, this is why we are checking the response body
 	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
 	if !repoExists && response.StatusCode() != http.StatusOK {
@@ -286,7 +295,10 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 func DeleteRepo(t *testing.T, repo string) {
 	restyClient := GetTestResty(t)
 
-	response, errRepo := restyClient.R().Delete("artifactory/api/repositories/" + repo)
+	response, errRepo := restyClient.R().
+		AddRetryCondition(repository.RetryOnMergeError).
+		AddRetryCondition(repository.Retry503).
+		Delete("artifactory/api/repositories/" + repo)
 	if errRepo != nil || response.StatusCode() != http.StatusOK {
 		t.Logf("The repository %s doesn't exist", repo)
 	}
