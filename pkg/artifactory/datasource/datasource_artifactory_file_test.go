@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -81,7 +82,7 @@ func TestDownloadFile(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		verified, err := utils.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+		verified, err := datasource.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
 		if !verified {
 			return fmt.Errorf("%s checksum does not have expected checksum", download)
 		}
@@ -128,7 +129,7 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		verified, err := utils.VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
+		verified, err := datasource.VerifySha256Checksum(download, "fb59a2bb4698ed7ea025ea055e5dc1266ea2e669dd689765ebf26bcb7c94a230")
 		if !verified {
 			return fmt.Errorf("%s checksum does not match", download)
 		}
@@ -243,7 +244,7 @@ func TestDownloadFileSkipCheck(t *testing.T) {
 			return err
 		}
 		downloadedFileModTime := downloadedFileStat.ModTime()
-		verified, err := utils.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
+		verified, err := datasource.VerifySha256Checksum(download, "7a2489dd209d0acb72f7f11d171b418e65648b9cc96c6c351e00e22551fdd8f1")
 		if !verified {
 			return fmt.Errorf("%s checksum does not have expected checksum", download)
 		}
@@ -325,7 +326,7 @@ func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 
 	filePath, _ := filepath.Abs(file.Name())
 
-	sha256Verified, err := utils.VerifySha256Checksum(filePath, expectedSha256)
+	sha256Verified, err := datasource.VerifySha256Checksum(filePath, expectedSha256)
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, sha256Verified)

@@ -144,7 +144,7 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 
 		fileExists := utils.FileExists(outputPath)
-		chksMatches, _ := utils.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 
 		/*--File Download logic--
 		1. File doesn't exist
@@ -178,7 +178,7 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		chksMatches, _ = utils.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 		if !chksMatches {
 			return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
 		}
