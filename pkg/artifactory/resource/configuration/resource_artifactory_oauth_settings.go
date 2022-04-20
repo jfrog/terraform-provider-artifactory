@@ -1,4 +1,4 @@
-package security
+package configuration
 
 import (
 	"context"
@@ -162,7 +162,7 @@ func resourceOauthSettingsUpdate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.Errorf("failed to marshal oauth settings during Update")
 	}
 
-	err = utils.SendConfigurationPatch(content, m)
+	err = SendConfigurationPatch(content, m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
@@ -178,7 +178,7 @@ security:
   oauthSettings: ~
 `
 
-	err := utils.SendConfigurationPatch([]byte(content), m)
+	err := SendConfigurationPatch([]byte(content), m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}

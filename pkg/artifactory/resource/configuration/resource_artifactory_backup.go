@@ -130,7 +130,7 @@ func ResourceArtifactoryBackup() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		err = utils.SendConfigurationPatch(content, m)
+		err = SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -164,7 +164,7 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		var clearAllBackupConfigs = `
 backups: ~
 `
-		err = utils.SendConfigurationPatch([]byte(clearAllBackupConfigs), m)
+		err = SendConfigurationPatch([]byte(clearAllBackupConfigs), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -174,7 +174,7 @@ backups: ~
 			return diag.FromErr(err)
 		}
 
-		err = utils.SendConfigurationPatch([]byte(restoreRestOfBackups), m)
+		err = SendConfigurationPatch([]byte(restoreRestOfBackups), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}

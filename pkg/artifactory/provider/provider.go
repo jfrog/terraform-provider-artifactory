@@ -67,7 +67,7 @@ func Provider() *schema.Provider {
 		"artifactory_api_key":                     security.ResourceArtifactoryApiKey(),
 		"artifactory_access_token":                security.ResourceArtifactoryAccessToken(),
 		"artifactory_general_security":            configuration.ResourceArtifactoryGeneralSecurity(),
-		"artifactory_oauth_settings":              security.ResourceArtifactoryOauthSettings(),
+		"artifactory_oauth_settings":              configuration.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":               configuration.ResourceArtifactorySamlSettings(),
 		"artifactory_permission_targets":          security.ResourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
 		"artifactory_replication_config":          replication.ResourceArtifactoryReplicationConfig(),

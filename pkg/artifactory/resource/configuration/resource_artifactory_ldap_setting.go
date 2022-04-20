@@ -191,7 +191,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = utils.SendConfigurationPatch(content, m)
+		err = SendConfigurationPatch(content, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -234,7 +234,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 security:
   ldapSettings: ~
 `
-		err = utils.SendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
+		err = SendConfigurationPatch([]byte(clearAllLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all Ldap Settings")
 		}
@@ -244,7 +244,7 @@ security:
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = utils.SendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
+		err = SendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Settings")
 		}

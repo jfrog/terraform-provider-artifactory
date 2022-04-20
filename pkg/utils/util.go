@@ -129,15 +129,6 @@ func MkLens(d *schema.ResourceData) Lens {
 	}
 }
 
-func SendConfigurationPatch(content []byte, m interface{}) error {
-	_, err := m.(*resty.Client).R().SetBody(content).
-		SetHeader("Content-Type", "application/yaml").
-		AddRetryCondition(RetryOnMergeError).
-		Patch("artifactory/api/system/configuration")
-
-	return err
-}
-
 func FormatCommaSeparatedString(thing interface{}) string {
 	fields := strings.Fields(thing.(string))
 	sort.Strings(fields)

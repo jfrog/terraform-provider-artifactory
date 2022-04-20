@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"gopkg.in/yaml.v2"
@@ -302,7 +303,7 @@ var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody fun
 	body := getProxiesBody()
 	restyClient := GetTestResty(t)
 
-	err := utils.SendConfigurationPatch(body, restyClient)
+	err := configuration.SendConfigurationPatch(body, restyClient)
 	if err != nil {
 		t.Fatal(err)
 	}

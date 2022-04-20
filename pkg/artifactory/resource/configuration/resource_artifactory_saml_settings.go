@@ -157,7 +157,7 @@ func resourceSamlSettingsUpdate(ctx context.Context, d *schema.ResourceData, m i
 		return diag.Errorf("failed to marshal saml settings during Update")
 	}
 
-	err = utils.SendConfigurationPatch(content, m)
+	err = SendConfigurationPatch(content, m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 	}
@@ -173,7 +173,7 @@ security:
   samlSettings: ~
 `
 
-	err := utils.SendConfigurationPatch([]byte(content), m)
+	err := SendConfigurationPatch([]byte(content), m)
 	if err != nil {
 		return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 	}
