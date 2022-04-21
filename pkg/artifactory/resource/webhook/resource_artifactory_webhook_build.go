@@ -1,9 +1,10 @@
 package webhook
 
 import (
+	"context"
 	"fmt"
-	"log"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -55,8 +56,8 @@ var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCri
 	}
 }
 
-var buildCriteriaValidation = func(criteria map[string]interface{}) error {
-	log.Print("[DEBUG] buildCriteriaValidation")
+var buildCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	tflog.Debug(ctx, "buildCriteriaValidation")
 
 	anyBuild := criteria["any_build"].(bool)
 	selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
