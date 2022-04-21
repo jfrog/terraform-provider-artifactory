@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -124,14 +125,6 @@ func MkLens(d *schema.ResourceData) Lens {
 	}
 }
 
-func SendConfigurationPatch(content []byte, m interface{}) error {
-	_, err := m.(*resty.Client).R().SetBody(content).
-		SetHeader("Content-Type", "application/yaml").
-		Patch("artifactory/api/system/configuration")
-
-	return err
-}
-
 func FormatCommaSeparatedString(thing interface{}) string {
 	fields := strings.Fields(thing.(string))
 	sort.Strings(fields)
@@ -160,7 +153,7 @@ func BuildResty(URL, version string) (*resty.Client, error) {
 		SetHeader("content-type", "application/json").
 		SetHeader("accept", "*/*").
 		SetHeader("user-agent", "jfrog/terraform-provider-artifactory:"+version).
-		SetRetryCount(5)
+		SetRetryCount(20)
 
 	restyBase.DisableWarn = true
 
@@ -177,13 +170,76 @@ func AddAuthToResty(client *resty.Client, apiKey, accessToken string) (*resty.Cl
 	return nil, fmt.Errorf("no authentication details supplied")
 }
 
-var NeverRetry = func(response *resty.Response, err error) bool {
+func NeverRetry(response *resty.Response, err error) bool {
 	return false
 }
 
-const RepositoriesEndpoint = "artifactory/api/repositories/"
+var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descriptor.*")
 
-func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.Head(RepositoriesEndpoint + id)
+func RetryOnMergeError(response *resty.Response, _r error) bool {
+	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
+}
+
+type SupportedRepoClasses struct {
+	RepoLayoutRef      string
+	SupportedRepoTypes map[string]bool
+}
+
+//Consolidated list of Default Repo Layout for all Package Types with active Repo Types
+var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
+	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cran":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cargo":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"chef":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cocoapods": {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"composer":  {RepoLayoutRef: "composer-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conan":     {RepoLayoutRef: "conan-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conda":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"debian":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"docker":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gems":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"generic":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gitlfs":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"go":        {RepoLayoutRef: "go-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gradle":    {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"helm":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"ivy":       {RepoLayoutRef: "ivy-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"maven":     {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"npm":       {RepoLayoutRef: "npm-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"nuget":     {RepoLayoutRef: "nuget-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"opkg":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"p2":        {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true, "virtual": true}},
+	"pub":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"puppet":    {RepoLayoutRef: "puppet-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"pypi":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"sbt":       {RepoLayoutRef: "sbt-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"vagrant":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "federated": true}},
+	"vcs":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true}},
+	"rpm":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+}
+
+//Return the default repo layout by Repository Type & Package Type
+func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+	return func() (interface{}, error) {
+		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
+			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
+		}
+		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
+	}
+}
+
+const (
+	CertificateEndpoint = "artifactory/api/system/security/certificates/"
+	KeypairEndPoint     = "artifactory/api/security/keypair/"
+)
+
+func VerifyKeyPair(id string, request *resty.Request) (*resty.Response, error) {
+	return request.Head(KeypairEndPoint + id)
+}
+
+var GradleLikeRepoTypes = []string{
+	"gradle",
+	"sbt",
+	"ivy",
 }
