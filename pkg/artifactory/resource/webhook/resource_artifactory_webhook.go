@@ -26,12 +26,12 @@ var WebhookTypesSupported = []string{
 }
 
 var DomainEventTypesSupported = map[string][]string{
-	"artifact": []string{"deployed", "deleted", "moved", "copied"},
-	"artifact_property": []string{"added", "deleted"},
-	"docker": []string{"pushed", "deleted", "promoted"},
-	"build": []string{"uploaded", "deleted", "promoted"},
-	"release_bundle": []string{"created", "signed", "deleted"},
-	"distribution": []string{"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	"artifact":                   []string{"deployed", "deleted", "moved", "copied", "cached"},
+	"artifact_property":          []string{"added", "deleted"},
+	"docker":                     []string{"pushed", "deleted", "promoted"},
+	"build":                      []string{"uploaded", "deleted", "promoted"},
+	"release_bundle":             []string{"created", "signed", "deleted"},
+	"distribution":               []string{"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
 	"artifactory_release_bundle": []string{"received", "delete_started", "delete_completed", "delete_failed"},
 }
 
@@ -357,11 +357,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:        domainSchemaLookup[webhookType],
+		Schema: domainSchemaLookup[webhookType],
 		CustomizeDiff: customdiff.All(
 			eventTypesDiff,
 			criteriaDiff,
 		),
-		Description:   "Provides an Artifactory webhook resource",
+		Description: "Provides an Artifactory webhook resource",
 	}
 }

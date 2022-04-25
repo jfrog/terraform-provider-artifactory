@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
-export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.27.10}
+export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.14}
 echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
