@@ -41,7 +41,7 @@ The following arguments are supported:
 * `key` - (Required) The identity key of the webhook. Must be between 2 and 200 characters. Cannot contain spaces.
 * `description` - (Optional) Webhook description. Max length 1000 characters.
 * `enabled` - (Optional) Status of webhook. Default to 'true'
-* `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: "deployed", "deleted", "moved", "copied"
+* `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: "deployed", "deleted", "moved", "copied", "cached".
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_local` - (Required) Trigger on any local repo
   * `any_remote` - (Required) Trigger on any remote repo
