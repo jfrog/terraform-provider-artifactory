@@ -1,3 +1,9 @@
+## 6.5.2 (Apr 25, 2022).
+
+IMPROVEMENTS:
+
+* resource/artifactory_artifact_webhook: Added 'cached' event type for Artifact webhook. PR: [GH-430](https://github.com/jfrog/terraform-provider-artifactory/pull/430).
+
 ## 6.5.1 (Apr 20, 2022). Tested on Artifactory 7.37.14
 
 BUG FIXES:
