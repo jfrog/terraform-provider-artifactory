@@ -643,7 +643,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	})
 }
 
-func TestAccAllVirtualRepository(t *testing.T) {
+func TestAccVirtualRepository(t *testing.T) {
 	for _, repoType := range virtual.VirtualRepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{

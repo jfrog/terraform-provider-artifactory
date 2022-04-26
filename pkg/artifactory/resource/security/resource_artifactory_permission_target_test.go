@@ -100,7 +100,7 @@ const permissionFull = `
 	}
 `
 
-func TestTestAccPermissionTarget_GitHubIssue126(t *testing.T) {
+func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 	_, permFqrn, permName := acctest.MkNames("test-perm", "artifactory_permission_target")
 	_, _, repoName := acctest.MkNames("test-perm-repo", "artifactory_local_generic_repository")
 	_, _, username := acctest.MkNames("artifactory_user", "artifactory_user")
