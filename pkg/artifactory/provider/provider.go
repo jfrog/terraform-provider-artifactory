@@ -18,7 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/client"
 )
 
 // Version for some reason isn't getting updated by the linker
@@ -174,14 +174,14 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, fmt.Errorf("you must supply a URL")
 	}
 
-	restyBase, err := util.BuildResty(URL.(string), Version)
+	restyBase, err := client.Build(URL.(string), Version)
 	if err != nil {
 		return nil, err
 	}
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	restyBase, err = util.AddAuthToResty(restyBase, apiKey, accessToken)
+	restyBase, err = client.AddAuth(restyBase, apiKey, accessToken)
 	if err != nil {
 		return nil, err
 	}

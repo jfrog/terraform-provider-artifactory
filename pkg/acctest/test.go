@@ -20,8 +20,8 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -288,7 +288,7 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	r.XrayIndex = true
 	response, errRepo := restyClient.R().
 		SetBody(r).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Put("artifactory/api/repositories/" + repo)
 	//Artifactory can return 400 for several reasons, this is why we are checking the response body
 	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
@@ -301,7 +301,7 @@ func DeleteRepo(t *testing.T, repo string) {
 	restyClient := GetTestResty(t)
 
 	response, errRepo := restyClient.R().
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete("artifactory/api/repositories/" + repo)
 	if errRepo != nil || response.StatusCode() != http.StatusOK {
 		t.Logf("The repository %s doesn't exist", repo)
@@ -370,7 +370,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 			t.Fatal("ARTIFACTORY_URL or JFROG_URL must be set for acceptance tests")
 		}
 	}
-	restyClient, err := util.BuildResty(artifactoryUrl, "")
+	restyClient, err := client.Build(artifactoryUrl, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +382,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		}
 	}
 	api := os.Getenv("ARTIFACTORY_API_KEY")
-	restyClient, err = util.AddAuthToResty(restyClient, api, accessToken)
+	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

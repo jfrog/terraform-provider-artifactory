@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -106,7 +107,7 @@ func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.Resour
 	// The password is sent clear
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
@@ -160,7 +161,7 @@ func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.Resour
 	replicationConfig := unpackSingleReplicationConfig(d)
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)

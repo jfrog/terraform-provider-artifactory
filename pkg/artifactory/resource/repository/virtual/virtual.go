@@ -107,7 +107,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: repository.RepoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {

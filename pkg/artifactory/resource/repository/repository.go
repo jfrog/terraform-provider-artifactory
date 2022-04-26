@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
@@ -70,7 +71,7 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 		}
 		// repo must be a pointer
 		_, err = m.(*resty.Client).R().
-			AddRetryCondition(util.RetryOnMergeError).
+			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			Put(RepositoriesEndpoint + key)
 
@@ -107,7 +108,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 		}
 		// repo must be a pointer
 		_, err = m.(*resty.Client).R().
-			AddRetryCondition(util.RetryOnMergeError).
+			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			Post(RepositoriesEndpoint + d.Id())
 		if err != nil {
@@ -121,7 +122,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete(RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
@@ -505,7 +506,7 @@ func FormatCommaSeparatedString(thing interface{}) string {
 	return strings.Join(fields, ",")
 }
 
-func RepoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagnostics {
+func ValidateRepoLayoutRefSchemaOverride(_ interface{}, _ cty.Path) diag.Diagnostics {
 	return diag.Diagnostics{
 		diag.Diagnostic{
 			Severity: diag.Error,

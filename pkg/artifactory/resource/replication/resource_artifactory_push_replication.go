@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/exp/slices"
@@ -316,7 +317,7 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Post(ReplicationEndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
@@ -327,7 +328,7 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete(ReplicationEndpointPath + d.Id())
 	return diag.FromErr(err)
 }

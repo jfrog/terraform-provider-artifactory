@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -132,7 +133,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 	// The password is sent clear
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
@@ -191,7 +192,7 @@ func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	replicationConfig := unpackPullReplication(d)
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(util.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
