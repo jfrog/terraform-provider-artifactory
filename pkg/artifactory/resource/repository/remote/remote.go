@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared"
 )
 
 type RemoteRepositoryBaseParams struct {
@@ -91,7 +92,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.ProjectKeyValidator,
+		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -346,7 +347,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.CommaSeperatedList,
+		ValidateDiagFunc: validator.CommaSeperatedList,
 		StateFunc:        utils.FormatCommaSeparatedString,
 		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},

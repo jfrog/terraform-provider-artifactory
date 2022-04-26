@@ -32,7 +32,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	name := fmt.Sprintf("terraform-federated-generic-%d-full", rand.Int())
 	resourceType := "artifactory_federated_generic_repository"
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
-	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
 	params := map[string]interface{}{
@@ -87,7 +87,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
 	xrayIndex := utils.RandBool()
-	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
 		"resourceType": resourceType,
@@ -148,7 +148,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
-	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
 		"name":       name,
@@ -170,7 +170,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() {
+		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
 		},
@@ -201,7 +201,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
-	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL"), name)
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
 		"name":       name,

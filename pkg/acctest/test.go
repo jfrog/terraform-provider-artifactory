@@ -53,10 +53,11 @@ func PreCheck(t *testing.T) {
 	testAccProviderConfigure.Do(func() {
 		restyClient := GetTestResty(t)
 
+		artifactoryUrl := GetArtifactoryUrl(t)
 		// Set custom base URL so repos that relies on it will work
 		// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
 		_, err := restyClient.R().
-			SetBody(os.Getenv("ARTIFACTORY_URL")).
+			SetBody(artifactoryUrl).
 			SetHeader("Content-Type", "text/plain").
 			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
@@ -68,6 +69,19 @@ func PreCheck(t *testing.T) {
 			t.Fatalf("Failed to configure provider %v", configErr)
 		}
 	})
+}
+
+func GetArtifactoryUrl(t *testing.T) string {
+	var ok bool
+	var artifactoryUrl string
+	if artifactoryUrl, ok = os.LookupEnv("ARTIFACTORY_URL"); !ok {
+		if artifactoryUrl, ok = os.LookupEnv("JFROG_URL"); !ok {
+			t.Fatal("ARTIFACTORY_URL or JFROG_URL must be set for acceptance tests")
+			return ""
+		}
+	}
+
+	return artifactoryUrl
 }
 
 func FmtMapToHcl(fields map[string]interface{}) string {
@@ -348,14 +362,24 @@ func DeleteProxy(t *testing.T, proxyKey string) {
 }
 
 func GetTestResty(t *testing.T) *resty.Client {
-	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
-		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
+	var ok bool
+	var artifactoryUrl string
+	if artifactoryUrl, ok = os.LookupEnv("ARTIFACTORY_URL"); !ok {
+		if artifactoryUrl, ok = os.LookupEnv("JFROG_URL"); !ok {
+			t.Fatal("ARTIFACTORY_URL or JFROG_URL must be set for acceptance tests")
+		}
 	}
-	restyClient, err := utils.BuildResty(os.Getenv("ARTIFACTORY_URL"), "")
+	restyClient, err := utils.BuildResty(artifactoryUrl, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
+
+	var accessToken string
+	if accessToken, ok = os.LookupEnv("ARTIFACTORY_ACCESS_TOKEN"); !ok {
+		if accessToken, ok = os.LookupEnv("JFROG_ACCESS_TOKEN"); !ok {
+			t.Fatal("ARTIFACTORY_ACCESS_TOKEN or JFROG_ACCESS_TOKEN must be set for acceptance tests")
+		}
+	}
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = utils.AddAuthToResty(restyClient, api, accessToken)
 	if err != nil {

@@ -2,7 +2,6 @@ package replication_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -39,7 +38,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
 	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
-	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"))
+	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -56,8 +55,8 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
-	config := mkTclForPullRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
-	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", os.Getenv("ARTIFACTORY_URL"))
+	config := mkTclForPullRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t))
+	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", acctest.GetArtifactoryUrl(t))
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,

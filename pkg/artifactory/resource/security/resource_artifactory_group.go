@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	validator "github.com/jfrog/terraform-provider-shared"
 )
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
@@ -47,10 +48,10 @@ func ResourceArtifactoryGroup() *schema.Resource {
 				Computed: true,
 			},
 			"realm": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: utils.ValidateLowerCase,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validator.LowerCase,
 			},
 			"realm_attributes": {
 				Type:     schema.TypeString,

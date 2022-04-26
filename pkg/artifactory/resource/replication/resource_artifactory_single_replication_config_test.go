@@ -3,7 +3,6 @@ package replication_test
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"testing"
 
@@ -41,7 +40,7 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 func TestInvalidCronSingleReplication(t *testing.T) {
 
 	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
-	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", os.Getenv("ARTIFACTORY_URL"), "")
+	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t), "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -77,7 +76,7 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 func TestAccSingleReplication_full(t *testing.T) {
 	const testProxy = "testProxy"
 	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
-	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), testProxy)
+	config := mkTclForRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t), testProxy)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -96,7 +95,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr(fqrn, "url", acctest.GetArtifactoryUrl(t)),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
@@ -107,7 +106,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 
 func TestAccSingleReplication_withDelRepo(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
-	config := mkTclForRepConfg(name, "0 0 * * * ?", os.Getenv("ARTIFACTORY_URL"), "")
+	config := mkTclForRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t), "")
 	var deleteRepo = func() {
 		restyClient := acctest.GetTestResty(t)
 		_, err := restyClient.R().Delete("artifactory/api/repositories/" + name)
@@ -128,7 +127,7 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr(fqrn, "url", acctest.GetArtifactoryUrl(t)),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 				),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	validator "github.com/jfrog/terraform-provider-shared"
 	"golang.org/x/exp/slices"
 )
 
@@ -60,7 +61,7 @@ var pushReplicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateCron),
+		ValidateDiagFunc: validator.Cron,
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	validator "github.com/jfrog/terraform-provider-shared"
 	"gopkg.in/yaml.v2"
 )
 
@@ -45,7 +46,7 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		"cron_exp": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateCron),
+			ValidateDiagFunc: validator.Cron,
 			Description:      `(Required) Cron expression to control the backup frequency.`,
 		},
 		"retention_period_hours": {

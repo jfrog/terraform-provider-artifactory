@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared"
 )
 
 func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
@@ -34,7 +35,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: utils.CommaSeperatedList,
+			ValidateDiagFunc: validator.CommaSeperatedList,
 			Description: "A list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",

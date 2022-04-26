@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared"
 )
 
 type User struct {
 	Name                     string   `json:"name"`
 	Email                    string   `json:"email"`
-	Password                 string `json:"password,omitempty"`
+	Password                 string   `json:"password,omitempty"`
 	Admin                    bool     `json:"admin"`
 	ProfileUpdatable         bool     `json:"profileUpdatable"`
 	DisableUIAccess          bool     `json:"disableUIAccess"`
@@ -37,7 +38,7 @@ var baseUserSchema = map[string]*schema.Schema{
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: utils.ValidateIsEmail,
+		ValidateDiagFunc: validator.IsEmail,
 		Description:      "(Required) Email for user.",
 	},
 	"admin": {
