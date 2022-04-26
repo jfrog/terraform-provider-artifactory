@@ -20,8 +20,9 @@ func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 		"git_registry_url": {
 			Type:         schema.TypeString,
 			Required:     true,
+			Default:      "https://github.com/rust-lang/crates.io-index",
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `This is the index url, expected to be a git repository. for remote artifactory use "arturl/git/repokey.git"`,
+			Description:  `This is the index url, expected to be a git repository. Default value is "https://github.com/rust-lang/crates.io-index"`,
 		},
 		"anonymous_access": {
 			Type:     schema.TypeBool,

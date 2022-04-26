@@ -35,7 +35,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "",
 			ValidateDiagFunc: utils.CommaSeperatedList,
-			Description: "A list of XML file names containing RPM group component definitions. Artifactory includes " +
+			Description: "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
 		},

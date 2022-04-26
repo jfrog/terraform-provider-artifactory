@@ -21,7 +21,7 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "ARTIFACTORY",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "ARTIFACTORY"}, false)),
-			Description:      `(Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
+			Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
