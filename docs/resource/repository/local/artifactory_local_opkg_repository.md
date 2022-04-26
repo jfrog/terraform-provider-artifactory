@@ -1,6 +1,6 @@
 # Artifactory Local Opkg Repository Resource
 
-Creates a local opkg repository.
+Creates a local Opkg repository.
 
 ## Example Usage
 
@@ -15,11 +15,11 @@ resource "artifactory_local_opkg_repository" "terraform-local-test-opkg-repo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Opkg repository type closely match with arguments for Generic repository type.
+
 
 ## Import
 

@@ -1,6 +1,6 @@
 # Artifactory Local Ivy Repository Resource
 
-Creates a local ivy repository.
+Creates a local Ivy repository.
 
 ## Example Usage
 
@@ -14,11 +14,11 @@ resource "artifactory_local_ivy_repository" "terraform-local-test-ivy-repo" {
 
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Ivy repository type closely match with arguments for Gradle repository type.
+
 
 ## Import
 

@@ -1,6 +1,6 @@
 # Artifactory Local Helm Repository Resource
 
-Creates a local helm repository.
+Creates a local Helm repository.
 
 ## Example Usage
 
@@ -15,7 +15,7 @@ resource "artifactory_local_helm_repository" "terraform-local-test-helm-repo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
 

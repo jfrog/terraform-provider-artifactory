@@ -21,19 +21,19 @@ resource "artifactory_remote_nuget_repository" "my-remote-nuget" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the remote repositories](remote.md):
 
-* `key` - (Required) - A mandatory identifier for the repository that must be unique. It cannot begin with a number or
+* `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
   contain spaces or special characters.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `url` - (Required) - The remote repo URL.
-* `feed_context_path` - (Optional) - When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.
-* `download_context_path` - (Optional) - The context path prefix through which NuGet downloads are served.
+* `url` - (Required) The remote repo URL.
+* `feed_context_path` - (Optional) When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.
+* `download_context_path` - (Optional) The context path prefix through which NuGet downloads are served.
    For example, the NuGet Gallery download URL is 'https://nuget.org/api/v2/package', so the repository
    URL should be configured as 'https://nuget.org' and the download context path should be configured as 'api/v2/package'. Default value is 'api/v2/package'.
-* `v3_feed_url` - (Optional) - The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.
-* `force_nuget_authentication` - (Optional) - Force basic authentication credentials in order to use this repository. Default value is 'false'.
+* `v3_feed_url` - (Optional) The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.
+* `force_nuget_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.
 
-Arguments for remote Nuget repository type closely match with arguments for remote Generic repository type.
+
 
 ## Import
 

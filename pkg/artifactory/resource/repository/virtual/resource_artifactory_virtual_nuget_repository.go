@@ -15,7 +15,7 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Force basic authentication credentials in order to use this repository.",
+			Description: "If set, user authentication is required when accessing the repository. An anonymous request will display an HTTP 401 error. This is also enforced when aggregated repositories support anonymous requests.",
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 

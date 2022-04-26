@@ -6,26 +6,26 @@ Creates a local Debian repository and allows for the creation of a GPG key.
 
 ```hcl
 resource "artifactory_keypair" "some-keypairGPG1" {
-  pair_name   = "some-keypair${random_id.randid.id}"
-  pair_type   = "GPG"
-  alias       = "foo-alias1"
-  private_key = file("samples/gpg.priv")
-  public_key  = file("samples/gpg.pub")
+  pair_name         = "some-keypair${random_id.randid.id}"
+  pair_type         = "GPG"
+  alias             = "foo-alias1"
+  private_key       = file("samples/gpg.priv")
+  public_key        = file("samples/gpg.pub")
   lifecycle {
-    ignore_changes = [
+    ignore_changes  = [
       private_key,
       passphrase,
     ]
   }
 }
 resource "artifactory_keypair" "some-keypairGPG2" {
-  pair_name   = "some-keypair4${random_id.randid.id}"
-  pair_type   = "GPG"
-  alias       = "foo-alias2"
-  private_key = file("samples/gpg.priv")
-  public_key  = file("samples/gpg.pub")
+  pair_name           = "some-keypair4${random_id.randid.id}"
+  pair_type           = "GPG"
+  alias               = "foo-alias2"
+  private_key         = file("samples/gpg.priv")
+  public_key          = file("samples/gpg.pub")
   lifecycle {
-    ignore_changes = [
+    ignore_changes    = [
       private_key,
       passphrase,
     ]
@@ -46,18 +46,18 @@ resource "artifactory_local_debian_repository" "my-debian-repo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
-* `primary_keypair_ref` - (Optional) - The primary RSA key to be used to sign packages.
-* `secondary_keypair_ref` - (Optional) - The secondary RSA key to be used to sign packages.
-* `index_compression_formats` - (Optional) - The options are Bzip2 (.bz2 extension) (default), LZMA (.lzma extension)
+* `key` - (Required) the identity key of the repo.
+* `primary_keypair_ref` - (Optional) The primary RSA key to be used to sign packages.
+* `secondary_keypair_ref` - (Optional) The secondary RSA key to be used to sign packages.
+* `index_compression_formats` - (Optional) The options are Bzip2 (.bz2 extension) (default), LZMA (.lzma extension)
 and XZ (.xz extension).
-* `trivial_layout` - (Optional) - When set, the repository will use the deprecated trivial layout.
+* `trivial_layout` - (Optional) When set, the repository will use the deprecated trivial layout.
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
 
 The meta-argument `lifecycle` used here to make Provider ignore the changes for these two keys in the Terraform state.
 
-Arguments for Debian repository type closely match with arguments for Generic repository type.
+
 
 ## Import
 

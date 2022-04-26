@@ -18,13 +18,13 @@ resource "artifactory_remote_pub_repository" "my-remote-pub" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the remote repositories](remote.md):
 
-* `key` - (Required) - A mandatory identifier for the repository that must be unique. It cannot begin with a number or
+* `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
   contain spaces or special characters.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `url` - (Required) - the remote repository URL.
+* `url` - (Required) the remote repository URL.
 
-Arguments for remote Pub repository type closely match with arguments for remote Generic repository type.
+
 
 ## Import
 

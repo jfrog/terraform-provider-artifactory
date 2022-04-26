@@ -1,6 +1,6 @@
 # Artifactory Local Sbt Repository Resource
 
-Creates a local sbt repository.
+Creates a local Sbt repository.
 
 ## Example Usage
 
@@ -15,11 +15,11 @@ resource "artifactory_local_sbt_repository" "terraform-local-test-sbt-repo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Sbt repository type closely match with arguments for Gradle repository type.
+
 
 ## Import
 

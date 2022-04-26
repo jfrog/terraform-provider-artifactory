@@ -1,6 +1,7 @@
 # Artifactory Virtual Helm Repository Resource
 
-Provides an Artifactory virtual repository resource with Helm package type.
+Creates a virtual Helm repository.
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-VirtualRepositories).
 
 ## Example Usage
 
@@ -13,17 +14,20 @@ resource "artifactory_virtual_helm_repository" "foo-helm-virtual" {
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-VirtualRepository). The following arguments are supported:
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+The following arguments are supported, along with the [common list of arguments for the virtual repositories](virtual.md):
 
-* `key` - (Required)
-* `use_namespaces` - (Optional) From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories. See https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'.
-
-Arguments for Helm repository type closely match with arguments for Generic repository type.
+* `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
+  contain spaces or special characters.
+* `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
+* `description` - (Optional)
+* `notes` - (Optional)
+* `use_namespaces` - (Optional) From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories. See the documentation [here](https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories). Default is 'false'.
 
 ## Import
 
 Virtual repositories can be imported using their name, e.g.
 
 ```
-$ terraform import artifactory_virtual_helm_repository.foo foo
+$ terraform import artifactory_virtual_helm_repository.foo-helm-virtual foo-helm-virtual
 ```

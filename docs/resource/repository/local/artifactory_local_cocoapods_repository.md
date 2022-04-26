@@ -1,6 +1,6 @@
 # Artifactory Local Cocoapods Repository Resource
 
-Creates a local cocoapods repository.
+Creates a local Cocoapods repository.
 
 ## Example Usage
 
@@ -15,11 +15,11 @@ resource "artifactory_local_cocoapods_repository" "terraform-local-test-cocoapod
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
 
-Arguments for Cocoapods repository type closely match with arguments for Generic repository type.
+
 
 ## Import
 

@@ -15,9 +15,9 @@ resource "artifactory_local_docker_v1_repository" "foo" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
-* `key` - (Required) - the identity key of the repo.
+* `key` - (Required) the identity key of the repo.
 
-Arguments for Docker V1 repository type closely match with arguments for Generic repository type.
+
 
 ## Import
 
