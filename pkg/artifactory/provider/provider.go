@@ -120,7 +120,7 @@ func Provider() *schema.Provider {
 			"url": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_URL", "JFROG_URL"}, "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"api_key": {
