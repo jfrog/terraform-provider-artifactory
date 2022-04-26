@@ -72,17 +72,21 @@ func PreCheck(t *testing.T) {
 	})
 }
 
-func GetArtifactoryUrl(t *testing.T) string {
+func GetEnvVarWithFallback(primaryEnvVar string, fallbackEnvVar string, t *testing.T) string {
 	var ok bool
-	var artifactoryUrl string
-	if artifactoryUrl, ok = os.LookupEnv("ARTIFACTORY_URL"); !ok {
-		if artifactoryUrl, ok = os.LookupEnv("JFROG_URL"); !ok {
-			t.Fatal("ARTIFACTORY_URL or JFROG_URL must be set for acceptance tests")
+	var envVarValue string
+	if envVarValue, ok = os.LookupEnv(primaryEnvVar); !ok {
+		if envVarValue, ok = os.LookupEnv(fallbackEnvVar); !ok {
+			t.Fatalf("%s or %s must be set for acceptance tests", primaryEnvVar, fallbackEnvVar)
 			return ""
 		}
 	}
 
-	return artifactoryUrl
+	return envVarValue
+}
+
+func GetArtifactoryUrl(t *testing.T) string {
+	return GetEnvVarWithFallback("ARTIFACTORY_URL", "JFROG_URL", t)
 }
 
 func FmtMapToHcl(fields map[string]interface{}) string {
@@ -363,24 +367,13 @@ func DeleteProxy(t *testing.T, proxyKey string) {
 }
 
 func GetTestResty(t *testing.T) *resty.Client {
-	var ok bool
-	var artifactoryUrl string
-	if artifactoryUrl, ok = os.LookupEnv("ARTIFACTORY_URL"); !ok {
-		if artifactoryUrl, ok = os.LookupEnv("JFROG_URL"); !ok {
-			t.Fatal("ARTIFACTORY_URL or JFROG_URL must be set for acceptance tests")
-		}
-	}
+	artifactoryUrl := GetArtifactoryUrl(t)
 	restyClient, err := client.Build(artifactoryUrl, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var accessToken string
-	if accessToken, ok = os.LookupEnv("ARTIFACTORY_ACCESS_TOKEN"); !ok {
-		if accessToken, ok = os.LookupEnv("JFROG_ACCESS_TOKEN"); !ok {
-			t.Fatal("ARTIFACTORY_ACCESS_TOKEN or JFROG_ACCESS_TOKEN must be set for acceptance tests")
-		}
-	}
+	accessToken := GetEnvVarWithFallback("ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN", t)
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {
