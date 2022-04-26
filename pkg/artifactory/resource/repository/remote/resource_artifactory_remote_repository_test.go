@@ -16,6 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -612,7 +613,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 
 	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
 		deleteTestCertificate(t, certificateAlias, security.CertificateEndpoint)
-		return acctest.CheckRepo(id, request.AddRetryCondition(test.NeverRetry))
+		return acctest.CheckRepo(id, request.AddRetryCondition(client.NeverRetry))
 	}
 
 	return t, resource.TestCase{

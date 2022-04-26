@@ -3,8 +3,6 @@ package test
 import (
 	"math/rand"
 	"time"
-
-	"github.com/go-resty/resty/v2"
 )
 
 func RandomInt() int {
@@ -18,8 +16,4 @@ func RandBool() bool {
 
 func RandSelect(items ...interface{}) interface{} {
 	return items[RandomInt()%len(items)]
-}
-
-func NeverRetry(response *resty.Response, err error) bool {
-	return false
 }

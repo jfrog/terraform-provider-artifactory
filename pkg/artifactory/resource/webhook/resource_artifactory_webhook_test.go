@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -248,6 +249,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error) {
 	return request.
 		SetPathParam("webhookKey", id).
-		AddRetryCondition(test.NeverRetry).
+		AddRetryCondition(client.NeverRetry).
 		Get(webhook.WebhookUrl)
 }

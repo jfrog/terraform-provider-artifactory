@@ -53,3 +53,7 @@ var mergeAndSaveRegex = regexp.MustCompile(".*Could not merge and save new descr
 func RetryOnMergeError(response *resty.Response, _r error) bool {
 	return mergeAndSaveRegex.MatchString(string(response.Body()[:]))
 }
+
+func NeverRetry(response *resty.Response, err error) bool {
+	return false
+}

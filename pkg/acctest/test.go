@@ -219,7 +219,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 }
 
 func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	return repository.CheckRepo(id, request.AddRetryCondition(test.NeverRetry))
+	return repository.CheckRepo(id, request.AddRetryCondition(client.NeverRetry))
 }
 
 func CreateProject(t *testing.T, projectKey string) {
