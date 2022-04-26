@@ -11,7 +11,7 @@ release:
 	@echo "Pushed ${NEXT_VERSION}"
 
 build: fmtcheck
-	go build
+	go build ./...
 
 test:
 	@echo "==> Starting unit tests"
