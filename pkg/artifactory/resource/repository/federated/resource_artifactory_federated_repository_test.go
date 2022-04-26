@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -127,7 +126,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 					resource.TestCheckResourceAttr(resourceName, "member.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMemberUrl),
 					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},

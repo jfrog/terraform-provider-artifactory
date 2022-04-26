@@ -16,7 +16,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -710,7 +709,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	defaultChecks := acctest.MapToTestChecks(fqrn, allFields)
 
 	var addCheckFunctions = []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("remote", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("remote", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 	}
 
 	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)

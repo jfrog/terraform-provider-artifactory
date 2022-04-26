@@ -14,7 +14,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -145,7 +144,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "**/github.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.1", "**/go.googlesource.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -212,7 +211,7 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -254,7 +253,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 					// to test key pair, we'd have to be able to create them on the fly and we currently can't.
 					resource.TestCheckResourceAttr(fqrn, "key_pair", ""),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -426,7 +425,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},

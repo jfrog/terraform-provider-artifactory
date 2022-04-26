@@ -3,13 +3,12 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 	constructor := func() interface{} {
-		repoLayout, _ := utils.GetDefaultRepoLayoutRef("remote", pkt)()
+		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", pkt)()
 		return &RemoteRepositoryBaseParams{
 			PackageType:         pkt,
 			Rclass:              "remote",

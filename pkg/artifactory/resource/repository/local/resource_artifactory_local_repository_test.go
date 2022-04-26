@@ -14,7 +14,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/test"
 )
 
@@ -98,7 +97,7 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -241,7 +240,7 @@ func TestAccLocalDebianRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -384,7 +383,7 @@ func TestAccLocalRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "true"),
 					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
 					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "1"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -415,7 +414,7 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -452,7 +451,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -514,7 +513,7 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -568,7 +567,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
@@ -786,7 +785,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 				),
 			},
@@ -911,7 +910,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := utils.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},

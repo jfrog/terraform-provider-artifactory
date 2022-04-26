@@ -3,7 +3,6 @@ package federated
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -86,7 +85,7 @@ var BaseFederatedRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: repository.RepoLayoutRefSchemaOverrideValidator,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
