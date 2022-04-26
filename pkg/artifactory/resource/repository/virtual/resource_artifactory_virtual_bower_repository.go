@@ -4,14 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 
 	const packageType = "bower"
 
-	var bowerVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var bowerVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Default:     false,
@@ -46,7 +46,7 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 	}
 
 	var unpackBowerVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 
 		repo := BowerVirtualRepositoryParams{
 			VirtualRepositoryBaseParams:    UnpackBaseVirtRepo(s, packageType),

@@ -11,12 +11,15 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryBasic = `
@@ -45,7 +48,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	localRepoName := fmt.Sprintf("%s-local", name)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
@@ -219,7 +222,7 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	const packageType = "maven"
 
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	var virtualRepositoryBasic = fmt.Sprintf(`
@@ -260,7 +263,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 
 func TestAccVirtualHelmRepository_basic(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
-	useNamespaces := utils.RandBool()
+	useNamespaces := test.RandBool()
 
 	params := map[string]interface{}{
 		"name":          name,
@@ -412,8 +415,8 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, utils.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, utils.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn2, security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -431,7 +434,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 }
 
 func TestAccVirtualRepository_update(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryUpdateBefore = `
@@ -478,7 +481,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 }
 
 func TestNugetPackageCreationFull(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_nuget_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -515,7 +518,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 
 }
 func TestAccVirtualRepository_full(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -559,8 +562,8 @@ func TestAccVirtualRepository_full(t *testing.T) {
 func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
-	projectEnv := utils.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_virtual_generic_repository")
@@ -605,7 +608,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_virtual_generic_repository")
@@ -659,7 +662,7 @@ func TestAccAllVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, repoType := range utils.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikeRepoTypes {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
@@ -732,7 +735,7 @@ func TestAccVirtualBowerRepository(t *testing.T) {
 }
 
 func TestAccVirtualDebianRepository_full(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_debian_repository.%s", name)
 	const virtualRepositoryBasic = `

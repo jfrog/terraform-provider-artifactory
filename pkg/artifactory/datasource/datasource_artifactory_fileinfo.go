@@ -6,7 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func DataSourceArtifactoryFileInfo() *schema.Resource {
@@ -85,7 +85,7 @@ func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) error {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	d.SetId(fileInfo.DownloadUri)
 

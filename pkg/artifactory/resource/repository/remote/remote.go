@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
-	"github.com/jfrog/terraform-provider-shared"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type RemoteRepositoryBaseParams struct {
@@ -348,7 +349,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validator.CommaSeperatedList,
-		StateFunc:        utils.FormatCommaSeparatedString,
+		StateFunc:        repository.FormatCommaSeparatedString,
 		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }
@@ -370,7 +371,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
 		Rclass:                   "remote",
@@ -437,7 +438,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 }
 
 func UnpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	repo := RemoteRepositoryVcsParams{
 		VcsGitProvider:    d.GetString("vcs_git_provider", false),
 		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),

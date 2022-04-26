@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
@@ -447,12 +447,12 @@ func testAccCheckAccessTokenDestroy(t *testing.T, id string) func(*terraform.Sta
 		// We want to check that the token cannot authenticate
 		url := acctest.GetArtifactoryUrl(t)
 
-		resty, err := utils.BuildResty(url, "")
+		resty, err := util.BuildResty(url, "")
 		if err != nil {
 			return err
 		}
 		accessToken := rs.Primary.Attributes["access_token"]
-		resty, err = utils.AddAuthToResty(resty, "", accessToken)
+		resty, err = util.AddAuthToResty(resty, "", accessToken)
 		if err != nil {
 			return err
 		}

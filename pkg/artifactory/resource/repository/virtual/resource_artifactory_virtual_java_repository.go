@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type CommonJavaVirtualRepositoryParams struct {
@@ -20,7 +20,7 @@ type JavaVirtualRepositoryParams struct {
 
 func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource {
 
-	var mavenVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var mavenVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"force_maven_authentication": {
 			Type:        schema.TypeBool,
@@ -47,7 +47,7 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 	}, repository.RepoLayoutRefSchema("virtual", repoType))
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 
 		repo := JavaVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: UnpackBaseVirtRepo(s, repoType),

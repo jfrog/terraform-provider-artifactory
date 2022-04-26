@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 func TestAccCertHasFileAndContentFails(t *testing.T) {
@@ -59,7 +59,7 @@ func TestAccCertWithFile(t *testing.T) {
 			file = "../../../../samples/cert.pem"
 		}
 	`
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccCertificate_full(t *testing.T) {
 		EOF
 		}
 	`
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	subbed := fmt.Sprintf(certificateFull, name, name)

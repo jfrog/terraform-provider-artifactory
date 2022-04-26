@@ -4,7 +4,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
-	"github.com/jfrog/terraform-provider-shared"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 var RepoTypesLikeGeneric = []string{
@@ -143,7 +144,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	return LocalRepositoryBaseParams{
 		Rclass:                 rclassType,
 		Key:                    d.GetString("key", false),

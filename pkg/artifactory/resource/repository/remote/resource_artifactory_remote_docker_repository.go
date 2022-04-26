@@ -3,7 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type DockerRemoteRepository struct {
@@ -17,7 +17,7 @@ type DockerRemoteRepository struct {
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	const packageType = "docker"
 
-	var dockerRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var dockerRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -50,7 +50,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 		repo := DockerRemoteRepository{
 			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
@@ -67,7 +67,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
 	dockerRemoteRepoPacker := repository.UniversalPack(
 		repository.AllHclPredicate(
-			utils.SchemaHasKey(dockerRemoteSchema),
+			util.SchemaHasKey(dockerRemoteSchema),
 			repository.NoPassword,
 			repository.IgnoreHclPredicate("external_dependencies_patterns"),
 		),

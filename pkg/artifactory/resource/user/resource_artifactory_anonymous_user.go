@@ -7,7 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryAnonymousUser() *schema.Resource {
@@ -28,7 +28,7 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 
 	packAnonymousUser := func(user AnonymousUser, d *schema.ResourceData) diag.Diagnostics {
 
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		errors := setValue("name", user.Name)
 
@@ -40,7 +40,7 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 	}
 
 	resourceAnonymousUserRead := func(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-		d := &utils.ResourceData{rd}
+		d := &util.ResourceData{rd}
 
 		userName := d.Id()
 		user := &AnonymousUser{}

@@ -3,13 +3,13 @@ package configuration
 import (
 	"github.com/go-resty/resty/v2"
 
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func SendConfigurationPatch(content []byte, m interface{}) error {
 	_, err := m.(*resty.Client).R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(util.RetryOnMergeError).
 		Patch("artifactory/api/system/configuration")
 
 	return err

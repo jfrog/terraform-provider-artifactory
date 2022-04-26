@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 var pullReplicationSchema = map[string]*schema.Schema{
@@ -83,13 +83,13 @@ func ResourceArtifactoryPullReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      utils.MergeSchema(replicationSchemaCommon, pullReplicationSchema),
+		Schema:      util.MergeSchema(replicationSchemaCommon, pullReplicationSchema),
 		Description: "Used for configuring pull replication on local or remote repos.",
 	}
 }
 
 func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	replicationConfig := new(ReplicationBody)
 
 	replicationConfig.RepoKey = d.GetString("repo_key", false)
@@ -108,7 +108,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 }
 
 func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
@@ -132,7 +132,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 	// The password is sent clear
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(util.RetryOnMergeError).
 		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
@@ -191,7 +191,7 @@ func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	replicationConfig := unpackPullReplication(d)
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(util.RetryOnMergeError).
 		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)

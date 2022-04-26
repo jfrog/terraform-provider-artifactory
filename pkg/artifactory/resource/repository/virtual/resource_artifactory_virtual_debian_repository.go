@@ -6,14 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 	const packageType = "debian"
 
-	var debianVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var debianVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -42,7 +42,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "amd64,i386",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-			StateFunc:        utils.FormatCommaSeparatedString,
+			StateFunc:        repository.FormatCommaSeparatedString,
 			Description:      `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
@@ -56,7 +56,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 	}
 
 	var unpackDebianVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 
 		repo := DebianVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),

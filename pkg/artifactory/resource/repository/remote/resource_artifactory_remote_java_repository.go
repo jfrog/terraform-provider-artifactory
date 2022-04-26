@@ -4,11 +4,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	var javaRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var javaRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"fetch_jars_eagerly": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -71,7 +71,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 	}
 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{data}
+		d := &util.ResourceData{data}
 		repo := JavaRemoteRepo{
 			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(data, repoType),
 			FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),

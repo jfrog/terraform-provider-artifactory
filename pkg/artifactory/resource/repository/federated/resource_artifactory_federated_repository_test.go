@@ -14,6 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 func skipFederatedRepo() (bool, string) {
@@ -86,7 +87,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	name := fmt.Sprintf("terraform-federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
-	xrayIndex := utils.RandBool()
+	xrayIndex := test.RandBool()
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -143,8 +144,8 @@ func TestAccFederatedRepoAllTypes(t *testing.T) {
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
-	projectEnv := utils.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
@@ -197,7 +198,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 
 func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")

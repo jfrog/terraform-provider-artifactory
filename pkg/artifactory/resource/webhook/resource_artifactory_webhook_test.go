@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 var domainRepoTypeLookup = map[string]string{
@@ -78,7 +78,7 @@ func TestAccWebhookCriteriaValidation(t *testing.T) {
 }
 
 func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -114,7 +114,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 }
 
 func TestAccWebhookEventTypesValidation(t *testing.T) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
 
@@ -163,7 +163,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 }
 
 func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -177,8 +177,8 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"webhookType": webhookType,
 		"webhookName": name,
 		"eventTypes":  eventTypes,
-		"anyLocal":    utils.RandBool(),
-		"anyRemote":   utils.RandBool(),
+		"anyLocal":    test.RandBool(),
+		"anyRemote":   test.RandBool(),
 	}
 	webhookConfig := acctest.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
@@ -248,6 +248,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error) {
 	return request.
 		SetPathParam("webhookKey", id).
-		AddRetryCondition(utils.NeverRetry).
+		AddRetryCondition(test.NeverRetry).
 		Get(webhook.WebhookUrl)
 }

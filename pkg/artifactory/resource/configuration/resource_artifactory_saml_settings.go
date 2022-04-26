@@ -6,7 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -182,7 +182,7 @@ security:
 }
 
 func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	security := *new(SamlSecurity)
 
 	settings := SamlSettings{
@@ -206,7 +206,7 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 }
 
 func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("enable", s.Saml.Settings.EnableIntegration)
 	setValue("certificate", s.Saml.Settings.Certificate)

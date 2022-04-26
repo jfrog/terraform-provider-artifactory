@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
 
-	var federatedSchema = utils.MergeSchema(BaseFederatedRepoSchema, map[string]*schema.Schema{
+	var federatedSchema = util.MergeSchema(BaseFederatedRepoSchema, map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
 			Required: true,
@@ -51,7 +51,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	var unpackMembers = func(data *schema.ResourceData) []Member {
-		d := &utils.ResourceData{data}
+		d := &util.ResourceData{data}
 
 		var members []Member
 
@@ -84,7 +84,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	var packMembers = func(repo interface{}, d *schema.ResourceData) error {
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		var federatedMembers []interface{}
 

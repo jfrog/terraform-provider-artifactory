@@ -3,14 +3,14 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	const packageType = "nuget"
 
-	var nugetLocalSchema = utils.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	var nugetLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -34,7 +34,7 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	}
 
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{ResourceData: data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
 			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
 			MaxUniqueSnapshots:        d.GetInt("max_unique_snapshots", false),

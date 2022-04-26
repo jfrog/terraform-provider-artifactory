@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
@@ -19,13 +19,13 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	genericSchema := utils.MergeSchema(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
+	genericSchema := util.MergeSchema(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
 
 	return repository.MkResourceSchema(genericSchema, repository.DefaultPacker(genericSchema), unpack, constructor)
 }
 
 func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
-	var repoWithRetrivalCachePeriodSecsVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var repoWithRetrivalCachePeriodSecsVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"retrieval_cache_period_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,

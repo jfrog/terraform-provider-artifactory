@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type GoRemoteRepo struct {
@@ -15,7 +16,7 @@ type GoRemoteRepo struct {
 func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 	const packageType = "go"
 
-	var goRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var goRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"vcs_git_provider": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -26,7 +27,7 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackGoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 		repo := GoRemoteRepo{
 			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			VcsGitProvider:             d.GetString("vcs_git_provider", false),

@@ -4,14 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 
 	const packageType = "alpine"
 
-	var alpineVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var alpineVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -26,7 +26,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	}
 
 	var unpackAlpineVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 
 		repo := AlpineVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),

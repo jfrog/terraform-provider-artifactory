@@ -5,7 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
-	"github.com/jfrog/terraform-provider-shared"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type VirtualRepositoryBaseParams struct {
@@ -138,7 +139,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	return VirtualRepositoryBaseParams{
 		Key:                 d.GetString("key", false),
@@ -158,7 +159,7 @@ func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 }
 
 func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	return VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 		VirtualRepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),

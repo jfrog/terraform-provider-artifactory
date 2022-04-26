@@ -3,14 +3,14 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 
 	const packageType = "go"
 
-	var goVirtualSchema = utils.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var goVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
@@ -39,7 +39,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 	}
 
 	var unpackGoVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 
 		repo := GoVirtualRepositoryParams{
 			VirtualRepositoryBaseParams:  UnpackBaseVirtRepo(s, packageType),

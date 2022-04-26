@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
-	validator "github.com/jfrog/terraform-provider-shared"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type GetReplicationConfig struct {
@@ -120,14 +120,14 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: utils.MergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: util.MergeSchema(replicationSchemaCommon, repMultipleSchema),
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
 			"artifactory_push_replication resource.",
 	}
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.GetString("repo_key", false)
@@ -200,7 +200,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 
 func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", replicationConfig.RepoKey)
 	setValue("cron_exp", replicationConfig.CronExp)

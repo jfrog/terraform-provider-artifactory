@@ -13,14 +13,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
-func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
+func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
 
-	key := fmt.Sprintf("debian-remote.teleport_%d", utils.RandomInt())
+	key := fmt.Sprintf("debian-remote.teleport_%d", test.RandomInt())
 	localRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_debian_repository" "%s" {
 			key              = "%s"
@@ -48,7 +51,7 @@ func TestAccLocalAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	})
 }
 
-func TestKeyHasSpecialCharsFails(t *testing.T) {
+func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
 		resource "artifactory_remote_npm_repository" "terraform-remote-test-repo-basic" {
 			key                     = "IHave++special,Chars"
@@ -380,7 +383,7 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 }
 
 func TestAccAllRemoteGradleLikeRepository(t *testing.T) {
-	for _, repoType := range utils.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikeRepoTypes {
 		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
@@ -530,7 +533,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 			force_nuget_authentication = true
 		}
 	`
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
 
@@ -555,7 +558,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
 	_, fqrn, name := acctest.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
-	certificateAlias := fmt.Sprintf("certificate-%d", utils.RandomInt())
+	certificateAlias := fmt.Sprintf("certificate-%d", test.RandomInt())
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -572,7 +575,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"hard_fail":                      true,
 		"offline":                        true,
 		"blacked_out":                    true,
-		"xray_index":                     utils.RandBool(),
+		"xray_index":                     test.RandBool(),
 		"store_artifacts_locally":        true,
 		"socket_timeout_millis":          25000,
 		"local_address":                  "",
@@ -609,14 +612,14 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
 	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
-		deleteTestCertificate(t, certificateAlias, utils.CertificateEndpoint)
-		return acctest.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
+		deleteTestCertificate(t, certificateAlias, security.CertificateEndpoint)
+		return acctest.CheckRepo(id, request.AddRetryCondition(test.NeverRetry))
 	}
 
 	return t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			addTestCertificate(t, certificateAlias, utils.CertificateEndpoint)
+			addTestCertificate(t, certificateAlias, security.CertificateEndpoint)
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, delCertTestCheckRepo),
@@ -739,7 +742,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 
 		}
 	`
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
 
@@ -764,7 +767,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("terraform-remote-test-repo-basic", "artifactory_remote_cran_repository")
 
-	key := fmt.Sprintf("cran-remote-%d", utils.RandomInt())
+	key := fmt.Sprintf("cran-remote-%d", test.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
 			key              = "%s"
@@ -820,7 +823,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
 
-	key := fmt.Sprintf("docker-remote-%d", utils.RandomInt())
+	key := fmt.Sprintf("docker-remote-%d", test.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_docker_repository" "%s" {
 			key                                   = "%s"
@@ -852,7 +855,7 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("terraform-remote-test-repo-proxy", "artifactory_remote_go_repository")
 
-	key := fmt.Sprintf("go-remote.proxy_%d", utils.RandomInt())
+	key := fmt.Sprintf("go-remote.proxy_%d", test.RandomInt())
 	fakeProxy := "test-proxy"
 
 	remoteRepositoryWithProxy := fmt.Sprintf(`
@@ -923,8 +926,8 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
-	projectEnv := utils.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_remote_pypi_repository")
@@ -970,7 +973,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", utils.RandomInt())
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
 	_, fqrn, name := acctest.MkNames(repoName, "artifactory_remote_pypi_repository")

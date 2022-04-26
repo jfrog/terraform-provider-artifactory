@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type LdapSetting struct {
@@ -165,7 +166,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		packer := repository.UniversalPack(
 			repository.AllHclPredicate(
-				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
+				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), util.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 
@@ -267,7 +268,7 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	ldapSetting := LdapSetting{
 		Key:                      d.GetString("key", false),
 		Enabled:                  d.GetBool("enabled", false),

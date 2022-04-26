@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type LdapGroupSetting struct {
@@ -217,7 +218,7 @@ security:
 }
 
 func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	ldapGroupSetting := LdapGroupSetting{
 		Name:                 d.GetString("name", false),
 		EnabledLdap:          d.GetString("ldap_setting_key", false),

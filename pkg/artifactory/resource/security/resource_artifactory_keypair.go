@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
+
+const KeypairEndPoint = "artifactory/api/security/keypair/"
 
 type KeyPairPayLoad struct {
 	PairName    string `hcl:"pair_name" json:"pairName"`
@@ -177,7 +179,7 @@ func ignoreEmpty(_, old, new string, _ *schema.ResourceData) bool {
 }
 
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	result := KeyPairPayLoad{
 		PairName:    d.GetString("pair_name", false),
 		PairType:    d.GetString("pair_type", false),
@@ -191,7 +193,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 
 var keyPairPacker = repository.UniversalPack(
 	repository.AllHclPredicate(
-		repository.IgnoreHclPredicate("private_key"), utils.SchemaHasKey(keyPairSchema),
+		repository.IgnoreHclPredicate("private_key"), util.SchemaHasKey(keyPairSchema),
 	),
 )
 
@@ -199,9 +201,9 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 	keyPair, key, _ := unpackKeyPair(d)
 
 	_, err := m.(*resty.Client).R().
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(util.RetryOnMergeError).
 		SetBody(keyPair).
-		Post(utils.KeypairEndPoint)
+		Post(KeypairEndPoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -216,7 +218,7 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	data := KeyPairPayLoad{}
-	_, err := meta.(*resty.Client).R().SetResult(&data).Get(utils.KeypairEndPoint + d.Id())
+	_, err := meta.(*resty.Client).R().SetResult(&data).Get(KeypairEndPoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -228,7 +230,7 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 }
 
 func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(utils.KeypairEndPoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(KeypairEndPoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
