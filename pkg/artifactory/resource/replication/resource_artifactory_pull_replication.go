@@ -66,8 +66,8 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }

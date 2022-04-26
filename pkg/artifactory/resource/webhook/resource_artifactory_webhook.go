@@ -163,7 +163,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 				Criteria:   unpackCriteria(d, webhookType),
 			},
 			Handlers: []WebhookHandler{
-				WebhookHandler{
+				{
 					HandlerType:       "webhook",
 					Url:               d.GetString("url", false),
 					Secret:            d.GetString("secret", false),

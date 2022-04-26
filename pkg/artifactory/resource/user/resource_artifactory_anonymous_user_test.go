@@ -23,10 +23,10 @@ func TestAccAnonymousUserImportable(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:            anonymousUserConfig,
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateId:     "anonymous",
+				Config:        anonymousUserConfig,
+				ResourceName:  fqrn,
+				ImportState:   true,
+				ImportStateId: "anonymous",
 				ImportStateCheck: func(states []*terraform.InstanceState) error {
 					if len(states) == 0 {
 						return fmt.Errorf("No import state")

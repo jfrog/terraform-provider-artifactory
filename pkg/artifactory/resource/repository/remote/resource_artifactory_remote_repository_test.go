@@ -614,7 +614,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	}
 
 	return t, resource.TestCase{
-		PreCheck:          func() {
+		PreCheck: func() {
 			acctest.PreCheck(t)
 			addTestCertificate(t, certificateAlias, utils.CertificateEndpoint)
 		},

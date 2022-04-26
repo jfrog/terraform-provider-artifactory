@@ -49,12 +49,12 @@ var baseWebhookBaseSchema = func(webhookType string) map[string]*schema.Schema {
 			Description: "Status of webhook. Default to 'true'",
 		},
 		"event_types": {
-			Type:        schema.TypeSet,
-			Required:    true,
-			MinItems:    1,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n" +
-			"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
+			Type:     schema.TypeSet,
+			Required: true,
+			MinItems: 1,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
+				"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
 		},
 		"url": {
 			Type:             schema.TypeString,

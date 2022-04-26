@@ -101,7 +101,6 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 	return nil
 }
 
-
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
