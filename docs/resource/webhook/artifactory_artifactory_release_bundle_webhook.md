@@ -6,17 +6,17 @@ Provides an Artifactory webhook resource. This can be used to register and manag
 .
 ```hcl
 resource "artifactory_artifactory_release_bundle_webhook" "artifactory-release-bundle-webhook" {
-  key = "artifactory-release-bundle-webhook"
+  key         = "artifactory-release-bundle-webhook"
   event_types = ["received", "delete_started", "delete_completed", "delete_failed"]
   criteria {
-    any_release_bundle = false
+    any_release_bundle              = false
     registered_release_bundle_names = ["bundle-name"]
-    include_patterns = ["foo/**"]
-    exclude_patterns = ["bar/**"]
+    include_patterns                = ["foo/**"]
+    exclude_patterns                = ["bar/**"]
   }
-  url = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy = "proxy-key"
+  url         = "http://tempurl.org/webhook"
+  secret      = "some-secret"
+  proxy       = "proxy-key"
 
   custom_http_headers = {
     header-1 = "value-1"
@@ -38,8 +38,8 @@ The following arguments are supported:
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_release_bundle` - (Required) Trigger on any release bundle
   * `registered_release_bundle_names` - (Required) Trigger on this list of release bundle names
-  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, **, ?).\nFor example: "org/apache/**"
-  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, **, ?).\nFor example: "org/apache/**"
+  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: "org/apache/**"
+  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: "org/apache/**"
 * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
 * `secret` - (Optional) Secret authentication token that will be sent to the configured URL
 * `proxy` - (Optional) Proxy key from Artifactory Proxies setting

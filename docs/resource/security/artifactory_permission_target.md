@@ -1,7 +1,5 @@
 # Artifactory Permission Target Resource
 
-**Requires Artifactory >= 6.6.0. If using a lower version see [here](./artifactory_permission_target_v1.md)**
-
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.
 
 ## Example Usage
@@ -47,11 +45,11 @@ resource "artifactory_permission_target" "test-perm" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of permission
-* `repo` - (Optional) Repository permission configuration
-    * `includes_pattern` - (Optional) Pattern of artifacts to include
-    * `excludes_pattern` - (Optional) Pattern of artifacts to exclude
-    * `repositories` - (Optional) List of repositories this permission target is applicable for
+* `name` - (Required) Name of permission.
+* `repo` - (Optional) Repository permission configuration.
+    * `includes_pattern` - (Optional) Pattern of artifacts to include.
+    * `excludes_pattern` - (Optional) Pattern of artifacts to exclude.
+    * `repositories` - (Optional) List of repositories this permission target is applicable for.
     * `actions` -
         * `users` - (Optional) Users this permission target applies for. 
         * `groups` - (Optional) Groups this permission applies for. 

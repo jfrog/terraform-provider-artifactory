@@ -2,8 +2,7 @@
 
 Provides an Artifactory API key resource. This can be used to create and manage Artifactory API keys.
 
-~> **Note:** API keys will be stored in the raw state as plain-text. [Read more about sensitive data in
-state](https://www.terraform.io/docs/state/sensitive-data.html).
+~> **Note:** API keys will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 
 ## Example Usage

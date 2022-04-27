@@ -135,8 +135,8 @@ If `terraform apply` is run before 1 hour, a new token is generated with an expi
 
 ```hcl
 resource "time_rotating" "now_plus_1_hours" {
-  triggers = {
-    "key" = timestamp()
+  triggers  = {
+    "key"   = timestamp()
   }
 
   rotation_hours = "1"
@@ -182,7 +182,7 @@ The following arguments are supported:
 The following additional attributes are exported:
 
 * `access_token` - Returns the access token to authenciate to Artifactory
-* `refresh_token` - Returns the refresh token when `refreshable` is true, or an empty string when `refreshable` is false
+* `refresh_token` - Returns the refresh token when `refreshable` is true, or an empty string when `refreshable` is false.
 
 ## References
 
