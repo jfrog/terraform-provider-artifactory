@@ -9,7 +9,9 @@ import (
 	"github.com/gorhill/cronexpr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"gopkg.in/ldap.v2"
 )
 
 func LowerCase(value interface{}, key cty.Path) diag.Diagnostics {
@@ -500,6 +502,79 @@ func IsEmail(address interface{}, _ cty.Path) diag.Diagnostics {
 			Severity: diag.Error,
 			Summary:  "Invalid Email",
 			Detail:   fmt.Sprintf("%s is not a valid address: %s", address, err),
+		})
+	}
+
+	return diags
+}
+
+// Updated version of the Terraform's original validation func:
+// https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/validation/meta.go#L32
+//
+// All returns a SchemaValidateFunc which tests if the provided value
+// passes all provided SchemaValidateFunc
+func All(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, p cty.Path) diag.Diagnostics {
+		var allDiags diag.Diagnostics
+		for _, validator := range validators {
+			validatorDiags := validator(i, p)
+			allDiags = append(allDiags, validatorDiags...)
+		}
+		return allDiags
+	}
+}
+
+// Updated version of the Terraform's original validation func:
+// https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/validation/strings.go#L14
+func StringIsNotEmpty(i interface{}, p cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, ok := i.(string)
+	if !ok {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid string",
+			Detail:   fmt.Sprintf("expected type of %q to be string", p),
+		})
+		return diags
+	}
+
+	if v == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid string",
+			Detail:   fmt.Sprintf("expected %q to not be an empty string, got %v", p, i),
+		})
+		return diags
+	}
+
+	return diags
+}
+
+func LdapDn(value interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	_, err := ldap.ParseDN(value.(string))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid LDAP Domain Name",
+			Detail:   fmt.Sprintf("%s is not a valid LDAP Domain Name: %s", value, err),
+		})
+	}
+
+	return diags
+}
+
+func LdapFilter(value interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	_, err := ldap.CompileFilter(value.(string))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid LDAP Filter",
+			Detail:   fmt.Sprintf("%s is not a valid LDAP Filter: %s", value, err),
 		})
 	}
 
