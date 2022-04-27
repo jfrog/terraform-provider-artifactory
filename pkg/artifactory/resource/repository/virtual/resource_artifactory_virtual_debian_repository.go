@@ -31,7 +31,6 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			Optional: true,
 			MinItems: 0,
 			Computed: true,
-			Default:  "bz2",
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
