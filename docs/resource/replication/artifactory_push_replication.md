@@ -16,12 +16,12 @@ resource "artifactory_local_maven_repository" "provider_test_dest" {
 }
 
 resource "artifactory_push_replication" "foo-rep" {
-	repo_key = "${artifactory_local_maven_repository.provider_test_source.key}"
-	cron_exp = "0 0 * * * ?"
-	enable_event_replication = true
+	repo_key                  = "${artifactory_local_maven_repository.provider_test_source.key}"
+	cron_exp                  = "0 0 * * * ?"
+	enable_event_replication  = true
 
 	replications {
-		url = "$var.artifactory_url"
+		url      = "$var.artifactory_url"
 		username = "$var.artifactory_username"
 		password = "$var.artifactory_password"
 	}
@@ -45,7 +45,7 @@ The following arguments are supported:
     * `sync_properties` - (Optional)
     * `sync_statistics` - (Optional)
     * `path_prefix` - (Optional)
-    * `proxy` - (Optional) Proxy key from Artifactory Proxies setting
+    * `proxy` - (Optional) Proxy key from Artifactory Proxies setting.
 
 ## Import
 

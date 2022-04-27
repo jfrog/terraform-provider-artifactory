@@ -48,4 +48,4 @@ The last argument gets the `PID` for your provider and supplies it to `delve` to
 command, you're going to hit your break point. Please make sure to substitute `terraform-provider-artifactory` for your provider name
 6. To exit this infinite loop, use your debugger to set `connected` to `true`. By doing so you change the loop predicate 
 and it will exit this loop on the next iteration.
-7. *DEBUG!* - At this point you can, step, watch, drop the call stack, etc. Your whole arsenel is available
+7. *DEBUG!* - At this point you can, step, watch, drop the call stack, etc. Your whole arsenal is available.

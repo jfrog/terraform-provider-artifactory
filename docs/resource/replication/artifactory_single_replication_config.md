@@ -7,7 +7,7 @@ replication. Primarily used when pull replication is needed.
 unexpected behaviour and will almost certainly cause your replications to break.**
 
 ### Passwords
-Passwords can only be used when encryption is turned off (https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption). 
+Passwords can only be used when encryption is turned off, see [Key Encryption documentation](https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption). 
 Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
 
 To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible, 
@@ -31,12 +31,12 @@ resource "artifactory_local_maven_repository" "provider_test_dest" {
 }
 
 resource "artifactory_single_replication_config" "foo-rep" {
-	repo_key = "${artifactory_local_maven_repository.provider_test_source.key}"
-	cron_exp = "0 0 * * * ?"
-	enable_event_replication = true
-    url = "${var.artifactory_url}"
-    username = "${var.artifactory_username}"
-    password = "${var.artifactory_password}"		
+	repo_key                  = "${artifactory_local_maven_repository.provider_test_source.key}"
+	cron_exp                  = "0 0 * * * ?"
+	enable_event_replication  = true
+    url                       = "${var.artifactory_url}"
+    username                  = "${var.artifactory_username}"
+    password                  = "${var.artifactory_password}"		
 }
 ```
 
@@ -50,13 +50,13 @@ The following arguments are supported:
 * `url` - (Required)
 * `socket_timeout_millis` - (Optional)
 * `username` - (Optional)
-* `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
+* `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`.
 * `enabled` - (Optional)
 * `sync_deletes` - (Optional)
 * `sync_properties` - (Optional)
 * `sync_statistics` - (Optional)
 * `path_prefix` - (Optional)
-* `proxy` - (Optional) Proxy key from Artifactory Proxies setting
+* `proxy` - (Optional) Proxy key from Artifactory Proxies setting.
 
 ## Import
 

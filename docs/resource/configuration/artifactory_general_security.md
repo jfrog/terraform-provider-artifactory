@@ -17,7 +17,7 @@ resource "artifactory_general_security" "security" {
 
 The following arguments are supported:
 
-* `enable_anonoymous_access`    - (Optional) Enable anonymous access.  Default value is `false`.
+* `enable_anonoymous_access` - (Optional) Enable anonymous access.  Default value is `false`.
 
 ## Import
 
@@ -27,5 +27,5 @@ Current general security settings can be imported using `security` as the `ID`, 
 $ terraform import artifactory_general_security.security security
 ```
 
-**NOTE:** The artifactory_general_security resource uses endpoints that are undocumented and may not work with SaaS
+**NOTE:** The `artifactory_general_security` resource uses endpoints that are undocumented and may not work with SaaS
 environments, or may change without notice.

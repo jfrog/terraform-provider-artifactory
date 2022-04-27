@@ -3,7 +3,7 @@
 Provides an Artifactory replication config resource. This can be used to create and manage Artifactory replications.
 
 ### Passwords
-Passwords can only be used when encryption is turned off (https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption). 
+Passwords can only be used when encryption is turned off, see [Key Encryption documentation](https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption). 
 Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
 
 To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible, 
@@ -27,12 +27,12 @@ resource "artifactory_local_maven_repository" "provider_test_dest" {
 }
 
 resource "artifactory_replication_config" "foo-rep" {
-	repo_key = "${artifactory_local_maven_repository.provider_test_source.key}"
-	cron_exp = "0 0 * * * ?"
-	enable_event_replication = true
+	repo_key                  = "${artifactory_local_maven_repository.provider_test_source.key}"
+	cron_exp                  = "0 0 * * * ?"
+	enable_event_replication  = true
 	
 	replications {
-		url = "$var.artifactory_url"
+		url      = "$var.artifactory_url"
 		username = "$var.artifactory_username"
 		password = "$var.artifactory_password"
 	}
@@ -50,7 +50,7 @@ The following arguments are supported:
     * `url` - (Required)
     * `socket_timeout_millis` - (Optional)
     * `username` - (Optional)
-    * `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`
+    * `password` - (Optional) Requires password encryption to be turned off `POST /api/system/decrypt`.
     * `enabled` - (Optional)
     * `sync_deletes` - (Optional)
     * `sync_properties` - (Optional)

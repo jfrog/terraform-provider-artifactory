@@ -9,14 +9,14 @@ Only a single `artifactory_oauth_settings` resource is meant to be defined.
 ```hcl
 # Configure Artifactory OAuth SSO settings
 resource "artifactory_oauth_settings" "oauth" {
-  enable                       = true
-  persist_users 	       = true
-  allow_user_to_access_profile = true
+  enable                        = true
+  persist_users 	            = true
+  allow_user_to_access_profile  = true
 
   oauth_provider {
-    name 	  = "okta"
+    name 	      = "okta"
     enabled       = false
-    type 	  = "openId"
+    type 	      = "openId"
     client_id     = "foo"
     client_secret = "bar"
     api_url       = "https://organization.okta.com/oauth2/v1/userinfo"

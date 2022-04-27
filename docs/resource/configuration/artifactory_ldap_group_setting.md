@@ -2,22 +2,23 @@
 
 This resource can be used to manage Artifactory's LDAP Group settings for user authentication.
 
-LDAP Groups Add-on allows you to synchronize your LDAP groups with the system and leverage your existing organizational structure for managing group-based permissions.
+LDAP Groups Add-on allows you to synchronize your LDAP groups with the system and leverage your existing organizational 
+structure for managing group-based permissions.
 
 ## Example Usage
 
 ```hcl
 # Configure Artifactory LDAP setting
 resource "artifactory_ldap_group_setting" "ldap_group_name" {
-  name = "ldap_group_name"
-  enabled_ldap = "ldap_name"
-  group_base_dn = ""
-  group_name_attribute = "cn"
-  group_member_attribute = "uniqueMember"
-  sub_tree = true
-  filter = "(objectClass=groupOfNames)"
-  description_attribute = "description"
-  strategy = "STATIC"
+  name                    = "ldap_group_name"
+  enabled_ldap            = "ldap_name"
+  group_base_dn           = ""
+  group_name_attribute    = "cn"
+  group_member_attribute  = "uniqueMember"
+  sub_tree                = true
+  filter                  = "(objectClass=groupOfNames)"
+  description_attribute   = "description"
+  strategy                = "STATIC"
 }
 ```
 Note: `Name` argument has to match to the resource name.   
