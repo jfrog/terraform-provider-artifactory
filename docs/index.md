@@ -8,11 +8,11 @@ Links to documentation for specific resources can be found in the table of
 contents to the left.
 
 This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions.
-You can determine which license you have by accessing the following URL
-`${host}/artifactory/api/system/licenses/`
+You can determine which license you have by accessing the following the URL
+`${host}/artifactory/api/system/licenses/`.
 
 You can either access it via api, or web browser - it does require admin level credentials, but it's one of the few
-APIs that will work without a license (side node: you can also install your license here with a `POST`)
+APIs that will work without a license (side node: you can also install your license here with a `POST`).
 
 ```bash
 curl -sL ${host}/artifactory/api/system/licenses/ | jq .
@@ -43,8 +43,8 @@ terraform {
 
 # Configure the Artifactory provider
 provider "artifactory" {
-  url = "${var.artifactory_url}/artifactory"
-  access_token = "${var.artifactory_access_token}"
+  url           = "${var.artifactory_url}/artifactory"
+  access_token  = "${var.artifactory_access_token}"
 }
 
 # Create a new repository
@@ -63,26 +63,26 @@ The Artifactory provider supports two ways of authentication. The following meth
 
 ### Access Token
 Artifactory access tokens may be used via the Authorization header by providing the `access_token` field to the provider
-block. Getting this value from the environment is supported with `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` variables
+block. Getting this value from the environment is supported with `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` variables.
 
 Usage:
 ```hcl
 # Configure the Artifactory provider
 provider "artifactory" {
-  url = "artifactory.site.com/artifactory"
-  access_token = "abc...xy"
+  url           = "artifactory.site.com/artifactory"
+  access_token  = "abc...xy"
 }
 ```
 
 ### JFrog API Key Header
 Artifactory API keys may be used via the `X-JFrog-Art-Api` header by providing the `api_key` field in the provider block.
-Getting this value from the environment is supported with the `ARTIFACTORY_API_KEY` variable
+Getting this value from the environment is supported with the `ARTIFACTORY_API_KEY` variable.
 
 Usage:
 ```hcl
 # Configure the Artifactory provider
 provider "artifactory" {
-  url = "artifactory.site.com/artifactory"
+  url     = "artifactory.site.com/artifactory"
   api_key = "abc...xy"
 }
 ```

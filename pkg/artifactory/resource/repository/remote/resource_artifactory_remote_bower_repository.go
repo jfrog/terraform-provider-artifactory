@@ -22,7 +22,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 			Optional:     true,
 			Default:      "https://registry.bower.io",
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `(Optional) Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
+			Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 

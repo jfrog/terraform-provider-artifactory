@@ -33,13 +33,13 @@ var baseUserSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Required) Username for user.",
+		Description:      "Username for user.",
 	},
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: validator.IsEmail,
-		Description:      "(Required) Email for user.",
+		Description:      "Email for user.",
 	},
 	"admin": {
 		Type:        schema.TypeBool,
@@ -75,7 +75,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Set:         schema.HashString,
 		Optional:    true,
-		Description: "(Optional) List of groups this user is a part of.",
+		Description: "List of groups this user is a part of.",
 	},
 }
 

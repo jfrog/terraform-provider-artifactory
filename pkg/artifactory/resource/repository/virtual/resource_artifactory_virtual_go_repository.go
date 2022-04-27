@@ -27,8 +27,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 			},
 			RequiredWith: []string{"external_dependencies_enabled"},
 			Description: "An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will " +
-				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +
-				"By default, this is set to '**', which means that remote modules may be downloaded from any external VCS source.",
+				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.",
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 

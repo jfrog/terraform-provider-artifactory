@@ -22,7 +22,7 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 			Optional:     true,
 			Default:      "https://packagist.org",
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `(Optional) Proxy remote Composer repository. Default value is "https://packagist.org".`,
+			Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 

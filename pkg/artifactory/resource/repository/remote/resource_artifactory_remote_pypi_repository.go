@@ -16,14 +16,14 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "https://pypi.org",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
-			Description:      `(Optional) To configure the remote repo to proxy public external PyPI repository, or a PyPI repository hosted on another Artifactory server. See JFrog Pypi documentation for the usage details. Default value is 'https://pypi.org'.`,
+			Description:      `To configure the remote repo to proxy public external PyPI repository, or a PyPI repository hosted on another Artifactory server. See JFrog Pypi documentation for the usage details. Default value is 'https://pypi.org'.`,
 		},
 		"pypi_repository_suffix": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "simple",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Optional) Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.`,
+			Description:      `Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 

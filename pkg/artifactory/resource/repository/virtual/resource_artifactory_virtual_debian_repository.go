@@ -18,13 +18,13 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Optional) Primary keypair used to sign artifacts. Default is empty.",
+			Description:      "Primary keypair used to sign artifacts. Default is empty.",
 		},
 		"secondary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Optional) Secondary keypair used to sign artifacts. Default is empty.",
+			Description:      "Secondary keypair used to sign artifacts. Default is empty.",
 		},
 		"optional_index_compression_formats": {
 			Type:     schema.TypeSet,
@@ -35,7 +35,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
 			},
-			Description: `(Optional) Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
+			Description: `Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
 		},
 		"debian_default_architectures": {
 			Type:             schema.TypeString,
@@ -43,7 +43,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			Default:          "amd64,i386",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
 			StateFunc:        util.FormatCommaSeparatedString,
-			Description:      `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
+			Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 

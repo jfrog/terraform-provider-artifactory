@@ -88,6 +88,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: repository.RepoKeyValidator,
+		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.",
 	},
 	"project_key": {
 		Type:             schema.TypeString,
@@ -113,6 +114,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+		Description:  "The remote repo URL.",
 	},
 	"username": {
 		Type:     schema.TypeString,
@@ -126,7 +128,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"proxy": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Proxy key from Artifactory Proxies setting",
+		Description: "Proxy key from Artifactory Proxies settings",
 	},
 	"description": {
 		Type:     schema.TypeString,
@@ -267,7 +269,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Set:      schema.HashString,
-		Optional: true, Description: "List of property set name",
+		Optional: true, Description: "List of property set names",
 	},
 	"allow_any_host_auth": {
 		Type:        schema.TypeBool,
@@ -309,25 +311,25 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `(Optional) If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
+					Description: `If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
 				},
 				"statistics_enabled": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `(Optional) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
+					Description: `If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
 				},
 				"properties_enabled": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `(Optional) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
+					Description: `If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
 				},
 				"source_origin_absence_detection": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `(Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
+					Description: `If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
 				},
 			},
 		},
@@ -342,14 +344,14 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: `(Optional) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
+		Description: `Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
 	},
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validator.CommaSeperatedList,
 		StateFunc:        util.FormatCommaSeparatedString,
-		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
+		Description:      `The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }
 
@@ -357,15 +359,15 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 	"vcs_git_provider": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "ARTIFACTORY",
+		Default:          "GITHUB",
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"}, false)),
-		Description:      `(Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
+		Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "GITHUB".`,
 	},
 	"vcs_git_download_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.IsURLWithHTTPorHTTPS)),
-		Description:      `(Optional) This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
+		Description:      `This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
 	},
 }
 

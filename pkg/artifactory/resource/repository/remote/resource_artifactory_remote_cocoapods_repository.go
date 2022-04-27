@@ -22,7 +22,7 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 			Optional:     true,
 			Default:      "https://github.com/CocoaPods/Specs",
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `(Optional) Proxy remote CocoaPods Specs repositories. Default value is "https://github.com/CocoaPods/Specs".`,
+			Description:  `Proxy remote CocoaPods Specs repositories. Default value is "https://github.com/CocoaPods/Specs".`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 

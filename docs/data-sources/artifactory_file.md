@@ -7,9 +7,9 @@ Provides an Artifactory file datasource. This can be used to download a file fro
 ```hcl
 # 
 data "artifactory_file" "my-file" {
-   repository = "repo-key"
-   path = "/path/to/the/artifact.zip"
-   output_path = "tmp/artifact.zip"
+   repository   = "repo-key"
+   path         = "/path/to/the/artifact.zip"
+   output_path  = "tmp/artifact.zip"
 }
 ```
 

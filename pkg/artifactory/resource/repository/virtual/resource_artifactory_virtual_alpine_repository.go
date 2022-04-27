@@ -16,7 +16,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Optional) Primary keypair used to sign artifacts. Default value is empty.",
+			Description:      "Primary keypair used to sign artifacts. Default value is empty.",
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
