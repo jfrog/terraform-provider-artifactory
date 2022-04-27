@@ -72,21 +72,18 @@ func PreCheck(t *testing.T) {
 	})
 }
 
-func GetEnvVarWithFallback(primaryEnvVar string, fallbackEnvVar string, t *testing.T) string {
-	var ok bool
-	var envVarValue string
-	if envVarValue, ok = os.LookupEnv(primaryEnvVar); !ok {
-		if envVarValue, ok = os.LookupEnv(fallbackEnvVar); !ok {
-			t.Fatalf("%s or %s must be set for acceptance tests", primaryEnvVar, fallbackEnvVar)
-			return ""
-		}
+func GetEnvVarWithFallback(t *testing.T, envVars ...string) string {
+	envVarValue, err := schema.MultiEnvDefaultFunc(envVars, nil)()
+	if envVarValue == "" || envVarValue == nil || err != nil {
+		t.Fatalf("%s must be set for acceptance tests", strings.Join(envVars, " or "))
+		return ""
 	}
 
-	return envVarValue
+	return envVarValue.(string)
 }
 
 func GetArtifactoryUrl(t *testing.T) string {
-	return GetEnvVarWithFallback("ARTIFACTORY_URL", "JFROG_URL", t)
+	return GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
 }
 
 func FmtMapToHcl(fields map[string]interface{}) string {
@@ -373,7 +370,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 
-	accessToken := GetEnvVarWithFallback("ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN", t)
+	accessToken := GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {
