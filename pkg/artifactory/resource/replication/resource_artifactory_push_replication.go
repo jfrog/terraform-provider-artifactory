@@ -96,14 +96,14 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Required) Username for push replication",
+		Description:      "Username for push replication",
 	},
 	"password": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Sensitive:        true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Required) Password for push replication",
+		Description:      "Password for push replication",
 	},
 	"enabled": {
 		Type:     schema.TypeBool,

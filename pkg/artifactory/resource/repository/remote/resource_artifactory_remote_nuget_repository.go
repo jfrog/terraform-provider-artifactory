@@ -23,27 +23,27 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "api/v2",
-			Description: `(Optional) When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.`,
+			Description: `When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.`,
 		},
 		"download_context_path": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "api/v2/package",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Optional) The context path prefix through which NuGet downloads are served. Default value is 'api/v2/package'.`,
+			Description:      `The context path prefix through which NuGet downloads are served. Default value is 'api/v2/package'.`,
 		},
 		"v3_feed_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "https://api.nuget.org/v3/index.json",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
-			Description:      `(Optional) The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.`,
+			Description:      `The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.`,
 		},
 		"force_nuget_authentication": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: `(Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
+			Description: `Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 

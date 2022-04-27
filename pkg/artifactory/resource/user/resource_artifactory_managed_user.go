@@ -16,7 +16,7 @@ func ResourceArtifactoryManagedUser() *schema.Resource {
 			Sensitive:        true,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Required) Password for the user.",
+			Description:      "Password for the user.",
 		},
 	}
 	maps.Copy(managedUserSchema, baseUserSchema)

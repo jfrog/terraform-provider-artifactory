@@ -18,7 +18,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		RequiredWith:     []string{"username", "password"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
-		Description:      "(Optional) URL for local repository replication. Required for local repository, but not needed for remote repository.",
+		Description:      "URL for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
 	"socket_timeout_millis": {
 		Type:             schema.TypeInt,
@@ -31,7 +31,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		RequiredWith:     []string{"url", "password"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Optional) Username for local repository replication. Required for local repository, but not needed for remote repository.",
+		Description:      "Username for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
 	"password": {
 		Type:             schema.TypeString,
@@ -39,7 +39,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Sensitive:        true,
 		RequiredWith:     []string{"url", "username"},
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Optional) Password for local repository replication. Required for local repository, but not needed for remote repository.",
+		Description:      "Password for local repository replication. Required for local repository, but not needed for remote repository.",
 	},
 	"enabled": {
 		Type:     schema.TypeBool,
@@ -66,8 +66,8 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }
