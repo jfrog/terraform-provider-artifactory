@@ -1,6 +1,9 @@
 package util
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -101,4 +104,10 @@ func SchemaHasKey(skeema map[string]*schema.Schema) HclPredicate {
 		_, ok := skeema[key]
 		return ok
 	}
+}
+
+func FormatCommaSeparatedString(thing interface{}) string {
+	fields := strings.Fields(thing.(string))
+	sort.Strings(fields)
+	return strings.Join(fields, ",")
 }

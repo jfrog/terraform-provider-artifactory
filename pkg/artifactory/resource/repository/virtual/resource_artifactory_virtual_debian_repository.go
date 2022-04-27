@@ -42,7 +42,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "amd64,i386",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-			StateFunc:        repository.FormatCommaSeparatedString,
+			StateFunc:        util.FormatCommaSeparatedString,
 			Description:      `(Optional) Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
 	}, repository.RepoLayoutRefSchema("virtual", packageType))

@@ -348,7 +348,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validator.CommaSeperatedList,
-		StateFunc:        repository.FormatCommaSeparatedString,
+		StateFunc:        util.FormatCommaSeparatedString,
 		Description:      `(Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }

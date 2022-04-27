@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -410,7 +409,7 @@ func DefaultPacker(skeema map[string]*schema.Schema) PackFunc {
 	return UniversalPack(AllHclPredicate(util.SchemaHasKey(skeema), NoPassword))
 }
 
-// repository.UniversalPack consider making this a function that takes a predicate of what to include and returns
+// UniversalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
 func UniversalPack(predicate util.HclPredicate) PackFunc {
 
@@ -464,7 +463,7 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 	}
 }
 
-//Returns random string from a map[string]string
+// selectRandomFromMapOfStrings returns random string from a map[string]string
 func selectRandomFromMapOfStrings(m map[string]string) string {
 	mapLength := len(m)
 	allValues := make([]string, 0, mapLength)
@@ -500,12 +499,6 @@ func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
 	return request.Head(RepositoriesEndpoint + id)
 }
 
-func FormatCommaSeparatedString(thing interface{}) string {
-	fields := strings.Fields(thing.(string))
-	sort.Strings(fields)
-	return strings.Join(fields, ",")
-}
-
 func ValidateRepoLayoutRefSchemaOverride(_ interface{}, _ cty.Path) diag.Diagnostics {
 	return diag.Diagnostics{
 		diag.Diagnostic{
@@ -521,7 +514,7 @@ type SupportedRepoClasses struct {
 	SupportedRepoTypes map[string]bool
 }
 
-//Consolidated list of Default Repo Layout for all Package Types with active Repo Types
+// Consolidated list of Default Repo Layout for all Package Types with active Repo Types
 var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
@@ -555,7 +548,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	"rpm":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 }
 
-//Return the default repo layout by Repository Type & Package Type
+// GetDefaultRepoLayoutRef return the default repo layout by Repository Type & Package Type
 func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
 	return func() (interface{}, error) {
 		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
