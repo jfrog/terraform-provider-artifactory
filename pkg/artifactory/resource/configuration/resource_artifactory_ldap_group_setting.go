@@ -45,56 +45,56 @@ func ResourceArtifactoryLdapGroupSetting() *schema.Resource {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) Ldap group setting name.`,
+			Description:      `Ldap group setting name.`,
 		},
 		"ldap_setting_key": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) The LDAP setting key you want to use for group retrieval. The value for this field corresponds to 'enabledLdap' field of the ldap group setting XML block of system configuration.`,
+			Description:      `The LDAP setting key you want to use for group retrieval. The value for this field corresponds to 'enabledLdap' field of the ldap group setting XML block of system configuration.`,
 		},
 		"group_base_dn": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
 			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
-			Description:      `(Optional) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
+			Description:      `A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
 		},
 		"group_name_attribute": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "(Required) Attribute on the group entry denoting the group name. Used when importing groups.",
+			Description:      "Attribute on the group entry denoting the group name. Used when importing groups.",
 		},
 		"group_member_attribute": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) A multi-value attribute on the group entry containing user DNs or IDs of the group members (e.g., uniqueMember,member).`,
+			Description:      `A multi-value attribute on the group entry containing user DNs or IDs of the group members (e.g., uniqueMember,member).`,
 		},
 		"sub_tree": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: `(Optional) When set, enables deep search through the sub-tree of the LDAP URL + Search Base. True by default.`,
+			Description: `When set, enables deep search through the sub-tree of the LDAP URL + Search Base. True by default.`,
 		},
 		"filter": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapFilter)),
-			Description:      `(Required) The LDAP filter used to search for group entries. Used for importing groups.`,
+			Description:      `The LDAP filter used to search for group entries. Used for importing groups.`,
 		},
 		"description_attribute": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `(Required) An attribute on the group entry which denoting the group description. Used when importing groups.`,
+			Description:      `An attribute on the group entry which denoting the group description. Used when importing groups.`,
 		},
 		"strategy": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"STATIC", "DYNAMIC", "HIERARCHICAL"}, false)),
-			Description: `(Required) The JFrog Platform Deployment (JPD) supports three ways of mapping groups to LDAP schemas:
+			Description: `The JFrog Platform Deployment (JPD) supports three ways of mapping groups to LDAP schemas:
 Static: Group objects are aware of their members, however, the users are not aware of the groups they belong to. Each group object such as groupOfNames or groupOfUniqueNames holds its respective member attributes, typically member or uniqueMember, which is a user DN.
 Dynamic: User objects are aware of what groups they belong to, but the group objects are not aware of their members. Each user object contains a custom attribute, such as group, that holds the group DNs or group names of which the user is a member.
 Hierarchy: The user's DN is indicative of the groups the user belongs to by using group names as part of user DN hierarchy. Each user DN contains a list of ou's or custom attributes that make up the group association. For example, uid=user1,ou=developers,ou=uk,dc=jfrog,dc=org indicates that user1 belongs to two groups: uk and developers.`,

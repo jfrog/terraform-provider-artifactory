@@ -69,19 +69,19 @@ func ResourceArtifactoryGroup() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: `(Optional) When this override is set,  User in the group can manage Xray Watches on any resource type. Default value is 'false'.`,
+				Description: `When this override is set,  User in the group can manage Xray Watches on any resource type. Default value is 'false'.`,
 			},
 			"policy_manager": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: `(Optional) When this override is set,  User in the group can set Xray security and compliance policies. Default value is 'false'.`,
+				Description: `When this override is set,  User in the group can set Xray security and compliance policies. Default value is 'false'.`,
 			},
 			"reports_manager": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: `(Optional) When this override is set,  User in the group can manage Xray Reports. Default value is 'false'.`,
+				Description: `When this override is set,  User in the group can manage Xray Reports. Default value is 'false'.`,
 			},
 		},
 	}

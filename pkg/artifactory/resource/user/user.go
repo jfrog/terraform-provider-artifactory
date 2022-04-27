@@ -16,7 +16,7 @@ import (
 type User struct {
 	Name                     string   `json:"name"`
 	Email                    string   `json:"email"`
-	Password                 string `json:"password,omitempty"`
+	Password                 string   `json:"password,omitempty"`
 	Admin                    bool     `json:"admin"`
 	ProfileUpdatable         bool     `json:"profileUpdatable"`
 	DisableUIAccess          bool     `json:"disableUIAccess"`
@@ -32,13 +32,13 @@ var baseUserSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "(Required) Username for user.",
+		Description:      "Username for user.",
 	},
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: utils.ValidateIsEmail,
-		Description:      "(Required) Email for user.",
+		Description:      "Email for user.",
 	},
 	"admin": {
 		Type:        schema.TypeBool,
@@ -74,7 +74,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Set:         schema.HashString,
 		Optional:    true,
-		Description: "(Optional) List of groups this user is a part of.",
+		Description: "List of groups this user is a part of.",
 	},
 }
 

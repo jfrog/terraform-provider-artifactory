@@ -1,3 +1,10 @@
+## 6.5.3 (Apr 27, 2022). Tested on Artifactory 7.37.15
+
+IMPROVEMENTS:
+
+* reorganizing documentation, adding missing documentation links, fixing formatting. No changes in the functionality.
+PR: [GH-435](https://github.com/jfrog/terraform-provider-artifactory/pull/435). Issues [#422](https://github.com/jfrog/terraform-provider-artifactory/issues/422) and [#398](https://github.com/jfrog/terraform-provider-artifactory/issues/398)
+
 ## 6.5.2 (Apr 25, 2022). Tested on Artifactory 7.37.14
 
 IMPROVEMENTS:

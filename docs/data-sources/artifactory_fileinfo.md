@@ -8,7 +8,7 @@ Provides an Artifactory fileinfo datasource. This can be used to read metadata o
 # 
 data "artifactory_fileinfo" "my-file" {
    repository = "repo-key"
-   path = "/path/to/the/artifact.zip" 
+   path       = "/path/to/the/artifact.zip" 
 }
 ```
 

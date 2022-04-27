@@ -19,10 +19,10 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 	anonymousUserSchema := map[string]*schema.Schema{
 		// This isn't necessary in theory but Terraform doesn't like schema with no attributes
 		"name": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			Description:  "(Optional) Username for anonymous user. This should not be set in the HCL, or change after importing into Terraform state.",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Username for anonymous user. This should not be set in the HCL, or change after importing into Terraform state.",
 		},
 	}
 
