@@ -278,6 +278,36 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	})
 }
 
+func TestAccGroup_external_id(t *testing.T) {
+	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
+	externalId := "88e87204-844e-497e-ab19-69e6927fe8cb"
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name  = "{{ .groupName }}"
+			external_id = "{{ .externalId }}"
+		}
+	`
+	config := acctest.ExecuteTemplate(groupName, temp, map[string]string{
+		"groupName": groupName,
+		"externalId": externalId,
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "external_id", externalId),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(*resty.Client)

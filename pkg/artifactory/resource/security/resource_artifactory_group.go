@@ -37,6 +37,12 @@ func ResourceArtifactoryGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"external_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(36, 36)),
+				Description: "New external group ID used to configure the corresponding group in Azure AD.",
+			},
 			"auto_join": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -94,6 +100,7 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	group := Group{
 		Name:            d.GetString("name", false),
 		Description:     d.GetString("description", false),
+		ExternalId:      d.GetString("external_id", false),
 		AutoJoin:        d.GetBool("auto_join", false),
 		AdminPrivileges: d.GetBool("admin_privileges", false),
 		Realm:           d.GetString("realm", false),
@@ -172,6 +179,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	setValue := util.MkLens(d)
 	setValue("name", group.Name)
 	setValue("description", group.Description)
+	setValue("external_id", group.ExternalId)
 	setValue("auto_join", group.AutoJoin)
 	setValue("admin_privileges", group.AdminPrivileges)
 	setValue("realm", group.Realm)
@@ -237,6 +245,7 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
+	ExternalId      string   `json:"externalId"`
 	AutoJoin        bool     `json:"autoJoin,omitempty"`
 	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
 	Realm           string   `json:"realm,omitempty"`

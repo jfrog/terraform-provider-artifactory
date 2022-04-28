@@ -12,6 +12,7 @@ Provides an Artifactory group resource. This can be used to create and manage Ar
 resource "artifactory_group" "test-group" {
   name             = "terraform"
   description      = "test group"
+  external_id      = "00628948-b509-4362-aa73-380c4dbd2a44"
   admin_privileges = false
   users_names      = [ "foobar" ]
 }
@@ -23,6 +24,7 @@ The following arguments are supported:
 
 * `name`                - (Required) Name of the group
 * `description`         - (Optional) A description for the group
+* `external_id`         - (Optional) New external group ID used to configure the corresponding group in Azure AD.
 * `auto_join`           - (Optional) When this parameter is set, any new users defined in the system are automatically assigned to this group.
 * `admin_privileges`    - (Optional) Any users added to this group will automatically be assigned with admin privileges in the system.
 * `realm`               - (Optional) The realm for the group.
@@ -44,8 +46,7 @@ $ terraform import artifactory_group.terraform-group mygroup
 
 ## Managed vs Unmanaged Group Membership
 TF does not distinguish between an absent UsersNames array and setting to an array of length 0
-To prevent accidental deletion of existing membership, the default was chosen to mean that tf does not manage membership
-and that to detach all users would require an explicit bool.
+To prevent accidental deletion of existing membership, the default was chosen to mean that Terraform does not manage membership and that to detach all users would require an explicit bool.
 
-Note when moving from managed group membership to unmanaged the tf plan will show the users previously in the array
+Note when moving from managed group membership to unmanaged the Terraform plan will show the users previously in the array
 being removed from terraform state, but it will not actually delete any members.
