@@ -39,12 +39,14 @@ func TestAccGroup_basic(t *testing.T) {
 
 func TestAccGroup_full(t *testing.T) {
 	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
+	externalId := "88e87204-844e-497e-ab19-69e6927fe8cb"
 
 	templates := []string{
 		`
 		resource "artifactory_group" "{{ .groupName }}" {
 			name             = "{{ .groupName }}"
 			description 	 = "Test group"
+			external_id      = "{{ .externalId }}"
 			auto_join        = true
 			admin_privileges = false
 			realm            = "test"
@@ -122,8 +124,10 @@ func TestAccGroup_full(t *testing.T) {
 
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
-
+		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{
+			"groupName": groupName,
+			"externalId": externalId,
+		}))
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -135,6 +139,7 @@ func TestAccGroup_full(t *testing.T) {
 				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "external_id", externalId),
 					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
 					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
 					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
@@ -272,36 +277,6 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
 					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
 					testAccDirectCheckGroupMembership(rfqn, 0),
-				),
-			},
-		},
-	})
-}
-
-func TestAccGroup_external_id(t *testing.T) {
-	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
-	externalId := "88e87204-844e-497e-ab19-69e6927fe8cb"
-	temp := `
-		resource "artifactory_group" "{{ .groupName }}" {
-			name  = "{{ .groupName }}"
-			external_id = "{{ .externalId }}"
-		}
-	`
-	config := acctest.ExecuteTemplate(groupName, temp, map[string]string{
-		"groupName": groupName,
-		"externalId": externalId,
-	})
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "name", groupName),
-					resource.TestCheckResourceAttr(rfqn, "external_id", externalId),
 				),
 			},
 		},
