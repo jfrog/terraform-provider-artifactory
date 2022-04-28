@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type GetReplicationConfig struct {
@@ -32,9 +33,9 @@ var replicationSchemaCommon = map[string]*schema.Schema{
 		Required: true,
 	},
 	"cron_exp": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: utils.ValidateCron,
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validator.Cron,
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
@@ -102,8 +103,8 @@ var replicationSchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"proxy": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
 }
@@ -119,14 +120,14 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: utils.MergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: util.MergeSchema(replicationSchemaCommon, repMultipleSchema),
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
 			"artifactory_push_replication resource.",
 	}
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.GetString("repo_key", false)
@@ -199,7 +200,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 
 func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", replicationConfig.RepoKey)
 	setValue("cron_exp", replicationConfig.CronExp)

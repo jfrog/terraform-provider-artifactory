@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type BowerRemoteRepo struct {
@@ -16,7 +16,7 @@ type BowerRemoteRepo struct {
 func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	const packageType = "bower"
 
-	var bowerRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var bowerRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"bower_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -27,7 +27,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 		repo := BowerRemoteRepo{
 			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			RemoteRepositoryVcsParams:  UnpackVcsRemoteRepo(s),
@@ -37,7 +37,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}
 
 	return repository.MkResourceSchema(bowerRemoteSchema, repository.DefaultPacker(bowerRemoteSchema), unpackBowerRemoteRepo, func() interface{} {
-		repoLayout, _ := utils.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &BowerRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:              "remote",

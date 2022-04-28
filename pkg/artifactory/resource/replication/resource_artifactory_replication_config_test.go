@@ -2,7 +2,6 @@ package replication_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -105,7 +104,7 @@ func TestAccReplication_full(t *testing.T) {
 			{
 				Config: fmt.Sprintf(
 					replicationConfigTemplate,
-					os.Getenv("ARTIFACTORY_URL"),
+					acctest.GetArtifactoryUrl(t),
 					acctest.RtDefaultUser,
 					testProxy,
 				),

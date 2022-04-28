@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/exp/slices"
 )
 
@@ -60,7 +62,7 @@ var pushReplicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateCron),
+		ValidateDiagFunc: validator.Cron,
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
@@ -147,12 +149,12 @@ func ResourceArtifactoryPushReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: utils.MergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
+		Schema: util.MergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
 	}
 }
 
 func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	pushReplication := new(UpdatePushReplication)
 
 	repo := d.GetString("repo_key", false)
@@ -226,7 +228,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 
 func packPushReplication(pushReplication *GetPushReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", pushReplication.RepoKey)
 	setValue("cron_exp", pushReplication.CronExp)
@@ -315,7 +317,7 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Post(ReplicationEndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
@@ -326,7 +328,7 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete(ReplicationEndpointPath + d.Id())
 	return diag.FromErr(err)
 }

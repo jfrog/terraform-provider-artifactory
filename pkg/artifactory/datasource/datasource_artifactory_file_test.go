@@ -89,7 +89,7 @@ func TestDownloadFile(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() {
+		PreCheck: func() {
 			acctest.PreCheck(t)
 			downloadPreCheck(t, downloadPath, &localFileModTime)
 		},

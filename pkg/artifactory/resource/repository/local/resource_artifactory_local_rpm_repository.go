@@ -4,13 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	const packageType = "rpm"
 
-	var rpmLocalSchema = utils.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	var rpmLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
 			Optional:         true,
@@ -34,7 +35,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: utils.CommaSeperatedList,
+			ValidateDiagFunc: validator.CommaSeperatedList,
 			Description: "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
@@ -64,7 +65,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	}
 
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{ResourceData: data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "rpm"),
 			RootDepth:                 d.GetInt("yum_root_depth", false),

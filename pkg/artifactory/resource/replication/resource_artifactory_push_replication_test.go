@@ -2,7 +2,6 @@ package replication_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -75,7 +74,7 @@ func TestAccPushReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
 
 	params := map[string]interface{}{
-		"url":      os.Getenv("ARTIFACTORY_URL"),
+		"url":      acctest.GetArtifactoryUrl(t),
 		"username": acctest.RtDefaultUser,
 		"proxy":    testProxy,
 	}
@@ -137,7 +136,7 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.url", os.Getenv("ARTIFACTORY_URL")),
+					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.url", acctest.GetArtifactoryUrl(t)),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.password", "Passw0rd!"),
 					resource.TestCheckResourceAttr("artifactory_push_replication.lib-local", "replications.0.proxy", testProxy),

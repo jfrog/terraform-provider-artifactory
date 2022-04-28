@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type RemoteRepositoryBaseParams struct {
@@ -92,7 +93,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.ProjectKeyValidator,
+		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -157,7 +158,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"remote_repo_layout_ref": {
@@ -348,8 +349,8 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.CommaSeperatedList,
-		StateFunc:        utils.FormatCommaSeparatedString,
+		ValidateDiagFunc: validator.CommaSeperatedList,
+		StateFunc:        util.FormatCommaSeparatedString,
 		Description:      `The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
 }
@@ -371,7 +372,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	repo := RemoteRepositoryBaseParams{
 		Rclass:                   "remote",
@@ -438,7 +439,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 }
 
 func UnpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	repo := RemoteRepositoryVcsParams{
 		VcsGitProvider:    d.GetString("vcs_git_provider", false),
 		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),

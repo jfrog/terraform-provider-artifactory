@@ -4,14 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV2LocalSchema = utils.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	var dockerV2LocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -44,7 +44,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	packer := repository.DefaultPacker(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{ResourceData: data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
 			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
@@ -74,7 +74,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	const packageType = "docker"
 
-	var dockerV1LocalSchema = utils.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	var dockerV1LocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -95,7 +95,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("local", packageType))
 
 	// this is necessary because of the pointers
-	skeema := utils.MergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
+	skeema := util.MergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{

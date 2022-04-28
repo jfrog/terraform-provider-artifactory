@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
@@ -156,13 +156,13 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
 	part1 := schema.HashString(p["name"].(string)) + 31
-	permissions := utils.CastToStringArr(p["permissions"].(*schema.Set).List())
+	permissions := util.CastToStringArr(p["permissions"].(*schema.Set).List())
 	part3 := schema.HashString(strings.Join(permissions, ""))
 	return part1 * part3
 }
 
 func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {
 		unpackEntity := func(rawEntityData interface{}) *Actions {
@@ -176,7 +176,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 				for _, v := range permList {
 					id := v.(map[string]interface{})
 
-					permissions[id["name"].(string)] = utils.CastToStringArr(id["permissions"].(*schema.Set).List())
+					permissions[id["name"].(string)] = util.CastToStringArr(id["permissions"].(*schema.Set).List())
 				}
 				return permissions
 			}
@@ -204,7 +204,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 
 		// This will always exist
 		{
-			tmp := utils.CastToStringArr(permissionData["repositories"].(*schema.Set).List())
+			tmp := util.CastToStringArr(permissionData["repositories"].(*schema.Set).List())
 			permission.Repositories = tmp
 		}
 
@@ -215,14 +215,14 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
 			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
 			// it responds with "[**]" which messes us the test. This hack seems to line them up
-			tmp := utils.CastToStringArr(v.(*schema.Set).List())
+			tmp := util.CastToStringArr(v.(*schema.Set).List())
 			if len(tmp) == 0 {
 				tmp = []string{""}
 			}
 			permission.IncludePatterns = tmp
 		}
 		if v, ok := permissionData["excludes_pattern"]; ok {
-			tmp := utils.CastToStringArr(v.(*schema.Set).List())
+			tmp := util.CastToStringArr(v.(*schema.Set).List())
 			permission.ExcludePatterns = tmp
 		}
 		if v, ok := permissionData["actions"]; ok {
@@ -256,7 +256,7 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 			for k, v := range e {
 				perm[count] = map[string]interface{}{
 					"name":        k,
-					"permissions": schema.NewSet(schema.HashString, utils.CastToInterfaceArr(v)),
+					"permissions": schema.NewSet(schema.HashString, util.CastToInterfaceArr(v)),
 				}
 				count++
 			}
@@ -268,15 +268,15 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 
 		if p != nil {
 			if p.IncludePatterns != nil {
-				s["includes_pattern"] = schema.NewSet(schema.HashString, utils.CastToInterfaceArr(p.IncludePatterns))
+				s["includes_pattern"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.IncludePatterns))
 			}
 
 			if p.ExcludePatterns != nil {
-				s["excludes_pattern"] = schema.NewSet(schema.HashString, utils.CastToInterfaceArr(p.ExcludePatterns))
+				s["excludes_pattern"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.ExcludePatterns))
 			}
 
 			if p.Repositories != nil {
-				s["repositories"] = schema.NewSet(schema.HashString, utils.CastToInterfaceArr(p.Repositories))
+				s["repositories"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.Repositories))
 			}
 
 			if p.Actions != nil {
@@ -299,7 +299,7 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 		return []interface{}{s}
 	}
 
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	errors := setValue("name", permissionTarget.Name)
 	if permissionTarget.Repo != nil {

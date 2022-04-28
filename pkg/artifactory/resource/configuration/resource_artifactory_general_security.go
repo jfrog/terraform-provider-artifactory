@@ -6,7 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -96,7 +96,7 @@ security:
 }
 
 func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	security := *new(GeneralSecurity)
 
 	settings := GeneralSettings{
@@ -108,7 +108,7 @@ func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
 }
 
 func packGeneralSecurity(s *GeneralSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	errors := setValue("enable_anonymous_access", s.GeneralSettings.AnonAccessEnabled)
 

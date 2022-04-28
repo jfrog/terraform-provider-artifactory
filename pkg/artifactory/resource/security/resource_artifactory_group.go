@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
@@ -47,10 +48,10 @@ func ResourceArtifactoryGroup() *schema.Resource {
 				Computed: true,
 			},
 			"realm": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: utils.ValidateLowerCase,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validator.LowerCase,
 			},
 			"realm_attributes": {
 				Type:     schema.TypeString,
@@ -88,7 +89,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 }
 
 func groupParams(s *schema.ResourceData) (Group, bool, error) {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	group := Group{
 		Name:            d.GetString("name", false),
@@ -168,7 +169,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 	setValue("name", group.Name)
 	setValue("description", group.Description)
 	setValue("auto_join", group.AutoJoin)
@@ -178,7 +179,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	setValue("watch_manager", group.WatchManager)
 	setValue("policy_manager", group.PolicyManager)
 	setValue("reports_manager", group.ReportsManager)
-	errors := setValue("users_names", schema.NewSet(schema.HashString, utils.CastToInterfaceArr(group.UsersNames)))
+	errors := setValue("users_names", schema.NewSet(schema.HashString, util.CastToInterfaceArr(group.UsersNames)))
 	if errors != nil && len(errors) > 0 {
 		return fmt.Errorf("failed saving state for groups %q", errors)
 	}

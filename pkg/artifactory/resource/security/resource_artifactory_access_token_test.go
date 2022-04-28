@@ -3,7 +3,6 @@ package security_test
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
 )
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
@@ -65,7 +64,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: audienceGood,
@@ -102,7 +101,7 @@ func TestAccAccessTokenExistingUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: existingUser,
@@ -144,7 +143,7 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: fixedDateGood(),
@@ -245,7 +244,7 @@ func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: refreshableToken,
@@ -300,7 +299,7 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: missingUserGood,
@@ -373,7 +372,7 @@ func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: wildcardGroupGood,
@@ -411,7 +410,7 @@ func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy("artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: nonExpiringToken,
@@ -429,7 +428,7 @@ func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
+func testAccCheckAccessTokenDestroy(t *testing.T, id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 
@@ -446,18 +445,18 @@ func testAccCheckAccessTokenDestroy(id string) func(*terraform.State) error {
 
 		// Create a new client to auth to Artifactory
 		// We want to check that the token cannot authenticate
-		url := os.Getenv("ARTIFACTORY_URL")
+		url := acctest.GetArtifactoryUrl(t)
 
-		resty, err := utils.BuildResty(url, "")
+		restyClient, err := client.Build(url, "")
 		if err != nil {
 			return err
 		}
 		accessToken := rs.Primary.Attributes["access_token"]
-		resty, err = utils.AddAuthToResty(resty, "", accessToken)
+		restyClient, err = client.AddAuth(restyClient, "", accessToken)
 		if err != nil {
 			return err
 		}
-		if resp, err := resty.R().Get("artifactory/api/system/ping"); err != nil {
+		if resp, err := restyClient.R().Get("artifactory/api/system/ping"); err != nil {
 			if resp == nil {
 				return fmt.Errorf("no response returned for testAccCheckAccessTokenDestroy")
 			}

@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type LdapGroupSetting struct {
@@ -57,7 +58,7 @@ func ResourceArtifactoryLdapGroupSetting() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
+			ValidateDiagFunc: validator.LdapDn,
 			Description:      `A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.`,
 		},
 		"group_name_attribute": {
@@ -81,7 +82,7 @@ func ResourceArtifactoryLdapGroupSetting() *schema.Resource {
 		"filter": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapFilter)),
+			ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validator.LdapFilter),
 			Description:      `The LDAP filter used to search for group entries. Used for importing groups.`,
 		},
 		"description_attribute": {
@@ -217,7 +218,7 @@ security:
 }
 
 func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	ldapGroupSetting := LdapGroupSetting{
 		Name:                 d.GetString("name", false),
 		EnabledLdap:          d.GetString("ldap_setting_key", false),

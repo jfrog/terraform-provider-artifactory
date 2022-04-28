@@ -3,7 +3,8 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 var RepoTypesLikeGeneric = []string{
@@ -61,7 +62,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.ProjectKeyValidator,
+		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -101,7 +102,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"blacked_out": {
@@ -142,7 +143,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	return LocalRepositoryBaseParams{
 		Rclass:                 rclassType,
 		Key:                    d.GetString("key", false),

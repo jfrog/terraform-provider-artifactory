@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
@@ -23,7 +24,7 @@ func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: utils.MergeSchema(replicationSchemaCommon, replicationSchema),
+		Schema: util.MergeSchema(replicationSchemaCommon, replicationSchema),
 		Description: "Used for configuring replications on repos. However, the TCL only makes " +
 			"good sense for local repo replication (PUSH) and not remote (PULL).",
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
@@ -32,7 +33,7 @@ func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
 }
 
 func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBody {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	replicationConfig := new(updateReplicationBody)
 
 	replicationConfig.RepoKey = d.GetString("repo_key", false)
@@ -53,7 +54,7 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBod
 }
 
 func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) diag.Diagnostics {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
@@ -83,7 +84,7 @@ func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) 
 }
 
 func packPullReplicationBody(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := utils.MkLens(d)
+	setValue := util.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
@@ -101,13 +102,12 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 	return nil
 }
 
-
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
@@ -161,7 +161,7 @@ func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.Resour
 	replicationConfig := unpackSingleReplicationConfig(d)
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)

@@ -1,4 +1,4 @@
-package utils
+package validator
 
 import (
 	"fmt"
@@ -9,30 +9,49 @@ import (
 	"github.com/gorhill/cronexpr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/ldap.v2"
 )
 
-func ValidateLowerCase(value interface{}, key string) (ws []string, es []error) {
+func LowerCase(value interface{}, key cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	m := value.(string)
 	low := strings.ToLower(m)
 
 	if m != low {
-		es = append(es, fmt.Errorf("%s should be lowercase", key))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid value",
+			Detail:   fmt.Sprintf("%s should be lowercase", key),
+		})
 	}
-	return
+
+	return diags
 }
 
-func ValidateCron(value interface{}, key string) (ws []string, es []error) {
+func Cron(value interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	_, err := cronexpr.Parse(value.(string))
 	if err != nil {
-		return nil, []error{err}
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Cron expression",
+			Detail:   fmt.Sprintf("%s is not a valid cron: %s", value, err),
+		})
 	}
-	return nil, nil
+
+	return diags
 }
 
 var CommaSeperatedList = validation.ToDiagFunc(
 	validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"),
+)
+
+var ProjectKey = validation.ToDiagFunc(
+	validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{3,10}$`), "project_key must be 3 - 10 lowercase alphanumeric characters"),
 )
 
 var validLicenseTypes = []string{
@@ -472,24 +491,11 @@ var validLicenseTypes = []string{
 	"ZPL-2.1",
 }
 
-var licenseTypeValidator = validation.StringInSlice(validLicenseTypes, false)
+var LicenseType = validation.ToDiagFunc(validation.StringInSlice(validLicenseTypes, false))
 
-var ProjectKeyValidator = validation.ToDiagFunc(
-	validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{3,10}$`), "project_key must be 3 - 10 lowercase alphanumeric characters"),
-)
-
-func RepoLayoutRefSchemaOverrideValidator(_ interface{}, _ cty.Path) diag.Diagnostics {
-	return diag.Diagnostics{
-		diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Always override repo_layout_ref attribute in the schema",
-			Detail:   "Always override repo_layout_ref attribute in the schema on top of base schema",
-		},
-	}
-}
-
-func ValidateIsEmail(address interface{}, _ cty.Path) diag.Diagnostics {
+func IsEmail(address interface{}, _ cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	_, err := mail.ParseAddress(address.(string))
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -498,21 +504,79 @@ func ValidateIsEmail(address interface{}, _ cty.Path) diag.Diagnostics {
 			Detail:   fmt.Sprintf("%s is not a valid address: %s", address, err),
 		})
 	}
+
 	return diags
 }
 
-func ValidateLdapDn(value interface{}, _ string) ([]string, []error) {
-	_, err := ldap.ParseDN(value.(string))
-	if err != nil {
-		return nil, []error{err}
+// Updated version of the Terraform's original validation func:
+// https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/validation/meta.go#L32
+//
+// All returns a SchemaValidateFunc which tests if the provided value
+// passes all provided SchemaValidateFunc
+func All(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, p cty.Path) diag.Diagnostics {
+		var allDiags diag.Diagnostics
+		for _, validator := range validators {
+			validatorDiags := validator(i, p)
+			allDiags = append(allDiags, validatorDiags...)
+		}
+		return allDiags
 	}
-	return nil, nil
 }
 
-func ValidateLdapFilter(value interface{}, _ string) ([]string, []error) {
+// Updated version of the Terraform's original validation func:
+// https://github.com/hashicorp/terraform-plugin-sdk/blob/main/helper/validation/strings.go#L14
+func StringIsNotEmpty(i interface{}, p cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, ok := i.(string)
+	if !ok {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid string",
+			Detail:   fmt.Sprintf("expected type of %q to be string", p),
+		})
+		return diags
+	}
+
+	if v == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid string",
+			Detail:   fmt.Sprintf("expected %q to not be an empty string, got %v", p, i),
+		})
+		return diags
+	}
+
+	return diags
+}
+
+func LdapDn(value interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	_, err := ldap.ParseDN(value.(string))
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid LDAP Domain Name",
+			Detail:   fmt.Sprintf("%s is not a valid LDAP Domain Name: %s", value, err),
+		})
+	}
+
+	return diags
+}
+
+func LdapFilter(value interface{}, _ cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	_, err := ldap.CompileFilter(value.(string))
 	if err != nil {
-		return nil, []error{err}
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid LDAP Filter",
+			Detail:   fmt.Sprintf("%s is not a valid LDAP Filter: %s", value, err),
+		})
 	}
-	return nil, nil
+
+	return diags
 }

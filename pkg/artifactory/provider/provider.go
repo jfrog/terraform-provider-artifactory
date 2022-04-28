@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
@@ -17,7 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
 )
 
 // Version for some reason isn't getting updated by the linker
@@ -87,7 +88,7 @@ func Provider() *schema.Provider {
 		resoucesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteGenericRepository(repoType)
 	}
 
-	for _, repoType := range utils.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikeRepoTypes {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
 		resoucesMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(repoType, true)
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
@@ -120,7 +121,7 @@ func Provider() *schema.Provider {
 			"url": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("ARTIFACTORY_URL", "http://localhost:8082"),
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_URL", "JFROG_URL"}, "http://localhost:8082"),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"api_key": {
@@ -173,14 +174,14 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, fmt.Errorf("you must supply a URL")
 	}
 
-	restyBase, err := utils.BuildResty(URL.(string), Version)
+	restyBase, err := client.Build(URL.(string), Version)
 	if err != nil {
 		return nil, err
 	}
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
-	restyBase, err = utils.AddAuthToResty(restyBase, apiKey, accessToken)
+	restyBase, err = client.AddAuth(restyBase, apiKey, accessToken)
 	if err != nil {
 		return nil, err
 	}

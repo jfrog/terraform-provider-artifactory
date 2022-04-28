@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type RepoWebhookCriteria struct {
@@ -16,13 +16,13 @@ type RepoWebhookCriteria struct {
 }
 
 var repoWebhookSchema = func(webhookType string) map[string]*schema.Schema {
-	return utils.MergeSchema(baseWebhookBaseSchema(webhookType), map[string]*schema.Schema{
+	return util.MergeSchema(baseWebhookBaseSchema(webhookType), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
-				Schema: utils.MergeSchema(baseCriteriaSchema, map[string]*schema.Schema{
+				Schema: util.MergeSchema(baseCriteriaSchema, map[string]*schema.Schema{
 					"any_local": {
 						Type:        schema.TypeBool,
 						Required:    true,
@@ -58,7 +58,7 @@ var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCrit
 	return RepoWebhookCriteria{
 		AnyLocal:            terraformCriteria["any_local"].(bool),
 		AnyRemote:           terraformCriteria["any_remote"].(bool),
-		RepoKeys:            utils.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
+		RepoKeys:            util.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
 		BaseWebhookCriteria: baseCriteria,
 	}
 }

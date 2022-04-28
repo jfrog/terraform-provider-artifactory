@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 )
 
-
 func TestAccManagedUser_NoGroups(t *testing.T) {
 	const userNoGroups = `
 		resource "artifactory_managed_user" "%s" {

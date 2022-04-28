@@ -4,13 +4,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	const packageType = "helm"
 
-	var helmRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var helmRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"helm_charts_base_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -46,7 +46,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	}
 
 	var unpackHelmRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 		repo := HelmRemoteRepo{
 			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
 			HelmChartsBaseURL:            d.GetString("helm_charts_base_url", false),
@@ -62,7 +62,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
 	helmRemoteRepoPacker := repository.UniversalPack(
 		repository.AllHclPredicate(
-			utils.SchemaHasKey(helmRemoteSchema),
+			util.SchemaHasKey(helmRemoteSchema),
 			repository.NoPassword,
 			repository.IgnoreHclPredicate("external_dependencies_patterns"),
 		),

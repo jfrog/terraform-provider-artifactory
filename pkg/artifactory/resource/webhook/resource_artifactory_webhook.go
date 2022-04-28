@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
 )
 
@@ -113,9 +113,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var unpackWebhook = func(data *schema.ResourceData) (WebhookBaseParams, error) {
-		d := &utils.ResourceData{data}
+		d := &util.ResourceData{data}
 
-		var unpackCriteria = func(d *utils.ResourceData, webhookType string) interface{} {
+		var unpackCriteria = func(d *util.ResourceData, webhookType string) interface{} {
 			var webhookCriteria interface{}
 
 			if v, ok := d.GetOkExists("criteria"); ok {
@@ -124,8 +124,8 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					id := criteria[0].(map[string]interface{})
 
 					baseCriteria := BaseWebhookCriteria{
-						IncludePatterns: utils.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
-						ExcludePatterns: utils.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
+						IncludePatterns: util.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
+						ExcludePatterns: util.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
 					}
 
 					webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
@@ -135,7 +135,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookCriteria
 		}
 
-		var unpackCustomHttpHeaders = func(d *utils.ResourceData) []WebhookCustomHttpHeader {
+		var unpackCustomHttpHeaders = func(d *util.ResourceData) []WebhookCustomHttpHeader {
 			var customHeaders []WebhookCustomHttpHeader
 
 			if v, ok := d.GetOkExists("custom_http_headers"); ok {
@@ -163,7 +163,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 				Criteria:   unpackCriteria(d, webhookType),
 			},
 			Handlers: []WebhookHandler{
-				WebhookHandler{
+				{
 					HandlerType:       "webhook",
 					Url:               d.GetString("url", false),
 					Secret:            d.GetString("secret", false),
@@ -177,7 +177,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packCriteria = func(d *schema.ResourceData, criteria map[string]interface{}) []error {
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		resource := domainSchemaLookup[webhookType]["criteria"].Elem.(*schema.Resource)
 		packedCriteria := domainPackLookup[webhookType](criteria)
@@ -189,7 +189,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packCustomHeaders = func(d *schema.ResourceData, customHeaders []WebhookCustomHttpHeader) []error {
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		headers := make(map[string]interface{})
 		for _, customHeader := range customHeaders {
@@ -200,7 +200,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packWebhook = func(d *schema.ResourceData, webhook WebhookBaseParams) diag.Diagnostics {
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		var errors []error
 

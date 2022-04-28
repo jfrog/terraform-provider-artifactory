@@ -20,7 +20,8 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"gopkg.in/yaml.v2"
 )
 
@@ -53,10 +54,11 @@ func PreCheck(t *testing.T) {
 	testAccProviderConfigure.Do(func() {
 		restyClient := GetTestResty(t)
 
+		artifactoryUrl := GetArtifactoryUrl(t)
 		// Set custom base URL so repos that relies on it will work
 		// https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-UpdateCustomURLBase
 		_, err := restyClient.R().
-			SetBody(os.Getenv("ARTIFACTORY_URL")).
+			SetBody(artifactoryUrl).
 			SetHeader("Content-Type", "text/plain").
 			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
@@ -68,6 +70,20 @@ func PreCheck(t *testing.T) {
 			t.Fatalf("Failed to configure provider %v", configErr)
 		}
 	})
+}
+
+func GetEnvVarWithFallback(t *testing.T, envVars ...string) string {
+	envVarValue, err := schema.MultiEnvDefaultFunc(envVars, nil)()
+	if envVarValue == "" || envVarValue == nil || err != nil {
+		t.Fatalf("%s must be set for acceptance tests", strings.Join(envVars, " or "))
+		return ""
+	}
+
+	return envVarValue.(string)
+}
+
+func GetArtifactoryUrl(t *testing.T) string {
+	return GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
 }
 
 func FmtMapToHcl(fields map[string]interface{}) string {
@@ -169,7 +185,7 @@ func CopyInterfaceMap(source map[string]interface{}, target map[string]interface
 }
 
 func MkNames(name, resource string) (int, string, string) {
-	id := utils.RandomInt()
+	id := test.RandomInt()
 	n := fmt.Sprintf("%s%d", name, id)
 	return id, fmt.Sprintf("%s.%s", resource, n), n
 }
@@ -204,7 +220,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 }
 
 func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
-	return repository.CheckRepo(id, request.AddRetryCondition(utils.NeverRetry))
+	return repository.CheckRepo(id, request.AddRetryCondition(client.NeverRetry))
 }
 
 func CreateProject(t *testing.T, projectKey string) {
@@ -273,7 +289,7 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	r.XrayIndex = true
 	response, errRepo := restyClient.R().
 		SetBody(r).
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Put("artifactory/api/repositories/" + repo)
 	//Artifactory can return 400 for several reasons, this is why we are checking the response body
 	repoExists := strings.Contains(fmt.Sprint(errRepo), "Case insensitive repository key already exists")
@@ -286,7 +302,7 @@ func DeleteRepo(t *testing.T, repo string) {
 	restyClient := GetTestResty(t)
 
 	response, errRepo := restyClient.R().
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete("artifactory/api/repositories/" + repo)
 	if errRepo != nil || response.StatusCode() != http.StatusOK {
 		t.Logf("The repository %s doesn't exist", repo)
@@ -295,7 +311,7 @@ func DeleteRepo(t *testing.T, repo string) {
 
 //Usage of the function is strictly restricted to Test Cases
 func GetValidRandomDefaultRepoLayoutRef() string {
-	return utils.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+	return test.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }
 
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
@@ -348,16 +364,15 @@ func DeleteProxy(t *testing.T, proxyKey string) {
 }
 
 func GetTestResty(t *testing.T) *resty.Client {
-	if v := os.Getenv("ARTIFACTORY_URL"); v == "" {
-		t.Fatal("ARTIFACTORY_URL must be set for acceptance tests")
-	}
-	restyClient, err := utils.BuildResty(os.Getenv("ARTIFACTORY_URL"), "")
+	artifactoryUrl := GetArtifactoryUrl(t)
+	restyClient, err := client.Build(artifactoryUrl, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	accessToken := os.Getenv("ARTIFACTORY_ACCESS_TOKEN")
+
+	accessToken := GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
 	api := os.Getenv("ARTIFACTORY_API_KEY")
-	restyClient, err = utils.AddAuthToResty(restyClient, api, accessToken)
+	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

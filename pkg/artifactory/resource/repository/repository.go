@@ -11,10 +11,13 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
 )
 
@@ -67,7 +70,7 @@ func mkRepoCreate(unpack UnpackFunc, read schema.ReadContextFunc) schema.CreateC
 		}
 		// repo must be a pointer
 		_, err = m.(*resty.Client).R().
-			AddRetryCondition(utils.RetryOnMergeError).
+			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			Put(RepositoriesEndpoint + key)
 
@@ -104,7 +107,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 		}
 		// repo must be a pointer
 		_, err = m.(*resty.Client).R().
-			AddRetryCondition(utils.RetryOnMergeError).
+			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			Post(RepositoriesEndpoint + d.Id())
 		if err != nil {
@@ -118,7 +121,7 @@ func mkRepoUpdate(unpack UnpackFunc, read schema.ReadContextFunc) schema.UpdateC
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().
-		AddRetryCondition(utils.RetryOnMergeError).
+		AddRetryCondition(client.RetryOnMergeError).
 		Delete(RepositoriesEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
@@ -176,6 +179,12 @@ var RepoTypesSupported = []string{
 	"vcs",
 }
 
+var GradleLikeRepoTypes = []string{
+	"gradle",
+	"sbt",
+	"ivy",
+}
+
 var ProjectEnvironmentsSupported = []string{"DEV", "PROD"}
 
 func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*schema.Schema {
@@ -183,7 +192,7 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 		"repo_layout_ref": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			DefaultFunc: utils.GetDefaultRepoLayoutRef(repositoryType, packageType),
+			DefaultFunc: GetDefaultRepoLayoutRef(repositoryType, packageType),
 			Description: "Repository layout key for the local repository",
 		},
 	}
@@ -194,13 +203,13 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 // Artifactory REST API will not accept empty string or null to reset value to not set
 // Instead, using a non-existant value works as a workaround
 // To ensure we don't accidentally set the value to a valid value, we use a UUID v4 string
-func HandleResetWithNonExistantValue(d *utils.ResourceData, key string) string {
+func HandleResetWithNonExistantValue(d *util.ResourceData, key string) string {
 	value := d.GetString(key, false)
 
 	// When value has changed and is empty string, then it has been removed from
 	// the Terraform configuration.
 	if value == "" && d.HasChange(key) {
-		return fmt.Sprintf("non-existant-value-%d", utils.RandomInt())
+		return fmt.Sprintf("non-existant-value-%d", test.RandomInt())
 	}
 
 	return value
@@ -208,7 +217,7 @@ func HandleResetWithNonExistantValue(d *utils.ResourceData, key string) string {
 
 // TODO universalUnpack - implement me
 // func universalUnpack(payload reflect.Type, s *schema.ResourceData) (interface{}, string, error) {
-// 	d := &utils.ResourceData{s}
+// 	d := &util.ResourceData{s}
 // 	var t = reflect.TypeOf(payload)
 // 	var v = reflect.ValueOf(payload)
 // 	if t.Kind() == reflect.Ptr {
@@ -273,7 +282,7 @@ func findInspector(kind reflect.Kind) AutoMapper {
 	case reflect.Slice:
 		return func(field reflect.StructField, thing reflect.Value) map[string]interface{} {
 			return map[string]interface{}{
-				fieldToHcl(field): utils.CastToInterfaceArr(thing.Interface().([]string)),
+				fieldToHcl(field): util.CastToInterfaceArr(thing.Interface().([]string)),
 			}
 		}
 	}
@@ -304,7 +313,7 @@ func fieldToHcl(field reflect.StructField) string {
 	return result
 }
 
-func lookup(payload interface{}, predicate utils.HclPredicate) map[string]interface{} {
+func lookup(payload interface{}, predicate util.HclPredicate) map[string]interface{} {
 
 	if predicate == nil {
 		predicate = allowAllPredicate
@@ -339,7 +348,7 @@ func lookup(payload interface{}, predicate utils.HclPredicate) map[string]interf
 	return values
 }
 
-func anyuHclPredicate(predicates ...utils.HclPredicate) utils.HclPredicate {
+func anyuHclPredicate(predicates ...util.HclPredicate) util.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if predicate(hcl) {
@@ -350,7 +359,7 @@ func anyuHclPredicate(predicates ...utils.HclPredicate) utils.HclPredicate {
 	}
 }
 
-func AllHclPredicate(predicates ...utils.HclPredicate) utils.HclPredicate {
+func AllHclPredicate(predicates ...util.HclPredicate) util.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if !predicate(hcl) {
@@ -368,7 +377,7 @@ var allowAllPredicate = func(hcl string) bool {
 	return true
 }
 
-func IgnoreHclPredicate(names ...string) utils.HclPredicate {
+func IgnoreHclPredicate(names ...string) util.HclPredicate {
 	set := map[string]interface{}{}
 	for _, name := range names {
 		set[name] = nil
@@ -397,15 +406,15 @@ func ComposePacker(packers ...PackFunc) PackFunc {
 }
 
 func DefaultPacker(skeema map[string]*schema.Schema) PackFunc {
-	return UniversalPack(AllHclPredicate(utils.SchemaHasKey(skeema), NoPassword))
+	return UniversalPack(AllHclPredicate(util.SchemaHasKey(skeema), NoPassword))
 }
 
-// repository.UniversalPack consider making this a function that takes a predicate of what to include and returns
+// UniversalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
-func UniversalPack(predicate utils.HclPredicate) PackFunc {
+func UniversalPack(predicate util.HclPredicate) PackFunc {
 
 	return func(payload interface{}, d *schema.ResourceData) error {
-		setValue := utils.MkLens(d)
+		setValue := util.MkLens(d)
 
 		var errors []error
 
@@ -454,7 +463,7 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer PackFunc, unpack 
 	}
 }
 
-//Returns random string from a map[string]string
+// selectRandomFromMapOfStrings returns random string from a map[string]string
 func selectRandomFromMapOfStrings(m map[string]string) string {
 	mapLength := len(m)
 	allValues := make([]string, 0, mapLength)
@@ -488,4 +497,63 @@ const RepositoriesEndpoint = "artifactory/api/repositories/"
 func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
 	// artifactory returns 400 instead of 404. but regardless, it's an error
 	return request.Head(RepositoriesEndpoint + id)
+}
+
+func ValidateRepoLayoutRefSchemaOverride(_ interface{}, _ cty.Path) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Always override repo_layout_ref attribute in the schema",
+			Detail:   "Always override repo_layout_ref attribute in the schema on top of base schema",
+		},
+	}
+}
+
+type SupportedRepoClasses struct {
+	RepoLayoutRef      string
+	SupportedRepoTypes map[string]bool
+}
+
+// Consolidated list of Default Repo Layout for all Package Types with active Repo Types
+var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
+	"alpine":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"bower":     {RepoLayoutRef: "bower-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cran":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cargo":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"chef":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"cocoapods": {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "federated": true}},
+	"composer":  {RepoLayoutRef: "composer-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conan":     {RepoLayoutRef: "conan-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"conda":     {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"debian":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"docker":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gems":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"generic":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gitlfs":    {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"go":        {RepoLayoutRef: "go-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"gradle":    {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"helm":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"ivy":       {RepoLayoutRef: "ivy-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"maven":     {RepoLayoutRef: "maven-2-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"npm":       {RepoLayoutRef: "npm-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"nuget":     {RepoLayoutRef: "nuget-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"opkg":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"p2":        {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true, "virtual": true}},
+	"pub":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"puppet":    {RepoLayoutRef: "puppet-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"pypi":      {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"sbt":       {RepoLayoutRef: "sbt-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"vagrant":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "federated": true}},
+	"vcs":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"remote": true}},
+	"rpm":       {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+}
+
+// GetDefaultRepoLayoutRef return the default repo layout by Repository Type & Package Type
+func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+	return func() (interface{}, error) {
+		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
+			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
+		}
+		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
+	}
 }

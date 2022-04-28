@@ -4,7 +4,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type VirtualRepositoryBaseParams struct {
@@ -62,7 +63,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.ProjectKeyValidator,
+		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
@@ -106,7 +107,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: utils.RepoLayoutRefSchemaOverrideValidator,
+		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
 		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"repositories": {
@@ -137,7 +138,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 }
 
 func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParams {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	return VirtualRepositoryBaseParams{
 		Key:                 d.GetString("key", false),
@@ -157,7 +158,7 @@ func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 }
 
 func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 
 	return VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 		VirtualRepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),

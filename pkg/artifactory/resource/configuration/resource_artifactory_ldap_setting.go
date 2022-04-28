@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type LdapSetting struct {
@@ -71,7 +72,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		"user_dn_pattern": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapDn)),
+			ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validator.LdapDn),
 			Description:      "A DN pattern that can be used to log users directly in to LDAP. This pattern is used to create a DN string for 'direct' user authentication where the pattern is relative to the base DN in the LDAP URL. The pattern argument {0} is replaced with the username. This only works if anonymous binding is allowed and a direct user DN can be used, which is not the default case for Active Directory (use User DN search filter instead). Example: uid={0},ou=People. Default value is blank/empty.",
 		},
 		"auto_create_user": {
@@ -115,14 +116,14 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		"search_filter": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, utils.ValidateLdapFilter)),
+			ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validator.LdapFilter),
 			Description:      "A filter expression used to search for the user DN used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, and is denoted by '{0}'. Possible examples are: (uid={0}) - This searches for a username match on the attribute. Authentication to LDAP is performed from the DN found if successful.",
 		},
 		"search_base": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
+			ValidateDiagFunc: validator.LdapDn,
 			Description:      "A context name to search in relative to the base DN of the LDAP URL. For example, 'ou=users' With the LDAP Group Add-on enabled, it is possible to enter multiple search base entries separated by a pipe ('|') character.",
 		},
 		"search_sub_tree": {
@@ -135,7 +136,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "",
-			ValidateDiagFunc: validation.ToDiagFunc(utils.ValidateLdapDn),
+			ValidateDiagFunc: validator.LdapDn,
 			Description:      `The full DN of the user that binds to the LDAP server to perform user searches. Only used with "search" authentication.`,
 		},
 		"manager_password": {
@@ -165,7 +166,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		packer := repository.UniversalPack(
 			repository.AllHclPredicate(
-				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), utils.SchemaHasKey(ldapSettingsSchema),
+				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), util.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 
@@ -267,7 +268,7 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &utils.ResourceData{s}
+	d := &util.ResourceData{s}
 	ldapSetting := LdapSetting{
 		Key:                      d.GetString("key", false),
 		Enabled:                  d.GetBool("enabled", false),

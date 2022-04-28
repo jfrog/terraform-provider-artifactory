@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
@@ -35,7 +35,7 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, utils.VerifyKeyPair),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, security.VerifyKeyPair),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -88,7 +88,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, utils.VerifyKeyPair),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, security.VerifyKeyPair),
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -157,7 +157,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, utils.VerifyKeyPair),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, security.VerifyKeyPair),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,
@@ -281,7 +281,7 @@ func TestAccKeyPairGPG(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, utils.VerifyKeyPair),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, security.VerifyKeyPair),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,

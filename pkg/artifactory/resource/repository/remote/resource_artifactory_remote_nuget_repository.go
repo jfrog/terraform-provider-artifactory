@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/utils"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type NugetRemoteRepo struct {
@@ -18,7 +18,7 @@ type NugetRemoteRepo struct {
 func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	const packageType = "nuget"
 
-	var nugetRemoteSchema = utils.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var nugetRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"feed_context_path": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -48,7 +48,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utils.ResourceData{s}
+		d := &util.ResourceData{s}
 		repo := NugetRemoteRepo{
 			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			FeedContextPath:            d.GetString("feed_context_path", false),
@@ -60,7 +60,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	}
 
 	return repository.MkResourceSchema(nugetRemoteSchema, repository.DefaultPacker(nugetRemoteSchema), unpackNugetRemoteRepo, func() interface{} {
-		repoLayout, _ := utils.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &NugetRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
 				Rclass:              "remote",
