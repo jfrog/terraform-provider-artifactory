@@ -1,9 +1,10 @@
 package webhook
 
 import (
+	"context"
 	"fmt"
-	"log"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -63,8 +64,8 @@ var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCrit
 	}
 }
 
-var repoCriteriaValidation = func(criteria map[string]interface{}) error {
-	log.Print("[DEBUG] repoCriteriaValidation")
+var repoCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	tflog.Debug(ctx, "repoCriteriaValidation")
 
 	anyLocal := criteria["any_local"].(bool)
 	anyRemote := criteria["any_remote"].(bool)

@@ -3,11 +3,11 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -226,7 +226,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		log.Printf("[DEBUG] readWebhook")
+		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
 
 		webhook := WebhookBaseParams{}
 
@@ -251,7 +251,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		log.Printf("[DEBUG] createWebhook")
+		tflog.Debug(ctx, "createWebhook")
 
 		webhook, err := unpackWebhook(data)
 		if err != nil {
@@ -272,7 +272,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var updateWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		log.Printf("[DEBUG] updateWebhook")
+		tflog.Debug(ctx, "updateWebhook")
 
 		webhook, err := unpackWebhook(data)
 		if err != nil {
@@ -294,7 +294,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		log.Printf("[DEBUG] deleteWebhook")
+		tflog.Debug(ctx, "deleteWebhook")
 
 		resp, err := m.(*resty.Client).R().
 			SetPathParam("webhookKey", data.Id()).
@@ -308,7 +308,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var domainCriteriaValidationLookup = map[string]func(map[string]interface{}) error{
+	var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
 		"artifact":                   repoCriteriaValidation,
 		"artifact_property":          repoCriteriaValidation,
 		"docker":                     repoCriteriaValidation,
@@ -318,8 +318,8 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		"artifactory_release_bundle": releaseBundleCriteriaValidation,
 	}
 
-	var eventTypesDiff = func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		log.Print("[DEBUG] eventTypesDiff")
+	var eventTypesDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		tflog.Debug(ctx, "eventTypesDiff")
 
 		eventTypes := diff.Get("event_types").(*schema.Set).List()
 		if len(eventTypes) == 0 {
@@ -335,15 +335,15 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var criteriaDiff = func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		log.Print("[DEBUG] criteriaDiff")
+	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		tflog.Debug(ctx, "criteriaDiff")
 
 		criteria := diff.Get("criteria").(*schema.Set).List()
 		if len(criteria) == 0 {
 			return nil
 		}
 
-		return domainCriteriaValidationLookup[webhookType](criteria[0].(map[string]interface{}))
+		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 	}
 
 	return &schema.Resource{

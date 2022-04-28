@@ -1,10 +1,13 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
@@ -156,48 +159,51 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		tflog.Debug(ctx, "ConfigureContextFunc")
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(d, terraformVersion)
+		return providerConfigure(ctx, d, terraformVersion)
 	}
 
 	return p
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+	tflog.Debug(ctx, "providerConfigure")
+
 	URL, ok := d.GetOk("url")
 	if URL == nil || URL == "" || !ok {
-		return nil, fmt.Errorf("you must supply a URL")
+		return nil, diag.Errorf("you must supply a URL")
 	}
 
 	restyBase, err := client.Build(URL.(string), Version)
 	if err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 	apiKey := d.Get("api_key").(string)
 	accessToken := d.Get("access_token").(string)
 
 	restyBase, err = client.AddAuth(restyBase, apiKey, accessToken)
 	if err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 
 	checkLicense := d.Get("check_license").(bool)
 	if checkLicense {
 		err = checkArtifactoryLicense(restyBase)
 		if err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 	}
 
-	_, err = sendUsageRepo(restyBase, terraformVersion)
+	err = sendUsageRepo(restyBase, terraformVersion)
 
 	if err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 
 	return restyBase, nil
@@ -237,7 +243,7 @@ func checkArtifactoryLicense(client *resty.Client) error {
 	return nil
 }
 
-func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{}, error) {
+func sendUsageRepo(restyBase *resty.Client, terraformVersion string) error {
 	type Feature struct {
 		FeatureId string `json:"featureId"`
 	}
@@ -259,7 +265,8 @@ func sendUsageRepo(restyBase *resty.Client, terraformVersion string) (interface{
 		Post("artifactory/api/system/usage")
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to report usage %s", err)
+		return fmt.Errorf("unable to report usage %s", err)
 	}
-	return nil, nil
+
+	return nil
 }
