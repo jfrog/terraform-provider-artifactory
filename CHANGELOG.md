@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* resource/artifactory_group: Add `external_id` attribute to support Azure AD group. PR: [](). Issue [#429](https://github.com/jfrog/terraform-provider-artifactory/issues/429)
+* resource/artifactory_group: Add `external_id` attribute to support Azure AD group. PR: [#437](https://github.com/jfrog/terraform-provider-artifactory/pull/437). Issue [#429](https://github.com/jfrog/terraform-provider-artifactory/issues/429)
 
 ## 6.5.3 (Apr 27, 2022). Tested on Artifactory 7.37.15
 
