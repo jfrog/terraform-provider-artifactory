@@ -128,7 +128,8 @@ func TestAccGroup_full(t *testing.T) {
 			configs,
 			acctest.ExecuteTemplate(
 				fmt.Sprint(step),
-				template, map[string]string{
+				template,
+				map[string]string{
 					"groupName": groupName,
 					"externalId": externalId,
 				},
