@@ -8,11 +8,78 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
+
+var groupSchema = map[string]*schema.Schema{
+	"name": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: validation.StringIsNotEmpty,
+	},
+	"description": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"external_id": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "New external group ID used to configure the corresponding group in Azure AD.",
+	},
+	"auto_join": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"admin_privileges": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"realm": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validator.LowerCase,
+	},
+	"realm_attributes": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"users_names": {
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Optional: true,
+	},
+	"detach_all_users": {
+		Type:     schema.TypeBool,
+		Optional: true,
+	},
+	"watch_manager": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `When this override is set,  User in the group can manage Xray Watches on any resource type. Default value is 'false'.`,
+	},
+	"policy_manager": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `When this override is set,  User in the group can set Xray security and compliance policies. Default value is 'false'.`,
+	},
+	"reports_manager": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `When this override is set,  User in the group can manage Xray Reports. Default value is 'false'.`,
+	},
+}
 
 func ResourceArtifactoryGroup() *schema.Resource {
 	return &schema.Resource{
@@ -26,65 +93,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"auto_join": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"admin_privileges": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"realm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validator.LowerCase,
-			},
-			"realm_attributes": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"users_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"detach_all_users": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"watch_manager": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: `When this override is set,  User in the group can manage Xray Watches on any resource type. Default value is 'false'.`,
-			},
-			"policy_manager": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: `When this override is set,  User in the group can set Xray security and compliance policies. Default value is 'false'.`,
-			},
-			"reports_manager": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: `When this override is set,  User in the group can manage Xray Reports. Default value is 'false'.`,
-			},
-		},
+		Schema: groupSchema,
 	}
 }
 
@@ -94,6 +103,7 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	group := Group{
 		Name:            d.GetString("name", false),
 		Description:     d.GetString("description", false),
+		ExternalId:      d.GetString("external_id", false),
 		AutoJoin:        d.GetBool("auto_join", false),
 		AdminPrivileges: d.GetBool("admin_privileges", false),
 		Realm:           d.GetString("realm", false),
@@ -145,45 +155,30 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	})
 }
 
-func resourceGroupGet(d *schema.ResourceData, m interface{}) (*Group, error) {
+func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	_, includeUsers, err := groupParams(d)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	group := Group{}
 	url := fmt.Sprintf("%s%s?includeUsers=%t", GroupsEndpoint, d.Id(), includeUsers)
-	_, err = m.(*resty.Client).R().SetResult(&group).Get(url)
-	return &group, err
-}
+	resp, err := m.(*resty.Client).R().SetResult(&group).Get(url)
 
-func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
-	group, err := resourceGroupGet(d, m)
 	if err != nil {
-		// If we 404 it is likely the resources was externally deleted
-		// If the ID is updated to blank, this tells Terraform the resource no longer exist
-		if group == nil {
+		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
+			// If we 404 it is likely the resources was externally deleted
+			// If the ID is updated to blank, this tells Terraform the resource no longer exist
 			d.SetId("")
 			return nil
 		}
+
 		return err
 	}
 
-	setValue := util.MkLens(d)
-	setValue("name", group.Name)
-	setValue("description", group.Description)
-	setValue("auto_join", group.AutoJoin)
-	setValue("admin_privileges", group.AdminPrivileges)
-	setValue("realm", group.Realm)
-	setValue("realm_attributes", group.RealmAttributes)
-	setValue("watch_manager", group.WatchManager)
-	setValue("policy_manager", group.PolicyManager)
-	setValue("reports_manager", group.ReportsManager)
-	errors := setValue("users_names", schema.NewSet(schema.HashString, util.CastToInterfaceArr(group.UsersNames)))
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed saving state for groups %q", errors)
-	}
-	return nil
+	packer := repository.UniversalPack(util.SchemaHasKey(groupSchema))
+
+	return packer(&group, d)
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
@@ -214,7 +209,13 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
-	_, err := m.(*resty.Client).R().Delete(GroupsEndpoint + d.Id())
+	resp, err := m.(*resty.Client).R().Delete(GroupsEndpoint + d.Id())
+
+	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+		d.SetId("")
+		return nil
+	}
+
 	return err
 }
 
@@ -237,6 +238,7 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 type Group struct {
 	Name            string   `json:"name,omitempty"`
 	Description     string   `json:"description,omitempty"`
+	ExternalId      string   `json:"externalId"`
 	AutoJoin        bool     `json:"autoJoin,omitempty"`
 	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
 	Realm           string   `json:"realm,omitempty"`

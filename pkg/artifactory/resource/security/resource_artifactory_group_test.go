@@ -39,12 +39,14 @@ func TestAccGroup_basic(t *testing.T) {
 
 func TestAccGroup_full(t *testing.T) {
 	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
+	externalId := "test-external-id"
 
 	templates := []string{
 		`
 		resource "artifactory_group" "{{ .groupName }}" {
 			name             = "{{ .groupName }}"
 			description 	 = "Test group"
+			external_id      = "{{ .externalId }}"
 			auto_join        = true
 			admin_privileges = false
 			realm            = "test"
@@ -122,8 +124,17 @@ func TestAccGroup_full(t *testing.T) {
 
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
-
+		configs = append(
+			configs,
+			acctest.ExecuteTemplate(
+				fmt.Sprint(step),
+				template,
+				map[string]string{
+					"groupName": groupName,
+					"externalId": externalId,
+				},
+			),
+		)
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -135,6 +146,7 @@ func TestAccGroup_full(t *testing.T) {
 				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(rfqn, "external_id", externalId),
 					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
 					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
 					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
