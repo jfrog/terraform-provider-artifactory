@@ -1,9 +1,10 @@
 package webhook
 
 import (
+	"context"
 	"fmt"
-	"log"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -55,8 +56,8 @@ var unpackReleaseBundleCriteria = func(terraformCriteria map[string]interface{},
 	}
 }
 
-var releaseBundleCriteriaValidation = func(criteria map[string]interface{}) error {
-	log.Print("[DEBUG] releaseBundleCriteriaValidation")
+var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	tflog.Debug(ctx, "releaseBundleCriteriaValidation")
 
 	anyReleaseBundle := criteria["any_release_bundle"].(bool)
 	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*schema.Set).List()
