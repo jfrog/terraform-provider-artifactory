@@ -38,10 +38,10 @@ func ResourceArtifactoryGroup() *schema.Resource {
 				Optional: true,
 			},
 			"external_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(36, 36)),
-				Description: "New external group ID used to configure the corresponding group in Azure AD.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description:      "New external group ID used to configure the corresponding group in Azure AD.",
 			},
 			"auto_join": {
 				Type:     schema.TypeBool,

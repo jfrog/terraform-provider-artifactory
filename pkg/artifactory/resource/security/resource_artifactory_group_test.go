@@ -39,7 +39,7 @@ func TestAccGroup_basic(t *testing.T) {
 
 func TestAccGroup_full(t *testing.T) {
 	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
-	externalId := "88e87204-844e-497e-ab19-69e6927fe8cb"
+	externalId := "test-external-id"
 
 	templates := []string{
 		`
