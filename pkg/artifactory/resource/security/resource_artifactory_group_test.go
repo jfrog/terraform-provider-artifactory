@@ -124,10 +124,16 @@ func TestAccGroup_full(t *testing.T) {
 
 	configs := []string{}
 	for step, template := range templates {
-		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{
-			"groupName": groupName,
-			"externalId": externalId,
-		}))
+		configs = append(
+			configs,
+			acctest.ExecuteTemplate(
+				fmt.Sprint(step),
+				template, map[string]string{
+					"groupName": groupName,
+					"externalId": externalId,
+				},
+			),
+		)
 	}
 
 	resource.Test(t, resource.TestCase{
