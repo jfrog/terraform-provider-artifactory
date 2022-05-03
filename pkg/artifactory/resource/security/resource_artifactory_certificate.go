@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -31,14 +32,13 @@ type CertificateDetails struct {
 
 func ResourceArtifactoryCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Update: resourceCertificateUpdate,
-		Delete: resourceCertificateDelete,
-		Exists: resourceCertificateExists,
+		CreateContext: resourceCertificateCreate,
+		ReadContext:   resourceCertificateRead,
+		UpdateContext: resourceCertificateUpdate,
+		DeleteContext: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -183,15 +183,15 @@ func FindCertificate(alias string, m interface{}) (*CertificateDetails, error) {
 	return nil, nil
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.SetId(d.Get("alias").(string))
-	return resourceCertificateUpdate(d, m)
+	return resourceCertificateUpdate(ctx, d, m)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	cert, err := FindCertificate(d.Id(), m)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if cert != nil {
@@ -205,7 +205,7 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 		errors := setValue("valid_until", (*cert).ValidUntil)
 
 		if errors != nil && len(errors) > 0 {
-			return fmt.Errorf("failed to pack certificate %q", errors)
+			return diag.Errorf("failed to pack certificate %q", errors)
 		}
 
 		return nil
@@ -252,33 +252,28 @@ func getContentFromData(d *schema.ResourceData) (string, error) {
 	return "", fmt.Errorf("mmm, couldn't get content or file. You need either a content or a file")
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	content, err := getContentFromData(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(CertificateEndpoint + d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCertificateRead(d, m)
+	return resourceCertificateRead(ctx, d, m)
 }
 
-func resourceCertificateDelete(d *schema.ResourceData, m interface{}) error {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(CertificateEndpoint + d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
 
 	return nil
-}
-
-func resourceCertificateExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	cert, err := FindCertificate(d.Id(), m)
-	return err == nil && cert != nil, err
 }

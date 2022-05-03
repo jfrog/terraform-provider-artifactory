@@ -1,10 +1,11 @@
 package security
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -17,12 +18,12 @@ type ApiKey struct {
 
 func ResourceArtifactoryApiKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApiKeyCreate,
-		Read:   resourceApiKeyRead,
-		Delete: apiKeyRevoke,
+		CreateContext: resourceApiKeyCreate,
+		ReadContext:   resourceApiKeyRead,
+		DeleteContext: apiKeyRevoke,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -35,39 +36,39 @@ func ResourceArtifactoryApiKey() *schema.Resource {
 	}
 }
 
-func packApiKey(apiKey string, d *schema.ResourceData) error {
+func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 
 	setValue := util.MkLens(d)
 
 	errors := setValue("api_key", apiKey)
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack api key %q", errors)
+		return diag.Errorf("failed to pack api key %q", errors)
 	}
 
 	return nil
 }
 
-func resourceApiKeyCreate(d *schema.ResourceData, m interface{}) error {
+func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := make(map[string]string)
 
 	_, err := m.(*resty.Client).R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if apiKey, ok := data["apiKey"]; ok {
 		d.SetId(strconv.Itoa(schema.HashString(apiKey)))
-		return resourceApiKeyRead(d, m)
+		return resourceApiKeyRead(ctx, d, m)
 	}
-	return fmt.Errorf("received no error when creating apikey, but also got no apikey")
+	return diag.Errorf("received no error when creating apikey, but also got no apikey")
 }
 
-func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
+func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := make(map[string]string)
 	_, err := m.(*resty.Client).R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	key := data["apiKey"]
 	if key == "" {
@@ -77,7 +78,7 @@ func resourceApiKeyRead(d *schema.ResourceData, m interface{}) error {
 	return packApiKey(key, d)
 }
 
-func apiKeyRevoke(_ *schema.ResourceData, m interface{}) error {
+func apiKeyRevoke(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(ApiKeyEndpoint)
-	return err
+	return diag.FromErr(err)
 }

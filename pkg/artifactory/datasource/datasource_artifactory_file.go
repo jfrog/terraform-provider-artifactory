@@ -37,7 +37,7 @@ func (fi FileInfo) Id() string {
 	return fi.Repo + fi.Path
 }
 
-func DataSourceArtifactoryFile() *schema.Resource {
+func ArtifactoryFile() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFileReader,
 		Schema: map[string]*schema.Schema{
@@ -128,7 +128,7 @@ func DataSourceArtifactoryFile() *schema.Resource {
 	}
 }
 
-func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
@@ -216,5 +216,5 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 		return nil
 	}
 
-	return diag.FromErr(packFileInfo(fileInfo, d))
+	return packFileInfo(fileInfo, d)
 }

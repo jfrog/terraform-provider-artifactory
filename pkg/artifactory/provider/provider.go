@@ -24,13 +24,12 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 )
 
-// Version for some reason isn't getting updated by the linker
-var Version = "2.6.18"
+var Version = "6.6.0"
 
 // Provider Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
 func Provider() *schema.Provider {
-	resoucesMap := map[string]*schema.Resource{
+	resourceMap := map[string]*schema.Resource{
 		"artifactory_keypair":                     security.ResourceArtifactoryKeyPair(),
 		"artifactory_local_nuget_repository":      local.ResourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":      local.ResourceArtifactoryLocalJavaRepository("maven", false),
@@ -83,40 +82,40 @@ func Provider() *schema.Provider {
 
 	for _, repoType := range local.RepoTypesLikeGeneric {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
-		resoucesMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(repoType)
+		resourceMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(repoType)
 	}
 
 	for _, repoType := range remote.RemoteRepoTypesLikeGeneric {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
-		resoucesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteGenericRepository(repoType)
+		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteGenericRepository(repoType)
 	}
 
 	for _, repoType := range repository.GradleLikeRepoTypes {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
-		resoucesMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(repoType, true)
+		resourceMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(repoType, true)
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
-		resoucesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteJavaRepository(repoType, true)
+		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteJavaRepository(repoType, true)
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resoucesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(repoType)
+		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(repoType)
 	}
 
 	for _, repoType := range virtual.VirtualRepoTypesLikeGeneric {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resoucesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(repoType)
+		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(repoType)
 	}
 	for _, repoType := range virtual.VirtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resoucesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
+		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}
 
 	for _, repoType := range federated.FederatedRepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-		resoucesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
+		resourceMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
 	}
 
 	for _, webhookType := range webhook.WebhookTypesSupported {
 		webhookResourceName := fmt.Sprintf("artifactory_%s_webhook", webhookType)
-		resoucesMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
+		resourceMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
 	}
 
 	p := &schema.Provider{
@@ -151,12 +150,12 @@ func Provider() *schema.Provider {
 			},
 		},
 
-		ResourcesMap: resoucesMap,
+		ResourcesMap: 	addTelemetry(resourceMap),
 
-		DataSourcesMap: map[string]*schema.Resource{
-			"artifactory_file":     datasource.DataSourceArtifactoryFile(),
-			"artifactory_fileinfo": datasource.DataSourceArtifactoryFileInfo(),
-		},
+		DataSourcesMap: addTelemetry(map[string]*schema.Resource{
+			"artifactory_file":     datasource.ArtifactoryFile(),
+			"artifactory_fileinfo": datasource.ArtifactoryFileInfo(),
+		}),
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -169,6 +168,71 @@ func Provider() *schema.Provider {
 	}
 
 	return p
+}
+
+func addTelemetry(resourceMap map[string]*schema.Resource) map[string]*schema.Resource {
+	for name, skeema := range resourceMap {
+		if skeema.Create != nil {
+			panic(fmt.Sprintf("[%s] deprecated Create function in use", name))
+		}
+		if skeema.Read != nil {
+			panic(fmt.Sprintf("[%s] deprecated Read function in use", name))
+		}
+		if skeema.Update != nil {
+			panic(fmt.Sprintf("[%s] deprecated Update function in use", name))
+		}
+		if skeema.Delete != nil {
+			panic(fmt.Sprintf("[%s] deprecated Delete function in use", name))
+		}
+	}
+
+	for name, skeema := range resourceMap {
+		if skeema.CreateContext != nil {
+			skeema.CreateContext = applyTelemetry(name, "CREATE", skeema.CreateContext)
+		}
+		if skeema.ReadContext != nil {
+			skeema.ReadContext = applyTelemetry(name, "READ", skeema.ReadContext)
+		}
+		if skeema.UpdateContext != nil {
+			skeema.UpdateContext = applyTelemetry(name, "UPDATE", skeema.UpdateContext)
+		}
+		if skeema.DeleteContext != nil {
+			skeema.DeleteContext = applyTelemetry(name, "DELETE", skeema.DeleteContext)
+		}
+	}
+	return resourceMap
+}
+
+func sendUsage(ctx context.Context, resource, verb string, meta interface{}) {
+	type Feature struct {
+		FeatureId string `json:"featureId"`
+	}
+	type UsageStruct struct {
+		ProductId string    `json:"productId"`
+		Features  []Feature `json:"features"`
+	}
+	_, err := meta.(*resty.Client).R().SetBody(UsageStruct{
+		"terraform-provider-artifactory/" + Version,
+		[]Feature{
+			{FeatureId: "Partner/ACC-007450"},
+			{FeatureId: fmt.Sprintf("Terraform/%s/%s", resource, verb)},
+		},
+	}).Post("artifactory/api/system/usage")
+
+	if err != nil {
+		tflog.Info(ctx, fmt.Sprintf("failed to send usage: %v", err))
+	}
+}
+
+func applyTelemetry(resource, verb string, f func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	if f == nil {
+		panic("attempt to apply telemetry to a nil function")
+	}
+	return func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		// best effort. Go routine it
+		go sendUsage(ctx, resource, verb, meta)
+		return f(ctx, data, meta)
+	}
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
@@ -226,7 +290,7 @@ func checkArtifactoryLicense(client *resty.Client) error {
 		Get("/artifactory/api/system/license")
 
 	if err != nil {
-		return fmt.Errorf("Failed to check for license. If your usage doesn't require admin permission, you can set `check_license` attribute to `false` to skip this check. %s", err)
+		return fmt.Errorf("failed to check for license. If your usage doesn't require admin permission, you can set `check_license` attribute to `false` to skip this check. %s", err)
 	}
 
 	var licenseType string
@@ -236,8 +300,8 @@ func checkArtifactoryLicense(client *resty.Client) error {
 		licenseType = licensesWrapper.Type
 	}
 
-	if matched, _ := regexp.MatchString(`(?:Enterprise|Commercial|Edge)`, licenseType); !matched {
-		return fmt.Errorf("Artifactory requires Pro or Enterprise or Edge license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check.")
+	if matched, _ := regexp.MatchString(`Enterprise|Commercial|Edge`, licenseType); !matched {
+		return fmt.Errorf("artifactory requires Pro or Enterprise or Edge license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check")
 	}
 
 	return nil
