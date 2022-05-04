@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	"text/template"
 	"testing"
+	"text/template"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -27,7 +27,7 @@ import (
 
 const RtDefaultUser = "admin"
 
-// PreCheck(t) must be called before using this provider instance.
+// Provider PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
 var ProviderFactories map[string]func() (*schema.Provider, error)
 
@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-// This PreCheck function should be present in every acceptance test.
+// PreCheck This function should be present in every acceptance test.
 func PreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
@@ -200,7 +200,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 		}
 
 		if Provider == nil {
-			return fmt.Errorf("Provider is not initialized. Please PreCheck() is included in your acceptance test.")
+			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
 		client := Provider.Meta().(*resty.Client)
@@ -266,7 +266,7 @@ func DeleteProject(t *testing.T, projectKey string) {
 	}
 }
 
-// Create a local repository with Xray indexing enabled. It will be used in the tests
+// CreateRepo Create a local repository with Xray indexing enabled. It will be used in the tests
 func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	handleReleases bool, handleSnapshots bool) {
 	restyClient := GetTestResty(t)
@@ -309,7 +309,7 @@ func DeleteRepo(t *testing.T, repo string) {
 	}
 }
 
-//Usage of the function is strictly restricted to Test Cases
+// GetValidRandomDefaultRepoLayoutRef Usage of the function is strictly restricted to Test Cases
 func GetValidRandomDefaultRepoLayoutRef() string {
 	return test.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }

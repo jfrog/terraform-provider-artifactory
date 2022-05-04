@@ -1,17 +1,19 @@
 package datasource
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func DataSourceArtifactoryFileInfo() *schema.Resource {
+func ArtifactoryFileInfo() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFileInfoRead,
+		ReadContext: dataSourceFileInfoRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
@@ -71,20 +73,20 @@ func DataSourceArtifactoryFileInfo() *schema.Resource {
 	}
 }
 
-func dataSourceFileInfoRead(d *schema.ResourceData, m interface{}) error {
-	repository := d.Get("repository").(string)
+func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	repo := d.Get("repository").(string)
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
+	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repo, path))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return packFileInfo(fileInfo, d)
 }
 
-func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) error {
+func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) diag.Diagnostics {
 	setValue := util.MkLens(d)
 
 	d.SetId(fileInfo.DownloadUri)
@@ -109,7 +111,7 @@ func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) error {
 	}
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to pack fileInfo %q", errors)
+		return diag.Errorf("failed to pack fileInfo %q", errors)
 	}
 
 	return nil
