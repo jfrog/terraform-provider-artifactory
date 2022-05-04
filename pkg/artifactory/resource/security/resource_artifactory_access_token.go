@@ -58,12 +58,12 @@ type AccessToken struct {
 
 func ResourceArtifactoryAccessToken() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAccessTokenCreate,
-		Read:          resourceAccessTokenRead,
+		CreateContext: resourceAccessTokenCreate,
+		ReadContext:   resourceAccessTokenRead,
 		DeleteContext: resourceAccessTokenDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -162,22 +162,22 @@ func ResourceArtifactoryAccessToken() *schema.Resource {
 	}
 }
 
-func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
+func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*resty.Client)
 	grantType := "client_credentials" // client_credentials is the only supported type
 
 	tokenOptions := AccessTokenOptions{}
-	resourceData := &util.ResourceData{d}
+	resourceData := &util.ResourceData{ResourceData: d}
 
 	date, expiresIn, err := getDate(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	tokenOptions.ExpiresIn = expiresIn
 	err = d.Set("end_date", date.Format(time.RFC3339))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	refreshable := resourceData.Get("refreshable").(bool)
@@ -192,23 +192,23 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 	userExists, _ := checkUserExists(client, username)
 
 	if !userExists && len(resourceData.Get("groups").([]interface{})) == 0 {
-		return fmt.Errorf("you must specify at least 1 group when creating a token for a non-existant user - %s, or correct the username", username)
+		return diag.Errorf("you must specify at least 1 group when creating a token for a non-existant user - %s, or correct the username", username)
 	}
 
 	err = unpackGroups(d, client, &tokenOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = unpackAdminToken(d, &tokenOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	accessToken := AccessToken{}
 	values, err := TokenOptsToValues(tokenOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	_, err = m.(*resty.Client).R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
@@ -216,14 +216,14 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 		SetFormDataFromValues(values).Post("artifactory/api/security/token")
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(strconv.Itoa(schema.HashString(accessToken.AccessToken)))
 
 	err = d.Set("access_token", accessToken.AccessToken)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	refreshToken := ""
@@ -233,12 +233,12 @@ func resourceAccessTokenCreate(d *schema.ResourceData, m interface{}) error {
 
 	err = d.Set("refresh_token", refreshToken)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
-func resourceAccessTokenRead(_ *schema.ResourceData, _ interface{}) error {
+func resourceAccessTokenRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	// Terraform requires that the read function is always implemented.
 	// However, Artifactory does not have an API to read a token.
 	return nil

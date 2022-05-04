@@ -1,11 +1,12 @@
 package security
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
@@ -14,16 +15,14 @@ import (
 
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
 const (
-	PERM_READ     = "read"
-	PERM_WRITE    = "write"
-	PERM_ANNOTATE = "annotate"
-	PERM_DELETE   = "delete"
-	PERM_MANAGE   = "manage"
-
-	PERMISSION_SCHEMA = "application/vnd.org.jfrog.artifactory.security.PermissionTargetV2+json"
+	PermRead      = "read"
+	PermWrite    = "write"
+	PermAnnotate = "annotate"
+	PermDelete = "delete"
+	PermManage = "manage"
 )
 
-// Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
+// PermissionTargetParams Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
 //
 // Using struct pointers to keep the fields null if they are empty.
 // Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
@@ -68,11 +67,11 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 						ValidateFunc: validation.StringInSlice([]string{
-							PERM_READ,
-							PERM_ANNOTATE,
-							PERM_WRITE,
-							PERM_DELETE,
-							PERM_MANAGE,
+							PermRead,
+							PermAnnotate,
+							PermWrite,
+							PermDelete,
+							PermManage,
 							// v2.PERM_MANAGE_XRAY_METADATA,
 							"managedXrayMeta",
 						}, false),
@@ -130,14 +129,13 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
 
 	return &schema.Resource{
-		Create: resourcePermissionTargetCreate,
-		Read:   resourcePermissionTargetRead,
-		Update: resourcePermissionTargetUpdate,
-		Delete: resourcePermissionTargetDelete,
-		Exists: resourcePermissionTargetExists,
+		CreateContext: resourcePermissionTargetCreate,
+		ReadContext:   resourcePermissionTargetRead,
+		UpdateContext: resourcePermissionTargetUpdate,
+		DeleteContext: resourcePermissionTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -162,7 +160,7 @@ func hashPrincipal(o interface{}) int {
 }
 
 func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 
 	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {
 		unpackEntity := func(rawEntityData interface{}) *Actions {
@@ -247,7 +245,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 	return pTarget
 }
 
-func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) error {
+func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) diag.Diagnostics {
 	packPermission := func(p *PermissionTargetSection) []interface{} {
 		packPermMap := func(e map[string][]string) []interface{} {
 			perm := make([]interface{}, len(e))
@@ -310,23 +308,23 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 	}
 
 	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed to marshal permission target %q", errors)
+		return diag.Errorf("failed to marshal permission target %q", errors)
 	}
 	return nil
 }
 
-func resourcePermissionTargetCreate(d *schema.ResourceData, m interface{}) error {
+func resourcePermissionTargetCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
 	if _, err := m.(*resty.Client).R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(permissionTarget.Name)
 	return nil
 }
 
-func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
+func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := new(PermissionTargetParams)
 	resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
 	if err != nil {
@@ -334,31 +332,27 @@ func resourcePermissionTargetRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	return packPermissionTarget(permissionTarget, d)
 }
 
-func resourcePermissionTargetUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
 	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(permissionTarget.Name)
-	return resourcePermissionTargetRead(d, m)
+	return resourcePermissionTargetRead(ctx, d, m)
 }
 
-func resourcePermissionTargetDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(permissionsEndPoint + d.Id())
 
-	return err
-}
-
-func resourcePermissionTargetExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return PermTargetExists(d.Id(), m)
+	return diag.FromErr(err)
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {

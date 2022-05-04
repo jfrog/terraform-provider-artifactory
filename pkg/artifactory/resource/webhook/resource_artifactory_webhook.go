@@ -357,11 +357,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: domainSchemaLookup[webhookType],
+		Schema:        domainSchemaLookup[webhookType],
 		CustomizeDiff: customdiff.All(
 			eventTypesDiff,
 			criteriaDiff,
 		),
-		Description: "Provides an Artifactory webhook resource",
+		Description:   "Provides an Artifactory webhook resource",
 	}
 }

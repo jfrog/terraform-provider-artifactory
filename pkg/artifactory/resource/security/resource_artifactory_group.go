@@ -1,10 +1,12 @@
 package security
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,6 +15,25 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+// Group is a encoding struct to match
+// https://www.jfrog.com/confluence/display/JFROG/Security+Configuration+JSON#SecurityConfigurationJSON-application/vnd.org.jfrog.artifactory.security.Group+json
+type Group struct {
+	Name            string   `json:"name,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	ExternalId      string   `json:"externalId"`
+	AutoJoin        bool     `json:"autoJoin,omitempty"`
+	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
+	Realm           string   `json:"realm,omitempty"`
+	RealmAttributes string   `json:"realmAttributes,omitempty"`
+	UsersNames      []string `json:"userNames"`
+	WatchManager    bool     `json:"watchManager"`
+	PolicyManager   bool     `json:"policyManager"`
+	ReportsManager  bool     `json:"reportsManager"`
+}
+
+func (g Group) Id() string {
+	return g.Name
+}
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
 var groupSchema = map[string]*schema.Schema{
@@ -83,11 +104,10 @@ var groupSchema = map[string]*schema.Schema{
 
 func ResourceArtifactoryGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
-		Exists: resourceGroupExists,
+		CreateContext: resourceGroupCreate,
+		ReadContext:   resourceGroupRead,
+		UpdateContext: resourceGroupUpdate,
+		DeleteContext: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -98,7 +118,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 }
 
 func groupParams(s *schema.ResourceData) (Group, bool, error) {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 
 	group := Group{
 		Name:            d.GetString("name", false),
@@ -129,19 +149,20 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	return group, includeUsers, nil
 }
 
-func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	group, _, err := groupParams(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	_, err = m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + group.Name)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(group.Name)
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+
+	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		exists, err := resourceGroupExists(d, m)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error describing group: %s", err))
@@ -153,12 +174,16 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 		return nil
 	})
+	if retryError != nil {
+		return diag.FromErr(retryError)
+	}
+	return nil
 }
 
-func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, includeUsers, err := groupParams(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	group := Group{}
@@ -173,18 +198,18 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	packer := repository.UniversalPack(util.SchemaHasKey(groupSchema))
 
-	return packer(&group, d)
+	return diag.FromErr(packer(&group, d))
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	group, includeUsers, err := groupParams(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Create and Update uses same endpoint, create checks for ReplaceIfExists and then uses put
@@ -195,28 +220,27 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	if includeUsers {
 		_, err := m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + d.Id())
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		_, err = m.(*resty.Client).R().SetBody(group).Post(GroupsEndpoint + d.Id())
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(group.Name)
-	return resourceGroupRead(d, m)
+	return resourceGroupRead(ctx, d, m)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGroupDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().Delete(GroupsEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
 		return nil
 	}
-
-	return err
+	return diag.FromErr(err)
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
@@ -231,24 +255,4 @@ func groupExists(client *resty.Client, groupName string) (bool, error) {
 	}
 
 	return err == nil, err
-}
-
-// Group is a encoding struct to match
-// https://www.jfrog.com/confluence/display/JFROG/Security+Configuration+JSON#SecurityConfigurationJSON-application/vnd.org.jfrog.artifactory.security.Group+json
-type Group struct {
-	Name            string   `json:"name,omitempty"`
-	Description     string   `json:"description,omitempty"`
-	ExternalId      string   `json:"externalId"`
-	AutoJoin        bool     `json:"autoJoin,omitempty"`
-	AdminPrivileges bool     `json:"adminPrivileges,omitempty"`
-	Realm           string   `json:"realm,omitempty"`
-	RealmAttributes string   `json:"realmAttributes,omitempty"`
-	UsersNames      []string `json:"userNames"`
-	WatchManager    bool     `json:"watchManager"`
-	PolicyManager   bool     `json:"policyManager"`
-	ReportsManager  bool     `json:"reportsManager"`
-}
-
-func (g Group) Id() string {
-	return g.Name
 }

@@ -51,7 +51,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	var unpackMembers = func(data *schema.ResourceData) []Member {
-		d := &util.ResourceData{data}
+		d := &util.ResourceData{ResourceData: data}
 
 		var members []Member
 
