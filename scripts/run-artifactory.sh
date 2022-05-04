@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.14}
@@ -8,22 +8,25 @@ set -euf
 
 docker-compose --project-directory ${SCRIPT_DIR} up -d --remove-orphans
 
+ARTIFACTORY_URL_1=http://localhost:8081
+ARTIFACTORY_URL_2=http://localhost:9081
+
 echo "Waiting for Artifactory 1 to start"
-until curl -sf -u admin:password http://localhost:8081/artifactory/api/system/licenses/; do
+until curl -sf -u admin:password ${ARTIFACTORY_URL_1}/artifactory/api/system/licenses/; do
     printf '.'
     sleep 4
 done
 echo ""
 
 echo "Waiting for Artifactory 2 to start"
-until curl -sf -u admin:password http://localhost:9081/artifactory/api/system/licenses/; do
+until curl -sf -u admin:password ${ARTIFACTORY_URL_2}/artifactory/api/system/licenses/; do
     printf '.'
     sleep 4
 done
 echo ""
 
 echo "Setting base URL for Artifactory 2. (Base URL for Artifactory 1 will be set by acceptance tests)"
-curl -X PUT http://localhost:9081/artifactory/api/system/configuration/baseUrl -d 'http://artifactory-2:8081' -u admin:password -H "Content-type: text/plain"
+curl -X PUT ${ARTIFACTORY_URL_2}/artifactory/api/system/configuration/baseUrl -d 'http://artifactory-2:8081' -u admin:password -H "Content-type: text/plain"
 
 # docker cp doesn't support coping files between containers so copy to local disk first
 CONTAINER_ID_1=$(docker ps -q --filter ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION} --filter publish=8080)
@@ -40,3 +43,24 @@ docker cp ${SCRIPT_DIR}/artifactory-1.crt ${CONTAINER_ID_2}:/opt/jfrog/artifacto
 docker cp ${SCRIPT_DIR}/artifactory-2.crt ${CONTAINER_ID_1}:/opt/jfrog/artifactory/var/etc/access/keys/trusted/artifactory-2.crt
 
 echo "Circle-of-Trust is setup between artifactory-1 and artifactory-2 instances"
+
+echo "Generate Admin Access Keys for both instances"
+
+ARTIFACTORY_URLS=("${ARTIFACTORY_URL_1}" "${ARTIFACTORY_URL_2}")
+for ARTIFACTORY_URL in "${ARTIFACTORY_URLS[@]}";
+  do
+    COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
+                  --header "accept: application/json, text/plain, */*" \
+                  --header "content-type: application/json;charset=UTF-8" \
+                  --header "x-requested-with: XMLHttpRequest" \
+                  -d '{"user":"admin","password":"Password1!","type":"login"}' | grep TOKEN)
+
+    REFRESH_TOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
+    ACCESS_TOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $14 }')
+
+    ACCESS_KEY=$(curl -g --request GET "${ARTIFACTORY_URL}/ui/api/v1/system/security/token?services[]=all" \
+                        --header "accept: application/json, text/plain, */*" \
+                        --header "x-requested-with: XMLHttpRequest" \
+                        --header "cookie: ACCESSTOKEN=${ACCESS_TOKEN}; REFRESHTOKEN=${REFRESH_TOKEN}")
+    echo "Artifactory Admin Access Key for ${ARTIFACTORY_URL}: ${ACCESS_KEY}"
+  done
