@@ -22,9 +22,11 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var Version = "6.6.0"
+var Version = "6.6.0" // needs to be exported so make file can update this
+var productId = "terraform-provider-artifactory/" + Version
 
 // Provider Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
@@ -188,51 +190,19 @@ func addTelemetry(resourceMap map[string]*schema.Resource) map[string]*schema.Re
 
 	for name, skeema := range resourceMap {
 		if skeema.CreateContext != nil {
-			skeema.CreateContext = applyTelemetry(name, "CREATE", skeema.CreateContext)
+			skeema.CreateContext = util.ApplyTelemetry(Version, name, "CREATE", skeema.CreateContext)
 		}
 		if skeema.ReadContext != nil {
-			skeema.ReadContext = applyTelemetry(name, "READ", skeema.ReadContext)
+			skeema.ReadContext = util.ApplyTelemetry(Version, name, "READ", skeema.ReadContext)
 		}
 		if skeema.UpdateContext != nil {
-			skeema.UpdateContext = applyTelemetry(name, "UPDATE", skeema.UpdateContext)
+			skeema.UpdateContext = util.ApplyTelemetry(Version, name, "UPDATE", skeema.UpdateContext)
 		}
 		if skeema.DeleteContext != nil {
-			skeema.DeleteContext = applyTelemetry(name, "DELETE", skeema.DeleteContext)
+			skeema.DeleteContext = util.ApplyTelemetry(Version, name, "DELETE", skeema.DeleteContext)
 		}
 	}
 	return resourceMap
-}
-
-func sendUsage(ctx context.Context, resource, verb string, meta interface{}) {
-	type Feature struct {
-		FeatureId string `json:"featureId"`
-	}
-	type UsageStruct struct {
-		ProductId string    `json:"productId"`
-		Features  []Feature `json:"features"`
-	}
-	_, err := meta.(*resty.Client).R().SetBody(UsageStruct{
-		"terraform-provider-artifactory/" + Version,
-		[]Feature{
-			{FeatureId: "Partner/ACC-007450"},
-			{FeatureId: fmt.Sprintf("Terraform/%s/%s", resource, verb)},
-		},
-	}).Post("artifactory/api/system/usage")
-
-	if err != nil {
-		tflog.Info(ctx, fmt.Sprintf("failed to send usage: %v", err))
-	}
-}
-
-func applyTelemetry(resource, verb string, f func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-	if f == nil {
-		panic("attempt to apply telemetry to a nil function")
-	}
-	return func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		// best effort. Go routine it
-		go sendUsage(ctx, resource, verb, meta)
-		return f(ctx, data, meta)
-	}
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
@@ -264,11 +234,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
-	err = sendUsageRepo(restyBase, terraformVersion)
-
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
+	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
+	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
 	return restyBase, nil
 }
@@ -302,34 +269,6 @@ func checkArtifactoryLicense(client *resty.Client) error {
 
 	if matched, _ := regexp.MatchString(`Enterprise|Commercial|Edge`, licenseType); !matched {
 		return fmt.Errorf("artifactory requires Pro or Enterprise or Edge license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check")
-	}
-
-	return nil
-}
-
-func sendUsageRepo(restyBase *resty.Client, terraformVersion string) error {
-	type Feature struct {
-		FeatureId string `json:"featureId"`
-	}
-	type UsageStruct struct {
-		ProductId string    `json:"productId"`
-		Features  []Feature `json:"features"`
-	}
-
-	usage := UsageStruct{
-		"terraform-provider-artifactory/" + Version,
-		[]Feature{
-			{FeatureId: "Partner/ACC-007450"},
-			{FeatureId: "Terraform/" + terraformVersion},
-		},
-	}
-
-	_, err := restyBase.R().
-		SetBody(usage).
-		Post("artifactory/api/system/usage")
-
-	if err != nil {
-		return fmt.Errorf("unable to report usage %s", err)
 	}
 
 	return nil
