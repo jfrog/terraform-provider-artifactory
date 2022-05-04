@@ -3,9 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -152,12 +150,15 @@ func Provider() *schema.Provider {
 			},
 		},
 
-		ResourcesMap: 	addTelemetry(resourceMap),
+		ResourcesMap: 	util.AddTelemetry(productId, resourceMap),
 
-		DataSourcesMap: addTelemetry(map[string]*schema.Resource{
-			"artifactory_file":     datasource.ArtifactoryFile(),
-			"artifactory_fileinfo": datasource.ArtifactoryFileInfo(),
-		}),
+		DataSourcesMap: util.AddTelemetry(
+			productId,
+			map[string]*schema.Resource{
+				"artifactory_file":     datasource.ArtifactoryFile(),
+				"artifactory_fileinfo": datasource.ArtifactoryFileInfo(),
+			},
+		),
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -170,39 +171,6 @@ func Provider() *schema.Provider {
 	}
 
 	return p
-}
-
-func addTelemetry(resourceMap map[string]*schema.Resource) map[string]*schema.Resource {
-	for name, skeema := range resourceMap {
-		if skeema.Create != nil {
-			panic(fmt.Sprintf("[%s] deprecated Create function in use", name))
-		}
-		if skeema.Read != nil {
-			panic(fmt.Sprintf("[%s] deprecated Read function in use", name))
-		}
-		if skeema.Update != nil {
-			panic(fmt.Sprintf("[%s] deprecated Update function in use", name))
-		}
-		if skeema.Delete != nil {
-			panic(fmt.Sprintf("[%s] deprecated Delete function in use", name))
-		}
-	}
-
-	for name, skeema := range resourceMap {
-		if skeema.CreateContext != nil {
-			skeema.CreateContext = util.ApplyTelemetry(productId, name, "CREATE", skeema.CreateContext)
-		}
-		if skeema.ReadContext != nil {
-			skeema.ReadContext = util.ApplyTelemetry(productId, name, "READ", skeema.ReadContext)
-		}
-		if skeema.UpdateContext != nil {
-			skeema.UpdateContext = util.ApplyTelemetry(productId, name, "UPDATE", skeema.UpdateContext)
-		}
-		if skeema.DeleteContext != nil {
-			skeema.DeleteContext = util.ApplyTelemetry(productId, name, "DELETE", skeema.DeleteContext)
-		}
-	}
-	return resourceMap
 }
 
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
@@ -228,9 +196,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	checkLicense := d.Get("check_license").(bool)
 	if checkLicense {
-		err = checkArtifactoryLicense(restyBase)
-		if err != nil {
-			return nil, diag.FromErr(err)
+		licenseErr := util.CheckArtifactoryLicense(restyBase)
+		if licenseErr != nil {
+			return nil, licenseErr
 		}
 	}
 
@@ -238,38 +206,4 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
 	return restyBase, nil
-}
-
-func checkArtifactoryLicense(client *resty.Client) error {
-
-	type License struct {
-		Type string `json:"type"`
-	}
-
-	type LicensesWrapper struct {
-		License
-		Licenses []License `json:"licenses"` // HA licenses returns as an array instead
-	}
-
-	licensesWrapper := LicensesWrapper{}
-	_, err := client.R().
-		SetResult(&licensesWrapper).
-		Get("/artifactory/api/system/license")
-
-	if err != nil {
-		return fmt.Errorf("failed to check for license. If your usage doesn't require admin permission, you can set `check_license` attribute to `false` to skip this check. %s", err)
-	}
-
-	var licenseType string
-	if len(licensesWrapper.Licenses) > 0 {
-		licenseType = licensesWrapper.Licenses[0].Type
-	} else {
-		licenseType = licensesWrapper.Type
-	}
-
-	if matched, _ := regexp.MatchString(`Enterprise|Commercial|Edge`, licenseType); !matched {
-		return fmt.Errorf("artifactory requires Pro or Enterprise or Edge license to work with Terraform! If your usage doesn't require a license, you can set `check_license` attribute to `false` to skip this check")
-	}
-
-	return nil
 }
