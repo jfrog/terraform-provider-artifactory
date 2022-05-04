@@ -190,16 +190,16 @@ func addTelemetry(resourceMap map[string]*schema.Resource) map[string]*schema.Re
 
 	for name, skeema := range resourceMap {
 		if skeema.CreateContext != nil {
-			skeema.CreateContext = util.ApplyTelemetry(Version, name, "CREATE", skeema.CreateContext)
+			skeema.CreateContext = util.ApplyTelemetry(productId, name, "CREATE", skeema.CreateContext)
 		}
 		if skeema.ReadContext != nil {
-			skeema.ReadContext = util.ApplyTelemetry(Version, name, "READ", skeema.ReadContext)
+			skeema.ReadContext = util.ApplyTelemetry(productId, name, "READ", skeema.ReadContext)
 		}
 		if skeema.UpdateContext != nil {
-			skeema.UpdateContext = util.ApplyTelemetry(Version, name, "UPDATE", skeema.UpdateContext)
+			skeema.UpdateContext = util.ApplyTelemetry(productId, name, "UPDATE", skeema.UpdateContext)
 		}
 		if skeema.DeleteContext != nil {
-			skeema.DeleteContext = util.ApplyTelemetry(Version, name, "DELETE", skeema.DeleteContext)
+			skeema.DeleteContext = util.ApplyTelemetry(productId, name, "DELETE", skeema.DeleteContext)
 		}
 	}
 	return resourceMap
