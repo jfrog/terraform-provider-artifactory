@@ -38,7 +38,7 @@ IMPROVEMENTS:
 * Resources added for Pub package type of Virtual Repository
 * Acceptance test case enhanced with Client TLS Certificate
 
-[GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
+PR: [GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
 
 ## 6.4.1 (Apr 18, 2022). Tested on Artifactory 7.37.14
 

@@ -1,17 +1,131 @@
+<a href="https://jfrog.com">
+    <img src=".github/jfrog-logo-2022.svg" alt="JFrog logo" title="JFrog" align="right" height="50" />
+</a>
+
 # Terraform Provider Artifactory
 
 [![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/release/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jfrog/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/jfrog/terraform-provider-artifactory)
 
-To use this provider in your Terraform module, follow the documentation [here](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
+## Releases
 
-## License requirements:
+Current major release: **6.x**
+
+See [CHANGELOG.md](CHANGELOG.md) for full details
+
+<details><summary>Recent Releases</summary>
+### 6.6.0
+
+IMPROVEMENTS:
+
+* resource/artifactory_group: Add `external_id` attribute to support Azure AD group. PR: [#437](https://github.com/jfrog/terraform-provider-artifactory/pull/437). Issue [#429](https://github.com/jfrog/terraform-provider-artifactory/issues/429)
+
+### 6.5.3
+
+IMPROVEMENTS:
+
+* reorganizing documentation, adding missing documentation links, fixing formatting. No changes in the functionality.
+PR: [GH-435](https://github.com/jfrog/terraform-provider-artifactory/pull/435). Issues [#422](https://github.com/jfrog/terraform-provider-artifactory/issues/422) and [#398](https://github.com/jfrog/terraform-provider-artifactory/issues/398)
+
+### 6.5.2
+
+IMPROVEMENTS:
+
+* resource/artifactory_artifact_webhook: Added 'cached' event type for Artifact webhook. PR: [GH-430](https://github.com/jfrog/terraform-provider-artifactory/pull/430).
+
+### 6.5.1
+
+BUG FIXES:
+
+* provider:  Setting the right default value for 'access_token' attribute. PR: [GH-426](https://github.com/jfrog/terraform-provider-artifactory/pull/426). Issue [#425](https://github.com/jfrog/terraform-provider-artifactory/issues/425)
+
+### 6.5.0
+
+IMPROVEMENTS:
+
+* Resources added for Pub package type of Local Repository
+* Resources added for Pub package type of Remote Repository
+* Resources added for Pub package type of Virtual Repository
+* Acceptance test case enhanced with Client TLS Certificate
+
+PR: [GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
+</details>
+
+## Quick Start
+
+Create a new Terraform file with `artifactory` resources. Also see [sample.tf](./sample.tf):
+
+<details><summary>HCL Example</summary>
+
+```terraform
+# Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
+terraform {
+  required_providers {
+    artifactory = {
+      source  = "registry.terraform.io/jfrog/artifactory"
+      version = "6.6.1"
+    }
+  }
+}
+
+provider "artifactory" {
+  // supply ARTIFACTORY_USERNAME, ARTIFACTORY_ACCESS_TOKEN, and ARTIFACTORY_URL as env vars
+}
+
+resource "artifactory_local_pypi_repository" "pypi-local" {
+  key         = "pypi-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+resource "artifactory_artifact_webhook" "artifact-webhook" {
+  key         = "artifact-webhook"
+  event_types = ["deployed", "deleted", "moved", "copied"]
+  criteria {
+    any_local        = true
+    any_remote       = false
+    repo_keys        = [artifactory_local_pypi_repository.pypi-local.key]
+    include_patterns = ["foo/**"]
+    exclude_patterns = ["bar/**"]
+  }
+  url    = "http://tempurl.org/webhook"
+  secret = "some-secret"
+  proxy  = "proxy-key"
+
+  custom_http_headers = {
+    header-1 = "value-1"
+    header-2 = "value-2"
+  }
+
+  depends_on = [artifactory_local_pypi_repository.pypi-local]
+}
+```
+</details>
+
+Initialize Terrform:
+```sh
+$ terraform init
+```
+
+Plan (or Apply):
+```sh
+$ terraform plan
+```
+
+## Documentation
+
+To use this provider in your Terraform module, follow the documentation on [Terraform Registry](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
+
+## License requirements
 
 This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions. You can determine which license you have by accessing the following URL `${host}/artifactory/api/system/licenses/`
 
-You can either access it via api, or web browser - it does require admin level credentials, but it's one of the few APIs that will work without a license (side node: you can also install your license here with a `POST`)
+You can either access it via API, or web browser - it requires admin level credentials, but it's one of the few APIs that will work without a license (side node: you can also install your license here with a `POST`)
+
 ```sh
-curl -sL ${host}/artifactory/api/system/licenses/ | jq .
+$ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
+```
+
+```js
 {
   "type" : "Enterprise Plus Trial",
   "validThrough" : "Jan 29, 2022",
@@ -24,152 +138,12 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 - JCR Edition
 - OSS
 
-## Limitations of functionality
-The current way a repository is created is essentially through a union of fields of certain repo types.
-It's important to note that, the official documentation is used only for inspiration as the documentation is quite wrong.
-Support for some features has been achieved entirely through reverse engineering.
-
-### Local repository limitations
-[Local repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-LocalRepository) does not support (directly), repository specific fields in all cases. It's basically a union of
-- Base repo params
-- Maven
-- Gradle
-- Debian
-- Docker (v1)
-- RPM
-
-### Remote repository limitations
-[Remote repository creation](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-RemoteRepository) does not support (directly), repository specific fields in all cases. It's basically a union of
-- base remote repo params
-- bower support
-- maven
-- gradle
-- Docker (v1)
-- VCS
-- Pypi
-- Nuget
-
-Query params may be forwarded, but this field doesn't exist in the documentation
-
-### Permission target limitations
-[Permission target V2](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplacePermissionTarget)
-
-Permission target V1 support has been totally removed. Dynamically testing of permission targets using a new repository currently doesn't work because of race conditions when creating a repo. This will have to be resolved with retries at a later date.
-
-### Changes to user creation
-Previously, passwords were being generated for the user if none was supplied. This was both unnecessary (since TF has a password provider) and because the internal implementation could never be entirely in line with the remote server (or, be sure it was).
-
-Now this functionality is removed. Password is a required field. The verification is offloaded to the Artifactory, which makes more sense, so we don't need to catch up with any possible changes on the Artifactory side.
-
-## Build the Provider
-Simply run `make install` - this will compile the provider and install it to `~/.terraform.d`. When running this, it will take the current tag and bump it 1 minor version. It does not actually create a new tag (that is `make release`). If you wish to use the locally installed provider, make sure your TF script refers to the new version number
-
-Requirements:
-- [Terraform](https://www.terraform.io/downloads.html) 0.13
-- [Go](https://golang.org/doc/install) 1.15+ (to build the provider plugin)
-
-## Testing
-
-First, you need a running instance of the JFrog Artifactory.
-You can ask for an instance to test against it as part of your PR. Alternatively, you can run the file [scripts/run-artifactory.sh](scripts/run-artifactory.sh).
-The script requires a valid license of a [supported type](https://github.com/jfrog/terraform-provider-artifactory#license-requirements), license should be saved in the file called `artifactory.lic` in the same directory as a script.
-With the script you can start one or two Artifactory instances using docker compose.
-The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development. Make sure the license saved as a multi line text file.
-
-Currently, acceptance tests **require an access key** and don't support basic authentication or an API key. To generate an access key, please refer to the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-GeneratingAdminTokens)
-Then, you have to set some environment variables as this is how the acceptance tests pick up their config.
-```sh
-ARTIFACTORY_URL=http://localhost:8082
-ARTIFACTORY_USERNAME=admin
-ARTIFACTORY_ACCESS_TOKEN=<your_access_token>
-TF_ACC=true
-```
-`ARTIFACTORY_USERNAME` is not used in authentication, but used in several tests, related to replication functionality.
-It should be hardcoded to `admin`, because it's a default user created in the Artifactory instance from the start.
-A crucial, and very much hidden, env var to set is `TF_ACC=true` - you can literally set `TF_ACC` to anything you want, so long as it's set. The acceptance tests use terraform testing libraries that, if this flag isn't set, will skip all tests.
-
-You can then run the tests as
-
-```sh
-$ go test -v ./pkg/...
-```
-
-Or
-
-```sh
-$ make acceptance
-```
-
-**DO NOT** remove the `-v` - terraform testing needs this (don't ask me why). This will recursively run all tests, including acceptance tests.
-
-### Testing Federated repos
-
-To execute acceptance tests for federated repo resource, we need:
-- 2 Artifactory instances, configured with [Circle-of-Trust](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-CircleofTrust(Cross-InstanceAuthentication))
-- Set environment variables `ARTIFACTORY_URL_2` to enable the acceptance tests that utilize both Artifactory instances
-
-#### Setup Artifactory instances
-
-The [scripts/run-artifactory.sh](scripts/run-artifactory.sh) starts two Artifactory instances for testing using the file [scripts/docker-compose.yml](scripts/docker-compose.yml).
-
-`artifactory-1` is on the usual 8080/8081/8082 ports while `artifactory-2` is on 9080/9081/9082
-
-#### Enable acceptance tests
-
-Set the env var to the second Artifactory instance URL. This is the URL that will be accessible from `artifactory-1` container (not the URL from the Docker host):
-```sh
-$ export ARTIFACTORY_URL_2=http://artifactory-2:8082
-```
-
-Run all the acceptance tests as usual
-```sh
-$ make acceptance
-```
-
-Or run only the acceptance tests for Federated repos:
-```sh
-$ make acceptance_federated
-```
-
-## Debugging
-Debugging a terraform provider is not straightforward. Terraform forks your provider as a separate process and then connects to it via RPC. Normally, when debugging, you would start the process to debug directly. However, with the terraform + go architecture, this isn't possible. So, you need to run terraform as you normally would and attach to the provider process by getting it's pid. This would be really tricky considering how fast the process can come up and be down. So, you need to actually halt the provider and have it wait for your debugger to attach.
-
-Having said all that, here are the steps:
-1. Install [delve](https://github.com/go-delve/delve)
-2. Keep in mind that terraform will parallel process if it can, and it will start new instances of the TF provider process when running apply between the plan and confirmation.
-   Add a snippet of go code to the close to where you need to break where in you install a busy sleep loop:
-```go
-	debug := true
-	for debug {
-		time.Sleep(time.Second) // set breakpoint here
-	}
-```
-Then set a breakpoint inside the loop. Once you have attached to the process you can set the `debug` value to `false`, thus breaking the sleep loop and allow you to continue.
-2. Compile the provider with debug symbology (`go build -gcflags "all=-N -l"`)
-3. Install the provider (change as needed for your version)
-```sh
-# this will bump your version by 1 so it doesn't download from TF. Make sure you update any test scripts accordingly
-make install
-```
-4. Run your provider: `terraform init && terraform plan` - it will start in this busy sleep loop.
-5. In a separate shell, find the `PID` of the provider that got forked
-`pgrep terraform-provider-artifactory`
-6. Then, attach the debugger to that pid: `dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $pid`
-A 1-liner for this whole process is:
-`dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $(pgrep terraform-provider-artifactory)`
-7. In intellij, setup a remote go debugging session (the default port is `2345`, but make sure it's set.) And click the `debug` button
-8. Your editor should immediately break at the breakpoint from step 2. At this point, in the watch window, edit the `debug` value and set it to false, and allow the debugger to continue. Be ready for your debugging as this will release the provider and continue executing normally.
-
-You will need to repeat steps 4-8 everytime you want to debug
-
 ## Versioning
-In general, this project follows [semver](https://semver.org/) as closely as we can for tagging releases of the package. We've adopted the following versioning policy:
 
-* We increment the **major version** with any incompatible change to functionality, including changes to the exported Go API surface or behavior of the API.
-* We increment the **minor version** with any backwards-compatible changes to functionality.
-* We increment the **patch version** with any backwards-compatible bug fixes.
+In general, this project follows [Terraform Versioning Specification](https://www.terraform.io/plugin/sdkv2/best-practices/versioning#versioning-specification) as closely as we can for tagging releases of the package.
 
 ## Contributors
+
 Pull requests, issues and comments are welcomed. For pull requests:
 
 * Add tests for new features and bug fixes
@@ -183,6 +157,7 @@ For bigger changes, make sure you start a discussion first by creating an issue 
 JFrog requires contributors to sign a Contributor License Agreement, known as a CLA. This serves as a record stating that the contributor is entitled to contribute the code/documentation/translation to the project and is willing to have it used in distributions and derivative works (or is willing to transfer ownership).
 
 ## License
+
 Copyright (c) 2022 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
