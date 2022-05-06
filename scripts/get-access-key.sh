@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-set -x
 
 function getAccessKey() {
   local url=${1?You must supply the artifactory url to obtain an access key}
-  echo "Generate Admin Access Key" > /dev/stderr
+  echo "### Generate Admin Access Key ###" > /dev/stderr
 
   local cookies
   cookies=$(curl -s -c - "${url}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
@@ -24,5 +23,5 @@ function getAccessKey() {
                       --header "x-requested-with: XMLHttpRequest" \
                       --header "cookie: ACCESSTOKEN=${access_token}; REFRESHTOKEN=${refresh_token}")
 
-  echo "export JFROG_ACCESS_KEY=${access_key}" > /dev/tty
+  echo "${access_key}"
 }

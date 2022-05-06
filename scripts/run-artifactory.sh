@@ -10,7 +10,9 @@ set -euf
 docker-compose --project-directory "${SCRIPT_DIR}" up -d --remove-orphans
 
 ARTIFACTORY_URL_1=http://localhost:8081
+ARTIFACTORY_UI_URL_1=http://localhost:8082
 ARTIFACTORY_URL_2=http://localhost:9081
+ARTIFACTORY_UI_URL_2=http://localhost:9082
 
 echo "Waiting for Artifactory 1 to start"
 until curl -sf -u admin:password ${ARTIFACTORY_URL_1}/artifactory/api/system/licenses/; do
@@ -36,7 +38,7 @@ CONTAINER_ID_2=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/
 echo "Fetching root certificates"
 docker cp "${CONTAINER_ID_1}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}/artifactory-1.crt" \
   && chmod go+rw "${SCRIPT_DIR}"/artifactory-1.crt
-docker cp "${CONTAINER_ID_2}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt ${SCRIPT_DIR}/artifactory-2.crt \
+docker cp "${CONTAINER_ID_2}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}/artifactory-2.crt" \
   && chmod go+rw "${SCRIPT_DIR}"/artifactory-2.crt
 
 echo "Uploading root certificates"
@@ -47,7 +49,7 @@ echo "Circle-of-Trust is setup between artifactory-1 and artifactory-2 instances
 
 echo "Generate Admin Access Keys for both instances"
 
-ARTIFACTORY_URLS=("${ARTIFACTORY_URL_1}" "${ARTIFACTORY_URL_2}")
+ARTIFACTORY_URLS=("${ARTIFACTORY_UI_URL_1}" "${ARTIFACTORY_UI_URL_2}")
 for ARTIFACTORY_URL in "${ARTIFACTORY_URLS[@]}"; do
-    getAccessKey "${ARTIFACTORY_URL}" > /dev/null 2>&1
+    echo "export JFROG_ACCESS_KEY=$(getAccessKey "${ARTIFACTORY_URL}")"
 done

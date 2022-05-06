@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -x
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 source "${SCRIPT_DIR}/get-access-key.sh"
@@ -13,6 +12,7 @@ docker run -i -t -d --rm -v "${SCRIPT_DIR}/artifactory.lic:/artifactory_extra_co
   -p8081:8081 -p8082:8082 -p8080:8080 "releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}"
 
 export ARTIFACTORY_URL=http://localhost:8081
+export ARTIFACTORY_UI_URL=http://localhost:8082
 
 echo "Waiting for Artifactory to start"
 until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
@@ -21,5 +21,5 @@ until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licen
 done
 echo ""
 
-# with this trick you can do $(./run-artifactory-container.sh) and it will directly be setup for you
-getAccessKey "${ARTIFACTORY_URL}" > /dev/null 2>&1
+# with this trick you can do $(./run-artifactory-container.sh) and it will directly be setup for you without the terminal output
+echo "export JFROG_ACCESS_KEY=$(getAccessKey "${ARTIFACTORY_UI_URL}")"
