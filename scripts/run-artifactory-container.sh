@@ -2,11 +2,10 @@
 set -x
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
-. ${SCRIPT_DIR}/get-access-key.sh
+source "${SCRIPT_DIR}/get-access-key.sh"
 
 export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.15}
-echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
-ARTIFACTORY_ADMIN_PASSWORD="password"
+echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}" > /dev/stderr
 
 set -euf
 
@@ -17,10 +16,10 @@ export ARTIFACTORY_URL=http://localhost:8081
 
 echo "Waiting for Artifactory to start"
 until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
-    printf '.'
+    printf '.' > /dev/stderr
     sleep 4
 done
 echo ""
 
-# by running this script - $(./run-artifactory-container.sh) all needed variables to run the provider will be setup
-getAccessKey > /dev/null 2>&1
+# with this trick you can do $(./run-artifactory-container.sh) and it will directly be setup for you
+getAccessKey "${ARTIFACTORY_URL}" > /dev/null 2>&1

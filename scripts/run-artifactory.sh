@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
-export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.14}
+source "${SCRIPT_DIR}/get-access-key.sh"
+export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.15}
 echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
@@ -33,9 +34,9 @@ CONTAINER_ID_1=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/
 CONTAINER_ID_2=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}" --filter publish=9080)
 
 echo "Fetching root certificates"
-docker cp "${CONTAINER_ID_1}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}"/artifactory-1.crt \
+docker cp "${CONTAINER_ID_1}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}/artifactory-1.crt" \
   && chmod go+rw "${SCRIPT_DIR}"/artifactory-1.crt
-docker cp "${CONTAINER_ID_2}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}"/artifactory-2.crt \
+docker cp "${CONTAINER_ID_2}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt ${SCRIPT_DIR}/artifactory-2.crt \
   && chmod go+rw "${SCRIPT_DIR}"/artifactory-2.crt
 
 echo "Uploading root certificates"
@@ -47,7 +48,6 @@ echo "Circle-of-Trust is setup between artifactory-1 and artifactory-2 instances
 echo "Generate Admin Access Keys for both instances"
 
 ARTIFACTORY_URLS=("${ARTIFACTORY_URL_1}" "${ARTIFACTORY_URL_2}")
-for ARTIFACTORY_URL in "${ARTIFACTORY_URLS[@]}";
-  do
-    getAccessKey > /dev/null 2>&1
-  done
+for ARTIFACTORY_URL in "${ARTIFACTORY_URLS[@]}"; do
+    getAccessKey "${ARTIFACTORY_URL}" > /dev/null 2>&1
+done

@@ -2,23 +2,27 @@
 set -x
 
 function getAccessKey() {
+  local url=${1?You must supply the artifactory url to obtain an access key}
+  echo "Generate Admin Access Key" > /dev/stderr
 
-echo "Generate Admin Access Key" > /dev/tty
+  local cookies
+  cookies=$(curl -s -c - "${url}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
+                --header "accept: application/json, text/plain, */*" \
+                --header "content-type: application/json;charset=UTF-8" \
+                --header "x-requested-with: XMLHttpRequest" \
+                -d '{"user":"admin","password":"password","type":"login"}' | grep TOKEN)
 
-COOKIES=$(curl -s -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
-              --header "accept: application/json, text/plain, */*" \
-              --header "content-type: application/json;charset=UTF-8" \
-              --header "x-requested-with: XMLHttpRequest" \
-              -d '{"user":"admin","password":'\""${ARTIFACTORY_ADMIN_PASSWORD}"\"',"type":"login"}' | grep TOKEN)
+  local refresh_token
+  refresh_token=$(echo "${cookies}" | grep REFRESHTOKEN | awk '{print $7 }')
 
-REFRESH_TOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7 }')
-ACCESS_TOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $14 }')
+  local access_token
+  access_token=$(echo "${cookies}" | grep ACCESSTOKEN | awk '{print $7 }')
 
-ACCESS_KEY=$(curl -s -g --request GET "${ARTIFACTORY_URL}/ui/api/v1/system/security/token?services[]=all" \
-                    --header "accept: application/json, text/plain, */*" \
-                    --header "x-requested-with: XMLHttpRequest" \
-                    --header "cookie: ACCESSTOKEN=${ACCESS_TOKEN}; REFRESHTOKEN=${REFRESH_TOKEN}")
+  local access_key
+  access_key=$(curl -s -g --request GET "${url}/ui/api/v1/system/security/token?services[]=all" \
+                      --header "accept: application/json, text/plain, */*" \
+                      --header "x-requested-with: XMLHttpRequest" \
+                      --header "cookie: ACCESSTOKEN=${access_token}; REFRESHTOKEN=${refresh_token}")
 
-echo "Artifactory Admin Access Key for ${ARTIFACTORY_URL}:" > /dev/tty
-echo "export JFROG_ACCESS_KEY=${ACCESS_KEY}" > /dev/tty
+  echo "export JFROG_ACCESS_KEY=${access_key}" > /dev/tty
 }
