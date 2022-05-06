@@ -26,7 +26,8 @@ resource "artifactory_federated_cargo_repository" "terraform-federated-test-carg
 ## Argument Reference
 
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-FederatedRepository).
-The following arguments are supported, along with the [common list of arguments for the federated repositories](local.md):
+
+The following arguments are supported, along with the [common list of arguments from the local repositories](local.md):
 
 * `key` - (Required) the identity key of the repo.
 * `member` - (Required) The list of Federated members and must contain this repository URL (configured base URL
