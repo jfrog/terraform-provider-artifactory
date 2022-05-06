@@ -1,3 +1,9 @@
+## 6.6.1 (May 5, 2022). Tested on Artifactory 7.37.15
+
+BUG FIXES:
+
+* resource/artifactory_federated_*_repository: Use correct 'base' schema from local repository. PR: [#443](https://github.com/jfrog/terraform-provider-artifactory/pull/443). Issue [#431](https://github.com/jfrog/terraform-provider-artifactory/issues/431)
+
 ## 6.6.0 (Apr 29, 2022). Tested on Artifactory 7.37.15
 
 IMPROVEMENTS:

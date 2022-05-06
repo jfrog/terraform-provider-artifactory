@@ -118,7 +118,7 @@ The [scripts/run-artifactory.sh](scripts/run-artifactory.sh) starts two Artifact
 
 Set the env var to the second Artifactory instance URL. This is the URL that will be accessible from `artifactory-1` container (not the URL from the Docker host):
 ```sh
-$ export ARTIFACTORY_URL_2=http://localhost:9081
+$ export ARTIFACTORY_URL_2=http://artifactory-2:8082
 ```
 
 Run all the acceptance tests as usual
