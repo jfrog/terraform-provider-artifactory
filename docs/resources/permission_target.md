@@ -41,6 +41,18 @@ resource "artifactory_permission_target" "test-perm" {
       }
     }
   }
+
+  release_bundle {
+    includes_pattern = ["**"]
+    repositories     = ["release-bundles"]
+
+    actions {
+      users {
+        name         = "anonymous"
+        permissions  = ["read"]
+      }
+    }
+  }
 }
 ```
 
@@ -57,6 +69,7 @@ The following arguments are supported:
         * `users` - (Optional) Users this permission target applies for. 
         * `groups` - (Optional) Groups this permission applies for. 
 * `build` - (Optional) As for repo but for artifactory-build-info permssions.
+* `release_bundle` - (Optional) As for repo for for release-bundles permissions.
 
 ## Permissions
 

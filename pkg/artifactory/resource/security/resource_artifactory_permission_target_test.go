@@ -51,6 +51,27 @@ const permissionJustBuild = `
 	}
 `
 
+const permissionJustReleaseBundle = `
+	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
+	//	key 	     = "{{ .repo_name }}"
+	//}
+	resource "artifactory_permission_target" "{{ .permission_name }}" {
+		name = "{{ .permission_name }}"
+		release_bundle {
+			includes_pattern = ["**"]
+			repositories = ["release-bundles"]
+			actions {
+				users {
+					name = "anonymous"
+					permissions = ["read", "write"]
+				}
+			}
+		}
+		//depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
+
+	}
+`
+
 const permissionFull = `
 // we can't auto create the repo because of race conditions'
 	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
@@ -94,6 +115,25 @@ const permissionFull = `
 			name        = "readers"
 			permissions = ["read"]
 		  }
+		}
+	  }
+
+	  release_bundle {
+		includes_pattern = ["foo/**"]
+		excludes_pattern = ["bar/**]
+		repositories     = ["release-bundles"]
+
+		actions {
+			users {
+				name        = "anonymous"
+				permissions = ["read", "write"]
+			}
+
+
+			groups {
+				name        = "readers"
+				permissions = ["read"]
+			}
 		}
 	  }
      //depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
@@ -186,6 +226,11 @@ func TestAccPermissionTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "build.0.repositories.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "build.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "build.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
 			},
 		},
@@ -229,6 +274,19 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
+				Config: acctest.ExecuteTemplate(permFqrn, permissionJustReleaseBundle, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(permFqrn, "name", permName),
+					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "build.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "0"),
+				),
+			},
+			{
 				Config: acctest.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
@@ -242,6 +300,11 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "build.0.repositories.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "build.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "build.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
 			},
 		},
