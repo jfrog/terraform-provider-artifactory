@@ -8,7 +8,7 @@ To migrate to new webhook schema with multiple handlers:
 - Update your HCL and copy the attributes (`url`, `secret`, `proxy`, and `custom_http_headers`) into a `handler` block (See `sample.tf` for full examples)
 - Execute `terraform apply -refresh-only` to update the Terraform state
 
-PR: [#](https://github.com/jfrog/terraform-provider-artifactory/pull/). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
+PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
 
 ## 6.6.1 (May 5, 2022). Tested on Artifactory 7.37.16
 
