@@ -1,6 +1,6 @@
 module github.com/jfrog/terraform-provider-artifactory/v6
 
-replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
+// replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
 require (
 	github.com/go-resty/resty/v2 v2.7.0
