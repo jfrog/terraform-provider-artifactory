@@ -406,6 +406,8 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 }
 
+// ResourceStateUpgradeV1 see the corresponding unit test TestWebhookResourceStateUpgradeV1
+// for more details on the schema transformation
 func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	rawState["handler"] = []map[string]interface{}{
 		{
