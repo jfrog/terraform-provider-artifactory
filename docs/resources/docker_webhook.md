@@ -56,6 +56,6 @@ The following arguments are supported:
   * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: "org/apache/**".
 * `handler` - (Required) At least one is required
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
-  * `secret` - (Optional) Secret authentication token that will be sent to the configured URL.
-  * `proxy` - (Optional) Proxy key from Artifactory Proxies setting.
+  * `secret` - (Optional) Secret authentication token that will be sent to the configured URL. The value will be sent as `x-jfrog-event-auth` header.
+  * `proxy` - (Optional) Proxy key from Artifactory UI (Administration -> Proxies -> Configuration)
   * `custom_http_headers` - (Optional) Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.
