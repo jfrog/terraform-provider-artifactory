@@ -10,6 +10,12 @@ To migrate to new webhook schema with multiple handlers:
 
 PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
 
+## 6.6.2 (May 11, 2022). Tested on Artifactory 7.38.8
+
+BUG FIXES:
+
+* provider: Fix license checking only works with 'Enterprise' license type. PR: [#456](https://github.com/jfrog/terraform-provider-artifactory/pull/456). Issue [#455](https://github.com/jfrog/terraform-provider-artifactory/issues/455)
+
 ## 6.6.1 (May 5, 2022). Tested on Artifactory 7.37.16
 
 BUG FIXES:
