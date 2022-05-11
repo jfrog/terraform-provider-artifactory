@@ -41,7 +41,12 @@ func baseWebhookBaseSchemaV1(webhookType string) map[string]*schema.Schema {
 		"key": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringLenBetween(2, 200), validation.StringDoesNotContainAny(" "))),
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.All(
+					validation.StringLenBetween(2, 200),
+					validation.StringDoesNotContainAny(" "),
+				),
+			),
 			Description:      "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
 		},
 		"description": {
@@ -57,17 +62,22 @@ func baseWebhookBaseSchemaV1(webhookType string) map[string]*schema.Schema {
 			Description: "Status of webhook. Default to 'true'",
 		},
 		"event_types": {
-			Type:     schema.TypeSet,
-			Required: true,
-			MinItems: 1,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Type:        schema.TypeSet,
+			Required:    true,
+			MinItems:    1,
+			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
 				"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
 		},
 		"url": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.IsURLWithHTTPorHTTPS, validation.StringIsNotEmpty)),
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.All(
+					validation.IsURLWithHTTPorHTTPS,
+					validation.StringIsNotEmpty,
+				),
+			),
 			Description:      "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 		},
 		"secret": {
@@ -96,7 +106,12 @@ func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 		"key": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringLenBetween(2, 200), validation.StringDoesNotContainAny(" "))),
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.All(
+					validation.StringLenBetween(2, 200),
+					validation.StringDoesNotContainAny(" "),
+				),
+			),
 			Description:      "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
 		},
 		"description": {
@@ -112,10 +127,10 @@ func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 			Description: "Status of webhook. Default to 'true'",
 		},
 		"event_types": {
-			Type:     schema.TypeSet,
-			Required: true,
-			MinItems: 1,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Type:        schema.TypeSet,
+			Required:    true,
+			MinItems:    1,
+			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
 				"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
 		},
@@ -128,7 +143,12 @@ func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 					"url": {
 						Type:             schema.TypeString,
 						Required:         true,
-						ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.IsURLWithHTTPorHTTPS, validation.StringIsNotEmpty)),
+						ValidateDiagFunc: validation.ToDiagFunc(
+							validation.All(
+								validation.IsURLWithHTTPorHTTPS,
+								validation.StringIsNotEmpty,
+							),
+						),
 						Description:      "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 					},
 					"secret": {
@@ -140,7 +160,10 @@ func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 					"proxy": {
 						Type:             schema.TypeString,
 						Optional:         true,
-						ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validator.StringIsNotURL),
+						ValidateDiagFunc: validator.All(
+							validator.StringIsNotEmpty,
+							validator.StringIsNotURL,
+						),
 						Description:      "Proxy key from Artifactory UI (Administration -> Proxies -> Configuration)",
 					},
 					"custom_http_headers": {
