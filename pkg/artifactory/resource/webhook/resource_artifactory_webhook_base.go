@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type BaseWebhookCriteria struct {
@@ -28,19 +29,14 @@ var baseCriteriaSchema = map[string]*schema.Schema{
 	},
 }
 
-var getBaseSchemaByVersion = func(webhookType string, version int) map[string]*schema.Schema {
-	var baseSchema map[string]*schema.Schema
-
+func getBaseSchemaByVersion(webhookType string, version int) map[string]*schema.Schema {
 	if version == 1 {
-		baseSchema = baseWebhookBaseSchemaV1(webhookType)
-	} else {
-		baseSchema = baseWebhookBaseSchemaV2(webhookType)
+		return baseWebhookBaseSchemaV1(webhookType)
 	}
-
-	return baseSchema
+	return baseWebhookBaseSchemaV2(webhookType)
 }
 
-var baseWebhookBaseSchemaV1 = func(webhookType string) map[string]*schema.Schema {
+func baseWebhookBaseSchemaV1(webhookType string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"key": {
 			Type:             schema.TypeString,
@@ -95,8 +91,7 @@ var baseWebhookBaseSchemaV1 = func(webhookType string) map[string]*schema.Schema
 	}
 }
 
-
-var baseWebhookBaseSchemaV2 = func(webhookType string) map[string]*schema.Schema {
+func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"key": {
 			Type:             schema.TypeString,
@@ -140,13 +135,13 @@ var baseWebhookBaseSchemaV2 = func(webhookType string) map[string]*schema.Schema
 						Type:             schema.TypeString,
 						Optional:         true,
 						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-						Description:      "Secret authentication token that will be sent to the configured URL.",
+						Description:      "Secret authentication token that will be sent to the configured URL. The value will be sent as `x-jfrog-event-auth` header.",
 					},
 					"proxy": {
 						Type:             schema.TypeString,
 						Optional:         true,
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-						Description:      "Proxy key from Artifactory Proxies setting",
+						ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validator.StringIsNotURL),
+						Description:      "Proxy key from Artifactory UI (Administration -> Proxies -> Configuration)",
 					},
 					"custom_http_headers": {
 						Type:        schema.TypeMap,

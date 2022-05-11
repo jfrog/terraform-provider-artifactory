@@ -139,9 +139,9 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 			description = "test description"
 			event_types = ["{{ .eventType }}"]
 			criteria {
-				any_local = true
+				any_local  = true
 				any_remote = true
-				repo_keys = []
+				repo_keys  = []
 			}
 			handler {
 				url = "http://tempurl.org"
@@ -158,6 +158,84 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 			{
 				Config:      webhookConfig,
 				ExpectError: regexp.MustCompile(fmt.Sprintf("event_type %s not supported for domain artifact", wrongEventType)),
+			},
+		},
+	})
+}
+
+func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := acctest.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["deployed"]
+			criteria {
+				any_local  = true
+				any_remote = true
+				repo_keys  = []
+			}
+			handler {
+				url   = "http://tempurl.org"
+				proxy = ""
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config:      webhookConfig,
+				ExpectError: regexp.MustCompile(`expected "proxy" to not be an empty string`),
+			},
+		},
+	})
+}
+
+func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := acctest.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["deployed"]
+			criteria {
+				any_local  = true
+				any_remote = true
+				repo_keys  = []
+			}
+			handler {
+				url   = "http://tempurl.org"
+				proxy = "http://tempurl.org"
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config:      webhookConfig,
+				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got http://tempurl.org`),
 			},
 		},
 	})

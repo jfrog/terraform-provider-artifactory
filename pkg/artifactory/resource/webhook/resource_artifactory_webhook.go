@@ -372,11 +372,10 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 	}
 
-	// taken from example in https://www.terraform.io/plugin/sdkv2/resources/state-migration#terraform-v0-12-sdk-state-migrations
-	var resourceSchemaV1 = func() *schema.Resource {
-		return &schema.Resource{
-			Schema: domainSchemaLookup(1)[webhookType],
-		}
+	// Previous version of the schema
+	// see example in https://www.terraform.io/plugin/sdkv2/resources/state-migration#terraform-v0-12-sdk-state-migrations
+	resourceSchemaV1 := &schema.Resource{
+		Schema: domainSchemaLookup(1)[webhookType],
 	}
 
 	return &schema.Resource{
@@ -393,7 +392,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		Schema:         domainSchemaLookup(currentSchemaVersion)[webhookType],
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceSchemaV1().CoreConfigSchema().ImpliedType(),
+				Type:    resourceSchemaV1.CoreConfigSchema().ImpliedType(),
 				Upgrade: ResourceStateUpgradeV1,
 				Version: 1,
 			},
@@ -407,7 +406,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 }
 
-var ResourceStateUpgradeV1 = func(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	rawState["handler"] = []map[string]interface{}{
 		{
 			"url": rawState["url"],
