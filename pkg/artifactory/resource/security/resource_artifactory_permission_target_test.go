@@ -115,7 +115,7 @@ const permissionFull = `
 
 	  release_bundle {
 		includes_pattern = ["foo/**"]
-		excludes_pattern = ["bar/**]
+		excludes_pattern = ["bar/**"]
 		repositories     = ["release-bundles"]
 
 		actions {
