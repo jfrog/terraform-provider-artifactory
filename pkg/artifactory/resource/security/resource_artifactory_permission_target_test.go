@@ -52,9 +52,6 @@ const permissionJustBuild = `
 `
 
 const permissionJustReleaseBundle = `
-	//resource "artifactory_local_docker_repository" "{{ .repo_name }}" {
-	//	key 	     = "{{ .repo_name }}"
-	//}
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
 		name = "{{ .permission_name }}"
 		release_bundle {
@@ -67,8 +64,6 @@ const permissionJustReleaseBundle = `
 				}
 			}
 		}
-		//depends_on = [artifactory_local_docker_repository.{{ .repo_name }}]
-
 	}
 `
 
