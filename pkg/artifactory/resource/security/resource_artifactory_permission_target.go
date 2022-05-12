@@ -242,6 +242,10 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 		pTarget.Build = unpackPermission(v)
 	}
 
+	if v, ok := d.GetOk("release_bundle"); ok {
+		pTarget.ReleaseBundle = unpackPermission(v)
+	}
+
 	return pTarget
 }
 
@@ -305,6 +309,10 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 	}
 	if permissionTarget.Build != nil {
 		errors = setValue("build", packPermission(permissionTarget.Build))
+	}
+
+	if permissionTarget.ReleaseBundle != nil {
+		errors = setValue("release_bundle", packPermission(permissionTarget.ReleaseBundle))
 	}
 
 	if errors != nil && len(errors) > 0 {
