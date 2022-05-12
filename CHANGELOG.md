@@ -1,3 +1,9 @@
+## 6.7.1 (May 13, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_federated_*_repository: Fix attributes from corresponding local repository were not used. PR: [#458](https://github.com/jfrog/terraform-provider-artifactory/pull/458). Issue [#431](https://github.com/jfrog/terraform-provider-artifactory/issues/431)
+
 ## 6.7.0 (May 12, 2022). Tested on Artifactory 7.38.8
 
 IMPROVEMENTS:
