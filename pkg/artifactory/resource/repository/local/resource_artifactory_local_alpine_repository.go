@@ -6,14 +6,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var alpineLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
-	"primary_keypair_ref": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Description: "Used to sign index files in Alpine Linux repositories. " +
-			"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
+var alpineLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
+		"primary_keypair_ref": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Used to sign index files in Alpine Linux repositories. " +
+				"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
+		},
 	},
-}, repository.RepoLayoutRefSchema("local", "alpine"), repository.CompressionFormats)
+	repository.RepoLayoutRefSchema("local", "alpine"),
+	repository.CompressionFormats,
+)
 
 func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 

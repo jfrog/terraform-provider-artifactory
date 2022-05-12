@@ -6,14 +6,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var cargoLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
-	"anonymous_access": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: `Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.`,
+var cargoLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
+		"anonymous_access": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: `Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.`,
+		},
 	},
-}, repository.RepoLayoutRefSchema("local", "cargo"), repository.CompressionFormats)
+	repository.RepoLayoutRefSchema("local", "cargo"),
+	repository.CompressionFormats,
+)
 
 func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 

@@ -6,24 +6,29 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var debianLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
-	"primary_keypair_ref": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Used to sign index files in Debian artifacts. ",
+var debianLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
+		"primary_keypair_ref": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Used to sign index files in Debian artifacts. ",
+		},
+		"secondary_keypair_ref": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Used to sign index files in Debian artifacts. ",
+		},
+		"trivial_layout": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "When set, the repository will use the deprecated trivial layout.",
+			Deprecated:  "You shouldn't be using this",
+		},
 	},
-	"secondary_keypair_ref": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Used to sign index files in Debian artifacts. ",
-	},
-	"trivial_layout": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Description: "When set, the repository will use the deprecated trivial layout.",
-		Deprecated:  "You shouldn't be using this",
-	},
-}, repository.RepoLayoutRefSchema("local", "debian"), repository.CompressionFormats)
+	repository.RepoLayoutRefSchema("local", "debian"),
+	repository.CompressionFormats,
+)
 
 func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 
