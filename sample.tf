@@ -669,6 +669,7 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
 resource "artifactory_artifact_webhook" "artifact-webhook" {
   key         = "artifact-webhook"
   event_types = ["deployed", "deleted", "moved", "copied"]
+
   criteria {
     any_local        = true
     any_remote       = false
@@ -676,13 +677,16 @@ resource "artifactory_artifact_webhook" "artifact-webhook" {
     include_patterns = ["foo/**"]
     exclude_patterns = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 
   depends_on = [artifactory_local_maven_repository.maven-local]
@@ -691,6 +695,7 @@ resource "artifactory_artifact_webhook" "artifact-webhook" {
 resource "artifactory_artifact_property_webhook" "artifact-property-webhook" {
   key         = "artifact-prop-webhook"
   event_types = ["added", "deleted"]
+
   criteria {
     any_local        = true
     any_remote       = false
@@ -698,13 +703,16 @@ resource "artifactory_artifact_property_webhook" "artifact-property-webhook" {
     include_patterns = ["foo/**"]
     exclude_patterns = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 
   depends_on = [artifactory_local_maven_repository.maven-local]
@@ -713,6 +721,7 @@ resource "artifactory_artifact_property_webhook" "artifact-property-webhook" {
 resource "artifactory_docker_webhook" "docker-webhook" {
   key         = "docker-webhook"
   event_types = ["pushed", "deleted", "promoted"]
+
   criteria {
     any_local        = true
     any_remote       = false
@@ -720,13 +729,16 @@ resource "artifactory_docker_webhook" "docker-webhook" {
     include_patterns = ["foo/**"]
     exclude_patterns = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 
   depends_on = [artifactory_local_docker_v2_repository.docker-v2-local]
@@ -735,38 +747,46 @@ resource "artifactory_docker_webhook" "docker-webhook" {
 resource "artifactory_build_webhook" "build-webhook" {
   key         = "build-webhook"
   event_types = ["uploaded", "deleted", "promoted"]
+
   criteria {
     any_build        = false
     selected_builds  = ["build-id"]
     include_patterns = ["foo/**"]
     exclude_patterns = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 }
 
 resource "artifactory_release_bundle_webhook" "release-bundle-webhook" {
   key         = "release-bundle-webhook"
   event_types = ["created", "signed", "deleted"]
+
   criteria {
     any_release_bundle              = false
     registered_release_bundle_names = ["release-bundle-name"]
     include_patterns                = ["foo/**"]
     exclude_patterns                = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 }
 
@@ -780,37 +800,45 @@ resource "artifactory_distribution_webhook" "release-distribution-webhook" {
     "delete_completed",
     "delete_failed"
   ]
+
   criteria {
     any_release_bundle              = false
     registered_release_bundle_names = ["release-bundle-name"]
     include_patterns                = ["foo/**"]
     exclude_patterns                = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 }
 
 resource "artifactory_artifactory_release_bundle_webhook" "release-distribution-webhook" {
   key         = "artifactory-release-bundle-webhook"
   event_types = ["received", "delete_started", "delete_completed", "delete_failed"]
+
   criteria {
     any_release_bundle              = false
     registered_release_bundle_names = ["release-bundle-name"]
     include_patterns                = ["foo/**"]
     exclude_patterns                = ["bar/**"]
   }
-  url    = "http://tempurl.org/webhook"
-  secret = "some-secret"
-  proxy  = "proxy-key"
 
-  custom_http_headers = {
-    header-1 = "value-1"
-    header-2 = "value-2"
+  handler {
+    url    = "http://tempurl.org/webhook"
+    secret = "some-secret"
+    proxy  = "proxy-key"
+
+    custom_http_headers = {
+      header-1 = "value-1"
+      header-2 = "value-2"
+    }
   }
 }

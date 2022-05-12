@@ -15,8 +15,8 @@ type ReleaseBundleWebhookCriteria struct {
 	RegisteredReleaseBundlesNames []string `json:"registeredReleaseBundlesNames"`
 }
 
-var releaseBundleWebhookSchema = func(webhookType string) map[string]*schema.Schema {
-	return util.MergeSchema(baseWebhookBaseSchema(webhookType), map[string]*schema.Schema{
+var releaseBundleWebhookSchema = func(webhookType string, version int) map[string]*schema.Schema {
+	return util.MergeSchema(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,

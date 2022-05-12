@@ -1,7 +1,9 @@
 package webhook_test
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -40,7 +42,9 @@ var repoTemplate = `
 			any_remote = false
 			repo_keys = []
 		}
-		url    = "http://tempurl.org"
+		handler {
+			url = "http://tempurl.org"
+		}
 	}
 `
 
@@ -53,7 +57,9 @@ var buildTemplate = `
 			any_build = false
 			selected_builds = []
 		}
-		url    = "http://tempurl.org"
+		handler {
+			url = "http://tempurl.org"
+		}
 	}
 `
 
@@ -66,7 +72,9 @@ var releaseBundleTemplate = `
 			any_release_bundle = false
 			registered_release_bundle_names = []
 		}
-		url    = "http://tempurl.org"
+		handler {
+			url = "http://tempurl.org"
+		}
 	}
 `
 
@@ -131,11 +139,13 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 			description = "test description"
 			event_types = ["{{ .eventType }}"]
 			criteria {
-				any_local = true
+				any_local  = true
 				any_remote = true
-				repo_keys = []
+				repo_keys  = []
 			}
-			url    = "http://tempurl.org"
+			handler {
+				url = "http://tempurl.org"
+			}
 		}
 	`, params)
 
@@ -148,6 +158,84 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 			{
 				Config:      webhookConfig,
 				ExpectError: regexp.MustCompile(fmt.Sprintf("event_type %s not supported for domain artifact", wrongEventType)),
+			},
+		},
+	})
+}
+
+func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := acctest.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["deployed"]
+			criteria {
+				any_local  = true
+				any_remote = true
+				repo_keys  = []
+			}
+			handler {
+				url   = "http://tempurl.org"
+				proxy = ""
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config:      webhookConfig,
+				ExpectError: regexp.MustCompile(`expected "proxy" to not be an empty string`),
+			},
+		},
+	})
+}
+
+func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := acctest.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["deployed"]
+			criteria {
+				any_local  = true
+				any_remote = true
+				repo_keys  = []
+			}
+			handler {
+				url   = "http://tempurl.org"
+				proxy = "http://tempurl.org"
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config:      webhookConfig,
+				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got http://tempurl.org`),
 			},
 		},
 	})
@@ -197,12 +285,21 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				include_patterns = ["foo/**"]
 				exclude_patterns = ["bar/**"]
 			}
-			url    = "http://tempurl.org"
-			secret = "fake-secret"
-
-			custom_http_headers = {
-				header-1 = "value-1"
-				header-2 = "value-2"
+			handler {
+				url                 = "http://tempurl.org"
+				secret              = "fake-secret"
+				custom_http_headers = {
+					header-1 = "value-1"
+					header-2 = "value-2"
+				}
+			}
+			handler {
+				url                 = "http://tempurl.org"
+				secret              = "fake-secret-2"
+				custom_http_headers = {
+					header-3 = "value-3"
+					header-4 = "value-4"
+				}
 			}
 
 			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
@@ -212,8 +309,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	testChecks := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr(fqrn, "key", name),
 		resource.TestCheckResourceAttr(fqrn, "event_types.#", fmt.Sprintf("%d", len(eventTypes))),
-		resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
-		resource.TestCheckResourceAttr(fqrn, "secret", "fake-secret"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_local", fmt.Sprintf("%t", params["anyLocal"])),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_remote", fmt.Sprintf("%t", params["anyRemote"])),
@@ -222,9 +317,17 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo/**"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.%", "2"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.header-1", "value-1"),
-		resource.TestCheckResourceAttr(fqrn, "custom_http_headers.header-2", "value-2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "http://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "http://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", "fake-secret-2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.%", "2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-3", "value-3"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-4", "value-4"),
 	}
 
 	for _, eventType := range eventTypes {
@@ -251,4 +354,40 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 		SetPathParam("webhookKey", id).
 		AddRetryCondition(client.NeverRetry).
 		Get(webhook.WebhookUrl)
+}
+
+// Unit tests for state migration func
+func TestWebhookResourceStateUpgradeV1(t *testing.T) {
+	v1Data := map[string]interface{} {
+		"url": "http://tempurl.org",
+		"secret": "fake-secret",
+		"proxy": "fake-proxy-key",
+		"custom_http_headers": map[string]interface{} {
+			"header-1": "fake-value-1",
+			"header-2": "fake-value-2",
+		},
+	}
+	v2Data := map[string]interface{} {
+		"handler": []map[string]interface{}{
+			{
+				"url": "http://tempurl.org",
+				"secret": "fake-secret",
+				"proxy": "fake-proxy-key",
+				"custom_http_headers": map[string]interface{} {
+					"header-1": "fake-value-1",
+					"header-2": "fake-value-2",
+				},
+			},
+		},
+	}
+
+	actual, err := webhook.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
+
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(v2Data, actual) {
+		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
+	}
 }

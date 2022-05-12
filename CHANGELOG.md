@@ -1,3 +1,15 @@
+## 6.7.0 (May 12, 2022). Tested on Artifactory 7.38.8
+
+IMPROVEMENTS:
+
+* resource/artifactory_*_webhook: Add support for multiple outlets (handlers) of the webhook. Existing attributes (`url`, `secret`, `proxy`, and `custom_http_headers`) will be automatically migrated to be the first handler.
+
+To migrate to new webhook schema with multiple handlers:
+- Update your HCL and copy the attributes (`url`, `secret`, `proxy`, and `custom_http_headers`) into a `handler` block (See `sample.tf` for full examples)
+- Execute `terraform apply -refresh-only` to update the Terraform state
+
+PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
+
 ## 6.6.2 (May 11, 2022). Tested on Artifactory 7.38.8
 
 BUG FIXES:
