@@ -10,6 +10,10 @@ To migrate to new webhook schema with multiple handlers:
 
 PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
 
+BUG FIXES:
+
+* resource/artifactory_permission_target: Fix not working `release_bundle` attribute PR: [#454](https://github.com/jfrog/terraform-provider-artifactory/pull/454). Issue [#449](https://github.com/jfrog/terraform-provider-artifactory/issues/449)
+
 ## 6.6.2 (May 11, 2022). Tested on Artifactory 7.38.8
 
 BUG FIXES:
