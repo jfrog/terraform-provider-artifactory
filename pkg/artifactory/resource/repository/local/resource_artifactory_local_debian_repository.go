@@ -6,27 +6,26 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
-	const packageType = "debian"
+var debianLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	"primary_keypair_ref": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Used to sign index files in Debian artifacts. ",
+	},
+	"secondary_keypair_ref": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Used to sign index files in Debian artifacts. ",
+	},
+	"trivial_layout": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "When set, the repository will use the deprecated trivial layout.",
+		Deprecated:  "You shouldn't be using this",
+	},
+}, repository.RepoLayoutRefSchema("local", "debian"), repository.CompressionFormats)
 
-	var debianLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Used to sign index files in Debian artifacts. ",
-		},
-		"secondary_keypair_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Used to sign index files in Debian artifacts. ",
-		},
-		"trivial_layout": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "When set, the repository will use the deprecated trivial layout.",
-			Deprecated:  "You shouldn't be using this",
-		},
-	}, repository.RepoLayoutRefSchema("local", packageType), repository.CompressionFormats)
+func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 
 	type DebianLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
@@ -39,7 +38,7 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DebianLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "debian"),
 			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
 			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
 			TrivialLayout:             d.GetBool("trivial_layout", false),
@@ -51,7 +50,7 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 	return repository.MkResourceSchema(debianLocalSchema, repository.DefaultPacker(debianLocalSchema), unPackLocalDebianRepository, func() interface{} {
 		return &DebianLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "debian",
 				Rclass:      "local",
 			},
 		}

@@ -6,17 +6,16 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
-	const packageType = "cargo"
+var cargoLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+	"anonymous_access": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: `Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.`,
+	},
+}, repository.RepoLayoutRefSchema("local", "cargo"), repository.CompressionFormats)
 
-	var cargoLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
-		"anonymous_access": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: `Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.`,
-		},
-	}, repository.RepoLayoutRefSchema("local", packageType), repository.CompressionFormats)
+func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	type CargoLocalRepo struct {
 		LocalRepositoryBaseParams
@@ -26,7 +25,7 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
 			AnonymousAccess:           d.GetBool("anonymous_access", false),
 		}
 
@@ -36,7 +35,7 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 	return repository.MkResourceSchema(cargoLocalSchema, repository.DefaultPacker(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
 		return &CargoLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "cargo",
 				Rclass:      "local",
 			},
 		}

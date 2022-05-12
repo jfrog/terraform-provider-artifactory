@@ -7,9 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-
-	var javaLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
+	return util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
 		"checksum_policy_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -61,6 +60,9 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 				"behavior by setting the Suppress POM Consistency Checks checkbox.",
 		},
 	}, repository.RepoLayoutRefSchema("local", repoType))
+}
+
+func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 	type JavaLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
 		ChecksumPolicyType           string `hcl:"checksum_policy_type" json:"checksumPolicyType"`
@@ -85,6 +87,9 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 
 		return repo, repo.Id(), nil
 	}
+
+	javaLocalSchema := getJavaRepoSchema(repoType, suppressPom)
+
 	return repository.MkResourceSchema(javaLocalSchema, repository.DefaultPacker(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
 		return &JavaLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
