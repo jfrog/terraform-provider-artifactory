@@ -1,3 +1,15 @@
+## 6.6.2 (May 11, 2022). Tested on Artifactory 7.38.8
+
+BUG FIXES:
+
+* provider: Fix license checking only works with 'Enterprise' license type. PR: [#456](https://github.com/jfrog/terraform-provider-artifactory/pull/456). Issue [#455](https://github.com/jfrog/terraform-provider-artifactory/issues/455)
+
+## 6.6.1 (May 5, 2022). Tested on Artifactory 7.37.16
+
+BUG FIXES:
+
+* resource/artifactory_federated_*_repository: Use correct 'base' schema from local repository. PR: [#443](https://github.com/jfrog/terraform-provider-artifactory/pull/443). Issue [#431](https://github.com/jfrog/terraform-provider-artifactory/issues/431)
+
 ## 6.6.0 (Apr 29, 2022). Tested on Artifactory 7.37.15
 
 IMPROVEMENTS:
@@ -32,7 +44,7 @@ IMPROVEMENTS:
 * Resources added for Pub package type of Virtual Repository
 * Acceptance test case enhanced with Client TLS Certificate
 
-[GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
+PR: [GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
 
 ## 6.4.1 (Apr 18, 2022). Tested on Artifactory 7.37.14
 
