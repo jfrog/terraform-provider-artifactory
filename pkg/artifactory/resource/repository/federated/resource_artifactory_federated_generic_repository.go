@@ -11,8 +11,9 @@ import (
 )
 
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
+	localRepoSchema := local.GetSchemaByRepoType(repoType)
 
-	var federatedSchema = util.MergeSchema(local.BaseLocalRepoSchema, map[string]*schema.Schema{
+	var federatedSchema = util.MergeSchema(localRepoSchema, map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
 			Required: true,

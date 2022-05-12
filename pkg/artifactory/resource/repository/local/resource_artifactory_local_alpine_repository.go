@@ -6,17 +6,21 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
-	const packageType = "alpine"
-
-	var alpineLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var alpineLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"primary_keypair_ref": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
 			Description: "Used to sign index files in Alpine Linux repositories. " +
 				"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType), repository.CompressionFormats)
+	},
+	repository.RepoLayoutRefSchema("local", "alpine"),
+	repository.CompressionFormats,
+)
+
+func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 
 	type AlpineLocalRepo struct {
 		LocalRepositoryBaseParams
@@ -26,7 +30,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	var unPackLocalAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := AlpineLocalRepo{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "alpine"),
 			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
 		}
 
@@ -36,7 +40,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	return repository.MkResourceSchema(alpineLocalSchema, repository.DefaultPacker(alpineLocalSchema), unPackLocalAlpineRepository, func() interface{} {
 		return &AlpineLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "alpine",
 				Rclass:      "local",
 			},
 		}

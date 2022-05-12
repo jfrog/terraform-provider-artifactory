@@ -19,4 +19,4 @@ export ARTIFACTORY_UI_URL=http://localhost:8082
 waitForArtifactory "${ARTIFACTORY_URL}" "${ARTIFACTORY_UI_URL}"
 
 # With this trick you can do $(./run-artifactory-container.sh) and it will directly be setup for you without the terminal output
-echo "export JFROG_ACCESS_KEY=$(getAccessKey "${ARTIFACTORY_UI_URL}")"
+echo "export JFROG_ACCESS_TOKEN=$(getAccessKey "${ARTIFACTORY_UI_URL}")"

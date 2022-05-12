@@ -6,17 +6,24 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalGenericRepository(pkt string) *schema.Resource {
+func getGenericRepoSchema(repoType string) map[string]*schema.Schema {
+	return util.MergeSchema(BaseLocalRepoSchema, repository.RepoLayoutRefSchema("local", repoType))
+}
+
+func ResourceArtifactoryLocalGenericRepository(repoType string) *schema.Resource {
 	constructor := func() interface{} {
 		return &LocalRepositoryBaseParams{
-			PackageType: pkt,
+			PackageType: repoType,
 			Rclass:      "local",
 		}
 	}
+
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackBaseRepo("local", data, pkt)
+		repo := UnpackBaseRepo("local", data, repoType)
 		return repo, repo.Id(), nil
 	}
-	mergedLocalRepoSchema := util.MergeSchema(BaseLocalRepoSchema, repository.RepoLayoutRefSchema("local", pkt))
-	return repository.MkResourceSchema(mergedLocalRepoSchema, repository.DefaultPacker(mergedLocalRepoSchema), unpack, constructor)
+
+	genericRepoSchema := getGenericRepoSchema(repoType)
+
+	return repository.MkResourceSchema(genericRepoSchema, repository.DefaultPacker(genericRepoSchema), unpack, constructor)
 }

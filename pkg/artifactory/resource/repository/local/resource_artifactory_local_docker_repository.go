@@ -7,15 +7,13 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-
-	const packageType = "docker"
-
-	var dockerV2LocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var dockerV2LocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"max_unique_tags": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
 			Description: "The maximum number of unique tags of a single Docker image to store in this repository.\n" +
 				"Once the number tags for an image exceeds this setting, older tags are removed. A value of 0 (default) indicates there is no limit.\n" +
 				"This only applies to manifest v2",
@@ -39,14 +37,17 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 			Computed:    true,
 			Description: "The Docker API version to use. This cannot be set",
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType))
+	},
+	repository.RepoLayoutRefSchema("local", "docker"),
+)
 
+func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	packer := repository.DefaultPacker(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
 			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
 			DockerApiVersion:          "V2",
 			TagRetention:              d.GetInt("tag_retention", false),
@@ -59,7 +60,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	return repository.MkResourceSchema(dockerV2LocalSchema, packer, unPackLocalDockerV2Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "docker",
 				Rclass:      "local",
 			},
 			DockerApiVersion:    "V2",
@@ -70,11 +71,9 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	})
 }
 
-func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
-
-	const packageType = "docker"
-
-	var dockerV1LocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var dockerV1LocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -92,14 +91,18 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType))
+	},
+	repository.RepoLayoutRefSchema("local", "docker"),
+)
+
+func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	// this is necessary because of the pointers
 	skeema := util.MergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
 			MaxUniqueTags:             0,
 			DockerApiVersion:          "V1",
 			TagRetention:              1,
@@ -112,7 +115,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	return repository.MkResourceSchema(skeema, repository.DefaultPacker(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "docker",
 				Rclass:      "local",
 			},
 			DockerApiVersion:    "V1",
