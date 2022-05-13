@@ -1,3 +1,11 @@
+## 6.7.2 (May 13, 2022). Tested on Artifactory 7.38.8
+
+IMPROVEMENTS:
+
+* resource/artifactory_pull_replication.go and resource/artifactory_push_replication.go: Add new attribute `check_binary_existence_in_filestore`.
+  PR: [#459](https://github.com/jfrog/terraform-provider-artifactory/pull/459).
+  Issue [#434](https://github.com/jfrog/terraform-provider-artifactory/issues/434)
+
 ## 6.7.1 (May 13, 2022). Tested on Artifactory 7.38.8
 
 BUG FIXES:
