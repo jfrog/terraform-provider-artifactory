@@ -71,23 +71,31 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 
 func TestAccReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	const replicationConfigTemplate = `
-		resource "artifactory_local_maven_repository" "lib-local" {
-			key = "lib-local"
+	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_replication_config")
+	params := map[string]interface{}{
+		"url":       acctest.GetArtifactoryUrl(t),
+		"username":  acctest.RtDefaultUser,
+		"proxy":     testProxy,
+		"repo_name": name,
+	}
+	replicationUpdateConfig := acctest.ExecuteTemplate("ReplicationConfigTemplate", `
+		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
 		}
 
-		resource "artifactory_replication_config" "lib-local" {
-			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
+		resource "artifactory_replication_config" "{{ .repo_name }}" {
+			repo_key = "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
 			replications {
-				url = "%s"
-				username = "%s"
-				proxy = "%s"
+				url = "{{ .url }}"
+				username = "{{ .username }}"
+				proxy = "{{ .proxy }}"
+				check_binary_existence_in_filestore = true
 			}
 		}
-	`
+	`, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -97,24 +105,20 @@ func TestAccReplication_full(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func() func(*terraform.State) error {
 			acctest.DeleteProxy(t, testProxy)
-			return testAccCheckReplicationDestroy("artifactory_replication_config.lib-local")
+			return testAccCheckReplicationDestroy(fqrn)
 		}(),
 
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(
-					replicationConfigTemplate,
-					acctest.GetArtifactoryUrl(t),
-					acctest.RtDefaultUser,
-					testProxy,
-				),
+				Config: replicationUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "repo_key", "lib-local"),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "cron_exp", "0 0 * * * ?"),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.username", acctest.RtDefaultUser),
-					resource.TestCheckResourceAttr("artifactory_replication_config.lib-local", "replications.0.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "replications.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "replications.0.username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "replications.0.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "replications.0.check_binary_existence_in_filestore", "true"),
 				),
 			},
 		},
