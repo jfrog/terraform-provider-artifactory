@@ -8,19 +8,18 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
-	const packageType = "rpm"
-
-	var rpmLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var rpmLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
 			Optional:         true,
 			Default:          0,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-			Description: "The depth, relative to the repository's root folder, where RPM metadata is created. " +
+			Description:      "The depth, relative to the repository's root folder, where RPM metadata is created. " +
 				"This is useful when your repository contains multiple RPM repositories under parallel hierarchies. " +
 				"For example, if your RPMs are stored under 'fedora/linux/$releasever/$basearch', specify a depth of 4.",
-		},
+			},
 		"calculate_yum_metadata": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -36,7 +35,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			Optional:         true,
 			Default:          "",
 			ValidateDiagFunc: validator.CommaSeperatedList,
-			Description: "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
+			Description:      "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
 		},
@@ -52,7 +51,11 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      "Secondary keypair used to sign artifacts.",
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType))
+	},
+	repository.RepoLayoutRefSchema("local", "rpm"),
+)
+
+func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 
 	type RpmLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
@@ -82,7 +85,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	return repository.MkResourceSchema(rpmLocalSchema, repository.DefaultPacker(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "rpm",
 				Rclass:      "local",
 			},
 			RootDepth:               0,
