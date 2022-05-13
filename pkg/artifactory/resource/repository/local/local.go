@@ -163,3 +163,26 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		PriorityResolution:     d.GetBool("priority_resolution", false),
 	}
 }
+
+var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
+	"alpine": alpineLocalSchema,
+	"cargo":  cargoLocalSchema,
+	"debian": debianLocalSchema,
+	"docker": dockerV2LocalSchema,
+	"gradle": getJavaRepoSchema("gradle", true),
+	"ivy":    getJavaRepoSchema("ivy", false),
+	"maven":  getJavaRepoSchema("maven", false),
+	"nuget":  nugetLocalSchema,
+	"rpm":    rpmLocalSchema,
+	"sbt":    getJavaRepoSchema("sbt", false),
+}
+
+func init() {
+	for _, repoType := range RepoTypesLikeGeneric {
+		schemaRepoTypeLookup[repoType] = getGenericRepoSchema(repoType)
+	}
+}
+
+func GetSchemaByRepoType(repoType string) map[string]*schema.Schema {
+	return schemaRepoTypeLookup[repoType]
+}

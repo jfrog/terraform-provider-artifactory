@@ -6,11 +6,9 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
-
-	const packageType = "nuget"
-
-	var nugetLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var nugetLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -25,7 +23,11 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 			Default:     false,
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType))
+	},
+	repository.RepoLayoutRefSchema("local", "nuget"),
+)
+
+func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	type NugetLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
@@ -36,7 +38,7 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, packageType),
+			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "nuget"),
 			MaxUniqueSnapshots:        d.GetInt("max_unique_snapshots", false),
 			ForceNugetAuthentication:  d.GetBool("force_nuget_authentication", false),
 		}
@@ -47,7 +49,7 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	return repository.MkResourceSchema(nugetLocalSchema, repository.DefaultPacker(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "nuget",
 				Rclass:      "local",
 			},
 			MaxUniqueSnapshots:       0,

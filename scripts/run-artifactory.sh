@@ -42,4 +42,4 @@ echo "Circle-of-Trust is setup between artifactory-1 and artifactory-2 instances
 
 echo "Generate Admin Access Keys for both instances"
 
-echo "export JFROG_ACCESS_KEY=$(getAccessKey "${ARTIFACTORY_UI_URL_1}")"
+echo "export JFROG_ACCESS_TOKEN=$(getAccessKey "${ARTIFACTORY_UI_URL_1}")"

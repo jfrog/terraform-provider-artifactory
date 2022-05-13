@@ -8,10 +8,9 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
-	const packageType = "rpm"
-
-	var rpmLocalSchema = util.MergeSchema(BaseLocalRepoSchema, map[string]*schema.Schema{
+var rpmLocalSchema = util.MergeSchema(
+	BaseLocalRepoSchema,
+	map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
 			Optional:         true,
@@ -52,7 +51,11 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 			Description:      "Secondary keypair used to sign artifacts.",
 		},
-	}, repository.RepoLayoutRefSchema("local", packageType))
+	},
+	repository.RepoLayoutRefSchema("local", "rpm"),
+)
+
+func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 
 	type RpmLocalRepositoryParams struct {
 		LocalRepositoryBaseParams
@@ -82,7 +85,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	return repository.MkResourceSchema(rpmLocalSchema, repository.DefaultPacker(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: "rpm",
 				Rclass:      "local",
 			},
 			RootDepth:               0,
