@@ -150,7 +150,7 @@ func Provider() *schema.Provider {
 			},
 		},
 
-		ResourcesMap: 	util.AddTelemetry(productId, resourceMap),
+		ResourcesMap: util.AddTelemetry(productId, resourceMap),
 
 		DataSourcesMap: util.AddTelemetry(
 			productId,

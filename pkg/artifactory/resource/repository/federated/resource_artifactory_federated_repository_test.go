@@ -533,11 +533,11 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
-		"block":      test.RandBool(),
-		"retention":  test.RandSelect(1, 5, 10),
-		"max_tags":   test.RandSelect(0, 5, 10),
-		"name":       name,
-		"memberUrl":  federatedMemberUrl,
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
 	}
 	federatedRepositoryBasic := acctest.ExecuteTemplate("TestAccFederatedDockerRepository", `
 		resource "artifactory_federated_docker_repository" "{{ .name }}" {
@@ -601,7 +601,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),

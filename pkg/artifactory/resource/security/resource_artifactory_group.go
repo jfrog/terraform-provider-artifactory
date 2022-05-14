@@ -34,6 +34,7 @@ type Group struct {
 func (g Group) Id() string {
 	return g.Name
 }
+
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
 var groupSchema = map[string]*schema.Schema{

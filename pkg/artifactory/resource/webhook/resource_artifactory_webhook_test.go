@@ -358,22 +358,22 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 
 // Unit tests for state migration func
 func TestWebhookResourceStateUpgradeV1(t *testing.T) {
-	v1Data := map[string]interface{} {
-		"url": "http://tempurl.org",
+	v1Data := map[string]interface{}{
+		"url":    "http://tempurl.org",
 		"secret": "fake-secret",
-		"proxy": "fake-proxy-key",
-		"custom_http_headers": map[string]interface{} {
+		"proxy":  "fake-proxy-key",
+		"custom_http_headers": map[string]interface{}{
 			"header-1": "fake-value-1",
 			"header-2": "fake-value-2",
 		},
 	}
-	v2Data := map[string]interface{} {
+	v2Data := map[string]interface{}{
 		"handler": []map[string]interface{}{
 			{
-				"url": "http://tempurl.org",
+				"url":    "http://tempurl.org",
 				"secret": "fake-secret",
-				"proxy": "fake-proxy-key",
-				"custom_http_headers": map[string]interface{} {
+				"proxy":  "fake-proxy-key",
+				"custom_http_headers": map[string]interface{}{
 					"header-1": "fake-value-1",
 					"header-2": "fake-value-2",
 				},

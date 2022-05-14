@@ -16,10 +16,10 @@ var rpmLocalSchema = util.MergeSchema(
 			Optional:         true,
 			Default:          0,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-			Description:      "The depth, relative to the repository's root folder, where RPM metadata is created. " +
+			Description: "The depth, relative to the repository's root folder, where RPM metadata is created. " +
 				"This is useful when your repository contains multiple RPM repositories under parallel hierarchies. " +
 				"For example, if your RPMs are stored under 'fedora/linux/$releasever/$basearch', specify a depth of 4.",
-			},
+		},
 		"calculate_yum_metadata": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -35,7 +35,7 @@ var rpmLocalSchema = util.MergeSchema(
 			Optional:         true,
 			Default:          "",
 			ValidateDiagFunc: validator.CommaSeperatedList,
-			Description:      "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
+			Description: "A comma separated list of XML file names containing RPM group component definitions. Artifactory includes " +
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
 		},

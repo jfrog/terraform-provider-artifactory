@@ -130,7 +130,7 @@ func TestAccGroup_full(t *testing.T) {
 				fmt.Sprint(step),
 				template,
 				map[string]string{
-					"groupName": groupName,
+					"groupName":  groupName,
 					"externalId": externalId,
 				},
 			),

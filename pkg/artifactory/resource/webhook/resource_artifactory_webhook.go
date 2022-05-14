@@ -26,13 +26,13 @@ var WebhookTypesSupported = []string{
 }
 
 var DomainEventTypesSupported = map[string][]string{
-	"artifact":                   []string{"deployed", "deleted", "moved", "copied", "cached"},
-	"artifact_property":          []string{"added", "deleted"},
-	"docker":                     []string{"pushed", "deleted", "promoted"},
-	"build":                      []string{"uploaded", "deleted", "promoted"},
-	"release_bundle":             []string{"created", "signed", "deleted"},
-	"distribution":               []string{"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
-	"artifactory_release_bundle": []string{"received", "delete_started", "delete_completed", "delete_failed"},
+	"artifact":                   {"deployed", "deleted", "moved", "copied", "cached"},
+	"artifact_property":          {"added", "deleted"},
+	"docker":                     {"pushed", "deleted", "promoted"},
+	"build":                      {"uploaded", "deleted", "promoted"},
+	"release_bundle":             {"created", "signed", "deleted"},
+	"distribution":               {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
 }
 
 type WebhookBaseParams struct {
@@ -221,9 +221,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
-				"url": handler.Url,
-				"secret": handler.Secret,
-				"proxy": handler.Proxy,
+				"url":                 handler.Url,
+				"secret":              handler.Secret,
+				"proxy":               handler.Proxy,
 				"custom_http_headers": packCustomHeaders(handler.CustomHttpHeaders),
 			}
 			packedHandlers = append(packedHandlers, packedHandler)
@@ -389,7 +389,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:         domainSchemaLookup(currentSchemaVersion)[webhookType],
+		Schema: domainSchemaLookup(currentSchemaVersion)[webhookType],
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceSchemaV1.CoreConfigSchema().ImpliedType(),
@@ -402,7 +402,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			eventTypesDiff,
 			criteriaDiff,
 		),
-		Description:   "Provides an Artifactory webhook resource",
+		Description: "Provides an Artifactory webhook resource",
 	}
 }
 
@@ -411,9 +411,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	rawState["handler"] = []map[string]interface{}{
 		{
-			"url": rawState["url"],
-			"secret": rawState["secret"],
-			"proxy": rawState["proxy"],
+			"url":                 rawState["url"],
+			"secret":              rawState["secret"],
+			"proxy":               rawState["proxy"],
 			"custom_http_headers": rawState["custom_http_headers"],
 		},
 	}
