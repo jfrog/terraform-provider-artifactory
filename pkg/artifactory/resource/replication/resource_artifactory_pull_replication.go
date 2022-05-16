@@ -71,6 +71,13 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
+	"check_binary_existence_in_filestore": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		Description: "When true, enables distributed checksum storage. For more information, see " +
+			"[Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).",
+	},
 }
 
 func ResourceArtifactoryPullReplication() *schema.Resource {
@@ -104,6 +111,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 	replicationConfig.SyncProperties = d.GetBool("sync_properties", false)
 	replicationConfig.SyncStatistics = d.GetBool("sync_statistics", false)
 	replicationConfig.PathPrefix = d.GetString("path_prefix", false)
+	replicationConfig.CheckBinaryExistenceInFilestore = d.GetBool("check_binary_existence_in_filestore", false)
 
 	return replicationConfig
 }
@@ -118,6 +126,7 @@ func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Di
 	setValue("enabled", config.Enabled)
 	setValue("sync_deletes", config.SyncDeletes)
 	setValue("sync_properties", config.SyncProperties)
+	setValue("check_binary_existence_in_filestore", config.CheckBinaryExistenceInFilestore)
 
 	errors := setValue("path_prefix", config.PathPrefix)
 
@@ -145,17 +154,18 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 
 // PullReplication this is the structure for a PULL replication on a remote repo
 type PullReplication struct {
-	Enabled                bool   `json:"enabled"`
-	CronExp                string `json:"cronExp"`
-	SyncDeletes            bool   `json:"syncDeletes"`
-	SyncProperties         bool   `json:"syncProperties"`
-	PathPrefix             string `json:"pathPrefix"`
-	RepoKey                string `json:"repoKey"`
-	ReplicationKey         string `json:"replicationKey"`
-	EnableEventReplication bool   `json:"enableEventReplication"`
-	Username               string `json:"username"`
-	Password               string `json:"password"`
-	URL                    string `json:"url"`
+	Enabled                         bool   `json:"enabled"`
+	CronExp                         string `json:"cronExp"`
+	SyncDeletes                     bool   `json:"syncDeletes"`
+	SyncProperties                  bool   `json:"syncProperties"`
+	PathPrefix                      string `json:"pathPrefix"`
+	RepoKey                         string `json:"repoKey"`
+	ReplicationKey                  string `json:"replicationKey"`
+	EnableEventReplication          bool   `json:"enableEventReplication"`
+	Username                        string `json:"username"`
+	Password                        string `json:"password"`
+	URL                             string `json:"url"`
+	CheckBinaryExistenceInFilestore bool   `json:"checkBinaryExistenceInFilestore"`
 }
 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

@@ -16,18 +16,19 @@ import (
 )
 
 type ReplicationBody struct {
-	Username               string `json:"username"`
-	Password               string `json:"password"`
-	URL                    string `json:"url"`
-	CronExp                string `json:"cronExp"`
-	RepoKey                string `json:"repoKey"`
-	EnableEventReplication bool   `json:"enableEventReplication"`
-	SocketTimeoutMillis    int    `json:"socketTimeoutMillis"`
-	Enabled                bool   `json:"enabled"`
-	SyncDeletes            bool   `json:"syncDeletes"`
-	SyncProperties         bool   `json:"syncProperties"`
-	SyncStatistics         bool   `json:"syncStatistics"`
-	PathPrefix             string `json:"pathPrefix"`
+	Username                        string `json:"username"`
+	Password                        string `json:"password"`
+	URL                             string `json:"url"`
+	CronExp                         string `json:"cronExp"`
+	RepoKey                         string `json:"repoKey"`
+	EnableEventReplication          bool   `json:"enableEventReplication"`
+	SocketTimeoutMillis             int    `json:"socketTimeoutMillis"`
+	Enabled                         bool   `json:"enabled"`
+	SyncDeletes                     bool   `json:"syncDeletes"`
+	SyncProperties                  bool   `json:"syncProperties"`
+	SyncStatistics                  bool   `json:"syncStatistics"`
+	PathPrefix                      string `json:"pathPrefix"`
+	CheckBinaryExistenceInFilestore bool   `json:"checkBinaryExistenceInFilestore"`
 }
 
 type getReplicationBody struct {
@@ -136,6 +137,12 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Proxy key from Artifactory Proxies setting",
 	},
+	"check_binary_existence_in_filestore": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Description: "When true, enables distributed checksum storage. For more information, see " +
+			"[Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).",
+	},
 }
 
 func ResourceArtifactoryPushReplication() *schema.Resource {
@@ -219,6 +226,10 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 				replication.Password = pass.(string)
 			}
 
+			if v, ok = m["check_binary_existence_in_filestore"]; ok {
+				replication.CheckBinaryExistenceInFilestore = v.(bool)
+			}
+
 			pushReplication.Replications = append(pushReplication.Replications, replication)
 		}
 	}
@@ -266,6 +277,7 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 			replication["sync_statistics"] = repl.SyncStatistics
 			replication["path_prefix"] = repl.PathPrefix
 			replication["proxy"] = repl.ProxyRef
+			replication["check_binary_existence_in_filestore"] = repl.CheckBinaryExistenceInFilestore
 			replications = append(replications, replication)
 		}
 

@@ -3,6 +3,8 @@ subcategory: "Replication"
 ---
 # Artifactory Single Replication Config Resource
 
+Note: this resource is deprecated in favor of `artifactory_pull_replication` resource.
+
 Provides an Artifactory single replication config resource. This can be used to create and manage a single Artifactory
 replication. Primarily used when pull replication is needed.
 

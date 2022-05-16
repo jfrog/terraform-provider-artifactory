@@ -254,7 +254,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 	// Therefore, Artifactory will expire the token automatically
 	endDateRelative := d.Get("end_date_relative").(string)
 	if endDateRelative == "" {
-		tflog.Debug(ctx, "Token is not revoked. It will expire at " + d.Get("end_date").(string))
+		tflog.Debug(ctx, "Token is not revoked. It will expire at "+d.Get("end_date").(string))
 		return nil
 	}
 
@@ -292,7 +292,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	// If the duration is set, Artifactory will automatically revoke the token.
-	tflog.Debug(ctx, "Token is not revoked. It will expire at " + d.Get("end_date").(string))
+	tflog.Debug(ctx, "Token is not revoked. It will expire at "+d.Get("end_date").(string))
 
 	return nil
 }

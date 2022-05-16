@@ -15,11 +15,11 @@ import (
 
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
 const (
-	PermRead      = "read"
+	PermRead     = "read"
 	PermWrite    = "write"
 	PermAnnotate = "annotate"
-	PermDelete = "delete"
-	PermManage = "manage"
+	PermDelete   = "delete"
+	PermManage   = "manage"
 )
 
 // PermissionTargetParams Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116

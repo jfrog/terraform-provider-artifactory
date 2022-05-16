@@ -164,7 +164,7 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 	}
 }
 
-var schemaRepoTypeLookup = map[string]map[string]*schema.Schema {
+var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
 	"alpine": alpineLocalSchema,
 	"cargo":  cargoLocalSchema,
 	"debian": debianLocalSchema,

@@ -22,6 +22,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 			url = "%s"
 			username = "%s"
 			password = "Passw0rd!"
+			check_binary_existence_in_filestore = true
 		}
 	`
 	return fmt.Sprintf(tcl,
@@ -71,6 +72,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
 				),
 			},
 			{
@@ -81,6 +83,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
 				),
 			},
 		},
@@ -127,6 +130,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "false"),
 					resource.TestCheckResourceAttr(fqrn, "sync_properties", "false"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "false"),
 				),
 			},
 		},
