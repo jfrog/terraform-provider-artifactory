@@ -92,7 +92,6 @@ func TestAccReplication_full(t *testing.T) {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
 				proxy = "{{ .proxy }}"
-				check_binary_existence_in_filestore = true
 			}
 		}
 	`, params)
@@ -118,7 +117,6 @@ func TestAccReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "replications.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "replications.0.username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "replications.0.proxy", testProxy),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.check_binary_existence_in_filestore", "true"),
 				),
 			},
 		},
