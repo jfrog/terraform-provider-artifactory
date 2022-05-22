@@ -157,6 +157,23 @@ resource "artifactory_local_sbt_repository" "sbt-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
+resource "artifactory_local_terraform_module_repository" "terraform-module-local" {
+  key           = "terraform-module-local"
+  description   = "Repo created by Terraform Provider Artifactory"
+  registry_type = "module",
+}
+
+resource "artifactory_local_terraform_provider_repository" "terraform-provider-local" {
+  key           = "terraform-provider-local"
+  description   = "Repo created by Terraform Provider Artifactory"
+  registry_type = "provider",
+}
+
+resource "artifactory_local_terraformbackend_repository" "terraformbackend-local" {
+  key         = "terraformbackend-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
 resource "artifactory_local_vagrant_repository" "vagrant-local" {
   key         = "vagrant-local"
   description = "Repo created by Terraform Provider Artifactory"

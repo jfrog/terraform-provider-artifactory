@@ -1,0 +1,35 @@
+---
+subcategory: "Local Repositories"
+---
+# Artifactory Local Terraform Module Repository Resource
+
+Creates a local Terraform Module repository.
+
+## Example Usage
+
+```hcl
+resource "artifactory_local_terraform_module_repository" "terraform-local-test-terraform-module-repo" {
+  key = "terraform-local-test-terraform-module-repo"
+  registry_type = "module",
+  
+}
+```
+
+## Argument Reference
+
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
+The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
+
+* `key` - (Required) the identity key of the repo.
+* `description` - (Optional)
+* `notes` - (Optional)
+* `registry_type` - (Optional) The Terraform registry type for component Module. Default value is `module`.
+  Default repo layout will be set to `terraform-module-default`.
+
+
+## Import
+
+Local repositories can be imported using their name, e.g.
+```
+$ terraform import artifactory_local_terraform_module_repository.terraform-local-test-terraform-module-repo terraform-local-test-terraform-module-repo
+```
