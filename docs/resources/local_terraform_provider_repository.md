@@ -4,6 +4,7 @@ subcategory: "Local Repositories"
 # Artifactory Local Terraform Provider Repository Resource
 
 Creates a local Terraform Provider repository.
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Terraform+Repositories).
 
 ## Example Usage
 

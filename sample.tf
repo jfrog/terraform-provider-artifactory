@@ -409,6 +409,13 @@ resource "artifactory_remote_pypi_repository" "pypi_remote" {
   pypi_registry_url = "https://custom.PYPI.registry.url"
 }
 
+resource "artifactory_remote_terraform_repository" "terraform-remote" {
+  key                     = "terraform-remote"
+  url                     = "https://github.com/"
+  terraform_registry_url  = "https://registry.terraform.io"
+  terraform_providers_url = "https://releases.hashicorp.com"
+}
+
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {
   key = "my-remote-rpm"
   url = "http://mirror.centos.org/centos/"

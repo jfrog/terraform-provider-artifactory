@@ -4,6 +4,7 @@ subcategory: "Local Repositories"
 # Artifactory Local Terraform Backend Repository Resource
 
 Creates a local Terraform Backend repository.
+Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Terraform+Repositories).
 
 ## Example Usage
 

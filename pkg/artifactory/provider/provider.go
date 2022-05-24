@@ -51,6 +51,7 @@ func Provider() *schema.Provider {
 		"artifactory_remote_maven_repository":             remote.ResourceArtifactoryRemoteJavaRepository("maven", false),
 		"artifactory_remote_nuget_repository":             remote.ResourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_pypi_repository":              remote.ResourceArtifactoryRemotePypiRepository(),
+		"artifactory_remote_terraform_repository":         remote.ResourceArtifactoryRemoteTerraformRepository(),
 		"artifactory_remote_vcs_repository":               remote.ResourceArtifactoryRemoteVcsRepository(),
 		"artifactory_virtual_alpine_repository":           virtual.ResourceArtifactoryVirtualAlpineRepository(),
 		"artifactory_virtual_bower_repository":            virtual.ResourceArtifactoryVirtualBowerRepository(),

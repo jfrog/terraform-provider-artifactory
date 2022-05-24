@@ -543,6 +543,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	"puppet":             {RepoLayoutRef: "puppet-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"pypi":               {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"sbt":                {RepoLayoutRef: "sbt-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
+	"terraform":          {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": false, "remote": true, "virtual": true, "federated": true}},
 	"terraform_module":   {RepoLayoutRef: "terraform-module-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"terraform_provider": {RepoLayoutRef: "terraform-provider-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": true, "virtual": true, "federated": true}},
 	"terraformbackend":   {RepoLayoutRef: "simple-default", SupportedRepoTypes: map[string]bool{"local": true, "remote": false, "virtual": false, "federated": false}},
