@@ -11,9 +11,9 @@ var dockerV2LocalSchema = util.MergeSchema(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_tags": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
 			Description: "The maximum number of unique tags of a single Docker image to store in this repository.\n" +
 				"Once the number tags for an image exceeds this setting, older tags are removed. A value of 0 (default) indicates there is no limit.\n" +
 				"This only applies to manifest v2",
