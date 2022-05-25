@@ -184,10 +184,6 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		ReadContext:   accessTokenRead,
 		DeleteContext: accessTokenDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:             schema.TypeString,
