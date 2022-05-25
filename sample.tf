@@ -675,6 +675,15 @@ resource "artifactory_virtual_sbt_repository" "foo-sbt" {
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
 
+resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
+  key              = "terraform-remote"
+  repositories     = []
+  description      = "A test virtual repo"
+  notes            = "Internal description"
+  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern = "com/google/**"
+}
+
 
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"
