@@ -72,7 +72,6 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
-			expires_in  = 7200
 			audiences   = ["admin"]
 		}
 	`, map[string]interface{}{
@@ -91,7 +90,6 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "7200"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckResourceAttr(fqrn, "audiences.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "audiences.0", "admin"),

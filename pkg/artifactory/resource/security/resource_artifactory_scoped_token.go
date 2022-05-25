@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -37,7 +36,7 @@ type AccessTokenGet struct {
 	TokenId     string `json:"token_id"`
 	Subject     string `json:"subject"`
 	Expiry      int    `json:"expiry"`
-	IssuedAt    int    `json:"issused_at"`
+	IssuedAt    int    `json:"issued_at"`
 	Issuer      string `json:"issuer"`
 	Description string `json:"description"`
 	Refreshable bool   `json:"refreshable"`
@@ -157,36 +156,25 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	}
 
 	var accessTokenDelete = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		d := &util.ResourceData{data}
-
-		expiresIn, expiresInIsSet := data.GetOk("expires_in")
-		expiry := time.Unix(int64(d.GetInt("expiry", false)), 0)
-		now := time.Now()
-
-		tflog.Debug(ctx, fmt.Sprintf("expires_in: %v", expiresIn))
-		tflog.Debug(ctx, fmt.Sprintf("expiry: %v", expiry.Unix()))
-		tflog.Debug(ctx, fmt.Sprintf("now: %v", now.Unix()))
-
-		// Token is not revokable if expires_in is set and expiry has not been reached
-		if expiresInIsSet || now.Before(expiry) {
-			warnMessage := "Access token expires_in is set and expiry has not been reached. Token not revoked."
-			detailMessage := fmt.Sprintf("expires_in: %v, expiry: %v, now: %v", expiresIn, expiry, now)
-			tflog.Warn(ctx, fmt.Sprintf("%s - %s", warnMessage, detailMessage))
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  warnMessage,
-				Detail:   detailMessage,
-			}}
-		}
 
 		_, err := m.(*resty.Client).R().
 			SetPathParam("id", data.Id()).
 			Delete(accessTokenUrl)
 
 		if err != nil {
-			data.SetId("")
-			return diag.FromErr(err)
+			d := &util.ResourceData{data}
+
+			expiry := time.Unix(int64(d.GetInt("expiry", false)), 0)
+			issuedAt := time.Unix(int64(d.GetInt("issued_at", false)), 0)
+
+			return diag.Diagnostics{{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Failed to revoke scoped token %s", data.Id()),
+				Detail:   fmt.Sprintf("Token expiration time: %s, issued at: %s", expiry, issuedAt),
+			}}
 		}
+
+		data.SetId("")
 
 		return nil
 	}
