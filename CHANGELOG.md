@@ -1,8 +1,8 @@
-## 6.8.0 (May 26, 2022)
+## 6.9.0 (May 27, 2022)
 
 FEATURES:
 
-* resource/artifactory_scoped_token: New resource for Artifactory scoped token. PR: [#](https://github.com/jfrog/terraform-provider-artifactory/pull/). Issue [#451](https://github.com/jfrog/terraform-provider-artifactory/issues/451)
+* resource/artifactory_scoped_token: New resource for Artifactory scoped token. PR: [#465](https://github.com/jfrog/terraform-provider-artifactory/pull/465). Issue [#451](https://github.com/jfrog/terraform-provider-artifactory/issues/451)
 
 ## 6.7.2 (May 13, 2022). Tested on Artifactory 7.38.8
 
