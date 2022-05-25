@@ -1,3 +1,13 @@
+## 6.8.0 (May 24, 2022). 
+
+IMPROVEMENTS:
+
+* Added new resources: local Terraform Module, Terraform Provider and Terraform backend repositories. 
+  Remote, virtual and federated Terraform repositories. 
+  
+  PR: [#]().
+  Issue [#450](https://github.com/jfrog/terraform-provider-artifactory/issues/450)
+
 ## 6.7.2 (May 13, 2022). Tested on Artifactory 7.38.8
 
 IMPROVEMENTS:
