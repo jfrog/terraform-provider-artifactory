@@ -160,7 +160,7 @@ resource "artifactory_local_sbt_repository" "sbt-local" {
 resource "artifactory_local_terraform_module_repository" "terraform-module-local" {
   key           = "terraform-module-local"
   description   = "Repo created by Terraform Provider Artifactory"
-  registry_type = "module",
+  registry_type = "module"
 }
 
 resource "artifactory_local_terraform_provider_repository" "terraform-provider-local" {
