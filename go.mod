@@ -12,7 +12,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
@@ -63,7 +63,6 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/ldap.v2 v2.5.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
 go 1.18
