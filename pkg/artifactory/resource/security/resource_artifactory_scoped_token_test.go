@@ -13,8 +13,9 @@ import (
 func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate("TestAccScopedToken", `
-		resource "artifactory_user" "test-user" {
+	accessTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -26,10 +27,11 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.test-user.name
 			description = "test description"
-		}
-	`, map[string]interface{}{
-		"name": name,
-	})
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -57,8 +59,9 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate("TestAccScopedToken", `
-		resource "artifactory_user" "test-user" {
+	accessTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -73,10 +76,11 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			description = "test description"
 			refreshable = true
 			audiences   = ["admin"]
-		}
-	`, map[string]interface{}{
-		"name": name,
-	})
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -104,8 +108,9 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := acctest.ExecuteTemplate("TestAccScopedToken", `
-		resource "artifactory_local_generic_repository" "generic-local-1" {
+	scopedTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_local_generic_repository" "generic-local-1" {
 			key = "generic-local-1"
 		}
 
@@ -165,10 +170,11 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 				artifactory_local_generic_repository.generic-local-3,
 				artifactory_local_generic_repository.generic-local-4,
 			]
-		}
-	`, map[string]interface{}{
-		"name": name,
-	})
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -190,8 +196,9 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 		audences = append(audences, fmt.Sprintf("audence-%d", i))
 	}
 
-	scopedTokenConfig := acctest.ExecuteTemplate("TestAccScopedToken", `
-		resource "artifactory_user" "test-user" {
+	scopedTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -210,11 +217,12 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 			audiences    = [
 				{{range .audiences}}"{{.}}",{{end}}
 			]
-		}
-	`, map[string]interface{}{
-		"name":      name,
-		"audiences": audences,
-	})
+		}`,
+		map[string]interface{}{
+			"name":      name,
+			"audiences": audences,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
