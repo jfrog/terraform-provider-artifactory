@@ -1,3 +1,9 @@
+## 6.9.1 (May 31, 2022)
+
+ENHANCEMENTS:
+
+* resource/artifactory_file: Add debugging loggings to aid investigate issue. PR: [#466](https://github.com/jfrog/terraform-provider-artifactory/pull/466) Issue: [#441](https://github.com/jfrog/terraform-provider-artifactory/issues/441)
+
 ## 6.7.2 (May 13, 2022). Tested on Artifactory 7.38.8
 
 IMPROVEMENTS:
