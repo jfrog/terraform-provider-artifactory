@@ -4,6 +4,12 @@ FEATURES:
 
 * resource/artifactory_scoped_token: New resource for Artifactory scoped token. PR: [#465](https://github.com/jfrog/terraform-provider-artifactory/pull/465). Issue [#451](https://github.com/jfrog/terraform-provider-artifactory/issues/451)
 
+## 6.7.3 (May 27, 2022). Tested on Artifactory 7.38.10
+
+IMPROVEMENTS:
+
+* Upgrade `gopkg.in/yaml.v3` to v3.0.0 for [CVE-2022-28948](https://nvd.nist.gov/vuln/detail/CVE-2022-28948) PR [#467](https://github.com/jfrog/terraform-provider-artifactory/pull/467)
+
 ## 6.7.2 (May 13, 2022). Tested on Artifactory 7.38.8
 
 IMPROVEMENTS:
