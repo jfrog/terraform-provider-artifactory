@@ -232,11 +232,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	var packAccessTokenPostResponse = func(d *schema.ResourceData, accessToken AccessTokenPostResponse) diag.Diagnostics {
 		setValue := util.MkLens(d)
 
-		var errors []error
-		errors = append(errors, setValue("scopes", strings.Split(accessToken.Scope, " "))...)
-		errors = append(errors, setValue("expires_in", accessToken.ExpiresIn)...)
-		errors = append(errors, setValue("access_token", accessToken.AccessToken)...)
-		errors = append(errors, setValue("token_type", accessToken.TokenType)...)
+		setValue("scopes", strings.Split(accessToken.Scope, " "))
+		setValue("expires_in", accessToken.ExpiresIn)
+		setValue("access_token", accessToken.AccessToken)
+		errors := setValue("token_type", accessToken.TokenType)
 
 		if len(errors) > 0 {
 			return diag.Errorf("failed to pack access token from POST response %q", errors)
