@@ -75,7 +75,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
-			audiences   = ["admin"]
+			audiences   = ["jfrt@1", "jfrt@2"]
 		}`,
 		map[string]interface{}{
 			"name": name,
@@ -95,8 +95,9 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
-					resource.TestCheckResourceAttr(fqrn, "audiences.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "audiences.0", "admin"),
+					resource.TestCheckResourceAttr(fqrn, "audiences.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@2"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
 				),
@@ -106,6 +107,64 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
+	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+
+	scopedTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_local_generic_repository" "generic-local-1" {
+			key = "generic-local-1"
+		}
+
+		resource "artifactory_local_generic_repository" "generic-local-2" {
+			key = "generic-local-2"
+		}
+
+		resource "artifactory_local_generic_repository" "generic-local-3" {
+			key = "generic-local-3"
+		}
+
+		resource "artifactory_local_generic_repository" "generic-local-4" {
+			key = "generic-local-4"
+		}
+
+		resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+			scopes      = ["foo"]
+
+			depends_on = [
+				artifactory_local_generic_repository.generic-local-1,
+				artifactory_local_generic_repository.generic-local-2,
+				artifactory_local_generic_repository.generic-local-3,
+				artifactory_local_generic_repository.generic-local-4,
+			]
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      scopedTokenConfig,
+				ExpectError: regexp.MustCompile(`.*must be one of 'applied-permissions/user', 'applied-permissions/admin', 'applied-permissions/groups', 'system:metrics:r', 'system:livelogs:r', or '<resource-type>:<target>\[/<sub-resource>\]:<actions>'.*`),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := acctest.ExecuteTemplate(
@@ -191,9 +250,49 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
 
+	scopedTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+			scopes      = [
+				"applied-permissions/admin",
+				"applied-permissions/user",
+			]
+
+			audiences = ["foo"]
+		}`,
+		map[string]interface{}{
+			"name":      name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      scopedTokenConfig,
+				ExpectError: regexp.MustCompile(".*must begin with 'jfrt@'.*"),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
+	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+
 	audences := []string{}
 	for i := 0; i < 100; i++ {
-		audences = append(audences, fmt.Sprintf("audence-%d", i))
+		audences = append(audences, fmt.Sprintf("jfrt@%d", i))
 	}
 
 	scopedTokenConfig := acctest.ExecuteTemplate(

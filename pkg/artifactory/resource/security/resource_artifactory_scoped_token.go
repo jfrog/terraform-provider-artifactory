@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -179,6 +180,8 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		return nil
 	}
 
+	const scopesRegex = `^(applied-permissions/user|applied-permissions/admin|applied-permissions/groups|system:metrics:r|system:livelogs:r|artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+))))$`
+
 	return &schema.Resource{
 		CreateContext: accessTokenCreate,
 		ReadContext:   accessTokenRead,
@@ -198,15 +201,21 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validation.ToDiagFunc(
+						validation.All(
+							validation.StringIsNotEmpty,
+							validation.StringMatch(regexp.MustCompile(scopesRegex), "must be one of 'applied-permissions/user', 'applied-permissions/admin', 'applied-permissions/groups', 'system:metrics:r', 'system:livelogs:r', or '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+						),
+					),
 				},
 				Description: "The scope of access that the token provides. Access to the REST API is always provided by default. Administrators can set any scope, while non-admin users can only set the scope to a subset of the groups to which they belong.\n" +
 					"The supported scopes include:\n" +
-					"* applied-permissions/user - provides user access. If left at the default setting, the token will be created with the user-identity scope, which allows users to identify themselves in the Platform but does not grant any specific access permissions." +
-					"* applied-permissions/admin - the scope assigned to admin users." +
-					"* applied-permissions/groups - the group to which permissions are assigned by group name (use username to inicate the group name)" +
-					"* system:metrics:r - for getting the service metrics" +
-					"* system:livelogs:r - for getting the service livelogsr" +
+					"* `applied-permissions/user` - provides user access. If left at the default setting, the token will be created with the user-identity scope, which allows users to identify themselves in the Platform but does not grant any specific access permissions." +
+					"* `applied-permissions/admin` - the scope assigned to admin users." +
+					"* `applied-permissions/groups` - the group to which permissions are assigned by group name (use username to inicate the group name)" +
+					"* `system:metrics:r` - for getting the service metrics" +
+					"* `system:livelogs:r` - for getting the service livelogsr" +
 					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
 					"Resource Permissions\n" +
 					"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. A permission can be represented as a scope token string in the following format:\n" +
@@ -217,7 +226,11 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 					"* `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
 					"* `<actions>` - comma-separated list of action acronyms." +
 					"The actions allowed are <r, w, d, a, m> or any combination of these actions\n." +
-					"To allow all actions - use `*`",
+					"To allow all actions - use `*`\n" +
+					"Examples\n:" +
+					"* `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
+					"* `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
+					"* `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`",
 			},
 			"expires_in": {
 				Type:             schema.TypeInt,
@@ -246,9 +259,15 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validation.ToDiagFunc(
+						validation.All(
+							validation.StringIsNotEmpty,
+							validation.StringMatch(regexp.MustCompile(`^jfrt@.*`), "must begin with 'jfrt@'"),
+						),
+					),
 				},
-				Description: "A list of the other instances or services that should accept this token identified by their Service-IDs. Limited to total 255 characters. Default to '*@*' if not set. For instructions to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).",
+				Description: "A list of the other instances or services that should accept this token identified by their Service-IDs. Limited to total 255 characters. Default to '*@*' if not set. Service ID must begin with 'jfrt@'. For instructions to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).",
 			},
 			"access_token": {
 				Type:     schema.TypeString,
