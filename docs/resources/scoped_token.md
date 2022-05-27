@@ -44,7 +44,7 @@ resource "artifactory_scoped_token" "scoped_token_group" {
 ```hcl
 resource "artifactory_scoped_token" "scoped_token_no_expiry" {
   username   = "existing-user"
-  expires_in = 7200
+  expires_in = 7200 // in seconds
 }
 ```
 
