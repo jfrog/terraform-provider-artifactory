@@ -15,16 +15,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type AccessTokenPostRequest struct {
-	GrantType   string `json:"grant_type"`
-	Username    string `json:"username,omitempty"`
-	Scope       string `json:"scope,omitempty"`
-	ExpiresIn   int    `json:"expires_in,omitempty"`
-	Refreshable bool   `json:"refreshable"`
-	Description string `json:"description"`
-	Audience    string `json:"audience,omitempty"`
-}
-
 type AccessTokenPostResponse struct {
 	TokenId     string `json:"token_id"`
 	AccessToken string `json:"access_token"`
@@ -33,26 +23,31 @@ type AccessTokenPostResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-type AccessTokenGet struct {
-	TokenId     string `json:"token_id"`
-	Subject     string `json:"subject"`
-	Expiry      int    `json:"expiry"`
-	IssuedAt    int    `json:"issued_at"`
-	Issuer      string `json:"issuer"`
-	Description string `json:"description"`
-	Refreshable bool   `json:"refreshable"`
-}
-
 func (a AccessTokenPostResponse) Id() string {
 	return a.TokenId
 }
 
-const accessTokensUrl = "access/api/v1/tokens"
-const accessTokenUrl = accessTokensUrl + "/{id}"
-
 func ResourceArtifactoryScopedToken() *schema.Resource {
 
-	const scopesRegex = `^(applied-permissions/user|applied-permissions/admin|applied-permissions/groups|system:metrics:r|system:livelogs:r|artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+))))$`
+	type AccessTokenPostRequest struct {
+		GrantType   string `json:"grant_type"`
+		Username    string `json:"username,omitempty"`
+		Scope       string `json:"scope,omitempty"`
+		ExpiresIn   int    `json:"expires_in,omitempty"`
+		Refreshable bool   `json:"refreshable"`
+		Description string `json:"description"`
+		Audience    string `json:"audience,omitempty"`
+	}
+
+	type AccessTokenGet struct {
+		TokenId     string `json:"token_id"`
+		Subject     string `json:"subject"`
+		Expiry      int    `json:"expiry"`
+		IssuedAt    int    `json:"issued_at"`
+		Issuer      string `json:"issuer"`
+		Description string `json:"description"`
+		Refreshable bool   `json:"refreshable"`
+	}
 
 	var scopedTokenSchema = map[string]*schema.Schema{
 		"username": {
@@ -60,7 +55,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
-			Description:      "The user name for which this token is created. The username is based on the authenticated user - either from the user of the authenticated token or based on the username (if basic auth was used). The username is then used to set the subject of the token: <service-id>/users/<username>. Limited to 255 characters.",
+			Description:      "The user name for which this token is created. The username is based " +
+				"on the authenticated user - either from the user of the authenticated token or based " +
+				"on the username (if basic auth was used). The username is then used to set the subject " +
+				"of the token: <service-id>/users/<username>. Limited to 255 characters.",
 		},
 		"scopes": {
 			Type:     schema.TypeSet,
@@ -70,25 +68,44 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Elem: &schema.Schema{
 				Type:             schema.TypeString,
 				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.All(
-						validation.StringIsNotEmpty,
-						validation.StringMatch(regexp.MustCompile(scopesRegex), "must be one of 'applied-permissions/user', 'applied-permissions/admin', 'applied-permissions/groups', 'system:metrics:r', 'system:livelogs:r', or '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+					validation.Any(
+						validation.StringInSlice(
+							[]string{
+								"applied-permissions/user",
+								"applied-permissions/admin",
+								"applied-permissions/groups",
+								"system:metrics:r",
+								"system:livelogs:r",
+							},
+							true,
+						),
+						validation.StringMatch(
+							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),
+							"must be '<resource-type>:<target>[/<sub-resource>]:<actions>'",
+						),
 					),
 				),
 			},
-			Description: "The scope of access that the token provides. Access to the REST API is always provided by default. Administrators can set any scope, while non-admin users can only set the scope to a subset of the groups to which they belong.\n" +
+			Description: "The scope of access that the token provides. Access to the REST API is always " +
+				"provided by default. Administrators can set any scope, while non-admin users can only set " +
+				"the scope to a subset of the groups to which they belong.\n" +
 				"The supported scopes include:\n" +
-				"* `applied-permissions/user` - provides user access. If left at the default setting, the token will be created with the user-identity scope, which allows users to identify themselves in the Platform but does not grant any specific access permissions." +
+				"* `applied-permissions/user` - provides user access. If left at the default setting, the " +
+				"token will be created with the user-identity scope, which allows users to identify themselves " +
+				"in the Platform but does not grant any specific access permissions." +
 				"* `applied-permissions/admin` - the scope assigned to admin users." +
-				"* `applied-permissions/groups` - the group to which permissions are assigned by group name (use username to inicate the group name)" +
+				"* `applied-permissions/groups` - the group to which permissions are assigned by group name " +
+				"(use username to inicate the group name)" +
 				"* `system:metrics:r` - for getting the service metrics" +
 				"* `system:livelogs:r` - for getting the service livelogsr" +
 				"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
 				"Resource Permissions\n" +
-				"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. A permission can be represented as a scope token string in the following format:\n" +
+				"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
+				"A permission can be represented as a scope token string in the following format:\n" +
 				"`<resource-type>:<target>[/<sub-resource>]:<actions>`\n" +
 				"Where:\n" +
-				"* `<resource-type>` - one of the permission resource types, from a predefined closed list. Currently, the only resource type that is supported is the artifact resource type.\n" +
+				"* `<resource-type>` - one of the permission resource types, from a predefined closed list. " +
+				"Currently, the only resource type that is supported is the artifact resource type.\n" +
 				"* `<target>` - the target resource, can be exact name or a pattern" +
 				"* `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
 				"* `<actions>` - comma-separated list of action acronyms." +
@@ -105,7 +122,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew:         true,
 			Computed:         true,
 			ValidateDiagFunc: validator.IntAtLeast(0),
-			Description:      "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.",
+			Description:      "The amount of time, in seconds, it would take for the token to expire. " +
+				"An admin shall be able to set whether expiry is mandatory, what is the default expiry, " +
+				"and what is the maximum expiry allowed. Must be non-negative. Default value is based on " +
+				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.",
 		},
 		"refreshable": {
 			Type:        schema.TypeBool,
@@ -134,7 +154,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 					),
 				),
 			},
-			Description: "A list of the other instances or services that should accept this token identified by their Service-IDs. Limited to total 255 characters. Default to '*@*' if not set. Service ID must begin with 'jfrt@'. For instructions to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).",
+			Description: "A list of the other instances or services that should accept this " +
+				"token identified by their Service-IDs. Limited to total 255 characters. " +
+				"Default to '*@*' if not set. Service ID must begin with 'jfrt@'. For instructions " +
+				"to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).",
 		},
 		"access_token": {
 			Type:     schema.TypeString,
@@ -195,7 +218,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		_, err := m.(*resty.Client).R().
 			SetPathParam("id", data.Id()).
 			SetResult(&accessToken).
-			Get(accessTokenUrl)
+			Get("access/api/v1/tokens/{id}")
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -234,7 +257,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		_, err = m.(*resty.Client).R().
 			SetBody(accessToken).
 			SetResult(&result).
-			Post(accessTokensUrl)
+			Post("access/api/v1/tokens")
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -253,7 +276,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 
 		_, err := m.(*resty.Client).R().
 			SetPathParam("id", data.Id()).
-			Delete(accessTokenUrl)
+			Delete("access/api/v1/tokens/{id}")
 
 		if err != nil {
 			d := &util.ResourceData{data}
@@ -279,10 +302,13 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		DeleteContext: accessTokenDelete,
 
 		Schema: scopedTokenSchema,
-		Description: "Create scoped tokens for any of the services in your JFrog Platform and to manage user access to these services. If left at the default setting, the token will be created with the user-identity scope, which allows users to identify themselves in the Platform but does not grant any specific access permissions.",
+		Description: "Create scoped tokens for any of the services in your JFrog Platform and to " +
+			"manage user access to these services. If left at the default setting, the token will " +
+			"be created with the user-identity scope, which allows users to identify themselves in " +
+			"the Platform but does not grant any specific access permissions.",
 	}
 }
 
 func CheckAccessToken(id string, request *resty.Request) (*resty.Response, error) {
-	return request.SetPathParam("id", id).Get(accessTokenUrl)
+	return request.SetPathParam("id", id).Get("access/api/v1/tokens/{id}")
 }

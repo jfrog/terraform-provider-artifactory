@@ -166,7 +166,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must be one of 'applied-permissions/user', 'applied-permissions/admin', 'applied-permissions/groups', 'system:metrics:r', 'system:livelogs:r', or '<resource-type>:<target>\[/<sub-resource>\]:<actions>'.*`),
+				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>\]:<actions>'.*`),
 			},
 		},
 	})
