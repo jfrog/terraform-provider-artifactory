@@ -73,6 +73,12 @@ const permissionFull = `
 	//	key 	     = "{{ .repo_name }}"
 	//}
 
+	resource "artifactory_managed_user" "test-user" {
+		name     = "terraform"
+		email    = "test-user@artifactory-terraform.com"
+		password = "my super secret password"
+	}
+
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
 	  name = "{{ .permission_name }}"
 
@@ -82,10 +88,10 @@ const permissionFull = `
 		repositories     = ["{{ .repo_name }}"]
 
 		actions {
-		  users {
-			name        = "anonymous"
-			permissions = ["read", "write"]
-		  }
+			users {
+				name        = artifactory_managed_user.test-user
+				permissions = ["read", "write", "annotate", "delete"]
+			}
 
 		  groups {
 			name        = "readers"
@@ -100,11 +106,10 @@ const permissionFull = `
 		repositories     = ["artifactory-build-info"]
 
 		actions {
-		  users {
-			name        = "anonymous"
-			permissions = ["read", "write"]
-		  }
-
+			users {
+				name        = artifactory_managed_user.test-user
+				permissions = ["read", "write", "manage", "annotate", "delete"]
+			}
 
 		  groups {
 			name        = "readers"
@@ -120,10 +125,9 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = "anonymous"
-				permissions = ["read", "write"]
+				name        = artifactory_managed_user.test-user
+				permissions = ["read", "write", "managedXrayMeta", "distribute"]
 			}
-
 
 			groups {
 				name        = "readers"
@@ -226,6 +230,50 @@ func TestAccPermissionTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
+				 ),
+			},
+		},
+	})
+}
+
+func TestAccPermissionTarget_user_permissions(t *testing.T) {
+	_, permFqrn, permName := acctest.MkNames("test-perm", "artifactory_permission_target")
+
+	tempStruct := map[string]string{
+		"repo_name":       "example-repo-local",
+		"permission_name": permName,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(permFqrn, "name", permName),
+
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", 3),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "annotate"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "delete"),
+
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.0.permissions.#", 5),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "write"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "manage"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "annotate"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "delete"),
+
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.#", 4),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "write"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "managedXrayMeta"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "distribute"),
 				),
 			},
 		},
