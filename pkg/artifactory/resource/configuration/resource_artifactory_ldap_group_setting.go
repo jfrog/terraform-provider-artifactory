@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 
 	"github.com/go-resty/resty/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

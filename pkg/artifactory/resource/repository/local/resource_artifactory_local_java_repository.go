@@ -16,7 +16,7 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 				Optional:         true,
 				Default:          "client-checksums",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"client-checksums", "generated-checksums"}, true)),
-				Description:      "Checksum policy determines how Artifactory behaves when a client checksum for a deployed " +
+				Description: "Checksum policy determines how Artifactory behaves when a client checksum for a deployed " +
 					"resource is missing or conflicts with the locally calculated checksum (bad checksum).\nFor more details, " +
 					"please refer to Checksum Policy - " +
 					"https://www.jfrog.com/confluence/display/JFROG/Local+Repositories#LocalRepositories-ChecksumPolicy",
@@ -26,7 +26,7 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 				Optional:         true,
 				Default:          "unique",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"unique", "non-unique", "deployer"}, true)),
-				Description:      "Specifies the naming convention for Maven SNAPSHOT versions.\nThe options are " +
+				Description: "Specifies the naming convention for Maven SNAPSHOT versions.\nThe options are " +
 					"-\nUnique: Version number is based on a time-stamp (default)\nNon-unique: Version number uses a" +
 					" self-overriding naming pattern of artifactId-version-SNAPSHOT.type\nDeployer: Respects the settings " +
 					"in the Maven client that is deploying the artifact.",
@@ -36,7 +36,7 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 				Optional:         true,
 				Default:          0,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-				Description:      "The maximum number of unique snapshots of a single artifact to store.\nOnce the number of " +
+				Description: "The maximum number of unique snapshots of a single artifact to store.\nOnce the number of " +
 					"snapshots exceeds this setting, older versions are removed.\nA value of 0 (default) indicates there is " +
 					"no limit, and unique snapshots are not cleaned up.",
 			},
@@ -53,9 +53,9 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 				Description: "If set, Artifactory allows you to deploy snapshot artifacts into this repository.",
 			},
 			"suppress_pom_consistency_checks": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     suppressPom,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  suppressPom,
 				Description: "By default, Artifactory keeps your repositories healthy by refusing POMs with incorrect " +
 					"coordinates (path).\n  If the groupId:artifactId:version information inside the POM does not match the " +
 					"deployed path, Artifactory rejects the deployment with a \"409 Conflict\" error.\n  You can disable this " +

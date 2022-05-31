@@ -12,6 +12,28 @@ provider "artifactory" {
   //  supply ARTIFACTORY_ACCESS_TOKEN / JFROG_ACCESS_TOKEN / ARTIFACTORY_API_KEY and ARTIFACTORY_URL / JFROG_URL as env vars
 }
 
+resource "artifactory_user" "new_user" {
+  name   = "new_user"
+  email  = "new_user@somewhere.com"
+  groups = ["readers"]
+}
+
+resource "artifactory_scoped_token" "user" {
+  username = artifactory_user.new_user.name
+}
+
+resource "artifactory_scoped_token" "admin" {
+  scopes = ["applied-permissions/admin"]
+}
+
+output "user-scoped-token" {
+  value = artifactory_scoped_token.user
+}
+
+output "admin-scoped-token" {
+  value = artifactory_scoped_token.admin
+}
+
 resource "artifactory_local_bower_repository" "bower-local" {
   key         = "bower-local"
   description = "Repo created by Terraform Provider Artifactory"
