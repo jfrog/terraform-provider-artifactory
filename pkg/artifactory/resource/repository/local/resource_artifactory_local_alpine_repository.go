@@ -10,8 +10,8 @@ var alpineLocalSchema = util.MergeSchema(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"primary_keypair_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
 			Description: "Used to sign index files in Alpine Linux repositories. " +
 				"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
 		},

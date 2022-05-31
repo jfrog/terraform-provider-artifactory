@@ -69,6 +69,7 @@ func Provider() *schema.Provider {
 		"artifactory_certificate":                 security.ResourceArtifactoryCertificate(),
 		"artifactory_api_key":                     security.ResourceArtifactoryApiKey(),
 		"artifactory_access_token":                security.ResourceArtifactoryAccessToken(),
+		"artifactory_scoped_token":                security.ResourceArtifactoryScopedToken(),
 		"artifactory_general_security":            configuration.ResourceArtifactoryGeneralSecurity(),
 		"artifactory_oauth_settings":              configuration.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":               configuration.ResourceArtifactorySamlSettings(),

@@ -1,3 +1,9 @@
+## 6.8.0 (May 31, 2022). Tested on Artifactory 7.38.10
+
+FEATURES:
+
+* resource/artifactory_scoped_token: New resource for Artifactory scoped token. PR: [#465](https://github.com/jfrog/terraform-provider-artifactory/pull/465). Issue [#451](https://github.com/jfrog/terraform-provider-artifactory/issues/451)
+
 ## 6.7.3 (May 27, 2022). Tested on Artifactory 7.38.10
 
 IMPROVEMENTS:
