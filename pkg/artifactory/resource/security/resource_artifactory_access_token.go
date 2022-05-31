@@ -48,14 +48,6 @@ type AccessTokenOptions struct {
 	Audience string `url:"audience,omitempty"` // [Optional, default: Only the Service ID of the Artifactory instance that created the token]
 }
 
-type AccessToken struct {
-	AccessToken  string `json:"access_token,omitempty"`
-	ExpiresIn    int    `json:"expires_in,omitempty"`
-	Scope        string `json:"scope,omitempty"`
-	TokenType    string `json:"token_type,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-}
-
 func ResourceArtifactoryAccessToken() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAccessTokenCreate,
@@ -159,10 +151,21 @@ func ResourceArtifactoryAccessToken() *schema.Resource {
 				Sensitive: true,
 			},
 		},
+
+		DeprecationMessage: "This resource is being deprecated and replaced by artifactory_scoped_token",
 	}
 }
 
 func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	type AccessToken struct {
+		AccessToken  string `json:"access_token,omitempty"`
+		ExpiresIn    int    `json:"expires_in,omitempty"`
+		Scope        string `json:"scope,omitempty"`
+		TokenType    string `json:"token_type,omitempty"`
+		RefreshToken string `json:"refresh_token,omitempty"`
+	}
+
 	client := m.(*resty.Client)
 	grantType := "client_credentials" // client_credentials is the only supported type
 
