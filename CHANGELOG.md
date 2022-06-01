@@ -1,3 +1,17 @@
+## 6.9.0 (May 24, 2022). Tested on Artifactory 7.38.10
+
+FEATURES:
+
+* Added new resources to support Terraform repositories.
+  * Local: Terraform Module (`resource/artifactory_local_terraform_module_repository`).
+    Terraform Provider (`resource/artifactory_local_terraform_provider_repository`) and Terraform Backend (`resource\artifactory_local_terraformbackend_repository`).
+  * Remote: Terraform Repository (`resource/artifactory_remote_terraform_repository`).
+  * Virtual: Terraform Repository (`resource/artifactory_virtual_terraform_repository`).
+  * Federated: Terraform Module (`resource/artifactory_federated_terraform_module_repository`), Terraform Provider (`resource/artifactory_federated_terraform_provider_repository`).
+
+    PR: [#464](https://github.com/jfrog/terraform-provider-artifactory/pull/464).
+    Issue [#450](https://github.com/jfrog/terraform-provider-artifactory/issues/450)
+
 ## 6.8.0 (May 31, 2022). Tested on Artifactory 7.38.10
 
 FEATURES:

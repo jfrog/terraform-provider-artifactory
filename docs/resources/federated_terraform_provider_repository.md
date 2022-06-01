@@ -10,7 +10,6 @@ Creates a federated Generic repository.
 ```hcl
 resource "artifactory_federated_terraform_provider_repository" "terraform-federated-test-terraform_provider-repo" {
   key       = "terraform-federated-test-terraform-provider-repo"
-  registry_type = "provider",
   member {
     url     = "http://tempurl.org/artifactory/terraform-federated-test-terraform_provider-repo"
     enabled = true

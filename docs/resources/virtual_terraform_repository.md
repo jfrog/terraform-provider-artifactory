@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Terraform Repository Resource
 
-Creates a virtual Generic repository.
+Creates a virtual Terraform repository.
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Terraform+Registry#TerraformRegistry-SettingupaVirtualTerraformRegistry).
 
 ## Example Usage

@@ -524,13 +524,11 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 
 	_, fqrn, name := acctest.MkNames("terraform-local", "artifactory_local_terraform_module_repository")
 	params := map[string]interface{}{
-		"registry_type": "module",
-		"name":          name,
+		"name": name,
 	}
 	localRepositoryBasic := acctest.ExecuteTemplate("TestAccLocalTerraformModuleRepository", `
 		resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
-		  registry_type  = "{{ .registry_type }}"
 		}
 	`, params)
 
@@ -543,7 +541,7 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "registry_type", params["registry_type"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-module-default"),
 				),
 			},
@@ -555,13 +553,11 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 
 	_, fqrn, name := acctest.MkNames("terraform-local", "artifactory_local_terraform_provider_repository")
 	params := map[string]interface{}{
-		"registry_type": "provider",
-		"name":          name,
+		"name": name,
 	}
 	localRepositoryBasic := acctest.ExecuteTemplate("TestAccLocalTerraformProviderRepository", `
 		resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
-		  registry_type  = "{{ .registry_type }}"
 		}
 	`, params)
 
@@ -574,7 +570,7 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "registry_type", params["registry_type"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-provider-default"),
 				),
 			},

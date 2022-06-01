@@ -11,7 +11,6 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 ```hcl
 resource "artifactory_local_terraform_provider_repository" "terraform-local-test-terraform-provider-repo" {
   key = "terraform-local-test-terraform-provider-repo"
-  registry_type = "provider",
   
 }
 ```
@@ -24,9 +23,6 @@ The following arguments are supported, along with the [common list of arguments 
 * `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `registry_type` - (Optional) The Terraform registry type for component Provider. Default value is `provider`.
-  Default repo layout will be set to `terraform-provider-default`.
-
 
 ## Import
 
