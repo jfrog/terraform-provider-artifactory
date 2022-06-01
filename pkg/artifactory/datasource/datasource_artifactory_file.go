@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -128,7 +129,7 @@ func ArtifactoryFile() *schema.Resource {
 	}
 }
 
-func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
@@ -136,14 +137,34 @@ func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface
 	pathIsAliased := d.Get("path_is_aliased").(bool)
 	fileInfo := FileInfo{}
 
+	tflog.Debug(ctx, "dataSourceFileReader", map[string]interface{}{
+		"repository":     repository,
+		"path":           path,
+		"outputPath":     outputPath,
+		"forceOverwrite": forceOverwrite,
+		"pathIsAliased":  pathIsAliased,
+	})
+
 	if !pathIsAliased {
+		tflog.Debug(ctx, "pathIsAliased == false")
+
+		tflog.Debug(ctx, "Fetching file info")
 		_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
 		fileExists := FileExists(outputPath)
-		chksMatches, _ := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		chksMatches, err := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		tflog.Debug(ctx, "File info fetched", map[string]interface{}{
+			"fileInfo":    fileInfo,
+			"fileExists":  fileExists,
+			"chksMatches": chksMatches,
+		})
 
 		/*--File Download logic--
 		1. File doesn't exist
@@ -151,6 +172,7 @@ func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface
 		3. File exists but check sum doesn't match
 		*/
 		if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
+			tflog.Debug(ctx, "Should download file")
 			outdir := filepath.Dir(outputPath)
 			err = os.MkdirAll(outdir, os.ModePerm)
 			if err != nil {
@@ -164,30 +186,51 @@ func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface
 				_ = outFile.Close()
 			}(outFile)
 		} else { //download not required
+			tflog.Debug(ctx, "Skip downloading file")
 			d.SetId(fileInfo.Id())
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
 				Summary:  "WARN-001: file download skipped.",
 				Detail:   fmt.Sprintf("WARN-001: file download skipped. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite),
 			}}
-
 		}
+
+		tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
+			"fileInfo.DownloadUri": fileInfo.DownloadUri,
+			"outputPath":           outputPath,
+		})
 		_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		chksMatches, _ = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		chksMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		tflog.Debug(ctx, "Verify checksum", map[string]interface{}{
+			"fileInfo.Checksums.Sha256": fileInfo.Checksums.Sha256,
+			"chksMatches":               chksMatches,
+		})
 		if !chksMatches {
-			return diag.FromErr(fmt.Errorf("%s checksum and %s checksum do not match, expectd %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256))
+			return diag.Errorf("Checksums for file %s and %s do not match, expected %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
 		}
 	} else { // if we download the latest artifact (use path_is_aliased), we don't have all the data for the fileInfo struct, because no GET call was sent.
+		tflog.Debug(ctx, "pathIsAliased == true")
+
 		fileInfo.Repo = repository
 		fileInfo.Path = path
 		d.SetId(fileInfo.Path)
 		fileExists := FileExists(outputPath)
 
+		tflog.Debug(ctx, "File info", map[string]interface{}{
+			"fileInfo":   fileInfo,
+			"fileExists": fileExists,
+		})
+
 		if !fileExists || forceOverwrite {
+			tflog.Debug(ctx, "Should download file")
 			outdir := filepath.Dir(outputPath)
 			err := os.MkdirAll(outdir, os.ModePerm)
 			if err != nil {
@@ -201,6 +244,7 @@ func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface
 				_ = outFile.Close()
 			}(outFile)
 		} else { //download not required
+			tflog.Debug(ctx, "Skip downloading file")
 			d.SetId(fileInfo.Path)
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
@@ -209,12 +253,21 @@ func dataSourceFileReader(_ context.Context, d *schema.ResourceData, m interface
 			}}
 
 		}
+
+		tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
+			"repository path": fmt.Sprintf("artifactory/%s/%s", repository, path),
+			"outputPath":      outputPath,
+		})
 		_, err := m.(*resty.Client).R().SetOutput(outputPath).Get(fmt.Sprintf("artifactory/%s/%s", repository, path))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		return nil
 	}
+
+	tflog.Debug(ctx, "Calling packFileInfo", map[string]interface{}{
+		"fileInfo": fileInfo,
+	})
 
 	return packFileInfo(fileInfo, d)
 }
