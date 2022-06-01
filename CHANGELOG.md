@@ -4,6 +4,12 @@ BUG FIXES:
 
 * resource/artifactory_local_maven_repository, resource/artifactory_local_gradle_repository, resource/artifactory_local_sbt_repository, resource/artifactory_local_ivy_repositor: Fix validation for attribute `checksum_policy_type`. Previously it accepts `generated-checksums`. Now it accepts `server-generated-checksums`. Same applies to the corresponding federated repository resources. PR: [#471](https://github.com/jfrog/terraform-provider-artifactory/pull/471). Issue [#470](https://github.com/jfrog/terraform-provider-artifactory/issues/470)
 
+## 6.8.1 (May 31, 2022). Tested on Artifactory 7.38.10
+
+ENHANCEMENTS:
+
+* resource/artifactory_file: Add debugging loggings to aid investigate issue. PR: [#466](https://github.com/jfrog/terraform-provider-artifactory/pull/466) Issue: [#441](https://github.com/jfrog/terraform-provider-artifactory/issues/441)
+
 ## 6.8.0 (May 31, 2022). Tested on Artifactory 7.38.10
 
 FEATURES:
