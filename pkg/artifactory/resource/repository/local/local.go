@@ -1,11 +1,12 @@
 package local
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"strings"
 )
 
 var RepoTypesLikeGeneric = []string{
@@ -47,7 +48,7 @@ type LocalRepositoryBaseParams struct {
 	ArchiveBrowsingEnabled *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
 	DownloadRedirect       *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 	PriorityResolution     bool     `hcl:"priority_resolution" json:"priorityResolution"`
-	TerraformType          string   `json:"terraformType,omitempty"`
+	TerraformType          string   `json:"terraformType"`
 }
 
 func (bp LocalRepositoryBaseParams) Id() string {
@@ -146,8 +147,8 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 }
 
 // `packageType` in the API call payload for Terraform repositories must be "terraform", but we use
-// `terraform_module` and `terraform_provider` as a package types in the Provider. getRepoType function corrects this discrepancy.
-var GetPackageType = func(repoType string) string {
+// `terraform_module` and `terraform_provider` as a package types in the Provider. GetPackageType function corrects this discrepancy.
+func GetPackageType(repoType string) string {
 	if strings.Contains(repoType, "terraform_") {
 		return "terraform"
 	}

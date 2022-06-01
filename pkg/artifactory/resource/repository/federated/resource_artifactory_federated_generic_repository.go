@@ -76,16 +76,13 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-
-		var getTerraformType = func(repoType string) string {
-			return strings.ReplaceAll(repoType, "terraform_", "")
-		}
-
 		repo := FederatedRepositoryParams{
 			LocalRepositoryBaseParams: local.UnpackBaseRepo("federated", data, repoType),
 			Members:                   unpackMembers(data),
 		}
-		repo.TerraformType = getTerraformType(repoType)
+		// terraformType could be `module` or `provider`, repoType names we use are `terraform_module` and `terraform_provider`
+		// We need to remove the `terraform_` from the string.
+		repo.TerraformType = strings.ReplaceAll(repoType, "terraform_", "")
 
 		return repo, repo.Id(), nil
 	}

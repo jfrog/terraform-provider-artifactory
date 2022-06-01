@@ -11,7 +11,6 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 ```hcl
 resource "artifactory_local_terraform_provider_repository" "terraform-local-test-terraform-provider-repo" {
   key = "terraform-local-test-terraform-provider-repo"
-  
 }
 ```
 

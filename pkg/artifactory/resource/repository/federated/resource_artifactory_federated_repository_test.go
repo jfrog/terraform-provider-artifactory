@@ -149,7 +149,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_terraform_provider_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -159,7 +159,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 		"memberUrl":  federatedMemberUrl,
 	}
 	federatedRepositoryConfig := acctest.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
-		resource "artifactory_federated_generic_repository" "{{ .name }}" {
+		resource "artifactory_federated_terraform_provider_repository" "{{ .name }}" {
 			key                  = "{{ .name }}"
 			project_key          = "{{ .projectKey }}"
 	 		project_environments = ["{{ .projectEnv }}"]
