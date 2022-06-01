@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
@@ -15,20 +16,21 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          "client-checksums",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"client-checksums", "generated-checksums"}, true)),
+				ValidateDiagFunc: validator.StringInSlice(true, "client-checksums", "server-generated-checksums"),
 				Description: "Checksum policy determines how Artifactory behaves when a client checksum for a deployed " +
-					"resource is missing or conflicts with the locally calculated checksum (bad checksum).\nFor more details, " +
-					"please refer to Checksum Policy - " +
+					"resource is missing or conflicts with the locally calculated checksum (bad checksum). " +
+					`Options are: "client-checksums", or "server-generated-checksums". Default: "client-checksums"\n ` +
+					"For more details, please refer to Checksum Policy - " +
 					"https://www.jfrog.com/confluence/display/JFROG/Local+Repositories#LocalRepositories-ChecksumPolicy",
 			},
 			"snapshot_version_behavior": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          "unique",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"unique", "non-unique", "deployer"}, true)),
+				ValidateDiagFunc: validator.StringInSlice(true, "unique", "non-unique", "deployer"),
 				Description: "Specifies the naming convention for Maven SNAPSHOT versions.\nThe options are " +
-					"-\nUnique: Version number is based on a time-stamp (default)\nNon-unique: Version number uses a" +
-					" self-overriding naming pattern of artifactId-version-SNAPSHOT.type\nDeployer: Respects the settings " +
+					"-\nunique: Version number is based on a time-stamp (default)\nnon-unique: Version number uses a" +
+					" self-overriding naming pattern of artifactId-version-SNAPSHOT.type\ndeployer: Respects the settings " +
 					"in the Maven client that is deploying the artifact.",
 			},
 			"max_unique_snapshots": {
