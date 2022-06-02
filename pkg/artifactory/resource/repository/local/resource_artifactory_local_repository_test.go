@@ -526,11 +526,13 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := acctest.ExecuteTemplate("TestAccLocalTerraformModuleRepository", `
-		resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
+	localRepositoryBasic := acctest.ExecuteTemplate(
+		"TestAccLocalTerraformModuleRepository",
+		`resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
-		}
-	`, params)
+		}`,
+		params,
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -555,11 +557,13 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := acctest.ExecuteTemplate("TestAccLocalTerraformProviderRepository", `
-		resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
+	localRepositoryBasic := acctest.ExecuteTemplate(
+		"TestAccLocalTerraformProviderRepository",
+		`resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
-		}
-	`, params)
+		}`,
+		params,
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
