@@ -18,7 +18,6 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 
 	var unpackBowerVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
 		repo := unpackExternalDependenciesVirtualRepository(s, packageType)
-		repo.PackageType = packageType
 		return repo, repo.Id(), nil
 	}
 
