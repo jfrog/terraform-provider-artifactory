@@ -516,6 +516,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 	})
 
 }
+
 func TestAccVirtualRepository_full(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
@@ -726,11 +727,66 @@ func TestAccVirtualNugetRepository(t *testing.T) {
 	}))
 }
 
-func TestAccVirtualBowerRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase("bower", t, map[string]interface{}{
-		"description":                   "bower virtual repository public description testing.",
-		"external_dependencies_enabled": false,
-	}))
+func TestAccVirtualRepository_withExternalDependencies(t *testing.T) {
+	for _, packageType := range []string{"bower", "npm"} {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(mkVirtualExternalDependenciesTestCase(packageType, t))
+		})
+	}
+}
+
+func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("foo%d", id)
+	remoteRepoName := fmt.Sprintf("%s-remote-%d", packageType, id)
+	fqrn := fmt.Sprintf("artifactory_virtual_%s_repository.%s", packageType, name)
+
+	virtualRepositoryConfig := acctest.ExecuteTemplate(
+		"TestAccVirtualExternalDependenciesRepository",
+		`resource "artifactory_remote_{{ .packageType }}_repository" "{{ .packageType }}-remote" {
+			key = "{{ .remoteRepoName }}"
+			url = "https://registry.npmjs.org"
+		}
+
+		resource "artifactory_virtual_{{ .packageType }}_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = ["{{ .remoteRepoName }}"]
+			retrieval_cache_period_seconds    = 60
+			external_dependencies_enabled     = true
+			external_dependencies_patterns    = ["**/github.com/**", "**/go.googlesource.com/**"]
+			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
+
+			depends_on = ["artifactory_remote_{{ .packageType }}_repository.{{ .packageType }}-remote"]
+		}`,
+		map[string]interface{}{
+			"packageType": packageType,
+			"name": name,
+			"remoteRepoName": remoteRepoName,
+		},
+	)
+
+	return t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualRepositoryConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "repositories.*", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "60"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
+				),
+			},
+		},
+	}
 }
 
 func TestAccVirtualDebianRepository_full(t *testing.T) {
