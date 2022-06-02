@@ -1,6 +1,8 @@
 package local
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -25,6 +27,7 @@ var RepoTypesLikeGeneric = []string{
 	"pub",
 	"puppet",
 	"pypi",
+	"terraformbackend",
 	"vagrant",
 }
 
@@ -45,6 +48,7 @@ type LocalRepositoryBaseParams struct {
 	ArchiveBrowsingEnabled *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
 	DownloadRedirect       *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 	PriorityResolution     bool     `hcl:"priority_resolution" json:"priorityResolution"`
+	TerraformType          string   `json:"terraformType"`
 }
 
 func (bp LocalRepositoryBaseParams) Id() string {
@@ -142,6 +146,15 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 	},
 }
 
+// `packageType` in the API call payload for Terraform repositories must be "terraform", but we use
+// `terraform_module` and `terraform_provider` as a package types in the Provider. GetPackageType function corrects this discrepancy.
+func GetPackageType(repoType string) string {
+	if strings.Contains(repoType, "terraform_") {
+		return "terraform"
+	}
+	return repoType
+}
+
 func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
 	d := &util.ResourceData{s}
 	return LocalRepositoryBaseParams{
@@ -149,7 +162,7 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		Key:                    d.GetString("key", false),
 		ProjectKey:             d.GetString("project_key", false),
 		ProjectEnvironments:    d.GetSet("project_environments"),
-		PackageType:            packageType,
+		PackageType:            GetPackageType(packageType),
 		Description:            d.GetString("description", false),
 		Notes:                  d.GetString("notes", false),
 		IncludesPattern:        d.GetString("includes_pattern", false),
@@ -165,16 +178,18 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 }
 
 var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
-	"alpine": alpineLocalSchema,
-	"cargo":  cargoLocalSchema,
-	"debian": debianLocalSchema,
-	"docker": dockerV2LocalSchema,
-	"gradle": getJavaRepoSchema("gradle", true),
-	"ivy":    getJavaRepoSchema("ivy", false),
-	"maven":  getJavaRepoSchema("maven", false),
-	"nuget":  nugetLocalSchema,
-	"rpm":    rpmLocalSchema,
-	"sbt":    getJavaRepoSchema("sbt", false),
+	"alpine":             alpineLocalSchema,
+	"cargo":              cargoLocalSchema,
+	"debian":             debianLocalSchema,
+	"docker":             dockerV2LocalSchema,
+	"gradle":             getJavaRepoSchema("gradle", true),
+	"ivy":                getJavaRepoSchema("ivy", false),
+	"maven":              getJavaRepoSchema("maven", false),
+	"nuget":              nugetLocalSchema,
+	"rpm":                rpmLocalSchema,
+	"sbt":                getJavaRepoSchema("sbt", false),
+	"terraform_module":   getTerraformLocalSchema("module"),
+	"terraform_provider": getTerraformLocalSchema("provider"),
 }
 
 func init() {

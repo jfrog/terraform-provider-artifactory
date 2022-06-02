@@ -179,6 +179,21 @@ resource "artifactory_local_sbt_repository" "sbt-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
+resource "artifactory_local_terraform_module_repository" "terraform-module-local" {
+  key           = "terraform-module-local"
+  description   = "Repo created by Terraform Provider Artifactory"
+}
+
+resource "artifactory_local_terraform_provider_repository" "terraform-provider-local" {
+  key           = "terraform-provider-local"
+  description   = "Repo created by Terraform Provider Artifactory"
+}
+
+resource "artifactory_local_terraformbackend_repository" "terraformbackend-local" {
+  key         = "terraformbackend-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
 resource "artifactory_local_vagrant_repository" "vagrant-local" {
   key         = "vagrant-local"
   description = "Repo created by Terraform Provider Artifactory"
@@ -412,6 +427,13 @@ resource "artifactory_remote_pypi_repository" "pypi_remote" {
   key               = "pypi-remote"
   url               = "https://files.pythonhosted.org"
   pypi_registry_url = "https://custom.PYPI.registry.url"
+}
+
+resource "artifactory_remote_terraform_repository" "terraform-remote" {
+  key                     = "terraform-remote"
+  url                     = "https://github.com/"
+  terraform_registry_url  = "https://registry.terraform.io"
+  terraform_providers_url = "https://releases.hashicorp.com"
 }
 
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {
@@ -671,6 +693,15 @@ resource "artifactory_virtual_sbt_repository" "foo-sbt" {
   includes_pattern                         = "com/jfrog/**,cloud/jfrog/**"
   excludes_pattern                         = "com/google/**"
   pom_repository_references_cleanup_policy = "discard_active_reference"
+}
+
+resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
+  key              = "terraform-remote"
+  repositories     = []
+  description      = "A test virtual repo"
+  notes            = "Internal description"
+  includes_pattern = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern = "com/google/**"
 }
 
 

@@ -382,6 +382,16 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteTerraformRepository(t *testing.T) {
+	const packageType = "terraform"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"url":                     "https://github.com/",
+		"terraform_registry_url":  "https://registry.terraform.io",
+		"terraform_providers_url": "https://releases.hashicorp.com",
+		"repo_layout_ref":         "simple-default",
+	}))
+}
+
 func TestAccAllRemoteGradleLikeRepository(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
 		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {

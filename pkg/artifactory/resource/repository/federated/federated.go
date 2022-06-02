@@ -27,5 +27,7 @@ var FederatedRepoTypesSupported = []string{
 	"pypi",
 	"rpm",
 	"sbt",
+	"terraform_module",
+	"terraform_provider",
 	"vagrant",
 }

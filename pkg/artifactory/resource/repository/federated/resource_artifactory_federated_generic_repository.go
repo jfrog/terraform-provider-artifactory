@@ -2,6 +2,7 @@ package federated
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -53,7 +54,6 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 
 	var unpackMembers = func(data *schema.ResourceData) []Member {
 		d := &util.ResourceData{ResourceData: data}
-
 		var members []Member
 
 		if v, ok := d.GetOkExists("member"); ok {
@@ -80,6 +80,9 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 			LocalRepositoryBaseParams: local.UnpackBaseRepo("federated", data, repoType),
 			Members:                   unpackMembers(data),
 		}
+		// terraformType could be `module` or `provider`, repoType names we use are `terraform_module` and `terraform_provider`
+		// We need to remove the `terraform_` from the string.
+		repo.TerraformType = strings.ReplaceAll(repoType, "terraform_", "")
 
 		return repo, repo.Id(), nil
 	}
@@ -109,14 +112,14 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	packer := repository.ComposePacker(
-		repository.UniversalPack(repository.IgnoreHclPredicate("class", "rclass", "member")),
+		repository.UniversalPack(repository.IgnoreHclPredicate("class", "rclass", "member", "terraform_type")),
 		packMembers,
 	)
 
 	constructor := func() interface{} {
 		return &FederatedRepositoryParams{
 			LocalRepositoryBaseParams: local.LocalRepositoryBaseParams{
-				PackageType: repoType,
+				PackageType: local.GetPackageType(repoType),
 				Rclass:      "federated",
 			},
 		}
