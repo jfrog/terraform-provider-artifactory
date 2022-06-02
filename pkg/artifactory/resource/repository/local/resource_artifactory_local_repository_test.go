@@ -580,8 +580,8 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 
 var commonJavaParams = map[string]interface{}{
 	"name":                            "",
-	"checksum_policy_type":            "client-checksums",
-	"snapshot_version_behavior":       "unique",
+	"checksum_policy_type":            test.RandSelect("client-checksums", "server-generated-checksums"),
+	"snapshot_version_behavior":       test.RandSelect("unique", "non-unique", "deployer"),
 	"max_unique_snapshots":            test.RandSelect(0, 5, 10),
 	"handle_releases":                 true,
 	"handle_snapshots":                true,
