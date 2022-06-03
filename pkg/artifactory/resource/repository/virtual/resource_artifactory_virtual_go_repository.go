@@ -57,5 +57,4 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 			},
 		}
 	})
-
 }

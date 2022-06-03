@@ -1,3 +1,9 @@
+## 6.9.1 (June 3, 2022). Tested on Artifactory 7.38.10
+
+BUG FIXES:
+
+* resource/artifactory_virtual_npm_repository: Add missing attributes `external_dependencies_enabled`, `external_dependencies_patterns`, and `external_dependencies_remote_repo`. PR: [#473](https://github.com/jfrog/terraform-provider-artifactory/pull/473). Issue: [#463](https://github.com/jfrog/terraform-provider-artifactory/issues/463)
+
 ## 6.9.0 (May 24, 2022). Tested on Artifactory 7.38.10
 
 FEATURES:
