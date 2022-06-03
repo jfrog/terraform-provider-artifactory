@@ -1,4 +1,4 @@
-## 6.9.1 (June 3, 2022)
+## 6.9.1 (June 3, 2022). Tested on Artifactory 7.38.10
 
 BUG FIXES:
 
