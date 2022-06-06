@@ -90,11 +90,14 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 							[]string{
 								"applied-permissions/user",
 								"applied-permissions/admin",
-								"applied-permissions/groups",
 								"system:metrics:r",
 								"system:livelogs:r",
 							},
 							true,
+						),
+						validation.StringMatch(
+							regexp.MustCompile(`^applied-permissions/groups:.+$`),
+							"must be 'applied-permissions/groups:<group-name>[,<group-name>...]'",
 						),
 						validation.StringMatch(
 							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),

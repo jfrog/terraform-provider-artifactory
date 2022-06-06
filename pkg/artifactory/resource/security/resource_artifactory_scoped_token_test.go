@@ -114,6 +114,41 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	})
 }
 
+func TestAccScopedToken_WithGroupScope(t *testing.T) {
+	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := acctest.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_group" "test-group" {
+			name = "{{ .groupName }}"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_group.test-group.name
+			scopes      = ["applied-permissions/groups:{{ .groupName }}"]
+		}`,
+		map[string]interface{}{
+			"name": name,
+			"groupName": "test-group",
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "test-group"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
 
