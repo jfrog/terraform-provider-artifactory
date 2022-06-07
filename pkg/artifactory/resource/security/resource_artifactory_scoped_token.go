@@ -49,6 +49,23 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		Refreshable bool   `json:"refreshable"`
 	}
 
+	// serviceIdTypesValidator validates if the audience value starts with either
+	// '*@' for any service, or
+	// one of the valid JFrog service types (jfrt, jfxr, jfmc, etc.)
+	var serviceTypes = []string{"jfrt", "jfxr", "jfpip", "jfds", "jfmc", "jfac", "jfevt", "jfmd", "jfcon"}
+	var serviceIdTypesValidator = validation.ToDiagFunc(
+		validation.All(
+			validation.StringIsNotEmpty,
+			validation.StringMatch(
+				regexp.MustCompile(fmt.Sprintf(`^(%s|\*)@.+`, strings.Join(serviceTypes, "|"))),
+				fmt.Sprintf(
+					"must either begin with %s, or *",
+					strings.Join(serviceTypes, ", "),
+				),
+			),
+		),
+	)
+
 	var scopedTokenSchema = map[string]*schema.Schema{
 		"username": {
 			Type:             schema.TypeString,
@@ -73,11 +90,14 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 							[]string{
 								"applied-permissions/user",
 								"applied-permissions/admin",
-								"applied-permissions/groups",
 								"system:metrics:r",
 								"system:livelogs:r",
 							},
 							true,
+						),
+						validation.StringMatch(
+							regexp.MustCompile(`^applied-permissions/groups:.+$`),
+							"must be 'applied-permissions/groups:<group-name>[,<group-name>...]'",
 						),
 						validation.StringMatch(
 							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),
@@ -147,17 +167,12 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew: true,
 			Elem: &schema.Schema{
 				Type:             schema.TypeString,
-				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.All(
-						validation.StringIsNotEmpty,
-						validation.StringMatch(regexp.MustCompile(`^jfrt@.*`), "must begin with 'jfrt@'"),
-					),
-				),
+				ValidateDiagFunc: serviceIdTypesValidator,
 			},
 			Description: "A list of the other instances or services that should accept this " +
 				"token identified by their Service-IDs. Limited to total 255 characters. " +
-				"Default to '*@*' if not set. Service ID must begin with 'jfrt@'. For instructions " +
-				"to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).",
+				"Default to '*@*' if not set. Service ID must begin with valid JFrog service type. " +
+				"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *",
 		},
 		"access_token": {
 			Type:     schema.TypeString,

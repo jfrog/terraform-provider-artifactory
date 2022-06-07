@@ -1,3 +1,11 @@
+## 6.9.2 (June 7, 2022). Tested on Artifactory 7.38.10
+
+BUG FIXES:
+
+* resource/artifactory_scoped_token:
+  * Expand `audiences` validation to include all valid JFrog service types. PR: [#477](https://github.com/jfrog/terraform-provider-artifactory/pull/477). Issue: [#475](https://github.com/jfrog/terraform-provider-artifactory/issues/475)
+  * Fix incorrect validation for `applied-permissions/groups` scope. PR: [#477](https://github.com/jfrog/terraform-provider-artifactory/pull/477). Issue: [#478](https://github.com/jfrog/terraform-provider-artifactory/issues/478)
+
 ## 6.9.1 (June 3, 2022). Tested on Artifactory 7.38.10
 
 BUG FIXES:
