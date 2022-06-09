@@ -154,10 +154,14 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
+		chksMatches := false
 		fileExists := FileExists(outputPath)
-		chksMatches, err := VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-		if err != nil {
-			return diag.FromErr(err)
+		if fileExists {
+			chksMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+			if err != nil {
+				tflog.Error(ctx, fmt.Sprintf("Failed to verify checksum for %s", outputPath))
+				return diag.FromErr(err)
+			}
 		}
 
 		tflog.Debug(ctx, "File info fetched", map[string]interface{}{
