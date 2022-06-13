@@ -1,3 +1,9 @@
+## 6.9.3 (June 10, 2022). Tested on Artifactory 7.38.10
+
+BUG FIXES:
+
+* resource/artifactory_file: Check for file existence before verifying checksum. PR: [#481](https://github.com/jfrog/terraform-provider-artifactory/pull/481). Issue: [#480](https://github.com/jfrog/terraform-provider-artifactory/issues/480)
+
 ## 6.9.2 (June 7, 2022). Tested on Artifactory 7.38.10
 
 BUG FIXES:
