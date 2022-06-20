@@ -32,7 +32,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: data}
 		repo := AlpineLocalRepo{
 			RepositoryBaseParams: UnpackBaseRepo("local", data, "alpine"),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
+			PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil

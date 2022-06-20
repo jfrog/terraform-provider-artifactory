@@ -44,11 +44,11 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DebianLocalRepositoryParams{
-			RepositoryBaseParams: UnpackBaseRepo("local", data, "debian"),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
-			TrivialLayout:             d.GetBool("trivial_layout", false),
-			IndexCompressionFormats:   d.GetSet("index_compression_formats"),
+			RepositoryBaseParams:    UnpackBaseRepo("local", data, "debian"),
+			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
+			TrivialLayout:           d.GetBool("trivial_layout", false),
+			IndexCompressionFormats: d.GetSet("index_compression_formats"),
 		}
 		return repo, repo.Id(), nil
 	}

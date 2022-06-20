@@ -54,7 +54,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepository{
-			RepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),

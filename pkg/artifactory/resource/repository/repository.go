@@ -53,8 +53,6 @@ type ReadFunc func(d *schema.ResourceData, m interface{}) error
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
 type Constructor func() interface{}
 
-
-
 func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
 
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

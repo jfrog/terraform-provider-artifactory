@@ -69,8 +69,6 @@ func PreCheck(t *testing.T) {
 	})
 }
 
-
-
 func GetArtifactoryUrl(t *testing.T) string {
 	return test.GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
 }
@@ -102,7 +100,6 @@ func MapToTestChecks(fqrn string, fields map[string]interface{}) []resource.Test
 	}
 	return result
 }
-
 
 func CopyInterfaceMap(source map[string]interface{}, target map[string]interface{}) map[string]interface{} {
 	for k, v := range source {

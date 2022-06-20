@@ -71,13 +71,13 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := RpmLocalRepositoryParams{
-			RepositoryBaseParams: UnpackBaseRepo("local", data, "rpm"),
-			RootDepth:                 d.GetInt("yum_root_depth", false),
-			CalculateYumMetadata:      d.GetBool("calculate_yum_metadata", false),
-			EnableFileListsIndexing:   d.GetBool("enable_file_lists_indexing", false),
-			GroupFileNames:            d.GetString("yum_group_file_names", false),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
+			RepositoryBaseParams:    UnpackBaseRepo("local", data, "rpm"),
+			RootDepth:               d.GetInt("yum_root_depth", false),
+			CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
+			EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
+			GroupFileNames:          d.GetString("yum_group_file_names", false),
+			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil

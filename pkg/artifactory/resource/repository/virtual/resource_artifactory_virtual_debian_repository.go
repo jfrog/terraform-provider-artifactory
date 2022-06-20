@@ -61,10 +61,10 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 		repo := DebianVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
-			OptionalIndexCompressionFormats:                         d.GetSet("optional_index_compression_formats"),
-			PrimaryKeyPairRef:                                       d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:                                     d.GetString("secondary_keypair_ref", false),
-			DebianDefaultArchitectures:                              d.GetString("debian_default_architectures", false),
+			OptionalIndexCompressionFormats:                  d.GetSet("optional_index_compression_formats"),
+			PrimaryKeyPairRef:                                d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:                              d.GetString("secondary_keypair_ref", false),
+			DebianDefaultArchitectures:                       d.GetString("debian_default_architectures", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

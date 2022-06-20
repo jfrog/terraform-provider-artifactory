@@ -74,7 +74,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
-			Description:      "The user name for which this token is created. The username is based " +
+			Description: "The user name for which this token is created. The username is based " +
 				"on the authenticated user - either from the user of the authenticated token or based " +
 				"on the username (if basic auth was used). The username is then used to set the subject " +
 				"of the token: <service-id>/users/<username>. Limited to 255 characters.",
@@ -85,7 +85,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew: true,
 			Computed: true,
 			Elem: &schema.Schema{
-				Type:             schema.TypeString,
+				Type: schema.TypeString,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.Any(
 						validation.StringInSlice(
@@ -144,7 +144,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew:         true,
 			Computed:         true,
 			ValidateDiagFunc: validator.IntAtLeast(0),
-			Description:      "The amount of time, in seconds, it would take for the token to expire. " +
+			Description: "The amount of time, in seconds, it would take for the token to expire. " +
 				"An admin shall be able to set whether expiry is mandatory, what is the default expiry, " +
 				"and what is the maximum expiry allowed. Must be non-negative. Default value is based on " +
 				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.",

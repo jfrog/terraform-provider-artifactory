@@ -32,7 +32,7 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
 			RepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
-			AnonymousAccess:           d.GetBool("anonymous_access", false),
+			AnonymousAccess:      d.GetBool("anonymous_access", false),
 		}
 
 		return repo, repo.Id(), nil

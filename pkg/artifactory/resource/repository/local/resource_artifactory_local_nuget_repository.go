@@ -39,9 +39,9 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
-			RepositoryBaseParams: UnpackBaseRepo("local", data, "nuget"),
-			MaxUniqueSnapshots:        d.GetInt("max_unique_snapshots", false),
-			ForceNugetAuthentication:  d.GetBool("force_nuget_authentication", false),
+			RepositoryBaseParams:     UnpackBaseRepo("local", data, "nuget"),
+			MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 		}
 
 		return repo, repo.Id(), nil

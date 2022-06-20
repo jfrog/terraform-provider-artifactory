@@ -49,10 +49,10 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
 			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
-			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
-			DockerApiVersion:          "V2",
-			TagRetention:              d.GetInt("tag_retention", false),
-			BlockPushingSchema1:       d.GetBool("block_pushing_schema1", false),
+			MaxUniqueTags:        d.GetInt("max_unique_tags", false),
+			DockerApiVersion:     "V2",
+			TagRetention:         d.GetInt("tag_retention", false),
+			BlockPushingSchema1:  d.GetBool("block_pushing_schema1", false),
 		}
 
 		return repo, repo.Id(), nil
@@ -104,10 +104,10 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{
 			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
-			MaxUniqueTags:             0,
-			DockerApiVersion:          "V1",
-			TagRetention:              1,
-			BlockPushingSchema1:       false,
+			MaxUniqueTags:        0,
+			DockerApiVersion:     "V1",
+			TagRetention:         1,
+			BlockPushingSchema1:  false,
 		}
 
 		return repo, repo.Id(), nil

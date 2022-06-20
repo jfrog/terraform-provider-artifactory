@@ -29,8 +29,8 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: s}
 
 		repo := NugetVirtualRepositoryParams{
-			RepositoryBaseParams: UnpackBaseVirtRepo(s, packageType),
-			ForceNugetAuthentication:    d.GetBool("force_nuget_authentication", false),
+			RepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil

@@ -50,7 +50,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	var unpackHelmRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := HelmRemoteRepo{
-			RepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
 			HelmChartsBaseURL:            d.GetString("helm_charts_base_url", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),

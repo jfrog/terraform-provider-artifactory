@@ -129,7 +129,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 			scopes      = ["applied-permissions/groups:{{ .groupName }}"]
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":      name,
 			"groupName": "test-group",
 		},
 	)
@@ -295,7 +295,7 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 			audiences = ["foo@*"]
 		}`,
 		map[string]interface{}{
-			"name":      name,
+			"name": name,
 		},
 	)
 

@@ -38,8 +38,8 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: s}
 		repo := PypiRemoteRepo{
 			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			PypiRegistryUrl:            d.GetString("pypi_registry_url", false),
-			PypiRepositorySuffix:       d.GetString("pypi_repository_suffix", false),
+			PypiRegistryUrl:      d.GetString("pypi_registry_url", false),
+			PypiRepositorySuffix: d.GetString("pypi_repository_suffix", false),
 		}
 		return repo, repo.Id(), nil
 	}

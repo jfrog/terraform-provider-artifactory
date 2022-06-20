@@ -32,7 +32,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 		repo := BowerRemoteRepo{
 			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
+			BowerRegistryUrl:     d.GetString("bower_registry_url", false),
 		}
 		return repo, repo.Id(), nil
 	}

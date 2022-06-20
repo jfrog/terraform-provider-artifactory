@@ -42,7 +42,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: s}
 
 		repo := GoVirtualRepositoryParams{
-			RepositoryBaseParams:  UnpackBaseVirtRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseVirtRepo(s, packageType),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 		}

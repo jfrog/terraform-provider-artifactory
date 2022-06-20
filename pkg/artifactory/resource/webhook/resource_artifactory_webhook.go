@@ -36,9 +36,9 @@ var DomainEventTypesSupported = map[string][]string{
 }
 
 type BaseParams struct {
-	Key         string             `json:"key"`
-	Description string             `json:"description"`
-	Enabled     bool             `json:"enabled"`
+	Key         string      `json:"key"`
+	Description string      `json:"description"`
+	Enabled     bool        `json:"enabled"`
 	EventFilter EventFilter `json:"event_filter"`
 	Handlers    []Handler   `json:"handlers"`
 }
@@ -54,9 +54,9 @@ type EventFilter struct {
 }
 
 type Handler struct {
-	HandlerType       string                    `json:"handler_type"`
-	Url               string                    `json:"url"`
-	Secret            string                    `json:"secret"`
+	HandlerType       string             `json:"handler_type"`
+	Url               string             `json:"url"`
+	Secret            string             `json:"secret"`
 	Proxy             string             `json:"proxy"`
 	CustomHttpHeaders []CustomHttpHeader `json:"custom_http_headers"`
 }

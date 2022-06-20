@@ -161,7 +161,7 @@ func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, pack
 	d := &util.ResourceData{ResourceData: s}
 
 	return RepositoryBaseParamsWithRetrievalCachePeriodSecs{
-		RepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),
+		RepositoryBaseParams:            UnpackBaseVirtRepo(s, packageType),
 		VirtualRetrievalCachePeriodSecs: d.GetInt("retrieval_cache_period_seconds", false),
 	}
 }
@@ -204,7 +204,7 @@ var unpackExternalDependenciesVirtualRepository = func(s *schema.ResourceData, p
 	d := &util.ResourceData{ResourceData: s}
 
 	return ExternalDependenciesVirtualRepositoryParams{
-		RepositoryBaseParams:    UnpackBaseVirtRepo(s, packageType),
+		RepositoryBaseParams:           UnpackBaseVirtRepo(s, packageType),
 		ExternalDependenciesEnabled:    d.GetBool("external_dependencies_enabled", false),
 		ExternalDependenciesRemoteRepo: d.GetString("external_dependencies_remote_repo", false),
 		ExternalDependenciesPatterns:   d.GetList("external_dependencies_patterns"),
