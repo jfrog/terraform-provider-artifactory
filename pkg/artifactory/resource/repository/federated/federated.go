@@ -1,6 +1,6 @@
 package federated
 
-var FederatedRepoTypesSupported = []string{
+var RepoTypesSupported = []string{
 	"alpine",
 	"bower",
 	"cargo",

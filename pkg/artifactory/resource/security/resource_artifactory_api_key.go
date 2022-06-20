@@ -78,7 +78,7 @@ func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}
 	return packApiKey(key, d)
 }
 
-func apiKeyRevoke(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func apiKeyRevoke(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(ApiKeyEndpoint)
 	return diag.FromErr(err)
 }

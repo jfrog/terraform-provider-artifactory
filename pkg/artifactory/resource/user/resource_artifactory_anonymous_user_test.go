@@ -29,16 +29,16 @@ func TestAccAnonymousUserImportable(t *testing.T) {
 				ImportStateId: "anonymous",
 				ImportStateCheck: func(states []*terraform.InstanceState) error {
 					if len(states) == 0 {
-						return fmt.Errorf("No import state")
+						return fmt.Errorf("no import state")
 					}
 
 					instanceState := states[0]
 					if instanceState.ID != "anonymous" {
-						return fmt.Errorf("Incorrect state ID: %s", instanceState.ID)
+						return fmt.Errorf("incorrect state ID: %s", instanceState.ID)
 					}
 
 					if instanceState.Attributes["name"] != "anonymous" {
-						return fmt.Errorf("Incorrect state attribute 'name': %s", instanceState.Attributes["name"])
+						return fmt.Errorf("incorrect state attribute 'name': %s", instanceState.Attributes["name"])
 					}
 
 					return nil

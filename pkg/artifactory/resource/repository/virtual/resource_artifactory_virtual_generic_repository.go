@@ -3,12 +3,13 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 	constructor := func() interface{} {
-		return &VirtualRepositoryBaseParams{
+		return &RepositoryBaseParams{
 			PackageType: pkt,
 			Rclass:      "virtual",
 		}
@@ -20,7 +21,7 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 
 	genericSchema := util.MergeSchema(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
 
-	return repository.MkResourceSchema(genericSchema, repository.DefaultPacker(genericSchema), unpack, constructor)
+	return repository.MkResourceSchema(genericSchema, packer.Default(genericSchema), unpack, constructor)
 }
 
 func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
@@ -31,8 +32,8 @@ func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string
 	)
 
 	constructor := func() interface{} {
-		return &VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
-			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+		return &RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: pkt,
 			},
@@ -46,7 +47,7 @@ func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string
 
 	return repository.MkResourceSchema(
 		repoWithRetrivalCachePeriodSecsVirtualSchema,
-		repository.DefaultPacker(repoWithRetrivalCachePeriodSecsVirtualSchema),
+		packer.Default(repoWithRetrivalCachePeriodSecsVirtualSchema),
 		unpack,
 		constructor,
 	)

@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type VirtualRepositoryBaseParams struct {
+type RepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey                                    string   `json:"projectKey"`
 	ProjectEnvironments                           []string `json:"environments"`
@@ -24,16 +24,16 @@ type VirtualRepositoryBaseParams struct {
 	DefaultDeploymentRepo                         string   `hcl:"default_deployment_repo" json:"defaultDeploymentRepo,omitempty"`
 }
 
-type VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
-	VirtualRepositoryBaseParams
+type RepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
+	RepositoryBaseParams
 	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
-func (bp VirtualRepositoryBaseParams) Id() string {
+func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var VirtualRepoTypesLikeGeneric = []string{
+var RepoTypesLikeGeneric = []string{
 	"docker",
 	"gems",
 	"generic",
@@ -137,10 +137,10 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParams {
-	d := &util.ResourceData{s}
+func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
+	d := &util.ResourceData{ResourceData: s}
 
-	return VirtualRepositoryBaseParams{
+	return RepositoryBaseParams{
 		Key:                 d.GetString("key", false),
 		Rclass:              "virtual",
 		ProjectKey:          d.GetString("project_key", false),
@@ -153,15 +153,15 @@ func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) VirtualRepos
 		Repositories:          d.GetList("repositories"),
 		Description:           d.GetString("description", false),
 		Notes:                 d.GetString("notes", false),
-		DefaultDeploymentRepo: repository.HandleResetWithNonExistantValue(d, "default_deployment_repo"),
+		DefaultDeploymentRepo: repository.HandleResetWithNonExistentValue(d, "default_deployment_repo"),
 	}
 }
 
-func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs {
-	d := &util.ResourceData{s}
+func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) RepositoryBaseParamsWithRetrievalCachePeriodSecs {
+	d := &util.ResourceData{ResourceData: s}
 
-	return VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
-		VirtualRepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),
+	return RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+		RepositoryBaseParams:     UnpackBaseVirtRepo(s, packageType),
 		VirtualRetrievalCachePeriodSecs: d.GetInt("retrieval_cache_period_seconds", false),
 	}
 }
@@ -194,17 +194,17 @@ var externalDependenciesSchema = map[string]*schema.Schema{
 }
 
 type ExternalDependenciesVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
+	RepositoryBaseParams
 	ExternalDependenciesEnabled    bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesRemoteRepo string   `json:"externalDependenciesRemoteRepo"`
 	ExternalDependenciesPatterns   []string `json:"externalDependenciesPatterns"`
 }
 
 var unpackExternalDependenciesVirtualRepository = func(s *schema.ResourceData, packageType string) ExternalDependenciesVirtualRepositoryParams {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 
 	return ExternalDependenciesVirtualRepositoryParams{
-		VirtualRepositoryBaseParams:    UnpackBaseVirtRepo(s, packageType),
+		RepositoryBaseParams:    UnpackBaseVirtRepo(s, packageType),
 		ExternalDependenciesEnabled:    d.GetBool("external_dependencies_enabled", false),
 		ExternalDependenciesRemoteRepo: d.GetString("external_dependencies_remote_repo", false),
 		ExternalDependenciesPatterns:   d.GetList("external_dependencies_patterns"),

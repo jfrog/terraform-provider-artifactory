@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -28,24 +29,24 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	type PypiRemoteRepo struct {
-		RemoteRepositoryBaseParams
+		RepositoryBaseParams
 		PypiRegistryUrl      string `json:"pyPIRegistryUrl"`
 		PypiRepositorySuffix string `json:"pyPIRepositorySuffix"`
 	}
 
 	var unpackPypiRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := PypiRemoteRepo{
-			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			PypiRegistryUrl:            d.GetString("pypi_registry_url", false),
 			PypiRepositorySuffix:       d.GetString("pypi_repository_suffix", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(pypiRemoteSchema, repository.DefaultPacker(pypiRemoteSchema), unpackPypiRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(pypiRemoteSchema, packer.Default(pypiRemoteSchema), unpackPypiRemoteRepo, func() interface{} {
 		return &PypiRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

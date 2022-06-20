@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -42,12 +43,12 @@ var dockerV2LocalSchema = util.MergeSchema(
 )
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	packer := repository.DefaultPacker(dockerV2LocalSchema)
+	pkr := packer.Default(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
 			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
 			DockerApiVersion:          "V2",
 			TagRetention:              d.GetInt("tag_retention", false),
@@ -57,9 +58,9 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(dockerV2LocalSchema, packer, unPackLocalDockerV2Repository, func() interface{} {
+	return repository.MkResourceSchema(dockerV2LocalSchema, pkr, unPackLocalDockerV2Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
 			},
@@ -102,7 +103,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
 			MaxUniqueTags:             0,
 			DockerApiVersion:          "V1",
 			TagRetention:              1,
@@ -112,9 +113,9 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(skeema, repository.DefaultPacker(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
+	return repository.MkResourceSchema(skeema, packer.Default(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
 			},
@@ -127,7 +128,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 }
 
 type DockerLocalRepositoryParams struct {
-	LocalRepositoryBaseParams
+	RepositoryBaseParams
 	MaxUniqueTags       int    `hcl:"max_unique_tags" json:"maxUniqueTags"`
 	DockerApiVersion    string `hcl:"api_version" json:"dockerApiVersion"`
 	TagRetention        int    `hcl:"tag_retention" json:"dockerTagRetention"`

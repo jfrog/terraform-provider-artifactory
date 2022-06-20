@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -14,7 +15,7 @@ type CommonJavaVirtualRepositoryParams struct {
 }
 
 type JavaVirtualRepositoryParams struct {
-	VirtualRepositoryBaseParams
+	RepositoryBaseParams
 	CommonJavaVirtualRepositoryParams
 }
 
@@ -47,10 +48,10 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 	}, repository.RepoLayoutRefSchema("virtual", repoType))
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 
 		repo := JavaVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: UnpackBaseVirtRepo(s, repoType),
+			RepositoryBaseParams: UnpackBaseVirtRepo(s, repoType),
 			CommonJavaVirtualRepositoryParams: CommonJavaVirtualRepositoryParams{
 				KeyPair:                              d.GetString("key_pair", false),
 				ForceMavenAuthentication:             d.GetBool("force_maven_authentication", false),
@@ -62,9 +63,9 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(mavenVirtualSchema, repository.DefaultPacker(mavenVirtualSchema), unpackMavenVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(mavenVirtualSchema, packer.Default(mavenVirtualSchema), unpackMavenVirtualRepository, func() interface{} {
 		return &JavaVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: repoType,
 			},

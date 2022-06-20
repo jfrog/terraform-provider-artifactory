@@ -3,6 +3,7 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -26,10 +27,10 @@ func ResourceArtifactoryLocalTerraformRepository(registryType string) *schema.Re
 
 	return repository.MkResourceSchema(
 		terraformLocalSchema,
-		repository.DefaultPacker(terraformLocalSchema),
+		packer.Default(terraformLocalSchema),
 		unPackLocalTerraformRepository,
 		func() interface{} {
-			return &LocalRepositoryBaseParams{
+			return &RepositoryBaseParams{
 				PackageType: "terraform_" + registryType,
 				Rclass:      "local",
 			}

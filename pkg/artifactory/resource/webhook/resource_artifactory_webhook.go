@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var WebhookTypesSupported = []string{
+var TypesSupported = []string{
 	"artifact",
 	"artifact_property",
 	"docker",
@@ -35,40 +35,40 @@ var DomainEventTypesSupported = map[string][]string{
 	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
 }
 
-type WebhookBaseParams struct {
+type BaseParams struct {
 	Key         string             `json:"key"`
 	Description string             `json:"description"`
-	Enabled     bool               `json:"enabled"`
-	EventFilter WebhookEventFilter `json:"event_filter"`
-	Handlers    []WebhookHandler   `json:"handlers"`
+	Enabled     bool             `json:"enabled"`
+	EventFilter EventFilter `json:"event_filter"`
+	Handlers    []Handler   `json:"handlers"`
 }
 
-func (w WebhookBaseParams) Id() string {
+func (w BaseParams) Id() string {
 	return w.Key
 }
 
-type WebhookEventFilter struct {
+type EventFilter struct {
 	Domain     string      `json:"domain"`
 	EventTypes []string    `json:"event_types"`
 	Criteria   interface{} `json:"criteria"`
 }
 
-type WebhookHandler struct {
+type Handler struct {
 	HandlerType       string                    `json:"handler_type"`
 	Url               string                    `json:"url"`
 	Secret            string                    `json:"secret"`
-	Proxy             string                    `json:"proxy"`
-	CustomHttpHeaders []WebhookCustomHttpHeader `json:"custom_http_headers"`
+	Proxy             string             `json:"proxy"`
+	CustomHttpHeaders []CustomHttpHeader `json:"custom_http_headers"`
 }
 
-type WebhookCustomHttpHeader struct {
+type CustomHttpHeader struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
 const webhooksUrl = "/event/api/v1/subscriptions"
 
-const WebhookUrl = webhooksUrl + "/{webhookKey}"
+const WhUrl = webhooksUrl + "/{webhookKey}"
 
 const currentSchemaVersion = 2
 
@@ -116,13 +116,13 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		"artifactory_release_bundle": unpackReleaseBundleCriteria,
 	}
 
-	var unpackWebhook = func(data *schema.ResourceData) (WebhookBaseParams, error) {
-		d := &util.ResourceData{data}
+	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
+		d := &util.ResourceData{ResourceData: data}
 
 		var unpackCriteria = func(d *util.ResourceData, webhookType string) interface{} {
 			var webhookCriteria interface{}
 
-			if v, ok := d.GetOkExists("criteria"); ok {
+			if v, ok := d.GetOk("criteria"); ok {
 				criteria := v.(*schema.Set).List()
 				if len(criteria) == 1 {
 					id := criteria[0].(map[string]interface{})
@@ -139,11 +139,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookCriteria
 		}
 
-		var unpackCustomHttpHeaders = func(customHeaders map[string]interface{}) []WebhookCustomHttpHeader {
-			var headers []WebhookCustomHttpHeader
+		var unpackCustomHttpHeaders = func(customHeaders map[string]interface{}) []CustomHttpHeader {
+			var headers []CustomHttpHeader
 
 			for key, value := range customHeaders {
-				customHeader := WebhookCustomHttpHeader{
+				customHeader := CustomHttpHeader{
 					Name:  key,
 					Value: value.(string),
 				}
@@ -154,15 +154,15 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return headers
 		}
 
-		var unpackHandlers = func(d *util.ResourceData) []WebhookHandler {
-			var webhookHandlers []WebhookHandler
+		var unpackHandlers = func(d *util.ResourceData) []Handler {
+			var webhookHandlers []Handler
 
-			if v, ok := d.GetOkExists("handler"); ok {
+			if v, ok := d.GetOk("handler"); ok {
 				handlers := v.(*schema.Set).List()
 				for _, handler := range handlers {
 					h := handler.(map[string]interface{})
 
-					webhookHandler := WebhookHandler{
+					webhookHandler := Handler{
 						HandlerType:       "webhook",
 						Url:               h["url"].(string),
 						Secret:            h["secret"].(string),
@@ -176,11 +176,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookHandlers
 		}
 
-		webhook := WebhookBaseParams{
+		webhook := BaseParams{
 			Key:         d.GetString("key", false),
 			Description: d.GetString("description", false),
 			Enabled:     d.GetBool("enabled", false),
-			EventFilter: WebhookEventFilter{
+			EventFilter: EventFilter{
 				Domain:     webhookType,
 				EventTypes: d.GetSet("event_types"),
 				Criteria:   unpackCriteria(d, webhookType),
@@ -203,7 +203,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
 	}
 
-	var packCustomHeaders = func(customHeaders []WebhookCustomHttpHeader) map[string]interface{} {
+	var packCustomHeaders = func(customHeaders []CustomHttpHeader) map[string]interface{} {
 		headers := make(map[string]interface{})
 		for _, customHeader := range customHeaders {
 			headers[customHeader.Name] = customHeader.Value
@@ -212,7 +212,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return headers
 	}
 
-	var packHandlers = func(d *schema.ResourceData, handlers []WebhookHandler) []error {
+	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
 		setValue := util.MkLens(d)
 
 		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["handler"].Elem.(*schema.Resource)
@@ -232,7 +232,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return setValue("handler", schema.NewSet(schema.HashResource(resource), packedHandlers))
 	}
 
-	var packWebhook = func(d *schema.ResourceData, webhook WebhookBaseParams) diag.Diagnostics {
+	var packWebhook = func(d *schema.ResourceData, webhook BaseParams) diag.Diagnostics {
 		setValue := util.MkLens(d)
 
 		var errors []error
@@ -254,14 +254,14 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
 
-		webhook := WebhookBaseParams{}
+		webhook := BaseParams{}
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
 		_, err := m.(*resty.Client).R().
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
-			Get(WebhookUrl)
+			Get(WhUrl)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -309,7 +309,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
-			Put(WebhookUrl)
+			Put(WhUrl)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -324,7 +324,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		resp, err := m.(*resty.Client).R().
 			SetPathParam("webhookKey", data.Id()).
-			Delete(WebhookUrl)
+			Delete(WhUrl)
 
 		if err != nil && resp.StatusCode() == http.StatusNotFound {
 			data.SetId("")
@@ -408,7 +408,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 // ResourceStateUpgradeV1 see the corresponding unit test TestWebhookResourceStateUpgradeV1
 // for more details on the schema transformation
-func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	rawState["handler"] = []map[string]interface{}{
 		{
 			"url":                 rawState["url"],

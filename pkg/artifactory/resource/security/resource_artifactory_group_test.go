@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"net/http"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestAccGroup_basic(t *testing.T) {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := acctest.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -122,11 +123,11 @@ func TestAccGroup_full(t *testing.T) {
 		`,
 	}
 
-	configs := []string{}
+	var configs []string
 	for step, template := range templates {
 		configs = append(
 			configs,
-			acctest.ExecuteTemplate(
+			util.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{
@@ -249,9 +250,9 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 		}
 		`,
 	}
-	configs := []string{}
+	var configs []string
 	for step, template := range templates {
-		configs = append(configs, acctest.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
+		configs = append(configs, util.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
 
 	}
 	resource.Test(t, resource.TestCase{

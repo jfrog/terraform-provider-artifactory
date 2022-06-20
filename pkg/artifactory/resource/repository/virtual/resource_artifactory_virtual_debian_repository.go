@@ -1,6 +1,7 @@
 package virtual
 
 import (
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,7 +49,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type DebianVirtualRepositoryParams struct {
-		VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs
+		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats"`
 		PrimaryKeyPairRef               string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
 		SecondaryKeyPairRef             string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
@@ -56,10 +57,10 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 	}
 
 	var unpackDebianVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 
 		repo := DebianVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
 			OptionalIndexCompressionFormats:                         d.GetSet("optional_index_compression_formats"),
 			PrimaryKeyPairRef:                                       d.GetString("primary_keypair_ref", false),
 			SecondaryKeyPairRef:                                     d.GetString("secondary_keypair_ref", false),
@@ -69,10 +70,10 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(debianVirtualSchema, repository.DefaultPacker(debianVirtualSchema), unpackDebianVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(debianVirtualSchema, packer.Default(debianVirtualSchema), unpackDebianVirtualRepository, func() interface{} {
 		return &DebianVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
-				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      "virtual",
 					PackageType: packageType,
 				},

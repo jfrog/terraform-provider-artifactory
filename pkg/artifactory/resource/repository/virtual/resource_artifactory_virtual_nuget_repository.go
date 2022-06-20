@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -20,24 +21,24 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type NugetVirtualRepositoryParams struct {
-		VirtualRepositoryBaseParams
+		RepositoryBaseParams
 		ForceNugetAuthentication bool `json:"forceNugetAuthentication"`
 	}
 
 	var unpackNugetVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 
 		repo := NugetVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: UnpackBaseVirtRepo(s, packageType),
+			RepositoryBaseParams: UnpackBaseVirtRepo(s, packageType),
 			ForceNugetAuthentication:    d.GetBool("force_nuget_authentication", false),
 		}
 		repo.PackageType = packageType
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(nugetVirtualSchema, repository.DefaultPacker(nugetVirtualSchema), unpackNugetVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(nugetVirtualSchema, packer.Default(nugetVirtualSchema), unpackNugetVirtualRepository, func() interface{} {
 		return &NugetVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: packageType,
 			},

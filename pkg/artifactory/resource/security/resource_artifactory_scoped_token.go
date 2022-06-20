@@ -3,6 +3,8 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"regexp"
 	"strings"
 	"time"
@@ -100,7 +102,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 							"must be 'applied-permissions/groups:<group-name>[,<group-name>...]'",
 						),
 						validation.StringMatch(
-							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),
+							regexp.MustCompile(`^artifact:.+:([rwdam*]|([rwdam]+(,[rwdam]+)))$`),
 							"must be '<resource-type>:<target>[/<sub-resource>]:<actions>'",
 						),
 					),
@@ -239,7 +241,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		packer := util.UniversalPack(util.SchemaHasKey(scopedTokenSchema))
+		packer := packer.Universal(predicate.SchemaHasKey(scopedTokenSchema))
 
 		return diag.FromErr(packer(&accessToken, data))
 	}
