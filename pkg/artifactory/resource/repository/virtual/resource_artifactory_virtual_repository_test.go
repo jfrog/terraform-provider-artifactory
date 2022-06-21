@@ -2,6 +2,7 @@ package virtual_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -268,7 +269,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 		"name":          name,
 		"useNamespaces": useNamespaces,
 	}
-	virtualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualHelmRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
 	 	  use_namespaces = {{ .useNamespaces }}
@@ -298,7 +299,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 	_, fqrn, name := acctest.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := acctest.MkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := acctest.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := acctest.ExecuteTemplate("keypair", `
+	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -573,7 +574,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	virtualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -617,7 +618,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	virualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key"
@@ -644,7 +645,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepository(t *testing.T) {
-	for _, repoType := range virtual.VirtualRepoTypesLikeGeneric {
+	for _, repoType := range virtual.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
@@ -681,8 +682,8 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 		"description": "A test virtual repo",
 		"notes":       "Internal description",
 	}
-	allFields := acctest.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := acctest.FmtMapToHcl(allFields)
+	allFields := util.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := util.FmtMapToHcl(allFields)
 	const virtualRepoFull = `
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
@@ -741,7 +742,7 @@ func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*t
 	remoteRepoName := fmt.Sprintf("%s-remote-%d", packageType, id)
 	fqrn := fmt.Sprintf("artifactory_virtual_%s_repository.%s", packageType, name)
 
-	virtualRepositoryConfig := acctest.ExecuteTemplate(
+	virtualRepositoryConfig := util.ExecuteTemplate(
 		"TestAccVirtualExternalDependenciesRepository",
 		`resource "artifactory_remote_{{ .packageType }}_repository" "{{ .packageType }}-remote" {
 			key = "{{ .remoteRepoName }}"
@@ -759,8 +760,8 @@ func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*t
 			depends_on = ["artifactory_remote_{{ .packageType }}_repository.{{ .packageType }}-remote"]
 		}`,
 		map[string]interface{}{
-			"packageType": packageType,
-			"name": name,
+			"packageType":    packageType,
+			"name":           name,
 			"remoteRepoName": remoteRepoName,
 		},
 	)

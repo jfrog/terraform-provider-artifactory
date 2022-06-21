@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -23,11 +24,11 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(
 		bowerVirtualSchema,
-		repository.DefaultPacker(bowerVirtualSchema),
+		packer.Default(bowerVirtualSchema),
 		unpackBowerVirtualRepository,
 		func() interface{} {
 			return &ExternalDependenciesVirtualRepositoryParams{
-				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      "virtual",
 					PackageType: packageType,
 				},

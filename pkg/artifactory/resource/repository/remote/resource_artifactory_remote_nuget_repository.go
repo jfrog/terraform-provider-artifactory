@@ -4,14 +4,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type NugetRemoteRepo struct {
-	RemoteRepositoryBaseParams
+	RepositoryBaseParams
 	FeedContextPath          string `json:"feedContextPath"`
 	DownloadContextPath      string `json:"downloadContextPath"`
-	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by repository.UniversalPack function.
+	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
 	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
 }
 
@@ -48,21 +49,21 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := NugetRemoteRepo{
-			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			FeedContextPath:            d.GetString("feed_context_path", false),
-			DownloadContextPath:        d.GetString("download_context_path", false),
-			V3FeedUrl:                  d.GetString("v3_feed_url", false),
-			ForceNugetAuthentication:   d.GetBool("force_nuget_authentication", false),
+			RepositoryBaseParams:     UnpackBaseRemoteRepo(s, packageType),
+			FeedContextPath:          d.GetString("feed_context_path", false),
+			DownloadContextPath:      d.GetString("download_context_path", false),
+			V3FeedUrl:                d.GetString("v3_feed_url", false),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(nugetRemoteSchema, repository.DefaultPacker(nugetRemoteSchema), unpackNugetRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(nugetRemoteSchema, packer.Default(nugetRemoteSchema), unpackNugetRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &NugetRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

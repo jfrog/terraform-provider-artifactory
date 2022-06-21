@@ -188,7 +188,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, m in
 	return resourceCertificateUpdate(ctx, d, m)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCertificateRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	cert, err := FindCertificate(d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
@@ -239,10 +239,10 @@ func getContentFromDiff(d *schema.ResourceDiff) (string, error) {
 
 func getContentFromData(d *schema.ResourceData) (string, error) {
 
-	if content, ok := d.GetOkExists("content"); ok {
+	if content, ok := d.GetOk("content"); ok {
 		return content.(string), nil
 	}
-	if file, ok := d.GetOkExists("file"); ok {
+	if file, ok := d.GetOk("file"); ok {
 		data, err := ioutil.ReadFile(file.(string))
 		if err != nil {
 			return "", err
@@ -267,7 +267,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m in
 	return resourceCertificateRead(ctx, d, m)
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCertificateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().Delete(CertificateEndpoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)

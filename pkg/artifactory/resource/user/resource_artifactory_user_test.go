@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"net/http"
 	"testing"
 
@@ -25,7 +26,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := acctest.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -34,7 +35,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := acctest.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"

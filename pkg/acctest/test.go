@@ -1,17 +1,14 @@
 package acctest
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
-	"text/template"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -72,45 +69,8 @@ func PreCheck(t *testing.T) {
 	})
 }
 
-func GetEnvVarWithFallback(t *testing.T, envVars ...string) string {
-	envVarValue, err := schema.MultiEnvDefaultFunc(envVars, nil)()
-	if envVarValue == "" || envVarValue == nil || err != nil {
-		t.Fatalf("%s must be set for acceptance tests", strings.Join(envVars, " or "))
-		return ""
-	}
-
-	return envVarValue.(string)
-}
-
 func GetArtifactoryUrl(t *testing.T) string {
-	return GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
-}
-
-func FmtMapToHcl(fields map[string]interface{}) string {
-	var allPairs []string
-	max := float64(0)
-	for key := range fields {
-		max = math.Max(max, float64(len(key)))
-	}
-	for key, value := range fields {
-		hcl := toHclFormat(value)
-		format := toHclFormatString(3, int(max), value)
-		allPairs = append(allPairs, fmt.Sprintf(format, key, hcl))
-	}
-
-	return strings.Join(allPairs, "\n")
-}
-
-func toHclFormatString(tabs, max int, value interface{}) string {
-	prefix := ""
-	suffix := ""
-	delimeter := "="
-	if reflect.TypeOf(value).Kind() == reflect.Map {
-		delimeter = ""
-		prefix = "{"
-		suffix = "}"
-	}
-	return fmt.Sprintf("%s%%-%ds %s %s%s%s", strings.Repeat("\t", tabs), max, delimeter, prefix, "%s", suffix)
+	return test.GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
 }
 
 func MapToTestChecks(fqrn string, fields map[string]interface{}) []resource.TestCheckFunc {
@@ -136,42 +96,6 @@ func MapToTestChecks(fqrn string, fields map[string]interface{}) []resource.Test
 			)
 		default:
 			result = append(result, resource.TestCheckResourceAttr(fqrn, key, fmt.Sprintf(`%v`, value)))
-		}
-	}
-	return result
-}
-
-func toHclFormat(thing interface{}) string {
-	switch thing.(type) {
-	case string:
-		return fmt.Sprintf(`"%s"`, thing.(string))
-	case []interface{}:
-		var result []string
-		for _, e := range thing.([]interface{}) {
-			result = append(result, toHclFormat(e))
-		}
-		return fmt.Sprintf("[%s]", strings.Join(result, ","))
-	case map[string]interface{}:
-		return fmt.Sprintf("\n\t%s\n\t\t\t\t", FmtMapToHcl(thing.(map[string]interface{})))
-	default:
-		return fmt.Sprintf("%v", thing)
-	}
-}
-
-func ExecuteTemplate(name, temp string, fields interface{}) string {
-	var tpl bytes.Buffer
-	if err := template.Must(template.New(name).Parse(temp)).Execute(&tpl, fields); err != nil {
-		panic(err)
-	}
-
-	return tpl.String()
-}
-
-func MergeMaps(schemata ...map[string]interface{}) map[string]interface{} {
-	result := map[string]interface{}{}
-	for _, schma := range schemata {
-		for k, v := range schma {
-			result[k] = v
 		}
 	}
 	return result
@@ -370,7 +294,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 
-	accessToken := GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
+	accessToken := test.GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {

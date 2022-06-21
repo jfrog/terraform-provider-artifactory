@@ -54,7 +54,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 		ReadContext:   resourceOauthSettingsRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -120,7 +120,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 	}
 }
 
-func resourceOauthSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOauthSettingsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 
 	oauthSettings := OauthSettings{}
@@ -186,7 +186,7 @@ security:
 }
 
 func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	security := new(OauthSecurity)
 
 	settings := OauthSettings{
@@ -195,7 +195,7 @@ func unpackOauthSecurity(s *schema.ResourceData) *OauthSecurity {
 		AllowUserToAccessProfile: d.GetBool("allow_user_to_access_profile", false),
 	}
 
-	if v, ok := d.GetOkExists("oauth_provider"); ok {
+	if v, ok := d.GetOk("oauth_provider"); ok {
 		oauthProviderSettings := map[string]OauthProviderSettings{}
 
 		for _, m := range v.(*schema.Set).List() {

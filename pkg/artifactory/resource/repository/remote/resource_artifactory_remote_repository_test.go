@@ -2,6 +2,7 @@ package remote_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"io/ioutil"
 	"math/rand"
 	"regexp"
@@ -314,7 +315,7 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 }
 
 func TestAccAllRemoteRepository(t *testing.T) {
-	for _, repoType := range remote.RemoteRepoTypesLikeGeneric {
+	for _, repoType := range remote.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
@@ -476,7 +477,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ExecuteTemplate("one", step1, map[string]interface{}{
+				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -486,7 +487,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ExecuteTemplate("two", step2, map[string]interface{}{
+				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -608,8 +609,8 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 	}
-	allFields := acctest.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := acctest.FmtMapToHcl(allFields)
+	allFields := util.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := util.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
@@ -709,8 +710,8 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 	}
-	allFields := acctest.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := acctest.FmtMapToHcl(allFields)
+	allFields := util.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := util.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
@@ -947,7 +948,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	remoteRepositoryBasic := acctest.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -992,7 +993,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	remoteRepositoryBasic := acctest.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key"

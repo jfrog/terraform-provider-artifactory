@@ -3,6 +3,8 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"regexp"
 	"strings"
 	"time"
@@ -72,7 +74,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
-			Description:      "The user name for which this token is created. The username is based " +
+			Description: "The user name for which this token is created. The username is based " +
 				"on the authenticated user - either from the user of the authenticated token or based " +
 				"on the username (if basic auth was used). The username is then used to set the subject " +
 				"of the token: <service-id>/users/<username>. Limited to 255 characters.",
@@ -83,7 +85,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew: true,
 			Computed: true,
 			Elem: &schema.Schema{
-				Type:             schema.TypeString,
+				Type: schema.TypeString,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.Any(
 						validation.StringInSlice(
@@ -100,7 +102,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 							"must be 'applied-permissions/groups:<group-name>[,<group-name>...]'",
 						),
 						validation.StringMatch(
-							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),
+							regexp.MustCompile(`^artifact:.+:([rwdam*]|([rwdam]+(,[rwdam]+)))$`),
 							"must be '<resource-type>:<target>[/<sub-resource>]:<actions>'",
 						),
 					),
@@ -142,7 +144,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew:         true,
 			Computed:         true,
 			ValidateDiagFunc: validator.IntAtLeast(0),
-			Description:      "The amount of time, in seconds, it would take for the token to expire. " +
+			Description: "The amount of time, in seconds, it would take for the token to expire. " +
 				"An admin shall be able to set whether expiry is mandatory, what is the default expiry, " +
 				"and what is the maximum expiry allowed. Must be non-negative. Default value is based on " +
 				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.",
@@ -239,7 +241,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		packer := util.UniversalPack(util.SchemaHasKey(scopedTokenSchema))
+		packer := packer.Universal(predicate.SchemaHasKey(scopedTokenSchema))
 
 		return diag.FromErr(packer(&accessToken, data))
 	}
