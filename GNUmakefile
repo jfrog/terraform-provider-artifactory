@@ -5,6 +5,10 @@ ifeq ($(GO_ARCH), amd64)
 GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
 endif
 PKG_NAME=pkg/artifactory
+
+# if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
+PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/v6/${PKG_NAME}/provider
+
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/${TARGET_ARCH}
@@ -43,7 +47,7 @@ attach:
 
 acceptance: fmtcheck
 	export TF_ACC=true && \
-		go test -v -p 1 -parallel 20 -timeout 20m ./pkg/...
+		go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
 
 acceptance_federated:
 	export TF_ACC=true && \
