@@ -16,6 +16,7 @@ BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VE
 default: build
 
 install:
+	rm -fR .terraform.d && \
 	mkdir -p ${BUILD_PATH} && \
 		(test -f terraform-provider-artifactory || GORELEASER_CURRENT_TAG=${NEXT_VERSION} GoReleaser build --single-target --rm-dist --snapshot) && \
 		mv -v dist/terraform-provider-artifactory_${GORELEASER_ARCH}/terraform-provider-artifactory_v${NEXT_VERSION}* ${BUILD_PATH} && \
