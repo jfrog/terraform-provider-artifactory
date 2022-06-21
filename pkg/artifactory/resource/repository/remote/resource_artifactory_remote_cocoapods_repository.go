@@ -4,12 +4,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type CocoapodsRemoteRepo struct {
-	RemoteRepositoryBaseParams
-	RemoteRepositoryVcsParams
+	RepositoryBaseParams
+	RepositoryVcsParams
 	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl"`
 }
 
@@ -27,19 +28,19 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackCocoapodsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := CocoapodsRemoteRepo{
-			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RemoteRepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			PodsSpecsRepoUrl:           d.GetString("pods_specs_repo_url", false),
+			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
+			PodsSpecsRepoUrl:     d.GetString("pods_specs_repo_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(cocoapodsRemoteSchema, repository.DefaultPacker(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &CocoapodsRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

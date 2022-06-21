@@ -3,6 +3,8 @@ package configuration
 import (
 	"context"
 	"encoding/xml"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 
 	"github.com/go-resty/resty/v2"
 	"gopkg.in/yaml.v3"
@@ -10,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -164,13 +165,14 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 			}
 		}
 
-		packer := repository.UniversalPack(
-			repository.AllHclPredicate(
-				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), util.SchemaHasKey(ldapSettingsSchema),
+		pkr := packer.Universal(
+			predicate.All(
+				predicate.Ignore("class", "rclass", "manager_password"),
+				predicate.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 
-		return diag.FromErr(packer(&matchedLdapSetting, d))
+		return diag.FromErr(pkr(&matchedLdapSetting, d))
 	}
 
 	var resourceLdapSettingsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -245,7 +247,7 @@ security:
 			return diag.Errorf("failed to marshal ldap settings during Update")
 		}
 
-		err = SendConfigurationPatch([]byte(restoreRestOfLdapSettingsConfigs), m)
+		err = SendConfigurationPatch(restoreRestOfLdapSettingsConfigs, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Settings")
 		}
@@ -268,7 +270,7 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	ldapSetting := LdapSetting{
 		Key:                      d.GetString("key", false),
 		Enabled:                  d.GetBool("enabled", false),

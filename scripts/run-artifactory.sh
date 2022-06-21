@@ -3,7 +3,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 source "${SCRIPT_DIR}/get-access-key.sh"
 source "${SCRIPT_DIR}/wait-for-rt.sh"
-export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.37.15}
+export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.39.4}
 echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf

@@ -3,6 +3,7 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -23,23 +24,23 @@ var cargoLocalSchema = util.MergeSchema(
 func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	type CargoLocalRepo struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		AnonymousAccess bool `json:"cargoAnonymousAccess"`
 	}
 
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
-			AnonymousAccess:           d.GetBool("anonymous_access", false),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
+			AnonymousAccess:      d.GetBool("anonymous_access", false),
 		}
 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(cargoLocalSchema, repository.DefaultPacker(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
+	return repository.MkResourceSchema(cargoLocalSchema, packer.Default(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
 		return &CargoLocalRepo{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "cargo",
 				Rclass:      "local",
 			},

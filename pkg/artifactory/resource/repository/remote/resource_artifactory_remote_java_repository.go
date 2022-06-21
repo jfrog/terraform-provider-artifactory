@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -60,7 +61,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 	}, repository.RepoLayoutRefSchema("remote", repoType))
 
 	type JavaRemoteRepo struct {
-		RemoteRepositoryBaseParams
+		RepositoryBaseParams
 		FetchJarsEagerly             bool   `json:"fetchJarsEagerly"`
 		FetchSourcesEagerly          bool   `json:"fetchSourcesEagerly"`
 		RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType"`
@@ -73,7 +74,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{data}
 		repo := JavaRemoteRepo{
-			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(data, repoType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(data, repoType),
 			FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),
 			FetchSourcesEagerly:          d.GetBool("fetch_sources_eagerly", false),
 			RemoteRepoChecksumPolicyType: d.GetString("remote_repo_checksum_policy_type", false),
@@ -85,9 +86,9 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(javaRemoteSchema, repository.DefaultPacker(javaRemoteSchema), unpackJavaRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(javaRemoteSchema, packer.Default(javaRemoteSchema), unpackJavaRemoteRepo, func() interface{} {
 		return &JavaRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: repoType,
 			},

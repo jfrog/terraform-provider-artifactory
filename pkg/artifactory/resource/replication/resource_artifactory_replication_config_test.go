@@ -2,6 +2,7 @@ package replication_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"regexp"
 	"testing"
 
@@ -78,7 +79,7 @@ func TestAccReplication_full(t *testing.T) {
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationUpdateConfig := acctest.ExecuteTemplate("ReplicationConfigTemplate", `
+	replicationUpdateConfig := util.ExecuteTemplate("ReplicationConfigTemplate", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
