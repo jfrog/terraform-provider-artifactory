@@ -5,6 +5,7 @@ vendor/
 .github/
 .modules/
 .terraform*
+terraform.d/
 terraform.tfstate
 terraform.tfstate.backup
 lib/

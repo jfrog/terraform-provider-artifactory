@@ -168,6 +168,8 @@ func Provider() *schema.Provider {
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		tflog.Debug(ctx, "ConfigureContextFunc")
+		tflog.Info(ctx, fmt.Sprintf("Provider version: %s", Version))
+
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			terraformVersion = "0.11+compatible"
