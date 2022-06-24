@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -62,7 +63,7 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(mavenVirtualSchema, repository.DefaultPacker(mavenVirtualSchema), unpackMavenVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(mavenVirtualSchema, packer.Default(mavenVirtualSchema), unpackMavenVirtualRepository, func() interface{} {
 		return &JavaVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 	"encoding/xml"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 
 	"github.com/go-resty/resty/v2"
@@ -11,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -165,9 +165,9 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 			}
 		}
 
-		packer := repository.UniversalPack(
-			repository.AllHclPredicate(
-				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), predicate.SchemaHasKey(ldapSettingsSchema),
+		packer := packer.Universal(
+			predicate.All(
+				predicate.Ignore("class", "rclass", "manager_password"), predicate.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 

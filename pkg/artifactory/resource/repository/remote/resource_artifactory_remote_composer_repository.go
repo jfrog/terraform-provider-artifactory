@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -36,7 +37,7 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(composerRemoteSchema, repository.DefaultPacker(composerRemoteSchema), unpackComposerRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(composerRemoteSchema, packer.Default(composerRemoteSchema), unpackComposerRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &ComposerRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

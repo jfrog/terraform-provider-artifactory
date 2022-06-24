@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -46,5 +47,5 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		}
 	}
 
-	return repository.MkResourceSchema(helmVirtualSchema, repository.DefaultPacker(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
+	return repository.MkResourceSchema(helmVirtualSchema, packer.Default(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
 }

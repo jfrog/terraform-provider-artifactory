@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 	"encoding/xml"
+	"github.com/jfrog/terraform-provider-shared/packer"
 
 	"github.com/go-resty/resty/v2"
 	"gopkg.in/yaml.v3"
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -118,7 +118,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 				break
 			}
 		}
-		packer := repository.DefaultPacker(ldapGroupSettingsSchema)
+		packer := packer.Default(ldapGroupSettingsSchema)
 
 		return diag.FromErr(packer(&matchedLdapGroupSetting, d))
 	}

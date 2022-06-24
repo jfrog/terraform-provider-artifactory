@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"strings"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -193,9 +193,9 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 	return &result, result.PairName, nil
 }
 
-var keyPairPacker = repository.UniversalPack(
-	repository.AllHclPredicate(
-		repository.IgnoreHclPredicate("private_key"), predicate.SchemaHasKey(keyPairSchema),
+var keyPairPacker = packer.Universal(
+	predicate.All(
+		predicate.Ignore("private_key"), predicate.SchemaHasKey(keyPairSchema),
 	),
 )
 

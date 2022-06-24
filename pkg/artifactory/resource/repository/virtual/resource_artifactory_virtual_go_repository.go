@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -49,7 +50,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(goVirtualSchema, repository.DefaultPacker(goVirtualSchema), unpackGoVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(goVirtualSchema, packer.Default(goVirtualSchema), unpackGoVirtualRepository, func() interface{} {
 		return &GoVirtualRepositoryParams{
 			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
 				Rclass:      "virtual",

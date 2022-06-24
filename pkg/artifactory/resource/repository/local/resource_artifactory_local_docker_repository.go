@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -42,7 +43,7 @@ var dockerV2LocalSchema = util.MergeSchema(
 )
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	packer := repository.DefaultPacker(dockerV2LocalSchema)
+	packer := packer.Default(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
@@ -112,7 +113,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(skeema, repository.DefaultPacker(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
+	return repository.MkResourceSchema(skeema, packer.Default(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "docker",

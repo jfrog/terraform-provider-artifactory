@@ -3,6 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -36,7 +37,7 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(vcsRemoteSchema, repository.DefaultPacker(vcsRemoteSchema), UnpackVcsRemoteRepo, func() interface{} {
+	return repository.MkResourceSchema(vcsRemoteSchema, packer.Default(vcsRemoteSchema), UnpackVcsRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &VcsRemoteRepo{
 			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{

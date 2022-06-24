@@ -3,6 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -23,5 +24,5 @@ func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 
 	mergedRemoteRepoSchema := util.MergeSchema(BaseRemoteRepoSchema, repository.RepoLayoutRefSchema("remote", pkt))
 
-	return repository.MkResourceSchema(mergedRemoteRepoSchema, repository.DefaultPacker(mergedRemoteRepoSchema), unpack, constructor)
+	return repository.MkResourceSchema(mergedRemoteRepoSchema, packer.Default(mergedRemoteRepoSchema), unpack, constructor)
 }

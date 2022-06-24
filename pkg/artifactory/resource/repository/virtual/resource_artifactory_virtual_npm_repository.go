@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -34,7 +35,7 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(
 		npmVirtualSchema,
-		repository.DefaultPacker(npmVirtualSchema),
+		packer.Default(npmVirtualSchema),
 		unpackNpmVirtualRepository,
 		func() interface{} {
 			return &NpmVirtualRepositoryParams{

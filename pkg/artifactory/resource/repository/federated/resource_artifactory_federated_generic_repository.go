@@ -2,6 +2,8 @@ package federated
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,8 +113,8 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		return nil
 	}
 
-	packer := repository.ComposePacker(
-		repository.UniversalPack(repository.IgnoreHclPredicate("class", "rclass", "member", "terraform_type")),
+	packer := packer.Compose(
+		packer.Universal(predicate.Ignore("class", "rclass", "member", "terraform_type")),
 		packMembers,
 	)
 

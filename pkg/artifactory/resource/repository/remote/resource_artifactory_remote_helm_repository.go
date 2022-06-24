@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -61,11 +62,11 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	}
 
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
-	helmRemoteRepoPacker := repository.UniversalPack(
-		repository.AllHclPredicate(
+	helmRemoteRepoPacker := packer.Universal(
+		predicate.All(
 			predicate.SchemaHasKey(helmRemoteSchema),
-			repository.NoPassword,
-			repository.IgnoreHclPredicate("external_dependencies_patterns"),
+			predicate.NoPassword,
+			predicate.Ignore("external_dependencies_patterns"),
 		),
 	)
 

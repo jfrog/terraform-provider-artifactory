@@ -3,6 +3,7 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -37,7 +38,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(alpineLocalSchema, repository.DefaultPacker(alpineLocalSchema), unPackLocalAlpineRepository, func() interface{} {
+	return repository.MkResourceSchema(alpineLocalSchema, packer.Default(alpineLocalSchema), unPackLocalAlpineRepository, func() interface{} {
 		return &AlpineLocalRepo{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "alpine",

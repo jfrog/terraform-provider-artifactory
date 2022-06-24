@@ -3,6 +3,7 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -52,7 +53,7 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(debianLocalSchema, repository.DefaultPacker(debianLocalSchema), unPackLocalDebianRepository, func() interface{} {
+	return repository.MkResourceSchema(debianLocalSchema, packer.Default(debianLocalSchema), unPackLocalDebianRepository, func() interface{} {
 		return &DebianLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: "debian",

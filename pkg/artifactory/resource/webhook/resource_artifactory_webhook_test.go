@@ -78,7 +78,7 @@ var releaseBundleTemplate = `
 	}
 `
 
-func testAccWebhookCriteriaValidation(t *testing.T) {
+func TestAccWebhookCriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.WebhookTypesSupported {
 		t.Run(fmt.Sprintf("TestWebhook%sCriteriaValidation", strings.Title(strings.ToLower(webhookType))), func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
@@ -122,7 +122,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	}
 }
 
-func testAccWebhookEventTypesValidation(t *testing.T) {
+func TestAccWebhookEventTypesValidation(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -163,7 +163,7 @@ func testAccWebhookEventTypesValidation(t *testing.T) {
 	})
 }
 
-func testAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
+func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -202,7 +202,7 @@ func testAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 	})
 }
 
-func testAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
+func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -241,7 +241,7 @@ func testAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 	})
 }
 
-func testAccWebhookAllTypes(t *testing.T) {
+func TestAccWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
@@ -357,7 +357,7 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 }
 
 // Unit tests for state migration func
-func testWebhookResourceStateUpgradeV1(t *testing.T) {
+func TestWebhookResourceStateUpgradeV1(t *testing.T) {
 	v1Data := map[string]interface{}{
 		"url":    "http://tempurl.org",
 		"secret": "fake-secret",

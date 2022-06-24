@@ -1,6 +1,7 @@
 package virtual
 
 import (
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -69,7 +70,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(debianVirtualSchema, repository.DefaultPacker(debianVirtualSchema), unpackDebianVirtualRepository, func() interface{} {
+	return repository.MkResourceSchema(debianVirtualSchema, packer.Default(debianVirtualSchema), unpackDebianVirtualRepository, func() interface{} {
 		return &DebianVirtualRepositoryParams{
 			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{

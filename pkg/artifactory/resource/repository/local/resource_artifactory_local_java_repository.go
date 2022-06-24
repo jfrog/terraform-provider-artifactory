@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -96,7 +97,7 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 
 	javaLocalSchema := getJavaRepoSchema(repoType, suppressPom)
 
-	return repository.MkResourceSchema(javaLocalSchema, repository.DefaultPacker(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
+	return repository.MkResourceSchema(javaLocalSchema, packer.Default(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
 		return &JavaLocalRepositoryParams{
 			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
 				PackageType: repoType,
