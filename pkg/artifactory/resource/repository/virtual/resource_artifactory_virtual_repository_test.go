@@ -759,8 +759,8 @@ func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*t
 			depends_on = ["artifactory_remote_{{ .packageType }}_repository.{{ .packageType }}-remote"]
 		}`,
 		map[string]interface{}{
-			"packageType": packageType,
-			"name": name,
+			"packageType":    packageType,
+			"name":           name,
 			"remoteRepoName": remoteRepoName,
 		},
 	)
