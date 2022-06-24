@@ -76,7 +76,7 @@ const permissionFull = `
 	resource "artifactory_managed_user" "test-user" {
 		name     = "terraform"
 		email    = "test-user@artifactory-terraform.com"
-		password = "my super secret password"
+		password = "Passsw0rd!"
 	}
 
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
@@ -89,7 +89,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_managed_user.test-user
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "annotate", "delete"]
 			}
 
@@ -107,7 +107,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_managed_user.test-user
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "manage", "annotate", "delete"]
 			}
 
@@ -125,7 +125,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_managed_user.test-user
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "managedXrayMeta", "distribute"]
 			}
 
@@ -255,13 +255,14 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", 3),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", "4"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "write"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "annotate"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "delete"),
 
 					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.0.permissions.#", 5),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.0.permissions.#", "5"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "read"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "write"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "manage"),
@@ -269,7 +270,7 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "delete"),
 
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.#", 4),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.#", "4"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "read"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "write"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "managedXrayMeta"),
