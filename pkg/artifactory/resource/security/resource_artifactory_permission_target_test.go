@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -179,7 +180,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 		"username":  username,
 		"repo_name": repoName,
 	}
-	foo := acctest.ExecuteTemplate(permFqrn, testConfig, variables)
+	foo := util.ExecuteTemplate(permFqrn, testConfig, variables)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -212,7 +213,7 @@ func TestAccPermissionTarget_full(t *testing.T) {
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -295,7 +296,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -306,7 +307,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionJustBuild, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionJustBuild, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
@@ -318,7 +319,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionJustReleaseBundle, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionJustReleaseBundle, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
@@ -331,7 +332,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),

@@ -31,7 +31,7 @@ var RepoTypesLikeGeneric = []string{
 	"vagrant",
 }
 
-type LocalRepositoryBaseParams struct {
+type RepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey             string   `json:"projectKey"`
 	ProjectEnvironments    []string `json:"environments"`
@@ -51,7 +51,7 @@ type LocalRepositoryBaseParams struct {
 	TerraformType          string   `json:"terraformType"`
 }
 
-func (bp LocalRepositoryBaseParams) Id() string {
+func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
@@ -146,7 +146,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-// `packageType` in the API call payload for Terraform repositories must be "terraform", but we use
+// GetPackageType `packageType` in the API call payload for Terraform repositories must be "terraform", but we use
 // `terraform_module` and `terraform_provider` as a package types in the Provider. GetPackageType function corrects this discrepancy.
 func GetPackageType(repoType string) string {
 	if strings.Contains(repoType, "terraform_") {
@@ -155,9 +155,9 @@ func GetPackageType(repoType string) string {
 	return repoType
 }
 
-func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) LocalRepositoryBaseParams {
-	d := &util.ResourceData{s}
-	return LocalRepositoryBaseParams{
+func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) RepositoryBaseParams {
+	d := &util.ResourceData{ResourceData: s}
+	return RepositoryBaseParams{
 		Rclass:                 rclassType,
 		Key:                    d.GetString("key", false),
 		ProjectKey:             d.GetString("project_key", false),

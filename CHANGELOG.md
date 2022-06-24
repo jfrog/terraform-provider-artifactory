@@ -1,9 +1,16 @@
-
-## 6.9.3 (June 10, 2022). Tested on Artifactory 7.38.10
-
 IMPROVEMENTS:
 
 * resource/security/resource_artifactory_permission_target: Add support for `distribute` permission for `release_bundle`.
+
+## 6.9.4 (June 21, 2022). Tested on Artifactory 7.38.10
+
+REFACTOR:
+
+* Remove redundant shared code to shared module and bump dependency. 
+* Moved some other sharable code to shared module
+
+
+## 6.9.3 (June 10, 2022). Tested on Artifactory 7.38.10
 
 BUG FIXES:
 

@@ -40,7 +40,7 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 	}
 
 	resourceAnonymousUserRead := func(ctx context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-		d := &util.ResourceData{rd}
+		d := &util.ResourceData{ResourceData: rd}
 
 		userName := d.Id()
 		user := &AnonymousUser{}
@@ -74,10 +74,9 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 		ReadContext:   resourceAnonymousUserRead,
 		UpdateContext: resourceAnonymousUserUpdate,
 		DeleteContext: resourceAnonymousUserDelete,
-		Exists:        resourceUserExists,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: anonymousUserSchema,

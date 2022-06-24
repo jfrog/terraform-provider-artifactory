@@ -50,6 +50,10 @@ pipelines:
             - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys DA418C88A3219F7B
             - sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
             - sudo apt install terraform && terraform -version
+            - echo "Install GoReleaser"
+            - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+            - sudo apt update
+            - sudo apt install goreleaser
           onExecute:
             - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')

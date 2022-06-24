@@ -3,11 +3,13 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type DockerRemoteRepository struct {
-	RemoteRepositoryBaseParams
+	RepositoryBaseParams
 	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 	EnableTokenAuthentication    bool     `hcl:"enable_token_authentication" json:"enableTokenAuthentication"`
@@ -50,9 +52,9 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepository{
-			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
@@ -65,17 +67,18 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}
 
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
-	dockerRemoteRepoPacker := repository.UniversalPack(
-		repository.AllHclPredicate(
-			util.SchemaHasKey(dockerRemoteSchema),
-			repository.NoPassword,
-			repository.IgnoreHclPredicate("external_dependencies_patterns"),
+	dockerRemoteRepoPacker := packer.Universal(
+		predicate.All(
+			predicate.SchemaHasKey(dockerRemoteSchema),
+			predicate.NoPassword,
+			predicate.NoClass,
+			predicate.Ignore("external_dependencies_patterns"),
 		),
 	)
 
 	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

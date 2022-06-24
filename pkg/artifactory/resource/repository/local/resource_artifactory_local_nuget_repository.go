@@ -3,6 +3,7 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -30,7 +31,7 @@ var nugetLocalSchema = util.MergeSchema(
 func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	type NugetLocalRepositoryParams struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		MaxUniqueSnapshots       int  `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
 		ForceNugetAuthentication bool `hcl:"force_nuget_authentication" json:"forceNugetAuthentication"`
 	}
@@ -38,17 +39,17 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "nuget"),
-			MaxUniqueSnapshots:        d.GetInt("max_unique_snapshots", false),
-			ForceNugetAuthentication:  d.GetBool("force_nuget_authentication", false),
+			RepositoryBaseParams:     UnpackBaseRepo("local", data, "nuget"),
+			MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 		}
 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(nugetLocalSchema, repository.DefaultPacker(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
+	return repository.MkResourceSchema(nugetLocalSchema, packer.Default(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "nuget",
 				Rclass:      "local",
 			},

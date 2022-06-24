@@ -3,6 +3,7 @@ package virtual
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -20,14 +21,14 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type HelmVirtualRepositoryParams struct {
-		VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs
+		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		UseNamespaces bool `json:"useNamespaces"`
 	}
 
 	unpackHelmVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := HelmVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
 			UseNamespaces: d.GetBool("use_namespaces", false),
 		}
 
@@ -36,8 +37,8 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 
 	constructor := func() interface{} {
 		return &HelmVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
-				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      "virtual",
 					PackageType: packageType,
 				},
@@ -46,5 +47,5 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		}
 	}
 
-	return repository.MkResourceSchema(helmVirtualSchema, repository.DefaultPacker(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
+	return repository.MkResourceSchema(helmVirtualSchema, packer.Default(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
 }

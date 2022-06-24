@@ -1,7 +1,14 @@
 TEST?=./...
-TARGET_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
+GO_ARCH=$(shell go env GOARCH)
+TARGET_ARCH=$(shell go env GOOS)_${GO_ARCH}
+ifeq ($(GO_ARCH), amd64)
+GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
+endif
 PKG_NAME=pkg/artifactory
+
+# if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-artifactory/v6/${PKG_NAME}/provider
+
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VERSION}/${TARGET_ARCH}
@@ -9,9 +16,10 @@ BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/artifactory/${NEXT_VE
 default: build
 
 install:
+	rm -fR .terraform.d && \
 	mkdir -p ${BUILD_PATH} && \
-		(test -f terraform-provider-artifactory || go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'") && \
-		mv terraform-provider-artifactory ${BUILD_PATH} && \
+		(test -f terraform-provider-artifactory || GORELEASER_CURRENT_TAG=${NEXT_VERSION} goreleaser build --single-target --rm-dist --snapshot) && \
+		mv -v dist/terraform-provider-artifactory_${GORELEASER_ARCH}/terraform-provider-artifactory_v${NEXT_VERSION}* ${BUILD_PATH} && \
 		rm -f .terraform.lock.hcl && \
 		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak && \
 		terraform init
@@ -29,15 +37,7 @@ update_pkg_cache:
 	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/terraform-provider-artifactory@v${VERSION}
 
 build: fmtcheck
-	go build -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}'"
-
-debug_install:
-	mkdir -p ${BUILD_PATH} && \
-		(test -f terraform-provider-artifactory || go build -gcflags "all=-N -l" -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-develop'") && \
-		mv terraform-provider-artifactory ${BUILD_PATH} && \
-		rm .terraform.lock.hcl && \
-		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak  && \
-		terraform init
+	GORELEASER_CURRENT_TAG=${NEXT_VERSION} goreleaser build --single-target --rm-dist --snapshot
 
 test:
 	@echo "==> Starting unit tests"

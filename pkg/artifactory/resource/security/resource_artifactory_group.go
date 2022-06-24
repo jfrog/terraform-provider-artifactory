@@ -3,6 +3,8 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -10,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -111,7 +112,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 		DeleteContext: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: groupSchema,
@@ -181,7 +182,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-func resourceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, includeUsers, err := groupParams(d)
 	if err != nil {
 		return diag.FromErr(err)
@@ -202,9 +203,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
-	packer := repository.UniversalPack(util.SchemaHasKey(groupSchema))
+	pkr := packer.Universal(predicate.SchemaHasKey(groupSchema))
 
-	return diag.FromErr(packer(&group, d))
+	return diag.FromErr(pkr(&group, d))
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

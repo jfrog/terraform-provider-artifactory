@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -58,7 +59,7 @@ var rpmLocalSchema = util.MergeSchema(
 func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 
 	type RpmLocalRepositoryParams struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		RootDepth               int    `hcl:"yum_root_depth" json:"yumRootDepth"`
 		CalculateYumMetadata    bool   `hcl:"calculate_yum_metadata" json:"calculateYumMetadata"`
 		EnableFileListsIndexing bool   `hcl:"enable_file_lists_indexing" json:"enableFileListsIndexing"`
@@ -70,21 +71,21 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := RpmLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "rpm"),
-			RootDepth:                 d.GetInt("yum_root_depth", false),
-			CalculateYumMetadata:      d.GetBool("calculate_yum_metadata", false),
-			EnableFileListsIndexing:   d.GetBool("enable_file_lists_indexing", false),
-			GroupFileNames:            d.GetString("yum_group_file_names", false),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
+			RepositoryBaseParams:    UnpackBaseRepo("local", data, "rpm"),
+			RootDepth:               d.GetInt("yum_root_depth", false),
+			CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
+			EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
+			GroupFileNames:          d.GetString("yum_group_file_names", false),
+			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(rpmLocalSchema, repository.DefaultPacker(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
+	return repository.MkResourceSchema(rpmLocalSchema, packer.Default(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
 		return &RpmLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "rpm",
 				Rclass:      "local",
 			},
