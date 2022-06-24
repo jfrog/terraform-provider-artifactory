@@ -3,6 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -67,7 +68,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
 	dockerRemoteRepoPacker := repository.UniversalPack(
 		repository.AllHclPredicate(
-			util.SchemaHasKey(dockerRemoteSchema),
+			predicate.SchemaHasKey(dockerRemoteSchema),
 			repository.NoPassword,
 			repository.IgnoreHclPredicate("external_dependencies_patterns"),
 		),

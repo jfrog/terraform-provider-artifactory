@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -202,7 +203,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
-	packer := repository.UniversalPack(util.SchemaHasKey(groupSchema))
+	packer := repository.UniversalPack(predicate.SchemaHasKey(groupSchema))
 
 	return diag.FromErr(packer(&group, d))
 }

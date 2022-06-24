@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"math/rand"
 	"net/http"
 	"reflect"
@@ -313,7 +314,7 @@ func fieldToHcl(field reflect.StructField) string {
 	return result
 }
 
-func lookup(payload interface{}, predicate util.HclPredicate) map[string]interface{} {
+func lookup(payload interface{}, predicate predicate.HclPredicate) map[string]interface{} {
 
 	if predicate == nil {
 		predicate = allowAllPredicate
@@ -348,7 +349,7 @@ func lookup(payload interface{}, predicate util.HclPredicate) map[string]interfa
 	return values
 }
 
-func anyuHclPredicate(predicates ...util.HclPredicate) util.HclPredicate {
+func anyuHclPredicate(predicates ...predicate.HclPredicate) predicate.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if predicate(hcl) {
@@ -359,7 +360,7 @@ func anyuHclPredicate(predicates ...util.HclPredicate) util.HclPredicate {
 	}
 }
 
-func AllHclPredicate(predicates ...util.HclPredicate) util.HclPredicate {
+func AllHclPredicate(predicates ...predicate.HclPredicate) predicate.HclPredicate {
 	return func(hcl string) bool {
 		for _, predicate := range predicates {
 			if !predicate(hcl) {
@@ -377,7 +378,7 @@ var allowAllPredicate = func(hcl string) bool {
 	return true
 }
 
-func IgnoreHclPredicate(names ...string) util.HclPredicate {
+func IgnoreHclPredicate(names ...string) predicate.HclPredicate {
 	set := map[string]interface{}{}
 	for _, name := range names {
 		set[name] = nil
@@ -406,12 +407,12 @@ func ComposePacker(packers ...PackFunc) PackFunc {
 }
 
 func DefaultPacker(skeema map[string]*schema.Schema) PackFunc {
-	return UniversalPack(AllHclPredicate(util.SchemaHasKey(skeema), NoPassword))
+	return UniversalPack(AllHclPredicate(predicate.SchemaHasKey(skeema), NoPassword))
 }
 
 // UniversalPack consider making this a function that takes a predicate of what to include and returns
 // a function that does the job. This would allow for the legacy code to specify which keys to keep and not
-func UniversalPack(predicate util.HclPredicate) PackFunc {
+func UniversalPack(predicate predicate.HclPredicate) PackFunc {
 
 	return func(payload interface{}, d *schema.ResourceData) error {
 		setValue := util.MkLens(d)

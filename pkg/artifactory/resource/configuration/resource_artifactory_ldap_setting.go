@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 	"encoding/xml"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 
 	"github.com/go-resty/resty/v2"
 	"gopkg.in/yaml.v3"
@@ -166,7 +167,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		packer := repository.UniversalPack(
 			repository.AllHclPredicate(
-				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), util.SchemaHasKey(ldapSettingsSchema),
+				repository.IgnoreHclPredicate("class", "rclass", "manager_password"), predicate.SchemaHasKey(ldapSettingsSchema),
 			),
 		)
 

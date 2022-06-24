@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -194,7 +195,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 
 var keyPairPacker = repository.UniversalPack(
 	repository.AllHclPredicate(
-		repository.IgnoreHclPredicate("private_key"), util.SchemaHasKey(keyPairSchema),
+		repository.IgnoreHclPredicate("private_key"), predicate.SchemaHasKey(keyPairSchema),
 	),
 )
 
