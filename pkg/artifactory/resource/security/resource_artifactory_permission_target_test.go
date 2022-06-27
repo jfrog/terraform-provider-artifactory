@@ -251,7 +251,7 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 
