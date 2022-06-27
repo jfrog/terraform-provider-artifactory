@@ -1,3 +1,10 @@
+## 6.9.5 (June 27, 2022). Tested on Artifactory 7.38.10
+
+REFACTOR:
+
+* Moved some functionality to shared
+* Fixed tests
+
 ## 6.9.4 (June 21, 2022). Tested on Artifactory 7.38.10
 
 REFACTOR:
