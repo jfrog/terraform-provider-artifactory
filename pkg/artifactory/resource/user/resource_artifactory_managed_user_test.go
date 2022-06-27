@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"net/http"
 	"testing"
 
@@ -19,7 +20,7 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 			password			= "Passsw0rd!"
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -45,7 +46,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -84,7 +85,7 @@ func TestAccManagedUser(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_managed_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,

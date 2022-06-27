@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 
 	const packageType = "npm"
 
-	var npmVirtualSchema = util.MergeSchema(
+	var npmVirtualSchema = util.MergeMaps(
 		BaseVirtualRepoSchema,
 		retrievalCachePeriodSecondsSchema,
 		externalDependenciesSchema,

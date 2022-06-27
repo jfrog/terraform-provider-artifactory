@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 
 	const packageType = "nuget"
 
-	var nugetVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var nugetVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"force_nuget_authentication": {
 			Type:        schema.TypeBool,
 			Optional:    true,

@@ -91,7 +91,7 @@ func ResourceArtifactoryPullReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      util.MergeSchema(replicationSchemaCommon, pullReplicationSchema),
+		Schema:      util.MergeMaps(replicationSchemaCommon, pullReplicationSchema),
 		Description: "Used for configuring pull replication on local or remote repos.",
 	}
 }

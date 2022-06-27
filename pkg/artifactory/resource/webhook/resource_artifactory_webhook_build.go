@@ -16,13 +16,13 @@ type BuildWebhookCriteria struct {
 }
 
 var buildWebhookSchema = func(webhookType string, version int) map[string]*schema.Schema {
-	return util.MergeSchema(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
+	return util.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
-				Schema: util.MergeSchema(baseCriteriaSchema, map[string]*schema.Schema{
+				Schema: util.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
 					"any_build": {
 						Type:        schema.TypeBool,
 						Required:    true,

@@ -17,7 +17,7 @@ type BowerRemoteRepo struct {
 func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	const packageType = "bower"
 
-	var bowerRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var bowerRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"bower_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,

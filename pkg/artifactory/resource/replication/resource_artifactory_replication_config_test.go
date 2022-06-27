@@ -2,6 +2,8 @@ package replication_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"regexp"
 	"testing"
 
@@ -71,14 +73,14 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 
 func TestAccReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_replication_config")
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationUpdateConfig := acctest.ExecuteTemplate("ReplicationConfigTemplate", `
+	replicationUpdateConfig := util.ExecuteTemplate("ReplicationConfigTemplate", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}

@@ -24,7 +24,7 @@ func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: util.MergeSchema(replicationSchemaCommon, replicationSchema),
+		Schema: util.MergeMaps(replicationSchemaCommon, replicationSchema),
 		Description: "Used for configuring replications on repos. However, the TCL only makes " +
 			"good sense for local repo replication (PUSH) and not remote (PULL).",
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +

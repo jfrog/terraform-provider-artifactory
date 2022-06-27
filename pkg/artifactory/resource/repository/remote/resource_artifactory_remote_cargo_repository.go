@@ -17,7 +17,7 @@ type CargoRemoteRepo struct {
 func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	const packageType = "cargo"
 
-	var cargoRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var cargoRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"git_registry_url": {
 			Type:         schema.TypeString,
 			Required:     true,

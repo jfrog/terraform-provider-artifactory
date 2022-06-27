@@ -2,6 +2,7 @@ package virtual_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -110,7 +111,7 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 }
 
 func TestAccVirtualGoRepository_basic(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("foo", "artifactory_virtual_go_repository")
+	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_go_repository")
 	const packageType = "go"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
@@ -152,7 +153,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualConanRepository_basic(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("foo", "artifactory_virtual_conan_repository")
+	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_conan_repository")
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_conan_repository" "%s" {
 		  key          = "%s"
@@ -186,7 +187,7 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualGenericRepository_basic(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("foo", "artifactory_virtual_generic_repository")
+	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_generic_repository")
 	const packageType = "generic"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_generic_repository" "%s" {
@@ -261,14 +262,14 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualHelmRepository_basic(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
+	_, fqrn, name := test.MkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
 	useNamespaces := test.RandBool()
 
 	params := map[string]interface{}{
 		"name":          name,
 		"useNamespaces": useNamespaces,
 	}
-	virtualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualHelmRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
 	 	  use_namespaces = {{ .useNamespaces }}
@@ -295,10 +296,10 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 
 func TestAccVirtualRpmRepository(t *testing.T) {
 	const packageType = "rpm"
-	_, fqrn, name := acctest.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
-	kpId, kpFqrn, kpName := acctest.MkNames("some-keypair1-", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := acctest.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := acctest.ExecuteTemplate("keypair", `
+	_, fqrn, name := test.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
+	kpId, kpFqrn, kpName := test.MkNames("some-keypair1-", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2-", "artifactory_keypair")
+	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -566,14 +567,14 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
-	_, fqrn, name := acctest.MkNames(repoName, "artifactory_virtual_generic_repository")
+	_, fqrn, name := test.MkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	virtualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -611,13 +612,13 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
-	_, fqrn, name := acctest.MkNames(repoName, "artifactory_virtual_generic_repository")
+	_, fqrn, name := test.MkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	virualRepositoryBasic := acctest.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key"
@@ -674,15 +675,15 @@ func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extraFields" as these will overwrite
 func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := acctest.MkNames("terraform-virtual-test-repo-full", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
+	_, fqrn, name := test.MkNames("terraform-virtual-test-repo-full", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
 	remoteRepoName := fmt.Sprintf("%s-local", name)
 	defaultFields := map[string]interface{}{
 		"key":         name,
 		"description": "A test virtual repo",
 		"notes":       "Internal description",
 	}
-	allFields := acctest.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := acctest.FmtMapToHcl(allFields)
+	allFields := util.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := util.FmtMapToHcl(allFields)
 	const virtualRepoFull = `
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
@@ -695,8 +696,8 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
             depends_on = [artifactory_remote_%[1]s_repository.%[3]s]
 		}
 	`
-	extraChecks := acctest.MapToTestChecks(fqrn, extraFields)
-	defaultChecks := acctest.MapToTestChecks(fqrn, allFields)
+	extraChecks := test.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := test.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
@@ -741,7 +742,7 @@ func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*t
 	remoteRepoName := fmt.Sprintf("%s-remote-%d", packageType, id)
 	fqrn := fmt.Sprintf("artifactory_virtual_%s_repository.%s", packageType, name)
 
-	virtualRepositoryConfig := acctest.ExecuteTemplate(
+	virtualRepositoryConfig := util.ExecuteTemplate(
 		"TestAccVirtualExternalDependenciesRepository",
 		`resource "artifactory_remote_{{ .packageType }}_repository" "{{ .packageType }}-remote" {
 			key = "{{ .remoteRepoName }}"

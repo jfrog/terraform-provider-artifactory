@@ -12,7 +12,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 
 	const packageType = "alpine"
 
-	var alpineVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var alpineVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,

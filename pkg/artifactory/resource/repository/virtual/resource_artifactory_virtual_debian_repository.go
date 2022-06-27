@@ -14,7 +14,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 	const packageType = "debian"
 
-	var debianVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var debianVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,

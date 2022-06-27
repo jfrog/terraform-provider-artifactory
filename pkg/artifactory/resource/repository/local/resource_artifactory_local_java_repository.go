@@ -10,7 +10,7 @@ import (
 )
 
 func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
-	return util.MergeSchema(
+	return util.MergeMaps(
 		BaseLocalRepoSchema,
 		map[string]*schema.Schema{
 			"checksum_policy_type": {

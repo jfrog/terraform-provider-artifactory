@@ -17,7 +17,7 @@ type ComposerRemoteRepo struct {
 func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	const packageType = "composer"
 
-	var composerRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var composerRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"composer_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,

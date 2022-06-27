@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 
 	const packageType = "helm"
 
-	helmVirtualSchema := util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	helmVirtualSchema := util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"use_namespaces": {
 			Type:        schema.TypeBool,
 			Optional:    true,

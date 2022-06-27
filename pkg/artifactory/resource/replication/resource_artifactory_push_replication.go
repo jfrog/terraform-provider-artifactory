@@ -156,7 +156,7 @@ func ResourceArtifactoryPushReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: util.MergeSchema(pushReplicationSchemaCommon, pushRepMultipleSchema),
+		Schema: util.MergeMaps(pushReplicationSchemaCommon, pushRepMultipleSchema),
 	}
 }
 

@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"net/http"
 	"testing"
 
@@ -25,7 +26,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := acctest.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -34,7 +35,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := acctest.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .name }}"
 			email             = "{{ .email }}"
@@ -162,7 +163,7 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -205,7 +206,7 @@ func TestAccUser_NoGroups(t *testing.T) {
 			email       		= "dummy%d@a.com"
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -230,7 +231,7 @@ func TestAccUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,

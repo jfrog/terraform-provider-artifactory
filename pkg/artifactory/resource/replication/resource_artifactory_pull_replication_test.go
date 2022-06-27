@@ -2,6 +2,8 @@ package replication_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"regexp"
 	"testing"
 
@@ -38,7 +40,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t))
 
 	resource.Test(t, resource.TestCase{
@@ -55,7 +57,7 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 }
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t))
 	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", acctest.GetArtifactoryUrl(t))
 	resource.Test(t, resource.TestCase{
@@ -91,8 +93,8 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 }
 
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repo_name := acctest.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := test.MkNames("lib-remote", "artifactory_pull_replication")
+	_, fqrepoName, repo_name := test.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -107,7 +109,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = acctest.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repo_name,
 	})

@@ -120,7 +120,7 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: util.MergeSchema(replicationSchemaCommon, repMultipleSchema),
+		Schema: util.MergeMaps(replicationSchemaCommon, repMultipleSchema),
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
 			"artifactory_push_replication resource.",
 	}

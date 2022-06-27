@@ -21,7 +21,7 @@ type JavaVirtualRepositoryParams struct {
 
 func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource {
 
-	var mavenVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var mavenVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"force_maven_authentication": {
 			Type:        schema.TypeBool,

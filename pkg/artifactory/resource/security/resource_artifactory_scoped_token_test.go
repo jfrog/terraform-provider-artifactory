@@ -2,6 +2,8 @@ package security_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"regexp"
 	"testing"
 
@@ -11,9 +13,9 @@ import (
 )
 
 func TestAccScopedToken_WithDefaults(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -61,9 +63,9 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 }
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -115,9 +117,9 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithGroupScope(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_group" "test-group" {
 			name = "{{ .groupName }}"
@@ -150,9 +152,9 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 }
 
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := acctest.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			scopes      = ["foo"]
@@ -175,9 +177,9 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := acctest.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_local_generic_repository" "generic-local-1" {
 			key = "generic-local-1"
@@ -257,9 +259,9 @@ func TestAccScopedToken_WithAudience(t *testing.T) {
 }
 
 func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := acctest.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["{{ .prefix }}@*"]
@@ -286,9 +288,9 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 }
 
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := acctest.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["foo@*"]
@@ -311,14 +313,14 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 }
 
 func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	audences := []string{}
 	for i := 0; i < 100; i++ {
 		audences = append(audences, fmt.Sprintf("jfrt@%d", i))
 	}
 
-	scopedTokenConfig := acctest.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences    = [
