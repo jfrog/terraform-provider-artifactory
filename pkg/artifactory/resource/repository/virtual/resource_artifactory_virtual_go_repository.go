@@ -33,16 +33,16 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type GoVirtualRepositoryParams struct {
-		VirtualRepositoryBaseParams
+		RepositoryBaseParams
 		ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled,omitempty"`
 		ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns,omitempty"`
 	}
 
 	var unpackGoVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 
 		repo := GoVirtualRepositoryParams{
-			VirtualRepositoryBaseParams:  UnpackBaseVirtRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseVirtRepo(s, packageType),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 		}
@@ -52,7 +52,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(goVirtualSchema, packer.Default(goVirtualSchema), unpackGoVirtualRepository, func() interface{} {
 		return &GoVirtualRepositoryParams{
-			VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: packageType,
 			},

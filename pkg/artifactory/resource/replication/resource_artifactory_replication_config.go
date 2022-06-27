@@ -117,7 +117,7 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: util.MergeMaps(replicationSchemaCommon, repMultipleSchema),
@@ -127,12 +127,12 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.GetString("repo_key", false)
 
-	if v, ok := d.GetOkExists("replications"); ok {
+	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
 		tmp := make([]updateReplicationBody, 0, len(arr))
@@ -184,7 +184,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 			}
 
 			if _, ok := m["proxy"]; ok {
-				replication.Proxy = repository.HandleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+				replication.Proxy = repository.HandleResetWithNonExistentValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -236,7 +236,7 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(ReplicationEndpointPath + "multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -248,7 +248,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get(ReplicationEndpointPath + d.Id())
+	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -268,7 +268,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(ReplicationEndpointPath + d.Id())
+	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

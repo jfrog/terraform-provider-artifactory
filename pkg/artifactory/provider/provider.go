@@ -90,7 +90,7 @@ func Provider() *schema.Provider {
 		resourceMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(repoType)
 	}
 
-	for _, repoType := range remote.RemoteRepoTypesLikeGeneric {
+	for _, repoType := range remote.RepoTypesLikeGeneric {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
 		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteGenericRepository(repoType)
 	}
@@ -104,7 +104,7 @@ func Provider() *schema.Provider {
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(repoType)
 	}
 
-	for _, repoType := range virtual.VirtualRepoTypesLikeGeneric {
+	for _, repoType := range virtual.RepoTypesLikeGeneric {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(repoType)
 	}
@@ -113,12 +113,12 @@ func Provider() *schema.Provider {
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}
 
-	for _, repoType := range federated.FederatedRepoTypesSupported {
+	for _, repoType := range federated.RepoTypesSupported {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resourceMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
 	}
 
-	for _, webhookType := range webhook.WebhookTypesSupported {
+	for _, webhookType := range webhook.TypesSupported {
 		webhookResourceName := fmt.Sprintf("artifactory_%s_webhook", webhookType)
 		resourceMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
 	}
@@ -168,6 +168,8 @@ func Provider() *schema.Provider {
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		tflog.Debug(ctx, "ConfigureContextFunc")
+		tflog.Info(ctx, fmt.Sprintf("Provider version: %s", Version))
+
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
 			terraformVersion = "0.11+compatible"

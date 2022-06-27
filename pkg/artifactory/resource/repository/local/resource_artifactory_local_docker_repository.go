@@ -43,24 +43,24 @@ var dockerV2LocalSchema = util.MergeMaps(
 )
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	packer := packer.Default(dockerV2LocalSchema)
+	pkr := packer.Default(dockerV2LocalSchema)
 
 	var unPackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
-			MaxUniqueTags:             d.GetInt("max_unique_tags", false),
-			DockerApiVersion:          "V2",
-			TagRetention:              d.GetInt("tag_retention", false),
-			BlockPushingSchema1:       d.GetBool("block_pushing_schema1", false),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
+			MaxUniqueTags:        d.GetInt("max_unique_tags", false),
+			DockerApiVersion:     "V2",
+			TagRetention:         d.GetInt("tag_retention", false),
+			BlockPushingSchema1:  d.GetBool("block_pushing_schema1", false),
 		}
 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(dockerV2LocalSchema, packer, unPackLocalDockerV2Repository, func() interface{} {
+	return repository.MkResourceSchema(dockerV2LocalSchema, pkr, unPackLocalDockerV2Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
 			},
@@ -99,15 +99,15 @@ var dockerV1LocalSchema = util.MergeMaps(
 func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	// this is necessary because of the pointers
-	skeema := util.MergeMaps(map[string]*schema.Schema{}, dockerV1LocalSchema)
+	skeema := util.MergeMaps(dockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
-			MaxUniqueTags:             0,
-			DockerApiVersion:          "V1",
-			TagRetention:              1,
-			BlockPushingSchema1:       false,
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "docker"),
+			MaxUniqueTags:        0,
+			DockerApiVersion:     "V1",
+			TagRetention:         1,
+			BlockPushingSchema1:  false,
 		}
 
 		return repo, repo.Id(), nil
@@ -115,7 +115,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	return repository.MkResourceSchema(skeema, packer.Default(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
 		return &DockerLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
 				Rclass:      "local",
 			},
@@ -128,7 +128,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 }
 
 type DockerLocalRepositoryParams struct {
-	LocalRepositoryBaseParams
+	RepositoryBaseParams
 	MaxUniqueTags       int    `hcl:"max_unique_tags" json:"maxUniqueTags"`
 	DockerApiVersion    string `hcl:"api_version" json:"dockerApiVersion"`
 	TagRetention        int    `hcl:"tag_retention" json:"dockerTagRetention"`

@@ -97,7 +97,7 @@ func ResourceArtifactoryPullReplication() *schema.Resource {
 }
 
 func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	replicationConfig := new(ReplicationBody)
 
 	replicationConfig.RepoKey = d.GetString("repo_key", false)
@@ -143,7 +143,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
-		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
+		Put(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -171,7 +171,7 @@ type PullReplication struct {
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(ReplicationEndpointPath + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -203,7 +203,7 @@ func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
-		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
+		Post(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}

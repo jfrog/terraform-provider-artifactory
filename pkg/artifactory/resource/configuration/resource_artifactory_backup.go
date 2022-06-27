@@ -108,9 +108,9 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		}
 
 		matchedBackup := findBackup(backups, backup.Key)
-		packer := packer.Default(backupSchema)
+		pkr := packer.Default(backupSchema)
 
-		return diag.FromErr(packer(&matchedBackup, d))
+		return diag.FromErr(pkr(&matchedBackup, d))
 	}
 
 	var resourceBackupUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -175,7 +175,7 @@ backups: ~
 			return diag.FromErr(err)
 		}
 
-		err = SendConfigurationPatch([]byte(restoreRestOfBackups), m)
+		err = SendConfigurationPatch(restoreRestOfBackups, m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -198,7 +198,7 @@ backups: ~
 }
 
 func unpackBackup(s *schema.ResourceData) Backup {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	backup := Backup{
 		Key:                    d.GetString("key", false),
 		Enabled:                d.GetBool("enabled", false),

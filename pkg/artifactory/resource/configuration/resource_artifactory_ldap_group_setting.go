@@ -118,9 +118,9 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 				break
 			}
 		}
-		packer := packer.Default(ldapGroupSettingsSchema)
+		pkr := packer.Default(ldapGroupSettingsSchema)
 
-		return diag.FromErr(packer(&matchedLdapGroupSetting, d))
+		return diag.FromErr(pkr(&matchedLdapGroupSetting, d))
 	}
 
 	var resourceLdapGroupSettingsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -195,7 +195,7 @@ security:
 			return diag.Errorf("failed to marshal ldap group settings during Update")
 		}
 
-		err = SendConfigurationPatch([]byte(restoreRestOfLdapGroupSettingsConfigs), m)
+		err = SendConfigurationPatch(restoreRestOfLdapGroupSettingsConfigs, m)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Group Settings")
 		}
@@ -218,7 +218,7 @@ security:
 }
 
 func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	ldapGroupSetting := LdapGroupSetting{
 		Name:                 d.GetString("name", false),
 		EnabledLdap:          d.GetString("ldap_setting_key", false),

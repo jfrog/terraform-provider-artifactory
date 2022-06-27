@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"strings"
 )
 
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
@@ -50,7 +50,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	}
 
 	type FederatedRepositoryParams struct {
-		local.LocalRepositoryBaseParams
+		local.RepositoryBaseParams
 		Members []Member `hcl:"member" json:"members"`
 	}
 
@@ -79,8 +79,8 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := FederatedRepositoryParams{
-			LocalRepositoryBaseParams: local.UnpackBaseRepo("federated", data, repoType),
-			Members:                   unpackMembers(data),
+			RepositoryBaseParams: local.UnpackBaseRepo("federated", data, repoType),
+			Members:              unpackMembers(data),
 		}
 		// terraformType could be `module` or `provider`, repoType names we use are `terraform_module` and `terraform_provider`
 		// We need to remove the `terraform_` from the string.
@@ -113,19 +113,21 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		return nil
 	}
 
-	packer := packer.Compose(
-		packer.Universal(predicate.Ignore("class", "rclass", "member", "terraform_type")),
+	pkr := packer.Compose(
+		packer.Universal(
+			predicate.Ignore("class", "rclass", "member", "terraform_type"),
+		),
 		packMembers,
 	)
 
 	constructor := func() interface{} {
 		return &FederatedRepositoryParams{
-			LocalRepositoryBaseParams: local.LocalRepositoryBaseParams{
+			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(repoType),
 				Rclass:      "federated",
 			},
 		}
 	}
 
-	return repository.MkResourceSchema(federatedSchema, packer, unpackFederatedRepository, constructor)
+	return repository.MkResourceSchema(federatedSchema, pkr, unpackFederatedRepository, constructor)
 }

@@ -1,3 +1,3 @@
 package replication
 
-const ReplicationEndpointPath = "artifactory/api/replications/"
+const EndpointPath = "artifactory/api/replications/"

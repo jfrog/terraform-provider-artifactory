@@ -1,14 +1,13 @@
 package security
 
 import (
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
+
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-	"strings"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"strings"
 )
 
 const KeypairEndPoint = "artifactory/api/security/keypair/"
@@ -138,7 +138,7 @@ func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 	return nil
 }
 
-func validatePublicKey(value interface{}, path cty.Path) diag.Diagnostics {
+func validatePublicKey(value interface{}, _ cty.Path) diag.Diagnostics {
 	var err error
 
 	stripped := strings.ReplaceAll(value.(string), "\t", "")
@@ -176,12 +176,12 @@ func stripTabs(val interface{}) string {
 	return strings.ReplaceAll(val.(string), "\t", "")
 }
 
-func ignoreEmpty(_, old, new string, _ *schema.ResourceData) bool {
+func ignoreEmpty(_, _, _ string, _ *schema.ResourceData) bool {
 	return false
 }
 
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	result := KeyPairPayLoad{
 		PairName:    d.GetString("pair_name", false),
 		PairType:    d.GetString("pair_type", false),
@@ -195,7 +195,8 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 
 var keyPairPacker = packer.Universal(
 	predicate.All(
-		predicate.Ignore("private_key"), predicate.SchemaHasKey(keyPairSchema),
+		predicate.Ignore("private_key"),
+		predicate.SchemaHasKey(keyPairSchema),
 	),
 )
 

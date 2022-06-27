@@ -1,15 +1,15 @@
 package replication_test
 
 import (
-	"fmt"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"regexp"
-	"testing"
 
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"regexp"
+	"testing"
 )
 
 func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {

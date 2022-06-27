@@ -315,7 +315,7 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 }
 
 func TestAccAllRemoteRepository(t *testing.T) {
-	for _, repoType := range remote.RemoteRepoTypesLikeGeneric {
+	for _, repoType := range remote.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,

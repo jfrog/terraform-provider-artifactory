@@ -102,7 +102,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 							"must be 'applied-permissions/groups:<group-name>[,<group-name>...]'",
 						),
 						validation.StringMatch(
-							regexp.MustCompile(`^artifact:.+:([rwdam\*]|([rwdam]+(,[rwdam]+)))$`),
+							regexp.MustCompile(`^artifact:.+:([rwdam*]|([rwdam]+(,[rwdam]+)))$`),
 							"must be '<resource-type>:<target>[/<sub-resource>]:<actions>'",
 						),
 					),

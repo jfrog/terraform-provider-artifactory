@@ -2,13 +2,13 @@ package replication_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -94,7 +94,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
 	_, fqrn, name := test.MkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repo_name := test.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrepoName, repoName := test.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -111,7 +111,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 	`
 	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
-		"remote_name":     repo_name,
+		"remote_name":     repoName,
 	})
 
 	resource.Test(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			{
 				Config: tcl,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "repo_key", repo_name),
+					resource.TestCheckResourceAttr(fqrn, "repo_key", repoName),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 ? * MON *"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "false"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),

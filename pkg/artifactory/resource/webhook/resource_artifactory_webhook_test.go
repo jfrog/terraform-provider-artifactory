@@ -80,7 +80,7 @@ var releaseBundleTemplate = `
 `
 
 func TestAccWebhookCriteriaValidation(t *testing.T) {
-	for _, webhookType := range webhook.WebhookTypesSupported {
+	for _, webhookType := range webhook.TypesSupported {
 		t.Run(fmt.Sprintf("TestWebhook%sCriteriaValidation", strings.Title(strings.ToLower(webhookType))), func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 		})
@@ -354,7 +354,7 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 	return request.
 		SetPathParam("webhookKey", id).
 		AddRetryCondition(client.NeverRetry).
-		Get(webhook.WebhookUrl)
+		Get(webhook.WhUrl)
 }
 
 // Unit tests for state migration func

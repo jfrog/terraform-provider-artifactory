@@ -2,6 +2,7 @@ package remote
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -9,7 +10,7 @@ import (
 )
 
 type DockerRemoteRepository struct {
-	RemoteRepositoryBaseParams
+	RepositoryBaseParams
 	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 	EnableTokenAuthentication    bool     `hcl:"enable_token_authentication" json:"enableTokenAuthentication"`
@@ -52,9 +53,9 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepository{
-			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
@@ -77,7 +78,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

@@ -3,6 +3,12 @@ package acctest
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -12,11 +18,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"gopkg.in/yaml.v3"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
-	"testing"
 )
 
 const RtDefaultUser = "admin"

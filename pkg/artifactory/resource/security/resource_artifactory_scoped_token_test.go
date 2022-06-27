@@ -2,14 +2,14 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccScopedToken_WithDefaults(t *testing.T) {
@@ -315,9 +315,9 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	audences := []string{}
+	var audiences []string
 	for i := 0; i < 100; i++ {
-		audences = append(audences, fmt.Sprintf("jfrt@%d", i))
+		audiences = append(audiences, fmt.Sprintf("jfrt@%d", i))
 	}
 
 	scopedTokenConfig := util.ExecuteTemplate(
@@ -329,7 +329,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		}`,
 		map[string]interface{}{
 			"name":      name,
-			"audiences": audences,
+			"audiences": audiences,
 		},
 	)
 

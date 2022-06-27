@@ -24,15 +24,15 @@ var cargoLocalSchema = util.MergeMaps(
 func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	type CargoLocalRepo struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		AnonymousAccess bool `json:"cargoAnonymousAccess"`
 	}
 
 	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := CargoLocalRepo{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
-			AnonymousAccess:           d.GetBool("anonymous_access", false),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
+			AnonymousAccess:      d.GetBool("anonymous_access", false),
 		}
 
 		return repo, repo.Id(), nil
@@ -40,7 +40,7 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(cargoLocalSchema, packer.Default(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
 		return &CargoLocalRepo{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "cargo",
 				Rclass:      "local",
 			},

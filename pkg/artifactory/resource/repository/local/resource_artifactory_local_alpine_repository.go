@@ -24,15 +24,15 @@ var alpineLocalSchema = util.MergeMaps(
 func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 
 	type AlpineLocalRepo struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
 	}
 
 	var unPackLocalAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := AlpineLocalRepo{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "alpine"),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
+			RepositoryBaseParams: UnpackBaseRepo("local", data, "alpine"),
+			PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),
 		}
 
 		return repo, repo.Id(), nil
@@ -40,7 +40,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(alpineLocalSchema, packer.Default(alpineLocalSchema), unPackLocalAlpineRepository, func() interface{} {
 		return &AlpineLocalRepo{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "alpine",
 				Rclass:      "local",
 			},

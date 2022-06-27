@@ -124,7 +124,7 @@ func TestAccGroup_full(t *testing.T) {
 		`,
 	}
 
-	configs := []string{}
+	var configs []string
 	for step, template := range templates {
 		configs = append(
 			configs,
@@ -251,10 +251,16 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 		}
 		`,
 	}
-	configs := []string{}
+	var configs []string
 	for step, template := range templates {
-		configs = append(configs, util.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
-
+		configs = append(
+			configs,
+			util.ExecuteTemplate(
+				fmt.Sprint(step),
+				template,
+				map[string]string{"groupName": groupName},
+			),
+		)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

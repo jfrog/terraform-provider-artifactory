@@ -33,7 +33,7 @@ func ResourceArtifactorySingleReplicationConfig() *schema.Resource {
 }
 
 func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBody {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	replicationConfig := new(updateReplicationBody)
 
 	replicationConfig.RepoKey = d.GetString("repo_key", false)
@@ -47,7 +47,7 @@ func unpackSingleReplicationConfig(s *schema.ResourceData) *updateReplicationBod
 	replicationConfig.SyncProperties = d.GetBool("sync_properties", false)
 	replicationConfig.SyncStatistics = d.GetBool("sync_statistics", false)
 	replicationConfig.PathPrefix = d.GetString("path_prefix", false)
-	replicationConfig.Proxy = repository.HandleResetWithNonExistantValue(d, "proxy")
+	replicationConfig.Proxy = repository.HandleResetWithNonExistentValue(d, "proxy")
 	replicationConfig.Password = d.GetString("password", false)
 
 	return replicationConfig
@@ -108,7 +108,7 @@ func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.Resour
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
-		Put(ReplicationEndpointPath + replicationConfig.RepoKey)
+		Put(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -126,7 +126,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	// an entirely different resource because values like "url" are never available after submit.
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(ReplicationEndpointPath + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -162,7 +162,7 @@ func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.Resour
 	_, err := m.(*resty.Client).R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
-		Post(ReplicationEndpointPath + replicationConfig.RepoKey)
+		Post(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -71,7 +71,7 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 
 func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 	type JavaLocalRepositoryParams struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		ChecksumPolicyType           string `hcl:"checksum_policy_type" json:"checksumPolicyType"`
 		SnapshotVersionBehavior      string `hcl:"snapshot_version_behavior" json:"snapshotVersionBehavior"`
 		MaxUniqueSnapshots           int    `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
@@ -83,7 +83,7 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := JavaLocalRepositoryParams{
-			LocalRepositoryBaseParams:    UnpackBaseRepo("local", data, repoType),
+			RepositoryBaseParams:         UnpackBaseRepo("local", data, repoType),
 			ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
 			SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
 			MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
@@ -99,7 +99,7 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 
 	return repository.MkResourceSchema(javaLocalSchema, packer.Default(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
 		return &JavaLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: repoType,
 				Rclass:      "local",
 			},

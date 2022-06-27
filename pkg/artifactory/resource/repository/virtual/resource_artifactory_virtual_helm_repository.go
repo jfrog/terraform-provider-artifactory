@@ -21,14 +21,14 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type HelmVirtualRepositoryParams struct {
-		VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs
+		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		UseNamespaces bool `json:"useNamespaces"`
 	}
 
 	unpackHelmVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := HelmVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
 			UseNamespaces: d.GetBool("use_namespaces", false),
 		}
 
@@ -37,8 +37,8 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 
 	constructor := func() interface{} {
 		return &HelmVirtualRepositoryParams{
-			VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs: VirtualRepositoryBaseParamsWithRetrievalCachePeriodSecs{
-				VirtualRepositoryBaseParams: VirtualRepositoryBaseParams{
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      "virtual",
 					PackageType: packageType,
 				},

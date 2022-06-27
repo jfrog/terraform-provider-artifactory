@@ -7,6 +7,6 @@ import (
 )
 
 func repConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(*resty.Client).R().Head(replication.ReplicationEndpointPath + id)
+	_, err := m.(*resty.Client).R().Head(replication.EndpointPath + id)
 	return err == nil, err
 }

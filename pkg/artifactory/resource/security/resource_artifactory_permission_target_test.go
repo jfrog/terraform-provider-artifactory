@@ -2,14 +2,14 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
-	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"testing"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const permissionNoIncludes = `

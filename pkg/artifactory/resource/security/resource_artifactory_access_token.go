@@ -338,7 +338,7 @@ func unpackAdminToken(d *schema.ResourceData, tokenOptions *AccessTokenOptions) 
 func checkUserExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head("artifactory/api/security/users/" + name)
 	if err != nil {
-		// If there is an error, it possible the user does not exist.
+		// If there is an error, it is possible the user does not exist.
 		if resp != nil {
 			// Check if the user does not exist in artifactory
 			if resp.StatusCode() == http.StatusNotFound {
@@ -359,7 +359,7 @@ func checkUserExists(client *resty.Client, name string) (bool, error) {
 
 func checkGroupExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head(GroupsEndpoint + name)
-	// If there is an error, it possible the group does not exist.
+	// If there is an error, it is possible the group does not exist.
 	if err != nil {
 		if resp != nil {
 			// Check if the group does not exist in artifactory

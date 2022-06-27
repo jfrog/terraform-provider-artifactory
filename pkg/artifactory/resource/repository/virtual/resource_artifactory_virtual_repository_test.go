@@ -2,20 +2,20 @@ package virtual_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -645,7 +645,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepository(t *testing.T) {
-	for _, repoType := range virtual.VirtualRepoTypesLikeGeneric {
+	for _, repoType := range virtual.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),

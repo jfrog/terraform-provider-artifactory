@@ -161,7 +161,7 @@ func ResourceArtifactoryPushReplication() *schema.Resource {
 }
 
 func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
-	d := &util.ResourceData{s}
+	d := &util.ResourceData{ResourceData: s}
 	pushReplication := new(UpdatePushReplication)
 
 	repo := d.GetString("repo_key", false)
@@ -219,7 +219,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 			}
 
 			if _, ok := m["proxy"]; ok {
-				replication.Proxy = repository.HandleResetWithNonExistantValue(d, fmt.Sprintf("replications.%d.proxy", i))
+				replication.Proxy = repository.HandleResetWithNonExistentValue(d, fmt.Sprintf("replications.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -295,7 +295,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
-		Put(ReplicationEndpointPath + "multiple/" + pushReplication.RepoKey)
+		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -307,7 +307,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get(ReplicationEndpointPath + d.Id())
+	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -330,7 +330,7 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
-		Post(ReplicationEndpointPath + "multiple/" + d.Id())
+		Post(EndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -341,6 +341,6 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	_, err := m.(*resty.Client).R().
 		AddRetryCondition(client.RetryOnMergeError).
-		Delete(ReplicationEndpointPath + d.Id())
+		Delete(EndpointPath + d.Id())
 	return diag.FromErr(err)
 }

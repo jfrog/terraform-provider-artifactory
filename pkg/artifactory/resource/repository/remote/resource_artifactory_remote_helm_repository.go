@@ -3,6 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -41,16 +42,16 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	type HelmRemoteRepo struct {
-		RemoteRepositoryBaseParams
+		RepositoryBaseParams
 		HelmChartsBaseURL            string   `hcl:"helm_charts_base_url" json:"chartsBaseUrl"`
 		ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 		ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 	}
 
 	var unpackHelmRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := HelmRemoteRepo{
-			RemoteRepositoryBaseParams:   UnpackBaseRemoteRepo(s, packageType),
+			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
 			HelmChartsBaseURL:            d.GetString("helm_charts_base_url", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
@@ -72,7 +73,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, func() interface{} {
 		return &HelmRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

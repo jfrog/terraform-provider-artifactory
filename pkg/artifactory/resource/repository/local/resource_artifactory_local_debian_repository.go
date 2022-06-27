@@ -34,7 +34,7 @@ var debianLocalSchema = util.MergeMaps(
 func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 
 	type DebianLocalRepositoryParams struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout,omitempty"`
 		IndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
 		PrimaryKeyPairRef       string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
@@ -44,18 +44,18 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := DebianLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "debian"),
-			PrimaryKeyPairRef:         d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:       d.GetString("secondary_keypair_ref", false),
-			TrivialLayout:             d.GetBool("trivial_layout", false),
-			IndexCompressionFormats:   d.GetSet("index_compression_formats"),
+			RepositoryBaseParams:    UnpackBaseRepo("local", data, "debian"),
+			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
+			TrivialLayout:           d.GetBool("trivial_layout", false),
+			IndexCompressionFormats: d.GetSet("index_compression_formats"),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	return repository.MkResourceSchema(debianLocalSchema, packer.Default(debianLocalSchema), unPackLocalDebianRepository, func() interface{} {
 		return &DebianLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "debian",
 				Rclass:      "local",
 			},

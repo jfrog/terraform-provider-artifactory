@@ -190,12 +190,12 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 	}
 }
 
-// Special handling for field that requires non-existant value for RT
+// HandleResetWithNonExistentValue Special handling for field that requires non-existant value for RT
 //
 // Artifactory REST API will not accept empty string or null to reset value to not set
 // Instead, using a non-existant value works as a workaround
 // To ensure we don't accidentally set the value to a valid value, we use a UUID v4 string
-func HandleResetWithNonExistantValue(d *util.ResourceData, key string) string {
+func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
 	value := d.GetString(key, false)
 
 	// When value has changed and is empty string, then it has been removed from

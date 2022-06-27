@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type RemoteRepositoryBaseParams struct {
+type RepositoryBaseParams struct {
 	Key                      string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey               string   `json:"projectKey"`
 	ProjectEnvironments      []string `json:"environments"`
@@ -55,16 +55,16 @@ type RemoteRepositoryBaseParams struct {
 	ListRemoteFolderItems             bool                               `json:"listRemoteFolderItems"`
 }
 
-type RemoteRepositoryVcsParams struct {
+type RepositoryVcsParams struct {
 	VcsGitProvider    string `json:"vcsGitProvider"`
 	VcsGitDownloadUrl string `json:"vcsGitDownloadUrl"`
 }
 
-func (bp RemoteRepositoryBaseParams) Id() string {
+func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var RemoteRepoTypesLikeGeneric = []string{
+var RepoTypesLikeGeneric = []string{
 	"alpine",
 	"chef",
 	"conda",
@@ -371,10 +371,10 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 	},
 }
 
-func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepositoryBaseParams {
-	d := &util.ResourceData{s}
+func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
+	d := &util.ResourceData{ResourceData: s}
 
-	repo := RemoteRepositoryBaseParams{
+	repo := RepositoryBaseParams{
 		Rclass:                   "remote",
 		Key:                      d.GetString("key", false),
 		ProjectKey:               d.GetString("project_key", false),
@@ -438,9 +438,9 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RemoteRepo
 	return repo
 }
 
-func UnpackVcsRemoteRepo(s *schema.ResourceData) RemoteRepositoryVcsParams {
-	d := &util.ResourceData{s}
-	repo := RemoteRepositoryVcsParams{
+func UnpackVcsRemoteRepo(s *schema.ResourceData) RepositoryVcsParams {
+	d := &util.ResourceData{ResourceData: s}
+	repo := RepositoryVcsParams{
 		VcsGitProvider:    d.GetString("vcs_git_provider", false),
 		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),
 	}

@@ -31,7 +31,7 @@ var nugetLocalSchema = util.MergeMaps(
 func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	type NugetLocalRepositoryParams struct {
-		LocalRepositoryBaseParams
+		RepositoryBaseParams
 		MaxUniqueSnapshots       int  `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
 		ForceNugetAuthentication bool `hcl:"force_nuget_authentication" json:"forceNugetAuthentication"`
 	}
@@ -39,9 +39,9 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: UnpackBaseRepo("local", data, "nuget"),
-			MaxUniqueSnapshots:        d.GetInt("max_unique_snapshots", false),
-			ForceNugetAuthentication:  d.GetBool("force_nuget_authentication", false),
+			RepositoryBaseParams:     UnpackBaseRepo("local", data, "nuget"),
+			MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 		}
 
 		return repo, repo.Id(), nil
@@ -49,7 +49,7 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(nugetLocalSchema, packer.Default(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
 		return &NugetLocalRepositoryParams{
-			LocalRepositoryBaseParams: LocalRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "nuget",
 				Rclass:      "local",
 			},

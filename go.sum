@@ -145,12 +145,6 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
-github.com/jfrog/terraform-provider-shared v0.7.0 h1:x8qLXyptP35KC1vLaqN2AWJC7/eMNZE2jabiBx07JSY=
-github.com/jfrog/terraform-provider-shared v0.7.0/go.mod h1:2ueIlfizwfDAkL1jm3hmvYBqbMusQtHz33ZpDiPOyxA=
-github.com/jfrog/terraform-provider-shared v1.1.1 h1:/neab0fWIuwZ0X0M0dIbxYT5w6hdAUbWS0DTL/ZQxPw=
-github.com/jfrog/terraform-provider-shared v1.1.1/go.mod h1:8Ah3LHk0irA14Mq3t8uaYax+V+l9M4sKZXFcqoPtZkI=
-github.com/jfrog/terraform-provider-shared v1.2.0 h1:SbU5c/s0vOGeVLqQgoyCXhpyG7PhDNJ5VccJ6c7leoc=
-github.com/jfrog/terraform-provider-shared v1.2.0/go.mod h1:8Ah3LHk0irA14Mq3t8uaYax+V+l9M4sKZXFcqoPtZkI=
 github.com/jfrog/terraform-provider-shared v1.3.1 h1:Y775hKPNh9m+SN7zRL1A/j2jc91++A+OfzFfjstE3aU=
 github.com/jfrog/terraform-provider-shared v1.3.1/go.mod h1:8Ah3LHk0irA14Mq3t8uaYax+V+l9M4sKZXFcqoPtZkI=
 github.com/jhump/protoreflect v1.6.0 h1:h5jfMVslIg6l29nsMs0D8Wj17RDVdNYti0vDN/PZZoE=

@@ -8,8 +8,8 @@ import (
 )
 
 type VcsRemoteRepo struct {
-	RemoteRepositoryBaseParams
-	RemoteRepositoryVcsParams
+	RepositoryBaseParams
+	RepositoryVcsParams
 	MaxUniqueSnapshots int `json:"maxUniqueSnapshots"`
 }
 
@@ -28,11 +28,11 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var UnpackVcsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := VcsRemoteRepo{
-			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RemoteRepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			MaxUniqueSnapshots:         d.GetInt("max_unique_snapshots", false),
+			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
+			MaxUniqueSnapshots:   d.GetInt("max_unique_snapshots", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -40,7 +40,7 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	return repository.MkResourceSchema(vcsRemoteSchema, packer.Default(vcsRemoteSchema), UnpackVcsRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &VcsRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

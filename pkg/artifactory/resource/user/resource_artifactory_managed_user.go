@@ -26,10 +26,9 @@ func ResourceArtifactoryManagedUser() *schema.Resource {
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
-		Exists:        resourceUserExists,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: managedUserSchema,

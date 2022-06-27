@@ -9,7 +9,7 @@ import (
 )
 
 type TerraformRemoteRepo struct {
-	RemoteRepositoryBaseParams
+	RepositoryBaseParams
 	TerraformRegistryUrl  string `hcl:"terraform_registry_url" json:"terraformRegistryUrl"`
 	TerraformProvidersUrl string `hcl:"terraform_providers_url" json:"terraformProvidersUrl"`
 }
@@ -37,18 +37,18 @@ func ResourceArtifactoryRemoteTerraformRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackTerraformRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{s}
+		d := &util.ResourceData{ResourceData: s}
 		repo := TerraformRemoteRepo{
-			RemoteRepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			TerraformRegistryUrl:       d.GetString("terraform_registry_url", false),
-			TerraformProvidersUrl:      d.GetString("terraform_providers_url", false),
+			RepositoryBaseParams:  UnpackBaseRemoteRepo(s, packageType),
+			TerraformRegistryUrl:  d.GetString("terraform_registry_url", false),
+			TerraformProvidersUrl: d.GetString("terraform_providers_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	return repository.MkResourceSchema(terraformRemoteSchema, packer.Default(terraformRemoteSchema), unpackTerraformRemoteRepo, func() interface{} {
 		return &TerraformRemoteRepo{
-			RemoteRepositoryBaseParams: RemoteRepositoryBaseParams{
+			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},
