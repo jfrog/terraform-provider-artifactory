@@ -2,7 +2,7 @@
 
 REFACTOR:
 
-* Updated docs for `local_maven_repository` PR: [#481](https://github.com/jfrog/terraform-provider-artifactory/pull/491). Issue: [#480](https://github.com/jfrog/terraform-provider-artifactory/issues/488)
+* Updated docs for `local_maven_repository` PR: [#491](https://github.com/jfrog/terraform-provider-artifactory/pull/491). Issue: [#480](https://github.com/jfrog/terraform-provider-artifactory/issues/488)
 
 ## 6.9.5 (June 27, 2022). Tested on Artifactory 7.38.10
 
