@@ -25,10 +25,10 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
 * `key` - (Required) the identity key of the repo.
-* `checksum_policy_type` - (Optional) Checksum policy determines how Artifactory behaves when a client checksum for a deployed
-  resource is missing or conflicts with the locally calculated checksum (bad checksum). The options are 
-  `client-checksums` and `generated-checksums`. For more details,
-  please refer to [Checksum Policy](https://www.jfrog.com/confluence/display/JFROG/Local+Repositories#LocalRepositories-ChecksumPolicy).
+* `checksum_policy_type` - (Optional) Checksum policy determines how Artifactory behaves when a client checksum for a deployed resource is missing or conflicts with the locally calculated checksum (bad checksum). The options are:
+  - `client-checksums` 
+  - `server-generated-checksums`. 
+For more details, please refer to [Checksum Policy](https://www.jfrog.com/confluence/display/JFROG/Local+Repositories#LocalRepositories-ChecksumPolicy).
 * `snapshot_version_behavior` - (Optional) Specifies the naming convention for Maven SNAPSHOT versions.
   The options are -
   * `unique`: Version number is based on a time-stamp (default)
