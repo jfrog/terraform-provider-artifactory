@@ -80,6 +80,8 @@ The provider supports the following `permission` enums:
 * `annotate`
 * `delete`
 * `manage`
+* `managedXrayMeta`
+* `distribute`
 
 The values can be mapped to the permissions from the official [documentation](https://www.jfrog.com/confluence/display/JFROG/Permissions):
 
@@ -88,6 +90,8 @@ The values can be mapped to the permissions from the official [documentation](ht
 * `annotate` - matches `Annotate` permissions.
 * `delete` - matches `Delete / Overwrite` permissions.
 * `manage` - matches `Manage` permissions.
+* `managedXrayMeta` - matches `Manage Xray Metadata` permissions.
+* `distribute` - matches `Distribute` permissions.
 
 ## Import
 

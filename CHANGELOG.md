@@ -1,3 +1,9 @@
+## 6.10.0 (June 28, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_target: Add support for `distribute` permission for `release_bundle`. PR: [#490](https://github.com/jfrog/terraform-provider-artifactory/pull/490)
+
 ## 6.9.6 (June 27, 2022). Tested on Artifactory 7.38.10
 
 REFACTOR:
@@ -15,7 +21,7 @@ REFACTOR:
 
 REFACTOR:
 
-* Remove redundant shared code to shared module and bump dependency. 
+* Remove redundant shared code to shared module and bump dependency.
 * Moved some other sharable code to shared module
 
 ## 6.9.3 (June 10, 2022). Tested on Artifactory 7.38.10
