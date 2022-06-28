@@ -19,7 +19,7 @@ type NugetRemoteRepo struct {
 func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	const packageType = "nuget"
 
-	var nugetRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var nugetRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"feed_context_path": {
 			Type:        schema.TypeString,
 			Optional:    true,

@@ -3,6 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -12,7 +13,7 @@ import (
 func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	const packageType = "helm"
 
-	var helmRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var helmRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"helm_charts_base_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -66,7 +67,6 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 		predicate.All(
 			predicate.SchemaHasKey(helmRemoteSchema),
 			predicate.NoPassword,
-			predicate.NoClass,
 			predicate.Ignore("external_dependencies_patterns"),
 		),
 	)

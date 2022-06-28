@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 
 	const packageType = "bower"
 
-	var bowerVirtualSchema = util.MergeSchema(
+	var bowerVirtualSchema = util.MergeMaps(
 		BaseVirtualRepoSchema,
 		externalDependenciesSchema,
 		repository.RepoLayoutRefSchema("virtual", packageType),

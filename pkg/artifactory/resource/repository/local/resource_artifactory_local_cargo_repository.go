@@ -7,7 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var cargoLocalSchema = util.MergeSchema(
+var cargoLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"anonymous_access": {

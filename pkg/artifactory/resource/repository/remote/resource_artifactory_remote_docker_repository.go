@@ -2,6 +2,7 @@ package remote
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -19,7 +20,7 @@ type DockerRemoteRepository struct {
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	const packageType = "docker"
 
-	var dockerRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var dockerRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -71,7 +72,6 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 		predicate.All(
 			predicate.SchemaHasKey(dockerRemoteSchema),
 			predicate.NoPassword,
-			predicate.NoClass,
 			predicate.Ignore("external_dependencies_patterns"),
 		),
 	)

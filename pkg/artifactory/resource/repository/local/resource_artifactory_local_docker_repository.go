@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var dockerV2LocalSchema = util.MergeSchema(
+var dockerV2LocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_tags": {
@@ -72,7 +72,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	})
 }
 
-var dockerV1LocalSchema = util.MergeSchema(
+var dockerV1LocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_tags": {
@@ -99,7 +99,7 @@ var dockerV1LocalSchema = util.MergeSchema(
 func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	// this is necessary because of the pointers
-	skeema := util.MergeSchema(map[string]*schema.Schema{}, dockerV1LocalSchema)
+	skeema := util.MergeMaps(dockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerLocalRepositoryParams{

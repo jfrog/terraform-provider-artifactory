@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
@@ -71,47 +69,6 @@ func PreCheck(t *testing.T) {
 
 func GetArtifactoryUrl(t *testing.T) string {
 	return test.GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
-}
-
-func MapToTestChecks(fqrn string, fields map[string]interface{}) []resource.TestCheckFunc {
-	var result []resource.TestCheckFunc
-	for key, value := range fields {
-		switch reflect.TypeOf(value).Kind() {
-		case reflect.Slice:
-			for i, lv := range value.([]interface{}) {
-				result = append(result, resource.TestCheckResourceAttr(
-					fqrn,
-					fmt.Sprintf("%s.%d", key, i),
-					fmt.Sprintf("%v", lv),
-				))
-			}
-		case reflect.Map:
-			// this also gets generated, but it's value is '1', which is also the size. So, I don't know
-			// what it means
-			// content_synchronisation.0.%
-			resource.TestCheckResourceAttr(
-				fqrn,
-				fmt.Sprintf("%s.#", key),
-				fmt.Sprintf("%d", len(value.(map[string]interface{}))),
-			)
-		default:
-			result = append(result, resource.TestCheckResourceAttr(fqrn, key, fmt.Sprintf(`%v`, value)))
-		}
-	}
-	return result
-}
-
-func CopyInterfaceMap(source map[string]interface{}, target map[string]interface{}) map[string]interface{} {
-	for k, v := range source {
-		target[k] = v
-	}
-	return target
-}
-
-func MkNames(name, resource string) (int, string, string) {
-	id := test.RandomInt()
-	n := fmt.Sprintf("%s%d", name, id)
-	return id, fmt.Sprintf("%s.%s", resource, n), n
 }
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)

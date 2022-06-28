@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"net/http"
 	"testing"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
@@ -39,7 +40,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_full(t *testing.T) {
-	_, rfqn, groupName := acctest.MkNames("test-group-full", "artifactory_group")
+	_, rfqn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	externalId := "test-external-id"
 
 	templates := []string{
@@ -214,7 +215,7 @@ func TestAccGroup_full(t *testing.T) {
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, rfqn, groupName := acctest.MkNames("test-group-unmanagedmembers", "artifactory_group")
+	_, rfqn, groupName := test.MkNames("test-group-unmanagedmembers", "artifactory_group")
 
 	templates := []string{
 		`
@@ -252,8 +253,14 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	}
 	var configs []string
 	for step, template := range templates {
-		configs = append(configs, util.ExecuteTemplate(fmt.Sprint(step), template, map[string]string{"groupName": groupName}))
-
+		configs = append(
+			configs,
+			util.ExecuteTemplate(
+				fmt.Sprint(step),
+				template,
+				map[string]string{"groupName": groupName},
+			),
+		)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

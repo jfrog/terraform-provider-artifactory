@@ -16,7 +16,7 @@ type GoRemoteRepo struct {
 func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 	const packageType = "go"
 
-	var goRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var goRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"vcs_git_provider": {
 			Type:             schema.TypeString,
 			Optional:         true,

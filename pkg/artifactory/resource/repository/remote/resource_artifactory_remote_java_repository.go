@@ -9,7 +9,7 @@ import (
 )
 
 func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	var javaRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var javaRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"fetch_jars_eagerly": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -72,7 +72,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 	}
 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{data}
+		d := &util.ResourceData{ResourceData: data}
 		repo := JavaRemoteRepo{
 			RepositoryBaseParams:         UnpackBaseRemoteRepo(data, repoType),
 			FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),

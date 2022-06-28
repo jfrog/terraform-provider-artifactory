@@ -19,13 +19,13 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	genericSchema := util.MergeSchema(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
+	genericSchema := util.MergeMaps(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
 
 	return repository.MkResourceSchema(genericSchema, packer.Default(genericSchema), unpack, constructor)
 }
 
 func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
-	var repoWithRetrivalCachePeriodSecsVirtualSchema = util.MergeSchema(
+	var repoWithRetrivalCachePeriodSecsVirtualSchema = util.MergeMaps(
 		BaseVirtualRepoSchema,
 		retrievalCachePeriodSecondsSchema,
 		repository.RepoLayoutRefSchema("virtual", pkt),

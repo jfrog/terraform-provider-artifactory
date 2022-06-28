@@ -1,14 +1,13 @@
 package security
 
 import (
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
+
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-	"strings"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"strings"
 )
 
 const KeypairEndPoint = "artifactory/api/security/keypair/"

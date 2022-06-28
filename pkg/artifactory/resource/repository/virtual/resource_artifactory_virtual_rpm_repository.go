@@ -12,7 +12,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 
 	const packageType = "rpm"
 
-	var rpmVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var rpmVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 		"primary_keypair_ref": {
 			Type:             schema.TypeString,
 			Optional:         true,

@@ -1,14 +1,15 @@
 package replication_test
 
 import (
-	"fmt"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"regexp"
-	"testing"
 
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"regexp"
+	"testing"
 )
 
 func TestInvalidCronFails(t *testing.T) {
@@ -72,7 +73,7 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 
 func TestAccReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_replication_config")
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,

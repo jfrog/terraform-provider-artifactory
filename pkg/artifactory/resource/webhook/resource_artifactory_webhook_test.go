@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"reflect"
 	"regexp"
 	"strings"
@@ -81,7 +83,11 @@ var releaseBundleTemplate = `
 
 func TestAccWebhookCriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
-		t.Run(fmt.Sprintf("TestWebhook%sCriteriaValidation", strings.Title(strings.ToLower(webhookType))), func(t *testing.T) {
+		title := fmt.Sprintf(
+			"TestWebhook%sCriteriaValidation",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
+		)
+		t.Run(title, func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 		})
 	}
@@ -246,7 +252,11 @@ func TestAccWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
-		t.Run(fmt.Sprintf("TestWebhook%s", strings.Title(strings.ToLower(webhookType))), func(t *testing.T) {
+		title := fmt.Sprintf(
+			"TestWebhook%s",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
+		)
+		t.Run(title, func(t *testing.T) {
 			resource.Test(webhookTestCase(webhookType, t))
 		})
 	}

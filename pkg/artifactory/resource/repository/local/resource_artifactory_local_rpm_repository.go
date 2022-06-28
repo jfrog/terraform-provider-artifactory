@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-var rpmLocalSchema = util.MergeSchema(
+var rpmLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"yum_root_depth": {

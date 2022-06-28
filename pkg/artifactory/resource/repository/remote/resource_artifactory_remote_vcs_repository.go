@@ -16,7 +16,7 @@ type VcsRemoteRepo struct {
 func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	const packageType = "vcs"
 
-	var vcsRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var vcsRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
 			Optional: true,
