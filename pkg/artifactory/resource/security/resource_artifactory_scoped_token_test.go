@@ -2,17 +2,18 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccScopedToken_WithDefaults(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -62,7 +63,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 }
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -116,7 +117,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithGroupScope(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -151,7 +152,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 }
 
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -169,14 +170,14 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>]:<actions>'.*`),
+				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>\]:<actions>'.*`),
 			},
 		},
 	})
 }
 
 func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -242,7 +243,7 @@ func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*Total combined length of scopes field exceeds 500 characters:.*"),
+				ExpectError: regexp.MustCompile(".*total combined length of scopes field exceeds 500 characters:.*"),
 			},
 		},
 	})
@@ -258,7 +259,7 @@ func TestAccScopedToken_WithAudience(t *testing.T) {
 }
 
 func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
-	_, fqrn, name := acctest.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -287,7 +288,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 }
 
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -312,7 +313,7 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 }
 
 func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
-	_, _, name := acctest.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	var audiences []string
 	for i := 0; i < 100; i++ {
@@ -338,7 +339,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*Total combined length of audiences field exceeds 255 characters:.*"),
+				ExpectError: regexp.MustCompile(".*total combined length of audiences field exceeds 255 characters:.*"),
 			},
 		},
 	})

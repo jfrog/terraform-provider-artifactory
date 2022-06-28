@@ -3,6 +3,8 @@ package federated_test
 import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"math/rand"
 	"os"
 	"regexp"
@@ -138,7 +140,8 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 
 func TestAccFederatedRepoAllTypes(t *testing.T) {
 	for _, repo := range federated.RepoTypesSupported {
-		t.Run(fmt.Sprintf("TestFederated%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
 		})
 	}
@@ -150,7 +153,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	projectEnv := test.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := test.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -203,7 +206,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := acctest.MkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := test.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -243,8 +246,8 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccFederatedAlpineRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("terraform-federated-test-repo-basic", "artifactory_federated_alpine_repository")
-	kpId, kpFqrn, kpName := acctest.MkNames("some-keypair", "artifactory_keypair")
+	_, fqrn, name := test.MkNames("terraform-federated-test-repo-basic", "artifactory_federated_alpine_repository")
+	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -340,7 +343,7 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 }
 
 func TestAccFederatedCargoRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("cargo-local", "artifactory_federated_cargo_repository")
+	_, fqrn, name := test.MkNames("cargo-local", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -377,9 +380,9 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 }
 
 func TestAccFederatedDebianRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("federated-debian-repo", "artifactory_federated_debian_repository")
-	kpId, kpFqrn, kpName := acctest.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := acctest.MkNames("some-keypair2", "artifactory_keypair")
+	_, fqrn, name := test.MkNames("federated-debian-repo", "artifactory_federated_debian_repository")
+	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -530,7 +533,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 }
 
 func TestAccFederatedDockerRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("docker-federated", "artifactory_federated_docker_repository")
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -574,7 +577,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 }
 
 func TestAccFederatedNugetRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("nuget-local", "artifactory_federated_nuget_repository")
+	_, fqrn, name := test.MkNames("nuget-local", "artifactory_federated_nuget_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -640,9 +643,8 @@ const federatedJavaRepositoryBasic = `
 `
 
 func TestAccFederatedMavenRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("maven-federated", "artifactory_federated_maven_repository")
-	tempStruct := make(map[string]interface{})
-	acctest.CopyInterfaceMap(commonJavaParams, tempStruct)
+	_, fqrn, name := test.MkNames("maven-federated", "artifactory_federated_maven_repository")
+	tempStruct := util.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
@@ -674,9 +676,8 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("%s-federated", repoType)
 	resourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-	_, fqrn, name := acctest.MkNames(name, resourceName)
-	tempStruct := make(map[string]interface{})
-	acctest.CopyInterfaceMap(commonJavaParams, tempStruct)
+	_, fqrn, name := test.MkNames(name, resourceName)
+	tempStruct := util.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
@@ -706,16 +707,17 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 
 func TestAccFederatedAllGradleLikeRepoTypes(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
-		t.Run(fmt.Sprintf("TestFederated%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))
 		})
 	}
 }
 
 func TestAccFederatedRpmRepository(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("federated-rpm-repo", "artifactory_federated_rpm_repository")
-	kpId, kpFqrn, kpName := acctest.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := acctest.MkNames("some-keypair2", "artifactory_keypair")
+	_, fqrn, name := test.MkNames("federated-rpm-repo", "artifactory_federated_rpm_repository")
+	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 

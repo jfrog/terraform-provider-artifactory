@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 
 	const packageType = "go"
 
-	var goVirtualSchema = util.MergeSchema(BaseVirtualRepoSchema, map[string]*schema.Schema{
+	var goVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,

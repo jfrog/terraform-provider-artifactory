@@ -22,7 +22,7 @@ func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	mergedRemoteRepoSchema := util.MergeSchema(BaseRemoteRepoSchema, repository.RepoLayoutRefSchema("remote", pkt))
+	mergedRemoteRepoSchema := util.MergeMaps(BaseRemoteRepoSchema, repository.RepoLayoutRefSchema("remote", pkt))
 
 	return repository.MkResourceSchema(mergedRemoteRepoSchema, packer.Default(mergedRemoteRepoSchema), unpack, constructor)
 }

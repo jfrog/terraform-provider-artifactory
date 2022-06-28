@@ -8,7 +8,7 @@ import (
 )
 
 func getGenericRepoSchema(repoType string) map[string]*schema.Schema {
-	return util.MergeSchema(BaseLocalRepoSchema, repository.RepoLayoutRefSchema("local", repoType))
+	return util.MergeMaps(BaseLocalRepoSchema, repository.RepoLayoutRefSchema("local", repoType))
 }
 
 func ResourceArtifactoryLocalGenericRepository(repoType string) *schema.Resource {

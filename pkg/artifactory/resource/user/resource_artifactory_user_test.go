@@ -163,7 +163,7 @@ func TestAccUser_full(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -206,7 +206,7 @@ func TestAccUser_NoGroups(t *testing.T) {
 			email       		= "dummy%d@a.com"
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -231,7 +231,7 @@ func TestAccUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, FQRN, name := acctest.MkNames("foobar-", "artifactory_user")
+	id, FQRN, name := test.MkNames("foobar-", "artifactory_user")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,

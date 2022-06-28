@@ -11,7 +11,7 @@ import (
 func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 	const packageType = "pypi"
 
-	var pypiRemoteSchema = util.MergeSchema(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var pypiRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
 		"pypi_registry_url": {
 			Type:             schema.TypeString,
 			Optional:         true,

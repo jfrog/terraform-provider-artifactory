@@ -145,8 +145,8 @@ github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
-github.com/jfrog/terraform-provider-shared v1.1.1 h1:/neab0fWIuwZ0X0M0dIbxYT5w6hdAUbWS0DTL/ZQxPw=
-github.com/jfrog/terraform-provider-shared v1.1.1/go.mod h1:8Ah3LHk0irA14Mq3t8uaYax+V+l9M4sKZXFcqoPtZkI=
+github.com/jfrog/terraform-provider-shared v1.3.1 h1:Y775hKPNh9m+SN7zRL1A/j2jc91++A+OfzFfjstE3aU=
+github.com/jfrog/terraform-provider-shared v1.3.1/go.mod h1:8Ah3LHk0irA14Mq3t8uaYax+V+l9M4sKZXFcqoPtZkI=
 github.com/jhump/protoreflect v1.6.0 h1:h5jfMVslIg6l29nsMs0D8Wj17RDVdNYti0vDN/PZZoE=
 github.com/jhump/protoreflect v1.6.0/go.mod h1:eaTn3RZAmMBcV0fifFvlm6VHNz3wSkYyXYWUh7ymB74=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 h1:DowS9hvgyYSX4TO5NpyC606/Z4SxnNYbT+WX27or6Ck=

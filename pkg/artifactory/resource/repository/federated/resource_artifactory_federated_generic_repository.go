@@ -1,10 +1,10 @@
 package federated
 
 import (
+	"fmt"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
@@ -16,7 +16,7 @@ import (
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
 	localRepoSchema := local.GetSchemaByRepoType(repoType)
 
-	var federatedSchema = util.MergeSchema(localRepoSchema, map[string]*schema.Schema{
+	var federatedSchema = util.MergeMaps(localRepoSchema, map[string]*schema.Schema{
 		"member": {
 			Type:     schema.TypeSet,
 			Required: true,
@@ -58,7 +58,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		d := &util.ResourceData{ResourceData: data}
 		var members []Member
 
-		if v, ok := d.GetOk("member"); ok {
+		if v, ok := d.GetOkExists("member"); ok {
 			federatedMembers := v.(*schema.Set).List()
 			if len(federatedMembers) == 0 {
 				return members

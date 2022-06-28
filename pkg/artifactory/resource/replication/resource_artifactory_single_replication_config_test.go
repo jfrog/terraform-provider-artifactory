@@ -2,14 +2,15 @@ package replication_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"log"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func mkTclForRepConfg(name, cron, url, proxy string) string {
@@ -40,7 +41,7 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 }
 func TestInvalidCronSingleReplication(t *testing.T) {
 
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t), "")
 
 	resource.Test(t, resource.TestCase{
@@ -58,7 +59,7 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 
 func TestInvalidUrlSingleReplication(t *testing.T) {
 
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url", "")
 
 	resource.Test(t, resource.TestCase{
@@ -76,7 +77,7 @@ func TestInvalidUrlSingleReplication(t *testing.T) {
 
 func TestAccSingleReplication_full(t *testing.T) {
 	const testProxy = "testProxy"
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t), testProxy)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -106,7 +107,7 @@ func TestAccSingleReplication_full(t *testing.T) {
 }
 
 func TestAccSingleReplication_withDelRepo(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("lib-local", "artifactory_single_replication_config")
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	config := mkTclForRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t), "")
 	var deleteRepo = func() {
 		restyClient := acctest.GetTestResty(t)
@@ -145,8 +146,8 @@ func TestAccSingleReplication_withDelRepo(t *testing.T) {
 }
 
 func TestAccSingleReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := acctest.MkNames("lib-remote", "artifactory_single_replication_config")
-	_, fqrepoName, repoName := acctest.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := test.MkNames("lib-remote", "artifactory_single_replication_config")
+	_, fqrepoName, repoName := test.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"

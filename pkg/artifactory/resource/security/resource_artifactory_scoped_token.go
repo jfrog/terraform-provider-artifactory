@@ -203,18 +203,18 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	}
 
 	var unpackAccessTokenPostRequest = func(data *schema.ResourceData) (*AccessTokenPostRequest, error) {
-		d := &util.ResourceData{data}
+		d := &util.ResourceData{ResourceData: data}
 
 		scopes := d.GetSet("scopes")
 		scopesString := strings.Join(scopes, " ") // Join slice into space-separated string
 		if len(scopesString) > 500 {
-			return nil, fmt.Errorf("Total combined length of scopes field exceeds 500 characters: %s", scopesString)
+			return nil, fmt.Errorf("total combined length of scopes field exceeds 500 characters: %s", scopesString)
 		}
 
 		audiences := d.GetSet("audiences")
 		audiencesString := strings.Join(audiences, " ") // Join slice into space-separated string
 		if len(audiencesString) > 255 {
-			return nil, fmt.Errorf("Total combined length of audences field exceeds 255 characters: %s", audiencesString)
+			return nil, fmt.Errorf("total combined length of audiences field exceeds 255 characters: %s", audiencesString)
 		}
 
 		accessToken := AccessTokenPostRequest{
@@ -241,9 +241,9 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		packer := packer.Universal(predicate.SchemaHasKey(scopedTokenSchema))
+		pkr := packer.Universal(predicate.SchemaHasKey(scopedTokenSchema))
 
-		return diag.FromErr(packer(&accessToken, data))
+		return diag.FromErr(pkr(&accessToken, data))
 	}
 
 	var packAccessTokenPostResponse = func(d *schema.ResourceData, accessToken AccessTokenPostResponse) diag.Diagnostics {
@@ -295,7 +295,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Delete("access/api/v1/tokens/{id}")
 
 		if err != nil {
-			d := &util.ResourceData{data}
+			d := &util.ResourceData{ResourceData: data}
 
 			expiry := time.Unix(int64(d.GetInt("expiry", false)), 0)
 			issuedAt := time.Unix(int64(d.GetInt("issued_at", false)), 0)
