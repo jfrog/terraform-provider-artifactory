@@ -239,7 +239,7 @@ func TestAccPermissionTarget_full(t *testing.T) {
 }
 
 func TestAccPermissionTarget_user_permissions(t *testing.T) {
-	_, permFqrn, permName := acctest.MkNames("test-perm", "artifactory_permission_target")
+	_, permFqrn, permName := test.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
 		"repo_name":       "example-repo-local",
