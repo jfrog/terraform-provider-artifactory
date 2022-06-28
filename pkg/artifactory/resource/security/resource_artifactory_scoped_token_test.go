@@ -243,7 +243,7 @@ func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*Total combined length of scopes field exceeds 500 characters:.*"),
+				ExpectError: regexp.MustCompile(".*total combined length of scopes field exceeds 500 characters:.*"),
 			},
 		},
 	})
@@ -339,7 +339,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*Total combined length of audences field exceeds 255 characters:.*"),
+				ExpectError: regexp.MustCompile(".*total combined length of audiences field exceeds 255 characters:.*"),
 			},
 		},
 	})

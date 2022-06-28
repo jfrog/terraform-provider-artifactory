@@ -3,6 +3,8 @@ package remote_test
 import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io/ioutil"
 	"math/rand"
 	"regexp"
@@ -218,7 +220,11 @@ func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
 			return err
 		}
 
-		t.Run(fmt.Sprintf("TestRemote%sRepo_ExternalDependenciesDefaults", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf(
+			"TestRemote%sRepo_ExternalDependenciesDefaults",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
+		)
+		t.Run(title, func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck:          func() { acctest.PreCheck(t) },
 				ProviderFactories: acctest.ProviderFactories,

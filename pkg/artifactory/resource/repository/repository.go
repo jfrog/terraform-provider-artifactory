@@ -123,7 +123,7 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 	return diag.FromErr(err)
 }
 
-func Retry400(response *resty.Response, err error) bool {
+func Retry400(response *resty.Response, _ error) bool {
 	return response.StatusCode() == http.StatusBadRequest
 }
 
@@ -207,7 +207,7 @@ func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
 	return value
 }
 
-func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, i interface{}) error {
+func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
 

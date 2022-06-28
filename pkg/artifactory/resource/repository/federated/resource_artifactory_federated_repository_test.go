@@ -3,6 +3,8 @@ package federated_test
 import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"math/rand"
 	"os"
 	"regexp"
@@ -138,7 +140,8 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 
 func TestAccFederatedRepoAllTypes(t *testing.T) {
 	for _, repo := range federated.RepoTypesSupported {
-		t.Run(fmt.Sprintf("TestFederated%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
 		})
 	}
@@ -704,7 +707,8 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 
 func TestAccFederatedAllGradleLikeRepoTypes(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
-		t.Run(fmt.Sprintf("TestFederated%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))
 		})
 	}

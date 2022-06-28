@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -646,14 +648,22 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 func TestAccVirtualRepository(t *testing.T) {
 	for _, repoType := range virtual.RepoTypesLikeGeneric {
-		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf(
+			"TestVirtual%sRepo",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
+		)
+		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 			}))
 		})
 	}
 	for _, repoType := range virtual.VirtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
-		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf(
+			"TestVirtual%sRepo",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
+		)
+		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"retrieval_cache_period_seconds": 7100,
@@ -664,7 +674,8 @@ func TestAccVirtualRepository(t *testing.T) {
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
-		t.Run(fmt.Sprintf("TestVirtual%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		title := fmt.Sprintf("TestVirtual%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
