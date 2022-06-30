@@ -1,3 +1,9 @@
+## 6.10.1 (July 1, 2022)
+
+BUG FIXES:
+
+* provider: Fix hardcoded HTTP user-agent string. PR: [#497](https://github.com/jfrog/terraform-provider-artifactory/pull/497)
+
 ## 6.10.0 (June 28, 2022)
 
 IMPROVEMENTS:
