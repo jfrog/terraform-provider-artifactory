@@ -1,6 +1,8 @@
 TEST?=./...
 GO_ARCH=$(shell go env GOARCH)
 TARGET_ARCH=$(shell go env GOOS)_${GO_ARCH}
+GORELEASER_ARCH=${TARGET_ARCH}
+
 ifeq ($(GO_ARCH), amd64)
 GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
 endif

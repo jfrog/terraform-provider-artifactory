@@ -161,15 +161,17 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 				handlers := v.(*schema.Set).List()
 				for _, handler := range handlers {
 					h := handler.(map[string]interface{})
-
-					webhookHandler := Handler{
-						HandlerType:       "webhook",
-						Url:               h["url"].(string),
-						Secret:            h["secret"].(string),
-						Proxy:             h["proxy"].(string),
-						CustomHttpHeaders: unpackCustomHttpHeaders(h["custom_http_headers"].(map[string]interface{})),
+					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
+					if h["url"].(string) != "" {
+						webhookHandler := Handler{
+							HandlerType:       "webhook",
+							Url:               h["url"].(string),
+							Secret:            h["secret"].(string),
+							Proxy:             h["proxy"].(string),
+							CustomHttpHeaders: unpackCustomHttpHeaders(h["custom_http_headers"].(map[string]interface{})),
+						}
+						webhookHandlers = append(webhookHandlers, webhookHandler)
 					}
-					webhookHandlers = append(webhookHandlers, webhookHandler)
 				}
 			}
 

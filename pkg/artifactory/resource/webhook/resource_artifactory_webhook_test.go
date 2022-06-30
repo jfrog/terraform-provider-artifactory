@@ -46,7 +46,7 @@ var repoTemplate = `
 			repo_keys = []
 		}
 		handler {
-			url = "http://tempurl.org"
+			url = "https://tempurl.org"
 		}
 	}
 `
@@ -61,7 +61,7 @@ var buildTemplate = `
 			selected_builds = []
 		}
 		handler {
-			url = "http://tempurl.org"
+			url = "https://tempurl.org"
 		}
 	}
 `
@@ -76,7 +76,7 @@ var releaseBundleTemplate = `
 			registered_release_bundle_names = []
 		}
 		handler {
-			url = "http://tempurl.org"
+			url = "https://tempurl.org"
 		}
 	}
 `
@@ -151,7 +151,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url = "http://tempurl.org"
+				url = "https://tempurl.org"
 			}
 		}
 	`, params)
@@ -189,7 +189,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url   = "http://tempurl.org"
+				url   = "https://tempurl.org"
 				proxy = ""
 			}
 		}
@@ -228,8 +228,8 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url   = "http://tempurl.org"
-				proxy = "http://tempurl.org"
+				url   = "https://tempurl.org"
+				proxy = "https://tempurl.org"
 			}
 		}
 	`, params)
@@ -242,7 +242,7 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
-				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got http://tempurl.org`),
+				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got https://tempurl.org`),
 			},
 		},
 	})
@@ -297,7 +297,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				exclude_patterns = ["bar/**"]
 			}
 			handler {
-				url                 = "http://tempurl.org"
+				url                 = "https://tempurl.org"
 				secret              = "fake-secret"
 				custom_http_headers = {
 					header-1 = "value-1"
@@ -305,7 +305,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				}
 			}
 			handler {
-				url                 = "http://tempurl.org"
+				url                 = "https://tempurl.org"
 				secret              = "fake-secret-2"
 				custom_http_headers = {
 					header-3 = "value-3"
@@ -329,12 +329,12 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
 		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "http://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "http://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://tempurl.org"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", "fake-secret-2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-3", "value-3"),
@@ -366,11 +366,83 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 		AddRetryCondition(client.NeverRetry).
 		Get(webhook.WhUrl)
 }
+func TestGH476WebHookChangeBearerSet0(t *testing.T) {
+	_, fqrn, name := test.MkNames("foo", "artifactory_artifact_webhook")
 
+	format := `
+		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
+		  key = "{{ .webhookName }}"
+		
+		  event_types = ["deployed"]
+		
+		  criteria {
+			any_local  = true
+			any_remote = false
+		
+			repo_keys = []
+		  }
+		
+		  handler {
+			custom_http_headers = {
+			  "Authorization" = "Bearer {{ .token }}"
+			}
+		
+			url = "https://example.com"
+		  }
+		}
+	`
+	firstToken := test.RandomInt()
+	config1 := util.ExecuteTemplate(
+		"TestAccWebhook{{ .webhookName }}",
+		format,
+		map[string]interface{}{
+			"webhookName": name,
+			"token":       firstToken,
+		},
+	)
+	secondToken := test.RandomInt()
+	config2 := util.ExecuteTemplate(
+		"TestAccWebhook{{ .webhookName }}",
+		format,
+		map[string]interface{}{
+			"webhookName": name,
+			"token":       secondToken,
+		},
+	)
+	thirdToken := test.RandomInt()
+	config3 := util.ExecuteTemplate(
+		"TestAccWebhook{{ .webhookName }}",
+		format,
+		map[string]interface{}{
+			"webhookName": name,
+			"token":       thirdToken,
+		},
+	)
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, testCheckWebhook),
+
+		Steps: []resource.TestStep{
+			{
+				Config: config1,
+				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",firstToken)),
+			},
+			{
+				Config: config2,
+				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",secondToken)),
+			},
+			{
+				Config: config3,
+				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",thirdToken)),
+			},
+		},
+	})
+}
 // Unit tests for state migration func
 func TestWebhookResourceStateUpgradeV1(t *testing.T) {
 	v1Data := map[string]interface{}{
-		"url":    "http://tempurl.org",
+		"url":    "https://tempurl.org",
 		"secret": "fake-secret",
 		"proxy":  "fake-proxy-key",
 		"custom_http_headers": map[string]interface{}{
@@ -381,7 +453,7 @@ func TestWebhookResourceStateUpgradeV1(t *testing.T) {
 	v2Data := map[string]interface{}{
 		"handler": []map[string]interface{}{
 			{
-				"url":    "http://tempurl.org",
+				"url":    "https://tempurl.org",
 				"secret": "fake-secret",
 				"proxy":  "fake-proxy-key",
 				"custom_http_headers": map[string]interface{}{
