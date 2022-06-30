@@ -1,3 +1,9 @@
+## 6.10.1 (June 30, 2022). Tested on Artifactory 7.38.10
+
+BUG FIXES:
+
+* Hack around wierd terraform bug dealing with sets. PR: [#481](https://github.com/jfrog/terraform-provider-artifactory/pull/496). Issue: [#496](https://github.com/jfrog/terraform-provider-artifactory/issues/476)
+
 ## 6.9.5 (June 27, 2022). Tested on Artifactory 7.38.10
 
 REFACTOR:
