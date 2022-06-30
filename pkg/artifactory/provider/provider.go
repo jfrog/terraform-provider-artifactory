@@ -189,7 +189,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		return nil, diag.Errorf("you must supply a URL")
 	}
 
-	restyBase, err := client.Build(URL.(string), Version)
+	restyBase, err := client.Build(URL.(string), productId)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
