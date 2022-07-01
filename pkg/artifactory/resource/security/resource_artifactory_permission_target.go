@@ -15,11 +15,13 @@ import (
 
 const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
 const (
-	PermRead     = "read"
-	PermWrite    = "write"
-	PermAnnotate = "annotate"
-	PermDelete   = "delete"
-	PermManage   = "manage"
+	PermRead            = "read"
+	PermWrite           = "write"
+	PermAnnotate        = "annotate"
+	PermDelete          = "delete"
+	PermManage          = "manage"
+	PermManagedXrayMeta = "managedXrayMeta"
+	PermDistribute      = "distribute"
 )
 
 // PermissionTargetParams Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
@@ -72,8 +74,8 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 							PermWrite,
 							PermDelete,
 							PermManage,
-							// v2.PERM_MANAGE_XRAY_METADATA,
-							"managedXrayMeta",
+							PermManagedXrayMeta,
+							PermDistribute,
 						}, false),
 					},
 					Set:      schema.HashString,
