@@ -84,9 +84,9 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		client := Provider.Meta().(*resty.Client)
+		c := Provider.Meta().(*resty.Client)
 
-		resp, err := check(rs.Primary.ID, client.R())
+		resp, err := check(rs.Primary.ID, c.R())
 		if err != nil {
 			if resp != nil {
 				switch resp.StatusCode() {
@@ -218,7 +218,7 @@ func CreateProxy(t *testing.T, proxyKey string) {
 	updateProxiesConfig(t, proxyKey, func() []byte {
 		testProxy := proxy{
 			Key:             proxyKey,
-			Host:            "http://fake-proxy.org",
+			Host:            "https://fake-proxy.org",
 			Port:            8080,
 			PlatformDefault: false,
 		}
