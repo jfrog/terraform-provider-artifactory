@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* Hack around wierd terraform bug dealing with sets. PR: [#481](https://github.com/jfrog/terraform-provider-artifactory/pull/496). Issue: [#496](https://github.com/jfrog/terraform-provider-artifactory/issues/476)
+* Hack around [wierd terraform bug](https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2) dealing with sets. PR: [#481](https://github.com/jfrog/terraform-provider-artifactory/pull/496). Issue: [#496](https://github.com/jfrog/terraform-provider-artifactory/issues/476)
 
 ## 6.9.5 (June 27, 2022). Tested on Artifactory 7.38.10
 

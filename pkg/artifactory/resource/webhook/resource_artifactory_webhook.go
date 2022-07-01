@@ -162,6 +162,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 				for _, handler := range handlers {
 					h := handler.(map[string]interface{})
 					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
+					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
 						webhookHandler := Handler{
 							HandlerType:       "webhook",

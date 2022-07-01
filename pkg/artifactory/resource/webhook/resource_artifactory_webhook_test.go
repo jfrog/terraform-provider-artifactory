@@ -426,19 +426,20 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config1,
-				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",firstToken)),
+				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", firstToken)),
 			},
 			{
 				Config: config2,
-				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",secondToken)),
+				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", secondToken)),
 			},
 			{
 				Config: config3,
-				Check: resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d",thirdToken)),
+				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", thirdToken)),
 			},
 		},
 	})
 }
+
 // Unit tests for state migration func
 func TestWebhookResourceStateUpgradeV1(t *testing.T) {
 	v1Data := map[string]interface{}{
