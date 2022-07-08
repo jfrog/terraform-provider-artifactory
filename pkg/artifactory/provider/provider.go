@@ -108,7 +108,7 @@ func Provider() *schema.Provider {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(repoType)
 	}
-	for _, repoType := range virtual.RepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+	for _, repoType := range virtual.VirtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}

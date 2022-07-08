@@ -27,7 +27,6 @@ var RepoTypesLikeGeneric = []string{
 	"pub",
 	"puppet",
 	"pypi",
-	"swift",
 	"terraformbackend",
 	"vagrant",
 }

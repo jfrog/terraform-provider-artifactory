@@ -80,7 +80,6 @@ var RepoTypesLikeGeneric = []string{
 	"pub",
 	"puppet",
 	"rpm",
-	"swift",
 }
 
 var BaseRemoteRepoSchema = map[string]*schema.Schema{

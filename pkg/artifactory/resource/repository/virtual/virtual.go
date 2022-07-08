@@ -43,11 +43,10 @@ var RepoTypesLikeGeneric = []string{
 	"pub",
 	"puppet",
 	"pypi",
-	"swift",
 	"terraform",
 }
 
-var RepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+var VirtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"chef",
 	"conan",
 	"conda",
