@@ -658,7 +658,7 @@ func TestAccVirtualRepository(t *testing.T) {
 			}))
 		})
 	}
-	for _, repoType := range virtual.VirtualRepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+	for _, repoType := range virtual.RepoTypesLikeGenericWithRetrievalCachePeriodSecs {
 		title := fmt.Sprintf(
 			"TestVirtual%sRepo",
 			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
