@@ -232,7 +232,7 @@ func TestAccPermissionTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
-				 ),
+				),
 			},
 		},
 	})

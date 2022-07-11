@@ -299,4 +299,13 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	"swift": {
+		RepoLayoutRef: "swift-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
 }
