@@ -1,3 +1,9 @@
+## 6.10.2 (July 1, 2022)
+
+DOCUMENTATION:
+
+* Added `api_key` deprecation message. 
+
 ## 6.10.1 (July 1, 2022)
 
 BUG FIXES:
