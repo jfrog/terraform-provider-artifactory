@@ -1,4 +1,8 @@
-## 6.10.2 (July 1, 2022)
+## 6.11.0 (July 8, 2022)
+
+IMPROVEMENTS:
+
+* Support for swift repo [#497](https://github.com/jfrog/terraform-provider-artifactory/pull/505). Issue: [#496](https://github.com/jfrog/terraform-provider-artifactory/issues/489)
 
 DOCUMENTATION:
 

@@ -3,6 +3,8 @@ package local_test
 import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -857,7 +859,8 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 
 func TestAccLocalAllRepoTypes(t *testing.T) {
 	for _, repo := range local.RepoTypesLikeGeneric {
-		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
+		title := fmt.Sprintf("TestLocal%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
+		t.Run(title, func(t *testing.T) {
 			resource.Test(mkTestCase(repo, t))
 		})
 	}
