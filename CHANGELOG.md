@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * Support for swift repo [#497](https://github.com/jfrog/terraform-provider-artifactory/pull/505). Issue: [#496](https://github.com/jfrog/terraform-provider-artifactory/issues/489)
 
+DOCUMENTATION:
+
+* Added `api_key` deprecation message. 
+
 ## 6.10.1 (July 1, 2022)
 
 BUG FIXES:
