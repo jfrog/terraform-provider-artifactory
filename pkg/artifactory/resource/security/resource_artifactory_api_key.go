@@ -13,7 +13,8 @@ import (
 const ApiKeyEndpoint = "artifactory/api/security/apiKey"
 
 type ApiKey struct {
-	ApiKey string `json:"apiKey"`
+	ApiKey            string `json:"apiKey"`
+	BlockCreateApiKey bool   `json:"blockCreateApiKey"` // not used currently. may in future.
 }
 
 func ResourceArtifactoryApiKey() *schema.Resource {
@@ -50,32 +51,31 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 }
 
 func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	data := make(map[string]string)
+	data := ApiKey{}
 
 	_, err := m.(*resty.Client).R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if apiKey, ok := data["apiKey"]; ok {
-		d.SetId(strconv.Itoa(schema.HashString(apiKey)))
+	if len(data.ApiKey) > 0 {
+		d.SetId(strconv.Itoa(schema.HashString(data.ApiKey)))
 		return resourceApiKeyRead(ctx, d, m)
 	}
 	return diag.Errorf("received no error when creating apikey, but also got no apikey")
 }
 
 func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	data := make(map[string]string)
+	data := ApiKey{}
 	_, err := m.(*resty.Client).R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	key := data["apiKey"]
-	if key == "" {
+	if data.ApiKey == "" {
 		d.SetId("")
 		return nil
 	}
-	return packApiKey(key, d)
+	return packApiKey(data.ApiKey, d)
 }
 
 func apiKeyRevoke(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {

@@ -40,14 +40,14 @@ func testAccCheckApiKeyDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		data := make(map[string]string)
+		data := security.ApiKey{}
 
 		_, err := client.R().SetResult(&data).Get(security.ApiKeyEndpoint)
 		if err != nil {
 			return err
 		}
 
-		if _, ok = data["apiKey"]; ok {
+		if data.ApiKey != "" {
 			return fmt.Errorf("error: API key %s still exists", rs.Primary.ID)
 		}
 		return nil
