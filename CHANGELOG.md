@@ -1,3 +1,10 @@
+## 6.11.1 (July 20, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_saml_settings: Fix attribute `no_auto_user_creation` has opposite result. PR: [#512](https://github.com/jfrog/terraform-provider-artifactory/pull/512). Issue: [#500](https://github.com/jfrog/terraform-provider-artifactory/issues/500)
+* resourec/artifactory_api_key: Fix failed acceptance test. PR: [#511](https://github.com/jfrog/terraform-provider-artifactory/pull/511)
+
 ## 6.11.0 (July 8, 2022)
 
 IMPROVEMENTS:
@@ -6,7 +13,7 @@ IMPROVEMENTS:
 
 DOCUMENTATION:
 
-* Added `api_key` deprecation message. 
+* Added `api_key` deprecation message.
 
 ## 6.10.1 (July 1, 2022)
 
