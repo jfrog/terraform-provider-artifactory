@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -125,7 +126,7 @@ func ResourceArtifactorySamlSettings() *schema.Resource {
 	}
 }
 
-func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSamlSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 
 	samlSettings := SamlSettings{}
@@ -137,7 +138,7 @@ func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m inter
 
 	s := SamlSecurity{SamlSettingsWrapper{Settings: samlSettings}}
 
-	packDiag := packSamlSecurity(&s, d)
+	packDiag := packSamlSecurity(ctx, &s, d)
 	if packDiag != nil {
 		return packDiag
 	}
@@ -150,7 +151,7 @@ func resourceSamlSettingsRead(_ context.Context, d *schema.ResourceData, m inter
 }
 
 func resourceSamlSettingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	unpacked := unpackSamlSecurity(d)
+	unpacked := unpackSamlSecurity(ctx, d)
 	content, err := yaml.Marshal(&unpacked)
 
 	if err != nil {
@@ -181,7 +182,7 @@ security:
 	return nil
 }
 
-func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
+func unpackSamlSecurity(ctx context.Context, s *schema.ResourceData) *SamlSecurity {
 	d := &util.ResourceData{ResourceData: s}
 	security := *new(SamlSecurity)
 
@@ -192,7 +193,7 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 		GroupAttribute:            d.GetString("group_attribute", false),
 		LoginUrl:                  d.GetString("login_url", false),
 		LogoutUrl:                 d.GetString("logout_url", false),
-		NoAutoUserCreation:        d.GetBool("no_auto_user_creation", false),
+		NoAutoUserCreation:        !d.GetBool("no_auto_user_creation", false),
 		ServiceProviderName:       d.GetString("service_provider_name", false),
 		AllowUserToAccessProfile:  d.GetBool("allow_user_to_access_profile", false),
 		AutoRedirect:              d.GetBool("auto_redirect", false),
@@ -200,12 +201,13 @@ func unpackSamlSecurity(s *schema.ResourceData) *SamlSecurity {
 		VerifyAudienceRestriction: d.GetBool("verify_audience_restriction", false),
 		UseEncryptedAssertion:     d.GetBool("use_encrypted_assertion", false),
 	}
+	tflog.Info(ctx, "unpacking no_auto_user_creation with inverted value from API because API changes its sematic.")
 
 	security.Saml.Settings = settings
 	return &security
 }
 
-func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
+func packSamlSecurity(ctx context.Context, s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
 	setValue := util.MkLens(d)
 
 	setValue("enable", s.Saml.Settings.EnableIntegration)
@@ -214,7 +216,8 @@ func packSamlSecurity(s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics 
 	setValue("group_attribute", s.Saml.Settings.GroupAttribute)
 	setValue("login_url", s.Saml.Settings.LoginUrl)
 	setValue("logout_url", s.Saml.Settings.LogoutUrl)
-	setValue("no_auto_user_creation", s.Saml.Settings.NoAutoUserCreation)
+	setValue("no_auto_user_creation", !s.Saml.Settings.NoAutoUserCreation)
+	tflog.Info(ctx, "packing no_auto_user_creation with inverted value from API because API changes its sematic.")
 	setValue("service_provider_name", s.Saml.Settings.ServiceProviderName)
 	setValue("allow_user_to_access_profile", s.Saml.Settings.AllowUserToAccessProfile)
 	setValue("auto_redirect", s.Saml.Settings.AutoRedirect)
