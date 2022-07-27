@@ -183,7 +183,7 @@ pipelines:
               fi
           onSuccess:
             - echo "Success"
-            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01DWTXV01M> please, review and merge."
+            - send_notification partnersSlack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> please, review and merge."
           onFailure:
             - >-
               if [[ "${PR_URL}" == null ]]; then
