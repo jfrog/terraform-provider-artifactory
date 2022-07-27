@@ -1,3 +1,11 @@
+## 6.11.2 (July 28, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_push_replication: Improve sample HCL in documentation. PR: [#519](https://github.com/jfrog/terraform-provider-artifactory/pull/519).
+* resourec/artifactory_virtual_maven_repository: Improve sample HCL in documentation. PR: [#519](https://github.com/jfrog/terraform-provider-artifactory/pull/519)
+* resource/artifactory_user: Fix inaccurate descriptions for attributes `profile_updatable` and `disable_ui_access`. PR: [#517](https://github.com/jfrog/terraform-provider-artifactory/pull/517). Issue: [#518](https://github.com/jfrog/terraform-provider-artifactory/issues/518)
+
 ## 6.11.1 (July 20, 2022). Tested on Artifactory 7.41.4
 
 BUG FIXES:
