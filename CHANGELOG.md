@@ -1,3 +1,9 @@
+## 6.12.0 (July 29, 2022)
+
+IMPROVEMENTS:
+
+* Update repositories `project_key` attribute validation to expand characters limit from 3-10 to 3-25. PR: [#521](https://github.com/jfrog/terraform-provider-artifactory/pull/521). Issue: [#513](https://github.com/jfrog/terraform-provider-artifactory/issues/513)
+
 ## 6.11.2 (July 28, 2022). Tested on Artifactory 7.41.6
 
 IMPROVEMENTS:
