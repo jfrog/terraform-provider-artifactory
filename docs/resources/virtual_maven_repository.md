@@ -25,20 +25,20 @@ resource "artifactory_virtual_maven_repository" "maven-virt-repo" {
   repo_layout_ref = "maven-2-default"
   repositories    = [
     "${artifactory_local_maven_repository.bar.key}",
-    "${artifactory_local_maven_repository.baz.key}"
+    "${artifactory_remote_maven_repository.baz.key}"
   ]
-  description                = "A test virtual repo"
-  notes                      = "Internal description"
-  includes_pattern           = "com/jfrog/**,cloud/jfrog/**"
-  excludes_pattern           = "com/google/**"
-  force_maven_authentication = true
+  description                              = "A test virtual repo"
+  notes                                    = "Internal description"
+  includes_pattern                         = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern                         = "com/google/**"
+  force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
 }
 ```
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported, along with the [common list of arguments for the virtual repositories](virtual.md):
 
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
