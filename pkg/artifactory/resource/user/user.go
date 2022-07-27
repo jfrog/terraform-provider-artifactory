@@ -51,7 +51,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
-		Description: "(Optional, Default: false) When enabled, this user can update their profile details (except for the password. " +
+		Description: "(Optional, Default: true) When enabled, this user can update their profile details (except for the password. " +
 			"Only an administrator can update the password). There may be cases in which you want to leave " +
 			"this unset to prevent users from updating their profile. For example, a departmental user with " +
 			"a single password shared between all department members.",
@@ -60,7 +60,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  true,
-		Description: "(Optional, Default: false) When enabled, this user can only access the system through the REST API." +
+		Description: "(Optional, Default: true) When enabled, this user can only access the system through the REST API." +
 			" This option cannot be set if the user has Admin privileges.",
 	},
 	"internal_password_disabled": {
