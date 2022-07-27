@@ -988,6 +988,16 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+	invalidProjectKeys := []string{"InvalidProjectKey", "project-key-longer-than-25", "project-key-with-^"}
+
+	for _, invalidProjectKey := range invalidProjectKeys {
+		t.Run(invalidProjectKey, func(t *testing.T) {
+			resource.Test(makeRemoteRepoTestCaseWithInvalidProjectKey(invalidProjectKey, t))
+		})
+	}
+}
+
+func makeRemoteRepoTestCaseWithInvalidProjectKey(invalidProjectKey string, t *testing.T) (*testing.T, resource.TestCase) {
 
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
@@ -996,18 +1006,18 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	_, fqrn, name := test.MkNames(repoName, "artifactory_remote_pypi_repository")
 
 	params := map[string]interface{}{
-		"name":       name,
-		"projectKey": projectKey,
+		"name":              name,
+		"invalidProjectKey": invalidProjectKey,
 	}
 	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key"
+	 	  project_key          = "{{ .invalidProjectKey }}"
 		  url                  = "http://tempurl.org"
 		}
 	`, params)
 
-	resource.Test(t, resource.TestCase{
+	return t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
@@ -1020,8 +1030,8 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      remoteRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 25 lowercase alphanumeric characters"),
 			},
 		},
-	})
+	}
 }

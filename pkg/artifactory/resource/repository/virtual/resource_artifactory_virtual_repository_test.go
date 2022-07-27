@@ -609,7 +609,16 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
+	invalidProjectKeys := []string{"InvalidProjectKey", "project-key-longer-than-25", "project-key-with-^"}
 
+	for _, invalidProjectKey := range invalidProjectKeys {
+		t.Run(invalidProjectKey, func(t *testing.T) {
+			resource.Test(makeVirtualRepoTestCaseWithInvalidProjectKey(invalidProjectKey, t))
+		})
+	}
+}
+
+func makeVirtualRepoTestCaseWithInvalidProjectKey(invalidProjectKey string, t *testing.T) (*testing.T, resource.TestCase) {
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
@@ -617,17 +626,17 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	_, fqrn, name := test.MkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
-		"name":       name,
-		"projectKey": projectKey,
+		"name":              name,
+		"invalidProjectKey": invalidProjectKey,
 	}
 	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key"
+	 	  project_key          = "{{ .invalidProjectKey }}"
 		}
 	`, params)
 
-	resource.Test(t, resource.TestCase{
+	return t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
@@ -640,10 +649,10 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      virualRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 3 - 25 lowercase alphanumeric characters"),
 			},
 		},
-	})
+	}
 }
 
 func TestAccVirtualRepository(t *testing.T) {
