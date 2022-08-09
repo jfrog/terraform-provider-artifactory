@@ -1,3 +1,9 @@
+## 6.11.3 (August 9, 2022). Tested on Artifactory 7.41.7
+
+BUG FIXES:
+
+* resource/artifactory_*_repository: Add support for hyphen character in `project_key` attribute. PR: [#524](https://github.com/jfrog/terraform-provider-artifactory/pull/524).
+
 ## 6.11.2 (July 28, 2022). Tested on Artifactory 7.41.6
 
 IMPROVEMENTS:

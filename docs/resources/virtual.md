@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Repository Common Arguments
 
-The list of arguments, common for the virtual repositories. All these arguments can be used together with the 
+The list of arguments, common for the virtual repositories. All these arguments can be used together with the
 repository-specific arguments, listed in separate repository-specific documents.  
 
 ## Example Usage (generic repository type)
@@ -22,13 +22,13 @@ resource "artifactory_virtual_generic_repository" "foo-generic" {
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported:
 
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
   contain spaces or special characters.
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository. The effective list of actual repositories included in this virtual repository.
-* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `description` - (Optional)
 * `notes` - (Optional)

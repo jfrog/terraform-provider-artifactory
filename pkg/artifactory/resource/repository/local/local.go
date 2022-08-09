@@ -62,7 +62,7 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		ValidateFunc: repository.RepoKeyValidator,
-		Description:  "A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.",
+		Description:  "A mandatory identifier for the repository that must be unique. Must be 3 - 10 lowercase alphanumeric and hyphen characters. It cannot begin with a number or contain spaces or special characters.",
 	},
 	"project_key": {
 		Type:             schema.TypeString,

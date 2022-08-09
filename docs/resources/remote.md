@@ -3,7 +3,7 @@ subcategory: "Remote Repositories"
 ---
 # Artifactory Remote Repository Common Arguments
 
-The list of arguments, common for the remote repositories. All these arguments can be used together with the 
+The list of arguments, common for the remote repositories. All these arguments can be used together with the
 repository-specific arguments, listed in separate repository-specific documents.  
 
 ### Passwords
@@ -17,7 +17,7 @@ the password diff can be disabled per resource with-- noting that this will requ
 lifecycle {
     ignore_changes = ["password"]
 }
-``` 
+```
 
 ## Example Usage (generic repository type)
 
@@ -30,14 +30,14 @@ resource "artifactory_remote_generic_repository" "my-remote-generic" {
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON). 
+Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported:
 
 All generic repo arguments are supported, in addition to:
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `project_key` - (Optional) Project key for assigning this repository to. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD".
 * `url` - (Required) The remote repo URL.
 * `username` - (Optional)
