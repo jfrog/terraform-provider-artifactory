@@ -309,8 +309,9 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 
 func TestAccRemoteMavenRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"list_remote_folder_items":    true,
+		"missed_cache_period_seconds":        1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"metadata_retrieval_timeout_seconds": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
+		"list_remote_folder_items":           true,
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 			"statistics_enabled":              true,
@@ -320,9 +321,9 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 	}))
 }
 
-func TestAccAllRemoteRepository(t *testing.T) {
+func TestAccRemoteAllRepository(t *testing.T) {
 	for _, repoType := range remote.RepoTypesLikeGeneric {
-		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
 			}))
@@ -399,9 +400,9 @@ func TestAccRemoteTerraformRepository(t *testing.T) {
 	}))
 }
 
-func TestAccAllRemoteGradleLikeRepository(t *testing.T) {
+func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
-		t.Run(fmt.Sprintf("TestRemote%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 				"list_remote_folder_items":    true,

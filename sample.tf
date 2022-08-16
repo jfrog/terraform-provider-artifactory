@@ -379,12 +379,13 @@ resource "artifactory_remote_ivy_repository" "ivy-remote" {
 }
 
 resource "artifactory_remote_maven_repository" "maven-remote" {
-  key                             = "maven-remote-foo"
-  url                             = "https://repo1.maven.org/maven2/"
-  fetch_jars_eagerly              = true
-  fetch_sources_eagerly           = false
-  suppress_pom_consistency_checks = false
-  reject_invalid_jars             = true
+  key                                = "maven-remote-foo"
+  url                                = "https://repo1.maven.org/maven2/"
+  fetch_jars_eagerly                 = true
+  fetch_sources_eagerly              = false
+  suppress_pom_consistency_checks    = false
+  reject_invalid_jars                = true
+  metadata_retrieval_timeout_seconds = 120
 }
 
 resource "artifactory_remote_npm_repository" "thing" {
