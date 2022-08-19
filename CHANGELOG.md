@@ -1,3 +1,9 @@
+## 6.12.0 (August 17, 2022). Tested on Artifactory 7.41.7
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_maven_repository: Add attribute `metadata_retrieval_timeout_seconds`. Issue: [#509](https://github.com/jfrog/terraform-provider-artifactory/issues/509) PR: [#525](https://github.com/jfrog/terraform-provider-artifactory/pull/525).
+
 ## 6.11.3 (August 9, 2022). Tested on Artifactory 7.41.7
 
 BUG FIXES:
