@@ -23,7 +23,7 @@ type RepositoryBaseParams struct {
 	Description              string   `hcl:"description" json:"description,omitempty"`
 	Notes                    string   `hcl:"notes" json:"notes,omitempty"`
 	IncludesPattern          string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
-	ExcludesPattern          string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	ExcludesPattern          string   `json:"excludesPattern"`
 	RepoLayoutRef            string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
 	RemoteRepoLayoutRef      string   `json:"remoteRepoLayoutRef"`
 	HardFail                 *bool    `hcl:"hard_fail" json:"hardFail,omitempty"`
@@ -159,13 +159,12 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
 	},
 	"excludes_pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Computed:    true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
+		Description: "List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
 		Type:             schema.TypeString,
@@ -456,7 +455,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		Description:              d.GetString("description", true),
 		Notes:                    d.GetString("notes", true),
 		IncludesPattern:          d.GetString("includes_pattern", true),
-		ExcludesPattern:          d.GetString("excludes_pattern", true),
+		ExcludesPattern:          d.GetString("excludes_pattern", false),
 		RepoLayoutRef:            d.GetString("repo_layout_ref", true),
 		HardFail:                 d.GetBoolRef("hard_fail", true),
 		Offline:                  d.GetBoolRef("offline", true),

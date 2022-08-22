@@ -757,7 +757,6 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 			repo_layout_ref         		= "simple-default"
 			propagate_query_params  		= true
 			retrieval_cache_period_seconds  = 70
-
 		}
 	`
 	id := test.RandomInt()
@@ -1022,6 +1021,56 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 			{
 				Config:      remoteRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric and hyphen characters"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
+	_, fqrn, name := test.MkNames("generic-remote", "artifactory_remote_generic_repository")
+	const step1 = `
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
+		  key              = "{{ .name }}"
+		  url              = "https://github.com"
+		  repo_layout_ref  = "simple-default"
+		  excludes_pattern = "fake-pattern"
+		}
+	`
+	const step2 = `
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
+		  key              = "{{ .name }}"
+		  url              = "https://github.com"
+		  repo_layout_ref  = "simple-default"
+		  excludes_pattern = ""
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
+					"name": name,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
+					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "fake-pattern"),
+				),
+			},
+			{
+				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
+					"name": name,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
+					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", ""),
+				),
 			},
 		},
 	})
