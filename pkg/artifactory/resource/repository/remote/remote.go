@@ -53,6 +53,7 @@ type RepositoryBaseParams struct {
 	ContentSynchronisation            *repository.ContentSynchronisation `hcl:"content_synchronisation" json:"contentSynchronisation,omitempty"`
 	MismatchingMimeTypeOverrideList   string                             `hcl:"mismatching_mime_types_override_list" json:"mismatchingMimeTypesOverrideList"`
 	ListRemoteFolderItems             bool                               `json:"listRemoteFolderItems"`
+	DownloadRedirect                  bool                               `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 }
 
 type JavaRemoteRepo struct {
@@ -364,6 +365,12 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		StateFunc:        util.FormatCommaSeparatedString,
 		Description:      `The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
 	},
+	"download_direct": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only. Default value is 'false'.",
+	},
 }
 
 var VcsRemoteRepoSchema = map[string]*schema.Schema{
@@ -461,6 +468,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		Offline:                  d.GetBoolRef("offline", true),
 		BlackedOut:               d.GetBoolRef("blacked_out", true),
 		XrayIndex:                d.GetBool("xray_index", true),
+		DownloadRedirect:         d.GetBool("download_direct", false),
 		PropagateQueryParams:     d.GetBool("propagate_query_params", true),
 		StoreArtifactsLocally:    d.GetBoolRef("store_artifacts_locally", true),
 		SocketTimeoutMillis:      d.GetInt("socket_timeout_millis", true),

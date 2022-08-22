@@ -77,3 +77,5 @@ All generic repo arguments are supported, in addition to:
   * `source_origin_absence_detection` - (Optional) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'.
 * `propagate_query_params` - (Optional, Default: false) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
 * `list_remote_folder_items` - (Optional, Default: false) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
+* `download_direct` - (Optional, Default: false) When set, download requests to this repository will redirect the client to download 
+the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
