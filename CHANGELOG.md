@@ -1,3 +1,9 @@
+## 6.12.1 (August 23, 2022). Tested on Artifactory 7.41.7
+
+BUG FIXES:
+
+* resource/artifactory_remote_*_repository: Fix unable to reset `excludes_pattern` attribute using empty string. PR: [#527](https://github.com/jfrog/terraform-provider-artifactory/pull/527).
+
 ## 6.12.0 (August 17, 2022). Tested on Artifactory 7.41.7
 
 IMPROVEMENTS:

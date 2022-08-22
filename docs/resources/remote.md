@@ -43,8 +43,8 @@ All generic repo arguments are supported, in addition to:
 * `username` - (Optional)
 * `password` - (Optional)
 * `proxy` - (Optional) Proxy key from Artifactory Proxies settings.
-* `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/\**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
-* `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
+* `includes_pattern` - (Optional) List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/\**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).
+* `excludes_pattern` - (Optional) List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.
 * `remote_repo_layout_ref` - (Optional) Repository layout key for the remote layout mapping.
 * `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
