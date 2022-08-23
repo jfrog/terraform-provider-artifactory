@@ -1,3 +1,9 @@
+## 6.13.0 (August 24, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_backup: Add attributes `verify_disk_space` and `export_mission_control`. Issue: [#516](https://github.com/jfrog/terraform-provider-artifactory/issues/516) PR: [#530](https://github.com/jfrog/terraform-provider-artifactory/pull/530).
+
 ## 6.12.1 (August 23, 2022). Tested on Artifactory 7.41.7
 
 BUG FIXES:
