@@ -163,7 +163,7 @@ pipelines:
                 exit 1
               fi
             - >-
-              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] || [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
+              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
                 cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
                 git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
                 sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
