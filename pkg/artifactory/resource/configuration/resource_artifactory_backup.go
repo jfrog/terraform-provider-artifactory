@@ -7,7 +7,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
@@ -22,6 +21,8 @@ type Backup struct {
 	CreateArchive          bool     `xml:"createArchive" yaml:"createArchive"`
 	ExcludeNewRepositories bool     `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
 	SendMailOnError        bool     `xml:"sendMailOnError" yaml:"sendMailOnError"`
+	VerifyDiskSpace        bool     `xml:"precalculate" yaml:"precalculate"`
+	ExportMissionControl   bool     `xml:"exportMissionControl" yaml:"exportMissionControl"`
 }
 
 type Backups struct {
@@ -34,53 +35,85 @@ func ResourceArtifactoryBackup() *schema.Resource {
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `Backup config name.`,
+			ValidateDiagFunc: validator.StringIsNotEmpty,
+			Description:      "Backup config name.",
 		},
 		"enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: `Flag to enable or disable the backup config. Default value is "true".`,
+			Description: "Flag to enable or disable the backup config. Default value is 'true'.",
 		},
 		"cron_exp": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validator.Cron,
-			Description:      `Cron expression to control the backup frequency.`,
+			Description:      "Cron expression to control the backup frequency.",
 		},
 		"retention_period_hours": {
 			Type:             schema.TypeInt,
 			Optional:         true,
 			Default:          168,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-			Description:      `The number of hours to keep a backup before Artifactory will clean it up to free up disk space. Applicable only to non-incremental backups. Default value is 168 hours ie: 7 days.`,
+			ValidateDiagFunc: validator.IntAtLeast(0),
+			Description:      "The number of hours to keep a backup before Artifactory will clean it up to free up disk space. Applicable only to non-incremental backups. Default value is 168 hours ie: 7 days.",
 		},
 		"excluded_repositories": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Description: `list of excluded repositories from the backup. Default is empty list.`,
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			Description: "List of excluded repositories from the backup. Default is empty list.",
 		},
 		"create_archive": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: `If set to true, backups will be created within a Zip archive (Slow and CPU intensive). Default value is 'false'`,
+			Description: "If set to true, backups will be created within a Zip archive (Slow and CPU intensive). Default value is 'false'",
 		},
 		"exclude_new_repositories": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: `When set to true, new repositories will not be automatically added to the backup. Default value is 'false'.`,
+			Description: "When set to true, new repositories will not be automatically added to the backup. Default value is 'false'.",
 		},
 		"send_mail_on_error": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: `If set to true, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is 'true'.`,
+			Description: "If set to true, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is 'true'.",
+		},
+		"verify_disk_space": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "If set, Artifactory will verify that the backup target location has enough disk space available to hold the backed up data. If there is not enough space available, Artifactory will abort the backup and write a message in the log file. Applicable only to non-incremental backups.",
+		},
+		"export_mission_control": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When set to true, mission control will not be automatically added to the backup. Default value is 'false'.",
 		},
 	}
+
+	var unpackBackup = func(s *schema.ResourceData) Backup {
+		d := &util.ResourceData{ResourceData: s}
+		backup := Backup{
+			Key:                    d.GetString("key", false),
+			Enabled:                d.GetBool("enabled", false),
+			CronExp:                d.GetString("cron_exp", false),
+			RetentionPeriodHours:   d.GetInt("retention_period_hours", false),
+			CreateArchive:          d.GetBool("create_archive", false),
+			ExcludeNewRepositories: d.GetBool("exclude_new_repositories", false),
+			SendMailOnError:        d.GetBool("send_mail_on_error", false),
+			ExcludedRepositories:   d.GetList("excluded_repositories"),
+			VerifyDiskSpace:        d.GetBool("verify_disk_space", false),
+			ExportMissionControl:   d.GetBool("export_mission_control", false),
+		}
+		return backup
+	}
+
 	var findBackup = func(backups *Backups, key string) Backup {
 		for _, iterBackup := range backups.BackupArr {
 			if iterBackup.Key == key {
@@ -89,15 +122,17 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		}
 		return Backup{}
 	}
-	var filterBackups = func(backups *Backups, key string) map[string]Backup {
+
+	var filterBackups = func(backups *Backups, excludeKey string) map[string]Backup {
 		var filteredMap = map[string]Backup{}
 		for _, iterBackup := range backups.BackupArr {
-			if iterBackup.Key != key {
+			if iterBackup.Key != excludeKey {
 				filteredMap[iterBackup.Key] = iterBackup
 			}
 		}
 		return filteredMap
 	}
+
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		backups := &Backups{}
 		backup := unpackBackup(d)
@@ -117,10 +152,17 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		unpackedBackup := unpackBackup(d)
 
 		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+
 		There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+
 		GET call structure has "backups -> backup -> Array of backup config blocks".
+
 		PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
+
 		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
+
+		See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration for patching system configuration
+		using YAML
 		*/
 		var constructBody = map[string]map[string]Backup{}
 		constructBody["backups"] = map[string]Backup{}
@@ -195,19 +237,4 @@ backups: ~
 		Schema:      backupSchema,
 		Description: "Provides an Artifactory backup config resource. This resource configuration corresponds to backup config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages the automatic and periodic backups of the entire Artifactory instance",
 	}
-}
-
-func unpackBackup(s *schema.ResourceData) Backup {
-	d := &util.ResourceData{ResourceData: s}
-	backup := Backup{
-		Key:                    d.GetString("key", false),
-		Enabled:                d.GetBool("enabled", false),
-		CronExp:                d.GetString("cron_exp", false),
-		RetentionPeriodHours:   d.GetInt("retention_period_hours", false),
-		CreateArchive:          d.GetBool("create_archive", false),
-		ExcludeNewRepositories: d.GetBool("exclude_new_repositories", false),
-		SendMailOnError:        d.GetBool("send_mail_on_error", false),
-		ExcludedRepositories:   d.GetList("excluded_repositories"),
-	}
-	return backup
 }
