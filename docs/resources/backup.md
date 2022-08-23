@@ -5,7 +5,7 @@ subcategory: "Configuration"
 
 This resource can be used to manage the automatic and periodic backups of the entire Artifactory instance.
 
-When an `artifactory_backup` resource is configured and enabled to true, backup of the entire Artifactory system will be done automatically and periodically. 
+When an `artifactory_backup` resource is configured and enabled to true, backup of the entire Artifactory system will be done automatically and periodically.
 The backup process creates a time-stamped directory in the target backup directory.
 
 ## Example Usage
@@ -21,6 +21,8 @@ resource "artifactory_backup" "backup_config_name" {
   create_archive            = false
   exclude_new_repositories  = true
   send_mail_on_error        = true
+  verify_disk_space         = true
+  export_mission_control    = true
 }
 ```
 Note: `Key` argument has to match to the resource name.   
@@ -38,6 +40,8 @@ The following arguments are supported:
 * `create_archive`               - (Optional) If set, backups will be created within a Zip archive (Slow and CPU intensive). Default value is `false`.
 * `exclude_new_repositories`     - (Optional) When set, new repositories will not be automatically added to the backup. Default value is `false`.
 * `send_mail_on_error`           - (Optional) If set, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is `true`.
+* `verify_disk_space`            - (Optional) If set, Artifactory will verify that the backup target location has enough disk space available to hold the backed up data. If there is not enough space available, Artifactory will abort the backup and write a message in the log file. Applicable only to non-incremental backups.
+* `export_mission_control`       - (Optional) When set to true, mission control will not be automatically added to the backup. Default value is 'false'.
 
 ## Import
 

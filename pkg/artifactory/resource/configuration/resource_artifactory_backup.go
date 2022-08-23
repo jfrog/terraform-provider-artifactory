@@ -2,11 +2,12 @@ package configuration
 
 import (
 	"context"
-	"github.com/jfrog/terraform-provider-shared/packer"
+	"fmt"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
@@ -123,16 +124,6 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		return Backup{}
 	}
 
-	var filterBackups = func(backups *Backups, excludeKey string) map[string]Backup {
-		var filteredMap = map[string]Backup{}
-		for _, iterBackup := range backups.BackupArr {
-			if iterBackup.Key != excludeKey {
-				filteredMap[iterBackup.Key] = iterBackup
-			}
-		}
-		return filteredMap
-	}
-
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		backups := &Backups{}
 		backup := unpackBackup(d)
@@ -183,45 +174,21 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		return resourceBackupRead(ctx, d, m)
 	}
 
-	var resourceBackupDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		backups := &Backups{}
+	var resourceBackupDelete = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		rsrcBackup := unpackBackup(d)
 
-		response, err := m.(*resty.Client).R().SetResult(&backups).Get("artifactory/api/system/configuration")
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if response.IsError() {
-			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read. Response:%#v", response)
-		}
+		deleteBackupConfig := fmt.Sprintf(`
+backups:
+  %s: ~
+`, rsrcBackup.Key)
 
-		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
-		There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
-		GET call structure has "backups -> backup -> Array of backup config blocks".
-		PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
-		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
-		*/
-		var restoreBackups = map[string]map[string]Backup{}
-		restoreBackups["backups"] = filterBackups(backups, rsrcBackup.Key)
-
-		var clearAllBackupConfigs = `
-backups: ~
-`
-		err = SendConfigurationPatch([]byte(clearAllBackupConfigs), m)
+		err := SendConfigurationPatch([]byte(deleteBackupConfig), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		restoreRestOfBackups, err := yaml.Marshal(&restoreBackups)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		err = SendConfigurationPatch(restoreRestOfBackups, m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
+		d.SetId("")
+		return resourceBackupRead(ctx, d, m)
 	}
 
 	return &schema.Resource{
