@@ -1,3 +1,9 @@
+## 6.13.0 (August 29, 2022)
+
+FEATURES:
+
+* **New Resource:** `artifactory_repository_layout` Issue: [#503](https://github.com/jfrog/terraform-provider-artifactory/issues/503) PR: [#532](https://github.com/jfrog/terraform-provider-artifactory/pull/532).
+
 ## 6.12.1 (August 23, 2022). Tested on Artifactory 7.41.7
 
 BUG FIXES:
