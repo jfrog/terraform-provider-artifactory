@@ -239,8 +239,10 @@ func CreateProxy(t *testing.T, proxyKey string) {
 // DeleteProxy deletes an existing proxy on Artifactory with the given key
 func DeleteProxy(t *testing.T, proxyKey string) {
 	updateProxiesConfig(t, proxyKey, func() []byte {
-		// Return empty yaml to clean up all proxies
-		return []byte(`proxies: ~`)
+		// Return yaml to delete proxy
+		proxiesConfig := fmt.Sprintf(`proxies:
+  %s: ~`, proxyKey)
+		return []byte(proxiesConfig)
 	})
 }
 
