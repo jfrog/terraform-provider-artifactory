@@ -2,7 +2,6 @@ package repository
 
 // Consolidated list of Default Repo Layout for all Package Types with active Repo Types
 var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
-
 	"alpine": {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

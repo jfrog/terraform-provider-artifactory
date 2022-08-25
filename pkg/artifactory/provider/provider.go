@@ -83,6 +83,7 @@ func Provider() *schema.Provider {
 		"artifactory_ldap_setting":                        configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                  configuration.ResourceArtifactoryLdapGroupSetting(),
 		"artifactory_backup":                              configuration.ResourceArtifactoryBackup(),
+		"artifactory_repository_layout":                   configuration.ResourceArtifactoryRepositoryLayout(),
 	}
 
 	for _, repoType := range local.RepoTypesLikeGeneric {
