@@ -23,15 +23,21 @@ resource "artifactory_backup" "backuptest" {
 resource "artifactory_local_generic_repository" "test-backup-local1" {
     key = "test-backup-local1"
 }
+
 resource "artifactory_local_generic_repository" "test-backup-local2" {
     key = "test-backup-local2"
 }
+
 resource "artifactory_backup" "backuptest" {
-    key = "backuptest"
-    enabled = false
-    cron_exp = "0 0 12 * * ?"
+    key                    = "backuptest"
+    enabled                = false
+    cron_exp               = "0 0 12 * * ?"
     retention_period_hours = 1000
-    excluded_repositories = [ "test-backup-local1", "test-backup-local2" ]
+    excluded_repositories  = [ "test-backup-local1", "test-backup-local2" ]
+	create_archive         = true
+	verify_disk_space      = true
+	export_mission_control = true
+
     depends_on = [ artifactory_local_generic_repository.test-backup-local1, artifactory_local_generic_repository.test-backup-local2 ]
 }`
 	resource.Test(t, resource.TestCase{
@@ -54,6 +60,9 @@ resource "artifactory_backup" "backuptest" {
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.#", "2"),
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.0", "test-backup-local1"),
 					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.1", "test-backup-local2"),
+					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "create_archive", "true"),
+					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "verify_disk_space", "true"),
+					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "export_mission_control", "true"),
 				),
 			},
 		},
