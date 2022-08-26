@@ -18,11 +18,12 @@ import (
 )
 
 type AccessTokenPostResponse struct {
-	TokenId     string `json:"token_id"`
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope"`
-	TokenType   string `json:"token_type"`
+	TokenId      string `json:"token_id"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
+	TokenType    string `json:"token_type"`
 }
 
 func (a AccessTokenPostResponse) Id() string {
@@ -180,6 +181,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"refresh_token": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"token_type": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -252,6 +257,12 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		setValue("scopes", strings.Split(accessToken.Scope, " "))
 		setValue("expires_in", accessToken.ExpiresIn)
 		setValue("access_token", accessToken.AccessToken)
+
+		// only have refresh token if 'refreshable' is set to true in the request
+		if len(accessToken.RefreshToken) > 0 {
+			setValue("refresh_token", accessToken.RefreshToken)
+		}
+
 		errors := setValue("token_type", accessToken.TokenType)
 
 		if len(errors) > 0 {

@@ -1,4 +1,10 @@
-## 6.14.0 (August 29, 2022). Tested on Artifactory 7.41.7
+## 6.14.1 (August 26, 2022). Tested on Artifactory 7.41.7
+
+BUG FIXES:
+
+* resource/artifactory_scoped_token: Add missing `refresh_token` attribute for output. Issue: [#531](https://github.com/jfrog/terraform-provider-artifactory/issues/531) PR: [#533](https://github.com/jfrog/terraform-provider-artifactory/pull/533).
+
+## 6.14.0 (August 26, 2022). Tested on Artifactory 7.41.7
 
 FEATURES:
 
