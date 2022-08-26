@@ -3,6 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"regexp"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,8 +17,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
-	"net/http"
-	"regexp"
 )
 
 var CompressionFormats = map[string]*schema.Schema{
