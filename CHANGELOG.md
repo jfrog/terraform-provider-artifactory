@@ -1,3 +1,9 @@
+## 6.15.0 (August 31, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_*_repostiory: Add attribute `download_direct`. PR: [#528](https://github.com/jfrog/terraform-provider-artifactory/pull/528)
+
 ## 6.14.1 (August 26, 2022). Tested on Artifactory 7.41.7
 
 BUG FIXES:
