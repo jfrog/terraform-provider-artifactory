@@ -9,7 +9,7 @@
 
 ## Releases
 
-Current major release: **6.x**
+Current provider major release: **6.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
