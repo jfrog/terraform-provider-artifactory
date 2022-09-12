@@ -115,6 +115,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		MaxItems:    2,
 		Set:         schema.HashString,
 		Optional:    true,
+		Computed:    true,
 		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
 	},
 	"package_type": {

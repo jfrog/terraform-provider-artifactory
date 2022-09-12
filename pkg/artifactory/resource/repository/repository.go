@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -65,7 +66,8 @@ func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 		_, err = m.(*resty.Client).R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
-			Put(RepositoriesEndpoint + key)
+			SetPathParam("key", key).
+			Put(RepositoriesEndpoint)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -79,7 +81,10 @@ func mkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo := construct()
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().SetResult(repo).Get(RepositoriesEndpoint + d.Id())
+		resp, err := m.(*resty.Client).R().
+			SetResult(repo).
+			SetPathParam("key", d.Id()).
+			Get(RepositoriesEndpoint)
 
 		if err != nil {
 			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -98,24 +103,68 @@ func mkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		// repo must be a pointer
+
 		_, err = m.(*resty.Client).R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
-			Post(RepositoriesEndpoint + d.Id())
+			SetPathParam("key", d.Id()).
+			Post(RepositoriesEndpoint)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
 		d.SetId(key)
+
+		projectKeyChanged := d.HasChange("project_key")
+		tflog.Debug(ctx, fmt.Sprintf("projectKeyChanged: %v", projectKeyChanged))
+		if projectKeyChanged {
+			old, new := d.GetChange("project_key")
+			oldProjectKey := old.(string)
+			newProjectKey := new.(string)
+			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
+
+			assignToProject := len(oldProjectKey) == 0 && len(newProjectKey) > 0
+			unassignFromProject := len(oldProjectKey) > 0 && len(newProjectKey) == 0
+			tflog.Debug(ctx, fmt.Sprintf("assignToProject: %v, unassignFromProject: %v", assignToProject, unassignFromProject))
+
+			var err error
+			if assignToProject {
+				err = assignRepoToProject(key, newProjectKey, m.(*resty.Client))
+			} else if unassignFromProject {
+				err = unassignRepoFromProject(key, m.(*resty.Client))
+			}
+
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
 		return read(ctx, d, m)
 	}
+}
+
+func assignRepoToProject(repoKey string, projectKey string, client *resty.Client) error {
+	_, err := client.R().
+		SetPathParams(map[string]string{
+			"repoKey":    repoKey,
+			"projectKey": projectKey,
+		}).
+		Put("access/api/v1/projects/_/attach/repositories/{repoKey}/{projectKey}")
+	return err
+}
+
+func unassignRepoFromProject(repoKey string, client *resty.Client) error {
+	_, err := client.R().
+		SetPathParam("repoKey", repoKey).
+		Delete("access/api/v1/projects/_/attach/repositories/{repoKey}")
+	return err
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().
 		AddRetryCondition(client.RetryOnMergeError).
-		Delete(RepositoriesEndpoint + d.Id())
+		SetPathParam("key", d.Id()).
+		Delete(RepositoriesEndpoint)
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -238,11 +287,11 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 	}
 }
 
-const RepositoriesEndpoint = "artifactory/api/repositories/"
+const RepositoriesEndpoint = "artifactory/api/repositories/{key}"
 
 func CheckRepo(id string, request *resty.Request) (*resty.Response, error) {
 	// artifactory returns 400 instead of 404. but regardless, it's an error
-	return request.Head(RepositoriesEndpoint + id)
+	return request.SetPathParam("key", id).Head(RepositoriesEndpoint)
 }
 
 func ValidateRepoLayoutRefSchemaOverride(_ interface{}, _ cty.Path) diag.Diagnostics {

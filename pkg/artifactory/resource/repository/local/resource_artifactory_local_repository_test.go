@@ -2,9 +2,6 @@ package local_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -18,6 +15,9 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func TestAccLocalAlpineRepository(t *testing.T) {
