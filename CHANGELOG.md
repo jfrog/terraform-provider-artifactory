@@ -1,3 +1,9 @@
+## 6.16.0 (September 14, 2022). Tested on Artifactory 7.41.12
+
+IMPROVEMENTS:
+
+* resource/artifactory_*_repostiory: Use projects API to assign/unassign to project when project_key is set/unset for existing repo. Issue: [#329](https://github.com/jfrog/terraform-provider-artifactory/issues/329) PR: [#537](https://github.com/jfrog/terraform-provider-artifactory/pull/537)
+
 ## 6.15.0 (August 31, 2022)
 
 IMPROVEMENTS:
