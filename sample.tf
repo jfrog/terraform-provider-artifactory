@@ -199,7 +199,6 @@ resource "artifactory_local_vagrant_repository" "vagrant-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
-
 resource "random_id" "randid" {
   byte_length = 16
 }
@@ -718,6 +717,15 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
     url     = "http://tempurl2.org/artifactory/generic-federated-2"
     enabled = true
   }
+}
+
+resource "artifactory_repository_layout" "custom-layout" {
+  name                                = "custom-layout"
+  artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"
+  distinctive_descriptor_path_pattern = true
+  descriptor_path_pattern             = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).pom"
+  folder_integration_revision_regexp  = "Foo"
+  file_integration_revision_regexp    = "Foo|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"
 }
 
 resource "artifactory_artifact_webhook" "artifact-webhook" {
