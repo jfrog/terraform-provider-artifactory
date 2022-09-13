@@ -6,7 +6,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* resource/artifactory_repository_layout: Add missing documentation.
+* resource/artifactory_repository_layout: Add missing documentation. PR: [#538](https://github.com/jfrog/terraform-provider-artifactory/pull/538)
 
 ## 6.15.0 (August 31, 2022)
 
