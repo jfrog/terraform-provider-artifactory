@@ -27,7 +27,7 @@ The following arguments are supported:
 
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
   contain spaces or special characters.
-* `repositories` - (Optional) The effective list of actual repositories included in this virtual repository. The effective list of actual repositories included in this virtual repository.
+* `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
 * `description` - (Optional)
