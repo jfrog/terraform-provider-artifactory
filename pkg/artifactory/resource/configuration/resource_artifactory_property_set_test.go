@@ -41,11 +41,24 @@ func TestAccPropertySetCreate(t *testing.T) {
 func TestAccPropertySetUpdate(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
-		"resource_name":     resourceName,
-		"property_set_name": "property-set-test",
-		"visible":           "false",
-		"property1":         "set1property1-upd",
-		"property2":         "set1property2-upd",
+		"resource_name":            resourceName,
+		"property_set_name":        "property-set-test",
+		"visible":                  "false",
+		"property1":                "set1property1",
+		"default_value1":           "false",
+		"default_value2":           "false",
+		"closed_predefined_values": "true",
+		"multiple_choice":          "true",
+	}
+	var testDataUpdated = map[string]string{
+		"resource_name":            resourceName,
+		"property_set_name":        "property-set-test",
+		"visible":                  "false",
+		"property1":                "set1property1",
+		"default_value1":           "true",
+		"default_value2":           "false",
+		"closed_predefined_values": "true",
+		"multiple_choice":          "false",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -55,8 +68,12 @@ func TestAccPropertySetUpdate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
-				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
+				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
+				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testData)),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
+				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
 		},
 	})
@@ -65,10 +82,14 @@ func TestAccPropertySetUpdate(t *testing.T) {
 func TestAccPropertySetCustomizeDiff(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
-		"resource_name":     resourceName,
-		"property_set_name": "property-set-test",
-		"visible":           "false",
-		"property1":         "set1property1",
+		"resource_name":            resourceName,
+		"property_set_name":        "property-set-test",
+		"visible":                  "false",
+		"property1":                "set1property1",
+		"default_value1":           "false",
+		"default_value2":           "false",
+		"closed_predefined_values": "false",
+		"multiple_choice":          "true",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -78,7 +99,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config:      util.ExecuteTemplate(fqrn, PropertySetCustomizeDiffTemplate, testData),
+				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
 			},
 		},
@@ -93,6 +114,20 @@ func verifyPropertySet(fqrn string, testData map[string]string) resource.TestChe
 		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.*", testData["property2"]),
 		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "passed-QA"),
 		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "failed-QA"),
+	)
+}
+
+func verifyPropertySetUpdate(fqrn string, testData map[string]string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(fqrn, "name", testData["property_set_name"]),
+		resource.TestCheckResourceAttr(fqrn, "visible", testData["visible"]),
+		resource.TestCheckResourceAttr(fqrn, "property.0.name", testData["property1"]),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "passed-QA"),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "failed-QA"),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", testData["default_value1"]),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", testData["default_value2"]),
+		resource.TestCheckResourceAttr(fqrn, "property.0.closed_predefined_values", testData["closed_predefined_values"]),
+		resource.TestCheckResourceAttr(fqrn, "property.0.multiple_choice", testData["multiple_choice"]),
 	)
 }
 
@@ -164,7 +199,7 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
   }
 }`
 
-const PropertySetCustomizeDiffTemplate = `
+const PropertySetUpdateAndDiffTemplate = `
 resource "artifactory_property_set" "{{ .resource_name }}" {
   name 		= "{{ .property_set_name }}"
   visible 	= {{ .visible }}
@@ -174,15 +209,15 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
 
       predefined_value {
         name 			= "passed-QA"
-        default_value 	= true
+        default_value 	= {{ .default_value1 }}
       }
 
       predefined_value {
         name 			= "failed-QA"
-        default_value 	= false 
+        default_value 	= {{ .default_value2 }} 
       }
 
-      closed_predefined_values 	= false
-      multiple_choice 			= true
+      closed_predefined_values 	= {{ .closed_predefined_values }}
+      multiple_choice 			= {{ .multiple_choice }}
   }
 }`

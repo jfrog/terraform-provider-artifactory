@@ -276,14 +276,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 			for _, set := range sets {
 				id := set.(map[string]interface{})
-				property := Property{
-					Name:                  id["name"].(string),
-					PredefinedValues:      unpackPredefinedValues(id["predefined_value"]),
-					ClosedPredefinedValue: id["closed_predefined_values"].(bool),
-					MultipleChoice:        id["multiple_choice"].(bool),
-				}
-
-				if property.ClosedPredefinedValue == false && property.MultipleChoice == true {
+				if id["closed_predefined_values"].(bool) == false && id["multiple_choice"].(bool) == true {
 					return fmt.Errorf("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice")
 				}
 			}
