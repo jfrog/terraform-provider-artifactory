@@ -1,3 +1,10 @@
+## 6.16.0 (September 27, 2022). Tested on Artifactory 7.41.13
+
+NEW FEATURE:
+
+* resource/artifactory_property_set: add a new resource. Issue: [#522](https://github.com/jfrog/terraform-provider-artifactory/issues/522)
+  PR: [#546](https://github.com/jfrog/terraform-provider-artifactory/pull/546)
+
 ## 6.15.1 (September 14, 2022). Tested on Artifactory 7.41.12
 
 IMPROVEMENTS:

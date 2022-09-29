@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "6.11.1"
+      version = "6.16.0"
     }
   }
 }
@@ -40,8 +40,8 @@ resource "artifactory_local_bower_repository" "bower-local" {
 }
 
 resource "artifactory_local_cargo_repository" "cargo-local" {
-  key          = "cargo-local"
-  description  = "Repo created by Terraform Provider Artifactory"
+  key         = "cargo-local"
+  description = "Repo created by Terraform Provider Artifactory"
 }
 
 resource "artifactory_local_chef_repository" "chef-local" {
@@ -180,13 +180,13 @@ resource "artifactory_local_sbt_repository" "sbt-local" {
 }
 
 resource "artifactory_local_terraform_module_repository" "terraform-module-local" {
-  key           = "terraform-module-local"
-  description   = "Repo created by Terraform Provider Artifactory"
+  key         = "terraform-module-local"
+  description = "Repo created by Terraform Provider Artifactory"
 }
 
 resource "artifactory_local_terraform_provider_repository" "terraform-provider-local" {
-  key           = "terraform-provider-local"
-  description   = "Repo created by Terraform Provider Artifactory"
+  key         = "terraform-provider-local"
+  description = "Repo created by Terraform Provider Artifactory"
 }
 
 resource "artifactory_local_terraformbackend_repository" "terraformbackend-local" {
@@ -902,5 +902,44 @@ resource "artifactory_artifactory_release_bundle_webhook" "release-distribution-
       header-1 = "value-1"
       header-2 = "value-2"
     }
+  }
+}
+
+resource "artifactory_property_set" "property-set" {
+  name    = "repo-property-set"
+  visible = true
+
+  property {
+    name = "artifact-status"
+
+    predefined_value {
+      name          = "passed-QA"
+      default_value = true
+    }
+
+    predefined_value {
+      name          = "failed-QA"
+      default_value = false
+    }
+
+    closed_predefined_values = true
+    multiple_choice          = true
+  }
+
+  property {
+    name = "repo-status"
+
+    predefined_value {
+      name          = "passed-QA"
+      default_value = true
+    }
+
+    predefined_value {
+      name          = "failed-QA"
+      default_value = false
+    }
+
+    closed_predefined_values = false
+    multiple_choice          = false
   }
 }
