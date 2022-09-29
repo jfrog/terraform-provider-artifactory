@@ -18,12 +18,12 @@ resource "artifactory_property_set" "foo" {
     name = "set1property1"
 
     predefined_value {
-      name 			= "passed-QA"
+      name 			    = "passed-QA"
       default_value 	= true
     }
 
     predefined_value {
-      name 			= "failed-QA"
+      name 			    = "failed-QA"
       default_value 	= false
     }
 
@@ -35,12 +35,12 @@ resource "artifactory_property_set" "foo" {
     name = "set1property2"
 
     predefined_value {
-      name 			= "passed-QA"
+      name 			    = "passed-QA"
       default_value 	= true
     }
 
     predefined_value {
-      name 			= "failed-QA"
+      name 			    = "failed-QA"
       default_value 	= false
     }
 
@@ -54,7 +54,7 @@ resource "artifactory_property_set" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) Enable SAML SSO. Default value is `true`.
+* `name` - (Required) Property set name.
 * `visible` - (Optional) Defines if the list visible and assignable to the repository or artifact. Default value is `true`.
 * `property` - (Required) A list of properties that will be part of the property set.
   * `name` - (Required) The name pf the property.

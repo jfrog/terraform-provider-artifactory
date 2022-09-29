@@ -2,15 +2,16 @@ package configuration
 
 import (
 	"context"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-	"gopkg.in/yaml.v3"
+	"fmt"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
+	"gopkg.in/yaml.v3"
 )
 
 type PredefinedValue struct {
@@ -98,6 +99,66 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			},
 		},
 	}
+
+	var findPropertySet = func(propertySets *PropertySets, name string) PropertySet {
+		for _, propertySet := range propertySets.PropertySets {
+			if propertySet.Name == name {
+				return propertySet
+			}
+		}
+		return PropertySet{}
+	}
+
+	var unpackPredefinedValues = func(s interface{}) []PredefinedValue {
+		predefinedValues := s.(*schema.Set).List()
+		var values []PredefinedValue
+
+		for _, v := range predefinedValues {
+
+			id := v.(map[string]interface{})
+
+			value := PredefinedValue{
+				Name:         id["name"].(string),
+				DefaultValue: id["default_value"].(bool),
+			}
+			values = append(values, value)
+		}
+
+		return values
+	}
+
+	var unpackPropertySet = func(s *schema.ResourceData) PropertySet {
+		d := &util.ResourceData{ResourceData: s}
+		propertySet := PropertySet{
+			Name:    d.GetString("name", false),
+			Visible: d.GetBool("visible", false),
+		}
+
+		var properties []Property
+
+		if v, ok := d.GetOk("property"); ok {
+			sets := v.(*schema.Set).List()
+			if len(sets) == 0 {
+				return propertySet
+			}
+
+			for _, set := range sets {
+				id := set.(map[string]interface{})
+
+				property := Property{
+					Name:                  id["name"].(string),
+					PredefinedValues:      unpackPredefinedValues(id["predefined_value"]),
+					ClosedPredefinedValue: id["closed_predefined_values"].(bool),
+					MultipleChoice:        id["multiple_choice"].(bool),
+				}
+				properties = append(properties, property)
+			}
+			propertySet.Properties = properties
+		}
+
+		return propertySet
+	}
+
 	var resourcePropertySetRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
 		// Unpacking HCL to compare the names of the property sets with the XML data we will get from the API
@@ -107,15 +168,8 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
-		var matchedPropertySet = PropertySet{}
 
-		matchedPropertySet = PropertySet{}
-		for _, iterPropertySet := range propertySetConfigs.PropertySets {
-			if iterPropertySet.Name == unpackedPropertySet.Name {
-				matchedPropertySet = iterPropertySet
-				break
-			}
-		}
+		matchedPropertySet := findPropertySet(propertySetConfigs, unpackedPropertySet.Name)
 
 		pkr := packer.Universal(
 			predicate.All(
@@ -126,27 +180,27 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		return diag.FromErr(pkr(&matchedPropertySet, d))
 	}
 
-	var parsePredefinedValues = func(values []PredefinedValue) map[string]interface{} {
-		parsedPredefinedValues := map[string]interface{}{}
+	var transformPredefinedValues = func(values []PredefinedValue) map[string]interface{} {
+		transformedPredefinedValues := map[string]interface{}{}
 		for _, value := range values {
-			parsedPredefinedValues[value.Name] = map[string]interface{}{
+			transformedPredefinedValues[value.Name] = map[string]interface{}{
 				"defaultValue": value.DefaultValue,
 			}
 		}
-		return parsedPredefinedValues
+		return transformedPredefinedValues
 	}
 
-	var parseProperties = func(properties []Property) map[string]interface{} {
-		parsedProperties := map[string]interface{}{}
+	var transformProperties = func(properties []Property) map[string]interface{} {
+		transformedProperties := map[string]interface{}{}
 
 		for _, property := range properties {
-			parsedProperties[property.Name] = map[string]interface{}{
-				"predefinedValues":       parsePredefinedValues(property.PredefinedValues),
+			transformedProperties[property.Name] = map[string]interface{}{
+				"predefinedValues":       transformPredefinedValues(property.PredefinedValues),
 				"closedPredefinedValues": property.ClosedPredefinedValue,
 				"multipleChoice":         property.MultipleChoice,
 			}
 		}
-		return parsedProperties
+		return transformedProperties
 	}
 
 	var resourcePropertySetsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -158,16 +212,16 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
 		//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
 		//*/
-		var constructBody = map[string]map[string]map[string]interface{}{
+		var body = map[string]map[string]map[string]interface{}{
 			"propertySets": {
 				unpackedPropertySet.Name: {
 					"visible":    unpackedPropertySet.Visible,
-					"properties": parseProperties(unpackedPropertySet.Properties),
+					"properties": transformProperties(unpackedPropertySet.Properties),
 				},
 			},
 		}
 
-		content, err := yaml.Marshal(&constructBody)
+		content, err := yaml.Marshal(&body)
 
 		if err != nil {
 			return diag.Errorf("failed to marshal property set during Update")
@@ -180,10 +234,9 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 		d.SetId(unpackedPropertySet.Name)
 		return resourcePropertySetRead(ctx, d, m)
-
 	}
 
-	var resourceLdapSettingsDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var resourcePropertySetDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
 		unpackedPropertySet := unpackPropertySet(d)
 
@@ -194,15 +247,8 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		if response.IsError() {
 			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
-		var matchedPropertySet = PropertySet{} // TODO: do we match before delete or just delete based on HCL list of sets?
 
-		matchedPropertySet = PropertySet{}
-		for _, iterPropertySet := range propertySetConfigs.PropertySets {
-			if iterPropertySet.Name == unpackedPropertySet.Name {
-				matchedPropertySet = iterPropertySet
-				break
-			}
-		}
+		matchedPropertySet := findPropertySet(propertySetConfigs, unpackedPropertySet.Name)
 
 		var constructBody = map[string]map[string]string{
 			"propertySets": {
@@ -224,67 +270,39 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		return nil
 	}
 
+	var verifyCrossDependentValues = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+		if data, ok := diff.GetOk("property"); ok {
+			sets := data.(*schema.Set).List()
+
+			for _, set := range sets {
+				id := set.(map[string]interface{})
+				property := Property{
+					Name:                  id["name"].(string),
+					PredefinedValues:      unpackPredefinedValues(id["predefined_value"]),
+					ClosedPredefinedValue: id["closed_predefined_values"].(bool),
+					MultipleChoice:        id["multiple_choice"].(bool),
+				}
+
+				if property.ClosedPredefinedValue == false && property.MultipleChoice == true {
+					return fmt.Errorf("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice")
+				}
+			}
+		}
+		return nil
+	}
+
 	return &schema.Resource{
 		UpdateContext: resourcePropertySetsUpdate,
 		CreateContext: resourcePropertySetsUpdate,
-		DeleteContext: resourceLdapSettingsDelete,
+		DeleteContext: resourcePropertySetDelete,
 		ReadContext:   resourcePropertySetRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:      propertySetsSchema,
-		Description: "Provides an Artifactory Property Set resource. This resource configuration corresponds to 'propertySets' config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
+		Schema:        propertySetsSchema,
+		CustomizeDiff: verifyCrossDependentValues,
+		Description:   "Provides an Artifactory Property Set resource. This resource configuration corresponds to 'propertySets' config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
 	}
-}
-
-func unpackPredefinedValues(s interface{}) []PredefinedValue {
-	predefinedValues := s.(*schema.Set).List()
-	var values []PredefinedValue
-
-	for _, v := range predefinedValues {
-
-		id := v.(map[string]interface{})
-
-		value := PredefinedValue{
-			Name:         id["name"].(string),
-			DefaultValue: id["default_value"].(bool),
-		}
-		values = append(values, value)
-	}
-
-	return values
-}
-
-func unpackPropertySet(s *schema.ResourceData) PropertySet {
-	d := &util.ResourceData{ResourceData: s}
-	propertySet := PropertySet{
-		Name:    d.GetString("name", false),
-		Visible: d.GetBool("visible", false),
-	}
-
-	var properties []Property
-
-	if v, ok := d.GetOk("property"); ok {
-		sets := v.(*schema.Set).List()
-		if len(sets) == 0 {
-			return propertySet
-		}
-
-		for _, set := range sets {
-			id := set.(map[string]interface{})
-
-			property := Property{
-				Name:                  id["name"].(string),
-				PredefinedValues:      unpackPredefinedValues(id["predefined_value"]),
-				ClosedPredefinedValue: id["closed_predefined_values"].(bool),
-				MultipleChoice:        id["multiple_choice"].(bool),
-			}
-			properties = append(properties, property)
-		}
-		propertySet.Properties = properties
-	}
-
-	return propertySet
 }

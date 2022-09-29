@@ -2,75 +2,98 @@ package configuration_test
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
+	"regexp"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccPropertySet(t *testing.T) {
-	const PropertySet = `
-resource "artifactory_property_set" "foo" {
-  name 		= "property-set1"
-  visible 	= true
-
-  property {
-      name = "set1property1"
-
-      predefined_value {
-        name 			= "passed-QA"
-        default_value 	= true
-      }
-
-      predefined_value {
-        name 			= "failed-QA"
-        default_value 	= false 
-      }
-
-      closed_predefined_values 	= true
-      multiple_choice 			= true
-  }
-
-  property {
-      name = "set1property2"
-    
-      predefined_value {
-        name 			= "passed-QA"
-        default_value 	= true
-      }
-
-      predefined_value {
-        name 			= "failed-QA"
-        default_value 	= false 
-      }
-
-      closed_predefined_values 	= false
-      multiple_choice 			= false
-  }
-}`
+func TestAccPropertySetCreate(t *testing.T) {
+	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":     resourceName,
+		"property_set_name": "property-set-test",
+		"visible":           "true",
+		"property1":         "set1property1",
+		"property2":         "set1property2",
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccPropertySetDestroy("foo"),
+		CheckDestroy:      testAccPropertySetDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
-				Config: PropertySet,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_property_set.foo", "name", "property-set1"),
-					resource.TestCheckResourceAttr("artifactory_property_set.foo", "visible", "true"),
-					resource.TestCheckTypeSetElemAttr("artifactory_property_set.foo", "property.*.*", "set1property1"),
-					resource.TestCheckTypeSetElemAttr("artifactory_property_set.foo", "property.*.*", "set1property2"),
-					resource.TestCheckTypeSetElemAttr("artifactory_property_set.foo", "property.*.predefined_value.*.*", "passed-QA"),
-					resource.TestCheckTypeSetElemAttr("artifactory_property_set.foo", "property.*.predefined_value.*.*", "failed-QA"),
-				),
+				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
+				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
 		},
 	})
+}
+
+func TestAccPropertySetUpdate(t *testing.T) {
+	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":     resourceName,
+		"property_set_name": "property-set-test",
+		"visible":           "false",
+		"property1":         "set1property1-upd",
+		"property2":         "set1property2-upd",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccPropertySetDestroy(resourceName),
+
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
+				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
+			},
+		},
+	})
+}
+
+func TestAccPropertySetCustomizeDiff(t *testing.T) {
+	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":     resourceName,
+		"property_set_name": "property-set-test",
+		"visible":           "false",
+		"property1":         "set1property1",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccPropertySetDestroy(resourceName),
+
+		Steps: []resource.TestStep{
+			{
+				Config:      util.ExecuteTemplate(fqrn, PropertySetCustomizeDiffTemplate, testData),
+				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
+			},
+		},
+	})
+}
+
+func verifyPropertySet(fqrn string, testData map[string]string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(fqrn, "name", testData["property_set_name"]),
+		resource.TestCheckResourceAttr(fqrn, "visible", testData["visible"]),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.*", testData["property1"]),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.*", testData["property2"]),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "passed-QA"),
+		resource.TestCheckTypeSetElemAttr(fqrn, "property.*.predefined_value.*.*", "failed-QA"),
+	)
 }
 
 func testAccPropertySetDestroy(id string) func(*terraform.State) error {
@@ -92,11 +115,74 @@ func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		for _, iterLdapSetting := range propertySets.PropertySets {
-			if iterLdapSetting.Name == id {
+		for _, iterPropertySet := range propertySets.PropertySets {
+			if iterPropertySet.Name == id {
 				return fmt.Errorf("error: Property set with key: " + id + " still exists.")
 			}
 		}
 		return nil
 	}
 }
+
+const PropertySetTemplate = `
+resource "artifactory_property_set" "{{ .resource_name }}" {
+  name 		= "{{ .property_set_name }}"
+  visible 	= {{ .visible }}
+
+  property {
+      name = "{{ .property1 }}"
+
+      predefined_value {
+        name 			= "passed-QA"
+        default_value 	= true
+      }
+
+      predefined_value {
+        name 			= "failed-QA"
+        default_value 	= false 
+      }
+
+      closed_predefined_values 	= true
+      multiple_choice 			= true
+  }
+
+  property {
+      name = "{{ .property2 }}"
+    
+      predefined_value {
+        name 			= "passed-QA"
+        default_value 	= true
+      }
+
+      predefined_value {
+        name 			= "failed-QA"
+        default_value 	= false 
+      }
+
+      closed_predefined_values 	= false
+      multiple_choice 			= false
+  }
+}`
+
+const PropertySetCustomizeDiffTemplate = `
+resource "artifactory_property_set" "{{ .resource_name }}" {
+  name 		= "{{ .property_set_name }}"
+  visible 	= {{ .visible }}
+
+  property {
+      name = "{{ .property1 }}"
+
+      predefined_value {
+        name 			= "passed-QA"
+        default_value 	= true
+      }
+
+      predefined_value {
+        name 			= "failed-QA"
+        default_value 	= false 
+      }
+
+      closed_predefined_values 	= false
+      multiple_choice 			= true
+  }
+}`
