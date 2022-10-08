@@ -8,7 +8,7 @@ This resource can be used to manage the automatic and periodic backups of the en
 When an `artifactory_backup` resource is configured and enabled to true, backup of the entire Artifactory system will be done automatically and periodically.
 The backup process creates a time-stamped directory in the target backup directory.
 
-Note that this resource utilizes the `artifactory/api/system/configuration` endpoint, which is blocked/removed in the SaaS environment (i.e. in Artifactory online).
+Note that this resource utilizes endpoints which are blocked/removed in the SaaS environment (i.e. in Artifactory online).
 This means this resource cannot be used with the Artifactory SaaS environment.
 
 ## Example Usage
