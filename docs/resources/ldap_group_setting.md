@@ -8,6 +8,9 @@ This resource can be used to manage Artifactory's LDAP Group settings for user a
 LDAP Groups Add-on allows you to synchronize your LDAP groups with the system and leverage your existing organizational 
 structure for managing group-based permissions.
 
+Note that this resource utilizes endpoints which are blocked/removed in the SaaS environment (i.e. in Artifactory online).
+This means this resource cannot be used with the Artifactory SaaS environment.
+
 ## Example Usage
 
 ```hcl
