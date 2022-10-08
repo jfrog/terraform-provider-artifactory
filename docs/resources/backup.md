@@ -8,6 +8,9 @@ This resource can be used to manage the automatic and periodic backups of the en
 When an `artifactory_backup` resource is configured and enabled to true, backup of the entire Artifactory system will be done automatically and periodically.
 The backup process creates a time-stamped directory in the target backup directory.
 
+Note that this resource utilizes the `artifactory/api/system/configuration` endpoint, which is blocked/removed in the SaaS environment (i.e. in Artifactory online).
+This means this resource cannot be used with the Artifactory SaaS environment.
+
 ## Example Usage
 
 ```hcl
@@ -25,7 +28,7 @@ resource "artifactory_backup" "backup_config_name" {
   export_mission_control    = true
 }
 ```
-Note: `Key` argument has to match to the resource name.   
+Note: `Key` argument has to match to the resource name.
 Reference Link: [JFrog Artifactory Backup](https://www.jfrog.com/confluence/display/JFROG/Backups)
 
 ## Argument Reference
