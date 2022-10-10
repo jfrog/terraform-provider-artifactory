@@ -1,3 +1,12 @@
+## 6.16.1 (October 10, 2022). Tested on Artifactory 7.41.13
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_*_repository: attribute 'remote_repo_layout_ref' is deprecated. Issue: [#542](https://github.com/jfrog/terraform-provider-artifactory/issues/542)
+PR: [#553](https://github.com/jfrog/terraform-provider-artifactory/pull/553)
+
+NOTE: 'remote_repo_layout_ref' will be removed on the next major release.
+
 ## 6.16.0 (September 27, 2022). Tested on Artifactory 7.41.13
 
 NEW FEATURE:

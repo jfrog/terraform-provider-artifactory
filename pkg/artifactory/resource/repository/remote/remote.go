@@ -179,6 +179,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Computed:    true,
 		Description: "Repository layout key for the remote layout mapping",
+		Deprecated:  "This field has currently no effect, because there is no corresponding field in the API body, and it's not returned by the GET call.",
 	},
 	"hard_fail": {
 		Type:     schema.TypeBool,
