@@ -47,7 +47,7 @@ All generic repo arguments are supported, in addition to:
 * `excludes_pattern` - (Optional) List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.
 * `remote_repo_layout_ref` - (Optional) Deprecated field. This field has currently no effect, because there is no no corresponding field in the API body, and it's not returned by the GET call.
-* `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
+* `hard_fail` - (Optional) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository. It is also 'Computed', so, if used, Terraform will try to re-apply it on the next apply command.
 * `offline` - (Optional) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.
 * `xray_index` - (Optional, Default: false) Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.
