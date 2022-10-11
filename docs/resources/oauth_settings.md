@@ -7,6 +7,8 @@ This resource can be used to manage Artifactory's OAuth SSO settings.
 
 Only a single `artifactory_oauth_settings` resource is meant to be defined.
 
+**NOTE:** The `artifactory_oauth_settings` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+
 ## Example Usage
 
 ```hcl

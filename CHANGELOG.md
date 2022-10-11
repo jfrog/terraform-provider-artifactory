@@ -18,7 +18,7 @@ NEW FEATURE:
 
 IMPROVEMENTS:
 
-* resource/artifactory_*_repostiory: Use projects API to assign/unassign to project when project_key is set/unset for existing repo. Issue: [#329](https://github.com/jfrog/terraform-provider-artifactory/issues/329) PR: [#537](https://github.com/jfrog/terraform-provider-artifactory/pull/537)
+* resource/artifactory_*_repository: Use projects API to assign/unassign to project when project_key is set/unset for existing repo. Issue: [#329](https://github.com/jfrog/terraform-provider-artifactory/issues/329) PR: [#537](https://github.com/jfrog/terraform-provider-artifactory/pull/537)
 
 BUG FIXES:
 

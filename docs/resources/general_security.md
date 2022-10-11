@@ -7,6 +7,8 @@ This resource can be used to manage Artifactory's general security settings.
 
 Only a single `artifactory_general_security` resource is meant to be defined.
 
+**NOTE:** The `artifactory_general_security` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+
 ## Example Usage
 
 ```hcl
