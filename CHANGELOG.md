@@ -1,3 +1,10 @@
+## 6.16.2 (October 11, 2022)
+
+IMPROVEMENTS:
+
+* Update documentation to distinguish resources that are not supported by JFrog SaaS environment. Issue: [#550](https://github.com/jfrog/terraform-provider-artifactory/issues/550) PR: [#551](https://github.com/jfrog/terraform-provider-artifactory/pull/551)
+* Remove `make doc` command from make file. Issue: [#552](https://github.com/jfrog/terraform-provider-artifactory/issues/552) PR: [#555](https://github.com/jfrog/terraform-provider-artifactory/pull/555)
+
 ## 6.16.1 (October 10, 2022). Tested on Artifactory 7.41.13
 
 IMPROVEMENTS:
