@@ -8,8 +8,7 @@ This resource can be used to manage Artifactory's LDAP settings for user authent
 When specified LDAP setting is active, Artifactory first attempts to authenticate the user against the LDAP server. 
 If LDAP authentication fails, it then tries to authenticate via its internal database.
 
-Note that this resource utilizes endpoints which are blocked/removed in the SaaS environment (i.e. in Artifactory online).
-This means this resource cannot be used with the Artifactory SaaS environment.
+**NOTE:** The `artifactory_ldap_setting` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 

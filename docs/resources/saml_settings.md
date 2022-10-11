@@ -7,8 +7,7 @@ This resource can be used to manage Artifactory's SAML SSO settings.
 
 Only a single `artifactory_saml_settings` resource is meant to be defined.
 
-Note that this resource utilizes endpoints which are blocked/removed in the SaaS environment (i.e. in Artifactory online).
-This means this resource cannot be used with the Artifactory SaaS environment.
+**NOTE:** The `artifactory_saml_settings` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 

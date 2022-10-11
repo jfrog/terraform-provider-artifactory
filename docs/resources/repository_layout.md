@@ -5,8 +5,7 @@ subcategory: "Configuration"
 
 This resource can be used to manage Artifactory's Repository Layout settings. See [Repository Layouts](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts) in the Artifactory Wiki documentation for more details.
 
-Note that this resource utilizes endpoints which are blocked/removed in the SaaS environment (i.e. in Artifactory online).
-This means this resource cannot be used with the Artifactory SaaS environment.
+**NOTE:** The `artifactory_repository_layout` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 
