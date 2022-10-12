@@ -25,7 +25,7 @@ func ResourceArtifactoryApiKey() *schema.Resource {
 		DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform).\n" +
 			"In September 2022, the option to block the usage/creation of API Keys will be enabled by default, with the option for admins to change it back to enable API Keys.\n" +
 			"In January 2023, API Keys will be deprecated all together and the option to use them will no longer be available.\n" +
-			"It is recommended to use scoped tokens instead - `artifactory_access_token` resource.\n" +
+			"It is recommended to use scoped tokens instead - `artifactory_scoped_token` resource.\n" +
 			"Please check the release notes: https://www.jfrog.com/confluence/display/JFROG/Artifactory+Release+Notes#ArtifactoryReleaseNotes-Artifactory7.38.4",
 
 		Importer: &schema.ResourceImporter{
