@@ -1,4 +1,4 @@
-## 6.16.3 (October 12, 2022)
+## 6.16.3 (October 12, 2022). Tested on Artifactory 7.46.3
 
 DEPRECATION:
 
