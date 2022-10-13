@@ -1,3 +1,10 @@
+## 6.16.3 (October 12, 2022). Tested on Artifactory 7.46.3
+
+DEPRECATION:
+
+* resource/artifactory_api_key: added deprecation notice. The API key support will be removed in upcoming versions of Artifactory. 
+
+
 ## 6.16.2 (October 11, 2022)
 
 IMPROVEMENTS:
