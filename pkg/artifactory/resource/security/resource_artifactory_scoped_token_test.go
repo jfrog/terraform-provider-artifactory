@@ -2,11 +2,11 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -46,7 +46,6 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/user"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
