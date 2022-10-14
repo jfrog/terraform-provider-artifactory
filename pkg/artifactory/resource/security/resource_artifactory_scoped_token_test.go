@@ -2,11 +2,11 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -46,7 +46,6 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/user"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
@@ -82,6 +81,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
+			expires_in  = 31536000
 			audiences   = ["jfrt@1", "jfxr@*"]
 		}`,
 		map[string]interface{}{
@@ -101,6 +101,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckResourceAttr(fqrn, "audiences.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@1"),

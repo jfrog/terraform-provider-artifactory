@@ -16,7 +16,7 @@ func ResourceArtifactoryUser() *schema.Resource {
 			Sensitive: true,
 			Optional:  true,
 			Description: "(Optional, Sensitive) Password for the user. When omitted, a random password is generated using the following password policy: " +
-				"10 characters with 1 digit, 1 symbol, with upper and lower case letters",
+				"12 characters with 1 digit, 1 symbol, with upper and lower case letters",
 		},
 	}
 	maps.Copy(userSchema, baseUserSchema)
@@ -46,12 +46,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "No password supplied",
-				Detail:   "One will be generated (10 characters with 1 digit, 1 symbol, with upper and lower case letters) and this may fail as your Artifactory password policy can't be determined by the provider.",
+				Detail:   "One will be generated (12 characters with 1 digit, 1 symbol, with upper and lower case letters) and this may fail as your Artifactory password policy can't be determined by the provider.",
 			})
 
-			// Generate a password that is 10 characters long with 1 digit, 1 symbol,
+			// Generate a password that is 12 characters long with 1 digit, 1 symbol,
 			// allowing upper and lower case letters, disallowing repeat characters.
-			randomPassword, err := password.Generate(10, 1, 1, false, false)
+			randomPassword, err := password.Generate(12, 1, 1, false, false)
 			if err != nil {
 				return diag.Errorf("failed to generate password. %v", err)
 			}
