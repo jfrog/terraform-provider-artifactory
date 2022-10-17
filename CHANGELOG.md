@@ -1,3 +1,11 @@
+## 6.16.4 (October 17, 2022).
+
+BUG FIX:
+
+* resource/artifactory_*_repository: removed condition to update certain fields (like `xray_index`) only if they got changed in the HCL, 
+ which lead to assigning the default values to these fields. Issue: [#557](https://github.com/jfrog/terraform-provider-artifactory/issues/557)
+ PR: [#]()
+
 ## 6.16.3 (October 12, 2022). Tested on Artifactory 7.46.3
 
 DEPRECATION:
