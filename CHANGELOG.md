@@ -1,4 +1,4 @@
-## 6.16.4 (October 17, 2022).
+## 6.16.4 (October 17, 2022). Tested on Artifactory 7.46.6
 
 BUG FIX:
 
