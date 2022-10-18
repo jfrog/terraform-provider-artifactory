@@ -96,6 +96,94 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 	resource.Test(t, testCase)
 }
 
+func TestAccRemoteDockerRepoUpdate(t *testing.T) {
+	id, fqrn, resourceName := test.MkNames("docker-remote-", "artifactory_remote_docker_repository")
+	var testData = map[string]string{
+		"resource_name":                  resourceName,
+		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
+		"url":                            "https://registry-1.docker.io/",
+		"assumed_offline_period_secs":    "300",
+		"retrieval_cache_period_seconds": "43200",
+		"missed_cache_period_seconds":    "7200",
+		"excludes_pattern":               "nopat3,nopat2,nopat1",
+		"includes_pattern":               "pat3,pat2,pat1",
+		"notes":                          "internal description",
+		"proxy":                          "testProxy",
+		"username":                       "admin",
+		"password":                       "password",
+		"xray_index":                     "false",
+	}
+	var testDataUpdated = map[string]string{
+		"resource_name":                  resourceName,
+		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
+		"url":                            "https://registry-1.docker.io/",
+		"assumed_offline_period_secs":    "301",
+		"retrieval_cache_period_seconds": "43201",
+		"missed_cache_period_seconds":    "7201",
+		"excludes_pattern":               "nopat3,nopat2,nopat1",
+		"includes_pattern":               "pat3,pat2,pat1",
+		"notes":                          "internal description",
+		"proxy":                          "testProxy",
+		"username":                       "admin1",
+		"password":                       "password",
+		"xray_index":                     "true",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testData),
+				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testData)),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
+				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
+			},
+		},
+	})
+}
+
+const repoTemplate = `
+resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
+  key                            = "{{ .repo_name }}"
+  url                            = "{{ .url }}"
+  assumed_offline_period_secs    = {{ .assumed_offline_period_secs }}
+  
+  retrieval_cache_period_seconds = {{ .retrieval_cache_period_seconds }}
+  missed_cache_period_seconds    = {{ .missed_cache_period_seconds }}
+  excludes_pattern               = "{{ .excludes_pattern }}"
+  includes_pattern               = "{{ .includes_pattern }}"
+  notes                          = "{{ .notes }}"
+  proxy                          = "{{ .proxy }}"
+  property_sets                  = [
+    "artifactory",
+  ]
+  username                       = "{{ .username }}"
+  password                       = "{{ .password }}"
+  xray_index 					 = {{ .xray_index }}
+}
+`
+
+func verifyRepository(fqrn string, testData map[string]string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(fqrn, "key", testData["repo_name"]),
+		resource.TestCheckResourceAttr(fqrn, "url", testData["url"]),
+		resource.TestCheckResourceAttr(fqrn, "assumed_offline_period_secs", testData["assumed_offline_period_secs"]),
+		resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", testData["retrieval_cache_period_seconds"]),
+		resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", testData["missed_cache_period_seconds"]),
+		resource.TestCheckResourceAttr(fqrn, "excludes_pattern", testData["excludes_pattern"]),
+		resource.TestCheckResourceAttr(fqrn, "includes_pattern", testData["includes_pattern"]),
+		resource.TestCheckResourceAttr(fqrn, "notes", testData["notes"]),
+		resource.TestCheckResourceAttr(fqrn, "proxy", testData["proxy"]),
+		resource.TestCheckResourceAttr(fqrn, "username", testData["username"]),
+		resource.TestCheckResourceAttr(fqrn, "xray_index", testData["xray_index"]),
+	)
+}
+
 func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	const packageType = "docker"
 	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
