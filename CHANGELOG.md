@@ -1,3 +1,8 @@
+## 6.18.0 (October 21, 2022)
+
+* resource/artifactory_remote_nuget_repository: added new attribute `symbol_server_url`. Issue: [#549](https://github.com/jfrog/terraform-provider-artifactory/issues/549)
+ PR: [#567](https://github.com/jfrog/terraform-provider-artifactory/pull/567)
+
 ## 6.17.1 (October 21, 2022)
 
 IMPROVEMENTS:
