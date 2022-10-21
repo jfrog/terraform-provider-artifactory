@@ -27,6 +27,7 @@ var RepoTypesSupported = []string{
 	"pypi",
 	"rpm",
 	"sbt",
+	"swift",
 	"terraform_module",
 	"terraform_provider",
 	"vagrant",

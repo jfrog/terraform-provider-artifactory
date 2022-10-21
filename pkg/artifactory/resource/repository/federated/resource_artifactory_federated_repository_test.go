@@ -2,9 +2,6 @@ package federated_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"math/rand"
 	"os"
 	"regexp"
@@ -17,8 +14,12 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func skipFederatedRepo() (bool, string) {
@@ -100,6 +101,9 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		"xrayIndex":    xrayIndex,
 		"memberUrl":    federatedMemberUrl,
 	}
+
+	repoTypeAdjusted := local.GetPackageType(repoType)
+
 	federatedRepositoryConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
@@ -123,7 +127,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 				Config: federatedRepositoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "package_type", repoTypeAdjusted),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
