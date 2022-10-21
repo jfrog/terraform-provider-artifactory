@@ -1,3 +1,8 @@
+## 6.17.0 (October 21, 2022)
+
+* resource/artifactory_federated_swift_repository: added new resource. Issue: [#540](https://github.com/jfrog/terraform-provider-artifactory/issues/540)
+ PR: [#565](https://github.com/jfrog/terraform-provider-artifactory/pull/565)
+
 ## 6.16.4 (October 17, 2022). Tested on Artifactory 7.46.6
 
 BUG FIX:
