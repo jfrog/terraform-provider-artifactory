@@ -1,3 +1,9 @@
+## 6.17.1 (October 21, 2022).
+
+IMPROVEMENTS:
+
+* Update documentation to change incorrect repository type reference 'gem' to correct type 'gems'. Issue: [#541](https://github.com/jfrog/terraform-provider-artifactory/issues/541) PR: [#566](https://github.com/jfrog/terraform-provider-artifactory/pull/566)
+
 ## 6.17.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
 * resource/artifactory_federated_swift_repository: added new resource. Issue: [#540](https://github.com/jfrog/terraform-provider-artifactory/issues/540)
