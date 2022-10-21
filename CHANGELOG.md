@@ -1,4 +1,4 @@
-## 6.18.0 (October 21, 2022)
+## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
 IMPROVEMENTS:
 
