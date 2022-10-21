@@ -1,4 +1,4 @@
-## 6.17.1 (October 21, 2022).
+## 6.17.1 (October 21, 2022)
 
 IMPROVEMENTS:
 
