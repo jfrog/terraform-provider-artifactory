@@ -475,6 +475,7 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 		"download_context_path":       "api/v2/package",
 		"force_nuget_authentication":  true,
 		"missed_cache_period_seconds": 1800,
+		"symbol_server_url":           "https://symbols.nuget.org/download/symbols",
 	}))
 }
 

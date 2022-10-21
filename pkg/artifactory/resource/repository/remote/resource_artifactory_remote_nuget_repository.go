@@ -14,6 +14,7 @@ type NugetRemoteRepo struct {
 	DownloadContextPath      string `json:"downloadContextPath"`
 	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
 	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
+	SymbolServerUrl          string `json:"symbolServerUrl"`
 }
 
 func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
@@ -46,6 +47,13 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 			Default:     false,
 			Description: `Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
 		},
+		"symbol_server_url": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "https://symbols.nuget.org/download/symbols",
+			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
+			Description:      `NuGet symbol server URL.`,
+		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -56,6 +64,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 			DownloadContextPath:      d.GetString("download_context_path", false),
 			V3FeedUrl:                d.GetString("v3_feed_url", false),
 			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
+			SymbolServerUrl:          d.GetString("symbol_server_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
