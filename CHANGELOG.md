@@ -1,3 +1,10 @@
+## 6.19.0 (October 25, 2022)
+
+IMPROVEMENTS:
+
+* resource/artifactory_virtual_docker_repository: added new attribute `resolve_docker_tags_by_timestamp`. Issue: [#563](https://github.com/jfrog/terraform-provider-artifactory/issues/563)
+ [#PR]()
+
 ## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
 IMPROVEMENTS:
