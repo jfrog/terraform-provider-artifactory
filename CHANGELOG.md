@@ -1,10 +1,19 @@
-## 6.17.1 (October 21, 2022)
+## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
 IMPROVEMENTS:
+
+* resource/artifactory_remote_nuget_repository: added new attribute `symbol_server_url`. Issue: [#549](https://github.com/jfrog/terraform-provider-artifactory/issues/549)
+ PR: [#567](https://github.com/jfrog/terraform-provider-artifactory/pull/567)
+
+## 6.17.1 (October 21, 2022)
+
+BUG FIX:
 
 * Update documentation to change incorrect repository type reference 'gem' to correct type 'gems'. Issue: [#541](https://github.com/jfrog/terraform-provider-artifactory/issues/541) PR: [#566](https://github.com/jfrog/terraform-provider-artifactory/pull/566)
 
 ## 6.17.0 (October 21, 2022). Tested on Artifactory 7.46.6
+
+IMPROVEMENTS:
 
 * resource/artifactory_federated_swift_repository: added new resource. Issue: [#540](https://github.com/jfrog/terraform-provider-artifactory/issues/540)
  PR: [#565](https://github.com/jfrog/terraform-provider-artifactory/pull/565)
