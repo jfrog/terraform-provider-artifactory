@@ -10,12 +10,13 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 
 ```hcl
 resource "artifactory_virtual_docker_repository" "foo-docker" {
-  key                 = "foo-docker"
-  repositories        = []
-  description         = "A test virtual repo"
-  notes               = "Internal description"
-  includes_pattern    = "com/jfrog/**,cloud/jfrog/**"
-  excludes_pattern    = "com/google/**"
+  key                               = "foo-docker"
+  repositories                      = []
+  description                       = "A test virtual repo"
+  notes                             = "Internal description"
+  includes_pattern                  = "com/jfrog/**,cloud/jfrog/**"
+  excludes_pattern                  = "com/google/**"
+  resolve_docker_tags_by_timestamp  = true
 }
 ```
 
@@ -29,6 +30,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `resolve_docker_tags_by_timestamp` - (Optional) When enabled, in cases where the same Docker tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp. Default values is `false`.
 
 ## Import
 
