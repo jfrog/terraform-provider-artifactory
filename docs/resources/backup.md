@@ -17,7 +17,7 @@ The backup process creates a time-stamped directory in the target backup directo
 resource "artifactory_backup" "backup_config_name" {
   key                       = "backup_config_name"
   enabled                   = true
-  cron_exp                  = "0 0 12 * * ?"
+  cron_exp                  = "0 0 12 * * ? *"
   retention_period_hours    = 1000
   excluded_repositories     = []
   create_archive            = false
@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `key`                          - (Required) The unique ID of the artifactory backup config.
 * `enabled`                      - (Optional) Flag to enable or disable the backup config. Default value is `true`.
-* `cron_exp`                     - (Required) A valid CRON expression that you can use to control backup frequency. Eg: "0 0 12 * * ? ".
+* `cron_exp`                     - (Required) A valid CRON expression that you can use to control backup frequency. Eg: "0 0 12 * * ? *", "0 0 2 ? * MON-SAT *". Note: please use 7 character format - Seconds,	Minutes	Hours, Day Of Month, Month, Day Of Week, Year.
 * `retention_period_hours`       - (Optional) The number of hours to keep a backup before Artifactory will clean it up to free up disk space. Applicable only to non-incremental backups. Default value is 168 hours ie: 7 days.
 * `excluded_repositories`        - (Optional) A list of excluded repositories from the backup. Default is empty list.
 * `create_archive`               - (Optional) If set, backups will be created within a Zip archive (Slow and CPU intensive). Default value is `false`.
