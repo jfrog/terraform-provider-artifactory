@@ -34,7 +34,6 @@ func (bp RepositoryBaseParams) Id() string {
 }
 
 var RepoTypesLikeGeneric = []string{
-	"docker",
 	"gems",
 	"generic",
 	"gitlfs",
