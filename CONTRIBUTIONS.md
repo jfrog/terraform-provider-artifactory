@@ -64,6 +64,8 @@ The [scripts/run-artifactory.sh](scripts/run-artifactory.sh) starts two Artifact
 
 `artifactory-1` is on the usual 8080/8081/8082 ports while `artifactory-2` is on 9080/9081/9082
 
+You can also run one instance of artifactory using `./run-artifactory-container.sh` which doesn't use docker-compose.
+
 #### Enable acceptance tests
 
 Set the env var to the second Artifactory instance URL. This is the URL that will be accessible from `artifactory-1` container (not the URL from the Docker host):
@@ -83,19 +85,6 @@ $ make acceptance_federated
 
 ## Releasing
 
-After the tag is pushed to GitHub, a [GitHub Action](https://github.com/jfrog/terraform-provider-artifactory/actions/workflows/release.yml) kicks off and build all the binaries for supported architectures, then uploads them to Terraform registry.
+Please create a pull request against the master branch. Each pull request will be reviewed by a member of the JFrog team.
 
-### Automated
-
-The `make release` command will automatically bump the patch version of the last git tag and push the tag to GitHub. This doesn't work if you want to bump Major or Minor version.
-
-```sh
-$ make release
-```
-
-If the latest git tag is `v2.17.0`, this will increment the version to `v2.17.1` and tag the repo.
-
-### Manual
-
-Manual release tagging is not recommended, but the process can be found in the [releasing wiki](https://github.com/jfrog/terraform-provider-artifactory/wiki/Release-Process).
-
+#### Thank you for contributing!
