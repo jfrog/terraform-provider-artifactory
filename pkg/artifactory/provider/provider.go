@@ -56,6 +56,7 @@ func Provider() *schema.Provider {
 		"artifactory_virtual_alpine_repository":           virtual.ResourceArtifactoryVirtualAlpineRepository(),
 		"artifactory_virtual_bower_repository":            virtual.ResourceArtifactoryVirtualBowerRepository(),
 		"artifactory_virtual_debian_repository":           virtual.ResourceArtifactoryVirtualDebianRepository(),
+		"artifactory_virtual_docker_repository":           virtual.ResourceArtifactoryVirtualDockerRepository(),
 		"artifactory_virtual_maven_repository":            virtual.ResourceArtifactoryVirtualJavaRepository("maven"),
 		"artifactory_virtual_npm_repository":              virtual.ResourceArtifactoryVirtualNpmRepository(),
 		"artifactory_virtual_nuget_repository":            virtual.ResourceArtifactoryVirtualNugetRepository(),

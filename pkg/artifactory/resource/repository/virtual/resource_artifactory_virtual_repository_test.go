@@ -2,22 +2,22 @@ package virtual_test
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -686,8 +686,8 @@ func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extraFields" as these will overwrite
 func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := test.MkNames("terraform-virtual-test-repo-full", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
-	remoteRepoName := fmt.Sprintf("%s-local", name)
+	_, fqrn, name := test.MkNames("terraform-virtual-test-repo-full-", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
+	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{
 		"key":         name,
 		"description": "A test virtual repo",
@@ -736,6 +736,13 @@ func TestAccVirtualNugetRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("nuget", t, map[string]interface{}{
 		"description":                "nuget virtual repository public description testing.",
 		"force_nuget_authentication": true,
+	}))
+}
+
+func TestAccVirtualDockerRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("docker", t, map[string]interface{}{
+		"description":                      "docker virtual repository public description testing.",
+		"resolve_docker_tags_by_timestamp": true,
 	}))
 }
 

@@ -1,23 +1,23 @@
 ---
 subcategory: "Federated Repositories"
 ---
-# Artifactory Federated Gems Repository Resource
+# Artifactory Federated Swift Repository Resource
 
-Creates a federated Gems repository.
+Creates a federated Swift repository.
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_federated_gems_repository" "terraform-federated-test-gems-repo" {
-  key       = "terraform-federated-test-gems-repo"
+resource "artifactory_federated_swift_repository" "terraform-federated-test-swift-repo" {
+  key       = "terraform-federated-test-swift-repo"
 
   member {
-    url     = "http://tempurl.org/artifactory/terraform-federated-test-gems-repo"
+    url     = "http://tempurl.org/artifactory/terraform-federated-test-swift-repo"
     enabled = true
   }
 
   member {
-    url     = "http://tempurl2.org/artifactory/terraform-federated-test-gems-repo-2"
+    url     = "http://tempurl2.org/artifactory/terraform-federated-test-swift-repo-2"
     enabled = true
   }
 }
@@ -44,5 +44,5 @@ The following arguments are supported, along with the [common list of arguments 
 
 Federated repositories can be imported using their name, e.g.
 ```
-$ terraform import artifactory_federated_gems_repository.terraform-federated-test-gems-repo terraform-federated-test-gems-repo
+$ terraform import artifactory_federated_swift_repository.terraform-federated-test-swift-repo terraform-federated-test-swift-repo
 ```

@@ -1,3 +1,46 @@
+## 6.19.0 (October 25, 2022). Tested on Artifactory 7.46.8
+
+IMPROVEMENTS:
+
+* resource/artifactory_virtual_docker_repository: added new attribute `resolve_docker_tags_by_timestamp`. Issue: [#563](https://github.com/jfrog/terraform-provider-artifactory/issues/563)
+ PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/569)
+* resource/artifactory_backup: added a format note to the documentation.Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564) 
+
+## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_nuget_repository: added new attribute `symbol_server_url`. Issue: [#549](https://github.com/jfrog/terraform-provider-artifactory/issues/549)
+ PR: [#567](https://github.com/jfrog/terraform-provider-artifactory/pull/567)
+
+## 6.17.1 (October 21, 2022)
+
+BUG FIX:
+
+* Update documentation to change incorrect repository type reference 'gem' to correct type 'gems'. Issue: [#541](https://github.com/jfrog/terraform-provider-artifactory/issues/541) PR: [#566](https://github.com/jfrog/terraform-provider-artifactory/pull/566)
+
+## 6.17.0 (October 21, 2022). Tested on Artifactory 7.46.6
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_swift_repository: added new resource. Issue: [#540](https://github.com/jfrog/terraform-provider-artifactory/issues/540)
+ PR: [#565](https://github.com/jfrog/terraform-provider-artifactory/pull/565)
+
+## 6.16.4 (October 17, 2022). Tested on Artifactory 7.46.6
+
+BUG FIX:
+
+* resource/artifactory_remote_*_repository: removed condition to update certain fields (like `xray_index`) only if they got changed in the HCL, 
+ which lead to assigning the default values to these fields. Issue: [#557](https://github.com/jfrog/terraform-provider-artifactory/issues/557)
+ PR: [#561](https://github.com/jfrog/terraform-provider-artifactory/pull/561)
+
+## 6.16.3 (October 12, 2022). Tested on Artifactory 7.46.3
+
+DEPRECATION:
+
+* resource/artifactory_api_key: added deprecation notice. The API key support will be removed in upcoming versions of Artifactory. 
+
+
 ## 6.16.2 (October 11, 2022)
 
 IMPROVEMENTS:

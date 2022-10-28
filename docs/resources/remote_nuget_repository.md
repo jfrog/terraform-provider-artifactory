@@ -16,6 +16,7 @@ resource "artifactory_remote_nuget_repository" "my-remote-nuget" {
   download_context_path       = "api/v2/package"
   force_nuget_authentication  = true
   v3_feed_url                 = "https://api.nuget.org/v3/index.json"
+  symbol_server_url           = "https://symbols.nuget.org/download/symbols"
 }
 ```
 
@@ -35,6 +36,7 @@ The following arguments are supported, along with the [common list of arguments 
    URL should be configured as 'https://nuget.org' and the download context path should be configured as 'api/v2/package'. Default value is 'api/v2/package'.
 * `v3_feed_url` - (Optional) The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.
 * `force_nuget_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.
+* `symbol_server_url` - (Optional) NuGet symbol server URL. Default value is `https://symbols.nuget.org/download/symbols`.
 
 
 
