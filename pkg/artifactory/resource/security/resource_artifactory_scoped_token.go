@@ -180,10 +180,12 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		"access_token": {
 			Type:     schema.TypeString,
 			Computed: true,
+			Sensitive: true,
 		},
 		"refresh_token": {
 			Type:     schema.TypeString,
 			Computed: true,
+			Sensitive: true,
 		},
 		"token_type": {
 			Type:     schema.TypeString,
