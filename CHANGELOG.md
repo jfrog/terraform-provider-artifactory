@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* resources/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handle correctly.
+* resources/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handled correctly.
 
 ## 6.19.0 (October 25, 2022). Tested on Artifactory 7.46.10
 
