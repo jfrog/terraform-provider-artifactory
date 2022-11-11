@@ -1,10 +1,16 @@
+## 6.19.1 (November 11, 2022)
+
+IMPROVEMENTS:
+
+* resources/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handle correctly.
+
 ## 6.19.0 (October 25, 2022). Tested on Artifactory 7.46.10
 
 IMPROVEMENTS:
 
 * resource/artifactory_virtual_docker_repository: added new attribute `resolve_docker_tags_by_timestamp`. Issue: [#563](https://github.com/jfrog/terraform-provider-artifactory/issues/563)
  PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/569)
-* resource/artifactory_backup: added a format note to the documentation.Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564) 
+* resource/artifactory_backup: added a format note to the documentation.Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564)
 
 ## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
@@ -30,7 +36,7 @@ IMPROVEMENTS:
 
 BUG FIX:
 
-* resource/artifactory_remote_*_repository: removed condition to update certain fields (like `xray_index`) only if they got changed in the HCL, 
+* resource/artifactory_remote_*_repository: removed condition to update certain fields (like `xray_index`) only if they got changed in the HCL,
  which lead to assigning the default values to these fields. Issue: [#557](https://github.com/jfrog/terraform-provider-artifactory/issues/557)
  PR: [#561](https://github.com/jfrog/terraform-provider-artifactory/pull/561)
 
@@ -38,7 +44,7 @@ BUG FIX:
 
 DEPRECATION:
 
-* resource/artifactory_api_key: added deprecation notice. The API key support will be removed in upcoming versions of Artifactory. 
+* resource/artifactory_api_key: added deprecation notice. The API key support will be removed in upcoming versions of Artifactory.
 
 
 ## 6.16.2 (October 11, 2022)
