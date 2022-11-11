@@ -5,11 +5,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/jfrog/terraform-provider-shared/test"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
