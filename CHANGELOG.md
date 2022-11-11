@@ -1,3 +1,10 @@
+## 6.19.2 (November 11, 2022).
+
+IMPROVEMENTS:
+
+* resources/artifactory_keypair: add `passphrase` attribute to the JSON body. No API errors in Artifactory 7.41.13 and up. Issue: [#574](https://github.com/jfrog/terraform-provider-artifactory/issues/574)
+PR: [#]()
+
 ## 6.19.1 (November 11, 2022). Tested on Artifactory 7.46.11
 
 IMPROVEMENTS:
