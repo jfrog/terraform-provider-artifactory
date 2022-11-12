@@ -147,12 +147,6 @@ func TestAccKeyPairRSA(t *testing.T) {
 		DQIDAQAB
 		-----END PUBLIC KEY-----
 		EOF
-			lifecycle {
-				ignore_changes = [
-					private_key,
-					passphrase,
-				]
-			}
 		}
 	`, name, name, id)
 
@@ -279,12 +273,6 @@ func TestAccKeyPairGPG(t *testing.T) {
 		=fot9
 		-----END PGP PUBLIC KEY BLOCK-----
 		EOF
-			lifecycle {
-			ignore_changes = [
-					private_key,
-					passphrase,
-					]
-			}
 		}
 	`, name, name, id)
 

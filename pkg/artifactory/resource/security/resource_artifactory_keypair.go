@@ -197,7 +197,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 
 var keyPairPacker = packer.Universal(
 	predicate.All(
-		predicate.Ignore("private_key"),
+		predicate.Ignore("private_key", "passphrase"),
 		predicate.SchemaHasKey(keyPairSchema),
 	),
 )
