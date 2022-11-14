@@ -4,10 +4,10 @@ subcategory: "Configuration"
 # Artifactory Property Set Resource
 
 Provides an Artifactory Property Set resource.
-This resource configuration corresponds to 'propertySets' config block in system configuration XML 
+This resource configuration corresponds to 'propertySets' config block in system configuration XML
 (REST endpoint: artifactory/api/system/configuration).
 
-**NOTE:** The `artifactory_property_set` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+~>The `artifactory_property_set` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 
