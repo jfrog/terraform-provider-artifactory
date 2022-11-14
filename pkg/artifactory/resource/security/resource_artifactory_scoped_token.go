@@ -178,13 +178,13 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *",
 		},
 		"access_token": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
 			Sensitive: true,
 		},
 		"refresh_token": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
 			Sensitive: true,
 		},
 		"token_type": {

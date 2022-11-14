@@ -8,8 +8,6 @@ used to sign and validate packages integrity in JFrog Distribution. The JFrog Pl
 RSA and GPG signing keys through the Keys Management UI and REST API. The JFrog Platform supports managing multiple 
 pairs of GPG signing keys to sign packages for authentication of several package types such as Debian, Opkg, and RPM 
 through the Keys Management UI and REST API.
-Passphrases are not currently supported, though they exist in the API.
-
 
 ## Example Usage
 
@@ -28,6 +26,7 @@ resource "artifactory_keypair" "some-keypair6543461672124900137" {
   alias       = "foo-alias6543461672124900137"
   private_key = file("samples/rsa.priv")
   public_key  = file("samples/rsa.pub")
+  passphrase  = "PASSPHRASE"
   
   lifecycle {
     ignore_changes = [

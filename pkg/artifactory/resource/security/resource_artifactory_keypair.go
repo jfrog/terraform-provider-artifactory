@@ -1,21 +1,21 @@
 package security
 
 import (
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"strings"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"strings"
 )
 
 const KeypairEndPoint = "artifactory/api/security/keypair/"
@@ -64,8 +64,8 @@ var keyPairSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreEmpty,
+		Sensitive:        true,
 		Description:      "Passphrase will be used to decrypt the private key. Validated server side",
-		ForceNew:         true,
 	},
 	"public_key": {
 		Type:             schema.TypeString,
@@ -85,8 +85,9 @@ var keyPairSchema = map[string]*schema.Schema{
 func ResourceArtifactoryKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: createKeyPair,
-		DeleteContext: rmKeyPair,
 		ReadContext:   readKeyPair,
+		UpdateContext: createKeyPair,
+		DeleteContext: rmKeyPair,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -186,6 +187,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 		PairName:    d.GetString("pair_name", false),
 		PairType:    d.GetString("pair_type", false),
 		Alias:       d.GetString("alias", false),
+		Passphrase:  d.GetString("passphrase", false),
 		PrivateKey:  strings.ReplaceAll(d.GetString("private_key", false), "\t", ""),
 		PublicKey:   strings.ReplaceAll(d.GetString("public_key", false), "\t", ""),
 		Unavailable: d.GetBool("unavailable", false),
@@ -195,7 +197,7 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 
 var keyPairPacker = packer.Universal(
 	predicate.All(
-		predicate.Ignore("private_key"),
+		predicate.Ignore("private_key", "passphrase"),
 		predicate.SchemaHasKey(keyPairSchema),
 	),
 )
@@ -237,6 +239,7 @@ func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Di
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	d.SetId("")
 	return nil
 }
 

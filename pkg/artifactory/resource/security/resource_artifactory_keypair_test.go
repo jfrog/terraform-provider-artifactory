@@ -2,13 +2,13 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
@@ -106,6 +106,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 			pair_name  = "%s"
 			pair_type = "RSA"
 			alias = "foo-alias%d"
+			passphrase = "password"
 			private_key = <<EOF
 		-----BEGIN RSA PRIVATE KEY-----
 		MIIEpAIBAAKCAQEA2ymVc24BoaZb0ElXoI3X4zUKJGZEetR6F4yT1tJhkPDg7UTm
@@ -146,12 +147,6 @@ func TestAccKeyPairRSA(t *testing.T) {
 		DQIDAQAB
 		-----END PUBLIC KEY-----
 		EOF
-			lifecycle {
-				ignore_changes = [
-					private_key,
-					passphrase,
-				]
-			}
 		}
 	`, name, name, id)
 
@@ -169,6 +164,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "alias", fmt.Sprintf("foo-alias%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "pair_type", "RSA"),
 					resource.TestCheckResourceAttr(fqrn, "unavailable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
 				),
 			},
 		},
@@ -182,6 +178,7 @@ func TestAccKeyPairGPG(t *testing.T) {
 			pair_name  = "%s"
 			pair_type = "GPG"
 			alias = "foo-alias%d"
+			passphrase = "password"
 			private_key = <<EOF
 		-----BEGIN PGP PRIVATE KEY BLOCK-----
 		Version: Keybase OpenPGP v1.0.0
@@ -293,6 +290,7 @@ func TestAccKeyPairGPG(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "alias", fmt.Sprintf("foo-alias%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "pair_type", "GPG"),
 					resource.TestCheckResourceAttr(fqrn, "unavailable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
 				),
 			},
 		},
