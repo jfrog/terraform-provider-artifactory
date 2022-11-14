@@ -40,52 +40,52 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		"key": {
 			Type:             schema.TypeString,
 			Required:         true,
-			ForceNew:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The unique ID of the proxy setting",
+			Description:      "The unique ID of the proxy.",
 		},
 		"host": {
 			Type:             schema.TypeString,
 			Required:         true,
+			ForceNew:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The name of the proxy host",
+			Description:      "The name of the proxy host.",
 		},
 		"port": {
 			Type:             schema.TypeInt,
 			Required:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-			Description:      "The proxy port number",
+			Description:      "The proxy port number.",
 		},
 		"username": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy username when authentication credentials are required",
+			Description:      "The proxy username when authentication credentials are required.",
 		},
 		"password": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Sensitive:        true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy password when authentication credentials are required",
+			Description:      "The proxy password when authentication credentials are required.",
 		},
 		"nt_host": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The computer name of the machine (the machine connecting to the NTLM proxy)",
+			Description:      "The computer name of the machine (the machine connecting to the NTLM proxy).",
 		},
 		"nt_domain": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy domain/realm name",
+			Description:      "The proxy domain/realm name.",
 		},
 		"platform_default": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "When set, this proxy will be the default proxy for new remote repositories and for internal HTTP requests issued by Artifactory. Will also be used as proxy for all other services in the platform (for example: Xray, Distribution, etc)",
+			Description: "When set, this proxy will be the default proxy for new remote repositories and for internal HTTP requests issued by Artifactory. Will also be used as proxy for all other services in the platform (for example: Xray, Distribution, etc).",
 		},
 		"redirect_to_hosts": {
 			Type:        schema.TypeSet,
@@ -101,7 +101,6 @@ func ResourceArtifactoryProxy() *schema.Resource {
 			Description: "An optional list of services names to which this proxy be the default of. The options are jfrt, jfmc, jfxr, jfds",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
-				// Optional:         true,
 				Set: schema.HashString,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
