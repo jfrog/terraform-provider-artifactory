@@ -32,6 +32,10 @@ type PropertySet struct {
 	Properties []Property `xml:"properties>property" yaml:"properties"`
 }
 
+func (p PropertySet) Id() string {
+	return p.Name
+}
+
 type PropertySets struct {
 	PropertySets []PropertySet `xml:"propertySets>propertySet" yaml:"propertySet"`
 }
@@ -100,15 +104,6 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		},
 	}
 
-	var findPropertySet = func(propertySets *PropertySets, name string) PropertySet {
-		for _, propertySet := range propertySets.PropertySets {
-			if propertySet.Name == name {
-				return propertySet
-			}
-		}
-		return PropertySet{}
-	}
-
 	var unpackPredefinedValues = func(s interface{}) []PredefinedValue {
 		predefinedValues := s.(*schema.Set).List()
 		var values []PredefinedValue
@@ -169,7 +164,10 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedPropertySet := findPropertySet(propertySetConfigs, unpackedPropertySet.Name)
+		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, unpackedPropertySet.Name)
+		if matchedPropertySet == nil {
+			return nil
+		}
 
 		pkr := packer.Universal(
 			predicate.All(
@@ -177,7 +175,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			),
 		)
 
-		return diag.FromErr(pkr(&matchedPropertySet, d))
+		return diag.FromErr(pkr(matchedPropertySet, d))
 	}
 
 	var transformPredefinedValues = func(values []PredefinedValue) map[string]interface{} {
@@ -248,7 +246,10 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		matchedPropertySet := findPropertySet(propertySetConfigs, unpackedPropertySet.Name)
+		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, unpackedPropertySet.Name)
+		if matchedPropertySet == nil {
+			return nil
+		}
 
 		var constructBody = map[string]map[string]string{
 			"propertySets": {
@@ -257,7 +258,6 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		}
 
 		content, err := yaml.Marshal(&constructBody)
-
 		if err != nil {
 			return diag.Errorf("failed to marshal property set during Delete")
 		}

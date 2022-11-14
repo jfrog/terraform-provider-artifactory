@@ -22,6 +22,10 @@ type Layout struct {
 	FileIntegrationRevisionRegExp    string `xml:"fileIntegrationRevisionRegExp" yaml:"fileIntegrationRevisionRegExp"`
 }
 
+func (l Layout) Id() string {
+	return l.Name
+}
+
 type Layouts struct {
 	Layouts []Layout `xml:"repoLayouts>repoLayout" yaml:"repoLayout"`
 }
@@ -67,15 +71,6 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		},
 	}
 
-	var findLayout = func(layouts *Layouts, name string) Layout {
-		for _, layout := range layouts.Layouts {
-			if layout.Name == name {
-				return layout
-			}
-		}
-		return Layout{}
-	}
-
 	var unpackLayout = func(s *schema.ResourceData) Layout {
 		d := &util.ResourceData{ResourceData: s}
 		return Layout{
@@ -97,10 +92,14 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedLayout := findLayout(layouts, layout.Name)
+		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, layout.Name)
+		if matchedLayout == nil {
+			return nil
+		}
+
 		pkr := packer.Default(layoutSchema)
 
-		return diag.FromErr(pkr(&matchedLayout, d))
+		return diag.FromErr(pkr(matchedLayout, d))
 	}
 
 	var resourceLayoutUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

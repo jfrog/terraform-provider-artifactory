@@ -86,6 +86,7 @@ func Provider() *schema.Provider {
 		"artifactory_backup":                              configuration.ResourceArtifactoryBackup(),
 		"artifactory_repository_layout":                   configuration.ResourceArtifactoryRepositoryLayout(),
 		"artifactory_property_set":                        configuration.ResourceArtifactoryPropertySet(),
+		"artifactory_proxy":                               configuration.ResourceArtifactoryProxy(),
 	}
 
 	for _, repoType := range local.RepoTypesLikeGeneric {
