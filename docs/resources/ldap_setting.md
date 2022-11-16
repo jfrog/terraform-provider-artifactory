@@ -5,10 +5,10 @@ subcategory: "Configuration"
 
 This resource can be used to manage Artifactory's LDAP settings for user authentication.
 
-When specified LDAP setting is active, Artifactory first attempts to authenticate the user against the LDAP server. 
+When specified LDAP setting is active, Artifactory first attempts to authenticate the user against the LDAP server.
 If LDAP authentication fails, it then tries to authenticate via its internal database.
 
-**NOTE:** The `artifactory_ldap_setting` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+~>The `artifactory_ldap_setting` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `ldap_poisoning_protection`    - (Optional) Protects against LDAP poisoning by filtering out users exposed to vulnerabilities.  Default value is `true`.
 * `allow_user_to_access_profile` - (Optional) When set, users created after logging in using LDAP will be able to access their profile page.  Default value is `false`.
 * `paging_support_enabled`       - (Optional) When set, supports paging results for the LDAP server. This feature requires that the LDAP Server supports a PagedResultsControl configuration.  Default value is `true`.
-* `search_filter`                - (Optional) A filter expression used to search for the user DN that is used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, denoted by '{0}'. Possible examples are: uid={0}) - this would search for a username match on the uid attribute. Authentication using LDAP is performed from the DN found if successful. Default value is blank/empty. 
+* `search_filter`                - (Optional) A filter expression used to search for the user DN that is used in LDAP authentication. This is an LDAP search filter (as defined in 'RFC 2254') with optional arguments. In this case, the username is the only argument, denoted by '{0}'. Possible examples are: uid={0}) - this would search for a username match on the uid attribute. Authentication using LDAP is performed from the DN found if successful. Default value is blank/empty.
   - Note: LDAP settings should provide a userDnPattern or a searchFilter (or both)
 * `search_base`                  - (Optional) The Context name in which to search relative to the base DN in the LDAP URL. Multiple search bases may be specified separated by a pipe ( | ).
 * `search_sub_tree`              - (Optional) When set, enables deep search through the sub-tree of the LDAP URL + Search Base.  Default value is `true`.

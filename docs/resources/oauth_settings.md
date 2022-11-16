@@ -7,7 +7,7 @@ This resource can be used to manage Artifactory's OAuth SSO settings.
 
 Only a single `artifactory_oauth_settings` resource is meant to be defined.
 
-**NOTE:** The `artifactory_oauth_settings` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+~>The `artifactory_oauth_settings` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 
@@ -43,7 +43,7 @@ The following arguments are supported:
     * `name`                        - (Required) Name of the Artifactory OAuth provider.
     * `type`                        - (Required) Type of OAuth provider. (e.g., `github`, `google`, `cloudfoundry`, or `openId`)
     * `client_id`                   - (Required) OAuth client ID configured on the IdP.
-    * `client_secret`               - (Required) OAuth client secret configured on the IdP. 
+    * `client_secret`               - (Required) OAuth client secret configured on the IdP.
     * `api_url`                     - (Required) OAuth user info endpoint for the IdP.
     * `auth_url`                    - (Required) OAuth authorization endpoint for the IdP.
     * `token_url`                   - (Required) OAuth token endpoint for the IdP.

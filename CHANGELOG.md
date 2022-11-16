@@ -1,3 +1,10 @@
+## 6.20.0 (November 16, 2022). Tested on Artifactory 7.46.11
+
+NEW FEATURE:
+
+* resource/artifactory_proxy: add a new resource. Issue: [#562](https://github.com/jfrog/terraform-provider-artifactory/issues/562)
+  PR: [#582](https://github.com/jfrog/terraform-provider-artifactory/pull/582)
+
 ## 6.19.2 (November 11, 2022). Tested on Artifactory 7.46.11
 
 BUG FIX:
@@ -52,7 +59,6 @@ BUG FIX:
 DEPRECATION:
 
 * resource/artifactory_api_key: added deprecation notice. The API key support will be removed in upcoming versions of Artifactory.
-
 
 ## 6.16.2 (October 11, 2022)
 

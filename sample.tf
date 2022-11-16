@@ -943,3 +943,16 @@ resource "artifactory_property_set" "property-set" {
     multiple_choice          = false
   }
 }
+
+resource "artifactory_proxy" "my-proxy" {
+  key               = "my-proxy"
+  host              = "my-proxy.mycompany.com"
+  port              = 8888
+  username          = "user1"
+  password          = "password"
+  nt_host           = "MYCOMPANY.COM"
+  nt_domain         = "MYCOMPANY"
+  platform_default  = false
+  redirect_to_hosts = ["rediect-host.mycompany.com"]
+  services          = ["jfrt", "jfxr"]
+}
