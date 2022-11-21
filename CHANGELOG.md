@@ -1,3 +1,9 @@
+## 6.20.1 (November 21, 2022). Tested on Artifactory 7.46.11
+IMPROVEMENTS:
+
+* resource/artifactory_permission_target: Update documentation for attribute `repositories` to include values for setting any local/remote repository options. Issue: [#583](https://github.com/jfrog/terraform-provider-artifactory/issues/583)
+  PR: [#584](https://github.com/jfrog/terraform-provider-artifactory/pull/584)
+
 ## 6.20.0 (November 16, 2022). Tested on Artifactory 7.46.11
 
 NEW FEATURE:

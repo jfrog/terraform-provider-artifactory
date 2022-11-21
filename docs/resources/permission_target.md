@@ -64,11 +64,11 @@ The following arguments are supported:
 * `repo` - (Optional) Repository permission configuration.
     * `includes_pattern` - (Optional) Pattern of artifacts to include.
     * `excludes_pattern` - (Optional) Pattern of artifacts to exclude.
-    * `repositories` - (Optional) List of repositories this permission target is applicable for.
+    * `repositories` - (Required) List of repositories this permission target is applicable for. You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be `[]` if nothing is specified.
     * `actions` -
-        * `users` - (Optional) Users this permission target applies for. 
-        * `groups` - (Optional) Groups this permission applies for. 
-* `build` - (Optional) As for repo but for artifactory-build-info permssions.
+        * `users` - (Optional) Users this permission target applies for.
+        * `groups` - (Optional) Groups this permission applies for.
+* `build` - (Optional) As for repo but for artifactory-build-info permissions.
 * `release_bundle` - (Optional) As for repo for for release-bundles permissions.
 
 ## Permissions
