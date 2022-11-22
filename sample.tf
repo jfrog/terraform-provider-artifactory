@@ -450,6 +450,13 @@ resource "artifactory_remote_sbt_repository" "sbt-remote" {
   reject_invalid_jars             = true
 }
 
+resource "artifactory_remote_vcs_repository" "my-remote-vcs" {
+  key                  = "my-remote-vcs"
+  url                  = "https://github.com/"
+  vcs_git_provider     = "GITHUB"
+  max_unique_snapshots = 5
+}
+
 resource "artifactory_virtual_alpine_repository" "foo-alpine" {
   key              = "foo-alpine"
   repositories     = []
