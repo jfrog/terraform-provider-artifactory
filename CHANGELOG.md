@@ -1,4 +1,11 @@
+## 6.20.2 (November 23, 2022)
+
+BUG FIX:
+
+* resource/artifactory_remote_vcs_repository: fix incorrect documentation. PR: [#587](https://github.com/jfrog/terraform-provider-artifactory/pull/587)
+
 ## 6.20.1 (November 21, 2022). Tested on Artifactory 7.46.11
+
 IMPROVEMENTS:
 
 * resource/artifactory_permission_target: Update documentation for attribute `repositories` to include values for setting any local/remote repository options. Issue: [#583](https://github.com/jfrog/terraform-provider-artifactory/issues/583)
