@@ -300,8 +300,9 @@ resource "artifactory_remote_composer_repository" "my-remote-composer" {
 }
 
 resource "artifactory_remote_conan_repository" "my-remote-conan" {
-  key = "my-remote-conan"
-  url = "https://conan.bintray.com"
+  key                        = "my-remote-conan"
+  url                        = "https://conan.bintray.com"
+  force_conan_authentication = true
 }
 
 resource "artifactory_remote_conda_repository" "my-remote-conda" {
