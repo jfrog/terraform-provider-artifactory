@@ -4,7 +4,7 @@ BUG FIX:
 
 * resource/artifactory_virtual_*_repository: removed incorrect default value for the attribute `retrieval_cache_period_seconds`, which was set to 7200 for all package types.
 Now the attribute can only be set for the package types, that supports it in the UI: Alpine, Chef, Conan, Conda, Cran, Debian, Helm and Npm.
-PR: [#]()
+PR: [#590](https://github.com/jfrog/terraform-provider-artifactory/pull/590)
 
 ## 6.20.2 (November 23, 2022). Tested on Artifactory 7.46.11
 
