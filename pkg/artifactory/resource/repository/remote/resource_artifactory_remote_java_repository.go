@@ -16,7 +16,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 
 	return repository.MkResourceSchema(javaRemoteSchema, packer.Default(javaRemoteSchema), unpackJavaRemoteRepo, func() interface{} {
 		return &JavaRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: repoType,
 			},

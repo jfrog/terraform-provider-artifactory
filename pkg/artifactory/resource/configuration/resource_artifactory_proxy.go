@@ -101,7 +101,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 			Description: "An optional list of services names to which this proxy be the default of. The options are jfrt, jfmc, jfxr, jfds",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
-				Set: schema.HashString,
+				Set:  schema.HashString,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{

@@ -1,12 +1,12 @@
 package virtual
 
 import (
-	"github.com/jfrog/terraform-provider-shared/packer"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -14,39 +14,42 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 	const packageType = "debian"
 
-	var debianVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Primary keypair used to sign artifacts. Default is empty.",
-		},
-		"secondary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Secondary keypair used to sign artifacts. Default is empty.",
-		},
-		"optional_index_compression_formats": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			MinItems: 0,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
+	var debianVirtualSchema = util.MergeMaps(
+		BaseVirtualRepoSchema,
+		retrievalCachePeriodSecondsSchema,
+		map[string]*schema.Schema{
+			"primary_keypair_ref": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description:      "Primary keypair used to sign artifacts. Default is empty.",
 			},
-			Description: `Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
-		},
-		"debian_default_architectures": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "amd64,i386",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-			StateFunc:        util.FormatCommaSeparatedString,
-			Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
-		},
-	}, repository.RepoLayoutRefSchema("virtual", packageType))
+			"secondary_keypair_ref": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description:      "Secondary keypair used to sign artifacts. Default is empty.",
+			},
+			"optional_index_compression_formats": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 0,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
+				},
+				Description: `Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
+			},
+			"debian_default_architectures": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "amd64,i386",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
+				StateFunc:        util.FormatCommaSeparatedString,
+				Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
+			},
+		}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type DebianVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs

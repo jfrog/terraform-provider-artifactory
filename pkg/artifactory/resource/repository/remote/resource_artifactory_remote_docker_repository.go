@@ -10,7 +10,7 @@ import (
 )
 
 type DockerRemoteRepository struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
 	EnableTokenAuthentication    bool     `hcl:"enable_token_authentication" json:"enableTokenAuthentication"`
@@ -55,7 +55,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepository{
-			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, packageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
@@ -78,7 +78,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 
 	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
 		return &DockerRemoteRepository{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

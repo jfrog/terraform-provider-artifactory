@@ -10,7 +10,7 @@ import (
 func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 	constructor := func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", pkt)()
-		return &RepositoryBaseParams{
+		return &RepositoryRemoteBaseParams{
 			PackageType:         pkt,
 			Rclass:              "remote",
 			RemoteRepoLayoutRef: repoLayout.(string),

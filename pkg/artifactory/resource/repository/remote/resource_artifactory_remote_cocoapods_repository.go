@@ -9,7 +9,7 @@ import (
 )
 
 type CocoapodsRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	RepositoryVcsParams
 	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl"`
 }
@@ -30,9 +30,9 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	var unpackCocoapodsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := CocoapodsRemoteRepo{
-			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			PodsSpecsRepoUrl:     d.GetString("pods_specs_repo_url", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
+			PodsSpecsRepoUrl:           d.GetString("pods_specs_repo_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -40,7 +40,7 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	return repository.MkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &CocoapodsRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

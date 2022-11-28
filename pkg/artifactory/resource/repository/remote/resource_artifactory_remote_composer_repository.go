@@ -9,7 +9,7 @@ import (
 )
 
 type ComposerRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	RepositoryVcsParams
 	ComposerRegistryUrl string `json:"composerRegistryUrl"`
 }
@@ -30,9 +30,9 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	var unpackComposerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := ComposerRemoteRepo{
-			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			ComposerRegistryUrl:  d.GetString("composer_registry_url", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
+			ComposerRegistryUrl:        d.GetString("composer_registry_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -40,7 +40,7 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	return repository.MkResourceSchema(composerRemoteSchema, packer.Default(composerRemoteSchema), unpackComposerRemoteRepo, func() interface{} {
 		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
 		return &ComposerRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

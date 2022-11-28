@@ -42,7 +42,7 @@ func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
 	var constructor = func() interface{} {
 		return &MavenRemoteRepo{
 			JavaRemoteRepo: JavaRemoteRepo{
-				RepositoryBaseParams: RepositoryBaseParams{
+				RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 					Rclass:      "remote",
 					PackageType: "maven",
 				},
