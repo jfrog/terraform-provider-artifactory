@@ -1,3 +1,9 @@
+## 6.21.1 (November 30, 2022)
+
+BUG FIX:
+
+* resource/artifactory_scoped_token: fix token that no longer exist doesn't trigger Terraform plan recreation. Issue: [#576](https://github.com/jfrog/terraform-provider-artifactory/issues/576) PR: [#589](https://github.com/jfrog/terraform-provider-artifactory/pull/589)
+
 ## 6.20.2 (November 23, 2022). Tested on Artifactory 7.46.11
 
 BUG FIX:
