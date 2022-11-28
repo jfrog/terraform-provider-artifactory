@@ -38,12 +38,14 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(cargoLocalSchema, packer.Default(cargoLocalSchema), unPackLocalCargoRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &CargoLocalRepo{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "cargo",
 				Rclass:      "local",
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(cargoLocalSchema, packer.Default(cargoLocalSchema), unPackLocalCargoRepository, constructor)
 }

@@ -39,7 +39,7 @@ func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	var constructor = func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &MavenRemoteRepo{
 			JavaRemoteRepo: JavaRemoteRepo{
 				RepositoryBaseParams: RepositoryBaseParams{
@@ -48,7 +48,7 @@ func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
 				},
 				SuppressPomConsistencyChecks: false,
 			},
-		}
+		}, nil
 	}
 
 	return repository.MkResourceSchema(mavenRemoteSchema, packer.Default(mavenRemoteSchema), unpackMavenRemoteRepo, constructor)

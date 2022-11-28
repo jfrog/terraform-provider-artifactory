@@ -76,12 +76,14 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 		),
 	)
 
-	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &DockerRemoteRepository{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, constructor)
 }

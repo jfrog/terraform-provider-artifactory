@@ -120,13 +120,13 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		packMembers,
 	)
 
-	constructor := func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &FederatedRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(repoType),
 				Rclass:      "federated",
 			},
-		}
+		}, nil
 	}
 
 	return repository.MkResourceSchema(federatedSchema, pkr, unpackFederatedRepository, constructor)
