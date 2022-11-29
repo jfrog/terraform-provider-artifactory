@@ -6,13 +6,13 @@ subcategory: "Remote Repositories"
 Creates a remote Conan repository.
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Conan+Repositories).
 
-
 ## Example Usage
 
 ```hcl
 resource "artifactory_remote_conan_repository" "my-remote-conan" {
-  key                         = "my-remote-conan"
-  url                         = "https://conan.io/center/"
+  key                        = "my-remote-conan"
+  url                        = "https://conan.io/center/"
+  force_conan_authentication = true
 }
 ```
 
@@ -26,8 +26,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
-
-
+* `force_conan_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.
 
 ## Import
 

@@ -1,3 +1,9 @@
+## 6.21.0 (November 28, 2022). Tested on Artifactory 7.46.11
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_conan_repository: add `force_conan_authentication` attribute to support 'force authentication'. Issue: [#578](https://github.com/jfrog/terraform-provider-artifactory/issues/578) PR: [#588](https://github.com/jfrog/terraform-provider-artifactory/pull/588)
+
 ## 6.20.2 (November 23, 2022). Tested on Artifactory 7.46.11
 
 BUG FIX:

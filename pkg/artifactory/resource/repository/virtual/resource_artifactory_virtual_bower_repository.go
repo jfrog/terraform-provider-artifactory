@@ -22,17 +22,19 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
+	constructor := func() (interface{}, error) {
+		return &ExternalDependenciesVirtualRepositoryParams{
+			RepositoryBaseParams: RepositoryBaseParams{
+				Rclass:      "virtual",
+				PackageType: packageType,
+			},
+		}, nil
+	}
+
 	return repository.MkResourceSchema(
 		bowerVirtualSchema,
 		packer.Default(bowerVirtualSchema),
 		unpackBowerVirtualRepository,
-		func() interface{} {
-			return &ExternalDependenciesVirtualRepositoryParams{
-				RepositoryBaseParams: RepositoryBaseParams{
-					Rclass:      "virtual",
-					PackageType: packageType,
-				},
-			}
-		},
+		constructor,
 	)
 }

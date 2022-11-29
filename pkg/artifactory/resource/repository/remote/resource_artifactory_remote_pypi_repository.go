@@ -44,12 +44,14 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(pypiRemoteSchema, packer.Default(pypiRemoteSchema), unpackPypiRemoteRepo, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &PypiRemoteRepo{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(pypiRemoteSchema, packer.Default(pypiRemoteSchema), unpackPypiRemoteRepo, constructor)
 }

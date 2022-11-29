@@ -8,13 +8,17 @@ import (
 )
 
 func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
-	constructor := func() interface{} {
-		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", pkt)()
+	constructor := func() (interface{}, error) {
+		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", pkt)()
+		if err != nil {
+			return nil, err
+		}
+
 		return &RepositoryBaseParams{
 			PackageType:         pkt,
 			Rclass:              "remote",
 			RemoteRepoLayoutRef: repoLayout.(string),
-		}
+		}, nil
 	}
 
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {

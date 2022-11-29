@@ -47,7 +47,7 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(nugetLocalSchema, packer.Default(nugetLocalSchema), unPackLocalNugetRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &NugetLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "nuget",
@@ -55,6 +55,8 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 			},
 			MaxUniqueSnapshots:       0,
 			ForceNugetAuthentication: false,
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(nugetLocalSchema, packer.Default(nugetLocalSchema), unPackLocalNugetRepository, constructor)
 }

@@ -97,13 +97,15 @@ func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *
 
 	javaLocalSchema := getJavaRepoSchema(repoType, suppressPom)
 
-	return repository.MkResourceSchema(javaLocalSchema, packer.Default(javaLocalSchema), unPackLocalJavaRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &JavaLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: repoType,
 				Rclass:      "local",
 			},
 			SuppressPomConsistencyChecks: suppressPom,
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(javaLocalSchema, packer.Default(javaLocalSchema), unPackLocalJavaRepository, constructor)
 }

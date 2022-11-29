@@ -35,7 +35,7 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	constructor := func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &HelmVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
@@ -44,7 +44,7 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 				},
 			},
 			UseNamespaces: false,
-		}
+		}, nil
 	}
 
 	return repository.MkResourceSchema(helmVirtualSchema, packer.Default(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
