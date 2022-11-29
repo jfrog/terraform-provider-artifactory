@@ -83,7 +83,7 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(rpmLocalSchema, packer.Default(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &RpmLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "rpm",
@@ -93,6 +93,8 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 			CalculateYumMetadata:    false,
 			EnableFileListsIndexing: false,
 			GroupFileNames:          "",
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(rpmLocalSchema, packer.Default(rpmLocalSchema), unPackLocalRpmRepository, constructor)
 }

@@ -53,7 +53,7 @@ type ContentSynchronisationSource struct {
 type ReadFunc func(d *schema.ResourceData, m interface{}) error
 
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
-type Constructor func() interface{}
+type Constructor func() (interface{}, error)
 
 func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
 
@@ -79,7 +79,11 @@ func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 
 func mkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		repo := construct()
+		repo, err := construct()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		// repo must be a pointer
 		resp, err := m.(*resty.Client).R().
 			SetResult(repo).

@@ -9,7 +9,7 @@ import (
 )
 
 type BowerRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	RepositoryVcsParams
 	BowerRegistryUrl string `json:"bowerRegistryUrl"`
 }
@@ -30,21 +30,27 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := BowerRemoteRepo{
-			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RepositoryVcsParams:  UnpackVcsRemoteRepo(s),
-			BowerRegistryUrl:     d.GetString("bower_registry_url", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
+			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(bowerRemoteSchema, packer.Default(bowerRemoteSchema), unpackBowerRemoteRepo, func() interface{} {
-		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+	constructor := func() (interface{}, error) {
+		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		if err != nil {
+			return nil, err
+		}
+
 		return &BowerRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(bowerRemoteSchema, packer.Default(bowerRemoteSchema), unpackBowerRemoteRepo, constructor)
 }

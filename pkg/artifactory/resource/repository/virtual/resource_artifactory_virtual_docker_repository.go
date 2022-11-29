@@ -35,13 +35,13 @@ func ResourceArtifactoryVirtualDockerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	constructor := func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &DockerVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: packageType,
 			},
-		}
+		}, nil
 	}
 
 	return repository.MkResourceSchema(dockerVirtualSchema, packer.Default(dockerVirtualSchema), unpackDockerVirtualRepository, constructor)

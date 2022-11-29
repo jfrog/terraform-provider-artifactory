@@ -58,7 +58,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(dockerV2LocalSchema, pkr, unPackLocalDockerV2Repository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
@@ -68,8 +68,10 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 			TagRetention:        1,
 			MaxUniqueTags:       0, // no limit
 			BlockPushingSchema1: true,
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(dockerV2LocalSchema, pkr, unPackLocalDockerV2Repository, constructor)
 }
 
 var dockerV1LocalSchema = util.MergeMaps(
@@ -113,7 +115,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(skeema, packer.Default(dockerV1LocalSchema), unPackLocalDockerV1Repository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "docker",
@@ -123,8 +125,10 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 			TagRetention:        1,
 			MaxUniqueTags:       0,
 			BlockPushingSchema1: false,
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(skeema, packer.Default(dockerV1LocalSchema), unPackLocalDockerV1Repository, constructor)
 }
 
 type DockerLocalRepositoryParams struct {

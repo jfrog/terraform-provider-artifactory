@@ -152,7 +152,7 @@ resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
   key                            = "{{ .repo_name }}"
   url                            = "{{ .url }}"
   assumed_offline_period_secs    = {{ .assumed_offline_period_secs }}
-  
+
   retrieval_cache_period_seconds = {{ .retrieval_cache_period_seconds }}
   missed_cache_period_seconds    = {{ .missed_cache_period_seconds }}
   excludes_pattern               = "{{ .excludes_pattern }}"
@@ -465,6 +465,13 @@ func TestAccRemoteBowerRepository(t *testing.T) {
 		"vcs_git_provider":            "ARTIFACTORY",
 		"bower_registry_url":          "https://registry1.bower.io",
 		"missed_cache_period_seconds": 1800,
+	}))
+}
+
+func TestAccRemoteConanRepository(t *testing.T) {
+	const packageType = "conan"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"force_conan_authentication": true,
 	}))
 }
 
