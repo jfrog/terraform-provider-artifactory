@@ -38,12 +38,14 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(alpineLocalSchema, packer.Default(alpineLocalSchema), unPackLocalAlpineRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &AlpineLocalRepo{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "alpine",
 				Rclass:      "local",
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(alpineLocalSchema, packer.Default(alpineLocalSchema), unPackLocalAlpineRepository, constructor)
 }

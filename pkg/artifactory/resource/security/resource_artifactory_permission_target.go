@@ -107,11 +107,11 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 					Description: `The default value will be [] if nothing is supplied`,
 				},
 				"repositories": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Set:      schema.HashString,
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
 					Description: "You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified.",
-					Required: true,
+					Required:    true,
 				},
 				"actions": {
 					Type:     schema.TypeList,

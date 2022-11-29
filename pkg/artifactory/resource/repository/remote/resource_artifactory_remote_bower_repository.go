@@ -37,14 +37,20 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(bowerRemoteSchema, packer.Default(bowerRemoteSchema), unpackBowerRemoteRepo, func() interface{} {
-		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+	constructor := func() (interface{}, error) {
+		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		if err != nil {
+			return nil, err
+		}
+
 		return &BowerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(bowerRemoteSchema, packer.Default(bowerRemoteSchema), unpackBowerRemoteRepo, constructor)
 }

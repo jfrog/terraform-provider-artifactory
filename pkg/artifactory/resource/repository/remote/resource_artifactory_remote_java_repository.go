@@ -14,13 +14,15 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(javaRemoteSchema, packer.Default(javaRemoteSchema), unpackJavaRemoteRepo, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &JavaRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: repoType,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(javaRemoteSchema, packer.Default(javaRemoteSchema), unpackJavaRemoteRepo, constructor)
 }

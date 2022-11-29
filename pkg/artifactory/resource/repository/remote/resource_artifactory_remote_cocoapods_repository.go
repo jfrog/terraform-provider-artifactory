@@ -37,14 +37,20 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, func() interface{} {
-		repoLayout, _ := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+	constructor := func() (interface{}, error) {
+		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		if err != nil {
+			return nil, err
+		}
+
 		return &CocoapodsRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, constructor)
 }

@@ -25,15 +25,17 @@ func ResourceArtifactoryLocalTerraformRepository(registryType string) *schema.Re
 
 	terraformLocalSchema := getTerraformLocalSchema(registryType)
 
+	constructor := func() (interface{}, error) {
+		return &RepositoryBaseParams{
+			PackageType: "terraform_" + registryType,
+			Rclass:      "local",
+		}, nil
+	}
+
 	return repository.MkResourceSchema(
 		terraformLocalSchema,
 		packer.Default(terraformLocalSchema),
 		unPackLocalTerraformRepository,
-		func() interface{} {
-			return &RepositoryBaseParams{
-				PackageType: "terraform_" + registryType,
-				Rclass:      "local",
-			}
-		},
+		constructor,
 	)
 }

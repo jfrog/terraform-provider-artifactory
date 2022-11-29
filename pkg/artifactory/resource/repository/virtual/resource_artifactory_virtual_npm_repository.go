@@ -33,19 +33,21 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
+	constructor := func() (interface{}, error) {
+		return &NpmVirtualRepositoryParams{
+			ExternalDependenciesVirtualRepositoryParams: ExternalDependenciesVirtualRepositoryParams{
+				RepositoryBaseParams: RepositoryBaseParams{
+					Rclass:      "virtual",
+					PackageType: packageType,
+				},
+			},
+		}, nil
+	}
+
 	return repository.MkResourceSchema(
 		npmVirtualSchema,
 		packer.Default(npmVirtualSchema),
 		unpackNpmVirtualRepository,
-		func() interface{} {
-			return &NpmVirtualRepositoryParams{
-				ExternalDependenciesVirtualRepositoryParams: ExternalDependenciesVirtualRepositoryParams{
-					RepositoryBaseParams: RepositoryBaseParams{
-						Rclass:      "virtual",
-						PackageType: packageType,
-					},
-				},
-			}
-		},
+		constructor,
 	)
 }

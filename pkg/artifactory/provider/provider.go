@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 		"artifactory_remote_cargo_repository":             remote.ResourceArtifactoryRemoteCargoRepository(),
 		"artifactory_remote_cocoapods_repository":         remote.ResourceArtifactoryRemoteCocoapodsRepository(),
 		"artifactory_remote_composer_repository":          remote.ResourceArtifactoryRemoteComposerRepository(),
+		"artifactory_remote_conan_repository":             remote.ResourceArtifactoryRemoteConanRepository(),
 		"artifactory_remote_docker_repository":            remote.ResourceArtifactoryRemoteDockerRepository(),
 		"artifactory_remote_go_repository":                remote.ResourceArtifactoryRemoteGoRepository(),
 		"artifactory_remote_helm_repository":              remote.ResourceArtifactoryRemoteHelmRepository(),

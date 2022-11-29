@@ -73,7 +73,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(debianVirtualSchema, packer.Default(debianVirtualSchema), unpackDebianVirtualRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &DebianVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
@@ -81,6 +81,8 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 					PackageType: packageType,
 				},
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(debianVirtualSchema, packer.Default(debianVirtualSchema), unpackDebianVirtualRepository, constructor)
 }

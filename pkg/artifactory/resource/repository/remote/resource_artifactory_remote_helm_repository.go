@@ -71,12 +71,14 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 		),
 	)
 
-	return repository.MkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &HelmRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, constructor)
 }

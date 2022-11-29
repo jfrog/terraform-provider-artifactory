@@ -80,7 +80,6 @@ var RepoTypesLikeGeneric = []string{
 	"alpine",
 	"chef",
 	"conda",
-	"conan",
 	"cran",
 	"debian",
 	"gems",
