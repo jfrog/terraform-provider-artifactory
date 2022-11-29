@@ -25,6 +25,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `retrieval_cache_period_seconds` - (Optional, Default: 7200) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
 * `use_namespaces` - (Optional) From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories. See the documentation [here](https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories). Default is 'false'.
 
 ## Import

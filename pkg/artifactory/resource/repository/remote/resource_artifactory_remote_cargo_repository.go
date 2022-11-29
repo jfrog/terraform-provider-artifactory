@@ -9,7 +9,7 @@ import (
 )
 
 type CargoRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	RegistryUrl     string `hcl:"git_registry_url" json:"gitRegistryUrl"`
 	AnonymousAccess bool   `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
 }
@@ -35,16 +35,16 @@ func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := CargoRemoteRepo{
-			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			RegistryUrl:          d.GetString("git_registry_url", false),
-			AnonymousAccess:      d.GetBool("anonymous_access", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RegistryUrl:                d.GetString("git_registry_url", false),
+			AnonymousAccess:            d.GetBool("anonymous_access", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &CargoRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

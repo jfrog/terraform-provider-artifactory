@@ -273,8 +273,9 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 	}
 	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
-		  key            = "{{ .name }}"
-	 	  use_namespaces = {{ .useNamespaces }}
+		  key            				 = "{{ .name }}"
+	 	  use_namespaces 				 = {{ .useNamespaces }}
+		  retrieval_cache_period_seconds = 650	
 		}
 	`, params)
 
@@ -290,6 +291,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "helm"),
 					resource.TestCheckResourceAttr(fqrn, "use_namespaces", fmt.Sprintf("%t", useNamespaces)),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
 				),
 			},
 		},
@@ -666,7 +668,7 @@ func TestAccVirtualRepository(t *testing.T) {
 		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
-				"retrieval_cache_period_seconds": 7100,
+				"retrieval_cache_period_seconds": 650,
 			}))
 		})
 	}
@@ -728,7 +730,8 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 
 func TestAccVirtualAlpineRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
-		"description": "alpine virtual repository public description testing.",
+		"description":                    "alpine virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 650,
 	}))
 }
 
@@ -746,58 +749,46 @@ func TestAccVirtualDockerRepository(t *testing.T) {
 	}))
 }
 
-func TestAccVirtualRepository_withExternalDependencies(t *testing.T) {
-	for _, packageType := range []string{"bower", "npm"} {
-		t.Run(packageType, func(t *testing.T) {
-			resource.Test(mkVirtualExternalDependenciesTestCase(packageType, t))
-		})
-	}
-}
-
-func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
+func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 	id := test.RandomInt()
-	name := fmt.Sprintf("foo%d", id)
-	remoteRepoName := fmt.Sprintf("%s-remote-%d", packageType, id)
-	fqrn := fmt.Sprintf("artifactory_virtual_%s_repository.%s", packageType, name)
+	name := fmt.Sprintf("bower-virtual-%d", id)
+	remoteRepoName := fmt.Sprintf("bower-remote-%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_bower_repository.%s", name)
 
-	virtualRepositoryConfig := util.ExecuteTemplate(
-		"TestAccVirtualExternalDependenciesRepository",
-		`resource "artifactory_remote_{{ .packageType }}_repository" "{{ .packageType }}-remote" {
+	params := map[string]interface{}{
+		"name":           name,
+		"remoteRepoName": remoteRepoName,
+	}
+	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualBower", `
+		resource "artifactory_remote_bower_repository" "bower-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
 		}
 
-		resource "artifactory_virtual_{{ .packageType }}_repository" "{{ .name }}" {
+		resource "artifactory_virtual_bower_repository" "{{ .name }}" {
 			key                               = "{{ .name }}"
 			repositories                      = ["{{ .remoteRepoName }}"]
-			retrieval_cache_period_seconds    = 60
 			external_dependencies_enabled     = true
 			external_dependencies_patterns    = ["**/github.com/**", "**/go.googlesource.com/**"]
 			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
 
-			depends_on = ["artifactory_remote_{{ .packageType }}_repository.{{ .packageType }}-remote"]
-		}`,
-		map[string]interface{}{
-			"packageType":    packageType,
-			"name":           name,
-			"remoteRepoName": remoteRepoName,
-		},
-	)
+			depends_on = ["artifactory_remote_bower_repository.bower-remote"]
+		}
+	`, params)
 
-	return t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
-				Config: virtualRepositoryConfig,
+				Config: virtualBowerRepository,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "bower"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "repositories.*", remoteRepoName),
-					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "60"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
@@ -805,7 +796,59 @@ func mkVirtualExternalDependenciesTestCase(packageType string, t *testing.T) (*t
 				),
 			},
 		},
+	})
+}
+
+func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
+	id := test.RandomInt()
+	name := fmt.Sprintf("npm-virtual-%d", id)
+	remoteRepoName := fmt.Sprintf("npm-remote-%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_npm_repository.%s", name)
+
+	params := map[string]interface{}{
+		"name":           name,
+		"remoteRepoName": remoteRepoName,
 	}
+	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualNpm", `
+		resource "artifactory_remote_npm_repository" "npm-remote" {
+			key = "{{ .remoteRepoName }}"
+			url = "https://registry.npmjs.org"
+		}
+
+		resource "artifactory_virtual_npm_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = ["{{ .remoteRepoName }}"]
+			external_dependencies_enabled     = true
+			retrieval_cache_period_seconds    = 650
+			external_dependencies_patterns    = ["**/github.com/**", "**/go.googlesource.com/**"]
+			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
+
+			depends_on = ["artifactory_remote_npm_repository.npm-remote"]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: virtualBowerRepository,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccVirtualDebianRepository_full(t *testing.T) {
@@ -817,6 +860,7 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 			key          = "%s"
 			repositories = []
             debian_default_architectures = "i386,amd64"
+			retrieval_cache_period_seconds = 650
             optional_index_compression_formats = [
                 "bz2",
                 "xz",
@@ -835,6 +879,7 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "debian"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
 				),
 			},

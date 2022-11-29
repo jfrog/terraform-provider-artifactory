@@ -11,14 +11,18 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 
 	const packageType = "helm"
 
-	helmVirtualSchema := util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-		"use_namespaces": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories\nSee https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'",
+	helmVirtualSchema := util.MergeMaps(
+		BaseVirtualRepoSchema,
+		retrievalCachePeriodSecondsSchema,
+		map[string]*schema.Schema{
+			"use_namespaces": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories\nSee https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'",
+			},
 		},
-	}, repository.RepoLayoutRefSchema("virtual", packageType))
+		repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type HelmVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs

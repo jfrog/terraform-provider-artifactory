@@ -29,7 +29,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `description` - (Optional)
 * `notes` - (Optional)
-
+* `retrieval_cache_period_seconds` - (Optional, Default: 7200) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
 
 ## Import
 

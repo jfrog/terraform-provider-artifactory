@@ -30,6 +30,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `retrieval_cache_period_seconds` - (Optional, Default: 7200) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
 * `primary_keypair_ref` - (Optional) Primary keypair used to sign artifacts. Default is empty.
 * `secondary_keypair_ref` - (Optional) Secondary keypair used to sign artifacts. Default is empty.
 * `optional_index_compression_formats` - (Optional) Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.

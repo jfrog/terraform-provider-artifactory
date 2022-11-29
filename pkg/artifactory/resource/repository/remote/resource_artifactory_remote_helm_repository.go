@@ -42,7 +42,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	type HelmRemoteRepo struct {
-		RepositoryBaseParams
+		RepositoryRemoteBaseParams
 		HelmChartsBaseURL            string   `hcl:"helm_charts_base_url" json:"chartsBaseUrl"`
 		ExternalDependenciesEnabled  bool     `hcl:"external_dependencies_enabled" json:"externalDependenciesEnabled"`
 		ExternalDependenciesPatterns []string `hcl:"external_dependencies_patterns" json:"externalDependenciesPatterns"`
@@ -51,7 +51,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	var unpackHelmRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := HelmRemoteRepo{
-			RepositoryBaseParams:         UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, packageType),
 			HelmChartsBaseURL:            d.GetString("helm_charts_base_url", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
@@ -73,7 +73,7 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 
 	constructor := func() (interface{}, error) {
 		return &HelmRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: packageType,
 			},

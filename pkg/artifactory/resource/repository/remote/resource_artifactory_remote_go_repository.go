@@ -9,7 +9,7 @@ import (
 )
 
 type GoRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	VcsGitProvider string `json:"vcsGitProvider"`
 }
 
@@ -29,8 +29,8 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 	var unpackGoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := GoRemoteRepo{
-			RepositoryBaseParams: UnpackBaseRemoteRepo(s, packageType),
-			VcsGitProvider:       d.GetString("vcs_git_provider", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			VcsGitProvider:             d.GetString("vcs_git_provider", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -42,7 +42,7 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 		}
 
 		return &GoRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

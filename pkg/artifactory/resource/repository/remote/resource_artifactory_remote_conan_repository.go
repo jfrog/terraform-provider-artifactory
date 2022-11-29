@@ -8,7 +8,7 @@ import (
 )
 
 type ConanRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	ForceConanAuthentication bool `json:"forceConanAuthentication"`
 }
 
@@ -27,8 +27,8 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	var unpackConanRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := ConanRemoteRepo{
-			RepositoryBaseParams:     UnpackBaseRemoteRepo(s, packageType),
-			ForceConanAuthentication: d.GetBool("force_conan_authentication", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			ForceConanAuthentication:   d.GetBool("force_conan_authentication", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -40,7 +40,7 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 		}
 
 		return &ConanRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),

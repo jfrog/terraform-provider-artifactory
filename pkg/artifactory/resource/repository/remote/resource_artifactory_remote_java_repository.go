@@ -16,7 +16,7 @@ func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) 
 
 	constructor := func() (interface{}, error) {
 		return &JavaRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:      "remote",
 				PackageType: repoType,
 			},

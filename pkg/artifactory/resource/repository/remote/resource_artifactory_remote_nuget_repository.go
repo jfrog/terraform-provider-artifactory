@@ -9,7 +9,7 @@ import (
 )
 
 type NugetRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	FeedContextPath          string `json:"feedContextPath"`
 	DownloadContextPath      string `json:"downloadContextPath"`
 	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
@@ -59,12 +59,12 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := NugetRemoteRepo{
-			RepositoryBaseParams:     UnpackBaseRemoteRepo(s, packageType),
-			FeedContextPath:          d.GetString("feed_context_path", false),
-			DownloadContextPath:      d.GetString("download_context_path", false),
-			V3FeedUrl:                d.GetString("v3_feed_url", false),
-			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
-			SymbolServerUrl:          d.GetString("symbol_server_url", false),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			FeedContextPath:            d.GetString("feed_context_path", false),
+			DownloadContextPath:        d.GetString("download_context_path", false),
+			V3FeedUrl:                  d.GetString("v3_feed_url", false),
+			ForceNugetAuthentication:   d.GetBool("force_nuget_authentication", false),
+			SymbolServerUrl:            d.GetString("symbol_server_url", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -76,7 +76,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 		}
 
 		return &NugetRemoteRepo{
-			RepositoryBaseParams: RepositoryBaseParams{
+			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:              "remote",
 				PackageType:         packageType,
 				RemoteRepoLayoutRef: repoLayout.(string),
