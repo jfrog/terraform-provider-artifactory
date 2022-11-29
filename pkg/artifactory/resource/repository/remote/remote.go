@@ -227,7 +227,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
 		DefaultFunc: func() (interface{}, error) {
-			return 7300, nil
+			return 7200, nil
 		},
 		ValidateFunc: validation.IntAtLeast(0),
 	},
