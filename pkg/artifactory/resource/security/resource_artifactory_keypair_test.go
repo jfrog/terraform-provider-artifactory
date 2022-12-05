@@ -154,8 +154,8 @@ func TestAccKeyPairRSA(t *testing.T) {
 		fqrn,
 		template,
 		map[string]string{
-			"id": fmt.Sprint(id),
-			"name": name,
+			"id":         fmt.Sprint(id),
+			"name":       name,
 			"passphrase": "password",
 		},
 	)
@@ -164,8 +164,8 @@ func TestAccKeyPairRSA(t *testing.T) {
 		fqrn,
 		template,
 		map[string]string{
-			"id": fmt.Sprint(id),
-			"name": name,
+			"id":         fmt.Sprint(id),
+			"name":       name,
 			"passphrase": "new-password",
 		},
 	)

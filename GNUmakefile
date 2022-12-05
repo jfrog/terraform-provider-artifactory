@@ -7,7 +7,7 @@ GORELEASER_ARCH=${TARGET_ARCH}
 ifeq ($(GO_ARCH), amd64)
 GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
 endif
-PKG_NAME=pkg/xray
+PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
