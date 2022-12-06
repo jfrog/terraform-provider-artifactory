@@ -9,6 +9,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+const rclass = "local"
+
 var RepoTypesLikeGeneric = []string{
 	"bower",
 	"chef",
@@ -180,7 +182,7 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 }
 
 var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
-	"alpine":             alpineLocalSchema,
+	"alpine":             AlpineLocalSchema,
 	"cargo":              cargoLocalSchema,
 	"debian":             debianLocalSchema,
 	"docker":             dockerV2LocalSchema,

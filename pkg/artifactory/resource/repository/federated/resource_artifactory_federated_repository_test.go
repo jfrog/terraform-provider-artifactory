@@ -250,7 +250,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccFederatedAlpineRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-federated-test-repo-basic", "artifactory_federated_alpine_repository")
+	_, fqrn, name := test.MkNames("alpine-federated-test-repo-basic", "artifactory_federated_alpine_repository")
 	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
@@ -341,6 +341,11 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
