@@ -26,7 +26,7 @@ type CargoLocalRepoParams struct {
 	AnonymousAccess bool `json:"cargoAnonymousAccess"`
 }
 
-var UnpackLocalCargoRepository = func(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
+func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
 	d := &util.ResourceData{ResourceData: data}
 	return CargoLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "cargo"),

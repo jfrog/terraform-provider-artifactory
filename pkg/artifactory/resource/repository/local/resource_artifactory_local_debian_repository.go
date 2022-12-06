@@ -39,7 +39,7 @@ type DebianLocalRepositoryParams struct {
 	SecondaryKeyPairRef     string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
 }
 
-var UnpackLocalDebianRepository = func(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
+func UnpackLocalDebianRepository(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
 	d := &util.ResourceData{ResourceData: data}
 	return DebianLocalRepositoryParams{
 		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, "debian"),

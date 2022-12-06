@@ -532,23 +532,23 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 	`
 
 	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
-		"kp_id":     kpId,
-		"kp_name":   kpName,
-		"kp_id2":    kpId2,
-		"kp_name2":  kpName2,
-		"repo_name": name,
+		"kp_id":         kpId,
+		"kp_name":       kpName,
+		"kp_id2":        kpId2,
+		"kp_name2":      kpName2,
+		"repo_name":     name,
 		"trivialLayout": true,
-		"memberUrl": federatedMemberUrl,
+		"memberUrl":     federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
-		"kp_id":     kpId,
-		"kp_name":   kpName,
-		"kp_id2":    kpId2,
-		"kp_name2":  kpName2,
-		"repo_name": name,
+		"kp_id":         kpId,
+		"kp_name":       kpName,
+		"kp_id2":        kpId2,
+		"kp_name2":      kpName2,
+		"repo_name":     name,
 		"trivialLayout": false,
-		"memberUrl": federatedMemberUrl,
+		"memberUrl":     federatedMemberUrl,
 	})
 
 	resource.Test(t, resource.TestCase{
@@ -597,21 +597,14 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 	})
 }
 
-func TestAccFederatedDockerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_repository")
+func TestAccFederatedDockerV2Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v2_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	params := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
-		"name":      name,
-		"memberUrl": federatedMemberUrl,
-	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", `
-		resource "artifactory_federated_docker_repository" "{{ .name }}" {
-			key 	               = "{{ .name }}"
-			tag_retention          = {{ .retention }}
+	template := `
+		resource "artifactory_federated_docker_v2_repository" "{{ .name }}" {
+			key 	              = "{{ .name }}"
+			tag_retention         = {{ .retention }}
 			max_unique_tags       = {{ .max_tags }}
 			block_pushing_schema1 = {{ .block }}
 
@@ -620,7 +613,25 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+
+	params := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+
+	updated := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -636,6 +647,66 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", updated["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updated["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updated["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFederatedDockerV1Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v1_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_docker_v1_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+
+	params := map[string]interface{}{
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

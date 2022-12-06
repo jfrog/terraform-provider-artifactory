@@ -18,7 +18,6 @@ var RepoTypesLikeGeneric = []string{
 	"conan",
 	"conda",
 	"cran",
-	"docker",
 	"gems",
 	"generic",
 	"gitlfs",
@@ -69,7 +68,7 @@ var memberSchema = map[string]*schema.Schema{
 	},
 }
 
-var unpackMembers = func(data *schema.ResourceData) []Member {
+func unpackMembers(data *schema.ResourceData) []Member {
 	d := &util.ResourceData{ResourceData: data}
 	var members []Member
 

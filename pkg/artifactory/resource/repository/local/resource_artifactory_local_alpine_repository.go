@@ -26,7 +26,7 @@ type AlpineLocalRepoParams struct {
 	PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
 }
 
-var UnpackLocalAlpineRepository = func(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
+func UnpackLocalAlpineRepository(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
 	d := &util.ResourceData{ResourceData: data}
 	return AlpineLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "alpine"),

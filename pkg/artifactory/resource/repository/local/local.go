@@ -185,7 +185,6 @@ var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
 	"alpine":             AlpineLocalSchema,
 	"cargo":              CargoLocalSchema,
 	"debian":             DebianLocalSchema,
-	"docker":             dockerV2LocalSchema,
 	"gradle":             GetJavaRepoSchema("gradle", true),
 	"ivy":                GetJavaRepoSchema("ivy", false),
 	"maven":              GetJavaRepoSchema("maven", false),
