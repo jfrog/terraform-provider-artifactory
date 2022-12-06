@@ -354,13 +354,14 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 func TestAccFederatedCargoRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("cargo-local", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
-
+	anonAccess := test.RandBool()
 	params := map[string]interface{}{
-		"anonymous_access": test.RandBool(),
+		"anonymous_access": anonAccess,
 		"name":             name,
 		"memberUrl":        federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", `
+
+	template := `
 		resource "artifactory_federated_cargo_repository" "{{ .name }}" {
 			key              = "{{ .name }}"
 			anonymous_access = {{ .anonymous_access }}
@@ -369,7 +370,17 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
+	federatedRepositoryUpdated := util.ExecuteTemplate(
+		"TestAccFederatedCargoRepository",
+		template,
+		map[string]interface{}{
+			"anonymous_access": !anonAccess,
+			"name":             name,
+			"memberUrl":        federatedMemberUrl,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -380,9 +391,22 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				Config: federatedRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", anonAccess)),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", !anonAccess)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

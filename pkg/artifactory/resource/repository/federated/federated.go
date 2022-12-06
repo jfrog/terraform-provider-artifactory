@@ -12,7 +12,6 @@ const rclass = "federated"
 
 var RepoTypesLikeGeneric = []string{
 	"bower",
-	"cargo",
 	"chef",
 	"cocoapods",
 	"composer",

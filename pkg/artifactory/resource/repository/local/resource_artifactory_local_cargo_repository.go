@@ -7,7 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var cargoLocalSchema = util.MergeMaps(
+var CargoLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"anonymous_access": {
@@ -21,25 +21,28 @@ var cargoLocalSchema = util.MergeMaps(
 	repository.CompressionFormats,
 )
 
+type CargoLocalRepoParams struct {
+	RepositoryBaseParams
+	AnonymousAccess bool `json:"cargoAnonymousAccess"`
+}
+
+var UnpackLocalCargoRepository = func(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
+	d := &util.ResourceData{ResourceData: data}
+	return CargoLocalRepoParams{
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "cargo"),
+		AnonymousAccess:      d.GetBool("anonymous_access", false),
+	}
+}
+
 func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
-	type CargoLocalRepo struct {
-		RepositoryBaseParams
-		AnonymousAccess bool `json:"cargoAnonymousAccess"`
-	}
-
-	var unPackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
-		repo := CargoLocalRepo{
-			RepositoryBaseParams: UnpackBaseRepo("local", data, "cargo"),
-			AnonymousAccess:      d.GetBool("anonymous_access", false),
-		}
-
+	var unpackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := UnpackLocalCargoRepository(data, rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		return &CargoLocalRepo{
+		return &CargoLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "cargo",
 				Rclass:      "local",
@@ -47,5 +50,5 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(cargoLocalSchema, packer.Default(cargoLocalSchema), unPackLocalCargoRepository, constructor)
+	return repository.MkResourceSchema(CargoLocalSchema, packer.Default(CargoLocalSchema), unpackLocalCargoRepository, constructor)
 }
