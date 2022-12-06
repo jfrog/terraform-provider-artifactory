@@ -18,7 +18,6 @@ var RepoTypesLikeGeneric = []string{
 	"conan",
 	"conda",
 	"cran",
-	"debian",
 	"docker",
 	"gems",
 	"generic",

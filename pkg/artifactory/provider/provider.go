@@ -33,6 +33,7 @@ func Provider() *schema.Provider {
 		"artifactory_keypair":                             security.ResourceArtifactoryKeyPair(),
 		"artifactory_federated_alpine_repository":         federated.ResourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_cargo_repository":          federated.ResourceArtifactoryFederatedCargoRepository(),
+		"artifactory_federated_debian_repository":         federated.ResourceArtifactoryFederatedDebianRepository(),
 		"artifactory_federated_maven_repository":          federated.ResourceArtifactoryFederatedJavaRepository("maven", false),
 		"artifactory_local_nuget_repository":              local.ResourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":              local.ResourceArtifactoryLocalJavaRepository("maven", false),

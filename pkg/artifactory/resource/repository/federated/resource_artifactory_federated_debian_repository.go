@@ -9,30 +9,30 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
-	packageType := "cargo"
+func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
+	packageType := "debian"
 
-	type CargoFederatedRepositoryParams struct {
-		local.CargoLocalRepoParams
+	type DebianFederatedRepositoryParams struct {
+		local.DebianLocalRepositoryParams
 		Members []Member `hcl:"member" json:"members"`
 	}
 
-	cargoFederatedSchema := util.MergeMaps(
-		local.CargoLocalSchema,
+	debianFederatedSchema := util.MergeMaps(
+		local.DebianLocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
-	var unpackFederatedCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := CargoFederatedRepositoryParams{
-			CargoLocalRepoParams: local.UnpackLocalCargoRepository(data, rclass),
-			Members:              unpackMembers(data),
+	var unpackFederatedDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := DebianFederatedRepositoryParams{
+			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, rclass),
+			Members:                     unpackMembers(data),
 		}
 		return repo, repo.Id(), nil
 	}
 
-	var packCargoMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*CargoFederatedRepositoryParams).Members
+	var packDebianMembers = func(repo interface{}, d *schema.ResourceData) error {
+		members := repo.(*DebianFederatedRepositoryParams).Members
 		return packMembers(members, d)
 	}
 
@@ -40,12 +40,12 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		packer.Universal(
 			predicate.Ignore("class", "rclass", "member", "terraform_type"),
 		),
-		packCargoMembers,
+		packDebianMembers,
 	)
 
 	constructor := func() (interface{}, error) {
-		return &CargoFederatedRepositoryParams{
-			CargoLocalRepoParams: local.CargoLocalRepoParams{
+		return &DebianFederatedRepositoryParams{
+			DebianLocalRepositoryParams: local.DebianLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
 					Rclass:      rclass,
@@ -54,5 +54,5 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(cargoFederatedSchema, pkr, unpackFederatedCargoRepository, constructor)
+	return repository.MkResourceSchema(debianFederatedSchema, pkr, unpackFederatedDebianRepository, constructor)
 }

@@ -14,7 +14,7 @@ import (
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
 	localRepoSchema := local.GetSchemaByRepoType(repoType)
 
-	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema("federated", repoType))
+	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
 
 	type FederatedRepositoryParams struct {
 		local.RepositoryBaseParams
@@ -23,7 +23,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := FederatedRepositoryParams{
-			RepositoryBaseParams: local.UnpackBaseRepo("federated", data, repoType),
+			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, repoType),
 			Members:              unpackMembers(data),
 		}
 		// terraformType could be `module` or `provider`, repoType names we use are `terraform_module` and `terraform_provider`
@@ -49,7 +49,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		return &FederatedRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(repoType),
-				Rclass:      "federated",
+				Rclass:      rclass,
 			},
 		}, nil
 	}

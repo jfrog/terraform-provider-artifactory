@@ -419,7 +419,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+	template := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -517,7 +517,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 			primary_keypair_ref       = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref     = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
-			trivial_layout            = true
+			trivial_layout            = {{ .trivialLayout }}
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -529,14 +529,27 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				artifactory_keypair.{{ .kp_name2 }},
 			]
 		}
-	`, map[string]interface{}{
+	`
+
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":     kpId,
 		"kp_name":   kpName,
 		"kp_id2":    kpId2,
 		"kp_name2":  kpName2,
 		"repo_name": name,
+		"trivialLayout": true,
 		"memberUrl": federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":     kpId,
+		"kp_name":   kpName,
+		"kp_id2":    kpId2,
+		"kp_name2":  kpName2,
+		"repo_name": name,
+		"trivialLayout": false,
+		"memberUrl": federatedMemberUrl,
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -560,6 +573,25 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "debian"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "trivial_layout", "false"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

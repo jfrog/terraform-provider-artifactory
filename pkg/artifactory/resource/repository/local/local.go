@@ -184,7 +184,7 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
 	"alpine":             AlpineLocalSchema,
 	"cargo":              CargoLocalSchema,
-	"debian":             debianLocalSchema,
+	"debian":             DebianLocalSchema,
 	"docker":             dockerV2LocalSchema,
 	"gradle":             GetJavaRepoSchema("gradle", true),
 	"ivy":                GetJavaRepoSchema("ivy", false),
