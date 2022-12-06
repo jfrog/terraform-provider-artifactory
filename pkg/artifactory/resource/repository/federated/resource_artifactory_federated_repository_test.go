@@ -716,13 +716,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("nuget-local", "artifactory_federated_nuget_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	params := map[string]interface{}{
-		"force_nuget_authentication": test.RandBool(),
-		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
-		"name":                       name,
-		"memberUrl":                  federatedMemberUrl,
-	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", `
+	template := `
 		resource "artifactory_federated_nuget_repository" "{{ .name }}" {
 			key                        = "{{ .name }}"
 			max_unique_snapshots       = {{ .max_unique_snapshots }}
@@ -732,7 +726,23 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+
+	params := map[string]interface{}{
+		"force_nuget_authentication": test.RandBool(),
+		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
+
+	updates := map[string]interface{}{
+		"force_nuget_authentication": test.RandBool(),
+		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -747,6 +757,20 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updates["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", updates["force_nuget_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

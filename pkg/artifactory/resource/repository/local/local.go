@@ -188,7 +188,7 @@ var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
 	"gradle":             GetJavaRepoSchema("gradle", true),
 	"ivy":                GetJavaRepoSchema("ivy", false),
 	"maven":              GetJavaRepoSchema("maven", false),
-	"nuget":              nugetLocalSchema,
+	"nuget":              NugetLocalSchema,
 	"rpm":                rpmLocalSchema,
 	"sbt":                GetJavaRepoSchema("sbt", false),
 	"terraform_module":   getTerraformLocalSchema("module"),

@@ -24,7 +24,6 @@ var RepoTypesLikeGeneric = []string{
 	"go",
 	"helm",
 	"npm",
-	"nuget",
 	"opkg",
 	"puppet",
 	"pypi",
