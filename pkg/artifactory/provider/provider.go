@@ -31,6 +31,7 @@ var productId = "terraform-provider-artifactory/" + Version
 func Provider() *schema.Provider {
 	resourceMap := map[string]*schema.Resource{
 		"artifactory_keypair":                             security.ResourceArtifactoryKeyPair(),
+		"artifactory_federated_maven_repository":          federated.ResourceArtifactoryFederatedJavaRepository("maven", false),
 		"artifactory_local_nuget_repository":              local.ResourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":              local.ResourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":             local.ResourceArtifactoryLocalAlpineRepository(),
@@ -107,6 +108,8 @@ func Provider() *schema.Provider {
 		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteJavaRepository(repoType, true)
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(repoType)
+		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
+		resourceMap[federatedResourceName] = federated.ResourceArtifactoryFederatedJavaRepository(repoType, true)
 	}
 
 	for _, repoType := range virtual.RepoTypesLikeGeneric {
@@ -118,7 +121,7 @@ func Provider() *schema.Provider {
 		resourceMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
 	}
 
-	for _, repoType := range federated.RepoTypesSupported {
+	for _, repoType := range federated.RepoTypesLikeGeneric {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resourceMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
 	}

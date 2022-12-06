@@ -1,6 +1,8 @@
 package federated
 
-var RepoTypesSupported = []string{
+const rclass = "federated"
+
+var RepoTypesLikeGeneric = []string{
 	"alpine",
 	"bower",
 	"cargo",
@@ -16,17 +18,13 @@ var RepoTypesSupported = []string{
 	"generic",
 	"gitlfs",
 	"go",
-	"gradle",
 	"helm",
-	"ivy",
-	"maven",
 	"npm",
 	"nuget",
 	"opkg",
 	"puppet",
 	"pypi",
 	"rpm",
-	"sbt",
 	"swift",
 	"terraform_module",
 	"terraform_provider",

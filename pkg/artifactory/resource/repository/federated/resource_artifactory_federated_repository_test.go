@@ -142,8 +142,8 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	}
 }
 
-func TestAccFederatedRepoAllTypes(t *testing.T) {
-	for _, repo := range federated.RepoTypesSupported {
+func TestAccFederatedRepoGenericTypes(t *testing.T) {
+	for _, repo := range federated.RepoTypesLikeGeneric {
 		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
 		t.Run(title, func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
@@ -648,12 +648,19 @@ const federatedJavaRepositoryBasic = `
 
 func TestAccFederatedMavenRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("maven-federated", "artifactory_federated_maven_repository")
-	tempStruct := util.MergeMaps(commonJavaParams)
 
+	repoLayoutRef := func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()
+	tempStruct := util.MergeMaps(commonJavaParams)
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = false
 	tempStruct["memberUrl"] = fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	updatedStruct := tempStruct
+	updatedStruct["snapshot_version_behavior"] = "non-unique"
+	updatedStruct["handle_releases"] = false
+	updatedStruct["handle_snapshots"] = false
+	updatedStruct["suppress_pom_consistency_checks"] = true
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -670,8 +677,26 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", updatedStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updatedStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", updatedStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", updatedStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", updatedStruct["suppress_pom_consistency_checks"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -687,6 +712,12 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = true
 	tempStruct["memberUrl"] = fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	updatedStruct := tempStruct
+	updatedStruct["snapshot_version_behavior"] = "non-unique"
+	updatedStruct["handle_releases"] = false
+	updatedStruct["handle_snapshots"] = false
+	updatedStruct["suppress_pom_consistency_checks"] = true
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -704,6 +735,23 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
 				),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", updatedStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updatedStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", updatedStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", updatedStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", updatedStruct["suppress_pom_consistency_checks"])),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	}
