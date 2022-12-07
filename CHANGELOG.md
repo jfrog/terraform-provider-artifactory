@@ -1,3 +1,13 @@
+## 6.21.3 (December 6, 2022). Tested on Artifactory 7.47.10
+
+BUG FIX:
+
+* resource/artifactory_keypair:
+  * Fix updating 'passphrase' does not delete and recreate key pair.
+  * Fix externally deleted key pair does not trigger Terraform to recreate.
+
+Issue: [#594](https://github.com/jfrog/terraform-provider-artifactory/issues/594) PR: [#596](https://github.com/jfrog/terraform-provider-artifactory/pull/596)
+
 ## 6.21.2 (November 30, 2022). Tested on Artifactory 7.46.11
 
 BUG FIX:

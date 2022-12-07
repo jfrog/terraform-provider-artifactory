@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"net/http"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -63,6 +64,7 @@ var keyPairSchema = map[string]*schema.Schema{
 	"passphrase": {
 		Type:             schema.TypeString,
 		Optional:         true,
+		ForceNew:         true,
 		DiffSuppressFunc: ignoreEmpty,
 		Sensitive:        true,
 		Description:      "Passphrase will be used to decrypt the private key. Validated server side",
@@ -86,7 +88,6 @@ func ResourceArtifactoryKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: createKeyPair,
 		ReadContext:   readKeyPair,
-		UpdateContext: createKeyPair,
 		DeleteContext: rmKeyPair,
 
 		Importer: &schema.ResourceImporter{
@@ -202,7 +203,7 @@ var keyPairPacker = packer.Universal(
 	),
 )
 
-func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func createKeyPair(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
 
 	_, err := m.(*resty.Client).R().
@@ -212,19 +213,19 @@ func createKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) dia
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = keyPairPacker(*keyPair.(*KeyPairPayLoad), d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	d.SetId(key)
-	return nil
+	return readKeyPair(ctx, d, m)
 }
 
 func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	data := KeyPairPayLoad{}
-	_, err := meta.(*resty.Client).R().SetResult(&data).Get(KeypairEndPoint + d.Id())
+	resp, err := meta.(*resty.Client).R().SetResult(&data).Get(KeypairEndPoint + d.Id())
 	if err != nil {
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 	err = keyPairPacker(data, d)
