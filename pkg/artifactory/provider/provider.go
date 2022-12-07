@@ -38,6 +38,7 @@ func Provider() *schema.Provider {
 		"artifactory_federated_docker_v2_repository":      federated.ResourceArtifactoryFederatedDockerV2Repository(),
 		"artifactory_federated_maven_repository":          federated.ResourceArtifactoryFederatedJavaRepository("maven", false),
 		"artifactory_federated_nuget_repository":          federated.ResourceArtifactoryFederatedNugetRepository(),
+		"artifactory_federated_rpm_repository":            federated.ResourceArtifactoryFederatedRpmRepository(),
 		"artifactory_local_nuget_repository":              local.ResourceArtifactoryLocalNugetRepository(),
 		"artifactory_local_maven_repository":              local.ResourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":             local.ResourceArtifactoryLocalAlpineRepository(),

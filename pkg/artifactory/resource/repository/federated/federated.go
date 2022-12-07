@@ -27,7 +27,6 @@ var RepoTypesLikeGeneric = []string{
 	"opkg",
 	"puppet",
 	"pypi",
-	"rpm",
 	"swift",
 	"terraform_module",
 	"terraform_provider",

@@ -929,7 +929,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+	template := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -1022,12 +1022,13 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_federated_rpm_repository" "{{ .repo_name }}" {
 			key 	                   = "{{ .repo_name }}"
 			primary_keypair_ref        = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref      = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			yum_root_depth             = 1
-			enable_file_lists_indexing = true
+			enable_file_lists_indexing = {{ .enable_file_lists_indexing }}
 			calculate_yum_metadata     = true
 
 			member {
@@ -1040,14 +1041,29 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				artifactory_keypair.{{ .kp_name2 }},
 			]
 		}
-	`, map[string]interface{}{
-		"kp_id":     kpId,
-		"kp_name":   kpName,
-		"kp_id2":    kpId2,
-		"kp_name2":  kpName2,
-		"repo_name": name,
-		"memberUrl": federatedMemberUrl,
+	`
+
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":                      kpId,
+		"kp_name":                    kpName,
+		"kp_id2":                     kpId2,
+		"kp_name2":                   kpName2,
+		"repo_name":                  name,
+		"yum_root_depth":             1,
+		"enable_file_lists_indexing": true,
+		"memberUrl":                  federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":                      kpId,
+		"kp_name":                    kpName,
+		"kp_id2":                     kpId2,
+		"kp_name2":                   kpName2,
+		"repo_name":                  name,
+		"yum_root_depth":             2,
+		"enable_file_lists_indexing": false,
+		"memberUrl":                  federatedMemberUrl,
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1070,6 +1086,24 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "1"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "rpm"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "false"),
+					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
+					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "2"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
