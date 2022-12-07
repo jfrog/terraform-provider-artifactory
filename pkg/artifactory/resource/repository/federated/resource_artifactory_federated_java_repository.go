@@ -38,7 +38,10 @@ func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom boo
 
 	pkr := packer.Compose(
 		packer.Universal(
-			predicate.Ignore("class", "rclass", "member", "terraform_type"),
+			predicate.All(
+				predicate.NoClass,
+				predicate.Ignore("member", "terraform_type"),
+			),
 		),
 		packJavaMembers,
 	)

@@ -180,27 +180,3 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		PriorityResolution:     d.GetBool("priority_resolution", false),
 	}
 }
-
-var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
-	"alpine":             AlpineLocalSchema,
-	"cargo":              CargoLocalSchema,
-	"debian":             DebianLocalSchema,
-	"gradle":             GetJavaRepoSchema("gradle", true),
-	"ivy":                GetJavaRepoSchema("ivy", false),
-	"maven":              GetJavaRepoSchema("maven", false),
-	"nuget":              NugetLocalSchema,
-	"rpm":                RpmLocalSchema,
-	"sbt":                GetJavaRepoSchema("sbt", false),
-	"terraform_module":   getTerraformLocalSchema("module"),
-	"terraform_provider": getTerraformLocalSchema("provider"),
-}
-
-func init() {
-	for _, repoType := range RepoTypesLikeGeneric {
-		schemaRepoTypeLookup[repoType] = getGenericRepoSchema(repoType)
-	}
-}
-
-func GetSchemaByRepoType(repoType string) map[string]*schema.Schema {
-	return schemaRepoTypeLookup[repoType]
-}

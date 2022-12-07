@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"strings"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
@@ -12,7 +10,7 @@ import (
 )
 
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
-	localRepoSchema := local.GetSchemaByRepoType(repoType)
+	localRepoSchema := local.GetGenericRepoSchema(repoType)
 
 	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
 
@@ -26,10 +24,6 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, repoType),
 			Members:              unpackMembers(data),
 		}
-		// terraformType could be `module` or `provider`, repoType names we use are `terraform_module` and `terraform_provider`
-		// We need to remove the `terraform_` from the string.
-		repo.TerraformType = strings.ReplaceAll(repoType, "terraform_", "")
-
 		return repo, repo.Id(), nil
 	}
 
@@ -40,7 +34,10 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 
 	pkr := packer.Compose(
 		packer.Universal(
-			predicate.Ignore("class", "rclass", "member", "terraform_type"),
+			predicate.All(
+				predicate.NoClass,
+				predicate.Ignore("member", "terraform_type"),
+			),
 		),
 		packGenericMembers,
 	)
