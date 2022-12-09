@@ -1,3 +1,11 @@
+## 6.21.5 (December 12, 2022)
+
+IMPROVEMENTS
+
+* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent. [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+
+BUG FIX:
+
 ## 6.21.3 (December 6, 2022). Tested on Artifactory 7.47.10
 
 BUG FIX:
