@@ -3,9 +3,11 @@ subcategory: "User"
 ---
 # Artifactory Anonymous User Resource
 
-Provides an Artifactory anonymous user resource. This can be used to import Artifactory user.
+Provides an Artifactory anonymous user resource. This can be used to import Artifactory 'anonymous' user for some use cases where this is useful.
 
-Note: Anonymous user cannot be altered once imported into Terraform state.
+This resource is not intended for managing the 'anonymous' user in Artifactory. Use the `resource_artifactory_user` resource instead.
+
+!> Anonymous user cannot be created from scratch, nor updated/deleted once imported into Terraform state.
 
 ## Example Usage
 
