@@ -714,6 +714,76 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 	})
 }
 
+func TestAccLocalGenericRepositoryWithProjectAttributesUpdatePTRENG4789(t *testing.T) {
+
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	//projectEnv := test.RandSelect("DEV", "PROD").(string)
+	projectEnv := "PROD"
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+	description := "Updated repo"
+
+	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+		"projectEnv": projectEnv,
+	}
+	paramsUpdate := map[string]interface{}{
+		"name":        name,
+		"projectKey":  projectKey,
+		"description": description,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+	 	  project_environments = ["{{ .projectEnv }}"]
+		}
+	`, params)
+	localRepositoryBasicUpdate := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+		  description		   = "{{ .description }}"
+		}
+	`, paramsUpdate)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.CreateProject(t, projectKey)
+		},
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			acctest.DeleteProject(t, projectKey)
+			return acctest.CheckRepo(id, request)
+		}),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+				),
+			},
+			{
+				Config: localRepositoryBasicUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+					resource.TestCheckResourceAttr(fqrn, "description", description),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
