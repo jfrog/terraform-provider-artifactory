@@ -81,6 +81,6 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 
 		Schema: anonymousUserSchema,
 
-		Description: "Provides an Artifactory anonymouse user resource. This only supports importing from Artifactory through `terraform import` command. This cannot be created from scratch, nor updated/deleted once imported into Terraform state.",
+		Description: "Provides an Artifactory anonymous user resource. This can be used to import Artifactory 'anonymous' uer for some use cases where this is useful.\n\nThis resource is not intended for managing the 'anonymous' user in Artifactory. Use the `resource_artifactory_user` resource instead.\n\n!> Anonymous user cannot be created from scratch, nor updated/deleted once imported into Terraform state.",
 	}
 }

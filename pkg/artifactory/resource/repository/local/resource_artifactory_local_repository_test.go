@@ -21,7 +21,7 @@ import (
 )
 
 func TestAccLocalAlpineRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-local-test-repo-basic", "artifactory_local_alpine_repository")
+	_, fqrn, name := test.MkNames("alpine-local-test-repo-basic", "artifactory_local_alpine_repository")
 	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
 	localRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
