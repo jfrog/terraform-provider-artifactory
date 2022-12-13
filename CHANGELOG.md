@@ -2,8 +2,8 @@
 
 BUG FIXES:
 
-* resource/artifactory_federated_docker_repository: Provide backward compatibility and is aliased to `artifactory_federated_docker_v2_repository` resource. Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
-* resource/artifactory_federated_docker_v1_repository, artifactory_federated_docker_v2_repository: Add missing documentation. Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
+* resource/artifactory_federated_docker_repository: Provide backward compatibility and is aliased to `artifactory_federated_docker_v2_repository` resource. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
+* resource/artifactory_federated_docker_v1_repository, artifactory_federated_docker_v2_repository: Add missing documentation. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
 
 ## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.12
 
