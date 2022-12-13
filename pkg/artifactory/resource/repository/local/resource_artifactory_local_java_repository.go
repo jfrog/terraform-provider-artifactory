@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
+func GetJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
 	return util.MergeMaps(
 		BaseLocalRepoSchema,
 		map[string]*schema.Schema{
@@ -69,33 +69,36 @@ func getJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 	)
 }
 
-func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	type JavaLocalRepositoryParams struct {
-		RepositoryBaseParams
-		ChecksumPolicyType           string `hcl:"checksum_policy_type" json:"checksumPolicyType"`
-		SnapshotVersionBehavior      string `hcl:"snapshot_version_behavior" json:"snapshotVersionBehavior"`
-		MaxUniqueSnapshots           int    `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
-		HandleReleases               bool   `hcl:"handle_releases" json:"handleReleases"`
-		HandleSnapshots              bool   `hcl:"handle_snapshots" json:"handleSnapshots"`
-		SuppressPomConsistencyChecks bool   `hcl:"suppress_pom_consistency_checks" json:"suppressPomConsistencyChecks"`
+type JavaLocalRepositoryParams struct {
+	RepositoryBaseParams
+	ChecksumPolicyType           string `hcl:"checksum_policy_type" json:"checksumPolicyType"`
+	SnapshotVersionBehavior      string `hcl:"snapshot_version_behavior" json:"snapshotVersionBehavior"`
+	MaxUniqueSnapshots           int    `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
+	HandleReleases               bool   `hcl:"handle_releases" json:"handleReleases"`
+	HandleSnapshots              bool   `hcl:"handle_snapshots" json:"handleSnapshots"`
+	SuppressPomConsistencyChecks bool   `hcl:"suppress_pom_consistency_checks" json:"suppressPomConsistencyChecks"`
+}
+
+var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, repoType string) JavaLocalRepositoryParams {
+	d := &util.ResourceData{ResourceData: data}
+	return JavaLocalRepositoryParams{
+		RepositoryBaseParams:         UnpackBaseRepo(rclass, data, repoType),
+		ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
+		SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
+		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
+		HandleReleases:               d.GetBool("handle_releases", false),
+		HandleSnapshots:              d.GetBool("handle_snapshots", false),
+		SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
 	}
+}
 
+func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
-		repo := JavaLocalRepositoryParams{
-			RepositoryBaseParams:         UnpackBaseRepo("local", data, repoType),
-			ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
-			SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
-			MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
-			HandleReleases:               d.GetBool("handle_releases", false),
-			HandleSnapshots:              d.GetBool("handle_snapshots", false),
-			SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
-		}
-
+		repo := UnpackLocalJavaRepository(data, "local", repoType)
 		return repo, repo.Id(), nil
 	}
 
-	javaLocalSchema := getJavaRepoSchema(repoType, suppressPom)
+	javaLocalSchema := GetJavaRepoSchema(repoType, suppressPom)
 
 	constructor := func() (interface{}, error) {
 		return &JavaLocalRepositoryParams{

@@ -7,7 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var debianLocalSchema = util.MergeMaps(
+var DebianLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"primary_keypair_ref": {
@@ -31,25 +31,29 @@ var debianLocalSchema = util.MergeMaps(
 	repository.CompressionFormats,
 )
 
+type DebianLocalRepositoryParams struct {
+	RepositoryBaseParams
+	TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout,omitempty"`
+	IndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
+	PrimaryKeyPairRef       string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
+	SecondaryKeyPairRef     string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
+}
+
+func UnpackLocalDebianRepository(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
+	d := &util.ResourceData{ResourceData: data}
+	return DebianLocalRepositoryParams{
+		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, "debian"),
+		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+		SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
+		TrivialLayout:           d.GetBool("trivial_layout", false),
+		IndexCompressionFormats: d.GetSet("index_compression_formats"),
+	}
+}
+
 func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 
-	type DebianLocalRepositoryParams struct {
-		RepositoryBaseParams
-		TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout,omitempty"`
-		IndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
-		PrimaryKeyPairRef       string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
-		SecondaryKeyPairRef     string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
-	}
-
-	var unPackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
-		repo := DebianLocalRepositoryParams{
-			RepositoryBaseParams:    UnpackBaseRepo("local", data, "debian"),
-			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
-			TrivialLayout:           d.GetBool("trivial_layout", false),
-			IndexCompressionFormats: d.GetSet("index_compression_formats"),
-		}
+	var unpackLocalDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := UnpackLocalDebianRepository(data, rclass)
 		return repo, repo.Id(), nil
 	}
 
@@ -62,5 +66,5 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(debianLocalSchema, packer.Default(debianLocalSchema), unPackLocalDebianRepository, constructor)
+	return repository.MkResourceSchema(DebianLocalSchema, packer.Default(DebianLocalSchema), unpackLocalDebianRepository, constructor)
 }
