@@ -1,16 +1,14 @@
 ---
 subcategory: "Federated Repositories"
 ---
-# Artifactory Federated Docker Repository Resource
+# Artifactory Federated Docker V2 Repository Resource
 
 Creates a federated Docker repository.
-
-~>This resource has been superseded by the `artifactory_federated_docker_v2_repository` resource. This resource will continue to be available in the provider for backward compatibility. For documentation, please refer to [the new resource](federated_docker_v2_repository.md).
 
 ## Example Usage
 
 ```hcl
-resource "artifactory_federated_docker_repository" "terraform-federated-test-docker-repo" {
+resource "artifactory_federated_docker_v2_repository" "terraform-federated-test-docker-repo" {
   key       = "terraform-federated-test-docker-repo"
 
   member {
