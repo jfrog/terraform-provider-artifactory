@@ -1,7 +1,6 @@
 ---
-subcategory: "Guides"
+page_title: "Adding repositories to the project"
 ---
-# Adding repositories to the project
 
 The guide provides an information and the example on how to add repositories to the project. 
 
