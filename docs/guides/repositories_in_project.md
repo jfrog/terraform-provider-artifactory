@@ -2,11 +2,11 @@
 page_title: "Adding repositories to the project"
 ---
 
-The guide provides an information and the example on how to add repositories to the project. 
+The guide provides information and the example on how to add repositories to the project. 
 
 ## Artifactory behavior
 
-The attribute `project_environments` (`environments` in the API call) is ignored by Artifactory, if the repository is not assigned to the existing project.
+The attribute `project_environments` (`environments` in the API call) is ignored by Artifactory, if the repository is not assigned to an existing project.
 That attribute can only be set to the repository if it's assigned to the project already. 
 The project can't be created with the list of non-existing repositories, and the repository can't be assigned to non-existing project.
 Thus, if the project and the repository/repositories are created at the same time in one Terraform configuration, we have a state drift 
@@ -33,7 +33,7 @@ drift occurs. But if the desired value was `PROD`, we will get an error message 
 
 ## Workaround
 
-~> **Note:** In the Project provider documentation, we strongly recommend using the `repos` attribute to manage the list of repositories.
+~> In the Project provider documentation, we strongly recommend using the `repos` attribute to manage the list of repositories.
 Do not use `project_key` attribute of the repository resource.
 
 Unfortunately, we can't fix the behavior described above right now. The workaround is simply to run `terraform apply` twice. 
@@ -91,5 +91,5 @@ resource "project" "myproject" {
   depends_on = [ artifactory_local_docker_v2_repository.docker-v2-local ]
 }
 ```
-~> **Note:** Apply `lifecycle.ignore_changes` to `project_key` attribute, otherwise it will be removed from the repository, 
+~> Apply `lifecycle.ignore_changes` to `project_key` attribute, otherwise it will be removed from the repository, 
 which means it will be unassigned from the project on the configuration update.
