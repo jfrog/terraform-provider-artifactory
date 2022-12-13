@@ -1,10 +1,15 @@
+## 6.21.6 (December 14, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_federated_docker_repository: Provide backward compatibility and is aliased to `artifactory_federated_docker_v2_repository` resource. Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_federated_docker_v1_repository, artifactory_federated_docker_v2_repository: Add missing documentation. Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+
 ## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.12
 
 IMPROVEMENTS:
 
-* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent.
-  Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) 
-  PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_anonymous_user: Update documentation and make resource limitation more prominent. Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
 * resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository:
   updated documentation for `project_environments` and `project_key` attributes. Added guide for adding repositories to the project. 
   PR: [#600](https://github.com/jfrog/terraform-provider-artifactory/pull/600)
