@@ -1,8 +1,13 @@
-## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.11
+## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.12
 
-IMPROVEMENTS
+IMPROVEMENTS:
 
-* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent. [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent.
+  Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) 
+  PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository:
+  updated documentation for `project_environments` and `project_key` attributes. Added guide for adding repositories to the project. 
+  PR: [#600](https://github.com/jfrog/terraform-provider-artifactory/pull/600)
 
 ## 6.21.4 (December 9, 2022). Tested on Artifactory 7.47.12
 
@@ -67,7 +72,7 @@ FEATURES:
 BUG FIXES:
 
 * resources/artifactory_keypair: add `passphrase` attribute to the JSON body. No API errors in Artifactory 7.41.13 and up. Issue: [#574](https://github.com/jfrog/terraform-provider-artifactory/issues/574)
-PR: [#581](https://github.com/jfrog/terraform-provider-artifactory/pull/581)
+  PR: [#581](https://github.com/jfrog/terraform-provider-artifactory/pull/581)
 
 ## 6.19.1 (November 11, 2022). Tested on Artifactory 7.46.11
 
@@ -80,7 +85,7 @@ IMPROVEMENTS:
 IMPROVEMENTS:
 
 * resource/artifactory_virtual_docker_repository: added new attribute `resolve_docker_tags_by_timestamp`. Issue: [#563](https://github.com/jfrog/terraform-provider-artifactory/issues/563)
- PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/569)
+  PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/569)
 * resource/artifactory_backup: added a format note to the documentation.Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564)
 
 ## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
@@ -88,7 +93,7 @@ IMPROVEMENTS:
 IMPROVEMENTS:
 
 * resource/artifactory_remote_nuget_repository: added new attribute `symbol_server_url`. Issue: [#549](https://github.com/jfrog/terraform-provider-artifactory/issues/549)
- PR: [#567](https://github.com/jfrog/terraform-provider-artifactory/pull/567)
+  PR: [#567](https://github.com/jfrog/terraform-provider-artifactory/pull/567)
 
 ## 6.17.1 (October 21, 2022)
 
@@ -101,15 +106,15 @@ BUG FIXES:
 IMPROVEMENTS:
 
 * resource/artifactory_federated_swift_repository: added new resource. Issue: [#540](https://github.com/jfrog/terraform-provider-artifactory/issues/540)
- PR: [#565](https://github.com/jfrog/terraform-provider-artifactory/pull/565)
+  PR: [#565](https://github.com/jfrog/terraform-provider-artifactory/pull/565)
 
 ## 6.16.4 (October 17, 2022). Tested on Artifactory 7.46.6
 
 BUG FIXES:
 
 * resource/artifactory_remote_*_repository: removed condition to update certain fields (like `xray_index`) only if they got changed in the HCL,
- which lead to assigning the default values to these fields. Issue: [#557](https://github.com/jfrog/terraform-provider-artifactory/issues/557)
- PR: [#561](https://github.com/jfrog/terraform-provider-artifactory/pull/561)
+  which lead to assigning the default values to these fields. Issue: [#557](https://github.com/jfrog/terraform-provider-artifactory/issues/557)
+  PR: [#561](https://github.com/jfrog/terraform-provider-artifactory/pull/561)
 
 ## 6.16.3 (October 12, 2022). Tested on Artifactory 7.46.3
 
@@ -129,7 +134,7 @@ IMPROVEMENTS:
 IMPROVEMENTS:
 
 * resource/artifactory_remote_*_repository: attribute 'remote_repo_layout_ref' is deprecated. Issue: [#542](https://github.com/jfrog/terraform-provider-artifactory/issues/542)
-PR: [#553](https://github.com/jfrog/terraform-provider-artifactory/pull/553)
+  PR: [#553](https://github.com/jfrog/terraform-provider-artifactory/pull/553)
 
 NOTE: 'remote_repo_layout_ref' will be removed on the next major release.
 
@@ -361,7 +366,7 @@ IMPROVEMENTS:
 IMPROVEMENTS:
 
 * reorganizing documentation, adding missing documentation links, fixing formatting. No changes in the functionality.
-PR: [GH-435](https://github.com/jfrog/terraform-provider-artifactory/pull/435). Issues [#422](https://github.com/jfrog/terraform-provider-artifactory/issues/422) and [#398](https://github.com/jfrog/terraform-provider-artifactory/issues/398)
+  PR: [GH-435](https://github.com/jfrog/terraform-provider-artifactory/pull/435). Issues [#422](https://github.com/jfrog/terraform-provider-artifactory/issues/422) and [#398](https://github.com/jfrog/terraform-provider-artifactory/issues/398)
 
 ## 6.5.2 (Apr 25, 2022). Tested on Artifactory 7.37.14
 
