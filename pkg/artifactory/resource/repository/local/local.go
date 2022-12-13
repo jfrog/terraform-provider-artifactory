@@ -9,6 +9,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+const rclass = "local"
+
 var RepoTypesLikeGeneric = []string{
 	"bower",
 	"chef",
@@ -177,29 +179,4 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		DownloadRedirect:       d.GetBoolRef("download_direct", false),
 		PriorityResolution:     d.GetBool("priority_resolution", false),
 	}
-}
-
-var schemaRepoTypeLookup = map[string]map[string]*schema.Schema{
-	"alpine":             alpineLocalSchema,
-	"cargo":              cargoLocalSchema,
-	"debian":             debianLocalSchema,
-	"docker":             dockerV2LocalSchema,
-	"gradle":             getJavaRepoSchema("gradle", true),
-	"ivy":                getJavaRepoSchema("ivy", false),
-	"maven":              getJavaRepoSchema("maven", false),
-	"nuget":              nugetLocalSchema,
-	"rpm":                rpmLocalSchema,
-	"sbt":                getJavaRepoSchema("sbt", false),
-	"terraform_module":   getTerraformLocalSchema("module"),
-	"terraform_provider": getTerraformLocalSchema("provider"),
-}
-
-func init() {
-	for _, repoType := range RepoTypesLikeGeneric {
-		schemaRepoTypeLookup[repoType] = getGenericRepoSchema(repoType)
-	}
-}
-
-func GetSchemaByRepoType(repoType string) map[string]*schema.Schema {
-	return schemaRepoTypeLookup[repoType]
 }

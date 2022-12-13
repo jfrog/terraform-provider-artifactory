@@ -7,7 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var alpineLocalSchema = util.MergeMaps(
+var AlpineLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"primary_keypair_ref": {
@@ -21,31 +21,33 @@ var alpineLocalSchema = util.MergeMaps(
 	repository.CompressionFormats,
 )
 
-func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
+type AlpineLocalRepoParams struct {
+	RepositoryBaseParams
+	PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+}
 
-	type AlpineLocalRepo struct {
-		RepositoryBaseParams
-		PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+func UnpackLocalAlpineRepository(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
+	d := &util.ResourceData{ResourceData: data}
+	return AlpineLocalRepoParams{
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "alpine"),
+		PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),
 	}
+}
 
-	var unPackLocalAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
-		repo := AlpineLocalRepo{
-			RepositoryBaseParams: UnpackBaseRepo("local", data, "alpine"),
-			PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),
-		}
-
+func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
+	var unpackLocalAlpineRepo = func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := UnpackLocalAlpineRepository(data, rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		return &AlpineLocalRepo{
+		return &AlpineLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "alpine",
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(alpineLocalSchema, packer.Default(alpineLocalSchema), unPackLocalAlpineRepository, constructor)
+	return repository.MkResourceSchema(AlpineLocalSchema, packer.Default(AlpineLocalSchema), unpackLocalAlpineRepo, constructor)
 }
