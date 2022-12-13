@@ -1,8 +1,13 @@
 ## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.11
 
-IMPROVEMENTS
+IMPROVEMENTS:
 
-* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent. [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_anonymous_user: Issue: Update documentation and make resource limitation more prominent.
+  Issue: [#577](https://github.com/jfrog/terraform-provider-artifactory/issues/577) 
+  PR: [#599](https://github.com/jfrog/terraform-provider-artifactory/pull/599)
+* resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository:
+  updated documentation for `project_environments` and `project_key` attributes. Added guide for adding repositories to the project. 
+  PR: [#600](https://github.com/jfrog/terraform-provider-artifactory/pull/600)
 
 ## 6.21.4 (December 9, 2022). Tested on Artifactory 7.47.12
 
