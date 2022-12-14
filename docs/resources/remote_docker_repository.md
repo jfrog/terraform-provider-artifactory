@@ -13,9 +13,9 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 resource "artifactory_remote_docker_repository" "my-remote-docker" {
   key                            = "my-remote-docker"
   external_dependencies_enabled  = true
-  external_dependencies_patterns = ["**/hub.docker.io/**"]
+  external_dependencies_patterns = ["**/registry-1.docker.io/**"]
   enable_token_authentication    = true
-  url                            = "https://hub.docker.io/"
+  url                            = "https://registry-1.docker.io/"
   block_pushing_schema1          = true
 }
 ```

@@ -1,3 +1,9 @@
+## 6.21.7 (December 14, 2022). Tested on Artifactory 7.47.12
+
+BUG FIXES:
+
+* resource/artifactory_remote_docker_repository: Update URL from the documentation and HCL example. [#603](https://github.com/jfrog/terraform-provider-artifactory/pull/603)
+
 ## 6.21.6 (December 14, 2022). Tested on Artifactory 7.47.12
 
 BUG FIXES:

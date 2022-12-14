@@ -308,9 +308,9 @@ resource "artifactory_remote_debian_repository" "my-remote-debian" {
 resource "artifactory_remote_docker_repository" "my-remote-docker" {
   key                            = "my-remote-docker"
   external_dependencies_enabled  = true
-  external_dependencies_patterns = ["**/hub.docker.io/**", "**/bintray.jfrog.io/**"]
+  external_dependencies_patterns = ["**/registry-1.docker.io/**"]
   enable_token_authentication    = true
-  url                            = "https://hub.docker.io/"
+  url                            = "https://registry-1.docker.io/"
   block_pushing_schema1          = true
 }
 
