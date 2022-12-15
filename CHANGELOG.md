@@ -1,3 +1,12 @@
+## 6.21.8 (December 15, 2022). Tested on Artifactory 7.47.12
+
+IMPROVEMENTS:
+
+* resource/artifactory_access_token: Remove ability to import which was never supported.
+* Add documentation guide for migrating access token to scoped token.
+
+Issue: [#573](https://github.com/jfrog/terraform-provider-artifactory/issues/573) PR: [#604](https://github.com/jfrog/terraform-provider-artifactory/pull/604)
+
 ## 6.21.7 (December 14, 2022). Tested on Artifactory 7.47.12
 
 BUG FIXES:
