@@ -59,10 +59,10 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 				),
 			},
 			{
-				Config: accessTokenConfig,
+				Config:       accessTokenConfig,
 				ResourceName: fqrn,
-				ImportState: true,
-				ExpectError: regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
 			},
 		},
 	})

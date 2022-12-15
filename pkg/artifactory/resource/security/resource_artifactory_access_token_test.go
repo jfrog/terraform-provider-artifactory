@@ -80,10 +80,10 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 				),
 			},
 			{
-				Config: audienceGood,
+				Config:       audienceGood,
 				ResourceName: fqrn,
-				ImportState: true,
-				ExpectError: regexp.MustCompile("resource artifactory_access_token doesn't support import"),
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
