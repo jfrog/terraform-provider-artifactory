@@ -45,6 +45,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 }
 
 func TestAccAccessTokenAudienceGood(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	const audienceGood = `
 		resource "artifactory_user" "existinguser" {
 			name  = "existinguser"
@@ -64,19 +65,25 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		CheckDestroy:      testAccCheckAccessTokenDestroy(t, fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: audienceGood,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "true"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "refresh_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "0"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
+					resource.TestCheckResourceAttrSet(fqrn, "refresh_token"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				Config: audienceGood,
+				ResourceName: fqrn,
+				ImportState: true,
+				ExpectError: regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})

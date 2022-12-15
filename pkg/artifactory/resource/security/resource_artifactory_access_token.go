@@ -54,9 +54,7 @@ func ResourceArtifactoryAccessToken() *schema.Resource {
 		ReadContext:   resourceAccessTokenRead,
 		DeleteContext: resourceAccessTokenDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+		Importer: nil,
 
 		Schema: map[string]*schema.Schema{
 			"username": {
