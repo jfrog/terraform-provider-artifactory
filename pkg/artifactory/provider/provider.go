@@ -168,6 +168,7 @@ func Provider() *schema.Provider {
 			map[string]*schema.Resource{
 				"artifactory_file":     datasource.ArtifactoryFile(),
 				"artifactory_fileinfo": datasource.ArtifactoryFileInfo(),
+				"artifactory_group":    datasource.ArtifactoryGroupSchema(),
 			},
 		),
 	}

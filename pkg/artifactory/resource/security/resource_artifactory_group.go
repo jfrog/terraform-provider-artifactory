@@ -38,7 +38,7 @@ func (g Group) Id() string {
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
-var groupSchema = map[string]*schema.Schema{
+var GroupSchema = map[string]*schema.Schema{
 	"name": {
 		Type:         schema.TypeString,
 		Required:     true,
@@ -115,7 +115,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: groupSchema,
+		Schema: GroupSchema,
 	}
 }
 
@@ -203,7 +203,7 @@ func resourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{})
 		return diag.FromErr(err)
 	}
 
-	pkr := packer.Universal(predicate.SchemaHasKey(groupSchema))
+	pkr := packer.Universal(predicate.SchemaHasKey(GroupSchema))
 
 	return diag.FromErr(pkr(&group, d))
 }
