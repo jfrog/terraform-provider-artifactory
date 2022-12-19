@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-var rpmLocalSchema = util.MergeMaps(
+var RpmLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"yum_root_depth": {
@@ -53,46 +53,51 @@ var rpmLocalSchema = util.MergeMaps(
 			Description:      "Secondary keypair used to sign artifacts.",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "rpm"),
+	repository.RepoLayoutRefSchema(rclass, "rpm"),
 )
+
+type RpmLocalRepositoryParams struct {
+	RepositoryBaseParams
+	RootDepth               int    `hcl:"yum_root_depth" json:"yumRootDepth"`
+	CalculateYumMetadata    bool   `hcl:"calculate_yum_metadata" json:"calculateYumMetadata"`
+	EnableFileListsIndexing bool   `hcl:"enable_file_lists_indexing" json:"enableFileListsIndexing"`
+	GroupFileNames          string `hcl:"yum_group_file_names" json:"yumGroupFileNames"`
+	PrimaryKeyPairRef       string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+	SecondaryKeyPairRef     string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
+}
+
+func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocalRepositoryParams {
+	d := &util.ResourceData{ResourceData: data}
+	return RpmLocalRepositoryParams{
+		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, "rpm"),
+		RootDepth:               d.GetInt("yum_root_depth", false),
+		CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
+		EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
+		GroupFileNames:          d.GetString("yum_group_file_names", false),
+		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
+		SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
+	}
+}
 
 func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 
-	type RpmLocalRepositoryParams struct {
-		RepositoryBaseParams
-		RootDepth               int    `hcl:"yum_root_depth" json:"yumRootDepth"`
-		CalculateYumMetadata    bool   `hcl:"calculate_yum_metadata" json:"calculateYumMetadata"`
-		EnableFileListsIndexing bool   `hcl:"enable_file_lists_indexing" json:"enableFileListsIndexing"`
-		GroupFileNames          string `hcl:"yum_group_file_names" json:"yumGroupFileNames"`
-		PrimaryKeyPairRef       string `json:"primaryKeyPairRef"`
-		SecondaryKeyPairRef     string `json:"secondaryKeyPairRef"`
-	}
-
-	unPackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
-		repo := RpmLocalRepositoryParams{
-			RepositoryBaseParams:    UnpackBaseRepo("local", data, "rpm"),
-			RootDepth:               d.GetInt("yum_root_depth", false),
-			CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
-			EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
-			GroupFileNames:          d.GetString("yum_group_file_names", false),
-			PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
-		}
-
+	unpackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := UnpackLocalRpmRepository(data, rclass)
 		return repo, repo.Id(), nil
 	}
 
-	return repository.MkResourceSchema(rpmLocalSchema, packer.Default(rpmLocalSchema), unPackLocalRpmRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &RpmLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: "rpm",
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 			RootDepth:               0,
 			CalculateYumMetadata:    false,
 			EnableFileListsIndexing: false,
 			GroupFileNames:          "",
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(RpmLocalSchema, packer.Default(RpmLocalSchema), unpackLocalRpmRepository, constructor)
 }

@@ -52,12 +52,14 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(rpmVirtualSchema, packer.Default(rpmVirtualSchema), unpackRpmVirtualRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &RpmVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      "virtual",
 				PackageType: packageType,
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(rpmVirtualSchema, packer.Default(rpmVirtualSchema), unpackRpmVirtualRepository, constructor)
 }

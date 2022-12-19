@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -178,12 +179,14 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *",
 		},
 		"access_token": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"refresh_token": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"token_type": {
 			Type:     schema.TypeString,
@@ -237,12 +240,16 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	var accessTokenRead = func(_ context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		accessToken := AccessTokenGet{}
 
-		_, err := m.(*resty.Client).R().
+		resp, err := m.(*resty.Client).R().
 			SetPathParam("id", data.Id()).
 			SetResult(&accessToken).
 			Get("access/api/v1/tokens/{id}")
 
 		if err != nil {
+			if resp != nil && resp.StatusCode() == http.StatusNotFound {
+				data.SetId("")
+				return nil
+			}
 			return diag.FromErr(err)
 		}
 

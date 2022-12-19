@@ -35,7 +35,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		t.Skipf(reason)
 	}
 
-	name := fmt.Sprintf("terraform-federated-generic-%d-full", rand.Int())
+	name := fmt.Sprintf("federated-generic-%d-full", rand.Int())
 	resourceType := "artifactory_federated_generic_repository"
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
 	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
@@ -89,7 +89,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		t.Skipf(reason)
 	}
 
-	name := fmt.Sprintf("terraform-federated-%s-%d", repoType, rand.Int())
+	name := fmt.Sprintf("federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
 	xrayIndex := test.RandBool()
@@ -142,9 +142,9 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	}
 }
 
-func TestAccFederatedRepoAllTypes(t *testing.T) {
-	for _, repo := range federated.RepoTypesSupported {
-		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
+func TestAccFederatedRepoGenericTypes(t *testing.T) {
+	for _, repo := range federated.RepoTypesLikeGeneric {
+		title := cases.Title(language.AmericanEnglish).String(repo)
 		t.Run(title, func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
 		})
@@ -250,7 +250,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccFederatedAlpineRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-federated-test-repo-basic", "artifactory_federated_alpine_repository")
+	_, fqrn, name := test.MkNames("alpine-federated", "artifactory_federated_alpine_repository")
 	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
@@ -342,20 +342,26 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccFederatedCargoRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("cargo-local", "artifactory_federated_cargo_repository")
+	_, fqrn, name := test.MkNames("cargo-federated", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
-
+	anonAccess := test.RandBool()
 	params := map[string]interface{}{
-		"anonymous_access": test.RandBool(),
+		"anonymous_access": anonAccess,
 		"name":             name,
 		"memberUrl":        federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", `
+
+	template := `
 		resource "artifactory_federated_cargo_repository" "{{ .name }}" {
 			key              = "{{ .name }}"
 			anonymous_access = {{ .anonymous_access }}
@@ -364,7 +370,17 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
+	federatedRepositoryUpdated := util.ExecuteTemplate(
+		"TestAccFederatedCargoRepository",
+		template,
+		map[string]interface{}{
+			"anonymous_access": !anonAccess,
+			"name":             name,
+			"memberUrl":        federatedMemberUrl,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -375,22 +391,35 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				Config: federatedRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", anonAccess)),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", !anonAccess)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccFederatedDebianRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("federated-debian-repo", "artifactory_federated_debian_repository")
+	_, fqrn, name := test.MkNames("debian-federated", "artifactory_federated_debian_repository")
 	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+	template := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -488,7 +517,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 			primary_keypair_ref       = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref     = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
-			trivial_layout            = true
+			trivial_layout            = {{ .trivialLayout }}
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -500,14 +529,27 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				artifactory_keypair.{{ .kp_name2 }},
 			]
 		}
-	`, map[string]interface{}{
-		"kp_id":     kpId,
-		"kp_name":   kpName,
-		"kp_id2":    kpId2,
-		"kp_name2":  kpName2,
-		"repo_name": name,
-		"memberUrl": federatedMemberUrl,
+	`
+
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":         kpId,
+		"kp_name":       kpName,
+		"kp_id2":        kpId2,
+		"kp_name2":      kpName2,
+		"repo_name":     name,
+		"trivialLayout": true,
+		"memberUrl":     federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":         kpId,
+		"kp_name":       kpName,
+		"kp_id2":        kpId2,
+		"kp_name2":      kpName2,
+		"repo_name":     name,
+		"trivialLayout": false,
+		"memberUrl":     federatedMemberUrl,
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -532,25 +574,37 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "debian"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "trivial_layout", "false"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccFederatedDockerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_repository")
+func TestAccFederatedDockerV2Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v2_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	params := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
-		"name":      name,
-		"memberUrl": federatedMemberUrl,
-	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", `
-		resource "artifactory_federated_docker_repository" "{{ .name }}" {
-			key 	               = "{{ .name }}"
-			tag_retention          = {{ .retention }}
+	template := `
+		resource "artifactory_federated_docker_v2_repository" "{{ .name }}" {
+			key 	              = "{{ .name }}"
+			tag_retention         = {{ .retention }}
 			max_unique_tags       = {{ .max_tags }}
 			block_pushing_schema1 = {{ .block }}
 
@@ -559,7 +613,25 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+
+	params := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+
+	updated := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -576,21 +648,146 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", updated["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updated["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updated["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccFederatedDockerRepository tests for backward compatibility
+func TestAccFederatedDockerRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_docker_repository" "{{ .name }}" {
+			key 	              = "{{ .name }}"
+			tag_retention         = {{ .retention }}
+			max_unique_tags       = {{ .max_tags }}
+			block_pushing_schema1 = {{ .block }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+
+	params := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+
+	updated := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", updated["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updated["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updated["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFederatedDockerV1Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v1_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_docker_v1_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+
+	params := map[string]interface{}{
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccFederatedNugetRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("nuget-local", "artifactory_federated_nuget_repository")
+	_, fqrn, name := test.MkNames("nuget-federated", "artifactory_federated_nuget_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	params := map[string]interface{}{
-		"force_nuget_authentication": test.RandBool(),
-		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
-		"name":                       name,
-		"memberUrl":                  federatedMemberUrl,
-	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", `
+	template := `
 		resource "artifactory_federated_nuget_repository" "{{ .name }}" {
 			key                        = "{{ .name }}"
 			max_unique_snapshots       = {{ .max_unique_snapshots }}
@@ -600,7 +797,23 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 				enabled = true
 			}
 		}
-	`, params)
+	`
+
+	params := map[string]interface{}{
+		"force_nuget_authentication": test.RandBool(),
+		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
+
+	updates := map[string]interface{}{
+		"force_nuget_authentication": test.RandBool(),
+		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -615,6 +828,20 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updates["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", updates["force_nuget_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -648,12 +875,19 @@ const federatedJavaRepositoryBasic = `
 
 func TestAccFederatedMavenRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("maven-federated", "artifactory_federated_maven_repository")
-	tempStruct := util.MergeMaps(commonJavaParams)
 
+	repoLayoutRef := func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()
+	tempStruct := util.MergeMaps(commonJavaParams)
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = false
 	tempStruct["memberUrl"] = fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	updatedStruct := tempStruct
+	updatedStruct["snapshot_version_behavior"] = "non-unique"
+	updatedStruct["handle_releases"] = false
+	updatedStruct["handle_snapshots"] = false
+	updatedStruct["suppress_pom_consistency_checks"] = true
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -670,8 +904,26 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", updatedStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updatedStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", updatedStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", updatedStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", updatedStruct["suppress_pom_consistency_checks"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -687,6 +939,12 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = true
 	tempStruct["memberUrl"] = fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	updatedStruct := tempStruct
+	updatedStruct["snapshot_version_behavior"] = "non-unique"
+	updatedStruct["handle_releases"] = false
+	updatedStruct["handle_snapshots"] = false
+	updatedStruct["suppress_pom_consistency_checks"] = true
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -705,13 +963,30 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
 				),
 			},
+			{
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", updatedStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updatedStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", updatedStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", updatedStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", updatedStruct["suppress_pom_consistency_checks"])),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	}
 }
 
 func TestAccFederatedAllGradleLikeRepoTypes(t *testing.T) {
 	for _, repoType := range repository.GradleLikeRepoTypes {
-		title := fmt.Sprintf("TestFederated%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+		title := cases.Title(language.AmericanEnglish).String(repoType)
 		t.Run(title, func(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))
 		})
@@ -719,13 +994,13 @@ func TestAccFederatedAllGradleLikeRepoTypes(t *testing.T) {
 }
 
 func TestAccFederatedRpmRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("federated-rpm-repo", "artifactory_federated_rpm_repository")
+	_, fqrn, name := test.MkNames("rpm-federated", "artifactory_federated_rpm_repository")
 	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+	template := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -818,12 +1093,13 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_federated_rpm_repository" "{{ .repo_name }}" {
 			key 	                   = "{{ .repo_name }}"
 			primary_keypair_ref        = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref      = artifactory_keypair.{{ .kp_name2 }}.pair_name
-			yum_root_depth             = 1
-			enable_file_lists_indexing = true
+			yum_root_depth             = {{ .yum_root_depth }}
+			enable_file_lists_indexing = {{ .enable_file_lists_indexing }}
 			calculate_yum_metadata     = true
 
 			member {
@@ -836,14 +1112,29 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				artifactory_keypair.{{ .kp_name2 }},
 			]
 		}
-	`, map[string]interface{}{
-		"kp_id":     kpId,
-		"kp_name":   kpName,
-		"kp_id2":    kpId2,
-		"kp_name2":  kpName2,
-		"repo_name": name,
-		"memberUrl": federatedMemberUrl,
+	`
+
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":                      kpId,
+		"kp_name":                    kpName,
+		"kp_id2":                     kpId2,
+		"kp_name2":                   kpName2,
+		"repo_name":                  name,
+		"yum_root_depth":             1,
+		"enable_file_lists_indexing": true,
+		"memberUrl":                  federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+		"kp_id":                      kpId,
+		"kp_name":                    kpName,
+		"kp_id2":                     kpId2,
+		"kp_name2":                   kpName2,
+		"repo_name":                  name,
+		"yum_root_depth":             2,
+		"enable_file_lists_indexing": false,
+		"memberUrl":                  federatedMemberUrl,
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -867,6 +1158,82 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "rpm"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "false"),
+					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
+					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "2"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*testing.T, resource.TestCase) {
+	resourceName := fmt.Sprintf("terraform-module-%s", registryType)
+	resourceType := fmt.Sprintf("artifactory_federated_terraform_%s_repository", registryType)
+	_, fqrn, name := test.MkNames(resourceName, resourceType)
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	params := map[string]interface{}{
+		"registryType": registryType,
+		"name":         name,
+		"memberUrl":    federatedMemberUrl,
+	}
+
+	template := `
+		resource "artifactory_federated_terraform_{{ .registryType }}_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedTerraformRepository", template, params)
+
+	return t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("federated", "terraform_"+registryType)()
+						return r.(string)
+					}()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	}
+}
+
+func TestAccFederatedTerraformRepositories(t *testing.T) {
+	for _, registryType := range []string{"module", "provider"} {
+		title := cases.Title(language.AmericanEnglish).String(registryType)
+		t.Run(title, func(t *testing.T) {
+			resource.Test(makeFederatedTerraformRepoTestCase(registryType, t))
+		})
+	}
 }

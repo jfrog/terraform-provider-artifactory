@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "6.16.0"
+      version = "6.19.2"
     }
   }
 }
@@ -214,12 +214,7 @@ resource "artifactory_keypair" "some-keypairRSA" {
   private_key = file("samples/rsa.priv")
   public_key  = file("samples/rsa.pub")
   alias       = "foo-aliasfoo"
-  lifecycle {
-    ignore_changes = [
-      private_key,
-      passphrase,
-    ]
-  }
+  passphrase  = "some-passphrase"
 }
 
 resource "artifactory_keypair" "some-keypairGPG1" {
@@ -228,12 +223,7 @@ resource "artifactory_keypair" "some-keypairGPG1" {
   alias       = "foo-alias1"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
-  lifecycle {
-    ignore_changes = [
-      private_key,
-      passphrase,
-    ]
-  }
+  passphrase  = "some-passphrase"
 }
 
 resource "artifactory_keypair" "some-keypairGPG2" {
@@ -242,12 +232,7 @@ resource "artifactory_keypair" "some-keypairGPG2" {
   alias       = "foo-alias2"
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
-  lifecycle {
-    ignore_changes = [
-      private_key,
-      passphrase,
-    ]
-  }
+  passphrase  = "some-passphrase"
 }
 
 resource "artifactory_local_debian_repository" "my-debian-repo" {
@@ -300,8 +285,9 @@ resource "artifactory_remote_composer_repository" "my-remote-composer" {
 }
 
 resource "artifactory_remote_conan_repository" "my-remote-conan" {
-  key = "my-remote-conan"
-  url = "https://conan.bintray.com"
+  key                        = "my-remote-conan"
+  url                        = "https://conan.bintray.com"
+  force_conan_authentication = true
 }
 
 resource "artifactory_remote_conda_repository" "my-remote-conda" {
@@ -322,9 +308,9 @@ resource "artifactory_remote_debian_repository" "my-remote-debian" {
 resource "artifactory_remote_docker_repository" "my-remote-docker" {
   key                            = "my-remote-docker"
   external_dependencies_enabled  = true
-  external_dependencies_patterns = ["**/hub.docker.io/**", "**/bintray.jfrog.io/**"]
+  external_dependencies_patterns = ["**/registry-1.docker.io/**"]
   enable_token_authentication    = true
-  url                            = "https://hub.docker.io/"
+  url                            = "https://registry-1.docker.io/"
   block_pushing_schema1          = true
 }
 
@@ -448,6 +434,13 @@ resource "artifactory_remote_sbt_repository" "sbt-remote" {
   fetch_sources_eagerly           = false
   suppress_pom_consistency_checks = true
   reject_invalid_jars             = true
+}
+
+resource "artifactory_remote_vcs_repository" "my-remote-vcs" {
+  key                  = "my-remote-vcs"
+  url                  = "https://github.com/"
+  vcs_git_provider     = "GITHUB"
+  max_unique_snapshots = 5
 }
 
 resource "artifactory_virtual_alpine_repository" "foo-alpine" {
@@ -942,4 +935,17 @@ resource "artifactory_property_set" "property-set" {
     closed_predefined_values = false
     multiple_choice          = false
   }
+}
+
+resource "artifactory_proxy" "my-proxy" {
+  key               = "my-proxy"
+  host              = "my-proxy.mycompany.com"
+  port              = 8888
+  username          = "user1"
+  password          = "password"
+  nt_host           = "MYCOMPANY.COM"
+  nt_domain         = "MYCOMPANY"
+  platform_default  = false
+  redirect_to_hosts = ["rediect-host.mycompany.com"]
+  services          = ["jfrt", "jfxr"]
 }

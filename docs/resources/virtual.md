@@ -28,8 +28,14 @@ The following arguments are supported:
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
   contain spaces or special characters.
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
-* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
-* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. 
+  When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+  We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider 
+  to manage the list of repositories.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD".
+  The attribute should only be used if the repository is already assigned to the existing project. 
+  If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state 
+  drift during the update.
 * `description` - (Optional)
 * `notes` - (Optional)
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/\*\*/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/\*).
@@ -37,7 +43,6 @@ The following arguments are supported:
 * `repo_layout_ref` - (Optional) Repository layout key for the virtual repository.
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: false) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
 * `default_deployment_repo` - (Optional) Default repository to deploy artifacts.
-* `retrieval_cache_period_seconds` - (Optional, Default: 7200) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default: 7200 seconds.
 
 ## Import
 

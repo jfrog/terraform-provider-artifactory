@@ -25,9 +25,7 @@ resource "artifactory_federated_sbt_repository" "terraform-federated-test-sbt-re
 
 ## Argument Reference
 
-Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/JFROG/Repository+Configuration+JSON#RepositoryConfigurationJSON-FederatedRepository).
-
-The following arguments are supported, along with the [common list of arguments from the local repositories](local.md):
+The following attributes are supported, along with the [list of attributes from the local SBT repository](local_sbt_repository.md):
 
 * `key` - (Required) the identity key of the repo.
 * `member` - (Required) The list of Federated members and must contain this repository URL (configured base URL
@@ -37,8 +35,6 @@ The following arguments are supported, along with the [common list of arguments 
   * `url` - (Required) Full URL to ending with the repository name.
   * `enabled` - (Required) Represents the active state of the federated member. It is supported to change the enabled
     status of my own member. The config will be updated on the other federated members automatically.
-
-
 
 ## Import
 
