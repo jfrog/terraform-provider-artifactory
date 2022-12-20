@@ -151,34 +151,6 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 	return group, includeUsers, nil
 }
 
-func GetDataSourceGroupSchema() map[string]*schema.Schema {
-	var includeUsersSchema = map[string]*schema.Schema{
-		"include_users": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     false,
-			Description: "Setting includeUsers to true will return the group with its associated user list attached.",
-		},
-	}
-
-	includeGroupSchema := util.MergeMaps(GroupSchema, includeUsersSchema)
-	delete(includeGroupSchema, "detach_all_users")
-	return includeGroupSchema
-}
-
-func DataSourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	group := Group{}
-	name := d.Get("name").(string)
-	includeUsers := d.Get("include_users").(string)
-	m.(*resty.Client).R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(GroupsEndpoint + name)
-
-	d.SetId(group.Name)
-
-	pkr := packer.Universal(predicate.SchemaHasKey(GroupSchema))
-
-	return diag.FromErr(pkr(&group, d))
-}
-
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	group, _, err := groupParams(d)
 	if err != nil {

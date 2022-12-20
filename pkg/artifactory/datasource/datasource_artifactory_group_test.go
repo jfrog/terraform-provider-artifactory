@@ -92,7 +92,7 @@ func TestAccGroup_basic_datasource_includeusers_true(t *testing.T) {
 		data "artifactory_group" "{{ .groupName }}" {
       name  = "{{ .groupName }}"
       include_users = true
-		}
+    }
 	`
 	fqrn := "data." + tempFqrn
 	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
