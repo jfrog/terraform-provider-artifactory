@@ -1,6 +1,8 @@
 package datasource
 
 import (
+	"golang.org/x/net/context"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -8,7 +10,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/net/context"
 )
 
 func ArtifactoryGroup() *schema.Resource {
@@ -25,7 +26,7 @@ func ArtifactoryGroup() *schema.Resource {
 	}
 
 	getDataSourceGroupSchema := func() map[string]*schema.Schema {
-		var includeUsersSchema = map[string]*schema.Schema{
+		includeUsersSchema := map[string]*schema.Schema{
 			"include_users": {
 				Type:        schema.TypeString,
 				Optional:    true,

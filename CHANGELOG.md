@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
 * Added new datasource: datasource/datasource_artifactory_group.go
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
-  PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/607)
+  PR: [#607](https://github.com/jfrog/terraform-provider-artifactory/pull/607)
 
 ## 6.21.8 (December 15, 2022). Tested on Artifactory 7.47.12
 
