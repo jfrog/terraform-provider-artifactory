@@ -1,19 +1,19 @@
 package security
 
 import (
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"net/http"
 )
 
 // Group is a encoding struct to match
@@ -149,6 +149,34 @@ func groupParams(s *schema.ResourceData) (Group, bool, error) {
 
 	includeUsers := len(group.UsersNames) > 0 || d.GetBool("detach_all_users", false)
 	return group, includeUsers, nil
+}
+
+func GetDataSourceGroupSchema() map[string]*schema.Schema {
+	var includeUsersSchema = map[string]*schema.Schema{
+		"include_users": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     false,
+			Description: "Setting includeUsers to true will return the group with its associated user list attached.",
+		},
+	}
+
+	includeGroupSchema := util.MergeMaps(GroupSchema, includeUsersSchema)
+	delete(includeGroupSchema, "detach_all_users")
+	return includeGroupSchema
+}
+
+func DataSourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	group := Group{}
+	name := d.Get("name").(string)
+	includeUsers := d.Get("include_users").(string)
+	m.(*resty.Client).R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(GroupsEndpoint + name)
+
+	d.SetId(group.Name)
+
+	pkr := packer.Universal(predicate.SchemaHasKey(GroupSchema))
+
+	return diag.FromErr(pkr(&group, d))
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

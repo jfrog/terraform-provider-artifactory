@@ -1,15 +1,16 @@
 package datasource_test
 
 import (
+	"log"
+	"strconv"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"log"
-	"strconv"
-	"testing"
 )
 
 func createGroup(groupName string, description string, id string, t *testing.T) {
@@ -36,12 +37,18 @@ func createGroup(groupName string, description string, id string, t *testing.T) 
 	log.Printf("Create group %s done.", group.Name)
 }
 
+func deleteGroup(t *testing.T, groupName string) error {
+	restyClient := acctest.GetTestResty(t)
+	_, err := restyClient.R().Delete(security.GroupsEndpoint + groupName)
+
+	return err
+}
+
 func TestAccGroup_basic_datasource(t *testing.T) {
 	id, tempFqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		data "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
-      include_users = true
 		}
 	`
 	fqrn := "data." + tempFqrn
@@ -66,9 +73,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
 					resource.TestCheckResourceAttr(fqrn, "realm", "realm name internal"),
 					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Realm attributes for use by internal"),
-					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
-					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
-					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"), //Include users set to false, so no users should be in this list.
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "true"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "true"),
@@ -76,19 +81,17 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 			},
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			restyClient := acctest.GetTestResty(t)
-			restyClient.R().Delete(security.GroupsEndpoint + groupName)
-			return nil
+			return deleteGroup(t, groupName)
 		},
 	})
 }
 
-func TestAccGroup_basic_datasource_includeusers_false(t *testing.T) {
+func TestAccGroup_basic_datasource_includeusers_true(t *testing.T) {
 	id, tempFqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		data "artifactory_group" "{{ .groupName }}" {
-			name  = "{{ .groupName }}"
-      include_users = false
+      name  = "{{ .groupName }}"
+      include_users = true
 		}
 	`
 	fqrn := "data." + tempFqrn
@@ -108,17 +111,14 @@ func TestAccGroup_basic_datasource_includeusers_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", groupName),
 					resource.TestCheckResourceAttr(fqrn, "description", description),
-					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"), //Include users set to false, so no users should be in this list.
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
 				),
 			},
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			restyClient := acctest.GetTestResty(t)
-			restyClient.R().Delete(security.GroupsEndpoint + groupName)
-			return nil
+			return deleteGroup(t, groupName)
 		},
 	})
 }
-
-// Found group
-// Not found group

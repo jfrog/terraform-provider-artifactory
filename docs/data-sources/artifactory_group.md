@@ -1,4 +1,4 @@
-# Artifactory File Info Data Source
+# Artifactory Group Data Source
 
 Provides an Artifactory group datasource. This can be used to read the configuration of groups in artifactory.
 
@@ -7,8 +7,8 @@ Provides an Artifactory group datasource. This can be used to read the configura
 ```hcl
 #
 data "artifactory_group" "my_group" {
-			name  = "my_group"
-      include_users = true
+  name  = "my_group"
+  include_users = true
 }
 ```
 
@@ -23,7 +23,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name`                - Name of the group
 * `description`         - A description for the group
 * `external_id`         - New external group ID used to configure the corresponding group in Azure AD.
 * `auto_join`           - When this parameter is set, any new users defined in the system are automatically assigned to this group.
