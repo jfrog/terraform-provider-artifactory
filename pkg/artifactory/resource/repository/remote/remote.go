@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type RepositoryBaseParams struct {
+type RepositoryRemoteBaseParams struct {
 	Key                      string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey               string   `json:"projectKey"`
 	ProjectEnvironments      []string `json:"environments"`
@@ -57,7 +57,7 @@ type RepositoryBaseParams struct {
 }
 
 type JavaRemoteRepo struct {
-	RepositoryBaseParams
+	RepositoryRemoteBaseParams
 	FetchJarsEagerly             bool   `json:"fetchJarsEagerly"`
 	FetchSourcesEagerly          bool   `json:"fetchSourcesEagerly"`
 	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType"`
@@ -72,7 +72,7 @@ type RepositoryVcsParams struct {
 	VcsGitDownloadUrl string `json:"vcsGitDownloadUrl"`
 }
 
-func (bp RepositoryBaseParams) Id() string {
+func (bp RepositoryRemoteBaseParams) Id() string {
 	return bp.Key
 }
 
@@ -80,7 +80,6 @@ var RepoTypesLikeGeneric = []string{
 	"alpine",
 	"chef",
 	"conda",
-	"conan",
 	"cran",
 	"debian",
 	"gems",
@@ -448,10 +447,10 @@ func getJavaRemoteSchema(repoType string, suppressPom bool) map[string]*schema.S
 	)
 }
 
-func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
+func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RepositoryRemoteBaseParams {
 	d := &util.ResourceData{ResourceData: s}
 
-	repo := RepositoryBaseParams{
+	repo := RepositoryRemoteBaseParams{
 		Rclass:                   "remote",
 		Key:                      d.GetString("key", false),
 		ProjectKey:               d.GetString("project_key", false),
@@ -527,7 +526,7 @@ func UnpackVcsRemoteRepo(s *schema.ResourceData) RepositoryVcsParams {
 func UnpackJavaRemoteRepo(s *schema.ResourceData, repoType string) JavaRemoteRepo {
 	d := &util.ResourceData{ResourceData: s}
 	return JavaRemoteRepo{
-		RepositoryBaseParams:         UnpackBaseRemoteRepo(s, repoType),
+		RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, repoType),
 		FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),
 		FetchSourcesEagerly:          d.GetBool("fetch_sources_eagerly", false),
 		RemoteRepoChecksumPolicyType: d.GetString("remote_repo_checksum_policy_type", false),

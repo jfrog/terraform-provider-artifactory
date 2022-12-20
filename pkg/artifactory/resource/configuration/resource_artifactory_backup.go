@@ -26,6 +26,10 @@ type Backup struct {
 	ExportMissionControl   bool     `xml:"exportMissionControl" yaml:"exportMissionControl"`
 }
 
+func (b Backup) Id() string {
+	return b.Key
+}
+
 type Backups struct {
 	BackupArr []Backup `xml:"backups>backup" yaml:"backup"`
 }
@@ -115,15 +119,6 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		return backup
 	}
 
-	var findBackup = func(backups *Backups, key string) Backup {
-		for _, iterBackup := range backups.BackupArr {
-			if iterBackup.Key == key {
-				return iterBackup
-			}
-		}
-		return Backup{}
-	}
-
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		backups := &Backups{}
 		backup := unpackBackup(d)
@@ -133,10 +128,14 @@ func ResourceArtifactoryBackup() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedBackup := findBackup(backups, backup.Key)
+		matchedBackup := FindConfigurationById[Backup](backups.BackupArr, backup.Key)
+		if matchedBackup == nil {
+			return nil
+		}
+
 		pkr := packer.Default(backupSchema)
 
-		return diag.FromErr(pkr(&matchedBackup, d))
+		return diag.FromErr(pkr(matchedBackup, d))
 	}
 
 	var resourceBackupUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

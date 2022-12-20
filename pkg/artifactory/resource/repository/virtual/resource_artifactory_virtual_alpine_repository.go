@@ -12,14 +12,18 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 
 	const packageType = "alpine"
 
-	var alpineVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Primary keypair used to sign artifacts. Default value is empty.",
+	var alpineVirtualSchema = util.MergeMaps(
+		BaseVirtualRepoSchema,
+		retrievalCachePeriodSecondsSchema,
+		map[string]*schema.Schema{
+			"primary_keypair_ref": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+				Description:      "Primary keypair used to sign artifacts. Default value is empty.",
+			},
 		},
-	}, repository.RepoLayoutRefSchema("virtual", packageType))
+		repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type AlpineVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
@@ -37,7 +41,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		return &repo, repo.Key, nil
 	}
 
-	return repository.MkResourceSchema(alpineVirtualSchema, packer.Default(alpineVirtualSchema), unpackAlpineVirtualRepository, func() interface{} {
+	constructor := func() (interface{}, error) {
 		return &AlpineVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
@@ -45,6 +49,8 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 					PackageType: packageType,
 				},
 			},
-		}
-	})
+		}, nil
+	}
+
+	return repository.MkResourceSchema(alpineVirtualSchema, packer.Default(alpineVirtualSchema), unpackAlpineVirtualRepository, constructor)
 }

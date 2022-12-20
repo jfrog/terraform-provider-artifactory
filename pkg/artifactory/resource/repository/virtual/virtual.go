@@ -26,7 +26,7 @@ type RepositoryBaseParams struct {
 
 type RepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
 	RepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs,omitempty"`
 }
 
 func (bp RepositoryBaseParams) Id() string {
@@ -128,13 +128,6 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Default repository to deploy artifacts.",
-	},
-	"retrieval_cache_period_seconds": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Default:      7200,
-		Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
-		ValidateFunc: validation.IntAtLeast(0),
 	},
 }
 

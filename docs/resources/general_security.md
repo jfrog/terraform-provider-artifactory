@@ -7,7 +7,7 @@ This resource can be used to manage Artifactory's general security settings.
 
 Only a single `artifactory_general_security` resource is meant to be defined.
 
-**NOTE:** The `artifactory_general_security` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+~>The `artifactory_general_security` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
 
 ## Example Usage
 
@@ -32,5 +32,5 @@ Current general security settings can be imported using `security` as the `ID`, 
 $ terraform import artifactory_general_security.security security
 ```
 
-**NOTE:** The `artifactory_general_security` resource uses endpoints that are undocumented and may not work with SaaS
+~>The `artifactory_general_security` resource uses endpoints that are undocumented and may not work with SaaS
 environments, or may change without notice.

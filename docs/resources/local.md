@@ -24,8 +24,14 @@ The following arguments are supported:
 contain spaces or special characters.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
-* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD"
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters.
+  When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
+  We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider
+  to manage the list of repositories.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD".
+  The attribute should only be used if the repository is already assigned to the existing project.
+  If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state
+  drift during the update.
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form
 of x/y/**/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (\*\*/*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form
