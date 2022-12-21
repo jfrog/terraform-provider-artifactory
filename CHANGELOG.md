@@ -1,4 +1,10 @@
-## 6.22.1 (December 22, 2022). Tested on Artifactory 7.47.14
+## 6.22.2 (December 22, 2022)
+
+BUG FIXES:
+
+* resource/artifactory_*_repository: Update `project_key` attribute validation to match Artifactory Project. PR: [#609](https://github.com/jfrog/terraform-provider-artifactory/pull/609)
+
+## 6.22.1 (December 21, 2022). Tested on Artifactory 7.47.14
 
 IMPROVEMENTS:
 
