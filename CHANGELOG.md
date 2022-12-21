@@ -1,3 +1,13 @@
+## 6.22.1 (December 22, 2022)
+
+IMPROVEMENTS:
+
+* New documentation guide for:
+  * Migrating `artifactory_local_repository`, `artifactory_remote_repository`, and `artifactory_virtual_repository` to package specific repository resources.
+  * Recommendation on handling user-group relationship
+
+PR: [#608](https://github.com/jfrog/terraform-provider-artifactory/pull/608)
+
 ## 6.22.0 (December 19, 2022). Tested on Artifactory 7.47.12
 
 IMPROVEMENTS:
