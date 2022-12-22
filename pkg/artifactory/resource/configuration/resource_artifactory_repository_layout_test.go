@@ -46,7 +46,6 @@ func TestAccLayout_full(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccLayoutDestroy(name),
-
 		Steps: []resource.TestStep{
 			{
 				Config: layoutConfig,
@@ -69,6 +68,37 @@ func TestAccLayout_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "Foo"),
 					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "Foo|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLayout_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_repository_layout" "not-exist-test" {
+			name                                = "not-exist-test"
+			artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"
+			distinctive_descriptor_path_pattern = true
+			descriptor_path_pattern             = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).pom"
+			folder_integration_revision_regexp  = "Foo"
+			file_integration_revision_regexp    = "Foo|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_repository_layout.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No layout found for 'not-exist-test'"),
 			},
 		},
 	})

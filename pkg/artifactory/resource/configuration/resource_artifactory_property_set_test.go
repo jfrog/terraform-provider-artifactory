@@ -18,7 +18,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
-		"property_set_name": "property-set-test",
+		"property_set_name": resourceName,
 		"visible":           "true",
 		"property1":         "set1property1",
 		"property2":         "set1property2",
@@ -34,6 +34,11 @@ func TestAccPropertySetCreate(t *testing.T) {
 				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -42,7 +47,7 @@ func TestAccPropertySetUpdate(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
-		"property_set_name":        "property-set-test",
+		"property_set_name":        resourceName,
 		"visible":                  "false",
 		"property1":                "set1property1",
 		"default_value1":           "false",
@@ -52,7 +57,7 @@ func TestAccPropertySetUpdate(t *testing.T) {
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":            resourceName,
-		"property_set_name":        "property-set-test",
+		"property_set_name":        resourceName,
 		"visible":                  "false",
 		"property1":                "set1property1",
 		"default_value1":           "true",
@@ -83,7 +88,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
-		"property_set_name":        "property-set-test",
+		"property_set_name":        resourceName,
 		"visible":                  "false",
 		"property1":                "set1property1",
 		"default_value1":           "false",
@@ -101,6 +106,39 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 			{
 				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
+			},
+		},
+	})
+}
+
+func TestAccPropertySet_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_property_set" "not-exist-test" {
+			name                     = "not-exist-test"
+			visible                  = true
+			closed_predefined_values = true
+			multiple_choice          = true
+
+			property {
+			  name = "property1"
+
+			  predefined_value {
+			    name          = "passed-QA"
+			    default_value = true
+			  }
+			}
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_property_set.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No property set found for 'not-exist-test'"),
 			},
 		},
 	})
@@ -174,7 +212,7 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
 
       predefined_value {
         name 			= "failed-QA"
-        default_value 	= false 
+        default_value 	= false
       }
 
       closed_predefined_values 	= true
@@ -183,7 +221,7 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
 
   property {
       name = "{{ .property2 }}"
-    
+
       predefined_value {
         name 			= "passed-QA"
         default_value 	= true
@@ -191,7 +229,7 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
 
       predefined_value {
         name 			= "failed-QA"
-        default_value 	= false 
+        default_value 	= false
       }
 
       closed_predefined_values 	= false
@@ -214,7 +252,7 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
 
       predefined_value {
         name 			= "failed-QA"
-        default_value 	= {{ .default_value2 }} 
+        default_value 	= {{ .default_value2 }}
       }
 
       closed_predefined_values 	= {{ .closed_predefined_values }}

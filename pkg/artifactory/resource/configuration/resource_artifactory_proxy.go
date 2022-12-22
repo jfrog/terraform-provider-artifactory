@@ -164,11 +164,9 @@ func ResourceArtifactoryProxy() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		// Unpacking HCL to compare the names of the property sets with the XML data we will get from the API
-		unpackedProxy := unpackProxy(d)
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, unpackedProxy.Key)
+		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, d.Id())
 		if matchedProxyConfig == nil {
-			return nil
+			return diag.Errorf("No proxy found for '%s'", d.Id())
 		}
 
 		return packProxy(matchedProxyConfig, d)
@@ -214,10 +212,9 @@ func ResourceArtifactoryProxy() *schema.Resource {
 			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		unpackedProxy := unpackProxy(d)
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, unpackedProxy.Key)
+		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, d.Id())
 		if matchedProxyConfig == nil {
-			return nil
+			return diag.Errorf("No proxy found for '%s'", d.Id())
 		}
 
 		var body = map[string]map[string]string{
@@ -235,6 +232,8 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 		}
+
+		d.SetId("")
 
 		return nil
 	}
