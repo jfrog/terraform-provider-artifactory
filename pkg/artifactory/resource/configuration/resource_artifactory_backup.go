@@ -188,7 +188,7 @@ backups:
 		}
 
 		d.SetId("")
-		return resourceBackupRead(ctx, d, m)
+		return nil
 	}
 
 	return &schema.Resource{
