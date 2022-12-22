@@ -158,15 +158,18 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	}
 
 	var resourceProxyRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		data := &util.ResourceData{ResourceData: d}
+		key := data.GetString("key", false)
+
 		proxiesConfig := &Proxies{}
 		_, err := m.(*resty.Client).R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, d.Id())
+		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, key)
 		if matchedProxyConfig == nil {
-			return diag.Errorf("No proxy found for '%s'", d.Id())
+			return diag.Errorf("No proxy found for '%s'", key)
 		}
 
 		return packProxy(matchedProxyConfig, d)
@@ -256,7 +259,10 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		ReadContext:   resourceProxyRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("key", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        proxySchema,

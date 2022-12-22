@@ -198,6 +198,9 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	}
 
 	var resourcePropertySetRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		data := &util.ResourceData{ResourceData: d}
+		name := data.GetString("name", false)
+
 		propertySetConfigs := &PropertySets{}
 
 		_, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
@@ -205,9 +208,9 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, d.Id())
+		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, name)
 		if matchedPropertySet == nil {
-			return diag.Errorf("No property set found for '%s'", d.Id())
+			return diag.Errorf("No property set found for '%s'", name)
 		}
 
 		return packPropertySet(matchedPropertySet, d)
@@ -327,7 +330,10 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		ReadContext:   resourcePropertySetRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        propertySetsSchema,

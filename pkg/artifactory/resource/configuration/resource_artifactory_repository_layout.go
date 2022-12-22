@@ -84,16 +84,18 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 	}
 
 	var resourceLayoutRead = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		layouts := Layouts{}
+		data := &util.ResourceData{ResourceData: d}
+		name := data.GetString("name", false)
 
+		layouts := Layouts{}
 		_, err := m.(*resty.Client).R().SetResult(&layouts).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, d.Id())
+		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, name)
 		if matchedLayout == nil {
-			return diag.Errorf("No layout found for '%s'", d.Id())
+			return diag.Errorf("No layout found for '%s'", name)
 		}
 
 		pkr := packer.Default(layoutSchema)
@@ -166,7 +168,10 @@ repoLayouts:
 		ReadContext:   resourceLayoutRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        layoutSchema,

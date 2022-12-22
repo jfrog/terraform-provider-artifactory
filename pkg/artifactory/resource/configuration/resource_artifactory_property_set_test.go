@@ -114,19 +114,19 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 func TestAccPropertySet_importNotFound(t *testing.T) {
 	config := `
 		resource "artifactory_property_set" "not-exist-test" {
-			name                     = "not-exist-test"
-			visible                  = true
-			closed_predefined_values = true
-			multiple_choice          = true
+		  name                     = "not-exist-test"
+		  visible                  = true
+		  closed_predefined_values = true
+		  multiple_choice          = true
 
-			property {
-			  name = "property1"
+		  property {
+		    name = "property1"
 
-			  predefined_value {
-			    name          = "passed-QA"
-			    default_value = true
-			  }
-			}
+		    predefined_value {
+		      name          = "passed-QA"
+		      default_value = true
+	        }
+		  }
 		}
 	`
 	resource.Test(t, resource.TestCase{
@@ -203,59 +203,59 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
   visible 	= {{ .visible }}
 
   property {
-      name = "{{ .property1 }}"
+    name = "{{ .property1 }}"
 
-      predefined_value {
-        name 			= "passed-QA"
-        default_value 	= true
-      }
+    predefined_value {
+      name          = "passed-QA"
+      default_value = true
+    }
 
-      predefined_value {
-        name 			= "failed-QA"
-        default_value 	= false
-      }
+    predefined_value {
+      name          = "failed-QA"
+      default_value = false
+    }
 
-      closed_predefined_values 	= true
-      multiple_choice 			= true
+    closed_predefined_values = true
+    multiple_choice          = true
   }
 
   property {
-      name = "{{ .property2 }}"
+    name = "{{ .property2 }}"
 
-      predefined_value {
-        name 			= "passed-QA"
-        default_value 	= true
-      }
+    predefined_value {
+      name          = "passed-QA"
+      default_value = true
+    }
 
-      predefined_value {
-        name 			= "failed-QA"
-        default_value 	= false
-      }
+    predefined_value {
+      name          = "failed-QA"
+      default_value = false
+    }
 
-      closed_predefined_values 	= false
-      multiple_choice 			= false
+    closed_predefined_values = false
+    multiple_choice          = false
   }
 }`
 
 const PropertySetUpdateAndDiffTemplate = `
 resource "artifactory_property_set" "{{ .resource_name }}" {
-  name 		= "{{ .property_set_name }}"
-  visible 	= {{ .visible }}
+  name    = "{{ .property_set_name }}"
+  visible = {{ .visible }}
 
   property {
-      name = "{{ .property1 }}"
+    name = "{{ .property1 }}"
 
-      predefined_value {
-        name 			= "passed-QA"
-        default_value 	= {{ .default_value1 }}
-      }
+    predefined_value {
+      name          = "passed-QA"
+      default_value = {{ .default_value1 }}
+    }
 
-      predefined_value {
-        name 			= "failed-QA"
-        default_value 	= {{ .default_value2 }}
-      }
+    predefined_value {
+      name          = "failed-QA"
+      default_value = {{ .default_value2 }}
+    }
 
-      closed_predefined_values 	= {{ .closed_predefined_values }}
-      multiple_choice 			= {{ .multiple_choice }}
+    closed_predefined_values = {{ .closed_predefined_values }}
+    multiple_choice          = {{ .multiple_choice }}
   }
 }`
