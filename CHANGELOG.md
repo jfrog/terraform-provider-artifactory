@@ -1,8 +1,16 @@
+## 6.23.0 (December 22, 2022).
+
+IMPROVEMENTS:
+
+* Added new user data source: datasource/user/datasource_artifactory_user.go
+  Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+  PR: [#611](https://github.com/jfrog/terraform-provider-artifactory/issues/611)
+
 ## 6.22.0 (December 19, 2022). Tested on Artifactory 7.47.12
 
 IMPROVEMENTS:
 
-* Added new datasource: datasource/datasource_artifactory_group.go
+* Added new group data source: datasource/datasource_artifactory_group.go
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   PR: [#607](https://github.com/jfrog/terraform-provider-artifactory/pull/607)
 

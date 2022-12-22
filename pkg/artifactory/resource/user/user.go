@@ -93,7 +93,7 @@ func unpackUser(s *schema.ResourceData) User {
 	}
 }
 
-func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
+func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 
 	setValue := util.MkLens(d)
 
@@ -115,14 +115,14 @@ func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	return nil
 }
 
-const usersEndpointPath = "artifactory/api/security/users/"
+const UsersEndpointPath = "artifactory/api/security/users/"
 
 func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d := &util.ResourceData{ResourceData: rd}
 
 	userName := d.Id()
 	user := &User{}
-	resp, err := m.(*resty.Client).R().SetResult(user).Get(usersEndpointPath + userName)
+	resp, err := m.(*resty.Client).R().SetResult(user).Get(UsersEndpointPath + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -131,7 +131,7 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 		}
 		return diag.FromErr(err)
 	}
-	return packUser(*user, rd)
+	return PackUser(*user, rd)
 }
 
 func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}, passwordGenerator func(*User) diag.Diagnostics) diag.Diagnostics {
@@ -143,7 +143,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(*resty.Client).R().SetBody(user).Put(usersEndpointPath + user.Name)
+	_, err := m.(*resty.Client).R().SetBody(user).Put(UsersEndpointPath + user.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -154,7 +154,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if user.Groups == nil {
 		user.Groups = []string{}
-		_, errGroupUpdate := m.(*resty.Client).R().SetBody(user).Post(usersEndpointPath + user.Name)
+		_, errGroupUpdate := m.(*resty.Client).R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			return diag.FromErr(errGroupUpdate)
 		}
@@ -164,7 +164,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		result := &User{}
-		resp, e := m.(*resty.Client).R().SetResult(result).Get(usersEndpointPath + user.Name)
+		resp, e := m.(*resty.Client).R().SetResult(result).Get(UsersEndpointPath + user.Name)
 
 		if e != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -173,7 +173,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
 
-		packUser(*result, d)
+		PackUser(*result, d)
 
 		return nil
 	})
@@ -187,7 +187,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
-	_, err := m.(*resty.Client).R().SetBody(user).Post(usersEndpointPath + user.Name)
+	_, err := m.(*resty.Client).R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,7 +201,7 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	d := &util.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(*resty.Client).R().Delete(usersEndpointPath + userName)
+	_, err := m.(*resty.Client).R().Delete(UsersEndpointPath + userName)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

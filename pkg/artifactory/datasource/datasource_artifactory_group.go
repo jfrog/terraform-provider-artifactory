@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ArtifactoryGroup() *schema.Resource {
+func DataSourceArtifactoryGroup() *schema.Resource {
 	dataSourceGroupRead := func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		group := security.Group{}
 		name := d.Get("name").(string)
