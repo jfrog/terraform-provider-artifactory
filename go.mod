@@ -9,10 +9,11 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-log v0.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
-	github.com/jfrog/terraform-provider-shared v1.7.0
+	github.com/jfrog/terraform-provider-shared v1.8.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
+	golang.org/x/net v0.0.0-20211029224645-99673261e6eb
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v3 v3.0.0
 )
@@ -56,7 +57,6 @@ require (
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211029224645-99673261e6eb // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect

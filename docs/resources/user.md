@@ -30,8 +30,7 @@ The following arguments are supported:
 * `profile_updatable` - (Optional) When set, this user can update his profile details (except for the password. Only an administrator can update the password). Default value is `true`.
 * `disable_ui_access` - (Optional) When set, this user can only access Artifactory through the REST API. This option cannot be set if the user has Admin privileges. Default value is `true`.
 * `internal_password_disabled` - (Optional) When set, disables the fallback of using an internal password when external authentication (such as LDAP) is enabled.
-* `groups` - (Optional) List of groups this user is a part of.
-    - Note: If "groups" attribute is not specified then user's group membership set to empty. User will not be part of default "readers" group automatically.
+* `groups` - (Optional) List of groups this user is a part of. **Notes:** If this attribute is not specified then user's group membership set to empty. User will not be part of default "readers" group automatically.
 
 ## Import
 
@@ -40,3 +39,7 @@ Users can be imported using their name, e.g.
 ```
 $ terraform import artifactory_user.test-user myusername
 ```
+
+## Managing groups relationship
+
+See [our recommendation](guides/user_group.md) on how to manage user-group relationship.
