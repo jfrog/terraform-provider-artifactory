@@ -17,7 +17,7 @@ import (
 
 type LdapGroupSetting struct {
 	Name                 string `xml:"name" yaml:"name"`
-	EnabledLdap          string `xml:"enabledLdap" yaml:"enabledLdap"`
+	EnabledLdap          string `hcl:"ldap_setting_key" xml:"enabledLdap" yaml:"enabledLdap"`
 	GroupBaseDn          string `xml:"groupBaseDn" yaml:"groupBaseDn"`
 	GroupNameAttribute   string `xml:"groupNameAttribute" yaml:"groupNameAttribute"`
 	GroupMemberAttribute string `xml:"groupMemberAttribute" yaml:"groupMemberAttribute"`
@@ -25,6 +25,10 @@ type LdapGroupSetting struct {
 	Filter               string `xml:"filter" yaml:"filter"`
 	DescriptionAttribute string `xml:"descriptionAttribute" yaml:"descriptionAttribute"`
 	Strategy             string `xml:"strategy" yaml:"strategy"`
+}
+
+func (l LdapGroupSetting) Id() string {
+	return l.Name
 }
 
 type LdapGroupSettings struct {
@@ -103,24 +107,23 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 	}
 
 	var resourceLdapGroupSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		ldapGroupConfigs := &XmlLdapGroupConfig{}
-		ldapGroupSetting := unpackLdapGroupSetting(d)
+		data := &util.ResourceData{ResourceData: d}
+		name := data.GetString("name", false)
 
+		ldapGroupConfigs := &XmlLdapGroupConfig{}
 		_, err := m.(*resty.Client).R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedLdapGroupSetting := LdapGroupSetting{}
-		for _, iterLdapGroupSetting := range ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr {
-			if iterLdapGroupSetting.Name == ldapGroupSetting.Name {
-				matchedLdapGroupSetting = iterLdapGroupSetting
-				break
-			}
+		matchedLdapGroupSetting := FindConfigurationById[LdapGroupSetting](ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr, name)
+		if matchedLdapGroupSetting == nil {
+			return diag.Errorf("No ldap_group_setting found for '%s'", name)
 		}
+
 		pkr := packer.Default(ldapGroupSettingsSchema)
 
-		return diag.FromErr(pkr(&matchedLdapGroupSetting, d))
+		return diag.FromErr(pkr(matchedLdapGroupSetting, d))
 	}
 
 	var resourceLdapGroupSettingsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -209,7 +212,10 @@ security:
 		ReadContext:   resourceLdapGroupSettingsRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:      ldapGroupSettingsSchema,

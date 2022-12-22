@@ -29,6 +29,10 @@ type LdapSetting struct {
 	Search                   LdapSearchType `xml:"search" yaml:"search"`
 }
 
+func (l LdapSetting) Id() string {
+	return l.Key
+}
+
 type LdapSearchType struct {
 	SearchSubTree   bool   `xml:"searchSubTree" yaml:"searchSubTree" `
 	SearchFilter    string `xml:"searchFilter" yaml:"searchFilter"`
@@ -149,20 +153,18 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		},
 	}
 	var resourceLdapSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		ldapConfigs := &XmlLdapConfig{}
-		ldapSetting := unpackLdapSetting(d)
+		data := &util.ResourceData{ResourceData: d}
+		key := data.GetString("key", false)
 
+		ldapConfigs := &XmlLdapConfig{}
 		_, err := m.(*resty.Client).R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedLdapSetting := LdapSetting{}
-		for _, iterLdapSetting := range ldapConfigs.Security.LdapSettings.LdapSettingArr {
-			if iterLdapSetting.Key == ldapSetting.Key {
-				matchedLdapSetting = iterLdapSetting
-				break
-			}
+		matchedLdapSetting := FindConfigurationById[LdapSetting](ldapConfigs.Security.LdapSettings.LdapSettingArr, key)
+		if matchedLdapSetting == nil {
+			return diag.Errorf("No ldap_setting found for '%s'", key)
 		}
 
 		pkr := packer.Universal(
@@ -172,7 +174,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 			),
 		)
 
-		return diag.FromErr(pkr(&matchedLdapSetting, d))
+		return diag.FromErr(pkr(matchedLdapSetting, d))
 	}
 
 	var resourceLdapSettingsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -261,7 +263,10 @@ security:
 		ReadContext:   resourceLdapSettingsRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("key", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:      ldapSettingsSchema,
