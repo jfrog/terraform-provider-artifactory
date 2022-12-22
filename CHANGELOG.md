@@ -6,6 +6,22 @@ IMPROVEMENTS:
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   PR: [#611](https://github.com/jfrog/terraform-provider-artifactory/issues/611)
 
+## 6.22.2 (December 22, 2022). Tested on Artifactory 7.47.14
+
+BUG FIXES:
+
+* resource/artifactory_*_repository: Update `project_key` attribute validation to match Artifactory Project. PR: [#609](https://github.com/jfrog/terraform-provider-artifactory/pull/609)
+
+## 6.22.1 (December 21, 2022). Tested on Artifactory 7.47.14
+
+IMPROVEMENTS:
+
+* New documentation guide for:
+  * Migrating `artifactory_local_repository`, `artifactory_remote_repository`, and `artifactory_virtual_repository` to package specific repository resources.
+  * Recommendation on handling user-group relationship
+
+PR: [#608](https://github.com/jfrog/terraform-provider-artifactory/pull/608)
+
 ## 6.22.0 (December 19, 2022). Tested on Artifactory 7.47.12
 
 IMPROVEMENTS:
@@ -27,14 +43,14 @@ Issue: [#573](https://github.com/jfrog/terraform-provider-artifactory/issues/573
 
 BUG FIXES:
 
-* resource/artifactory_remote_docker_repository: Update URL from the documentation and HCL example. [#603](https://github.com/jfrog/terraform-provider-artifactory/pull/603)
+* resource/artifactory_remote_docker_repository: Update URL from the documentation and HCL example. PR: [#603](https://github.com/jfrog/terraform-provider-artifactory/pull/603)
 
 ## 6.21.6 (December 14, 2022). Tested on Artifactory 7.47.12
 
 BUG FIXES:
 
-* resource/artifactory_federated_docker_repository: Provide backward compatibility and is aliased to `artifactory_federated_docker_v2_repository` resource. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
-* resource/artifactory_federated_docker_v1_repository, artifactory_federated_docker_v2_repository: Add missing documentation. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
+* resource/artifactory_federated_docker_repository: Provide backward compatibility and is aliased to `artifactory_federated_docker_v2_repository` resource. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) PR: [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
+* resource/artifactory_federated_docker_v1_repository, artifactory_federated_docker_v2_repository: Add missing documentation. Issue: [#593](https://github.com/jfrog/terraform-provider-artifactory/issues/593) PR: [#601](https://github.com/jfrog/terraform-provider-artifactory/pull/601)
 
 ## 6.21.5 (December 12, 2022). Tested on Artifactory 7.47.12
 
@@ -122,7 +138,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_virtual_docker_repository: added new attribute `resolve_docker_tags_by_timestamp`. Issue: [#563](https://github.com/jfrog/terraform-provider-artifactory/issues/563)
   PR: [#PR](https://github.com/jfrog/terraform-provider-artifactory/pull/569)
-* resource/artifactory_backup: added a format note to the documentation.Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564)
+* resource/artifactory_backup: added a format note to the documentation. Issue: [#564](https://github.com/jfrog/terraform-provider-artifactory/issues/564)
 
 ## 6.18.0 (October 21, 2022). Tested on Artifactory 7.46.6
 
@@ -322,8 +338,8 @@ FEATURES:
   * Virtual: Terraform Repository (`resource/artifactory_virtual_terraform_repository`).
   * Federated: Terraform Module (`resource/artifactory_federated_terraform_module_repository`), Terraform Provider (`resource/artifactory_federated_terraform_provider_repository`).
 
-    PR: [#464](https://github.com/jfrog/terraform-provider-artifactory/pull/464).
     Issue [#450](https://github.com/jfrog/terraform-provider-artifactory/issues/450)
+    PR: [#464](https://github.com/jfrog/terraform-provider-artifactory/pull/464).
 
 ## 6.8.2 (June 2, 2022). Tested on Artifactory 7.38.10
 
@@ -373,7 +389,7 @@ To migrate to new webhook schema with multiple handlers:
 - Update your HCL and copy the attributes (`url`, `secret`, `proxy`, and `custom_http_headers`) into a `handler` block (See `sample.tf` for full examples)
 - Execute `terraform apply -refresh-only` to update the Terraform state
 
-PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453). Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439)
+Issue [#439](https://github.com/jfrog/terraform-provider-artifactory/issues/439) PR: [#453](https://github.com/jfrog/terraform-provider-artifactory/pull/453).
 
 BUG FIXES:
 
