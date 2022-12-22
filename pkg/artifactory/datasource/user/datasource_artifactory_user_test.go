@@ -12,10 +12,10 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func createUserUpdatable(t *testing.T, name string) {
+func createUserUpdatable(t *testing.T, name string, email string) {
 	userObj := user.User{
 		Name:                     name,
-		Email:                    "foobar@test.com",
+		Email:                    email,
 		Password:                 "Lizard123!",
 		Admin:                    true,
 		ProfileUpdatable:         true,
@@ -42,6 +42,7 @@ func deleteUser(t *testing.T, name string) error {
 func TestAccUser_basic_datasource(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
+	email := name + "@test.com"
 
 	temp := `
 		data "artifactory_user" "{{ .name }}" {
@@ -55,7 +56,7 @@ func TestAccUser_basic_datasource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			createUserUpdatable(t, name)
+			createUserUpdatable(t, name, email)
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -66,7 +67,7 @@ func TestAccUser_basic_datasource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
-					resource.TestCheckResourceAttr(fqrn, "email", "foobar@test.com"),
+					resource.TestCheckResourceAttr(fqrn, "email", email),
 					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),

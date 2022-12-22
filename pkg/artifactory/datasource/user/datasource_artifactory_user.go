@@ -80,6 +80,6 @@ func DataSourceArtifactoryUser() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: read,
 		Schema:      userSchema, // note this does not include password of the user, don't think we should return it as a datasource
-		Description: "placeholder",
+		Description: "Provides the Artifactory User data source. ",
 	}
 }
