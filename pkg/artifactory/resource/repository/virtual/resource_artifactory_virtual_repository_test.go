@@ -275,7 +275,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            				 = "{{ .name }}"
 	 	  use_namespaces 				 = {{ .useNamespaces }}
-		  retrieval_cache_period_seconds = 650	
+		  retrieval_cache_period_seconds = 650
 		}
 	`, params)
 
@@ -642,7 +642,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      virualRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 3 - 10 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 2 - 10 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})

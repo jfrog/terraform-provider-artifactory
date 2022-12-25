@@ -1,19 +1,19 @@
 package security
 
 import (
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
-
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"net/http"
 )
 
 // Group is a encoding struct to match
@@ -38,7 +38,7 @@ func (g Group) Id() string {
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
-var groupSchema = map[string]*schema.Schema{
+var GroupSchema = map[string]*schema.Schema{
 	"name": {
 		Type:         schema.TypeString,
 		Required:     true,
@@ -115,7 +115,7 @@ func ResourceArtifactoryGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: groupSchema,
+		Schema: GroupSchema,
 	}
 }
 
@@ -203,7 +203,7 @@ func resourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{})
 		return diag.FromErr(err)
 	}
 
-	pkr := packer.Universal(predicate.SchemaHasKey(groupSchema))
+	pkr := packer.Universal(predicate.SchemaHasKey(GroupSchema))
 
 	return diag.FromErr(pkr(&group, d))
 }
