@@ -44,7 +44,7 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 
 		userName := d.Id()
 		user := &AnonymousUser{}
-		resp, err := m.(*resty.Client).R().SetResult(user).Get(usersEndpointPath + userName)
+		resp, err := m.(*resty.Client).R().SetResult(user).Get(UsersEndpointPath + userName)
 
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
