@@ -23,6 +23,7 @@ var DebianLocalSchema = util.MergeMaps(
 		"trivial_layout": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "When set, the repository will use the deprecated trivial layout.",
 			Deprecated:  "You shouldn't be using this",
 		},
