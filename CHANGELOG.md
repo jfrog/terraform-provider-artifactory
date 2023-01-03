@@ -1,3 +1,9 @@
+## 6.22.3 (January 4, 2023)
+
+BUG FIXES:
+
+* resource/artifactory_backup, resource/artifactory_ldap_group_setting, resource/artifactory_ldap_setting, resource/artifactory_property_set, resource/artifactory_proxy, resource/artifactory_repository_layout: Fix import does not update the state. Issue: [#610](https://github.com/jfrog/terraform-provider-artifactory/issues/610) PR: [#613](https://github.com/jfrog/terraform-provider-artifactory/pull/613)
+
 ## 6.22.2 (December 22, 2022). Tested on Artifactory 7.47.14
 
 BUG FIXES:
