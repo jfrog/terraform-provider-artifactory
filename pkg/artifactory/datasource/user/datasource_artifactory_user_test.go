@@ -39,7 +39,7 @@ func deleteUser(t *testing.T, name string) error {
 	return err
 }
 
-func TestAccUser_basic_datasource(t *testing.T) {
+func TestAccDataSourceUser_basic(t *testing.T) {
 	id := test.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	email := name + "@test.com"
@@ -72,6 +72,7 @@ func TestAccUser_basic_datasource(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "id", name),
 				),
 			},
 		},

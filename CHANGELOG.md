@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* Added new user data source: datasource/user/datasource_artifactory_user.go
+* Added new user data source: data.artifactory_user
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   PR: [#611](https://github.com/jfrog/terraform-provider-artifactory/issues/611)
 

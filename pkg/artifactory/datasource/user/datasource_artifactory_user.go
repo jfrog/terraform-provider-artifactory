@@ -72,7 +72,7 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		userObj := &user.User{}
 		m.(*resty.Client).R().SetResult(userObj).Get(user.UsersEndpointPath + userName)
 
-		d.SetId("name")
+		d.SetId(userObj.Name)
 
 		return user.PackUser(*userObj, rd)
 	}
