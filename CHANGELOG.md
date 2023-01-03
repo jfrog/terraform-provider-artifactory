@@ -26,7 +26,7 @@ PR: [#608](https://github.com/jfrog/terraform-provider-artifactory/pull/608)
 
 IMPROVEMENTS:
 
-* Added new group data source: datasource/datasource_artifactory_group.go
+* Added new group data source: data.artifactory_group
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   PR: [#607](https://github.com/jfrog/terraform-provider-artifactory/pull/607)
 
