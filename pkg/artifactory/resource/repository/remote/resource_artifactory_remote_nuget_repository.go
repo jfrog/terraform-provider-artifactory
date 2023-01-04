@@ -77,9 +77,9 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 
 		return &NugetRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:              "remote",
-				PackageType:         packageType,
-				RemoteRepoLayoutRef: repoLayout.(string),
+				Rclass:        "remote",
+				PackageType:   packageType,
+				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}

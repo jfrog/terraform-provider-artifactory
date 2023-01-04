@@ -73,14 +73,17 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 		Description:      "Project key for assigning this repository to. Must be 2 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		MinItems:    1,
-		MaxItems:    2,
-		Set:         schema.HashString,
-		Optional:    true,
-		Computed:    true,
-		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		MinItems: 1,
+		MaxItems: 2,
+		Set:      schema.HashString,
+		Optional: true,
+		Computed: true,
+		Description: "Project environment for assigning this repository to. Allow values: \"DEV\" or \"PROD\". " +
+			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
+			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
+			"state drift during the update.",
 	},
 	"package_type": {
 		Type:     schema.TypeString,

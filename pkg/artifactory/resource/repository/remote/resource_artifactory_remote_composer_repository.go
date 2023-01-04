@@ -45,9 +45,9 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 
 		return &ComposerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:              "remote",
-				PackageType:         packageType,
-				RemoteRepoLayoutRef: repoLayout.(string),
+				Rclass:        "remote",
+				PackageType:   packageType,
+				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}

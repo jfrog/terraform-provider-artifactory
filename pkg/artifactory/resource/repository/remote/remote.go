@@ -11,40 +11,38 @@ import (
 )
 
 type RepositoryRemoteBaseParams struct {
-	Key                      string   `hcl:"key" json:"key,omitempty"`
-	ProjectKey               string   `json:"projectKey"`
-	ProjectEnvironments      []string `json:"environments"`
-	Rclass                   string   `json:"rclass"`
-	PackageType              string   `hcl:"package_type" json:"packageType,omitempty"`
-	Url                      string   `hcl:"url" json:"url"`
-	Username                 string   `hcl:"username" json:"username,omitempty"`
-	Password                 string   `json:"password"`
-	Proxy                    string   `hcl:"proxy" json:"proxy"`
-	Description              string   `hcl:"description" json:"description,omitempty"`
-	Notes                    string   `hcl:"notes" json:"notes,omitempty"`
-	IncludesPattern          string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
-	ExcludesPattern          string   `json:"excludesPattern"`
-	RepoLayoutRef            string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
-	RemoteRepoLayoutRef      string   `json:"remoteRepoLayoutRef"`
-	HardFail                 *bool    `hcl:"hard_fail" json:"hardFail,omitempty"`
-	Offline                  *bool    `hcl:"offline" json:"offline,omitempty"`
-	BlackedOut               *bool    `hcl:"blacked_out" json:"blackedOut,omitempty"`
-	XrayIndex                bool     `json:"xrayIndex"`
-	PropagateQueryParams     bool     `hcl:"propagate_query_params" json:"propagateQueryParams"`
-	PriorityResolution       bool     `hcl:"priority_resolution" json:"priorityResolution"`
-	StoreArtifactsLocally    *bool    `hcl:"store_artifacts_locally" json:"storeArtifactsLocally,omitempty"`
-	SocketTimeoutMillis      int      `hcl:"socket_timeout_millis" json:"socketTimeoutMillis,omitempty"`
-	LocalAddress             string   `hcl:"local_address" json:"localAddress,omitempty"`
-	RetrievalCachePeriodSecs int      `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs"`
-	// doesn't appear in the body when calling get. Hence no HCL
-	FailedRetrievalCachePeriodSecs    int                                `json:"failedRetrievalCachePeriodSecs,omitempty"`
+	Key                               string                             `json:"key,omitempty"`
+	ProjectKey                        string                             `json:"projectKey"`
+	ProjectEnvironments               []string                           `json:"environments"`
+	Rclass                            string                             `json:"rclass"`
+	PackageType                       string                             `json:"packageType,omitempty"`
+	Url                               string                             `json:"url"`
+	Username                          string                             `json:"username"`
+	Password                          string                             `json:"password"`
+	Proxy                             string                             `json:"proxy"`
+	Description                       string                             `json:"description"`
+	Notes                             string                             `json:"notes"`
+	IncludesPattern                   string                             `json:"includesPattern"`
+	ExcludesPattern                   string                             `json:"excludesPattern"`
+	RepoLayoutRef                     string                             `json:"repoLayoutRef"`
+	RemoteRepoLayoutRef               string                             `json:"remoteRepoLayoutRef"`
+	HardFail                          *bool                              `json:"hardFail,omitempty"`
+	Offline                           *bool                              `json:"offline,omitempty"`
+	BlackedOut                        *bool                              `json:"blackedOut,omitempty"`
+	XrayIndex                         bool                               `json:"xrayIndex"`
+	PropagateQueryParams              bool                               `json:"propagateQueryParams"`
+	QueryParams                       string                             `json:"queryParams,omitempty"`
+	PriorityResolution                bool                               `json:"priorityResolution"`
+	StoreArtifactsLocally             *bool                              `json:"storeArtifactsLocally,omitempty"`
+	SocketTimeoutMillis               int                                `json:"socketTimeoutMillis"`
+	LocalAddress                      string                             `json:"localAddress"`
+	RetrievalCachePeriodSecs          int                                `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs"`
 	MissedRetrievalCachePeriodSecs    int                                `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
-	UnusedArtifactsCleanupEnabled     *bool                              `hcl:"unused_artifacts_cleanup_period_enabled" json:"unusedArtifactsCleanupEnabled,omitempty"`
-	UnusedArtifactsCleanupPeriodHours int                                `hcl:"unused_artifacts_cleanup_period_hours" json:"unusedArtifactsCleanupPeriodHours,omitempty"`
-	AssumedOfflinePeriodSecs          int                                `hcl:"assumed_offline_period_secs" json:"assumedOfflinePeriodSecs,omitempty"`
+	UnusedArtifactsCleanupPeriodHours int                                `json:"unusedArtifactsCleanupPeriodHours"`
+	AssumedOfflinePeriodSecs          int                                `hcl:"assumed_offline_period_secs" json:"assumedOfflinePeriodSecs"`
 	ShareConfiguration                *bool                              `hcl:"share_configuration" json:"shareConfiguration,omitempty"`
-	SynchronizeProperties             *bool                              `hcl:"synchronize_properties" json:"synchronizeProperties,omitempty"`
-	BlockMismatchingMimeTypes         *bool                              `hcl:"block_mismatching_mime_types" json:"blockMismatchingMimeTypes,omitempty"`
+	SynchronizeProperties             *bool                              `hcl:"synchronize_properties" json:"synchronizeProperties"`
+	BlockMismatchingMimeTypes         *bool                              `hcl:"block_mismatching_mime_types" json:"blockMismatchingMimeTypes"`
 	PropertySets                      []string                           `hcl:"property_sets" json:"propertySets,omitempty"`
 	AllowAnyHostAuth                  *bool                              `hcl:"allow_any_host_auth" json:"allowAnyHostAuth,omitempty"`
 	EnableCookieManagement            *bool                              `hcl:"enable_cookie_management" json:"enableCookieManagement,omitempty"`
@@ -109,13 +107,16 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Description:      "Project key for assigning this repository to. Must be 2 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		MaxItems:    2,
-		Set:         schema.HashString,
-		Optional:    true,
-		Computed:    true,
-		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		MaxItems: 2,
+		Set:      schema.HashString,
+		Optional: true,
+		Computed: true,
+		Description: "Project environment for assigning this repository to. Allow values: \"DEV\" or \"PROD\". " +
+			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
+			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
+			"state drift during the update.",
 	},
 	"package_type": {
 		Type:     schema.TypeString,
@@ -146,121 +147,134 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"description": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Computed: true,
 		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 			// this is literally what comes back from the server
 			return old == fmt.Sprintf("%s (local file cache)", new)
 		},
+		Description: "Public description.",
 	},
 	"notes": {
-		Type:     schema.TypeString,
-		Optional: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Internal description.",
 	},
 	"includes_pattern": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "**/*",
+		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
+			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
 	},
 	"excludes_pattern": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. " +
+			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
-		Type:             schema.TypeString,
-		Optional:         true,
+		Type:     schema.TypeString,
+		Optional: true,
+		// The default value in the UI is simple-default, in API maven-2-default. Provider will always override it ro math the UI.
 		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
-		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+		Description: "Sets the layout that the repository should use for storing and identifying modules. " +
+			"A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
 	},
 	"remote_repo_layout_ref": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Computed:    true,
-		Description: "Repository layout key for the remote layout mapping",
-		Deprecated:  "This field has currently no effect, because there is no corresponding field in the API body, and it's not returned by the GET call.",
+		Description: "Repository layout key for the remote layout mapping.",
 	},
 	"hard_fail": {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Computed: true, Description: "When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.",
+		Default:  false,
+		Description: "When set, Artifactory will return an error to the client that causes the build to fail if there " +
+			"is a failure to communicate with this repository.",
 	},
 	"offline": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Computed:    true,
+		Default:     false,
 		Description: "If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.",
 	},
 	"blacked_out": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Computed:    true,
+		Default:     false,
 		Description: "(A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution.",
 	},
 	"xray_index": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. " +
+			"You will be able to change it via Xray settings.",
 	},
 	"store_artifacts_locally": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  true,
+		Description: "When set, the repository should store cached artifacts locally. When not set, artifacts are not " +
+			"stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server " +
+			"setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming " +
+			"it directly to satellite pass-though Artifactory servers.",
 	},
 	"socket_timeout_millis": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Computed:     true,
+		Default:      15000,
 		ValidateFunc: validation.IntAtLeast(0),
-		Description:  " Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.",
+		Description: "Network timeout (in ms) to use when establishing a connection and for unanswered requests. " +
+			"Timing out on a network operation is considered a retrieval failure.",
 	},
 	"local_address": {
 		Type:     schema.TypeString,
-		Optional: true, Description: "The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.",
+		Optional: true,
+		Description: "The local address to be used when creating connections. " +
+			"Useful for specifying the interface to use on systems with multiple network interfaces.",
 	},
 	"retrieval_cache_period_seconds": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Computed:    true,
-		Description: "The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.",
-		DefaultFunc: func() (interface{}, error) {
-			return 7200, nil
-		},
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      7200,
 		ValidateFunc: validation.IntAtLeast(0),
+		Description: "Metadata Retrieval Cache Period (Sec) in the UI. This value refers to the number of seconds to cache " +
+			"metadata files before checking for newer versions on remote server. A value of 0 indicates no caching.",
 	},
-	"failed_retrieval_cache_period_secs": {
-		Type:     schema.TypeInt,
-		Computed: true,
-		Deprecated: "This field is not returned in a get payload but is offered on the UI. " +
-			"It's inserted here for inclusive and informational reasons. It does not function",
+	"metadata_retrieval_timeout_secs": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      60,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description: "Metadata Retrieval Cache Timeout (Sec) in the UI.This value refers to the number of seconds to wait " +
+			"for retrieval from the remote before serving locally cached artifact or fail the request.",
 	},
 	"missed_cache_period_seconds": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Computed:     true,
+		Default:      1800,
 		ValidateFunc: validation.IntAtLeast(0),
-		Description:  "The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.",
-	},
-	"unused_artifacts_cleanup_period_enabled": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Description: "Missed Retrieval Cache Period (Sec) in the UI. The number of seconds to cache artifact retrieval " +
+			"misses (artifact not found). A value of 0 indicates no caching.",
 	},
 	"unused_artifacts_cleanup_period_hours": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validation.IntAtLeast(0), Description: `The number of hours to wait before an artifact is deemed "unused" and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.`,
+		Default:      0,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description: "Unused Artifacts Cleanup Period (Hr) in the UI. The number of hours to wait before an artifact is " +
+			"deemed 'unused' and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.",
 	},
 	"assumed_offline_period_secs": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      300,
 		ValidateFunc: validation.IntAtLeast(0),
-		Description:  "The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline. Default to 300.",
+		Description: "The number of seconds the repository stays in assumed offline state after a connection error. " +
+			"At the end of this time, an online check is attempted in order to reset the offline status. " +
+			"A value of 0 means the repository is never assumed offline.",
 	},
+	// There is no corresponding field in the UI, but the attribute is returned by Get, default is 'false'.
 	"share_configuration": {
 		Type:     schema.TypeBool,
 		Optional: true,
@@ -269,54 +283,63 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	"synchronize_properties": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Computed:    true,
+		Default:     false,
 		Description: "When set, remote artifacts are fetched along with their properties.",
 	},
+	// Default value in UI is 'true', at the same time if the repo was created with API, the default is 'false'.
+	// We are repeating the UI behavior.
 	"block_mismatching_mime_types": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  true,
+		Description: "If set, artifacts will fail to download if a mismatch is detected between requested and received " +
+			"mimetype, according to the list specified in the system properties file under blockedMismatchingMimeTypes. " +
+			"You can override by adding mimetypes to the override list 'mismatching_mime_types_override_list'.",
 	},
 	"property_sets": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Set:      schema.HashString,
-		Optional: true, Description: "List of property set names",
+		Type:        schema.TypeSet,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Set:         schema.HashString,
+		Optional:    true,
+		Description: "List of property set names",
 	},
 	"allow_any_host_auth": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Computed:    true,
-		Description: "Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.",
+		Default:     false,
+		Description: "'Lenient Host Authentication' in the UI. Allow credentials of this repository to be used on requests redirected to any other host.",
 	},
 	"enable_cookie_management": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Computed:    true,
+		Default:     false,
 		Description: "Enables cookie management if the remote repository uses cookies to manage client state.",
 	},
 	"bypass_head_requests": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		Description: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. " +
+			"In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the " +
+			"artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
 	},
 	"priority_resolution": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Computed:    true,
-		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		Description: "Setting Priority Resolution takes precedence over the resolution order when resolving virtual " +
+			"repositories. Setting repositories with priority will cause metadata to be merged only from repositories " +
+			"set with a priority. If a package is not found in those repositories, Artifactory will merge from repositories marked as non-priority.",
 	},
 	"client_tls_certificate": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "Client TLS certificate name.",
 	},
 	"content_synchronisation": {
 		Type:     schema.TypeList,
 		Optional: true,
-		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -324,25 +347,25 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.`,
+					Description: "If set, Remote repository proxies a local or remote repository from another instance of Artifactory. Default value is 'false'.",
 				},
 				"statistics_enabled": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.`,
+					Description: "If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain. Default value is 'false'.",
 				},
 				"properties_enabled": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.`,
+					Description: "If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance. Default value is 'false'.",
 				},
 				"source_origin_absence_detection": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: `If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'`,
+					Description: "If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance. Default value is 'false'",
 				},
 			},
 		},
@@ -353,24 +376,33 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 	},
+	"query_params": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Custom HTTP query parameters that will be automatically included in all remote resource requests. " +
+			"For example: `param1=val1&param2=val2&param3=val3`",
+	},
 	"list_remote_folder_items": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: `Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. Default value is 'false'.`,
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  true,
+		Description: "Lists the items of remote folders in simple and list browsing. The remote content is cached " +
+			"according to the value of the 'Retrieval Cache Period'. Default value is 'true'.",
 	},
 	"mismatching_mime_types_override_list": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validator.CommaSeperatedList,
 		StateFunc:        util.FormatCommaSeparatedString,
-		Description:      `The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.`,
+		Description: "The set of mime types that should override the block_mismatching_mime_types setting. " +
+			"Eg: 'application/json,application/xml'. Default value is empty.",
 	},
 	"download_direct": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only. Default value is 'false'.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		Description: "When set, download requests to this repository will redirect the client to download the artifact " +
+			"directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only. Default value is 'false'.",
 	},
 }
 
@@ -451,34 +483,33 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 	d := &util.ResourceData{ResourceData: s}
 
 	repo := RepositoryRemoteBaseParams{
-		Rclass:                   "remote",
-		Key:                      d.GetString("key", false),
-		ProjectKey:               d.GetString("project_key", false),
-		ProjectEnvironments:      d.GetSet("project_environments"),
-		PackageType:              packageType, // must be set independently
-		Url:                      d.GetString("url", false),
-		Username:                 d.GetString("username", false),
-		Password:                 d.GetString("password", false),
-		Proxy:                    d.GetString("proxy", false),
-		Description:              d.GetString("description", false),
-		Notes:                    d.GetString("notes", false),
-		IncludesPattern:          d.GetString("includes_pattern", false),
-		ExcludesPattern:          d.GetString("excludes_pattern", false),
-		RepoLayoutRef:            d.GetString("repo_layout_ref", false),
-		HardFail:                 d.GetBoolRef("hard_fail", false),
-		Offline:                  d.GetBoolRef("offline", false),
-		BlackedOut:               d.GetBoolRef("blacked_out", false),
-		XrayIndex:                d.GetBool("xray_index", false),
-		DownloadRedirect:         d.GetBool("download_direct", false),
-		PropagateQueryParams:     d.GetBool("propagate_query_params", false),
-		StoreArtifactsLocally:    d.GetBoolRef("store_artifacts_locally", false),
-		SocketTimeoutMillis:      d.GetInt("socket_timeout_millis", false),
-		LocalAddress:             d.GetString("local_address", false),
-		RetrievalCachePeriodSecs: d.GetInt("retrieval_cache_period_seconds", false),
-		// Not returned in the GET
-		//FailedRetrievalCachePeriodSecs:    d.GetInt("failed_retrieval_cache_period_secs", true),
+		Rclass:                            "remote",
+		Key:                               d.GetString("key", false),
+		ProjectKey:                        d.GetString("project_key", false),
+		ProjectEnvironments:               d.GetSet("project_environments"),
+		PackageType:                       packageType, // must be set independently
+		Url:                               d.GetString("url", false),
+		Username:                          d.GetString("username", false),
+		Password:                          d.GetString("password", false),
+		Proxy:                             d.GetString("proxy", false),
+		Description:                       d.GetString("description", false),
+		Notes:                             d.GetString("notes", false),
+		IncludesPattern:                   d.GetString("includes_pattern", false),
+		ExcludesPattern:                   d.GetString("excludes_pattern", false),
+		RepoLayoutRef:                     d.GetString("repo_layout_ref", false),
+		RemoteRepoLayoutRef:               d.GetString("remote_repo_layout_ref", false),
+		HardFail:                          d.GetBoolRef("hard_fail", false),
+		Offline:                           d.GetBoolRef("offline", false),
+		BlackedOut:                        d.GetBoolRef("blacked_out", false),
+		XrayIndex:                         d.GetBool("xray_index", false),
+		DownloadRedirect:                  d.GetBool("download_direct", false),
+		PropagateQueryParams:              d.GetBool("propagate_query_params", false),
+		QueryParams:                       d.GetString("query_params", false),
+		StoreArtifactsLocally:             d.GetBoolRef("store_artifacts_locally", false),
+		SocketTimeoutMillis:               d.GetInt("socket_timeout_millis", false),
+		LocalAddress:                      d.GetString("local_address", false),
+		RetrievalCachePeriodSecs:          d.GetInt("retrieval_cache_period_seconds", false),
 		MissedRetrievalCachePeriodSecs:    d.GetInt("missed_cache_period_seconds", false),
-		UnusedArtifactsCleanupEnabled:     d.GetBoolRef("unused_artifacts_cleanup_period_enabled", false),
 		UnusedArtifactsCleanupPeriodHours: d.GetInt("unused_artifacts_cleanup_period_hours", false),
 		AssumedOfflinePeriodSecs:          d.GetInt("assumed_offline_period_secs", false),
 		ShareConfiguration:                d.GetBoolRef("share_configuration", false),
