@@ -201,7 +201,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		data := &util.ResourceData{ResourceData: d}
 		name := data.GetString("name", false)
 
-		propertySetConfigs := &PropertySets{}
+		propertySetConfigs := PropertySets{}
 
 		_, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {

@@ -110,7 +110,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 		data := &util.ResourceData{ResourceData: d}
 		name := data.GetString("name", false)
 
-		ldapGroupConfigs := &XmlLdapGroupConfig{}
+		ldapGroupConfigs := XmlLdapGroupConfig{}
 		_, err := m.(*resty.Client).R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")

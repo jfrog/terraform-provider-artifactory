@@ -123,7 +123,7 @@ func ResourceArtifactoryBackup() *schema.Resource {
 		data := &util.ResourceData{ResourceData: d}
 		key := data.GetString("key", false)
 
-		backups := &Backups{}
+		backups := Backups{}
 		_, err := m.(*resty.Client).R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
