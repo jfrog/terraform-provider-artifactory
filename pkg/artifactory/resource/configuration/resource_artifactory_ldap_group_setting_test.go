@@ -2,10 +2,10 @@ package configuration_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
@@ -39,6 +39,8 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	strategy = "STATIC"
 }`
 
+	fqrn := "artifactory_ldap_group_setting.ldapgrouptest"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -48,22 +50,56 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 			{
 				Config: LdapGroupSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "ldap_setting_key", "ldaptest"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_name_attribute", "cn"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_member_attribute", "uniqueMember"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "sub_tree", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "filter", "(objectClass=groupOfNames)"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "description_attribute", "description"),
+					resource.TestCheckResourceAttr(fqrn, "ldap_setting_key", "ldaptest"),
+					resource.TestCheckResourceAttr(fqrn, "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
+					resource.TestCheckResourceAttr(fqrn, "group_name_attribute", "cn"),
+					resource.TestCheckResourceAttr(fqrn, "group_member_attribute", "uniqueMember"),
+					resource.TestCheckResourceAttr(fqrn, "sub_tree", "true"),
+					resource.TestCheckResourceAttr(fqrn, "filter", "(objectClass=groupOfNames)"),
+					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 				),
 			},
 			{
 				Config: LdapGroupSettingTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "ldap_setting_key", "ldaptest"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
-					resource.TestCheckResourceAttr("artifactory_ldap_group_setting.ldapgrouptest", "description_attribute", "description1"),
+					resource.TestCheckResourceAttr(fqrn, "ldap_setting_key", "ldaptest"),
+					resource.TestCheckResourceAttr(fqrn, "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
+					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description1"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_ldap_group_setting" "not-exist-test" {
+			name = "not-exist-test"
+			ldap_setting_key = "ldaptest"
+			group_base_dn = "CN=Users,DC=MyDomain,DC=com"
+			group_name_attribute = "cn"
+			group_member_attribute = "uniqueMember"
+			sub_tree = true
+			filter = "(objectClass=groupOfNames)"
+			description_attribute = "description"
+			strategy = "STATIC"
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_ldap_group_setting.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No ldap_group_setting found for 'not-exist-test'"),
 			},
 		},
 	})

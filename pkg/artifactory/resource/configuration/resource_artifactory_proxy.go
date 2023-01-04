@@ -158,17 +158,18 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	}
 
 	var resourceProxyRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		proxiesConfig := &Proxies{}
+		data := &util.ResourceData{ResourceData: d}
+		key := data.GetString("key", false)
+
+		proxiesConfig := Proxies{}
 		_, err := m.(*resty.Client).R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		// Unpacking HCL to compare the names of the property sets with the XML data we will get from the API
-		unpackedProxy := unpackProxy(d)
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, unpackedProxy.Key)
+		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, key)
 		if matchedProxyConfig == nil {
-			return nil
+			return diag.Errorf("No proxy found for '%s'", key)
 		}
 
 		return packProxy(matchedProxyConfig, d)
@@ -214,10 +215,9 @@ func ResourceArtifactoryProxy() *schema.Resource {
 			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		unpackedProxy := unpackProxy(d)
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, unpackedProxy.Key)
+		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, d.Id())
 		if matchedProxyConfig == nil {
-			return nil
+			return diag.Errorf("No proxy found for '%s'", d.Id())
 		}
 
 		var body = map[string]map[string]string{
@@ -235,6 +235,8 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 		}
+
+		d.SetId("")
 
 		return nil
 	}
@@ -257,7 +259,10 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		ReadContext:   resourceProxyRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("key", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        proxySchema,
