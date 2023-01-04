@@ -13,7 +13,7 @@ BUG FIXES:
 * resouce/artifactory_remote_*_repository: fixed incorrect `remote_repo_layout` assignment for all repository resources.
 
   Issue: [#595](https://github.com/jfrog/terraform-provider-artifactory/issues/595)
-  PR: [#]()
+  PR: [#616](https://github.com/jfrog/terraform-provider-artifactory/pull/616)
 
 ## 6.22.3 (January 4, 2023). Tested on Artifactory 7.49.3
 
