@@ -2,6 +2,7 @@ package configuration_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -40,6 +41,9 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	manager_dn = "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com"
 	manager_password = "testmgrpaswd"
 }`
+
+	fqrn := "artifactory_ldap_setting.ldaptest"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -49,21 +53,57 @@ resource "artifactory_ldap_setting" "ldaptest" {
 			{
 				Config: LdapSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "ldap_url", "ldap://ldaptestldap"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "user_dn_pattern", "ou=Peo *ple, uid={0}"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "mail_attr"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_sub_tree", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_filter", "(uid={0})"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "search_base", "ou=users|ou=people"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "ldap_url", "ldap://ldaptestldap"),
+					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", "ou=Peo *ple, uid={0}"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail_attr"),
+					resource.TestCheckResourceAttr(fqrn, "search_sub_tree", "true"),
+					resource.TestCheckResourceAttr(fqrn, "search_filter", "(uid={0})"),
+					resource.TestCheckResourceAttr(fqrn, "search_base", "ou=users|ou=people"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptest", "email_attribute", "mail_attr"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail_attr"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"manager_password"},
+			},
+		},
+	})
+}
+
+func TestAccLdapSetting_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_ldap_setting" "not-exist-test" {
+			key = "not-exist-test"
+			enabled = true
+			ldap_url = "ldap://ldaptestldap"
+			user_dn_pattern = "uid={0},ou=People"
+			email_attribute = "mail_attr"
+			search_sub_tree = true
+			search_filter = "(uid={0})"
+			search_base = "ou=users"
+			manager_dn = "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com"
+			manager_password = "testmgrpaswd"
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_ldap_setting.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No ldap_setting found for 'not-exist-test'"),
 			},
 		},
 	})

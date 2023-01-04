@@ -434,7 +434,7 @@ func TestAccRemoteVcsRepository(t *testing.T) {
 		"url":                  "https://github.com/",
 		"vcs_git_provider":     "CUSTOM",
 		"vcs_git_download_url": "https://www.customrepo.com",
-		"max_unique_snapshots": 5,
+		// "max_unique_snapshots": 5, // commented out due to API bug in 7.49.3
 	}))
 }
 

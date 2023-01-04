@@ -16,7 +16,7 @@ import (
 
 const ProxyTemplate = `
 resource "artifactory_proxy" "{{ .resource_name }}" {
-  key               = "{{ .key }}"
+  key               = "{{ .resource_name }}"
   host              = "{{ .host }}"
   port              = {{ .port }}
   username          = "{{ .username }}"
@@ -29,7 +29,7 @@ resource "artifactory_proxy" "{{ .resource_name }}" {
 
 const ProxyUpdatedTemplate = `
 resource "artifactory_proxy" "{{ .resource_name }}" {
-  key               = "{{ .key }}"
+  key               = "{{ .resource_name }}"
   host              = "{{ .host }}"
   port              = {{ .port }}
   username          = "{{ .username }}"
@@ -45,7 +45,6 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
-		"key":                 "proxy-test",
 		"host":                "https://fake-proxy.org",
 		"port":                "8080",
 		"username":            "fake-user",
@@ -57,7 +56,6 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":       resourceName,
-		"key":                 "proxy-test",
 		"host":                "https://fake-proxy.org",
 		"port":                "8080",
 		"username":            "fake-user",
@@ -85,6 +83,42 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 				Config: util.ExecuteTemplate(fqrn, ProxyUpdatedTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyProxy(fqrn, testDataUpdated)),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccProxy_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_proxy" "not-exist-test" {
+		  key               = "not-exist-test"
+		  host              = "https://fake-proxy.org"
+		  port              = 8080
+		  username          = "fake-user"
+		  password          = "fake-password"
+		  nt_host           = "fake-nt-host"
+		  nt_domain         = "fake-nt-domain"
+		  platform_default  = false
+		  redirect_to_hosts = ["foo"]
+		  services          = ["jfrt"]
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_proxy.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No proxy found for 'not-exist-test'"),
+			},
 		},
 	})
 }
@@ -93,7 +127,6 @@ func TestAccProxyCustomizeDiff(t *testing.T) {
 	_, fqrn, resourceName := test.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
-		"key":                 "proxy-test",
 		"host":                "https://fake-proxy.org",
 		"port":                "8080",
 		"username":            "fake-user",
@@ -123,7 +156,7 @@ func TestAccProxyCustomizeDiff(t *testing.T) {
 
 func verifyProxy(fqrn string, testData map[string]string) resource.TestCheckFunc {
 	checkFunc := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(fqrn, "key", testData["key"]),
+		resource.TestCheckResourceAttr(fqrn, "key", testData["resource_name"]),
 		resource.TestCheckResourceAttr(fqrn, "host", testData["host"]),
 		resource.TestCheckResourceAttr(fqrn, "port", testData["port"]),
 		resource.TestCheckResourceAttr(fqrn, "username", testData["username"]),

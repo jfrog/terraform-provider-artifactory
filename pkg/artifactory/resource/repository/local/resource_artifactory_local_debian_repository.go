@@ -23,6 +23,7 @@ var DebianLocalSchema = util.MergeMaps(
 		"trivial_layout": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "When set, the repository will use the deprecated trivial layout.",
 			Deprecated:  "You shouldn't be using this",
 		},
@@ -33,7 +34,7 @@ var DebianLocalSchema = util.MergeMaps(
 
 type DebianLocalRepositoryParams struct {
 	RepositoryBaseParams
-	TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout,omitempty"`
+	TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout"`
 	IndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
 	PrimaryKeyPairRef       string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
 	SecondaryKeyPairRef     string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`

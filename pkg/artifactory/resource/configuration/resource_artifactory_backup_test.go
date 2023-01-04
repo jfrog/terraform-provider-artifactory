@@ -2,6 +2,7 @@ package configuration_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -9,64 +10,111 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 func TestAccBackup_full(t *testing.T) {
+	_, fqrn, resourceName := test.MkNames("backup-", "artifactory_backup")
+	_, _, repoResourceName1 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+	_, _, repoResourceName2 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+
 	const BackupTemplateFull = `
-resource "artifactory_backup" "backuptest" {
-    key = "backuptest"
+resource "artifactory_backup" "{{ .resourceName }}" {
+    key = "{{ .resourceName }}"
     enabled = true
     cron_exp = "0 0 2 ? * MON-SAT *"
 }`
 
+	testData := map[string]string{
+		"resourceName":      resourceName,
+		"repoResourceName1": repoResourceName1,
+		"repoResourceName2": repoResourceName2,
+	}
+
 	const BackupTemplateUpdate = `
-resource "artifactory_local_generic_repository" "test-backup-local1" {
-    key = "test-backup-local1"
+resource "artifactory_local_generic_repository" "{{ .repoResourceName1 }}" {
+    key = "{{ .repoResourceName1 }}"
 }
 
-resource "artifactory_local_generic_repository" "test-backup-local2" {
-    key = "test-backup-local2"
+resource "artifactory_local_generic_repository" "{{ .repoResourceName2 }}" {
+    key = "{{ .repoResourceName2 }}"
 }
 
-resource "artifactory_backup" "backuptest" {
-    key                    = "backuptest"
-    enabled                = false
+resource "artifactory_backup" "{{ .resourceName }}" {
+    key                    = "{{ .resourceName }}"
+    enabled                = true
     cron_exp               = "0 0 12 * * ? *"
     retention_period_hours = 1000
-    excluded_repositories  = [ "test-backup-local1", "test-backup-local2" ]
+    excluded_repositories  = [
+		artifactory_local_generic_repository.{{ .repoResourceName1 }}.key,
+		artifactory_local_generic_repository.{{ .repoResourceName2 }}.key,
+	]
 	create_archive         = true
 	verify_disk_space      = true
 	export_mission_control = true
-
-    depends_on = [ artifactory_local_generic_repository.test-backup-local1, artifactory_local_generic_repository.test-backup-local2 ]
 }`
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBackupDestroy("backuptest"),
+		CheckDestroy:      testAccBackupDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
-				Config: BackupTemplateFull,
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
 				),
 			},
 			{
-				Config: BackupTemplateUpdate,
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "enabled", "false"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "retention_period_hours", "1000"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.#", "2"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.0", "test-backup-local1"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "excluded_repositories.1", "test-backup-local2"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "create_archive", "true"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "verify_disk_space", "true"),
-					resource.TestCheckResourceAttr("artifactory_backup.backuptest", "export_mission_control", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 * * ? *"),
+					resource.TestCheckResourceAttr(fqrn, "retention_period_hours", "1000"),
+					resource.TestCheckResourceAttr(fqrn, "excluded_repositories.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "excluded_repositories.0", repoResourceName1),
+					resource.TestCheckResourceAttr(fqrn, "excluded_repositories.1", repoResourceName2),
+					resource.TestCheckResourceAttr(fqrn, "create_archive", "true"),
+					resource.TestCheckResourceAttr(fqrn, "verify_disk_space", "true"),
+					resource.TestCheckResourceAttr(fqrn, "export_mission_control", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBackup_importNotFound(t *testing.T) {
+	config := `
+		resource "artifactory_backup" "not-exist-test" {
+		  enabled                = false
+		  cron_exp               = "0 0 12 * * ? *"
+		  retention_period_hours = 1000
+		  excluded_repositories  = []
+		  create_archive         = true
+		  verify_disk_space      = true
+		  export_mission_control = true
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:        config,
+				ResourceName:  "artifactory_backup.not-exist-test",
+				ImportStateId: "not-exist-test",
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No backup found for 'not-exist-test'"),
 			},
 		},
 	})
