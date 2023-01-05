@@ -41,9 +41,9 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 
 		return &ConanRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:              "remote",
-				PackageType:         packageType,
-				RemoteRepoLayoutRef: repoLayout.(string),
+				Rclass:        "remote",
+				PackageType:   packageType,
+				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
