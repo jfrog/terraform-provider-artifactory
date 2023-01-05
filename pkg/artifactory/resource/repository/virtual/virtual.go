@@ -14,10 +14,10 @@ type RepositoryBaseParams struct {
 	ProjectEnvironments                           []string `json:"environments"`
 	Rclass                                        string   `json:"rclass"`
 	PackageType                                   string   `hcl:"package_type" json:"packageType,omitempty"`
-	Description                                   string   `hcl:"description" json:"description,omitempty"`
-	Notes                                         string   `hcl:"notes" json:"notes,omitempty"`
-	IncludesPattern                               string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
-	ExcludesPattern                               string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
+	Description                                   string   `json:"description"`
+	Notes                                         string   `json:"notes"`
+	IncludesPattern                               string   `json:"includesPattern"`
+	ExcludesPattern                               string   `json:"excludesPattern"`
 	RepoLayoutRef                                 string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
 	Repositories                                  []string `hcl:"repositories" json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `hcl:"artifactory_requests_can_retrieve_remote_artifacts" json:"artifactoryRequestsCanRetrieveRemoteArtifacts,omitempty"`
@@ -67,13 +67,16 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 		Description:      "Project key for assigning this repository to. Must be 2 - 10 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		MaxItems:    2,
-		Set:         schema.HashString,
-		Optional:    true,
-		Computed:    true,
-		Description: `Project environment for assigning this repository to. Allow values: "DEV" or "PROD"`,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		MaxItems: 2,
+		Set:      schema.HashString,
+		Optional: true,
+		Computed: true,
+		Description: "Project environment for assigning this repository to. Allow values: \"DEV\" or \"PROD\". " +
+			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
+			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
+			"state drift during the update.",
 	},
 	"package_type": {
 		Type:        schema.TypeString,
@@ -83,9 +86,11 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 		Description: "The Package Type. This must be specified when the repository is created, and once set, cannot be changed.",
 	},
 	"description": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "A free text field that describes the content and purpose of the repository.\nIf you choose to insert a link into this field, clicking the link will prompt the user to confirm that they might be redirected to a new domain.",
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "A free text field that describes the content and purpose of the repository. " +
+			"If you choose to insert a link into this field, clicking the link will prompt the user to confirm that " +
+			"they might be redirected to a new domain.",
 	},
 	"notes": {
 		Type:        schema.TypeString,
@@ -96,7 +101,7 @@ var BaseVirtualRepoSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "**/*",
-		Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
+		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
 	},
 	"excludes_pattern": {
@@ -207,10 +212,11 @@ var unpackExternalDependenciesVirtualRepository = func(s *schema.ResourceData, p
 
 var retrievalCachePeriodSecondsSchema = map[string]*schema.Schema{
 	"retrieval_cache_period_seconds": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Default:      7200,
-		Description:  "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.",
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  7200,
+		Description: "This value refers to the number of seconds to cache metadata files before checking for newer " +
+			"versions on aggregated repositories. A value of 0 indicates no caching.",
 		ValidateFunc: validation.IntAtLeast(0),
 	},
 }

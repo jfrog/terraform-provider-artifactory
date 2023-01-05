@@ -7,8 +7,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
@@ -21,7 +19,7 @@ type PredefinedValue struct {
 
 type Property struct {
 	Name                  string            `xml:"name" yaml:"-"`
-	PredefinedValues      []PredefinedValue `xml:"predefinedValues" yaml:"predefinedValues"`
+	PredefinedValues      []PredefinedValue `xml:"predefinedValues>predefinedValue" yaml:"predefinedValues"`
 	ClosedPredefinedValue bool              `xml:"closedPredefinedValues" yaml:"closedPredefinedValues"`
 	MultipleChoice        bool              `xml:"multipleChoice" yaml:"multipleChoice"`
 }
@@ -41,30 +39,51 @@ type PropertySets struct {
 }
 
 func ResourceArtifactoryPropertySet() *schema.Resource {
+	var predefinedValueSchema = schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "Properties in the property set.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Predefined property name.",
+					ValidateDiagFunc: validator.StringIsNotEmpty,
+				},
+				"default_value": {
+					Type:        schema.TypeBool,
+					Required:    true,
+					Description: "Whether the value is selected by default in the UI.",
+				},
+			},
+		},
+	}
+
 	var propertySetsSchema = map[string]*schema.Schema{
 		"name": {
 			Type:             schema.TypeString,
 			Required:         true,
 			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      `Property set name.`,
+			Description:      "Property set name.",
 		},
 		"visible": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: `Defines if the list visible and assignable to the repository or artifact.`,
+			Description: "Defines if the list visible and assignable to the repository or artifact.",
 		},
 		"property": {
 			Type:        schema.TypeSet,
 			Required:    true,
 			MinItems:    1,
-			Description: `A list of properties that will be part of the property set.`,
+			Description: "A list of properties that will be part of the property set.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"name": {
 						Type:             schema.TypeString,
 						Required:         true,
-						Description:      `The name of the property.`,
+						Description:      "The name of the property.",
 						ValidateDiagFunc: validator.StringIsNotEmpty,
 					},
 					"closed_predefined_values": {
@@ -79,26 +98,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 						Default:     false,
 						Description: `Whether or not user can select multiple values. "closed_predefined_values" should be set to "true".`,
 					},
-					"predefined_value": {
-						Type:        schema.TypeSet,
-						Required:    true,
-						Description: `Properties in the property set.`,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:             schema.TypeString,
-									Required:         true,
-									Description:      `Predefined property name.`,
-									ValidateDiagFunc: validator.StringIsNotEmpty,
-								},
-								"default_value": {
-									Type:        schema.TypeBool,
-									Required:    true,
-									Description: `Whether the value is selected by default in the UI.`,
-								},
-							},
-						},
-					},
+					"predefined_value": &predefinedValueSchema,
 				},
 			},
 		},
@@ -154,28 +154,66 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		return propertySet
 	}
 
+	var packPropertySet = func(p *PropertySet, d *schema.ResourceData) diag.Diagnostics {
+		setValue := util.MkLens(d)
+
+		setValue("name", p.Name)
+		setValue("visible", p.Visible)
+
+		var packPredefinedValues = func(predefinedValues []PredefinedValue) []interface{} {
+			packedValues := []interface{}{}
+
+			for _, predefinedValue := range predefinedValues {
+				value := map[string]interface{}{
+					"name":          predefinedValue.Name,
+					"default_value": predefinedValue.DefaultValue,
+				}
+
+				packedValues = append(packedValues, value)
+			}
+
+			return packedValues
+		}
+
+		predefinedValueResource := predefinedValueSchema.Elem.(*schema.Resource)
+		properties := []interface{}{}
+		for _, prop := range p.Properties {
+			property := map[string]interface{}{
+				"name":                     prop.Name,
+				"closed_predefined_values": prop.ClosedPredefinedValue,
+				"multiple_choice":          prop.MultipleChoice,
+				"predefined_value":         schema.NewSet(schema.HashResource(predefinedValueResource), packPredefinedValues(prop.PredefinedValues)),
+			}
+
+			properties = append(properties, property)
+		}
+
+		propertyResource := propertySetsSchema["property"].Elem.(*schema.Resource)
+		errors := setValue("property", schema.NewSet(schema.HashResource(propertyResource), properties))
+
+		if errors != nil && len(errors) > 0 {
+			return diag.Errorf("failed to pack property_set %q", errors)
+		}
+		return nil
+	}
+
 	var resourcePropertySetRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		propertySetConfigs := &PropertySets{}
-		// Unpacking HCL to compare the names of the property sets with the XML data we will get from the API
-		unpackedPropertySet := unpackPropertySet(d)
+		data := &util.ResourceData{ResourceData: d}
+		name := data.GetString("name", false)
+
+		propertySetConfigs := PropertySets{}
 
 		_, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, unpackedPropertySet.Name)
+		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, name)
 		if matchedPropertySet == nil {
-			return nil
+			return diag.Errorf("No property set found for '%s'", name)
 		}
 
-		pkr := packer.Universal(
-			predicate.All(
-				predicate.SchemaHasKey(propertySetsSchema),
-			),
-		)
-
-		return diag.FromErr(pkr(matchedPropertySet, d))
+		return packPropertySet(matchedPropertySet, d)
 	}
 
 	var transformPredefinedValues = func(values []PredefinedValue) map[string]interface{} {
@@ -236,7 +274,6 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 	var resourcePropertySetDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
-		unpackedPropertySet := unpackPropertySet(d)
 
 		response, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
@@ -246,9 +283,9 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, unpackedPropertySet.Name)
+		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, d.Id())
 		if matchedPropertySet == nil {
-			return nil
+			return diag.Errorf("No property set found for '%s'", d.Id())
 		}
 
 		var constructBody = map[string]map[string]string{
@@ -266,6 +303,8 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 		}
+
+		d.SetId("")
 
 		return nil
 	}
@@ -291,7 +330,10 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		ReadContext:   resourcePropertySetRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        propertySetsSchema,

@@ -1,10 +1,37 @@
-## 6.23.0 (December 22, 2022).
+## 6.24.0 (January 5, 2023).
 
 IMPROVEMENTS:
 
 * Added new user data source: data.artifactory_user
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   PR: [#611](https://github.com/jfrog/terraform-provider-artifactory/issues/611)
+
+## 6.23.0 (January 4, 2023). Tested on Artifactory 7.49.3
+
+IMPROVEMENTS:
+
+* resouce/artifactory_remote_*_repository: removed `Computed` from most attributes and added default values, as they appear in the UI.
+  The legacy `Computed` attributes created a problem, where user can't update or remove the value of that attribute. Now, to clear the string value, an empty string could be set as an attribute value in HCL. `omitempty` is removed from most string attributes, so the user has full control and visibility of these values.
+  Added a new attribute `query_params`.
+
+* resource/artifactory_virtual_*_repository: removed unnecessary HCL tags and `omitempty` from Description, Notes and Patterns fields. Updated descriptions.
+
+BUG FIXES:
+
+* resouce/artifactory_remote_*_repository: fixed incorrect `remote_repo_layout` assignment for all repository resources.
+
+  Issue: [#595](https://github.com/jfrog/terraform-provider-artifactory/issues/595)
+  PR: [#616](https://github.com/jfrog/terraform-provider-artifactory/pull/616)
+
+## 6.22.3 (January 4, 2023). Tested on Artifactory 7.49.3
+
+BUG FIXES:
+
+* resource/artifactory_backup, resource/artifactory_ldap_group_setting, resource/artifactory_ldap_setting, resource/artifactory_property_set, resource/artifactory_proxy, resource/artifactory_repository_layout: Fix import does not update the state. Issue: [#610](https://github.com/jfrog/terraform-provider-artifactory/issues/610) PR: [#613](https://github.com/jfrog/terraform-provider-artifactory/pull/613)
+
+NOTES:
+
+* resource/artifactory_remote_vcs_repository: In Artifactory version 7.49.3, the attribute `max_unique_snapshots` cannot be set/updated due to an API bug.
 
 ## 6.22.2 (December 22, 2022). Tested on Artifactory 7.47.14
 

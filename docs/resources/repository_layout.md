@@ -36,5 +36,5 @@ The following arguments are supported:
 Repository layout can be imported using its name, e.g.
 
 ```
-$ terraform import artifactory_repository_layout.custom-layout custom_layout
+$ terraform import artifactory_repository_layout.custom-layout custom-layout
 ```

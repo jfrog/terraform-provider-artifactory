@@ -120,17 +120,18 @@ func ResourceArtifactoryBackup() *schema.Resource {
 	}
 
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		backups := &Backups{}
-		backup := unpackBackup(d)
+		data := &util.ResourceData{ResourceData: d}
+		key := data.GetString("key", false)
 
+		backups := Backups{}
 		_, err := m.(*resty.Client).R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedBackup := FindConfigurationById[Backup](backups.BackupArr, backup.Key)
+		matchedBackup := FindConfigurationById[Backup](backups.BackupArr, key)
 		if matchedBackup == nil {
-			return nil
+			return diag.Errorf("No backup found for '%s'", key)
 		}
 
 		pkr := packer.Default(backupSchema)
@@ -187,7 +188,7 @@ backups:
 		}
 
 		d.SetId("")
-		return resourceBackupRead(ctx, d, m)
+		return nil
 	}
 
 	return &schema.Resource{
@@ -197,7 +198,10 @@ backups:
 		ReadContext:   resourceBackupRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("key", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:      backupSchema,

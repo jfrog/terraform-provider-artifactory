@@ -15,9 +15,9 @@ func ResourceArtifactoryRemoteGenericRepository(pkt string) *schema.Resource {
 		}
 
 		return &RepositoryRemoteBaseParams{
-			PackageType:         pkt,
-			Rclass:              "remote",
-			RemoteRepoLayoutRef: repoLayout.(string),
+			PackageType:   pkt,
+			Rclass:        "remote",
+			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 

@@ -14,12 +14,12 @@ import (
 )
 
 type Layout struct {
-	Name                             string `xml:"name" yaml:"name"`
-	ArtifactPathPattern              string `xml:"artifactPathPattern" yaml:"artifactPathPattern"`
-	DistinctiveDescriptorPathPattern bool   `xml:"distinctiveDescriptorPathPattern" yaml:"distinctiveDescriptorPathPattern"`
-	DescriptorPathPattern            string `xml:"descriptorPathPattern" yaml:"descriptorPathPattern"`
-	FolderIntegrationRevisionRegExp  string `xml:"folderIntegrationRevisionRegExp" yaml:"folderIntegrationRevisionRegExp"`
-	FileIntegrationRevisionRegExp    string `xml:"fileIntegrationRevisionRegExp" yaml:"fileIntegrationRevisionRegExp"`
+	Name                             string `hcl:"name" xml:"name" yaml:"name"`
+	ArtifactPathPattern              string `hcl:"artifact_path_pattern" xml:"artifactPathPattern" yaml:"artifactPathPattern"`
+	DistinctiveDescriptorPathPattern bool   `hcl:"distinctive_descriptor_path_pattern" xml:"distinctiveDescriptorPathPattern" yaml:"distinctiveDescriptorPathPattern"`
+	DescriptorPathPattern            string `hcl:"descriptor_path_pattern" xml:"descriptorPathPattern" yaml:"descriptorPathPattern"`
+	FolderIntegrationRevisionRegExp  string `hcl:"folder_integration_revision_regexp" xml:"folderIntegrationRevisionRegExp" yaml:"folderIntegrationRevisionRegExp"`
+	FileIntegrationRevisionRegExp    string `hcl:"file_integration_revision_regexp" xml:"fileIntegrationRevisionRegExp" yaml:"fileIntegrationRevisionRegExp"`
 }
 
 func (l Layout) Id() string {
@@ -83,18 +83,19 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		}
 	}
 
-	var resourceLayoutRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		layouts := &Layouts{}
-		layout := unpackLayout(d)
+	var resourceLayoutRead = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		data := &util.ResourceData{ResourceData: d}
+		name := data.GetString("name", false)
 
+		layouts := Layouts{}
 		_, err := m.(*resty.Client).R().SetResult(&layouts).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
 
-		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, layout.Name)
+		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, name)
 		if matchedLayout == nil {
-			return nil
+			return diag.Errorf("No layout found for '%s'", name)
 		}
 
 		pkr := packer.Default(layoutSchema)
@@ -146,7 +147,7 @@ repoLayouts:
 		}
 
 		d.SetId("")
-		return resourceLayoutRead(ctx, d, m)
+		return nil
 	}
 
 	var distinctiveDescriptorPathPatternDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -167,7 +168,10 @@ repoLayouts:
 		ReadContext:   resourceLayoutRead,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema:        layoutSchema,
