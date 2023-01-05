@@ -1,4 +1,4 @@
-# Artifactory Group Data Source
+# Artifactory User Data Source
 
 Provides an Artifactory user data source. This can be used to read the configuration of users in artifactory.
 

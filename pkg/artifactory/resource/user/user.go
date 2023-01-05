@@ -121,8 +121,8 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 	d := &util.ResourceData{ResourceData: rd}
 
 	userName := d.Id()
-	user := &User{}
-	resp, err := m.(*resty.Client).R().SetResult(user).Get(UsersEndpointPath + userName)
+	user := User{}
+	resp, err := m.(*resty.Client).R().SetResult(&user).Get(UsersEndpointPath + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -131,7 +131,7 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 		}
 		return diag.FromErr(err)
 	}
-	return PackUser(*user, rd)
+	return PackUser(user, rd)
 }
 
 func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}, passwordGenerator func(*User) diag.Diagnostics) diag.Diagnostics {

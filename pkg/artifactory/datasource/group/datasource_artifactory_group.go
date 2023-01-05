@@ -1,4 +1,4 @@
-package datasource
+package group
 
 import (
 	"golang.org/x/net/context"
