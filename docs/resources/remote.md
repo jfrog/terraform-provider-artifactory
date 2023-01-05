@@ -64,8 +64,6 @@ All generic repo arguments are supported, in addition to:
 * `missed_cache_period_seconds` - (Optional, Default: 1800) The number of seconds to cache artifact retrieval misses (artifact not found). A value of 0 indicates no caching.
 * `unused_artifacts_cleanup_period_hours` - (Optional, Default: 0) Unused Artifacts Cleanup Period (Hr) in the UI. The number of hours to wait before an artifact is deemed 'unused' and eligible for cleanup from the repository. A value of 0 means automatic cleanup of cached artifacts is disabled.
 * `assumed_offline_period_secs` - (Optional, Default: 300) The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline.
-
-
 * `share_configuration` - (Optional) The attribute is 'Computed', so it's not managed by the Provider. There is no corresponding field in the UI, but the attribute is returned by Get.
 * `synchronize_properties` - (Optional, Default: false) When set, remote artifacts are fetched along with their properties.
 * `block_mismatching_mime_types` - (Optional, Default: true) Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request. Note: dafault value in the UI is `true`, but it is `false` if the repo was created using the API call. We are copying the UI behavior.
