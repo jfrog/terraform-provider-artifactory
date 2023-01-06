@@ -1,4 +1,4 @@
-package datasource_test
+package group_test
 
 import (
 	"log"
