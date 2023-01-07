@@ -35,7 +35,8 @@ var replicationSchemaCommon = map[string]*schema.Schema{
 	"cron_exp": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ValidateDiagFunc: validator.Cron,
+		ValidateDiagFunc: validator.CronLength,
+		Description:      "Cron expression to control the operation frequency.",
 	},
 	"enable_event_replication": {
 		Type:     schema.TypeBool,
