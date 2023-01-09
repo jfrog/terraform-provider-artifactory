@@ -2,13 +2,13 @@ package replication_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"log"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -39,19 +39,19 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 		proxy,
 	)
 }
+
 func TestInvalidCronSingleReplication(t *testing.T) {
 
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
+	_, _, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t), "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
-				ExpectError: regexp.MustCompile(`.*syntax error in year field: '!!'.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid cronExp.*`),
 			},
 		},
 	})

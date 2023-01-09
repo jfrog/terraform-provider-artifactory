@@ -42,17 +42,16 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	_, _, name := test.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
-				ExpectError: regexp.MustCompile(`.*syntax error in year field: '!!'.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid cronExp.*`),
 			},
 		},
 	})

@@ -237,7 +237,9 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(*resty.Client).R().SetBody(replicationConfig).Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
+	_, err := m.(*resty.Client).R().
+		SetBody(replicationConfig).
+		Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
 	}
