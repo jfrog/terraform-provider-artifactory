@@ -76,12 +76,12 @@ func TestAccCronExpressions(t *testing.T) {
 	for _, cron := range cronExpressions {
 		title := fmt.Sprintf("TestPullReplicationLocalRepoCron_%s", cases.Title(language.AmericanEnglish).String(cron))
 		t.Run(title, func(t *testing.T) {
-			resource.Test(PullReplicationLocalRepoTestCase(cron, t))
+			resource.Test(pullReplicationLocalRepoTestCase(cron, t))
 		})
 	}
 }
 
-func PullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
+func pullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, cronExpression, acctest.GetArtifactoryUrl(t))
 
