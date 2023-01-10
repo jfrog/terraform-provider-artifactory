@@ -129,15 +129,17 @@ func main() {
 	var outputImport bool
 
 	app := &cli.App{
-		Name:  "Artifactory Terraform V5 HCL migrator CLI",
-		Usage: "Migrate generic repository resources to package specific repository resources",
+		Name:  "v5-v6-migrator",
+		Usage: "Artifactory Terraform V5-V6 HCL migrator - Migrate generic repository resources to package specific repository resources",
 		Authors: []*cli.Author{
 			&cli.Author{
 				Name:  "Alex Hung",
 				Email: "alexh@jfrog.com",
 			},
 		},
-		Version: "0.1.0",
+		Version:              "0.1.0",
+		EnableBashCompletion: true,
+		Suggest:              true,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "debug",
@@ -146,14 +148,14 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:        "input",
-				Usage:       ".tf file to migrate",
+				Usage:       ".tf `FILE` to migrate",
 				Aliases:     []string{"i"},
 				Destination: &inputFileName,
 				Required:    true,
 			},
 			&cli.StringFlag{
 				Name:        "output",
-				Usage:       "Output .tf file",
+				Usage:       "Output .tf `FILE`",
 				Aliases:     []string{"o"},
 				Destination: &outputFileName,
 				Required:    true,
