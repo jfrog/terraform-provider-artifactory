@@ -130,6 +130,7 @@ func TestAccCronExpressions(t *testing.T) {
 		"* 5-9 14/2 * * 1-3 *",
 		"*/3 */51 */12 */2 */4 ? *",
 		"* 5 22-23 * * Sun *",
+		"0/5 14,18,3-39,52 * ? JAN,MAR,SEP MON-FRI 2002-2010",
 	}
 	for _, cron := range cronExpressions {
 		title := fmt.Sprintf("TestBackupCronExpression_%s", cases.Title(language.AmericanEnglish).String(cron))

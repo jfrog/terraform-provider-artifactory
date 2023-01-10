@@ -1,15 +1,15 @@
 package replication_test
 
 import (
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
-
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"regexp"
-	"testing"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestInvalidCronFails(t *testing.T) {
@@ -26,7 +26,6 @@ func TestInvalidCronFails(t *testing.T) {
 			replications {
 				url = "http://localhost:8080"
 				username = "%s"
-				password = "%s"
 			}
 		}
 	`
@@ -36,7 +35,7 @@ func TestInvalidCronFails(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
-				ExpectError: regexp.MustCompile(`.*syntax error in day-of-month field.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid cronExp.*`),
 			},
 		},
 	})
