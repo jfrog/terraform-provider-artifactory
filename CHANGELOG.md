@@ -2,7 +2,7 @@
 
 DEPRECATION:
 
-* resource/artifactory_user and resource/artifactory_unmanaged_user: added deprecation notice. Both resources are deprecated in favor of resource/artifactory__managed_user.
+* resource/artifactory_user and resource/artifactory_unmanaged_user: added deprecation notice. Both resources are deprecated in favor of resource/artifactory_managed_user.
 
 ## 6.24.1 (January 9, 2023). Tested on Artifactory 7.49.3
 
