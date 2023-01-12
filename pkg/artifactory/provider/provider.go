@@ -3,13 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	datasource_security "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/security"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
-	datasource_group "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/group"
 	datasource_user "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
@@ -183,10 +183,11 @@ func Provider() *schema.Provider {
 		DataSourcesMap: util.AddTelemetry(
 			productId,
 			map[string]*schema.Resource{
-				"artifactory_file":     datasource.ArtifactoryFile(),
-				"artifactory_fileinfo": datasource.ArtifactoryFileInfo(),
-				"artifactory_group":    datasource_group.DataSourceArtifactoryGroup(),
-				"artifactory_user":     datasource_user.DataSourceArtifactoryUser(),
+				"artifactory_file":              datasource.ArtifactoryFile(),
+				"artifactory_fileinfo":          datasource.ArtifactoryFileInfo(),
+				"artifactory_group":             datasource_security.DataSourceArtifactoryGroup(),
+				"artifactory_user":              datasource_user.DataSourceArtifactoryUser(),
+				"artifactory_permission_target": datasource_security.DataSourceArtifactoryPermissionTarget(),
 			},
 		),
 	}

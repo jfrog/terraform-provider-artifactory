@@ -13,7 +13,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-const permissionsEndPoint = "artifactory/api/v2/security/permissions/"
+const PermissionsEndPoint = "artifactory/api/v2/security/permissions/"
 const (
 	PermRead            = "read"
 	PermWrite           = "write"
@@ -53,7 +53,7 @@ func ResourceArtifactoryPermissionTargets() *schema.Resource {
 	return target
 }
 
-func ResourceArtifactoryPermissionTarget() *schema.Resource {
+func BuildPermissionTargetSchema() map[string]*schema.Schema {
 	actionSchema := schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -131,6 +131,19 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 	buildSchema := principalSchema
 	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
 
+	return map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"repo":           &principalSchema,
+		"build":          &buildSchema,
+		"release_bundle": &principalSchema,
+	}
+}
+
+func ResourceArtifactoryPermissionTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePermissionTargetCreate,
 		ReadContext:   resourcePermissionTargetRead,
@@ -141,16 +154,7 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"repo":           &principalSchema,
-			"build":          &buildSchema,
-			"release_bundle": &principalSchema,
-		},
+		Schema: BuildPermissionTargetSchema(),
 	}
 }
 
@@ -252,7 +256,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 	return pTarget
 }
 
-func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) diag.Diagnostics {
+func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) diag.Diagnostics {
 	packPermission := func(p *PermissionTargetSection) []interface{} {
 		packPermMap := func(e map[string][]string) []interface{} {
 			perm := make([]interface{}, len(e))
@@ -327,7 +331,7 @@ func packPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 func resourcePermissionTargetCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(*resty.Client).R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(permissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(*resty.Client).R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -337,7 +341,7 @@ func resourcePermissionTargetCreate(_ context.Context, d *schema.ResourceData, m
 
 func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := new(PermissionTargetParams)
-	resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(permissionsEndPoint + d.Id())
+	resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -346,13 +350,13 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 
-	return packPermissionTarget(permissionTarget, d)
+	return PackPermissionTarget(permissionTarget, d)
 }
 
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Put(permissionsEndPoint + d.Id()); err != nil {
+	if _, err := m.(*resty.Client).R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -361,13 +365,13 @@ func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(permissionsEndPoint + d.Id())
+	_, err := m.(*resty.Client).R().Delete(PermissionsEndPoint + d.Id())
 
 	return diag.FromErr(err)
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
-	resp, err := m.(*resty.Client).R().Head(permissionsEndPoint + id)
+	resp, err := m.(*resty.Client).R().Head(PermissionsEndPoint + id)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream permission has been manually removed
 		return false, nil

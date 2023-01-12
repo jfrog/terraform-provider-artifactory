@@ -1,4 +1,4 @@
-package group_test
+package security_test
 
 import (
 	"log"
