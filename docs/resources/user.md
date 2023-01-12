@@ -3,6 +3,8 @@ subcategory: "User"
 ---
 # Artifactory User Resource
 
+~> This resource is deprecated in favor of `artifactory_managed_user` resource. Auto-generated password can’t be saved in the TF state due to the limitations of SDKv2. Thus, it can’t be retrieved later, other than returned in the TF apply output, which makes this resource pretty much a duplicate of `artifactory_managed_user`. If you need to auto-generate passwords, we recommend to use a separate provider to generate and manage passwords, then reference passwords with variables in Artifactory Provider. Also, as a workaround, use `lifecycle` to ignore the password attribute if needed.
+
 Provides an Artifactory user resource. This can be used to create and manage Artifactory users.
 
 When the optional attribute `password` is omitted, a random password is generated according to current Artifactory password policy.
