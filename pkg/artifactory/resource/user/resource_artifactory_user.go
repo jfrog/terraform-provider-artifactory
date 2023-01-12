@@ -12,9 +12,10 @@ import (
 func ResourceArtifactoryUser() *schema.Resource {
 	userSchema := map[string]*schema.Schema{
 		"password": {
-			Type:      schema.TypeString,
-			Sensitive: true,
-			Optional:  true,
+			Type:       schema.TypeString,
+			Sensitive:  true,
+			Optional:   true,
+			Deprecated: "This resource is deprecated. Auto-generated password can’t be saved in the TF state due to the limitations of SDKv2. Thus, it can’t be retrieved later, other than returned in the TF apply output, which makes this resource pretty much useless duplicate of `artifactory_managed_user`. Please use `artifactory_managed_user` instead. If you need to auto-generate passwords, we recommend to use a separate provider to generate and manage passwords, then reference passwords with variables in Artifactory Provider. Also, as a workaround, use `lifecycle` to ignore the password attribute if needed.",
 			Description: "(Optional, Sensitive) Password for the user. When omitted, a random password is generated using the following password policy: " +
 				"12 characters with 1 digit, 1 symbol, with upper and lower case letters",
 		},
