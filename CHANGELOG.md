@@ -3,7 +3,7 @@
 BUG FIX:
 
 * resource/artifactory_virtual_*_repository: `omitempty` is removed from `artifactory_requests_can_retrieve_remote_artifacts` attribute, allowing users to update the value with `false` value, if it was set to `true` before.
- PR [#]()
+ PR [#628](https://github.com/jfrog/terraform-provider-artifactory/pull/628)
 
 ## 6.24.1 (January 9, 2023). Tested on Artifactory 7.49.3
 
