@@ -446,6 +446,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 			key          = "%s"
 			description  = "Before"
 			repositories = []
+			artifactory_requests_can_retrieve_remote_artifacts = true
 		}
 	`
 	const virtualRepositoryUpdateAfter = `
@@ -453,6 +454,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 			key          = "%s"
 			description  = "After"
 			repositories = []
+			artifactory_requests_can_retrieve_remote_artifacts = false
 		}
 	`
 
@@ -469,6 +471,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "description", "Before"),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "artifactory_requests_can_retrieve_remote_artifacts", "true"),
 				),
 			},
 			{
@@ -478,6 +481,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "description", "After"),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "artifactory_requests_can_retrieve_remote_artifacts", "false"),
 				),
 			},
 		},
