@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/exp/slices"
 )
 
@@ -53,23 +52,6 @@ type UpdatePushReplication struct {
 	CronExp                string                  `json:"cronExp,omitempty"`
 	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
 	Replications           []updateReplicationBody `json:"replications,omitempty"`
-}
-
-var pushReplicationSchemaCommon = map[string]*schema.Schema{
-	"repo_key": {
-		Type:     schema.TypeString,
-		Required: true,
-	},
-	"cron_exp": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ValidateDiagFunc: validator.Cron,
-	},
-	"enable_event_replication": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
-	},
 }
 
 var pushRepMultipleSchema = map[string]*schema.Schema{
@@ -156,7 +138,7 @@ func ResourceArtifactoryPushReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: util.MergeMaps(pushReplicationSchemaCommon, pushRepMultipleSchema),
+		Schema: util.MergeMaps(replicationSchemaCommon, pushRepMultipleSchema),
 	}
 }
 

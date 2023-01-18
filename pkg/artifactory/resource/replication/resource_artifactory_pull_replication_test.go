@@ -2,13 +2,15 @@ package replication_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -40,20 +42,68 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	_, _, name := test.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config:      failCron,
-				ExpectError: regexp.MustCompile(`.*syntax error in year field: '!!'.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid cronExp.*`),
 			},
 		},
 	})
+}
+
+func TestAccCronExpressions(t *testing.T) {
+	cronExpressions := [...]string{
+		"10/20 15 14 5-10 * ? *",
+		"* 5,7,9 14-16 * * ? *",
+		"* 5,7,9 14/2 ? * WED,Sat *",
+		"* * * * * ? *",
+		"* * 14/2 ? * mon/3 *",
+		"* 5-9 14/2 ? * 1-3 *",
+		"*/3 */51 */12 */2 */4 ? *",
+		"* 5 22-23 ? * Sun *",
+		"0/5 14,18,3-39,52 * ? JAN,MAR,SEP MON-FRI 2002-2010",
+		"0 15 10 * * ? *",
+		"0 15 10 ? * 6#2",
+		"0 15 10 15 * ?",
+		"0 0 2 ? * MON-SAT",
+	}
+	for _, cron := range cronExpressions {
+		title := fmt.Sprintf("TestPullReplicationLocalRepoCron_%s", cases.Title(language.AmericanEnglish).String(cron))
+		t.Run(title, func(t *testing.T) {
+			resource.Test(pullReplicationLocalRepoTestCase(cron, t))
+		})
+	}
+}
+
+func pullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
+	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	config := mkTclForPullRepConfg(name, cronExpression, acctest.GetArtifactoryUrl(t))
+
+	return t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationDestroy(fqrn),
+
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
+				),
+			},
+		},
+	}
 }
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
