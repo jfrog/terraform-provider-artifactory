@@ -1,16 +1,16 @@
 package security_test
 
 import (
+	"log"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"log"
-	"testing"
 )
 
 func deletePermissionTarget(t *testing.T, name string) error {
@@ -20,36 +20,8 @@ func deletePermissionTarget(t *testing.T, name string) error {
 	return err
 }
 
-// TODO: Where can we put this user code
-func deleteUser(t *testing.T, name string) error {
-	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
-
-	return err
-}
-
-func createUserUpdatable(t *testing.T, name string, email string) {
-	userObj := user.User{
-		Name:                     name,
-		Email:                    email,
-		Password:                 "Lizard123!",
-		Admin:                    false,
-		ProfileUpdatable:         true,
-		DisableUIAccess:          false,
-		InternalPasswordDisabled: false,
-		Groups:                   []string{"readers"},
-	}
-
-	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().SetBody(userObj).Put(user.UsersEndpointPath + name)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func createPermissionTarget(targetName string, userName string, t *testing.T) {
-	createUserUpdatable(t, userName, "terraform@email.com")
+	acctest.CreateUserUpdatable(t, userName, "terraform@email.com")
 
 	actions := security.Actions{
 		Users:  map[string][]string{"terraform": {"read", "write"}},
@@ -112,13 +84,8 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			err := deletePermissionTarget(t, name)
-			err2 := deleteUser(t, userName)
-			// TODO: Figure out wtf this is. How do I turn 2 errors into 1.
-			if err != nil {
-				return err
-			} else {
-				return err2
-			}
+			_ = acctest.DeleteUser(t, userName)
+			return err
 		},
 		Steps: []resource.TestStep{
 			{

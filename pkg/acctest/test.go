@@ -15,6 +15,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"gopkg.in/yaml.v3"
@@ -275,5 +276,32 @@ func CompositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 			return fmt.Errorf("%q", errors)
 		}
 		return nil
+	}
+}
+
+func DeleteUser(t *testing.T, name string) error {
+	restyClient := GetTestResty(t)
+	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
+
+	return err
+}
+
+func CreateUserUpdatable(t *testing.T, name string, email string) {
+	userObj := user.User{
+		Name:                     name,
+		Email:                    email,
+		Password:                 "Lizard123!",
+		Admin:                    false,
+		ProfileUpdatable:         true,
+		DisableUIAccess:          false,
+		InternalPasswordDisabled: false,
+		Groups:                   []string{"readers"},
+	}
+
+	restyClient := GetTestResty(t)
+	_, err := restyClient.R().SetBody(userObj).Put(user.UsersEndpointPath + name)
+
+	if err != nil {
+		t.Fatal(err)
 	}
 }
