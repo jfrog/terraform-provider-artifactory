@@ -3,8 +3,8 @@
 IMPROVEMENTS: 
 
 * resource/artifactory_*_user: updated documentation.
-  Issue: [#](https://github.com/jfrog/terraform-provider-artifactory/issues/619)
-  PR: [#]()
+  Issue: [#619](https://github.com/jfrog/terraform-provider-artifactory/issues/619)
+  PR: [#629](https://github.com/jfrog/terraform-provider-artifactory/pull/629)
 
 ## 6.24.2 (January 13, 2023). Tested on Artifactory 7.49.5
 
