@@ -33,7 +33,7 @@ func ResourceArtifactoryUser() *schema.Resource {
 
 		Schema: userSchema,
 
-		Description: "Provides an Artifactory unmanaged user resource. This can be used to create and manage Artifactory users. Password is optional and one will be automatically generated.",
+		Description: "Provides an Artifactory user resource. This can be used to create and manage Artifactory users. The password is required field by the [Artifactory API](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplaceUser), but we made it optional in this resource to accommodate the scenario, when the password is not needed and will be reset by the actual user later. When the optional attribute `password` is omitted, a random password is generated according to current Artifactory password policy.",
 	}
 }
 
