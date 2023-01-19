@@ -9,7 +9,7 @@ When the optional attribute `password` is omitted, a random password is generate
 
 ~> The generated password won't be stored in the TF state and can not be recovered. The user must reset the password to be able to log in. An admin can always generate the access key for the user as well. The password change won't trigger the state drift.
 
-~> This resource is an alias for `artifactory_user` [resource](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs/resources/user), it is identical and was added for clarity and compatibility purpose. 
+~> This resource is an alias for `artifactory_user` [resource](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs/resources/user), it is identical and was added for clarity and compatibility purpose. We don't recommend to use this resource unless there is a specific use case for it. Recommended resource is `artifactory_managed_user`.
 
 ## Example Usage
 

@@ -8,7 +8,7 @@ Provides an Artifactory managed user resource. This can be used to create and ma
 Unlike `artifactory_unmanaged_user` and `artifactory_user`, the `password` attribute is required and cannot be empty.
 Consider using a separate provider to generate and manage passwords. 
 
-~> The password is stored in the Terraform state file. Make sure you secure it. 
+~> The password is stored in the Terraform state file. Make sure you secure it, please refer to the official [Terraform documentation](https://developer.hashicorp.com/terraform/language/state/sensitive-data).
 
 ## Example Usage
 
