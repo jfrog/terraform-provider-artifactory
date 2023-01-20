@@ -24,7 +24,7 @@ func createPermissionTarget(targetName string, userName string, t *testing.T) {
 	acctest.CreateUserUpdatable(t, userName, "terraform@email.com")
 
 	actions := security.Actions{
-		Users:  map[string][]string{"terraform": {"read", "write"}},
+		Users:  map[string][]string{userName: {"read", "write"}},
 		Groups: map[string][]string{"readers": {"read"}},
 	}
 	repoTarget := security.PermissionTargetSection{
@@ -54,7 +54,8 @@ func createPermissionTarget(targetName string, userName string, t *testing.T) {
 	}
 
 	restyClient := acctest.GetTestResty(t)
-	if _, err := restyClient.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(security.PermissionsEndPoint + permissionTarget.Name); err != nil {
+	postPermissionTarget := security.PermissionsEndPoint + permissionTarget.Name
+	if _, err := restyClient.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(postPermissionTarget); err != nil {
 		t.Fatal(err)
 	}
 
@@ -62,7 +63,7 @@ func createPermissionTarget(targetName string, userName string, t *testing.T) {
 }
 
 func TestAccDataSourcePermissionTarget_full(t *testing.T) {
-	_, tempFqrn, name := test.MkNames("test-perm", "artifactory_permission_target")
+	_, fqrn, name := test.MkNames("test-perm", "data.artifactory_permission_target")
 
 	temp := `
   data "artifactory_permission_target" "{{ .permission_name }}" {
@@ -73,8 +74,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		"permission_name": name,
 	}
 
-	fqrn := "data." + tempFqrn
-	userName := "terraform"
+	_, _, userName := test.MkNames("test-user", "artifactory_unmanaged_user")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -93,17 +93,26 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.users.0.%", "2"),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.groups.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repo.0.repositories.0", "example-repo-local"),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repo.0.includes_pattern.0", "foo/**"),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repo.0.excludes_pattern.0", "bar/**"),
 					resource.TestCheckResourceAttr(fqrn, "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "build.0.repositories.0", "artifactory-build-info"),
 					resource.TestCheckResourceAttr(fqrn, "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "build.0.includes_pattern.0", "foo/**"),
 					resource.TestCheckResourceAttr(fqrn, "build.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "build.0.excludes_pattern.0", "bar/**"),
 					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.repositories.0", "release-bundles"),
 					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.includes_pattern.0", "foo/**"),
 					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.excludes_pattern.#", "1"),
-				),
+					resource.TestCheckResourceAttr(fqrn, "release_bundle.0.excludes_pattern.0", "bar/**")),
 			},
 		},
 	})

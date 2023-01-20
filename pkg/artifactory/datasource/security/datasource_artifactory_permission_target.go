@@ -2,7 +2,6 @@ package security
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,7 +13,7 @@ func DataSourceArtifactoryPermissionTarget() *schema.Resource {
 	dataSourcePermissionTargetRead := func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		permissionTarget := new(security.PermissionTargetParams)
 		targetName := d.Get("name").(string)
-		resp, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
+		_, err := m.(*resty.Client).R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -22,7 +21,6 @@ func DataSourceArtifactoryPermissionTarget() *schema.Resource {
 
 		d.SetId(permissionTarget.Name)
 
-		// My intuition/memory makes me think that this call handles the error, it doesn't need to be handled twice?
 		return security.PackPermissionTarget(permissionTarget, d)
 	}
 	return &schema.Resource{
