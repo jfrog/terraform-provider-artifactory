@@ -1,3 +1,11 @@
+## 6.24.3 (January 18, 2023). Tested on Artifactory 7.49.5
+
+IMPROVEMENTS: 
+
+* resource/artifactory_*_user: updated documentation.
+  Issue: [#619](https://github.com/jfrog/terraform-provider-artifactory/issues/619)
+  PR: [#629](https://github.com/jfrog/terraform-provider-artifactory/pull/629)
+
 ## 6.24.2 (January 13, 2023). Tested on Artifactory 7.49.5
 
 BUG FIX:
@@ -25,7 +33,7 @@ IMPROVEMENTS:
 
 IMPROVEMENTS:
 
-* resouce/artifactory_remote_*_repository: removed `Computed` from most attributes and added default values, as they appear in the UI.
+* resource/artifactory_remote_*_repository: removed `Computed` from most attributes and added default values, as they appear in the UI.
   The legacy `Computed` attributes created a problem, where user can't update or remove the value of that attribute. Now, to clear the string value, an empty string could be set as an attribute value in HCL. `omitempty` is removed from most string attributes, so the user has full control and visibility of these values.
   Added a new attribute `query_params`.
 
@@ -33,7 +41,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* resouce/artifactory_remote_*_repository: fixed incorrect `remote_repo_layout` assignment for all repository resources.
+* resource/artifactory_remote_*_repository: fixed incorrect `remote_repo_layout` assignment for all repository resources.
 
   Issue: [#595](https://github.com/jfrog/terraform-provider-artifactory/issues/595)
   PR: [#616](https://github.com/jfrog/terraform-provider-artifactory/pull/616)
