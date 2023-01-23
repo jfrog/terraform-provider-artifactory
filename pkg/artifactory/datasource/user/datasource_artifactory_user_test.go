@@ -12,26 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func createUserUpdatable(t *testing.T, name string, email string) {
-	userObj := user.User{
-		Name:                     name,
-		Email:                    email,
-		Password:                 "Lizard123!",
-		Admin:                    true,
-		ProfileUpdatable:         true,
-		DisableUIAccess:          false,
-		InternalPasswordDisabled: false,
-		Groups:                   []string{"readers"},
-	}
-
-	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().SetBody(userObj).Put(user.UsersEndpointPath + name)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func deleteUser(t *testing.T, name string) error {
 	restyClient := acctest.GetTestResty(t)
 	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
@@ -56,11 +36,11 @@ func TestAccDataSourceUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			createUserUpdatable(t, name, email)
+			acctest.CreateUserUpdatable(t, name, email)
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
-			return deleteUser(t, name)
+			return acctest.DeleteUser(t, name)
 		},
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +48,7 @@ func TestAccDataSourceUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "email", email),
-					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
+					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),

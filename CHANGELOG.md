@@ -1,3 +1,11 @@
+## 6.25.0 (January 20, 2023). Tested on Artifactory 7.49.5
+
+IMPROVEMENTS:
+
+* Added new user data source: data.artifactory_permission_target
+  Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+  PR: [#624](https://github.com/jfrog/terraform-provider-artifactory/pull/624/)
+
 ## 6.24.3 (January 18, 2023). Tested on Artifactory 7.49.5
 
 IMPROVEMENTS: 
@@ -17,8 +25,8 @@ BUG FIX:
 
 IMPROVEMENTS:
 
-* resource/artifactory_*_replication: Cron expression validation replaced with verification of groups number (6 to 7). Cron verification will happen on the Artifactory API side to match UI behavior. Added more tests, documentation updated for both resources. 
-  Issue: [#591](https://github.com/jfrog/terraform-provider-artifactory/issues/591) 
+* resource/artifactory_*_replication: Cron expression validation replaced with verification of groups number (6 to 7). Cron verification will happen on the Artifactory API side to match UI behavior. Added more tests, documentation updated for both resources.
+  Issue: [#591](https://github.com/jfrog/terraform-provider-artifactory/issues/591)
   PR: [#618](https://github.com/jfrog/terraform-provider-artifactory/pull/618)
 
 ## 6.24.0 (January 5, 2023). Tested on Artifactory 7.49.3
