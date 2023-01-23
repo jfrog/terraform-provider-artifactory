@@ -2,7 +2,6 @@ package user_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
 	"net/http"
 	"testing"
 
@@ -10,28 +9,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccManagedUser_NoGroups(t *testing.T) {
 	const userNoGroups = `
 		resource "artifactory_managed_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passsw0rd!"
 		}
 	`
-	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
+		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userNoGroups, name, id, id),
+				Config: fmt.Sprintf(userNoGroups, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("dummy_user%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(username, "name"),
+				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
 	})
@@ -40,24 +49,32 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 func TestAccManagedUser_EmptyGroups(t *testing.T) {
 	const userEmptyGroups = `
 		resource "artifactory_managed_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passsw0rd!"
 			groups      		= []
 		}
 	`
-	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
+		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userEmptyGroups, name, id, id),
+				Config: fmt.Sprintf(userEmptyGroups, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(FQRN, "groups.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(username, "name"),
+				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
 	})
@@ -66,7 +83,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 func TestAccManagedUser(t *testing.T) {
 	const userFull = `
 		resource "artifactory_managed_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passsw0rd!"
 			admin    			= true
@@ -77,7 +94,7 @@ func TestAccManagedUser(t *testing.T) {
 	`
 	const userNonAdminNoProfUpd = `
 		resource "artifactory_managed_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passsw0rd!"
 			admin    			= false
@@ -85,36 +102,38 @@ func TestAccManagedUser(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, FQRN, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(FQRN),
+		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, id, id),
+				Config: fmt.Sprintf(userFull, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(FQRN, "email", fmt.Sprintf("dummy%d@a.com", id)),
-					resource.TestCheckResourceAttr(FQRN, "admin", "true"),
-					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "true"),
-					resource.TestCheckResourceAttr(FQRN, "disable_ui_access", "false"),
-					resource.TestCheckResourceAttr(FQRN, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
 			{
-				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, id, id),
+				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(FQRN, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(FQRN, "email", fmt.Sprintf("dummy%d@a.com", id)),
-					resource.TestCheckResourceAttr(FQRN, "admin", "false"),
-					resource.TestCheckResourceAttr(FQRN, "profile_updatable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 				),
 			},
 			{
-				ResourceName:            FQRN,
+				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(username, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},

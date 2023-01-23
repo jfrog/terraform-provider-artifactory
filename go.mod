@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-log v0.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
-	github.com/jfrog/terraform-provider-shared v1.9.0
+	github.com/jfrog/terraform-provider-shared v1.10.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
