@@ -94,7 +94,7 @@ pipelines:
               docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
                     -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Set localhost to a container IP address, since we run docker inside of docker"
-            - export LOCALHOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}' ${ARTIFACTORY_CONTAINER_NAME})
+            - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
             - echo "Using ${LOCALHOST} as 'localhost' ip address"
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
             - >-
