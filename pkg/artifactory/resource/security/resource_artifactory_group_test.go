@@ -2,21 +2,21 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"net/http"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	_, rfqn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	_, fqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
@@ -27,20 +27,26 @@ func TestAccGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
+		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(groupName, "name"),
 			},
 		},
 	})
 }
 
 func TestAccGroup_full(t *testing.T) {
-	_, rfqn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	_, fqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
 	externalId := "test-external-id"
 
 	templates := []string{
@@ -142,80 +148,87 @@ func TestAccGroup_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
+		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "name", groupName),
-					resource.TestCheckResourceAttr(rfqn, "external_id", externalId),
-					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
-					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
-					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
-					resource.TestCheckResourceAttr(rfqn, "realm_attributes", "Some attribute"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembership(rfqn, 0),
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "external_id", externalId),
+					resource.TestCheckResourceAttr(fqrn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
+					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(fqrn, 0),
 				),
 			},
 			{
 				Config: configs[1],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.0", "admin"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership(rfqn, 2),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
 				Config: configs[2],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "1"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.0", "anonymous"),
-					testAccDirectCheckGroupMembership(rfqn, 1),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.0", "anonymous"),
+					testAccDirectCheckGroupMembership(fqrn, 1),
 				),
 			},
 			{
 				Config: configs[3],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembership(rfqn, 1),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(fqrn, 1),
 				),
 			},
 			{
 				Config: configs[4],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.0", "admin"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership(rfqn, 2),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
 				Config: configs[5],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
-					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership(rfqn, 0),
-					resource.TestCheckResourceAttr(rfqn, "watch_manager", "false"),
-					resource.TestCheckResourceAttr(rfqn, "policy_manager", "false"),
-					resource.TestCheckResourceAttr(rfqn, "reports_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
+					testAccDirectCheckGroupMembership(fqrn, 0),
+					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
 				),
 			},
 			{
 				Config: configs[6],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "name", groupName),
-					resource.TestCheckResourceAttr(rfqn, "watch_manager", "true"),
-					resource.TestCheckResourceAttr(rfqn, "policy_manager", "true"),
-					resource.TestCheckResourceAttr(rfqn, "reports_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "watch_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "policy_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "reports_manager", "true"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
+				ImportStateVerifyIgnore: []string{"detach_all_users"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, rfqn, groupName := test.MkNames("test-group-unmanagedmembers", "artifactory_group")
+	_, fqrn, groupName := test.MkNames("test-group-unmanagedmembers", "artifactory_group")
 
 	templates := []string{
 		`
@@ -265,34 +278,41 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(rfqn),
+		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "name", groupName),
-					resource.TestCheckResourceAttr(rfqn, "auto_join", "true"),
-					resource.TestCheckResourceAttr(rfqn, "admin_privileges", "false"),
-					resource.TestCheckResourceAttr(rfqn, "realm", "test"),
-					resource.TestCheckResourceAttr(rfqn, "realm_attributes", "Some attribute"),
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "2"),
-					testAccDirectCheckGroupMembership(rfqn, 2),
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
+					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
 				Config: configs[1],
 				Check: resource.ComposeTestCheckFunc(
-					testAccDirectCheckGroupMembership(rfqn, 2),
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
+					testAccDirectCheckGroupMembership(fqrn, 2),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 				),
 			},
 			{
 				Config: configs[2],
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rfqn, "users_names.#", "0"),
-					resource.TestCheckResourceAttr(rfqn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership(rfqn, 0),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
+					testAccDirectCheckGroupMembership(fqrn, 0),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
+				ImportStateVerifyIgnore: []string{"detach_all_users"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})

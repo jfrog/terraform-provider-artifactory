@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccCertHasFileAndContentFails(t *testing.T) {
@@ -78,6 +79,13 @@ func TestAccCertWithFile(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "valid_until", "2029-05-14T10:03:26.000Z"),
 				),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "alias"),
+				ImportStateVerifyIgnore: []string{"file"}, // actual certificate is not returned via the API, so it cannot be "imported"
+			},
 		},
 	})
 }
@@ -142,6 +150,13 @@ func TestAccCertificate_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "issued_to", "Unknown"),
 					resource.TestCheckResourceAttr(fqrn, "valid_until", "2029-05-14T10:03:26.000Z"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "alias"),
+				ImportStateVerifyIgnore: []string{"content"}, // actual certificate is not returned via the API, so it cannot be "imported"
 			},
 		},
 	})

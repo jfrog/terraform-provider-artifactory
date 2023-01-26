@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
@@ -13,6 +12,7 @@ import (
 )
 
 func TestAccApiKey(t *testing.T) {
+	fqrn := "artifactory_api_key.foobar"
 	const apiKey = `
 		resource "artifactory_api_key" "foobar" {}
 	`
@@ -20,13 +20,18 @@ func TestAccApiKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApiKeyDestroy("artifactory_api_key.foobar"),
+		CheckDestroy:      testAccCheckApiKeyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: apiKey,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_api_key.foobar", "api_key"),
+					resource.TestCheckResourceAttrSet(fqrn, "api_key"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
