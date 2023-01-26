@@ -105,6 +105,7 @@ resource "artifactory_access_token" "foobar" {
 `
 
 func TestAccAccessTokenExistingUser(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -113,14 +114,19 @@ func TestAccAccessTokenExistingUser(t *testing.T) {
 			{
 				Config: existingUser,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "0"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_token", ""),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
@@ -147,6 +153,7 @@ resource "artifactory_access_token" "foobar" {
 }
 
 func TestAccAccessTokenFixedDateGood(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -155,13 +162,18 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 			{
 				Config: fixedDateGood(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "0"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_token", ""),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
@@ -248,6 +260,7 @@ resource "artifactory_access_token" "foobar" {
 `
 
 func TestAccAccessTokenRefreshableToken(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -256,14 +269,19 @@ func TestAccAccessTokenRefreshableToken(t *testing.T) {
 			{
 				Config: refreshableToken,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "true"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "refresh_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "0"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
+					resource.TestCheckResourceAttrSet(fqrn, "refresh_token"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
@@ -303,6 +321,7 @@ resource "artifactory_access_token" "foobar" {
 `
 
 func TestAccAccessTokenMissingUserGood(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -311,15 +330,20 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 			{
 				Config: missingUserGood,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "missing-user"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.0", "readers"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "missing-user"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_token", ""),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "groups.0", "readers"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
@@ -376,6 +400,7 @@ resource "artifactory_access_token" "foobar" {
 `
 
 func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -384,15 +409,20 @@ func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 			{
 				Config: wildcardGroupGood,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "1s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "1"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.0", "*"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "1s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_token", ""),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "groups.0", "*"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})
@@ -414,6 +444,7 @@ resource "artifactory_access_token" "foobar" {
 `
 
 func TestAccAccessTokenNonExpiringToken(t *testing.T) {
+	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -422,14 +453,19 @@ func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 			{
 				Config: nonExpiringToken,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "access_token"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "username", "existinguser"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "end_date_relative", "0s"),
-					resource.TestCheckResourceAttrSet("artifactory_access_token.foobar", "end_date"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refreshable", "false"),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "refresh_token", ""),
-					resource.TestCheckResourceAttr("artifactory_access_token.foobar", "groups.#", "0"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckResourceAttr(fqrn, "username", "existinguser"),
+					resource.TestCheckResourceAttr(fqrn, "end_date_relative", "0s"),
+					resource.TestCheckResourceAttrSet(fqrn, "end_date"),
+					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_token", ""),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_access_token doesn't support import"),
 			},
 		},
 	})

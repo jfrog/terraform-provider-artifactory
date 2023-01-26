@@ -2,14 +2,15 @@ package security_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const permissionNoIncludes = `
@@ -196,6 +197,12 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
 				),
 			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
+			},
 		},
 	})
 }
@@ -233,6 +240,12 @@ func TestAccPermissionTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
+			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
 			},
 		},
 	})
@@ -278,6 +291,12 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "managedXrayMeta"),
 					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "distribute"),
 				),
+			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
 			},
 		},
 	})
@@ -352,6 +371,12 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
+			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
 			},
 		},
 	})
