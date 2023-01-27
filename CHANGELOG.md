@@ -1,3 +1,10 @@
+## 6.25.1 (January 27, 2023).
+
+BUG FIXES:
+
+* resource/artifactory_oauth_settings: fix an issue with the import, where `oauth_provider` section couldn't be imported.
+  PR: [#]()
+
 ## 6.25.0 (January 20, 2023). Tested on Artifactory 7.49.5
 
 IMPROVEMENTS:
@@ -16,7 +23,7 @@ IMPROVEMENTS:
 
 ## 6.24.2 (January 13, 2023). Tested on Artifactory 7.49.5
 
-BUG FIX:
+BUG FIXES:
 
 * resource/artifactory_virtual_*_repository: `omitempty` is removed from `artifactory_requests_can_retrieve_remote_artifacts` attribute, allowing users to update the value with `false` value, if it was set to `true` before.
  PR [#628](https://github.com/jfrog/terraform-provider-artifactory/pull/628)

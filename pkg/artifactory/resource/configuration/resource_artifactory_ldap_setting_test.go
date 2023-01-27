@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/jfrog/terraform-provider-shared/validator"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -145,6 +146,7 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 	email_attribute = "mail_attr"
 }`
 
+	fqrn := "artifactory_ldap_setting.ldaptestemailattr"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -154,30 +156,36 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 			{
 				Config: LdapSettingTemplateNoEmailAttr,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "email_attribute", "mail"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateEmailAttrBlank,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "email_attribute", "mail"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateEmailAttrUpd1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "email_attribute", "mail"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateEmailAttrUpd2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestemailattr", "email_attribute", "mail_attr"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail_attr"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState("ldaptestemailattr", "key"),
 			},
 		},
 	})
@@ -217,6 +225,7 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 	ldap_url = "ldap://ldaptestldap"
 }`
 
+	fqrn := "artifactory_ldap_setting.ldaptestuserdnsearchfilter"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -226,30 +235,36 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 			{
 				Config: LdapSettingTemplateUserDnNoSearchFilter,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "user_dn_pattern", "ou=People, uid={0}"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", "ou=People, uid={0}"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateSearchFilterNoUserDn,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "search_filter", "(uid={0})"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "search_filter", "(uid={0})"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateUserDnAndSearchFilter,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "user_dn_pattern", "ou=People, uid={0}"),
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "search_filter", "(uid={0})"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", "ou=People, uid={0}"),
+					resource.TestCheckResourceAttr(fqrn, "search_filter", "(uid={0})"),
 				),
 			},
 			{
 				Config: LdapSettingTemplateNoUserDnNoSearchFilter,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_ldap_setting.ldaptestuserdnsearchfilter", "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState("ldaptestuserdnsearchfilter", "key"),
 			},
 		},
 	})
