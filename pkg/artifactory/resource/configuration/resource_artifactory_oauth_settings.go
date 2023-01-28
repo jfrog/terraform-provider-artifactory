@@ -266,6 +266,6 @@ security:
 		},
 
 		Schema:      artifactoryOauthSettingsSchema,
-		Description: "",
+		Description: "This resource can be used to manage Artifactory's OAuth SSO settings. Only a single `artifactory_oauth_settings` resource is meant to be defined.",
 	}
 }
