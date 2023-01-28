@@ -3,7 +3,7 @@
 BUG FIXES:
 
 * resource/artifactory_oauth_settings: fix an issue with the import, where `oauth_provider` section couldn't be imported.
-  PR: [#]()
+  PR: [#637](https://github.com/jfrog/terraform-provider-artifactory/pull/637)
 
 ## 6.25.0 (January 20, 2023). Tested on Artifactory 7.49.5
 
