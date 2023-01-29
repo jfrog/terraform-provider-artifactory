@@ -142,7 +142,7 @@ func TestAccCronExpressions(t *testing.T) {
 }
 
 func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
-	fqrn := fmt.Sprint("artifactory_backup.backuptest")
+	fqrn := "artifactory_backup.backuptest"
 
 	fields := map[string]interface{}{
 		"cron_exp": cronExpression,
