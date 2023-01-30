@@ -50,7 +50,10 @@ The following arguments are supported:
 
 ## Import
 
-Current OAuth SSO settings can be imported using `oauth_settings` as the `ID`, e.g.
+Current OAuth SSO settings can be imported using `oauth_settings` as the `ID`.
+If the resource is being imported, there will be a state drift, because `client_secret` can't be known. There are two options on how to approach this: 
+1) Don't set `client_secret` initially, import, then update the config with actual secret;
+2) Accept that there is a drift initially and run `terraform apply` twice;
 
 ```
 $ terraform import artifactory_oauth_settings.oauth oauth_settings

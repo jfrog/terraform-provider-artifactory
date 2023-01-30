@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
@@ -31,20 +30,27 @@ resource "artifactory_oauth_settings" "oauth" {
 }`
 
 func TestAccOauthSettings_full(t *testing.T) {
+	fqrn := "artifactory_oauth_settings.oauth"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccOauthSettingsDestroy("artifactory_oauth_settings.oauth"),
+		CheckDestroy:      testAccOauthSettingsDestroy(fqrn),
 
 		Steps: []resource.TestStep{
 			{
 				Config: OauthSettingsTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "enable", "true"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "persist_users", "true"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "allow_user_to_access_profile", "true"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "oauth_provider.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "enable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "persist_users", "true"),
+					resource.TestCheckResourceAttr(fqrn, "allow_user_to_access_profile", "true"),
+					resource.TestCheckResourceAttr(fqrn, "oauth_provider.#", "1"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"oauth_provider.0.client_secret"},
 			},
 		},
 	})
@@ -81,6 +87,7 @@ resource "artifactory_oauth_settings" "oauth" {
 `
 
 func TestAccOauthSettings_multipleProviders(t *testing.T) {
+	fqrn := "artifactory_oauth_settings.oauth"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -90,11 +97,17 @@ func TestAccOauthSettings_multipleProviders(t *testing.T) {
 			{
 				Config: OauthSettingsTemplateMultipleProviders,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "enable", "true"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "persist_users", "false"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "allow_user_to_access_profile", "false"),
-					resource.TestCheckResourceAttr("artifactory_oauth_settings.oauth", "oauth_provider.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "enable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "persist_users", "false"),
+					resource.TestCheckResourceAttr(fqrn, "allow_user_to_access_profile", "false"),
+					resource.TestCheckResourceAttr(fqrn, "oauth_provider.#", "2"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"oauth_provider.0.client_secret", "oauth_provider.1.client_secret"},
 			},
 		},
 	})

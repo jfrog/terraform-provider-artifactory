@@ -17,17 +17,23 @@ resource "artifactory_general_security" "security" {
 }`
 
 func TestAccGeneralSecurity_full(t *testing.T) {
+	fqrn := "artifactory_general_security.security"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccGeneralSecurityDestroy("artifactory_general_security.security"),
+		CheckDestroy:      testAccGeneralSecurityDestroy(fqrn),
 
 		Steps: []resource.TestStep{
 			{
 				Config: GeneralSecurityTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_general_security.security", "enable_anonymous_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

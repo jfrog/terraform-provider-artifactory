@@ -12,6 +12,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -141,7 +142,7 @@ func TestAccCronExpressions(t *testing.T) {
 }
 
 func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
-	resourceName := fmt.Sprintf("artifactory_backup.backuptest")
+	fqrn := "artifactory_backup.backuptest"
 
 	fields := map[string]interface{}{
 		"cron_exp": cronExpression,
@@ -157,13 +158,19 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "cron_exp", cronExpression),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState("backuptest", "key"),
 			},
 		},
 	}
