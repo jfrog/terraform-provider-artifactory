@@ -18,12 +18,13 @@ import (
 )
 
 type AccessTokenPostResponse struct {
-	TokenId      string `json:"token_id"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	Scope        string `json:"scope"`
-	TokenType    string `json:"token_type"`
+	TokenId        string `json:"token_id"`
+	AccessToken    string `json:"access_token"`
+	RefreshToken   string `json:"refresh_token"`
+	ExpiresIn      int    `json:"expires_in"`
+	Scope          string `json:"scope"`
+	TokenType      string `json:"token_type"`
+	ReferenceToken string `json:"reference_token"`
 }
 
 type AccessTokenErrorResponse struct {
@@ -39,13 +40,14 @@ func (a AccessTokenPostResponse) Id() string {
 func ResourceArtifactoryScopedToken() *schema.Resource {
 
 	type AccessTokenPostRequest struct {
-		GrantType   string `json:"grant_type"`
-		Username    string `json:"username,omitempty"`
-		Scope       string `json:"scope,omitempty"`
-		ExpiresIn   int    `json:"expires_in"`
-		Refreshable bool   `json:"refreshable"`
-		Description string `json:"description"`
-		Audience    string `json:"audience,omitempty"`
+		GrantType             string `json:"grant_type"`
+		Username              string `json:"username,omitempty"`
+		Scope                 string `json:"scope,omitempty"`
+		ExpiresIn             int    `json:"expires_in"`
+		Refreshable           bool   `json:"refreshable"`
+		Description           string `json:"description"`
+		Audience              string `json:"audience,omitempty"`
+		IncludeReferenceToken bool   `json:"include_reference_token"`
 	}
 
 	type AccessTokenGet struct {
@@ -164,6 +166,13 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			ForceNew:    true,
 			Description: "The token is not refreshable by default.",
 		},
+		"include_reference_token": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			ForceNew:    true,
+			Description: "Also create a reference token which can be used like an API key.",
+		},
 		"description": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -190,6 +199,11 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Sensitive: true,
 		},
 		"refresh_token": {
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
+		},
+		"reference_token": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
@@ -232,12 +246,13 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		}
 
 		accessToken := AccessTokenPostRequest{
-			Username:    d.GetString("username", false),
-			Scope:       scopesString,
-			ExpiresIn:   d.GetInt("expires_in", false),
-			Refreshable: d.GetBool("refreshable", false),
-			Description: d.GetString("description", false),
-			Audience:    audiencesString,
+			Username:              d.GetString("username", false),
+			Scope:                 scopesString,
+			ExpiresIn:             d.GetInt("expires_in", false),
+			Refreshable:           d.GetBool("refreshable", false),
+			Description:           d.GetString("description", false),
+			Audience:              audiencesString,
+			IncludeReferenceToken: d.GetBool("include_reference_token", false),
 		}
 
 		return &accessToken, nil
@@ -281,6 +296,11 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		// only have refresh token if 'refreshable' is set to true in the request
 		if len(accessToken.RefreshToken) > 0 {
 			setValue("refresh_token", accessToken.RefreshToken)
+		}
+
+		// only have reference token if 'include_reference_token' is set to true in the request
+		if len(accessToken.ReferenceToken) > 0 {
+			setValue("reference_token", accessToken.ReferenceToken)
 		}
 
 		errors := setValue("token_type", accessToken.TokenType)
