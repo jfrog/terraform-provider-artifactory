@@ -1,4 +1,4 @@
-## 6.25.2. (January 31, 2023).
+## 6.25.2. (January 31, 2023). Tested on Artifactory 7.49.6
 
 IMPROVEMENTS:
 
