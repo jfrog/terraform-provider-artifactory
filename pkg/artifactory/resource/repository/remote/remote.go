@@ -375,7 +375,7 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
+		Description: "Note: `propagate_query_params` is only available for Generic type repositories. When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 	},
 	"query_params": {
 		Type:     schema.TypeString,
