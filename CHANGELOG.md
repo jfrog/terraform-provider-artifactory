@@ -3,7 +3,7 @@
 IMPROVEMENTS:
 
 * resource/artifactory_remote_*_repository: documentation, add a note for `propagate_query_params`. This attribute should be used only with Generic repo type.
-  PR: [#]()
+  PR: [#638](https://github.com/jfrog/terraform-provider-artifactory/pull/638)
   Issue: [#635](https://github.com/jfrog/terraform-provider-artifactory/issues/635)
 
 ## 6.25.1 (January 27, 2023). Tested on Artifactory 7.49.6
