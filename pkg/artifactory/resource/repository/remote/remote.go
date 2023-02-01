@@ -30,7 +30,6 @@ type RepositoryRemoteBaseParams struct {
 	Offline                           *bool                              `json:"offline,omitempty"`
 	BlackedOut                        *bool                              `json:"blackedOut,omitempty"`
 	XrayIndex                         bool                               `json:"xrayIndex"`
-	PropagateQueryParams              bool                               `json:"propagateQueryParams"`
 	QueryParams                       string                             `json:"queryParams,omitempty"`
 	PriorityResolution                bool                               `json:"priorityResolution"`
 	StoreArtifactsLocally             *bool                              `json:"storeArtifactsLocally,omitempty"`
@@ -74,14 +73,13 @@ func (bp RepositoryRemoteBaseParams) Id() string {
 	return bp.Key
 }
 
-var RepoTypesLikeGeneric = []string{
+var RepoTypesLikeBasic = []string{
 	"alpine",
 	"chef",
 	"conda",
 	"cran",
 	"debian",
 	"gems",
-	"generic",
 	"gitlfs",
 	"npm",
 	"opkg",
@@ -371,12 +369,6 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"propagate_query_params": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Note: `propagate_query_params` is only available for Generic type repositories. When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
-	},
 	"query_params": {
 		Type:     schema.TypeString,
 		Optional: true,
@@ -504,7 +496,6 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		BlackedOut:                        d.GetBoolRef("blacked_out", false),
 		XrayIndex:                         d.GetBool("xray_index", false),
 		DownloadRedirect:                  d.GetBool("download_direct", false),
-		PropagateQueryParams:              d.GetBool("propagate_query_params", false),
 		QueryParams:                       d.GetString("query_params", false),
 		StoreArtifactsLocally:             d.GetBoolRef("store_artifacts_locally", false),
 		SocketTimeoutMillis:               d.GetInt("socket_timeout_millis", false),

@@ -122,9 +122,9 @@ func mkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 		projectKeyChanged := d.HasChange("project_key")
 		tflog.Debug(ctx, fmt.Sprintf("projectKeyChanged: %v", projectKeyChanged))
 		if projectKeyChanged {
-			old, new := d.GetChange("project_key")
+			old, newProject := d.GetChange("project_key")
 			oldProjectKey := old.(string)
-			newProjectKey := new.(string)
+			newProjectKey := newProject.(string)
 			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
 
 			assignToProject := len(oldProjectKey) == 0 && len(newProjectKey) > 0
@@ -278,6 +278,31 @@ func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ int
 func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
 	var reader = mkRepoRead(packer, constructor)
 	return &schema.Resource{
+		SchemaVersion: 2,
+		CreateContext: mkRepoCreate(unpack, reader),
+		ReadContext:   reader,
+		UpdateContext: mkRepoUpdate(unpack, reader),
+		DeleteContext: deleteRepo,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema:        skeema,
+		CustomizeDiff: projectEnvironmentsDiff,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    MkResourceSchemaV1(skeema, packer, unpack, constructor).CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceStateUpgradeV1,
+				Version: 1,
+			},
+		},
+	}
+}
+
+func MkResourceSchemaV1(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
+	var reader = mkRepoRead(packer, constructor)
+	return &schema.Resource{
+		SchemaVersion: 1,
 		CreateContext: mkRepoCreate(unpack, reader),
 		ReadContext:   reader,
 		UpdateContext: mkRepoUpdate(unpack, reader),
@@ -289,6 +314,14 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		Schema:        skeema,
 		CustomizeDiff: projectEnvironmentsDiff,
 	}
+}
+
+func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	if rawState["package_type"] != "generic" {
+		delete(rawState, "propagate_query_params")
+	}
+
+	return rawState, nil
 }
 
 const RepositoriesEndpoint = "artifactory/api/repositories/{key}"

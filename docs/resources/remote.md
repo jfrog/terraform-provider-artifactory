@@ -79,10 +79,6 @@ All generic repo arguments are supported, in addition to:
   * `statistics_enabled` - (Optional, Default: false) If set, Artifactory will notify the remote instance whenever an artifact in the Smart Remote Repository is downloaded locally so that it can update its download counter. Note that if this option is not set, there may be a discrepancy between the number of artifacts reported to have been downloaded in the different Artifactory instances of the proxy chain.
   * `properties_enabled` - (Optional, Default: false) If set, properties for artifacts that have been cached in this repository will be updated if they are modified in the artifact hosted at the remote Artifactory instance. The trigger to synchronize the properties is download of the artifact from the remote repository cache of the local Artifactory instance.
   * `source_origin_absence_detection` - (Optional, Default: false) If set, Artifactory displays an indication on cached items if they have been deleted from the corresponding repository in the remote Artifactory instance.
-
-~>`propagate_query_params` is only available for Generic type repositories.
-
-* `propagate_query_params` - (Optional, Default: false) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
 * `query_params` - (Optional) Custom HTTP query parameters that will be automatically included in all remote resource requests. For example: "param1=val1&param2=val2&param3=val3"
 * `list_remote_folder_items` - (Optional, Default: false) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
 * `download_direct` - (Optional, Default: false) When set, download requests to this repository will redirect the client to download 

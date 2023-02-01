@@ -1,9 +1,11 @@
 package remote_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -57,11 +59,10 @@ func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
 		resource "artifactory_remote_npm_repository" "terraform-remote-test-repo-basic" {
-			key                     = "IHave++special,Chars"
-			url                     = "https://registry.npmjs.org/"
-			repo_layout_ref         = "npm-default"
-			propagate_query_params  = true
-			retrieval_cache_period_seconds        = 70
+			key                     		= "IHave++special,Chars"
+			url                     		= "https://registry.npmjs.org/"
+			repo_layout_ref         		= "npm-default"
+			retrieval_cache_period_seconds  = 70
 		}
 	`
 
@@ -410,7 +411,7 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 }
 
 func TestAccRemoteAllRepository(t *testing.T) {
-	for _, repoType := range remote.RepoTypesLikeGeneric {
+	for _, repoType := range remote.RepoTypesLikeBasic {
 		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
@@ -873,6 +874,56 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
+
+	const remoteGemsRepoBasicWithPropagate = `
+		resource "artifactory_remote_gems_repository" "%s" {
+			key                     		= "%s"
+			description 					= "This is a test"
+			url                     		= "https://rubygems.org/"
+			repo_layout_ref         		= "simple-default"
+			propagate_query_params  		= true
+		}
+	`
+	id := test.RandomInt()
+	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, name, name),
+				ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
+			},
+		},
+	})
+}
+
+func TestRemoteRepoResourceStateUpgradeV1(t *testing.T) {
+	v1Data := map[string]interface{}{
+		"description":            "This is a test",
+		"propagate_query_params": "true",
+		"repo_layout_ref":        "simple-default",
+	}
+	v2Data := map[string]interface{}{
+		"description":     "This is a test",
+		"repo_layout_ref": "simple-default",
+	}
+
+	actual, err := repository.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
+
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(v2Data, actual) {
+		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
+	}
 }
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
