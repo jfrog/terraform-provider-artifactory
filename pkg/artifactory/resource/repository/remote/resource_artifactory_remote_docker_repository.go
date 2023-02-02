@@ -20,7 +20,7 @@ type DockerRemoteRepository struct {
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	const packageType = "docker"
 
-	var dockerRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var dockerRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -85,5 +85,5 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, constructor)
+	return mkResourceSchema(dockerRemoteSchema, dockerRemoteRepoPacker, unpackDockerRemoteRepo, constructor)
 }

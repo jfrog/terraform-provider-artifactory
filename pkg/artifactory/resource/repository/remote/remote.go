@@ -1,11 +1,14 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -90,7 +93,7 @@ var RepoTypesLikeBasic = []string{
 	"swift",
 }
 
-var BaseRemoteRepoSchema = map[string]*schema.Schema{
+var baseRemoteRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
 		Required:     true,
@@ -399,6 +402,17 @@ var BaseRemoteRepoSchema = map[string]*schema.Schema{
 	},
 }
 
+var baseRemoteRepoSchemaV1 = util.MergeMaps(baseRemoteRepoSchema, map[string]*schema.Schema{
+	"propagate_query_params": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
+	},
+})
+
+var baseRemoteRepoSchemaV2 = baseRemoteRepoSchema
+
 var VcsRemoteRepoSchema = map[string]*schema.Schema{
 	"vcs_git_provider": {
 		Type:             schema.TypeString,
@@ -417,7 +431,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 
 func getJavaRemoteSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
 	return util.MergeMaps(
-		BaseRemoteRepoSchema,
+		baseRemoteRepoSchema,
 		map[string]*schema.Schema{
 			"fetch_jars_eagerly": {
 				Type:        schema.TypeBool,
@@ -558,4 +572,40 @@ func UnpackJavaRemoteRepo(s *schema.ResourceData, repoType string) JavaRemoteRep
 		SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
 		RejectInvalidJars:            d.GetBool("reject_invalid_jars", false),
 	}
+}
+
+var resourceV1 = &schema.Resource{
+	Schema: baseRemoteRepoSchemaV1,
+}
+
+func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
+	var reader = repository.MkRepoRead(packer, constructor)
+	return &schema.Resource{
+		CreateContext: repository.MkRepoCreate(unpack, reader),
+		ReadContext:   reader,
+		UpdateContext: repository.MkRepoUpdate(unpack, reader),
+		DeleteContext: repository.DeleteRepo,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceV1.CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceStateUpgradeV1,
+				Version: 1,
+			},
+		},
+
+		Schema:        skeema,
+		SchemaVersion: 2,
+		CustomizeDiff: repository.ProjectEnvironmentsDiff,
+	}
+}
+func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	if rawState["package_type"] != "generic" {
+		delete(rawState, "propagate_query_params")
+	}
+
+	return rawState, nil
 }

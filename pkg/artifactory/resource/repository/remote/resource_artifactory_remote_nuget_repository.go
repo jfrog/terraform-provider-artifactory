@@ -20,7 +20,7 @@ type NugetRemoteRepo struct {
 func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	const packageType = "nuget"
 
-	var nugetRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var nugetRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"feed_context_path": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -84,5 +84,5 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(nugetRemoteSchema, packer.Default(nugetRemoteSchema), unpackNugetRemoteRepo, constructor)
+	return mkResourceSchema(nugetRemoteSchema, packer.Default(nugetRemoteSchema), unpackNugetRemoteRepo, constructor)
 }

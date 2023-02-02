@@ -15,7 +15,7 @@ type GenericRemoteRepo struct {
 func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	const packageType = "generic"
 
-	var genericRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var genericRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"propagate_query_params": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -70,7 +70,7 @@ func ResourceArtifactoryRemoteBasicRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	mergedRemoteRepoSchema := util.MergeMaps(BaseRemoteRepoSchema, repository.RepoLayoutRefSchema("remote", pkt))
+	mergedRemoteRepoSchema := util.MergeMaps(baseRemoteRepoSchema, repository.RepoLayoutRefSchema("remote", pkt))
 
-	return repository.MkResourceSchema(mergedRemoteRepoSchema, packer.Default(mergedRemoteRepoSchema), unpack, constructor)
+	return mkResourceSchema(mergedRemoteRepoSchema, packer.Default(mergedRemoteRepoSchema), unpack, constructor)
 }

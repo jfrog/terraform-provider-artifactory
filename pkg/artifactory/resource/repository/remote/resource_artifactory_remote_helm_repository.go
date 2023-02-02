@@ -13,7 +13,7 @@ import (
 func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	const packageType = "helm"
 
-	var helmRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var helmRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"helm_charts_base_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -80,5 +80,5 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, constructor)
+	return mkResourceSchema(helmRemoteSchema, helmRemoteRepoPacker, unpackHelmRemoteRepo, constructor)
 }

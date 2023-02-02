@@ -877,9 +877,9 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 }
 
 func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
-
-	const remoteGemsRepoBasicWithPropagate = `
-		resource "artifactory_remote_gems_repository" "%s" {
+	for _, repoType := range remote.RepoTypesLikeBasic {
+		const remoteGemsRepoBasicWithPropagate = `
+		resource "artifactory_remote_%s_repository" "%s" {
 			key                     		= "%s"
 			description 					= "This is a test"
 			url                     		= "https://rubygems.org/"
@@ -887,21 +887,22 @@ func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
 			propagate_query_params  		= true
 		}
 	`
-	id := test.RandomInt()
-	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
+		id := test.RandomInt()
+		name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+		fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, name, name),
-				ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { acctest.PreCheck(t) },
+			ProviderFactories: acctest.ProviderFactories,
+			CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, repoType, name, name),
+					ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
+				},
 			},
-		},
-	})
+		})
+	}
 }
 
 func TestRemoteRepoResourceStateUpgradeV1(t *testing.T) {
@@ -915,7 +916,7 @@ func TestRemoteRepoResourceStateUpgradeV1(t *testing.T) {
 		"repo_layout_ref": "simple-default",
 	}
 
-	actual, err := repository.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
+	actual, err := remote.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
 
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)

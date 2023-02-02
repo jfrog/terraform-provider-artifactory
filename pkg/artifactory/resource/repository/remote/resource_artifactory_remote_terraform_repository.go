@@ -17,7 +17,7 @@ type TerraformRemoteRepo struct {
 func ResourceArtifactoryRemoteTerraformRepository() *schema.Resource {
 	const packageType = "terraform"
 
-	var terraformRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var terraformRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"terraform_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -55,5 +55,5 @@ func ResourceArtifactoryRemoteTerraformRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(terraformRemoteSchema, packer.Default(terraformRemoteSchema), unpackTerraformRemoteRepo, constructor)
+	return mkResourceSchema(terraformRemoteSchema, packer.Default(terraformRemoteSchema), unpackTerraformRemoteRepo, constructor)
 }
