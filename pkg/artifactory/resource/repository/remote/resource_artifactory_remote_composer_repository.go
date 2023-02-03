@@ -17,7 +17,7 @@ type ComposerRemoteRepo struct {
 func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	const packageType = "composer"
 
-	var composerRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var composerRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"composer_registry_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -52,5 +52,5 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(composerRemoteSchema, packer.Default(composerRemoteSchema), unpackComposerRemoteRepo, constructor)
+	return mkResourceSchema(composerRemoteSchema, packer.Default(composerRemoteSchema), unpackComposerRemoteRepo, constructor)
 }

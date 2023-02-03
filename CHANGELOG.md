@@ -1,3 +1,11 @@
+## 6.26.0. (January 31, 2023). Tested on Artifactory 7.49.6
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_*_repository: `propagate_query_params` attribute is removed from the common remote repository configuration. This attribute only works with Generic repo type. This change is implemented in schema V2 and migrator was added. During the migration from V1 to V2 that attribute will be removed.
+  PR: [#638](https://github.com/jfrog/terraform-provider-artifactory/pull/638)
+  Issue: [#635](https://github.com/jfrog/terraform-provider-artifactory/issues/635)
+
 ## 6.25.1 (January 27, 2023). Tested on Artifactory 7.49.6
 
 BUG FIXES:

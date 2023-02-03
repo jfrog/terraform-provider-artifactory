@@ -55,7 +55,7 @@ type ReadFunc func(d *schema.ResourceData, m interface{}) error
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
 type Constructor func() (interface{}, error)
 
-func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
+func MkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
 
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo, key, err := unpack(d)
@@ -77,7 +77,7 @@ func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 	}
 }
 
-func mkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextFunc {
+func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo, err := construct()
 		if err != nil {
@@ -101,7 +101,7 @@ func mkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 	}
 }
 
-func mkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.UpdateContextFunc {
+func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo, key, err := unpack(d)
 		if err != nil {
@@ -122,9 +122,9 @@ func mkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 		projectKeyChanged := d.HasChange("project_key")
 		tflog.Debug(ctx, fmt.Sprintf("projectKeyChanged: %v", projectKeyChanged))
 		if projectKeyChanged {
-			old, new := d.GetChange("project_key")
+			old, newProject := d.GetChange("project_key")
 			oldProjectKey := old.(string)
-			newProjectKey := new.(string)
+			newProjectKey := newProject.(string)
 			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
 
 			assignToProject := len(oldProjectKey) == 0 && len(newProjectKey) > 0
@@ -164,7 +164,7 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 	return err
 }
 
-func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(*resty.Client).R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
@@ -261,7 +261,7 @@ func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
 	return value
 }
 
-func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func ProjectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
 
@@ -276,18 +276,18 @@ func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ int
 }
 
 func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
-	var reader = mkRepoRead(packer, constructor)
+	var reader = MkRepoRead(packer, constructor)
 	return &schema.Resource{
-		CreateContext: mkRepoCreate(unpack, reader),
+		CreateContext: MkRepoCreate(unpack, reader),
 		ReadContext:   reader,
-		UpdateContext: mkRepoUpdate(unpack, reader),
-		DeleteContext: deleteRepo,
+		UpdateContext: MkRepoUpdate(unpack, reader),
+		DeleteContext: DeleteRepo,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema:        skeema,
-		CustomizeDiff: projectEnvironmentsDiff,
+		CustomizeDiff: ProjectEnvironmentsDiff,
 	}
 }
 
