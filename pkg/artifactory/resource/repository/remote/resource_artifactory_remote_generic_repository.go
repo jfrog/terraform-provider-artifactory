@@ -48,7 +48,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(genericRemoteSchema, packer.Default(genericRemoteSchema), unpackGenericRemoteRepo, constructor)
+	return mkResourceSchema(genericRemoteSchema, packer.Default(genericRemoteSchema), unpackGenericRemoteRepo, constructor)
 }
 
 func ResourceArtifactoryRemoteBasicRepository(pkt string) *schema.Resource {

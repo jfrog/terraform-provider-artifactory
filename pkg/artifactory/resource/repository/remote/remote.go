@@ -431,7 +431,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 
 func getJavaRemoteSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
 	return util.MergeMaps(
-		baseRemoteRepoSchema,
+		baseRemoteRepoSchemaV2,
 		map[string]*schema.Schema{
 			"fetch_jars_eagerly": {
 				Type:        schema.TypeBool,
@@ -602,6 +602,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		CustomizeDiff: repository.ProjectEnvironmentsDiff,
 	}
 }
+
 func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	if rawState["package_type"] != "generic" {
 		delete(rawState, "propagate_query_params")
