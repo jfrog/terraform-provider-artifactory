@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/local"
 	datasource_security "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/security"
 	datasource_user "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
@@ -143,6 +144,19 @@ func Provider() *schema.Provider {
 		resourceMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
 	}
 
+	dataSourceMap := map[string]*schema.Resource{
+		"artifactory_file":              datasource.ArtifactoryFile(),
+		"artifactory_fileinfo":          datasource.ArtifactoryFileInfo(),
+		"artifactory_group":             datasource_security.DataSourceArtifactoryGroup(),
+		"artifactory_user":              datasource_user.DataSourceArtifactoryUser(),
+		"artifactory_permission_target": datasource_security.DataSourceArtifactoryPermissionTarget(),
+	}
+
+	for _, repoType := range local.RepoTypesLikeGeneric {
+		localDataSourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+		dataSourceMap[localDataSourceName] = datasource_local.DataSourceArtifactoryLocalGenericRepository(repoType)
+	}
+
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
@@ -182,13 +196,7 @@ func Provider() *schema.Provider {
 
 		DataSourcesMap: util.AddTelemetry(
 			productId,
-			map[string]*schema.Resource{
-				"artifactory_file":              datasource.ArtifactoryFile(),
-				"artifactory_fileinfo":          datasource.ArtifactoryFileInfo(),
-				"artifactory_group":             datasource_security.DataSourceArtifactoryGroup(),
-				"artifactory_user":              datasource_user.DataSourceArtifactoryUser(),
-				"artifactory_permission_target": datasource_security.DataSourceArtifactoryPermissionTarget(),
-			},
+			dataSourceMap,
 		),
 	}
 

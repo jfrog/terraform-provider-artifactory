@@ -77,7 +77,7 @@ func mkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 	}
 }
 
-func mkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextFunc {
+func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo, err := construct()
 		if err != nil {
@@ -276,7 +276,7 @@ func projectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ int
 }
 
 func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
-	var reader = mkRepoRead(packer, constructor)
+	var reader = MkRepoRead(packer, constructor)
 	return &schema.Resource{
 		CreateContext: mkRepoCreate(unpack, reader),
 		ReadContext:   reader,
