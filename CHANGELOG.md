@@ -2,7 +2,7 @@
 
 BUG FIXES:
 * resource/artifactory_remote_*_repository: fixed bug, where remote repository password could be deleted, if it wasn't managed by the provider and `ignore_changes` was applied to that attribute.
-  PR: []()
+  PR: [#634](https://github.com/jfrog/terraform-provider-artifactory/pull/643)
   Issue: [#642](https://github.com/jfrog/terraform-provider-artifactory/issues/642)
  
   
