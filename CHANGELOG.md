@@ -1,4 +1,12 @@
-## 6.26.0. (January 31, 2023). Tested on Artifactory 7.49.6
+## 6.26.1 (February 8, 2023).
+
+BUG FIXES:
+* resource/artifactory_remote_*_repository: fixed bug, where remote repository password could be deleted, if it wasn't managed by the provider and `ignore_changes` was applied to that attribute.
+  PR: []()
+  Issue: [#642](https://github.com/jfrog/terraform-provider-artifactory/issues/642)
+ 
+  
+## 6.26.0 (January 31, 2023). Tested on Artifactory 7.49.6
 
 IMPROVEMENTS:
 
