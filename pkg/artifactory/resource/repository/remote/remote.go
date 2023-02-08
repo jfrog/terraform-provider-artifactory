@@ -21,7 +21,7 @@ type RepositoryRemoteBaseParams struct {
 	PackageType                       string                             `json:"packageType,omitempty"`
 	Url                               string                             `json:"url"`
 	Username                          string                             `json:"username"`
-	Password                          string                             `json:"password"`
+	Password                          string                             `json:"password,omitempty"` // must have 'omitempty' to avoid sending an empty string on update, if attribute is ignored by the provider.
 	Proxy                             string                             `json:"proxy"`
 	Description                       string                             `json:"description"`
 	Notes                             string                             `json:"notes"`
