@@ -2,8 +2,6 @@ package local
 
 import (
 	"context"
-	"net/http"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,16 +18,12 @@ func MkRepoReadDataSource(pack packer.PackFunc, construct repository.Constructor
 
 		key := d.Get("key").(string)
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().
+		_, err = m.(*resty.Client).R().
 			SetResult(repo).
 			SetPathParam("key", key).
 			Get(repository.RepositoriesEndpoint)
 
 		if err != nil {
-			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-				d.SetId("")
-				return nil
-			}
 			return diag.FromErr(err)
 		}
 
