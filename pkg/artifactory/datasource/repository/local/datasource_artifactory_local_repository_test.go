@@ -28,12 +28,12 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	resourceName := fmt.Sprintf("data.artifactory_local_%s_repository.%s", repoType, name)
 	xrayIndex := test.RandBool()
 
-	createParams := map[string]interface{}{
+	params := map[string]interface{}{
 		"repoType":  repoType,
 		"name":      name,
 		"xrayIndex": xrayIndex,
 	}
-	createConfig := util.ExecuteTemplate("TestAccLocalRepository", `
+	config := util.ExecuteTemplate("TestAccLocalRepository", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 		  description = "Test repo for {{ .name }}"
@@ -44,7 +44,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 		data "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
 		  key = artifactory_local_{{ .repoType }}_repository.{{ .name }}.id
 		}
-	`, createParams)
+	`, params)
 
 	return t, resource.TestCase{
 		PreCheck: func() {
@@ -53,7 +53,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: createConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
 					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
