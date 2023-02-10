@@ -2,14 +2,13 @@ package local_test
 
 import (
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"math/rand"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -25,7 +24,7 @@ func TestAccLocalAllRepoTypes(t *testing.T) {
 }
 
 func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
+	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, test.RandomInt())
 	resourceName := fmt.Sprintf("data.artifactory_local_%s_repository.%s", repoType, name)
 	xrayIndex := test.RandBool()
 
