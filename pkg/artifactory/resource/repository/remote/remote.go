@@ -54,6 +54,7 @@ type RepositoryRemoteBaseParams struct {
 	MismatchingMimeTypeOverrideList   string                             `hcl:"mismatching_mime_types_override_list" json:"mismatchingMimeTypesOverrideList"`
 	ListRemoteFolderItems             bool                               `json:"listRemoteFolderItems"`
 	DownloadRedirect                  bool                               `hcl:"download_direct" json:"downloadRedirect,omitempty"`
+	CdnRedirect                       bool                               `hcl:"cdn_direct" json:"cdnRedirect,omitempty"`
 }
 
 type JavaRemoteRepo struct {
@@ -400,6 +401,12 @@ var baseRemoteRepoSchema = map[string]*schema.Schema{
 		Description: "When set, download requests to this repository will redirect the client to download the artifact " +
 			"directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only. Default value is 'false'.",
 	},
+	"cdn_direct": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Applies to Artifactory Cloud Only. Default value is 'false'",
+	},
 }
 
 var baseRemoteRepoSchemaV1 = util.MergeMaps(baseRemoteRepoSchema, map[string]*schema.Schema{
@@ -510,6 +517,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		BlackedOut:                        d.GetBoolRef("blacked_out", false),
 		XrayIndex:                         d.GetBool("xray_index", false),
 		DownloadRedirect:                  d.GetBool("download_direct", false),
+		CdnRedirect:                       d.GetBool("cdn_direct", false),
 		QueryParams:                       d.GetString("query_params", false),
 		StoreArtifactsLocally:             d.GetBoolRef("store_artifacts_locally", false),
 		SocketTimeoutMillis:               d.GetInt("socket_timeout_millis", false),
