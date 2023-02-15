@@ -10,9 +10,9 @@ endif
 PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
-VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
-BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_VERSION}/${TARGET_ARCH}
+PROVIDER_VERSION?=$(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+NEXT_PROVIDER_VERSION := $(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
+BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
 SONAR_SCANNER_VERSION?=4.7.0.2747
 SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
 
@@ -21,25 +21,25 @@ default: build
 install: clean build
 	rm -fR .terraform.d && \
 	mkdir -p ${BUILD_PATH} && \
-		mv -v dist/terraform-provider-${PRODUCT}_${GORELEASER_ARCH}/terraform-provider-${PRODUCT}_v${NEXT_VERSION}* ${BUILD_PATH} && \
+		mv -v dist/terraform-provider-${PRODUCT}_${GORELEASER_ARCH}/terraform-provider-${PRODUCT}_v${NEXT_PROVIDER_VERSION}* ${BUILD_PATH} && \
 		rm -f .terraform.lock.hcl && \
-		sed -i.bak 's/version = ".*"/version = "${NEXT_VERSION}"/' sample.tf && rm sample.tf.bak && \
+		sed -i.bak 's/version = ".*"/version = "${NEXT_PROVIDER_VERSION}"/' sample.tf && rm sample.tf.bak && \
 		terraform init
 
 clean:
 	rm -fR dist terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
 
 release:
-	@git tag ${NEXT_VERSION} && git push --mirror
-	@echo "Pushed ${NEXT_VERSION}"
-	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/terraform-provider-${PRODUCT}@v${NEXT_VERSION}
+	@git tag ${NEXT_PROVIDER_VERSION} && git push --mirror
+	@echo "Pushed ${NEXT_PROVIDER_VERSION}"
+	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/terraform-provider-${PRODUCT}@v${NEXT_PROVIDER_VERSION}
 	@echo "Updated pkg cache"
 
 update_pkg_cache:
-	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/terraform-provider-${PRODUCT}@v${VERSION}
+	GOPROXY=https://proxy.golang.org GO111MODULE=on go get github.com/jfrog/terraform-provider-${PRODUCT}@v${PROVIDER_VERSION}
 
 build: fmt
-	GORELEASER_CURRENT_TAG=${NEXT_VERSION} goreleaser build --single-target --rm-dist --snapshot
+	GORELEASER_CURRENT_TAG=${NEXT_PROVIDER_VERSION} goreleaser build --single-target --rm-dist --snapshot
 
 test:
 	@echo "==> Starting unit tests"
@@ -50,13 +50,13 @@ attach:
 
 acceptance: fmt
 	export TF_ACC=true && \
-		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
+		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
 
 coverage:
-	go tool cover -html=coverage.txt 
+	go tool cover -html=coverage.txt
 
 scan:
-	${SONAR_SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectVersion=${NEXT_VERSION} -Dsonar.go.coverage.reportPaths=coverage.txt
+	${SONAR_SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectVersion=${PROVIDER_VERSION} -Dsonar.go.coverage.reportPaths=coverage.txt
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
