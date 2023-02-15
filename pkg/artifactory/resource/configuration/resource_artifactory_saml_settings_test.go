@@ -29,6 +29,7 @@ resource "artifactory_saml_settings" "saml" {
 }`
 
 func TestAccSamlSettings_full(t *testing.T) {
+	fqrn := "artifactory_saml_settings.saml"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -38,20 +39,25 @@ func TestAccSamlSettings_full(t *testing.T) {
 			{
 				Config: SamlSettingsTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "enable", "true"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "certificate", "test-certificate"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "email_attribute", "email"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "group_attribute", "group"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "login_url", "test-login-url"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "logout_url", "test-logout-url"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "no_auto_user_creation", "false"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "service_provider_name", "okta"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "allow_user_to_access_profile", "true"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "auto_redirect", "true"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "sync_groups", "true"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "verify_audience_restriction", "true"),
-					resource.TestCheckResourceAttr("artifactory_saml_settings.saml", "use_encrypted_assertion", "false"),
+					resource.TestCheckResourceAttr(fqrn, "enable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "certificate", "test-certificate"),
+					resource.TestCheckResourceAttr(fqrn, "email_attribute", "email"),
+					resource.TestCheckResourceAttr(fqrn, "group_attribute", "group"),
+					resource.TestCheckResourceAttr(fqrn, "login_url", "test-login-url"),
+					resource.TestCheckResourceAttr(fqrn, "logout_url", "test-logout-url"),
+					resource.TestCheckResourceAttr(fqrn, "no_auto_user_creation", "false"),
+					resource.TestCheckResourceAttr(fqrn, "service_provider_name", "okta"),
+					resource.TestCheckResourceAttr(fqrn, "allow_user_to_access_profile", "true"),
+					resource.TestCheckResourceAttr(fqrn, "auto_redirect", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_groups", "true"),
+					resource.TestCheckResourceAttr(fqrn, "verify_audience_restriction", "true"),
+					resource.TestCheckResourceAttr(fqrn, "use_encrypted_assertion", "false"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

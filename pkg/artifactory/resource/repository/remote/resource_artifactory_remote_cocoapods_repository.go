@@ -17,7 +17,7 @@ type CocoapodsRemoteRepo struct {
 func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	const packageType = "cocoapods"
 
-	var cocoapodsRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, VcsRemoteRepoSchema, map[string]*schema.Schema{
+	var cocoapodsRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, VcsRemoteRepoSchema, map[string]*schema.Schema{
 		"pods_specs_repo_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -52,5 +52,5 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, constructor)
+	return mkResourceSchema(cocoapodsRemoteSchema, packer.Default(cocoapodsRemoteSchema), unpackCocoapodsRemoteRepo, constructor)
 }

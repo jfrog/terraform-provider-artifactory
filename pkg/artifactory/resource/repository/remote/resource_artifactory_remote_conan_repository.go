@@ -15,7 +15,7 @@ type ConanRemoteRepo struct {
 func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	const packageType = "conan"
 
-	var conanRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var conanRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"force_conan_authentication": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -48,5 +48,5 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(conanRemoteSchema, packer.Default(conanRemoteSchema), unpackConanRemoteRepo, constructor)
+	return mkResourceSchema(conanRemoteSchema, packer.Default(conanRemoteSchema), unpackConanRemoteRepo, constructor)
 }

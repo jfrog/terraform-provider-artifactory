@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
@@ -199,6 +200,13 @@ func TestAccKeyPairRSA(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "passphrase", "new-password"),
 				),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "pair_name"),
+				ImportStateVerifyIgnore: []string{"passphrase", "private_key"},
+			},
 		},
 	})
 }
@@ -324,6 +332,13 @@ func TestAccKeyPairGPG(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "unavailable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "pair_name"),
+				ImportStateVerifyIgnore: []string{"passphrase", "private_key"},
 			},
 		},
 	})

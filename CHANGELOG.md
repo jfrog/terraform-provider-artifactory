@@ -1,3 +1,26 @@
+## 6.26.1 (February 8, 2023). Tested on Artifactory 7.49.6
+
+BUG FIXES:
+* resource/artifactory_remote_*_repository: fixed bug, where remote repository password could be deleted, if it wasn't managed by the provider and `ignore_changes` was applied to that attribute.
+  PR: [#634](https://github.com/jfrog/terraform-provider-artifactory/pull/643)
+  Issue: [#642](https://github.com/jfrog/terraform-provider-artifactory/issues/642)
+ 
+  
+## 6.26.0 (January 31, 2023). Tested on Artifactory 7.49.6
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_*_repository: `propagate_query_params` attribute is removed from the common remote repository configuration. This attribute only works with Generic repo type. This change is implemented in schema V2 and migrator was added. During the migration from V1 to V2 that attribute will be removed.
+  PR: [#638](https://github.com/jfrog/terraform-provider-artifactory/pull/638)
+  Issue: [#635](https://github.com/jfrog/terraform-provider-artifactory/issues/635)
+
+## 6.25.1 (January 27, 2023). Tested on Artifactory 7.49.6
+
+BUG FIXES:
+
+* resource/artifactory_oauth_settings: fix an issue with the import, where `oauth_provider` section couldn't be imported.
+  PR: [#637](https://github.com/jfrog/terraform-provider-artifactory/pull/637)
+
 ## 6.25.0 (January 20, 2023). Tested on Artifactory 7.49.5
 
 IMPROVEMENTS:
@@ -16,7 +39,7 @@ IMPROVEMENTS:
 
 ## 6.24.2 (January 13, 2023). Tested on Artifactory 7.49.5
 
-BUG FIX:
+BUG FIXES:
 
 * resource/artifactory_virtual_*_repository: `omitempty` is removed from `artifactory_requests_can_retrieve_remote_artifacts` attribute, allowing users to update the value with `false` value, if it was set to `true` before.
  PR [#628](https://github.com/jfrog/terraform-provider-artifactory/pull/628)

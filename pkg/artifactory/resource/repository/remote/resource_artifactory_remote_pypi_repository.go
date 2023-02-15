@@ -11,7 +11,7 @@ import (
 func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 	const packageType = "pypi"
 
-	var pypiRemoteSchema = util.MergeMaps(BaseRemoteRepoSchema, map[string]*schema.Schema{
+	var pypiRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
 		"pypi_registry_url": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -53,5 +53,5 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(pypiRemoteSchema, packer.Default(pypiRemoteSchema), unpackPypiRemoteRepo, constructor)
+	return mkResourceSchema(pypiRemoteSchema, packer.Default(pypiRemoteSchema), unpackPypiRemoteRepo, constructor)
 }

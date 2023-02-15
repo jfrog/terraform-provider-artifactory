@@ -80,6 +80,11 @@ func TestAccPropertySetUpdate(t *testing.T) {
 				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -106,6 +111,12 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 			{
 				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
+			},
+			{
+				ResourceName:  fqrn,
+				ImportStateId: resourceName,
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile("No property set found for .*"),
 			},
 		},
 	})

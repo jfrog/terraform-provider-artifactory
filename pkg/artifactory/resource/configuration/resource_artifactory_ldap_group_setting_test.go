@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccLdapGroupSetting_full(t *testing.T) {
@@ -71,6 +72,7 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState("ldapgrouptest", "name"),
 			},
 		},
 	})

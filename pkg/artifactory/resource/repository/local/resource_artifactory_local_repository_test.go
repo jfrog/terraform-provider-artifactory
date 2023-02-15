@@ -16,6 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -102,6 +103,12 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -246,6 +253,12 @@ func TestAccLocalDebianRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -389,12 +402,17 @@ func TestAccLocalRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalDockerV1Repository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
 	params := map[string]interface{}{
 		"name": name,
@@ -420,12 +438,17 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalDockerV2Repository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
 	params := map[string]interface{}{
 		"block":     test.RandBool(),
@@ -457,12 +480,17 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
 	params := map[string]interface{}{
 		"name": name,
@@ -485,12 +513,17 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalNugetRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
 		"force_nuget_authentication": test.RandBool(),
@@ -519,12 +552,17 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalTerraformModuleRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("terraform-local", "artifactory_local_terraform_module_repository")
 	params := map[string]interface{}{
 		"name": name,
@@ -550,12 +588,17 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-module-default"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalTerraformProviderRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("terraform-local", "artifactory_local_terraform_provider_repository")
 	params := map[string]interface{}{
 		"name": name,
@@ -580,6 +623,12 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-provider-default"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -608,7 +657,6 @@ const localJavaRepositoryBasic = `
 	`
 
 func TestAccLocalMavenRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("maven-local", "artifactory_local_maven_repository")
 	tempStruct := util.MergeMaps(commonJavaParams)
 
@@ -634,12 +682,17 @@ func TestAccLocalMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalGenericRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("generic-local", "artifactory_local_generic_repository")
 	params := map[string]interface{}{
 		"name":                name,
@@ -664,12 +717,17 @@ func TestAccLocalGenericRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "priority_resolution", fmt.Sprintf("%t", params["priority_resolution"])),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
-
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	projectEnv := test.RandSelect("DEV", "PROD").(string)
@@ -710,12 +768,17 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
 
 func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
@@ -753,7 +816,6 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
-
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
@@ -792,7 +854,6 @@ func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing
 }
 
 func TestAccLocalNpmRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("npm-local", "artifactory_local_npm_repository")
 	params := map[string]interface{}{
 		"name": name,
@@ -814,6 +875,12 @@ func TestAccLocalNpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -822,6 +889,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 	xrayIndex := test.RandBool()
+	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 
 	params := map[string]interface{}{
 		"repoType":  repoType,
@@ -853,6 +921,12 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	}
 }
@@ -870,6 +944,7 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 	repoLayoutRef := acctest.GetValidRandomDefaultRepoLayoutRef()
+	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 
 	const localRepositoryConfigFull = `
 		resource "artifactory_local_%[1]s_repository" "%[2]s" {
@@ -897,13 +972,18 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	}
 }
 
 //Test case to cover when repoLayoutRef not left as blank and set to some value other than default
 func TestAccAllLocalRepoTypes(t *testing.T) {
-
 	for _, repo := range local.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 			resource.Test(makeLocalRepoTestCase(repo, t))
@@ -938,6 +1018,12 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	}
 }
@@ -951,7 +1037,6 @@ func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
 }
 
 func TestAccLocalCargoRepository(t *testing.T) {
-
 	_, fqrn, name := test.MkNames("cargo-local", "artifactory_local_cargo_repository")
 	params := map[string]interface{}{
 		"anonymous_access": test.RandBool(),
@@ -976,6 +1061,12 @@ func TestAccLocalCargoRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})

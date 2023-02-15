@@ -59,7 +59,6 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 				),
 			},
 			{
-				Config:       accessTokenConfig,
 				ResourceName: fqrn,
 				ImportState:  true,
 				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
@@ -121,6 +120,11 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
 			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
+			},
 		},
 	})
 }
@@ -156,6 +160,11 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group"),
 				),
 			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
+			},
 		},
 	})
 }
@@ -179,7 +188,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>\]:<actions>'.*`),
+				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>]:<actions>'.*`),
 			},
 		},
 	})
@@ -291,6 +300,11 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 					resource.TestCheckResourceAttr(fqrn, "audiences.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", fmt.Sprintf("%s@*", prefix)),
 				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
 			},
 		},
 	}

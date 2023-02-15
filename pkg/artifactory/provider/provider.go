@@ -61,6 +61,7 @@ func Provider() *schema.Provider {
 		"artifactory_remote_composer_repository":              remote.ResourceArtifactoryRemoteComposerRepository(),
 		"artifactory_remote_conan_repository":                 remote.ResourceArtifactoryRemoteConanRepository(),
 		"artifactory_remote_docker_repository":                remote.ResourceArtifactoryRemoteDockerRepository(),
+		"artifactory_remote_generic_repository":               remote.ResourceArtifactoryRemoteGenericRepository(),
 		"artifactory_remote_go_repository":                    remote.ResourceArtifactoryRemoteGoRepository(),
 		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_maven_repository":                 remote.ResourceArtifactoryRemoteMavenRepository(),
@@ -109,9 +110,9 @@ func Provider() *schema.Provider {
 		resourceMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(repoType)
 	}
 
-	for _, repoType := range remote.RepoTypesLikeGeneric {
+	for _, repoType := range remote.RepoTypesLikeBasic {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
-		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteGenericRepository(repoType)
+		resourceMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(repoType)
 	}
 
 	for _, repoType := range repository.GradleLikeRepoTypes {
