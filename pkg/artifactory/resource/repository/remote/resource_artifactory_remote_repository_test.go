@@ -712,7 +712,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 		"download_direct": true,
-		"cdn_direct":      true,
+		"cdn_redirect":    false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
 	}
 	allFields := util.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := util.FmtMapToHcl(allFields)

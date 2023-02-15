@@ -50,7 +50,7 @@ type RepositoryBaseParams struct {
 	PropertySets           []string `hcl:"property_sets" json:"propertySets,omitempty"`
 	ArchiveBrowsingEnabled *bool    `hcl:"archive_browsing_enabled" json:"archiveBrowsingEnabled,omitempty"`
 	DownloadRedirect       *bool    `hcl:"download_direct" json:"downloadRedirect,omitempty"`
-	CdnRedirect            *bool    `hcl:"cdn_direct" json:"cdnRedirect,omitempty"`
+	CdnRedirect            *bool    `json:"cdnRedirect"`
 	PriorityResolution     bool     `hcl:"priority_resolution" json:"priorityResolution"`
 	TerraformType          string   `json:"terraformType"`
 }
@@ -152,10 +152,11 @@ var BaseLocalRepoSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
 	},
-	"cdn_direct": {
+	"cdn_redirect": {
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Applies to Artifactory Cloud Only.",
+		Default:     false,
+		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
 	},
 }
 
@@ -186,7 +187,7 @@ func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType strin
 		PropertySets:           d.GetSet("property_sets"),
 		XrayIndex:              d.GetBool("xray_index", false),
 		DownloadRedirect:       d.GetBoolRef("download_direct", false),
-		CdnRedirect:            d.GetBoolRef("cdn_direct", false),
+		CdnRedirect:            d.GetBoolRef("cdn_redirect", false),
 		PriorityResolution:     d.GetBool("priority_resolution", false),
 	}
 }

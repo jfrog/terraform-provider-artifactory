@@ -892,16 +892,19 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 
 	params := map[string]interface{}{
-		"repoType":  repoType,
-		"name":      name,
-		"xrayIndex": xrayIndex,
+		"repoType":    repoType,
+		"name":        name,
+		"xrayIndex":   xrayIndex,
+		"cdnRedirect": false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+
 	}
 	cfg := util.ExecuteTemplate("TestAccLocalRepository", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
-		  key                 = "{{ .name }}"
-		  description = "Test repo for {{ .name }}"
-		  notes       = "Test repo for {{ .name }}"
-		  xray_index  = {{ .xrayIndex }}
+		  key           = "{{ .name }}"
+		  description   = "Test repo for {{ .name }}"
+		  notes         = "Test repo for {{ .name }}"
+		  xray_index    = {{ .xrayIndex }}
+		  cdn_redirect  = {{ .cdnRedirect }}
 		}
 	`, params)
 
@@ -919,6 +922,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
+					resource.TestCheckResourceAttr(resourceName, "cdn_redirect", fmt.Sprintf("%t", params["cdnRedirect"])),
 				),
 			},
 			{
@@ -982,7 +986,7 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 	}
 }
 
-//Test case to cover when repoLayoutRef not left as blank and set to some value other than default
+// Test case to cover when repoLayoutRef not left as blank and set to some value other than default
 func TestAccAllLocalRepoTypes(t *testing.T) {
 	for _, repo := range local.RepoTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
