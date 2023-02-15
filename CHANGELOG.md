@@ -3,7 +3,7 @@
 BUG FIXES:
 * resource/artifactory_remote_maven_repository: renamed the attribute `metadata_retrieval_timeout_seconds` to `metadata_retrieval_timeout_secs`. This attribute can be used with any remote repository type now, not only `maven`, as it was before.
 * resource/artifactory_remote_docker_repository and resource/artifactory_remote_helm_repository: fixed bug when `external_dependencies_patterns` attribute was not importable.
- PR: []()
+ PR: [#652](https://github.com/jfrog/terraform-provider-artifactory/pull/652)
 
 ## 6.27.0 (February 15, 2023). Tested on Artifactory 7.49.8
 
