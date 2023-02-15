@@ -30,15 +30,19 @@ pipelines:
             - name: partnersSlack
             - name: Partnership_GitHub
             - name: PartnershipArtifactory
+            - name: TerraformArtifactorySonarQube
           inputResources:
             - name: GitHubTFProviderRepoJFrog
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.35.1
             GO_VERSION: 1.18
+            SONAR_SCANNER_VERSION: 4.7.0.2747
+            SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
+            SONAR_SCANNER_OPTS: "-server"
         execution:
           onStart:
-            - echo "Preparing for work. Install Helm, Go and Teraform"
+            - echo "Preparing for work. Install Helm, Teraform, GoReleaser, and SonarQube"
             - ls -al && pwd
             - echo "Helm 3 install"
             - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh
@@ -55,6 +59,9 @@ pipelines:
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
             - sudo apt install goreleaser
+            - echo "Install SonarQube"
+            - curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-macosx.zip
+            - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           onExecute:
             - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
@@ -127,6 +134,8 @@ pipelines:
             - unset ARTIFACTORY_PASSWORD
             - export TF_ACC=true
             - make acceptance
+            - export SONAR_TOKEN=int_TerraformArtifactorySonarQube_token
+            - make scan
             - make install
           onSuccess:
             - echo "Success"
