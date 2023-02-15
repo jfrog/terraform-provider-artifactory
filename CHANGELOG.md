@@ -1,18 +1,43 @@
-## 6.27.0 (February 15, 2023).
+## 6.28.0 (February 15, 2023).
 
 BUG FIXES:
 * resource/artifactory_remote_maven_repository: renamed the attribute `metadata_retrieval_timeout_seconds` to `metadata_retrieval_timeout_secs`. This attribute can be used with any remote repository type now, not only `maven`, as it was before.
 * resource/artifactory_remote_docker_repository and resource/artifactory_remote_helm_repository: fixed bug when `external_dependencies_patterns` attribute was not importable.
  PR: []()
 
-## 6.26.1 (February 8, 2023). Tested on Artifactory 7.49.6
+## 6.27.0 (February 15, 2023). Tested on Artifactory 7.49.8
+
+FEATURES:
+
+* datasource/artifactory_local_*_repository: Added new data sources for some basic local repositories. Repositories included are:
+  * "bower",
+  * "chef",
+  * "cocoapods",
+  * "composer",
+  * "conan",
+  * "conda",
+  * "cran",
+  * "gems",
+  * "generic",
+  * "gitlfs",
+  * "go",
+  * "helm",
+  * "npm",
+  * "opkg",
+  * "pub",
+  * "puppet",
+  * "pypi",
+  * "swift",
+  * "terraformbackend",
+  * "vagrant"
+
+## 6.26.1 (February 8, 2023). Tested on Artifactory 7.49.8
 
 BUG FIXES:
 * resource/artifactory_remote_*_repository: fixed bug, where remote repository password could be deleted, if it wasn't managed by the provider and `ignore_changes` was applied to that attribute.
   PR: [#634](https://github.com/jfrog/terraform-provider-artifactory/pull/643)
   Issue: [#642](https://github.com/jfrog/terraform-provider-artifactory/issues/642)
- 
-  
+
 ## 6.26.0 (January 31, 2023). Tested on Artifactory 7.49.6
 
 IMPROVEMENTS:
@@ -38,7 +63,7 @@ IMPROVEMENTS:
 
 ## 6.24.3 (January 18, 2023). Tested on Artifactory 7.49.5
 
-IMPROVEMENTS: 
+IMPROVEMENTS:
 
 * resource/artifactory_*_user: updated documentation.
   Issue: [#619](https://github.com/jfrog/terraform-provider-artifactory/issues/619)
