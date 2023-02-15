@@ -13,6 +13,8 @@ PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
 VERSION := $(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_VERSION := $(shell echo ${VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_VERSION}/${TARGET_ARCH}
+SONAR_SCANNER_VERSION?=4.7.0.2747
+SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
 
 default: build
 
@@ -48,7 +50,13 @@ attach:
 
 acceptance: fmt
 	export TF_ACC=true && \
-		go test -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
+		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
+
+coverage:
+	go tool cover -html=coverage.txt 
+
+scan:
+	${SONAR_SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectVersion=${NEXT_VERSION} -Dsonar.go.coverage.reportPaths=coverage.txt
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
