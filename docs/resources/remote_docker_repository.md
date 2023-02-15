@@ -35,7 +35,12 @@ The following arguments are supported, along with the [common list of arguments 
   that exist in the cache.
 * `enable_token_authentication` - (Optional) Enable token (Bearer) based authentication.
 * `external_dependencies_enabled` - (Optional) Also known as 'Foreign Layers Caching' on the UI.
-* `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS.
+* `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will
+  follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. 
+  By default, this is set to '**' in the UI, which means that remote modules may be downloaded from any external VCS source.
+  Due to SDKv2 limitations, we can't set the default value for the list.
+  This value must be assigned to the attribute manually, if user don't specify any other non-default values.
+  This attribute must be set together with `external_dependencies_enabled = true`.
 
 ## Import
 

@@ -32,10 +32,10 @@ The following arguments are supported, along with the [common list of arguments 
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
 * `helm_charts_base_url` - (Optional) No documentation is available. Hopefully you know what this means.
-* `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten.
-* `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external
-  dependencies may be downloaded from. By default, this is set to ** which means that dependencies may be downloaded
-  from any external source.
+* `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten. `External Dependency Rewrite` in the UI.
+* `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will
+  follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.
+  Default value in the UI is empty. This attribute must be set together with `external_dependencies_enabled = true`.
 
 ## Import
 

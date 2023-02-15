@@ -7,13 +7,11 @@ import (
 	"math/rand"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
@@ -21,15 +19,14 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	_, fqrn, name := test.MkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
 
 	key := fmt.Sprintf("debian-remote.teleport_%d", test.RandomInt())
-	localRepositoryBasic := fmt.Sprintf(`
+	remoteRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_debian_repository" "%s" {
 			key              = "%s"
 			repo_layout_ref  = "simple-default"
@@ -49,8 +46,14 @@ func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: localRepositoryBasic,
+				Config: remoteRepositoryBasic,
 				Check:  resource.TestCheckResourceAttr(fqrn, "key", key),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(key, "key"),
 			},
 		},
 	})
@@ -78,7 +81,7 @@ func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	})
 }
 
-func TestAccRemoteDockerRepository(t *testing.T) {
+func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
 	const packageType = "docker"
 	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"external_dependencies_enabled":  true,
@@ -88,7 +91,7 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"enabled":                         false,
 			"statistics_enabled":              true,
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
@@ -97,10 +100,87 @@ func TestAccRemoteDockerRepository(t *testing.T) {
 	resource.Test(t, testCase)
 }
 
+func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
+	const failKey = `
+		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
+			key                     		= "remote-docker"
+			url                     		= "https://registry.npmjs.org/"
+			retrieval_cache_period_seconds 	= 70
+			enable_token_authentication    	= true
+			block_pushing_schema1          	= true
+			priority_resolution            	= false
+			external_dependencies_enabled   = true
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      failKey,
+				ExpectError: regexp.MustCompile(".*if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set.*"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteDockerRepositoryDependenciesFalseListFails(t *testing.T) {
+	const failKey = `
+		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
+			key                     		= "remote-docker"
+			url                     		= "https://registry.npmjs.org/"
+			retrieval_cache_period_seconds 	= 70
+			enable_token_authentication    	= true
+			block_pushing_schema1          	= true
+			priority_resolution            	= false
+			external_dependencies_enabled   = false
+			external_dependencies_patterns 	= ["**/hub.docker.io/**", "**/bintray.jfrog.io/**"]
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      failKey,
+				ExpectError: regexp.MustCompile(".*if `external_dependencies_enabled` is set to `false`, `external_dependencies_patterns` list can not be set.*"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteDockerRepositoryDepListEmptyStringFails(t *testing.T) {
+	const failKey = `
+		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
+			key                     		= "remote-docker"
+			url                     		= "https://registry.npmjs.org/"
+			retrieval_cache_period_seconds 	= 70
+			enable_token_authentication    	= true
+			block_pushing_schema1          	= true
+			priority_resolution            	= false
+			external_dependencies_enabled   = true
+			external_dependencies_patterns 	= ["**/hub.docker.io/**", ""]
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      failKey,
+				ExpectError: regexp.MustCompile(".*`external_dependencies_patterns` can't have an item of \"\" inside a list.*"),
+			},
+		},
+	})
+}
+
 func TestAccRemoteDockerRepoUpdate(t *testing.T) {
-	id, fqrn, resourceName := test.MkNames("docker-remote-", "artifactory_remote_docker_repository")
+	id, fqrn, name := test.MkNames("docker-remote-", "artifactory_remote_docker_repository")
 	var testData = map[string]string{
-		"resource_name":                  resourceName,
+		"resource_name":                  name,
 		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
 		"url":                            "https://registry-1.docker.io/",
 		"assumed_offline_period_secs":    "300",
@@ -109,13 +189,13 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"excludes_pattern":               "nopat3,nopat2,nopat1",
 		"includes_pattern":               "pat3,pat2,pat1",
 		"notes":                          "internal description",
-		"proxy":                          "testProxy",
+		"proxy":                          "",
 		"username":                       "admin",
-		"password":                       "password",
+		"password":                       "password1",
 		"xray_index":                     "false",
 	}
 	var testDataUpdated = map[string]string{
-		"resource_name":                  resourceName,
+		"resource_name":                  name,
 		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
 		"url":                            "https://registry-1.docker.io/",
 		"assumed_offline_period_secs":    "301",
@@ -124,7 +204,7 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"excludes_pattern":               "nopat3,nopat2,nopat1",
 		"includes_pattern":               "pat3,pat2,pat1",
 		"notes":                          "internal description",
-		"proxy":                          "testProxy",
+		"proxy":                          "",
 		"username":                       "admin1",
 		"password":                       "password",
 		"xray_index":                     "true",
@@ -143,6 +223,13 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 			{
 				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
 	})
@@ -275,64 +362,6 @@ func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	}))
 }
 
-func TestAccRemoteRepository_ExternalDependenciesDefaults(t *testing.T) {
-	repoTypes := []string{"helm", "docker"}
-	const remoteRepoExternalDependenciesDefaults = `
-		resource "artifactory_remote_%s_repository" "%s" {
-			key 				            = "%s"
-            url                             = "https://testrepo.io/"
-            external_dependencies_enabled   = true
-		}
-	    `
-	type ExternalDependenciesRemoteRepo struct {
-		ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
-		ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns"`
-	}
-
-	for _, repoType := range repoTypes {
-		id := rand.Int()
-		name := fmt.Sprintf("terraform-remote-test-%s-repo%d", repoType, id)
-		fqrn := fmt.Sprintf("artifactory_remote_%s_repository.%s", repoType, name)
-
-		var externalDependenciesCheck = func(state *terraform.State) error {
-			restyClient := acctest.GetTestResty(t)
-			queryRepoResponse := &ExternalDependenciesRemoteRepo{}
-			_, err := restyClient.R().SetResult(&queryRepoResponse).Get("artifactory/api/repositories/" + name)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if queryRepoResponse.ExternalDependenciesPatterns == nil ||
-				len(queryRepoResponse.ExternalDependenciesPatterns) != 1 ||
-				queryRepoResponse.ExternalDependenciesPatterns[0] != "**" {
-				return fmt.Errorf("error: external_dependencies_patterns attribute = %v instead of default '**'", queryRepoResponse.ExternalDependenciesPatterns)
-			}
-			return err
-		}
-
-		title := fmt.Sprintf(
-			"TestRemote%sRepo_ExternalDependenciesDefaults",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-		)
-		t.Run(title, func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
-				PreCheck:          func() { acctest.PreCheck(t) },
-				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
-				Steps: []resource.TestStep{
-					{
-						Config: fmt.Sprintf(remoteRepoExternalDependenciesDefaults, repoType, name, name),
-						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(fqrn, "key", name),
-							resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
-							externalDependenciesCheck,
-						),
-					},
-				},
-			})
-		})
-	}
-}
-
 func TestAccRemoteNpmRepository(t *testing.T) {
 	const packageType = "npm"
 	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
@@ -398,9 +427,9 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 
 func TestAccRemoteMavenRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
-		"missed_cache_period_seconds":        1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"metadata_retrieval_timeout_seconds": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
-		"list_remote_folder_items":           true,
+		"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
+		"list_remote_folder_items":        true,
 		"content_synchronisation": map[string]interface{}{
 			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 			"statistics_enabled":              true,
@@ -600,6 +629,12 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -633,6 +668,12 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.enabled", "false"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -665,6 +706,12 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "feed_context_path", "/api/notdefault"),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -743,6 +790,13 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	}
 }
@@ -784,7 +838,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		"password": "Passw0rd!",
 		"proxy":    "",
 
-		//"description":                        "foo", // the server returns this suffixed. Test seperate
+		//"description":                        "foo", // the server returns this suffixed. Test separate
 		"notes":                          "notes",
 		"includes_pattern":               "**/*.js",
 		"excludes_pattern":               "**/*.jsx",
@@ -839,6 +893,13 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	}
 }
@@ -871,6 +932,12 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "propagate_query_params", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -927,11 +994,33 @@ func TestRemoteRepoResourceStateUpgradeV1(t *testing.T) {
 	}
 }
 
+func TestRemoteMavenRepoResourceStateUpgradeV1(t *testing.T) {
+	v1Data := map[string]interface{}{
+		"description":                        "This is a test",
+		"url":                                "https://repo1.maven.org/maven2/",
+		"metadata_retrieval_timeout_seconds": 120,
+	}
+	v2Data := map[string]interface{}{
+		"description":                     "This is a test",
+		"url":                             "https://repo1.maven.org/maven2/",
+		"metadata_retrieval_timeout_secs": 120,
+	}
+
+	actual, err := remote.ResourceMavenStateUpgradeV1(context.Background(), v1Data, nil)
+
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(v2Data, actual) {
+		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
+	}
+}
+
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-remote-test-repo-basic", "artifactory_remote_cran_repository")
+	_, fqrn, name := test.MkNames("terraform-remote-test-cran-remote-", "artifactory_remote_cran_repository")
 
-	key := fmt.Sprintf("cran-remote-%d", test.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
 			key              = "%s"
@@ -943,7 +1032,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 			retrieval_cache_period_seconds        = 600
 			missed_cache_period_seconds           = 1800
 		}
-	`, name, key)
+	`, name, name)
 
 	remoteRepositoryUpdate := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
@@ -956,7 +1045,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 			retrieval_cache_period_seconds        = 600
 			missed_cache_period_seconds           = 1800
 		}
-	`, name, key)
+	`, name, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -966,7 +1055,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 			{
 				Config: remoteRepositoryInit,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
 				),
@@ -974,10 +1063,16 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 			{
 				Config: remoteRepositoryUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -987,18 +1082,18 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
 	_, fqrn, name := test.MkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
 
-	key := fmt.Sprintf("docker-remote-%d", test.RandomInt())
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_docker_repository" "%s" {
 			key                                   = "%s"
 			description                           = "DockerHub mirror"
 			url                                   = "https://registry-1.docker.io/"
 			external_dependencies_enabled         = true
+			external_dependencies_patterns		  = ["**"]	
 			enable_token_authentication           = true
 			block_pushing_schema1                 = false
 			unused_artifacts_cleanup_period_hours = 2 * 7 * 24
 		}
-	`, name, key)
+	`, name, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1008,18 +1103,23 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 			{
 				Config: remoteRepositoryInit,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "assumed_offline_period_secs", "300"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
 }
 
 func TestAccRemoteProxyUpdateGH2(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-remote-test-repo-proxy", "artifactory_remote_go_repository")
+	_, fqrn, name := test.MkNames("terraform-remote-test-go-remote-proxy-", "artifactory_remote_go_repository")
 
-	key := fmt.Sprintf("go-remote.proxy_%d", test.RandomInt())
 	fakeProxy := "test-proxy"
 
 	remoteRepositoryWithProxy := fmt.Sprintf(`
@@ -1029,7 +1129,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			url             = "https://gocenter.io"
 			proxy           = "%s"
 		}
-	`, name, key, fakeProxy)
+	`, name, name, fakeProxy)
 
 	remoteRepositoryResetProxyWithEmptyString := fmt.Sprintf(`
 		resource "artifactory_remote_go_repository" "%s" {
@@ -1038,7 +1138,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			url             = "https://gocenter.io"
 			proxy           = ""
 		}
-	`, name, key)
+	`, name, name)
 
 	remoteRepositoryResetProxyWithNoAttr := fmt.Sprintf(`
 		resource "artifactory_remote_go_repository" "%s" {
@@ -1046,7 +1146,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
 		}
-	`, name, key)
+	`, name, name)
 
 	testProxyKey := "test-proxy"
 
@@ -1064,7 +1164,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			{
 				Config: remoteRepositoryWithProxy,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
 				),
 			},
@@ -1075,13 +1175,19 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 			{
 				Config: remoteRepositoryWithProxy,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", key),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "proxy", fakeProxy),
 				),
 			},
 			{
 				Config: remoteRepositoryResetProxyWithNoAttr,
 				Check:  resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -1129,6 +1235,12 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -1218,6 +1330,12 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", ""),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
