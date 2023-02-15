@@ -13,44 +13,6 @@ Current provider major release: **6.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
-<details><summary>Recent Releases</summary>
-### 6.6.0
-
-IMPROVEMENTS:
-
-* resource/artifactory_group: Add `external_id` attribute to support Azure AD group. PR: [#437](https://github.com/jfrog/terraform-provider-artifactory/pull/437). Issue [#429](https://github.com/jfrog/terraform-provider-artifactory/issues/429)
-
-### 6.5.3
-
-IMPROVEMENTS:
-
-* reorganizing documentation, adding missing documentation links, fixing formatting. No changes in the functionality.
-PR: [GH-435](https://github.com/jfrog/terraform-provider-artifactory/pull/435). Issues [#422](https://github.com/jfrog/terraform-provider-artifactory/issues/422) and [#398](https://github.com/jfrog/terraform-provider-artifactory/issues/398)
-
-### 6.5.2
-
-IMPROVEMENTS:
-
-* resource/artifactory_artifact_webhook: Added 'cached' event type for Artifact webhook. PR: [GH-430](https://github.com/jfrog/terraform-provider-artifactory/pull/430).
-
-### 6.5.1
-
-BUG FIXES:
-
-* provider:  Setting the right default value for 'access_token' attribute. PR: [GH-426](https://github.com/jfrog/terraform-provider-artifactory/pull/426). Issue [#425](https://github.com/jfrog/terraform-provider-artifactory/issues/425)
-
-### 6.5.0
-
-IMPROVEMENTS:
-
-* Resources added for Pub package type of Local Repository
-* Resources added for Pub package type of Remote Repository
-* Resources added for Pub package type of Virtual Repository
-* Acceptance test case enhanced with Client TLS Certificate
-
-PR: [GH-421](https://github.com/jfrog/terraform-provider-artifactory/pull/421)
-</details>
-
 ## Quick Start
 
 Create a new Terraform file with `artifactory` resources. Also see [sample.tf](./sample.tf):

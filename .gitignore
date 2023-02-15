@@ -14,3 +14,5 @@ lib/
 .DS_Store
 *.crt
 *.backup
+coverage.txt
+.scannerwork
