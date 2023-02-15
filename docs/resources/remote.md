@@ -83,5 +83,5 @@ All generic repo arguments are supported, in addition to:
 * `list_remote_folder_items` - (Optional, Default: false) Lists the items of remote folders in simple and list browsing. The remote content is cached according to the value of the 'Retrieval Cache Period'. This field exists in the API but not in the UI.
 * `download_direct` - (Optional, Default: false) When set, download requests to this repository will redirect the client to download 
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
-* `cdn_direct` - (Optional) When set, download requests to this repository will redirect the client to download
+* `cdn_redirect` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
