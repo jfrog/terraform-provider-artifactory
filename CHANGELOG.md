@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## 6.27.0 (February 15, 2023).
 
 BUG FIXES:
@@ -6,6 +7,9 @@ BUG FIXES:
  PR: []()
 
 ## 6.26.1 (February 8, 2023). Tested on Artifactory 7.49.6
+=======
+## 6.26.1 (February 8, 2023). Tested on Artifactory 7.49.8
+>>>>>>> master
 
 BUG FIXES:
 * resource/artifactory_remote_*_repository: fixed bug, where remote repository password could be deleted, if it wasn't managed by the provider and `ignore_changes` was applied to that attribute.
