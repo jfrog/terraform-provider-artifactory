@@ -16,7 +16,7 @@ resource "artifactory_remote_maven_repository" "maven-remote" {
   fetch_sources_eagerly              = false
   suppress_pom_consistency_checks    = false
   reject_invalid_jars                = true
-  metadata_retrieval_timeout_secs = 120
+  metadata_retrieval_timeout_secs    = 120
 }
 ```
 
