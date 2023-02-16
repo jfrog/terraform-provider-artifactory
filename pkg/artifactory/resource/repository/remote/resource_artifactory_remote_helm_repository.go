@@ -3,7 +3,6 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -26,8 +25,9 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 			Type:        schema.TypeBool,
 			Default:     false,
 			Optional:    true,
-			Description: "When set, external dependencies are rewritten.",
+			Description: "When set, external dependencies are rewritten. External Dependency Rewrite in the UI.",
 		},
+		// We need to set default to ["**"] once we migrate to plugin-framework. SDKv2 doesn't support that.
 		"external_dependencies_patterns": {
 			Type:     schema.TypeList,
 			Optional: true,
@@ -36,8 +36,9 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 				Type: schema.TypeString,
 			},
 			RequiredWith: []string{"external_dependencies_enabled"},
-			Description: "An Allow List of Ant-style path expressions that specify where external dependencies may be downloaded from. " +
-				"By default, this is set to ** which means that dependencies may be downloaded from any external source.",
+			Description: "An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will " +
+				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response." +
+				"Default value in UI is empty. This attribute must be set together with `external_dependencies_enabled = true`",
 		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
@@ -56,18 +57,13 @@ func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 		}
-		if len(repo.ExternalDependenciesPatterns) == 0 {
-			repo.ExternalDependenciesPatterns = []string{"**"}
-		}
 		return repo, repo.Id(), nil
 	}
 
-	// Special handling for "external_dependencies_patterns" attribute to match default value behavior in UI.
 	helmRemoteRepoPacker := packer.Universal(
 		predicate.All(
 			predicate.SchemaHasKey(helmRemoteSchema),
 			predicate.NoPassword,
-			predicate.Ignore("external_dependencies_patterns"),
 		),
 	)
 
