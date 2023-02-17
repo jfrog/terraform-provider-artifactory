@@ -5,7 +5,7 @@ IMPROVEMENTS:
   PR: [#649](https://github.com/jfrog/terraform-provider-artifactory/pull/649)
   Issue: [#627](https://github.com/jfrog/terraform-provider-artifactory/issues/627)
 
-## 6.28.1 (February 21, 2023). Tested on Artifactory 7.49.8
+## 6.28.1 (February 17, 2023). Tested on Artifactory 7.49.8
 
 IMPROVEMENTS:
 * data/artifactory_file: removed warning message when skipping downloading of file. Issue: [#630](https://github.com/jfrog/terraform-provider-artifactory/issues/630) PR: [#653](https://github.com/jfrog/terraform-provider-artifactory/pull/653)
