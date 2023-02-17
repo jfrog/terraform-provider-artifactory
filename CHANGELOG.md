@@ -1,4 +1,4 @@
-## 6.28.2 (February 17, 2023).
+## 6.29.0 (February 17, 2023).
 
 IMPROVEMENTS:
 * resource/artifactory_remote_*_repository and resource/artifactory_local_*_repository: Added new attribute cdnRedirect for cloud users.
