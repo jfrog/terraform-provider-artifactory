@@ -2,7 +2,6 @@ package datasource
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -78,7 +77,13 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repo, path))
+	_, err := m.(*resty.Client).R().
+		SetResult(&fileInfo).
+		SetPathParams(map[string]string{
+			"repoKey": repo,
+			"path":    path,
+		}).
+		Get("artifactory/api/storage/{repoKey}/{path}")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -89,7 +94,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) diag.Diagnostics {
 	setValue := util.MkLens(d)
 
-	d.SetId(fileInfo.DownloadUri)
+	d.SetId(fileInfo.Id())
 
 	setValue("created", fileInfo.Created)
 	setValue("created_by", fileInfo.CreatedBy)
