@@ -1,3 +1,10 @@
+## 6.28.2 (February 17, 2023).
+
+IMPROVEMENTS:
+* resource/artifactory_remote_*_repository and resource/artifactory_local_*_repository: Added new attribute cdnRedirect for cloud users.
+  PR: [#649](https://github.com/jfrog/terraform-provider-artifactory/pull/649)
+  Issue: [#627](https://github.com/jfrog/terraform-provider-artifactory/issues/627)
+
 ## 6.28.1 (February 21, 2023). Tested on Artifactory 7.49.8
 
 IMPROVEMENTS:
