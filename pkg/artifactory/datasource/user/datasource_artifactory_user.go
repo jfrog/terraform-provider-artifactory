@@ -70,7 +70,11 @@ func DataSourceArtifactoryUser() *schema.Resource {
 
 		userName := d.Get("name").(string)
 		userObj := user.User{}
-		m.(*resty.Client).R().SetResult(&userObj).Get(user.UsersEndpointPath + userName)
+		_, err := m.(*resty.Client).R().SetResult(&userObj).Get(user.UsersEndpointPath + userName)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		d.SetId(userObj.Name)
 

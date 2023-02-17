@@ -35,7 +35,11 @@ type Checksums struct {
 }
 
 func (fi FileInfo) Id() string {
-	return fi.Repo + fi.Path
+	if fi.DownloadUri != "" {
+		return fi.DownloadUri
+	} else {
+		return fi.Repo + fi.Path
+	}
 }
 
 func ArtifactoryFile() *schema.Resource {
@@ -129,13 +133,32 @@ func ArtifactoryFile() *schema.Resource {
 	}
 }
 
+func createOutputFile(outputPath string) error {
+	outdir := filepath.Dir(outputPath)
+	err := os.MkdirAll(outdir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer func(outFile *os.File) {
+		outFile.Close()
+	}(outFile)
+
+	return nil
+}
+
 func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	repository := d.Get("repository").(string)
 	path := d.Get("path").(string)
 	outputPath := d.Get("output_path").(string)
 	forceOverwrite := d.Get("force_overwrite").(bool)
 	pathIsAliased := d.Get("path_is_aliased").(bool)
-	fileInfo := FileInfo{}
+
+	var fileInfo FileInfo
+	var err error
 
 	tflog.Debug(ctx, "dataSourceFileReader", map[string]interface{}{
 		"repository":     repository,
@@ -147,131 +170,134 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 
 	if !pathIsAliased {
 		tflog.Debug(ctx, "pathIsAliased == false")
-
-		tflog.Debug(ctx, "Fetching file info")
-		_, err := m.(*resty.Client).R().SetResult(&fileInfo).Get(fmt.Sprintf("artifactory/api/storage/%s/%s", repository, path))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		chksMatches := false
-		fileExists := FileExists(outputPath)
-		if fileExists {
-			chksMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-			if err != nil {
-				tflog.Error(ctx, fmt.Sprintf("Failed to verify checksum for %s", outputPath))
-				return diag.FromErr(err)
-			}
-		}
-
-		tflog.Debug(ctx, "File info fetched", map[string]interface{}{
-			"fileInfo":    fileInfo,
-			"fileExists":  fileExists,
-			"chksMatches": chksMatches,
-		})
-
-		/*--File Download logic--
-		1. File doesn't exist
-		2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
-		3. File exists but check sum doesn't match
-		*/
-		if !fileExists || forceOverwrite || (fileExists && !chksMatches) {
-			tflog.Debug(ctx, "Should download file")
-			outdir := filepath.Dir(outputPath)
-			err = os.MkdirAll(outdir, os.ModePerm)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			outFile, err := os.Create(outputPath)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			defer func(outFile *os.File) {
-				_ = outFile.Close()
-			}(outFile)
-		} else { //download not required
-			tflog.Debug(ctx, "Skip downloading file")
-			d.SetId(fileInfo.Id())
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "WARN-001: file download skipped.",
-				Detail:   fmt.Sprintf("WARN-001: file download skipped. fileExists: %v, chksMatches: %v, forceOverwrite: %v", fileExists, chksMatches, forceOverwrite),
-			}}
-		}
-
-		tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
-			"fileInfo.DownloadUri": fileInfo.DownloadUri,
-			"outputPath":           outputPath,
-		})
-		_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		chksMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		tflog.Debug(ctx, "Verify checksum", map[string]interface{}{
-			"fileInfo.Checksums.Sha256": fileInfo.Checksums.Sha256,
-			"chksMatches":               chksMatches,
-		})
-		if !chksMatches {
-			return diag.Errorf("Checksums for file %s and %s do not match, expected %s", outputPath, fileInfo.DownloadUri, fileInfo.Checksums.Sha256)
-		}
+		fileInfo, err = downloadUsingFileInfo(ctx, outputPath, forceOverwrite, repository, path, m)
 	} else { // if we download the latest artifact (use path_is_aliased), we don't have all the data for the fileInfo struct, because no GET call was sent.
 		tflog.Debug(ctx, "pathIsAliased == true")
-
-		fileInfo.Repo = repository
-		fileInfo.Path = path
-		d.SetId(fileInfo.Path)
-		fileExists := FileExists(outputPath)
-
-		tflog.Debug(ctx, "File info", map[string]interface{}{
-			"fileInfo":   fileInfo,
-			"fileExists": fileExists,
-		})
-
-		if !fileExists || forceOverwrite {
-			tflog.Debug(ctx, "Should download file")
-			outdir := filepath.Dir(outputPath)
-			err := os.MkdirAll(outdir, os.ModePerm)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			outFile, err := os.Create(outputPath)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			defer func(outFile *os.File) {
-				_ = outFile.Close()
-			}(outFile)
-		} else { //download not required
-			tflog.Debug(ctx, "Skip downloading file")
-			d.SetId(fileInfo.Path)
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "WARN-001: file download skipped.",
-				Detail:   fmt.Sprintf("WARN-001: file download skipped. fileExists: %v, forceOverwrite: %v", fileExists, forceOverwrite),
-			}}
-
-		}
-
-		tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
-			"repository path": fmt.Sprintf("artifactory/%s/%s", repository, path),
-			"outputPath":      outputPath,
-		})
-		_, err := m.(*resty.Client).R().SetOutput(outputPath).Get(fmt.Sprintf("artifactory/%s/%s", repository, path))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
+		fileInfo, err = downloadWithoutChecks(ctx, outputPath, forceOverwrite, repository, path, m)
 	}
 
-	tflog.Debug(ctx, "Calling packFileInfo", map[string]interface{}{
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return packFileInfo(fileInfo, d)
+}
+
+func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrite bool, repository string, path string, m interface{}) (FileInfo, error) {
+	fileInfo := FileInfo{}
+
+	tflog.Debug(ctx, "Fetching file info")
+	_, err := m.(*resty.Client).R().
+		SetResult(&fileInfo).
+		SetPathParams(map[string]string{
+			"repoKey":  repository,
+			"itemPath": path,
+		}).
+		Get("artifactory/api/storage/{repoKey}/{itemPath}")
+	if err != nil {
+		return fileInfo, err
+	}
+
+	tflog.Debug(ctx, "File info fetched", map[string]interface{}{
 		"fileInfo": fileInfo,
 	})
 
-	return packFileInfo(fileInfo, d)
+	checksumMatches := false
+	fileExists := FileExists(outputPath)
+	if fileExists {
+		checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		if err != nil {
+			tflog.Error(ctx, fmt.Sprintf("Failed to verify checksum for %s", outputPath))
+			return fileInfo, err
+		}
+	}
+
+	tflog.Debug(ctx, "File info checked", map[string]interface{}{
+		"fileExists":      fileExists,
+		"checksumMatches": checksumMatches,
+	})
+
+	/*--File Download logic--
+	1. File doesn't exist
+	2. In Data Source argument `force_overwrite` set to true, an existing file in the output_path will be overwritten. Ignore file exists or not
+	3. File exists but check sum doesn't match
+	*/
+	if !fileExists || forceOverwrite || (fileExists && !checksumMatches) {
+		tflog.Info(ctx, "Creating local output file")
+		err := createOutputFile(outputPath)
+		if err != nil {
+			return fileInfo, err
+		}
+	} else { //download not required
+		tflog.Info(ctx, "Skip downloading file")
+		return fileInfo, nil
+	}
+
+	tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
+		"fileInfo.DownloadUri": fileInfo.DownloadUri,
+		"outputPath":           outputPath,
+	})
+	_, err = m.(*resty.Client).R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+	if err != nil {
+		return fileInfo, err
+	}
+
+	tflog.Debug(ctx, "Verify checksum with downloaded file")
+	checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	if err != nil {
+		return fileInfo, err
+	}
+	if !checksumMatches {
+		return fileInfo, fmt.Errorf(
+			"Checksums for file %s and %s do not match, expected %s",
+			outputPath,
+			fileInfo.DownloadUri,
+			fileInfo.Checksums.Sha256,
+		)
+	}
+
+	return fileInfo, nil
+}
+
+func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrite bool, repository string, path string, m interface{}) (FileInfo, error) {
+	fileInfo := FileInfo{
+		Repo: repository,
+		Path: path,
+	}
+
+	fileExists := FileExists(outputPath)
+
+	tflog.Debug(ctx, "File info", map[string]interface{}{
+		"fileInfo":   fileInfo,
+		"fileExists": fileExists,
+	})
+
+	if !fileExists || forceOverwrite {
+		tflog.Info(ctx, "Creating local output file")
+		err := createOutputFile(outputPath)
+		if err != nil {
+			return fileInfo, err
+		}
+	} else { //download not required
+		tflog.Info(ctx, "Skip downloading file")
+		return fileInfo, nil
+	}
+
+	tflog.Debug(ctx, "Downloading file...", map[string]interface{}{
+		"repository": repository,
+		"path":       path,
+		"outputPath": outputPath,
+	})
+	_, err := m.(*resty.Client).R().
+		SetOutput(outputPath).
+		SetPathParams(map[string]string{
+			"repoKey": repository,
+			"path":    path,
+		}).
+		Get("artifactory/{repoKey}/{path}")
+	if err != nil {
+		return fileInfo, err
+	}
+
+	return fileInfo, nil
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,11 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 	}
 	uri := "/artifactory/" + remotePath
 	_, err = client.R().SetBody(body).SetHeader("Content-Type", contentType).Put(uri)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) {
@@ -44,15 +49,15 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 	*localFileModTime = stat.ModTime()
 }
 
-func uploadTwoArtifacts(t *testing.T) {
+func uploadTwoArtifacts(t *testing.T, repoKey string) {
 	const localOlderFilePath = "../../../samples/multi1-3.7-20220310.233748-1.jar"
 	const localNewerFilePath = "../../../samples/multi1-3.7-20220310.233859-2.jar"
 	client := acctest.GetTestResty(t)
-	err := uploadTestFile(client, localOlderFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
+	err := uploadTestFile(client, localOlderFilePath, repoKey + "/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = uploadTestFile(client, localNewerFilePath, "my-maven-local/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
+	err = uploadTestFile(client, localNewerFilePath, repoKey + "/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,18 +114,19 @@ For this test we create maven repository, upload 2 jars with different timestamp
 Then download the artifact using SNAPSHOT instead of the actual timestamp in the filename.
 Compare sha256 to match with the file with the latest timestamp.
 */
-func TestDownloadFileWithPath_is_aliased(t *testing.T) {
+func TestDownloadFileWith_path_is_aliased(t *testing.T) {
+	_, _, repoName := test.MkNames("maven-local", "artifactory_local_maven_repository")
+
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
-	const script = `
+	const config = `
 	data "artifactory_file" "example" {
-		  repository      = "my-maven-local"
-		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
-          output_path     = "%s"
-		  force_overwrite = true
-          path_is_aliased = true
-		}
-	`
+		repository      = "%s"
+		path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+		output_path     = "%s"
+		force_overwrite = true
+		path_is_aliased = true
+	}`
 
 	var downloadCheck = func(state *terraform.State) error {
 		download := state.Modules[0].Resources["data.artifactory_file.example"].Primary.Attributes["output_path"]
@@ -138,18 +144,17 @@ func TestDownloadFileWithPath_is_aliased(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.CreateRepo(t, "my-maven-local", "local",
-				"maven", true, true)
-			uploadTwoArtifacts(t)
+			acctest.CreateRepo(t, repoName, "local", "maven", true, true)
+			uploadTwoArtifacts(t, repoName)
 		},
 		CheckDestroy: func(_ *terraform.State) error {
-			acctest.DeleteRepo(t, "my-maven-local")
+			acctest.DeleteRepo(t, repoName)
 			return nil
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(script, downloadPath),
+				Config: fmt.Sprintf(config, repoName, downloadPath),
 				Check:  downloadCheck,
 			},
 		},
@@ -163,33 +168,34 @@ Then download the artifact using SNAPSHOT instead of the actual timestamp in the
 path_is_aliased parameter is set to `false`, so provider will send try to find exact filename with `SNAPSHOT`
 in the filename and will fail.
 */
-func TestDownloadFileWithPath_is_aliasedNegative(t *testing.T) {
+func TestDownloadFileWith_path_is_aliased_Negative(t *testing.T) {
+	_, _, repoName := test.MkNames("maven-local", "artifactory_local_maven_repository")
+
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
-	const script = `
+	const config = `
 	data "artifactory_file" "example" {
-		  repository      = "my-maven-local"
-		  path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
-          output_path     = "%s"
-		  force_overwrite = true
-          path_is_aliased = false
-		}
-	`
+		repository      = "%s"
+		path            = "org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-SNAPSHOT.jar"
+		output_path     = "%s"
+		force_overwrite = true
+		path_is_aliased = false
+	}`
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.CreateRepo(t, "my-maven-local", "local",
-				"maven", true, true)
-			uploadTwoArtifacts(t)
+			acctest.CreateRepo(t, repoName, "local", "maven", true, true)
+			uploadTwoArtifacts(t, repoName)
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy: func(_ *terraform.State) error {
-			acctest.DeleteRepo(t, "my-maven-local")
+			acctest.DeleteRepo(t, repoName)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      fmt.Sprintf(script, downloadPath),
+				Config:      fmt.Sprintf(config, repoName, downloadPath),
 				ExpectError: regexp.MustCompile(".*Unable to find item.*"),
 			},
 		},
@@ -300,11 +306,11 @@ func copyFile(destPath string, srcPath string) error {
 }
 
 func TestDownloadFileExists(t *testing.T) {
-	tmpFile, err := CreateTempFile("test")
+	tmpFile, err := createTempFile("test")
 
 	assert.Nil(t, err)
 
-	defer CloseAndRemove(tmpFile)
+	defer closeAndRemove(tmpFile)
 
 	existingPath, _ := filepath.Abs(tmpFile.Name())
 	nonExistingPath := existingPath + "-doesnt-exist"
@@ -317,11 +323,11 @@ func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 	const testString = "test content"
 	const expectedSha256 = "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72"
 
-	file, err := CreateTempFile(testString)
+	file, err := createTempFile(testString)
 
 	assert.Nil(t, err)
 
-	defer CloseAndRemove(file)
+	defer closeAndRemove(file)
 
 	filePath, _ := filepath.Abs(file.Name())
 
@@ -331,7 +337,7 @@ func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 	assert.Equal(t, true, sha256Verified)
 }
 
-func CreateTempFile(content string) (f *os.File, err error) {
+func createTempFile(content string) (f *os.File, err error) {
 	file, err := ioutil.TempFile(os.TempDir(), "terraform-provider-artifactory-")
 
 	if err != nil {
@@ -348,7 +354,7 @@ func CreateTempFile(content string) (f *os.File, err error) {
 	return file, err
 }
 
-func CloseAndRemove(f *os.File) {
+func closeAndRemove(f *os.File) {
 	_ = f.Close()
 	_ = os.Remove(f.Name())
 }

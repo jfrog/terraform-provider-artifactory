@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
@@ -40,6 +41,7 @@ type RepositoryRemoteBaseParams struct {
 	LocalAddress                      string                             `json:"localAddress"`
 	RetrievalCachePeriodSecs          int                                `hcl:"retrieval_cache_period_seconds" json:"retrievalCachePeriodSecs"`
 	MissedRetrievalCachePeriodSecs    int                                `hcl:"missed_cache_period_seconds" json:"missedRetrievalCachePeriodSecs"`
+	MetadataRetrievalTimeoutSecs      int                                `json:"metadataRetrievalTimeoutSecs"`
 	UnusedArtifactsCleanupPeriodHours int                                `json:"unusedArtifactsCleanupPeriodHours"`
 	AssumedOfflinePeriodSecs          int                                `hcl:"assumed_offline_period_secs" json:"assumedOfflinePeriodSecs"`
 	ShareConfiguration                *bool                              `hcl:"share_configuration" json:"shareConfiguration,omitempty"`
@@ -524,6 +526,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		LocalAddress:                      d.GetString("local_address", false),
 		RetrievalCachePeriodSecs:          d.GetInt("retrieval_cache_period_seconds", false),
 		MissedRetrievalCachePeriodSecs:    d.GetInt("missed_cache_period_seconds", false),
+		MetadataRetrievalTimeoutSecs:      d.GetInt("metadata_retrieval_timeout_secs", false),
 		UnusedArtifactsCleanupPeriodHours: d.GetInt("unused_artifacts_cleanup_period_hours", false),
 		AssumedOfflinePeriodSecs:          d.GetInt("assumed_offline_period_secs", false),
 		ShareConfiguration:                d.GetBoolRef("share_configuration", false),
@@ -607,8 +610,37 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 
 		Schema:        skeema,
 		SchemaVersion: 2,
-		CustomizeDiff: repository.ProjectEnvironmentsDiff,
+		CustomizeDiff: customdiff.All(
+			repository.ProjectEnvironmentsDiff,
+			verifyExternalDependenciesDockerAndHelm,
+		),
 	}
+}
+
+func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	// Skip the verification if schema doesn't have `external_dependencies_enabled` attribute (only docker and helm have it)
+	if _, ok := diff.GetOkExists("external_dependencies_enabled"); !ok {
+		return nil
+	}
+	for _, dep := range diff.Get("external_dependencies_patterns").([]interface{}) {
+		if dep == "" {
+			return fmt.Errorf("`external_dependencies_patterns` can't have an item of \"\" inside a list")
+		}
+	}
+
+	if diff.Get("external_dependencies_enabled") == true {
+		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
+			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
+		}
+	} else {
+		if _, ok := diff.GetOk("external_dependencies_patterns"); ok {
+			if len(diff.Get("external_dependencies_patterns").([]interface{})) != 0 {
+				return fmt.Errorf("if `external_dependencies_enabled` is set to `false`, `external_dependencies_patterns` list can not be set")
+			}
+		}
+	}
+
+	return nil
 }
 
 func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {

@@ -17,7 +17,11 @@ func DataSourceArtifactoryGroup() *schema.Resource {
 		group := security.Group{}
 		name := d.Get("name").(string)
 		includeUsers := d.Get("include_users").(string)
-		m.(*resty.Client).R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
+		_, err := m.(*resty.Client).R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		d.SetId(group.Name)
 
