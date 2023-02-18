@@ -17,7 +17,7 @@ pipelines:
       - name: build_and_run_tf_provider
         type: Bash
         configuration:
-          nodePool: default
+          #nodePool: default
           priority: 1
           timeoutSeconds: 1800 # 30 minutes
           runtime:
@@ -147,7 +147,7 @@ pipelines:
       - name: pr_info_add_rt_version
         type: Bash
         configuration:
-          nodePool: default
+          #nodePool: default
           priority: 1
           integrations:
             - name: partnership_slack
