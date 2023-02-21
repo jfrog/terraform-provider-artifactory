@@ -1,3 +1,8 @@
+## 6.29.1 (February 21, 2023).
+
+IMPROVEMENTS:
+* provider: Update `golang.org/x/net` and `golang.org/x/crypto` modules to latest version. PR: [#656](https://github.com/jfrog/terraform-provider-artifactory/pull/656) Dependabot alerts: [3](https://github.com/jfrog/terraform-provider-artifactory/security/dependabot/3), [4](https://github.com/jfrog/terraform-provider-artifactory/security/dependabot/4), [5](https://github.com/jfrog/terraform-provider-artifactory/security/dependabot/5), [6](https://github.com/jfrog/terraform-provider-artifactory/security/dependabot/6)
+
 ## 6.29.0 (February 17, 2023).
 
 IMPROVEMENTS:
