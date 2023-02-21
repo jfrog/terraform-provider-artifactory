@@ -53,11 +53,11 @@ func uploadTwoArtifacts(t *testing.T, repoKey string) {
 	const localOlderFilePath = "../../../samples/multi1-3.7-20220310.233748-1.jar"
 	const localNewerFilePath = "../../../samples/multi1-3.7-20220310.233859-2.jar"
 	client := acctest.GetTestResty(t)
-	err := uploadTestFile(client, localOlderFilePath, repoKey + "/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
+	err := uploadTestFile(client, localOlderFilePath, repoKey+"/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = uploadTestFile(client, localNewerFilePath, repoKey + "/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
+	err = uploadTestFile(client, localNewerFilePath, repoKey+"/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233859-2.jar", "application/java-archive")
 	if err != nil {
 		t.Fatal(err)
 	}
