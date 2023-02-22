@@ -146,11 +146,12 @@ func Provider() *schema.Provider {
 	}
 
 	dataSourceMap := map[string]*schema.Resource{
-		"artifactory_file":              datasource.ArtifactoryFile(),
-		"artifactory_fileinfo":          datasource.ArtifactoryFileInfo(),
-		"artifactory_group":             datasource_security.DataSourceArtifactoryGroup(),
-		"artifactory_user":              datasource_user.DataSourceArtifactoryUser(),
-		"artifactory_permission_target": datasource_security.DataSourceArtifactoryPermissionTarget(),
+		"artifactory_file":                    datasource.ArtifactoryFile(),
+		"artifactory_fileinfo":                datasource.ArtifactoryFileInfo(),
+		"artifactory_group":                   datasource_security.DataSourceArtifactoryGroup(),
+		"artifactory_user":                    datasource_user.DataSourceArtifactoryUser(),
+		"artifactory_permission_target":       datasource_security.DataSourceArtifactoryPermissionTarget(),
+		"artifactory_local_alpine_repository": datasource_local.DataSourceArtifactoryLocalAlpineRepository(),
 	}
 
 	for _, repoType := range local.RepoTypesLikeGeneric {

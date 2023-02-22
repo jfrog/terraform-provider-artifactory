@@ -17,7 +17,7 @@ data "artifactory_local_generic_repository" "my_generic_repo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following argument is supported:
 
 * `key` - (Required) Name of the repository.
 

@@ -1,3 +1,9 @@
+## 6.30.0 (February 21, 2023).
+
+FEATURES:
+* datasource/artifactory_local_alpine_repository: Added new local alpine repository data source
+  Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+
 ## 6.29.1 (February 21, 2023).
 
 IMPROVEMENTS:
