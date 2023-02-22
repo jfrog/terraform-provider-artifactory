@@ -65,7 +65,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	}
 }
 
-func TestAccLocalAlpineRepository(t *testing.T) {
+func TestAccDataSourceLocalAlpineRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("alpine-local-test-repo-basic", "data.artifactory_local_alpine_repository")
 	kpId, _, kpName := test.MkNames("some-keypair", "artifactory_keypair")
 	localRepositoryBasic := util.ExecuteTemplate("keypair", `
