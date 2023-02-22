@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -126,9 +127,9 @@ func TestAccDataSourceLocalAlpineRepository(t *testing.T) {
 			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 
-    data "artifactory_local_alpine_repository" "{{ .repo_name }}" {
-      key = artifactory_local_alpine_repository.{{ .repo_name }}.id
-    }
+		data "artifactory_local_alpine_repository" "{{ .repo_name }}" {
+			key = artifactory_local_alpine_repository.{{ .repo_name }}.id
+		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
 		"kp_name":   kpName,
@@ -146,6 +147,39 @@ func TestAccDataSourceLocalAlpineRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocalCargoRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("cargo-local", "data.artifactory_local_cargo_repository")
+	params := map[string]interface{}{
+		"anonymous_access": test.RandBool(),
+		"name":             name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalCargoRepository", `
+		resource "artifactory_local_cargo_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  anonymous_access = {{ .anonymous_access }}
+		}
+
+    data "artifactory_local_cargo_repository" "{{ .name }}" {
+      key = artifactory_local_cargo_repository.{{ .name }}.id
+    }
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},
