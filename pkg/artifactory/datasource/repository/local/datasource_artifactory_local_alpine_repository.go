@@ -19,6 +19,6 @@ func DataSourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      local.AlpineLocalSchema,
 		ReadContext: MkRepoReadDataSource(packer.Default(local.AlpineLocalSchema), constructor),
-		Description: "Dummy description",
+		Description: "Data source for a local alpine repository",
 	}
 }
