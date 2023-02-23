@@ -1,3 +1,8 @@
+## 6.30.1 (February 25, 2023).
+
+BUG FIXES:
+* resource/artifactory_*_repository: Update `project_key` attribute validation to match Artifactory Project. PR: [#662](https://github.com/jfrog/terraform-provider-artifactory/pull/662)
+
 ## 6.30.0 (February 24, 2023).
 
 IMPROVEMENTS:
