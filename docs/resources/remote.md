@@ -37,7 +37,7 @@ All generic repo arguments are supported, in addition to:
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.
 * `description` - (Optional) Public description.
 * `notes` - (Optional) Internal description.
-* `project_key` - (Optional) Project key for assigning this repository to. Must be 3 - 10 lowercase alphanumeric and hyphen characters.
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters.
   When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
   We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider
   to manage the list of repositories.

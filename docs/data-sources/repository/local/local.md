@@ -29,7 +29,7 @@ In addition to all arguments above, the following attributes are exported for al
   contain spaces or special characters.
 * `description` - Description of the repository
 * `notes`
-* `project_key` - Project key for assigning this repository to. Will be 3 - 10 lowercase alphanumeric and
+* `project_key` - Project key for assigning this repository to. Will be 2 - 20 lowercase alphanumeric and
   hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated
   by a dash. We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute
   in Project provider to manage the list of repositories.
