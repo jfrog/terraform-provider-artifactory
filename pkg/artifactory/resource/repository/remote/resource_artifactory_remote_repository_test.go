@@ -296,6 +296,7 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
+		"enable_sparse_index":         true,
 		"priority_resolution":         false,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"content_synchronisation": map[string]interface{}{
@@ -310,10 +311,10 @@ func TestAccRemoteCargoRepository(t *testing.T) {
 
 func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	const packageType = "cargo"
-	//resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", getDefaultRemoteRepoLayoutRef(packageType), //Check to ensure repository layout is set as per default even when it is not passed.
 	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
+		"enable_sparse_index":         true,
 		"priority_resolution":         false,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"list_remote_folder_items":    true,
