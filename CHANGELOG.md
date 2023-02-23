@@ -1,3 +1,8 @@
+## 6.30.0 (February 24, 2023).
+
+IMPROVEMENTS:
+* resource/artifactory_local_cargo_repository, resource/artifactory_remote_cargo_repository, resource/artifactory_federated_cargo_repository: Add `enable_sparse_index` attribute. PR: [#661](https://github.com/jfrog/terraform-provider-artifactory/pull/661) Issue: [#641](https://github.com/jfrog/terraform-provider-artifactory/issues/641)
+
 ## 6.29.1 (February 21, 2023).
 
 IMPROVEMENTS:
@@ -6,7 +11,7 @@ IMPROVEMENTS:
 ## 6.29.0 (February 17, 2023).
 
 IMPROVEMENTS:
-* resource/artifactory_remote_*_repository and resource/artifactory_local_*_repository: Added new attribute cdnRedirect for cloud users.
+* resource/artifactory_remote_*_repository and resource/artifactory_local_*_repository: Added new attribute `cdnRedirect` for cloud users.
   PR: [#649](https://github.com/jfrog/terraform-provider-artifactory/pull/649)
   Issue: [#627](https://github.com/jfrog/terraform-provider-artifactory/issues/627)
 

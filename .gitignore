@@ -16,3 +16,4 @@ lib/
 *.backup
 coverage.txt
 .scannerwork
+*.code-workspace
