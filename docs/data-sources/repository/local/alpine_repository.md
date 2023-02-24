@@ -4,7 +4,7 @@ subcategory: "Local Repositories"
 
 # Artifactory Local Alpine Repository Data Source
 
-Provides a data source for alpine repositories.
+Retrieves a local alpine repository.
 
 ## Example Usage
 

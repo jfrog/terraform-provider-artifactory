@@ -9,9 +9,9 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -153,7 +153,7 @@ func TestAccDataSourceLocalAlpineRepository(t *testing.T) {
 	})
 }
 
-func TestAccLocalCargoRepository(t *testing.T) {
+func TestAccDataSourceLocalCargoRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("cargo-local", "data.artifactory_local_cargo_repository")
 	params := map[string]interface{}{
 		"anonymous_access": test.RandBool(),
@@ -180,6 +180,565 @@ func TestAccLocalCargoRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalDebianRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("local-debian-repo", "data.artifactory_local_debian_repository")
+	kpId, _, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, _, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
+	localRepositoryBasic := util.ExecuteTemplate("keypair", `
+		resource "artifactory_keypair" "{{ .kp_name }}" {
+			pair_name  = "{{ .kp_name }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id }}"
+			private_key = <<EOF
+		-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+		=qCzy
+		-----END PGP PRIVATE KEY BLOCK-----
+		EOF
+			public_key = <<EOF
+		-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+		AQ==
+		=2kMe
+		-----END PGP PUBLIC KEY BLOCK-----
+		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+		resource "artifactory_keypair" "{{ .kp_name2 }}" {
+			pair_name  = "{{ .kp_name2 }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id2 }}"
+			private_key = <<EOF
+		-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+		=qCzy
+		-----END PGP PRIVATE KEY BLOCK-----
+		EOF
+			public_key = <<EOF
+		-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+		AQ==
+		=2kMe
+		-----END PGP PUBLIC KEY BLOCK-----
+		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
+			key 	     = "{{ .repo_name }}"
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
+			index_compression_formats = ["bz2","lzma","xz"]
+			trivial_layout = true
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
+		}
+
+    data "artifactory_local_debian_repository" "{{ .repo_name }}" {
+      key = artifactory_local_debian_repository.{{ .repo_name }}.id
+    }
+	`, map[string]interface{}{
+		"kp_id":     kpId,
+		"kp_name":   kpName,
+		"kp_id2":    kpId2,
+		"kp_name2":  kpName2,
+		"repo_name": name,
+	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "debian"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "trivial_layout", "true"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
+					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalDockerV2Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("dockerv2-local", "data.artifactory_local_docker_v2_repository")
+	params := map[string]interface{}{
+		"block":     test.RandBool(),
+		"retention": test.RandSelect(1, 5, 10),
+		"max_tags":  test.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
+		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+			key 	     = "{{ .name }}"
+			tag_retention = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+			block_pushing_schema1 = {{ .block }}
+		}
+
+    data "artifactory_local_docker_v2_repository" "{{ .name }}" {
+      key = artifactory_local_docker_v2_repository.{{ .name }}.id
+    }
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
+	_, fqrn, name := test.MkNames("dockerv1-local", "data.artifactory_local_docker_v1_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerv2Repository", `
+		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+		}
+    data "artifactory_local_docker_v1_repository" "{{ .name }}" {
+			key = artifactory_local_docker_v1_repository.{{ .name }}.id
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+var commonJavaParams = map[string]interface{}{
+	"name":                            "",
+	"checksum_policy_type":            test.RandSelect("client-checksums", "server-generated-checksums"),
+	"snapshot_version_behavior":       test.RandSelect("unique", "non-unique", "deployer"),
+	"max_unique_snapshots":            test.RandSelect(0, 5, 10),
+	"handle_releases":                 true,
+	"handle_snapshots":                true,
+	"suppress_pom_consistency_checks": false,
+}
+
+const localJavaRepositoryBasic = `
+		resource "{{ .resource_name }}" "{{ .name }}" {
+		  key                 			  = "{{ .name }}"
+		  checksum_policy_type            = "{{ .checksum_policy_type }}"
+		  snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+		  max_unique_snapshots            = {{ .max_unique_snapshots }}
+		  handle_releases                 = {{ .handle_releases }}
+		  handle_snapshots                = {{ .handle_snapshots }}
+		  suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+		}
+    data "{{ .resource_name }}" "{{ .name }}" {
+      key = {{ .resource_name }}.{{ .name }}.id
+    }
+	`
+
+func TestAccDataSourceLocalMavenRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("maven-local", "data.artifactory_local_maven_repository")
+	tempStruct := util.MergeMaps(commonJavaParams)
+
+	tempStruct["name"] = name
+	tempStruct["resource_name"] = "artifactory_local_maven_repository"
+	tempStruct["suppress_pom_consistency_checks"] = false
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("%s-local", repoType)
+	resourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+	_, tempFqrn, name := test.MkNames(name, resourceName)
+	tempStruct := util.MergeMaps(commonJavaParams)
+
+	tempStruct["name"] = name
+	tempStruct["resource_name"] = resourceName
+	tempStruct["suppress_pom_consistency_checks"] = true
+
+	fqrn := "data." + tempFqrn
+
+	return t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
+					resource.TestCheckResourceAttr(fqrn, "snapshot_version_behavior", fmt.Sprintf("%s", tempStruct["snapshot_version_behavior"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", tempStruct["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
+					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
+				),
+			},
+		},
+	}
+}
+
+func TestAccAllGradleLikeDataSourceLocalRepoTypes(t *testing.T) {
+	for _, repoType := range repository.GradleLikeRepoTypes {
+		t.Run(fmt.Sprintf("TestDataSourceLocal%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
+			resource.Test(makeDataSourceLocalGradleLikeRepoTestCase(repoType, t))
+		})
+	}
+}
+
+func TestAccDataSourceLocalNugetRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("nuget-local", "data.artifactory_local_nuget_repository")
+	params := map[string]interface{}{
+		"force_nuget_authentication": test.RandBool(),
+		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"name":                       name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccDataSourceLocalNugetRepository", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  max_unique_snapshots = {{ .max_unique_snapshots }}
+		  force_nuget_authentication = {{ .force_nuget_authentication }}
+		}
+    data "artifactory_local_nuget_repository" "{{ .name }}" {
+      key = artifactory_local_nuget_repository.{{ .name }}.id
+    }
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalRpmRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("local-rpm-repo", "data.artifactory_local_rpm_repository")
+	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
+	localRepositoryBasic := util.ExecuteTemplate("keypair", `
+		resource "artifactory_keypair" "{{ .kp_name }}" {
+			pair_name  = "{{ .kp_name }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id }}"
+			private_key = <<EOF
+		-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+		=qCzy
+		-----END PGP PRIVATE KEY BLOCK-----
+		EOF
+			public_key = <<EOF
+		-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+		AQ==
+		=2kMe
+		-----END PGP PUBLIC KEY BLOCK-----
+		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+		resource "artifactory_keypair" "{{ .kp_name2 }}" {
+			pair_name  = "{{ .kp_name2 }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id2 }}"
+			private_key = <<EOF
+		-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+		=qCzy
+		-----END PGP PRIVATE KEY BLOCK-----
+		EOF
+			public_key = <<EOF
+		-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+		AQ==
+		=2kMe
+		-----END PGP PUBLIC KEY BLOCK-----
+		EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+		resource "artifactory_local_rpm_repository" "{{ .repo_name }}" {
+			key 	     = "{{ .repo_name }}"
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
+			yum_root_depth = 1
+			enable_file_lists_indexing = true
+			calculate_yum_metadata = true
+			depends_on = [
+				artifactory_keypair.{{ .kp_name }},
+				artifactory_keypair.{{ .kp_name2 }},
+			]
+		}
+
+    data "artifactory_local_rpm_repository" "{{ .repo_name }}" {
+      key = artifactory_local_rpm_repository.{{ .repo_name }}.id
+    }
+	`, map[string]interface{}{
+		"kp_id":     kpId,
+		"kp_name":   kpName,
+		"kp_id2":    kpId2,
+		"kp_name2":  kpName2,
+		"repo_name": name,
+	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: acctest.CompositeCheckDestroy(
+			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn2, security.VerifyKeyPair),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "rpm"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "true"),
+					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
+					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("terraform-local", "data.artifactory_local_terraform_module_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccLocalTerraformModuleRepository",
+		`resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
+		  key            = "{{ .name }}"
+		}
+    data "artifactory_local_terraform_module_repository" "{{ .name }}" {
+      key = artifactory_local_terraform_module_repository.{{ .name }}.id
+    }
+  `,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-module-default"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
+	_, fqrn, name := test.MkNames("terraform-local", "data.artifactory_local_terraform_provider_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccLocalTerraformProviderRepository",
+		`resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
+		  key            = "{{ .name }}"
+		}
+    data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
+      key = artifactory_local_terraform_provider_repository.{{ .name }}.id
+    }
+    `,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-provider-default"),
 				),
 			},
 		},
