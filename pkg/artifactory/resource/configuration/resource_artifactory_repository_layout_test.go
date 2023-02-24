@@ -98,7 +98,7 @@ func TestAccLayout_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_repository_layout.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No layout found for 'not-exist-test'"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})

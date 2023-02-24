@@ -101,7 +101,7 @@ func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_ldap_group_setting.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No ldap_group_setting found for 'not-exist-test'"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})

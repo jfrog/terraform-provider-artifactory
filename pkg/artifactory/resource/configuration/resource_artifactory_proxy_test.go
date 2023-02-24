@@ -117,7 +117,7 @@ func TestAccProxy_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_proxy.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No proxy found for 'not-exist-test'"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})

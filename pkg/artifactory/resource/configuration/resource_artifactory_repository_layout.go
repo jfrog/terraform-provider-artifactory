@@ -95,7 +95,8 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 
 		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, name)
 		if matchedLayout == nil {
-			return diag.Errorf("No layout found for '%s'", name)
+			d.SetId("")
+			return nil
 		}
 
 		pkr := packer.Default(layoutSchema)
