@@ -1043,13 +1043,15 @@ func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
 func TestAccLocalCargoRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("cargo-local", "artifactory_local_cargo_repository")
 	params := map[string]interface{}{
-		"anonymous_access": test.RandBool(),
-		"name":             name,
+		"anonymous_access":    test.RandBool(),
+		"enable_sparse_index": test.RandBool(),
+		"name":                name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalCargoRepository", `
 		resource "artifactory_local_cargo_repository" "{{ .name }}" {
-		  key                 = "{{ .name }}"
+		  key              = "{{ .name }}"
 		  anonymous_access = {{ .anonymous_access }}
+		  enable_sparse_index = {{ .enable_sparse_index }}
 		}
 	`, params)
 
@@ -1063,6 +1065,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
+					resource.TestCheckResourceAttr(fqrn, "enable_sparse_index", fmt.Sprintf("%t", params["enable_sparse_index"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},

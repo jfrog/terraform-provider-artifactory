@@ -9,8 +9,9 @@ Creates a local Cargo repository.
 
 ```hcl
 resource "artifactory_local_cargo_repository" "terraform-local-test-cargo-repo-basic" {
-  key                        = "terraform-local-test-cargo-repo-basic"
-  anonymous_access           = false
+  key                 = "terraform-local-test-cargo-repo-basic"
+  anonymous_access    = false
+  enable_sparse_index = true
 }
 ```
 
@@ -21,10 +22,8 @@ The following arguments are supported, along with the [common list of arguments 
 
 * `key` - (Required) the identity key of the repo.
 * `anonymous_access` - (Optional) Cargo client does not send credentials when performing download and search for crates. 
-Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. 
-Default value is `false`.
-
-
+Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is `false`.
+* `enable_sparse_index` - (Optional) Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is `false`.
 
 ## Import
 

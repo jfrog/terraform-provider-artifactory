@@ -14,7 +14,13 @@ var CargoLocalSchema = util.MergeMaps(
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: `Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.`,
+			Description: "Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is 'false'.",
+		},
+		"enable_sparse_index": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
 		},
 	},
 	repository.RepoLayoutRefSchema("local", "cargo"),
@@ -23,7 +29,8 @@ var CargoLocalSchema = util.MergeMaps(
 
 type CargoLocalRepoParams struct {
 	RepositoryBaseParams
-	AnonymousAccess bool `json:"cargoAnonymousAccess"`
+	AnonymousAccess   bool `json:"cargoAnonymousAccess"`
+	EnableSparseIndex bool `json:"cargoInternalIndex"`
 }
 
 func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
@@ -31,6 +38,7 @@ func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoL
 	return CargoLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "cargo"),
 		AnonymousAccess:      d.GetBool("anonymous_access", false),
+		EnableSparseIndex:    d.GetBool("enable_sparse_index", false),
 	}
 }
 
