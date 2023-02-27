@@ -40,7 +40,7 @@ All generic repo arguments are supported, in addition to:
 * `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters.
   When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
   We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider
-  to manage the list of repositories.
+  to manage the list of repositories. Default value - `default`.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD".
   The attribute should only be used if the repository is already assigned to the existing project.
   If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state
