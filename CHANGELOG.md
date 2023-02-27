@@ -4,7 +4,7 @@ BACKWARDS INCOMPATIBILITIES:
 
 * resource/artifactory_*_repository: `project_key` attribute is assigned default value `default` to be compatible with Artifactory 7.50.x and above.
   It will create a state drift for Artifactory 7.49.x and below. For this reason, please use Terraform Provider Artifactory version 6.x on Artifactory 7.49.x and below.
-  PR: []
+  PR: [#668](https://github.com/jfrog/terraform-provider-artifactory/pull/668)
   Issue: [#647](https://github.com/jfrog/terraform-provider-artifactory/issues/647)
 
 ## 6.30.2 (February 27, 2023).
