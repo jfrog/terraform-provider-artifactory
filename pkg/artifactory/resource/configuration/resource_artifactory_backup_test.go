@@ -115,7 +115,7 @@ func TestAccBackup_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_backup.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No backup found for 'not-exist-test'"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})
