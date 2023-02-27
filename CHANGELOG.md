@@ -1,3 +1,8 @@
+## 7.0.1. (February 28, 2023)
+
+BUG FIXES:
+* resource/artifactory_file: Fix `/` in artifact path being escaped. Issue: [#666](https://github.com/jfrog/terraform-provider-artifactory/issues/666) PR: [#669](https://github.com/jfrog/terraform-provider-artifactory/pull/669)
+
 ## 7.0.0. (February 27, 2023) Tested on Artifactory 7.55.0
 
 BACKWARDS INCOMPATIBILITIES:
