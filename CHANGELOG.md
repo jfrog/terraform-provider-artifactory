@@ -1,3 +1,8 @@
+## 6.30.2 (February 27, 2023).
+
+BUG FIXES:
+* resource/artifactory_backup, resource/artifactory_ldap_group_setting, resource/artifactory_property_set, resource/artifactory_proxy, resource/artifactory_respository_layout: Fix provider erroring out instead of resetting resource ID if resource was deleted outside of Terraform. Issue: [#665](https://github.com/jfrog/terraform-provider-artifactory/issues/665) PR: [#667](https://github.com/jfrog/terraform-provider-artifactory/pull/667)
+
 ## 6.30.1 (February 24, 2023).
 
 BUG FIXES:
