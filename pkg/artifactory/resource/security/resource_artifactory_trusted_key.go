@@ -123,18 +123,18 @@ func readTrustedKey(_ context.Context, d *schema.ResourceData, m interface{}) di
 	}
 
 	for _, key := range data.Keys {
-
 		if key.KeyID == d.Id() {
 			d.Set("key_id", key.KeyID)
 			d.Set("fingerprint", key.Fingerprint)
 			d.Set("issued_on", key.IssuedOn)
 			d.Set("issued_by", key.IssuedBy)
 			d.Set("valid_until", key.ValidUntil)
-
-			break
+			return nil
 		}
 	}
 
+	// If the ID is updated to blank, this tells Terraform the resource no longer exist
+	d.SetId("")
 	return nil
 }
 
