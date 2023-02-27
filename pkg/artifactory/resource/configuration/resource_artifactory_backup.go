@@ -131,7 +131,8 @@ func ResourceArtifactoryBackup() *schema.Resource {
 
 		matchedBackup := FindConfigurationById[Backup](backups.BackupArr, key)
 		if matchedBackup == nil {
-			return diag.Errorf("No backup found for '%s'", key)
+			d.SetId("")
+			return nil
 		}
 
 		pkr := packer.Default(backupSchema)

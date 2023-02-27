@@ -118,7 +118,8 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 
 		matchedLdapGroupSetting := FindConfigurationById[LdapGroupSetting](ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr, name)
 		if matchedLdapGroupSetting == nil {
-			return diag.Errorf("No ldap_group_setting found for '%s'", name)
+			d.SetId("")
+			return nil
 		}
 
 		pkr := packer.Default(ldapGroupSettingsSchema)
