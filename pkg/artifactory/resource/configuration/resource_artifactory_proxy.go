@@ -169,7 +169,8 @@ func ResourceArtifactoryProxy() *schema.Resource {
 
 		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, key)
 		if matchedProxyConfig == nil {
-			return diag.Errorf("No proxy found for '%s'", key)
+			d.SetId("")
+			return nil
 		}
 
 		return packProxy(matchedProxyConfig, d)

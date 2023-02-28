@@ -792,7 +792,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key"
+	 	  project_key          = "invalid-project-key-too-long"
 		}
 	`, params)
 
@@ -809,7 +809,7 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 10 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 2 - 20 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})

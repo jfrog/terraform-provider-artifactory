@@ -1263,7 +1263,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key"
+	 	  project_key          = "invalid-project-key-too-long"
 		  url                  = "http://tempurl.org"
 		}
 	`, params)
@@ -1281,7 +1281,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      remoteRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 10 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 2 - 20 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})

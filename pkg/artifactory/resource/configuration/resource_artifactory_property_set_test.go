@@ -116,7 +116,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 				ResourceName:  fqrn,
 				ImportStateId: resourceName,
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No property set found for .*"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})
@@ -149,7 +149,7 @@ func TestAccPropertySet_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_property_set.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("No property set found for 'not-exist-test'"),
+				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})

@@ -164,7 +164,8 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		matchedLdapSetting := FindConfigurationById[LdapSetting](ldapConfigs.Security.LdapSettings.LdapSettingArr, key)
 		if matchedLdapSetting == nil {
-			return diag.Errorf("No ldap_setting found for '%s'", key)
+			d.SetId("")
+			return nil
 		}
 
 		pkr := packer.Universal(
