@@ -29,8 +29,7 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 - JCR Edition
 - OSS
 
-## Versions
-
+~>
 We maintain two major versions of Terraform Provider - 6.x and 7.x. Version 6.x is compatible with the Artifactory versions 7.49.x and below,
 version 7.x is only compatible with Artifactory 7.50.x and above due to changes in the projects functionality.
 
