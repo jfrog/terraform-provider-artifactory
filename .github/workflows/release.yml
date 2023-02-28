@@ -17,7 +17,9 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') && github.event.base_ref == 'refs/heads/master'
+    if: |
+      startsWith(github.ref, 'refs/tags/') && github.event.base_ref == 'refs/heads/master' 
+      || startsWith(github.ref, 'refs/tags/v6*') && github.event.base_ref == 'refs/heads/v6'
     steps:
       -
         name: Checkout
