@@ -168,7 +168,7 @@ pipelines:
             - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
             - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
-              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]] && [[ $"{res_GitHubTFProviderRepoJFrog_isPullRequest}" == true ]]; then
+              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
                 echo "The pipeline was triggered by the PR, add Artifactory version to CHANGELOG.md and send the PR data to slack channel."
                 cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
                 echo "Checking out the branch ${res_GitHubTFProviderRepoJFrog_headCommitRef} where the PR was created from."

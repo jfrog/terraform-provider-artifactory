@@ -186,14 +186,19 @@ func dataSourceFileReader(ctx context.Context, d *schema.ResourceData, m interfa
 func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrite bool, repository string, path string, m interface{}) (FileInfo, error) {
 	fileInfo := FileInfo{}
 
-	tflog.Debug(ctx, "Fetching file info")
-	_, err := m.(*resty.Client).R().
+	tflog.Debug(ctx, "Fetching file info", map[string]interface{}{
+		"repository": repository,
+		"path":       path,
+	})
+
+	client := m.(*resty.Client)
+	// switch to using Sprintf because Resty's SetPathParams() escape the path
+	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
+	// should use url.JoinPath() eventually in go 1.20
+	requestUrl := fmt.Sprintf("%s/artifactory/api/storage/%s/%s", client.BaseURL, repository, path)
+	_, err := client.R().
 		SetResult(&fileInfo).
-		SetPathParams(map[string]string{
-			"repoKey":  repository,
-			"itemPath": path,
-		}).
-		Get("artifactory/api/storage/{repoKey}/{itemPath}")
+		Get(requestUrl)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -288,13 +293,15 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 		"path":       path,
 		"outputPath": outputPath,
 	})
-	_, err := m.(*resty.Client).R().
+
+	client := m.(*resty.Client)
+	// switch to using Sprintf because Resty's SetPathParams() escape the path
+	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
+	// should use url.JoinPath() eventually in go 1.20
+	requestUrl := fmt.Sprintf("%s/artifactory/%s/%s", client.BaseURL, repository, path)
+	_, err := client.R().
 		SetOutput(outputPath).
-		SetPathParams(map[string]string{
-			"repoKey": repository,
-			"path":    path,
-		}).
-		Get("artifactory/{repoKey}/{path}")
+		Get(requestUrl)
 	if err != nil {
 		return fileInfo, err
 	}

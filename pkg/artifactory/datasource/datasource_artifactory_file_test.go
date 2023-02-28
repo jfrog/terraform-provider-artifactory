@@ -36,7 +36,7 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) {
 	const localFilePath = "../../../samples/crash.zip"
 	client := acctest.GetTestResty(t)
-	err := uploadTestFile(client, localFilePath, "example-repo-local/crash.zip", "application/zip")
+	err := uploadTestFile(client, localFilePath, "example-repo-local/test/crash.zip", "application/zip")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestDownloadFile(t *testing.T) {
 	const script = `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
-		  path            = "crash.zip"
+		  path            = "test/crash.zip"
 		  output_path     = "%s"
 		  force_overwrite = true
 		}
@@ -215,7 +215,7 @@ func TestDownloadFileSkipCheck(t *testing.T) {
 	const noOverWriteForcedScript = `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
-		  path            = "crash.zip"
+		  path            = "test/crash.zip"
 		  output_path     = "%s"
 		  force_overwrite = false
 		}
@@ -223,7 +223,7 @@ func TestDownloadFileSkipCheck(t *testing.T) {
 	const forceOverWriteScript = `
 		data "artifactory_file" "example" {
 		  repository      = "example-repo-local"
-		  path            = "crash.zip"
+		  path            = "test/crash.zip"
 		  output_path     = "%s"
 		  force_overwrite = true
 		}

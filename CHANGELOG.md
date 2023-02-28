@@ -1,9 +1,33 @@
-## 6.31.0 (February 25, 2023).
+## 7.1.0 (February 28, 2023).
 
 FEATURES:
 * datasource/artifactory_local_*_repository: Adds new data sources for all local repository types.
   PR:    [#664](https://github.com/jfrog/terraform-provider-artifactory/pull/664) 
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+
+## 7.0.1. (February 28, 2023)
+
+BUG FIXES:
+* resource/artifactory_file: Fix `/` in artifact path being escaped. Issue: [#666](https://github.com/jfrog/terraform-provider-artifactory/issues/666) PR: [#669](https://github.com/jfrog/terraform-provider-artifactory/pull/669)
+
+## 7.0.0. (February 27, 2023) Tested on Artifactory 7.55.0
+
+BACKWARDS INCOMPATIBILITIES:
+
+* resource/artifactory_*_repository: `project_key` attribute is assigned default value `default` to be compatible with Artifactory 7.50.x and above.
+  It will create a state drift for Artifactory 7.49.x and below. For this reason, please use Terraform Provider Artifactory version 6.x on Artifactory 7.49.x and below.
+  PR: [#668](https://github.com/jfrog/terraform-provider-artifactory/pull/668)
+  Issue: [#647](https://github.com/jfrog/terraform-provider-artifactory/issues/647)
+
+## 6.30.2 (February 27, 2023).
+
+BUG FIXES:
+* resource/artifactory_backup, resource/artifactory_ldap_group_setting, resource/artifactory_property_set, resource/artifactory_proxy, resource/artifactory_respository_layout: Fix provider erroring out instead of resetting resource ID if resource was deleted outside of Terraform. Issue: [#665](https://github.com/jfrog/terraform-provider-artifactory/issues/665) PR: [#667](https://github.com/jfrog/terraform-provider-artifactory/pull/667)
+
+## 6.30.1 (February 24, 2023).
+
+BUG FIXES:
+* resource/artifactory_*_repository: Update `project_key` attribute validation to match Artifactory Project. PR: [#662](https://github.com/jfrog/terraform-provider-artifactory/pull/662)
 
 ## 6.30.0 (February 24, 2023).
 

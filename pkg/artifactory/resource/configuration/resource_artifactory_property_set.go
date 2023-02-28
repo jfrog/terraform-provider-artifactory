@@ -210,7 +210,8 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, name)
 		if matchedPropertySet == nil {
-			return diag.Errorf("No property set found for '%s'", name)
+			d.SetId("")
+			return nil
 		}
 
 		return packPropertySet(matchedPropertySet, d)
