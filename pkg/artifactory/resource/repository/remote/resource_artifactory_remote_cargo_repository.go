@@ -10,8 +10,9 @@ import (
 
 type CargoRemoteRepo struct {
 	RepositoryRemoteBaseParams
-	RegistryUrl     string `hcl:"git_registry_url" json:"gitRegistryUrl"`
-	AnonymousAccess bool   `hcl:"anonymous_access" json:"cargoAnonymousAccess"`
+	RegistryUrl       string `hcl:"git_registry_url" json:"gitRegistryUrl"`
+	AnonymousAccess   bool   `json:"cargoAnonymousAccess"`
+	EnableSparseIndex bool   `json:"cargoInternalIndex"`
 }
 
 func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
@@ -30,6 +31,12 @@ func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 			Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
 				"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
 		},
+		"enable_sparse_index": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
+		},
 	}, repository.RepoLayoutRefSchema("remote", packageType))
 
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -38,6 +45,7 @@ func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
 			RegistryUrl:                d.GetString("git_registry_url", false),
 			AnonymousAccess:            d.GetBool("anonymous_access", false),
+			EnableSparseIndex:          d.GetBool("enable_sparse_index", false),
 		}
 		return repo, repo.Id(), nil
 	}

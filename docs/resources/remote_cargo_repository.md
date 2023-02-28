@@ -13,6 +13,7 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 resource "artifactory_remote_cargo_repository" "my-remote-cargo" {
   key                 = "my-remote-cargo"
   anonymous_access    = true
+  enable_sparse_index = true
   url                 = "https://github.com/rust-lang/crates.io-index"
   git_registry_url    = "https://github.com/rust-lang/foo.index"
 }
@@ -31,7 +32,8 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
-* `anonymous_access` - (Required) Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.
+* `anonymous_access` - (Required) Cargo client does not send credentials when performing download and search for crates. Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option. Default value is `false`.
+* `enable_sparse_index` - (Optional) Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is `false`.
 * `git_registry_url` - (Optional) This is the index url, expected to be a git repository. Default value is "https://github.com/rust-lang/crates.io-index".
 
 
