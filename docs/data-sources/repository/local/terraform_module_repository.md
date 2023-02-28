@@ -9,8 +9,8 @@ Retrieves a federated Generic repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_federated_terraform_module_repository" "terraform-federated-test-terraform_module-repo" {
-  key = "terraform-federated-test-terraform-module-repo"
+data "artifactory_federated_terraform_module_repository" "federated-test-terraform_module-repo" {
+  key = "federated-test-terraform-module-repo"
 }
 ```
 

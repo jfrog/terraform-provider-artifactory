@@ -165,9 +165,9 @@ func TestAccDataSourceLocalCargoRepository(t *testing.T) {
 		  anonymous_access = {{ .anonymous_access }}
 		}
 
-    data "artifactory_local_cargo_repository" "{{ .name }}" {
-      key = artifactory_local_cargo_repository.{{ .name }}.id
-    }
+		data "artifactory_local_cargo_repository" "{{ .name }}" {
+		  key = artifactory_local_cargo_repository.{{ .name }}.id
+		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -295,9 +295,9 @@ func TestAccDataSourceLocalDebianRepository(t *testing.T) {
 			]
 		}
 
-    data "artifactory_local_debian_repository" "{{ .repo_name }}" {
-      key = artifactory_local_debian_repository.{{ .repo_name }}.id
-    }
+		data "artifactory_local_debian_repository" "{{ .repo_name }}" {
+			key = artifactory_local_debian_repository.{{ .repo_name }}.id
+		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
 		"kp_name":   kpName,
@@ -337,12 +337,12 @@ func TestAccDataSourceLocalDockerV2Repository(t *testing.T) {
 		"name":      name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
-		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
-			key 	     = "{{ .name }}"
-			tag_retention = {{ .retention }}
-			max_unique_tags = {{ .max_tags }}
-			block_pushing_schema1 = {{ .block }}
-		}
+    resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+      key 	     = "{{ .name }}"
+      tag_retention = {{ .retention }}
+      max_unique_tags = {{ .max_tags }}
+      block_pushing_schema1 = {{ .block }}
+    }
 
     data "artifactory_local_docker_v2_repository" "{{ .name }}" {
       key = artifactory_local_docker_v2_repository.{{ .name }}.id
@@ -373,9 +373,9 @@ func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
 		"name": name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerv2Repository", `
-		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
-			key = "{{ .name }}"
-		}
+    resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
+      key = "{{ .name }}"
+    }
     data "artifactory_local_docker_v1_repository" "{{ .name }}" {
 			key = artifactory_local_docker_v1_repository.{{ .name }}.id
 		}
@@ -410,15 +410,15 @@ var commonJavaParams = map[string]interface{}{
 }
 
 const localJavaRepositoryBasic = `
-		resource "{{ .resource_name }}" "{{ .name }}" {
-		  key                 			  = "{{ .name }}"
-		  checksum_policy_type            = "{{ .checksum_policy_type }}"
-		  snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
-		  max_unique_snapshots            = {{ .max_unique_snapshots }}
-		  handle_releases                 = {{ .handle_releases }}
-		  handle_snapshots                = {{ .handle_snapshots }}
-		  suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
-		}
+    resource "{{ .resource_name }}" "{{ .name }}" {
+      key                 			  = "{{ .name }}"
+      checksum_policy_type            = "{{ .checksum_policy_type }}"
+      snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+      max_unique_snapshots            = {{ .max_unique_snapshots }}
+      handle_releases                 = {{ .handle_releases }}
+      handle_snapshots                = {{ .handle_snapshots }}
+      suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+    }
     data "{{ .resource_name }}" "{{ .name }}" {
       key = {{ .resource_name }}.{{ .name }}.id
     }
@@ -502,11 +502,11 @@ func TestAccDataSourceLocalNugetRepository(t *testing.T) {
 		"name":                       name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccDataSourceLocalNugetRepository", `
-		resource "artifactory_local_nuget_repository" "{{ .name }}" {
-		  key                 = "{{ .name }}"
-		  max_unique_snapshots = {{ .max_unique_snapshots }}
-		  force_nuget_authentication = {{ .force_nuget_authentication }}
-		}
+    resource "artifactory_local_nuget_repository" "{{ .name }}" {
+      key                 = "{{ .name }}"
+      max_unique_snapshots = {{ .max_unique_snapshots }}
+      force_nuget_authentication = {{ .force_nuget_authentication }}
+    }
     data "artifactory_local_nuget_repository" "{{ .name }}" {
       key = artifactory_local_nuget_repository.{{ .name }}.id
     }
@@ -640,9 +640,9 @@ func TestAccDataSourceLocalRpmRepository(t *testing.T) {
 			]
 		}
 
-    data "artifactory_local_rpm_repository" "{{ .repo_name }}" {
-      key = artifactory_local_rpm_repository.{{ .repo_name }}.id
-    }
+		data "artifactory_local_rpm_repository" "{{ .repo_name }}" {
+			key = artifactory_local_rpm_repository.{{ .repo_name }}.id
+		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
 		"kp_name":   kpName,
@@ -687,9 +687,9 @@ func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
 		`resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
 		}
-    data "artifactory_local_terraform_module_repository" "{{ .name }}" {
-      key = artifactory_local_terraform_module_repository.{{ .name }}.id
-    }
+		data "artifactory_local_terraform_module_repository" "{{ .name }}" {
+		  key = artifactory_local_terraform_module_repository.{{ .name }}.id
+		}
   `,
 		params,
 	)
@@ -721,9 +721,9 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 		`resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
 		}
-    data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
-      key = artifactory_local_terraform_provider_repository.{{ .name }}.id
-    }
+		data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
+		  key = artifactory_local_terraform_provider_repository.{{ .name }}.id
+		}
     `,
 		params,
 	)

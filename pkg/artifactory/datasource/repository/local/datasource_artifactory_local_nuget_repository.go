@@ -23,6 +23,4 @@ func DataSourceArtifactoryLocalNugetRepository() *schema.Resource {
 		ReadContext: MkRepoReadDataSource(packer.Default(local.NugetLocalSchema), constructor),
 		Description: "Data Source for a local nuget repository",
 	}
-
-	//return repository.MkResourceSchema(NugetLocalSchema, packer.Default(NugetLocalSchema), unPackLocalNugetRepository, constructor)
 }

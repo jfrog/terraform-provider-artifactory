@@ -9,8 +9,8 @@ Retrieves a local RPM repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_rpm_repository" "terraform-local-test-rpm-repo-basic" {
-  key = "terraform-local-test-rpm-repo-basic"
+data "artifactory_local_rpm_repository" "local-test-rpm-repo-basic" {
+  key = "local-test-rpm-repo-basic"
 }
 ```
 

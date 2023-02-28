@@ -9,8 +9,8 @@ Retrieves a local Debian repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_debian_repository" "my-debian-repo" {
-  key = "my-debian-repo"
+data "artifactory_local_debian_repository" "local-test-debian-repo-basic" {
+  key = "local-test-debian-repo-basic"
 }
 ```
 

@@ -10,8 +10,8 @@ found [here](https://www.jfrog.com/confluence/display/JFROG/Terraform+Repositori
 ## Example Usage
 
 ```hcl
-data "artifactory_local_terraform_provider_repository" "terraform-local-test-terraform-provider-repo" {
-  key = "terraform-local-test-terraform-provider-repo"
+data "artifactory_local_terraform_provider_repository" "local-test-terraform-provider-repo" {
+  key = "local-test-terraform-provider-repo"
 }
 ```
 

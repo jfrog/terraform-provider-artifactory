@@ -9,8 +9,8 @@ Retrieves a local cargo repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_cargo_repository" "terraform-local-test-cargo-repo-basic" {
-  key = "terraform-local-test-cargo-repo-basic"
+data "artifactory_local_cargo_repository" "local-test-cargo-repo-basic" {
+  key = "local-test-cargo-repo-basic"
 }
 ```
 

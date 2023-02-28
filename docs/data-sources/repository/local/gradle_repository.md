@@ -9,8 +9,8 @@ Retrieves a local Gradle repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_gradle_repository" "terraform-local-test-gradle-repo-basic" {
-  key = "terraform-local-test-gradle-repo-basic"
+data "artifactory_local_gradle_repository" "local-test-gradle-repo-basic" {
+  key = "local-test-gradle-repo-basic"
 }
 ```
 

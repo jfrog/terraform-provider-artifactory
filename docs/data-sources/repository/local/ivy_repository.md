@@ -9,8 +9,8 @@ Retrieves a local Ivy repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_ivy_repository" "terraform-local-test-ivy-repo" {
-  key = "terraform-local-test-ivy-repo"
+data "artifactory_local_ivy_repository" "local-test-ivy-repo" {
+  key = "local-test-ivy-repo"
 }
 ```
 

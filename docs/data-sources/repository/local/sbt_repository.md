@@ -9,8 +9,8 @@ Retrieves a local Sbt repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_sbt_repository" "terraform-local-test-sbt-repo" {
-  key = "terraform-local-test-sbt-repo"
+data "artifactory_local_sbt_repository" "local-test-sbt-repo" {
+  key = "local-test-sbt-repo"
 }
 ```
 

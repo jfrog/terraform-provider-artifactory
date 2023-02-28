@@ -9,14 +9,8 @@ Retrieves a local Maven repository.
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_maven_repository" "terraform-local-test-maven-repo-basic" {
-  key                             = "terraform-local-test-maven-repo-basic"
-  checksum_policy_type            = "client-checksums"
-  snapshot_version_behavior       = "unique"
-  max_unique_snapshots            = 10
-  handle_releases                 = true
-  handle_snapshots                = true
-  suppress_pom_consistency_checks = false
+resource "artifactory_local_maven_repository" "local-test-maven-repo-basic" {
+  key = "local-test-maven-repo-basic"
 }
 ```
 

@@ -9,7 +9,7 @@ Retrieves a local alpine repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_alpine_repository" "terraform-local-test-alpine-repo-basic" {
+data "artifactory_local_alpine_repository" "local-test-alpine-repo-basic" {
   key = "terraform-local-test-alpine-repo-basic"
 }
 ```

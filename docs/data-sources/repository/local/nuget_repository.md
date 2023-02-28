@@ -9,8 +9,8 @@ Retrieves a local Nuget repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_nuget_repository" "terraform-local-test-nuget-repo-basic" {
-  key = "terraform-local-test-nuget-repo-basic"
+data "artifactory_local_nuget_repository" "local-test-nuget-repo-basic" {
+  key = "local-test-nuget-repo-basic"
 }
 ```
 

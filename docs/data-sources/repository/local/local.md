@@ -10,8 +10,8 @@ All local repositories will follow this general format for retrieving the config
 
 ```hcl
 #
-data "artifactory_local_generic_repository" "my_generic_repo" {
-  key  = "my_generic_repo"
+data "artifactory_local_generic_repository" "local-test-generic-repo-basic" {
+  key  = "local-test-generic-repo-basic"
 }
 ```
 
