@@ -24,8 +24,6 @@ The following argument is supported:
 
 There are no unique attributes for , along with the [common list of attributes for the local repositories](local.md):
 
-[//]: # (Are these attributes supported for this repo type?)
-
 * `checksum_policy_type` - Checksum policy determines how Artifactory behaves when a client checksum for a deployed
   resource is missing or conflicts with the locally calculated checksum (bad checksum). The options are
   `client-checksums` and `generated-checksums`. For more details, please refer

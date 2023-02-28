@@ -24,6 +24,8 @@ The following argument is supported:
 
 The following attributes are supported, along with the [common list of attributes for the local repositories](local.md):
 
-* `anonymous_access` - (Optional) Cargo client does not send credentials when performing download and search for crates.
+* `anonymous_access` - Cargo client does not send credentials when performing download and search for crates.
   Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous
   access option. Default value is `false`.
+* `enable_sparse_index` - Enable internal index support based on Cargo sparse index specifications, instead
+  of the default git index. Default value is `false`.
