@@ -20,6 +20,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const defaultProjectKey = "default"
+
 var CompressionFormats = map[string]*schema.Schema{
 	"index_compression_formats": {
 		Type: schema.TypeSet,
@@ -127,8 +129,8 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			newProjectKey := newProject.(string)
 			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
 
-			assignToProject := len(oldProjectKey) == 0 && len(newProjectKey) > 0
-			unassignFromProject := len(oldProjectKey) > 0 && len(newProjectKey) == 0
+			assignToProject := oldProjectKey == defaultProjectKey && len(newProjectKey) > 0
+			unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == defaultProjectKey
 			tflog.Debug(ctx, fmt.Sprintf("assignToProject: %v, unassignFromProject: %v", assignToProject, unassignFromProject))
 
 			var err error
