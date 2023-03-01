@@ -119,7 +119,7 @@ pipelines:
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
             - export TF_ACC=true
-            #- make acceptance
+            - make acceptance
             # TODO: enable after migration to repo21
             #- export SONAR_TOKEN=${int_terraform_artifactory_sonarqube_token}
             #- make scan
@@ -155,7 +155,7 @@ pipelines:
             - export PR_BRANCH=${res_GitHubTFProviderRepoV6JFrog_headCommitRef}
             - >-
               if [[ -z "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" ]]; then
-                echo "No headCommitRef, exit without adding changes to CHANGELOG.md"
+                echo "No headCommitRef (PR branch), exit without adding changes to CHANGELOG.md"
                 exit 0
               fi
             - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoV6JFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
