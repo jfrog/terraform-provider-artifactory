@@ -378,8 +378,8 @@ func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
       key = "{{ .name }}"
     }
     data "artifactory_local_docker_v1_repository" "{{ .name }}" {
-			key = artifactory_local_docker_v1_repository.{{ .name }}.id
-		}
+      key = artifactory_local_docker_v1_repository.{{ .name }}.id
+    }
 	`, params)
 
 	resource.Test(t, resource.TestCase{
