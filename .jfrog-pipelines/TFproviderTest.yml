@@ -81,7 +81,7 @@ pipelines:
             - echo ${int_partnership_rt_cluster_license_5licenses} > scripts/artifactory.lic
             - echo "Set Artifactory version, run RT in a container"
             - add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
-            - echo "Artifactory version "${ARTIFACTORY_VERSION}"
+            - echo "Artifactory version "${ARTIFACTORY_VERSION}
             - export ARTIFACTORY_CONTAINER_NAME=artifactory
             - >-
               docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoV6JFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
