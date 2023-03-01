@@ -10,6 +10,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
+const rclass = "local"
+
 func MkRepoReadDataSource(pack packer.PackFunc, construct repository.Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		repo, err := construct()
