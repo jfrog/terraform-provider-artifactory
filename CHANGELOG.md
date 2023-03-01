@@ -1,3 +1,9 @@
+## 7.0.2. (March 1, 2023).
+
+BUG FIXES:
+* resource/artifactory_*_repository: Fixed an issue where the new project_key default value "default" caused our provider to fail to assign and unassign repository to project.
+  PR: [#674](https://github.com/jfrog/terraform-provider-artifactory/pull/674)
+
 ## 7.0.1. (February 28, 2023)
 
 BUG FIXES:

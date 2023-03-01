@@ -116,7 +116,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 				Config: localRepositoryNoProjectKey,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "project_key", ""),
+					resource.TestCheckResourceAttr(fqrn, "project_key", "default"),
 				),
 			},
 		},
