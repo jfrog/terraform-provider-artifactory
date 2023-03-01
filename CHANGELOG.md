@@ -1,9 +1,15 @@
-## 7.1.0 (February 28, 2023).
+## 7.1.0 (March 1, 2023).
 
 FEATURES:
 * datasource/artifactory_local_*_repository: Adds new data sources for all local repository types.
   PR:    [#664](https://github.com/jfrog/terraform-provider-artifactory/pull/664) 
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+
+## 7.0.2. (March 1, 2023).
+
+BUG FIXES:
+* resource/artifactory_*_repository: Fixed an issue where the new project_key default value "default" caused our provider to fail to assign and unassign repository to project.
+  PR: [#674](https://github.com/jfrog/terraform-provider-artifactory/pull/674)
 
 ## 7.0.1. (February 28, 2023)
 
