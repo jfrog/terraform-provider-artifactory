@@ -42,12 +42,8 @@ pipelines:
             SONAR_SCANNER_OPTS: "-server"
         execution:
           onStart:
-            - echo "Preparing for work. Install Helm, Terraform, GoReleaser, and SonarQube"
+            - echo "Preparing for work. Install Terraform, GoReleaser, and SonarQube"
             - ls -al && pwd
-            - echo "Helm 3 install"
-            - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh
-            - echo "Run Helm installation script" && ./get_helm.sh && rm get_helm.sh
-            - helm version
             - sudo apt update
             - go version
             - echo "Install latest Terraform version"
