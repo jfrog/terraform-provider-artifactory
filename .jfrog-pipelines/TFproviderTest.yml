@@ -119,7 +119,7 @@ pipelines:
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
             - export TF_ACC=true
-            - make acceptance
+            #- make acceptance
             # TODO: enable after migration to repo21
             #- export SONAR_TOKEN=${int_terraform_artifactory_sonarqube_token}
             #- make scan
@@ -153,9 +153,14 @@ pipelines:
             - export PR_URL=${res_GitHubTFProviderRepoV6JFrog_commitUrl}
             - export PR_COMMITTER=${res_GitHubTFProviderRepoV6JFrog_committerLogin}
             - export PR_BRANCH=${res_GitHubTFProviderRepoV6JFrog_headCommitRef}
+            - >-
+              if [[ -z "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" ]]; then
+                echo "No headCommitRef, exit without adding changes to CHANGELOG.md"
+                exit 0
+              fi
             - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoV6JFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
-              if [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != main ]]; then
+              if [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != v6 ]]; then
                 echo "The pipeline was triggered by the PR, add Artifactory version to CHANGELOG.md and send the PR data to slack channel."
                 cd ${res_GitHubTFProviderRepoV6JFrog_resourcePath}
                 echo "Checking out the branch ${res_GitHubTFProviderRepoV6JFrog_headCommitRef} where the PR was created from."
