@@ -166,6 +166,11 @@ pipelines:
             - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
             - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
             - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
+            - >-
+              if [[ -z "${res_GitHubTFProviderRepoJFrog_headCommitRef}" ]]; then
+                echo "No headCommitRef (PR branch), exit without adding changes to CHANGELOG.md"
+                exit 0
+              fi
             - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
               if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
