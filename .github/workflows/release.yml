@@ -13,13 +13,13 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - v*
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     if: |
       (startsWith(github.ref, 'refs/tags/') && github.event.base_ref == 'refs/heads/master') 
-      || (startsWith(github.ref, 'refs/tags/v6*') && github.event.base_ref == 'refs/heads/v6')
+      || (startsWith(github.ref, 'refs/tags/') && github.event.base_ref == 'refs/heads/v6')
     steps:
       -
         name: Checkout
@@ -43,7 +43,7 @@ jobs:
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: latest
+          version: ${{ github.event.inputs.tag }}
           args: release --rm-dist
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
