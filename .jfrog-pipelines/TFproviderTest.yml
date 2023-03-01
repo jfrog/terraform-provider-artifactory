@@ -1,18 +1,18 @@
 resources:
-  - name: GitHubTFProviderRepoJFrog
+  - name: GitHubTFProviderRepoV6JFrog
     type: GitRepo
     configuration:
       gitProvider: partnership_github
       path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
-        include: master
+        include: v6
       buildOn:
         commit: false
         pullRequestCreate: true
       cancelPendingRunsOn:
         pullRequestUpdate: true
 pipelines:
-  - name: tf_provider_artifactory
+  - name: tf_provider_artifactory_v6
     steps:
       - name: build_and_run_tf_provider
         type: Bash
@@ -33,10 +33,9 @@ pipelines:
             - name: terraform_artifactory_sonarqube
             - name: partnership_rt_cluster_license
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderRepoV6JFrog
           environmentVariables:
-            USE_LATEST_RT_VERSION: "true"
-            ARTIFACTORY_TEST_VERSION: 7.49.8
+            ARTIFACTORY_TEST_VERSION: 7.49.8 # this pipeline should always use RT version below 7.50.x because of the breaking changes introduced
             GO_VERSION: 1.18
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
@@ -65,10 +64,10 @@ pipelines:
             #- curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
             #- unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           onExecute:
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
+            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoV6JFrog_gitRepoRepositorySshUrl}
             - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
+            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoV6JFrog_gitRepoFullName}" | sed -e 's/.*\///g')
+            - cd ${res_GitHubTFProviderRepoV6JFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - add_run_variables PROVIDER_VERSION=$(head -1 CHANGELOG.md | awk '{print $2}')
@@ -85,19 +84,11 @@ pipelines:
             - echo "Save RT licenses from the variable to the license file"
             - echo ${int_partnership_rt_cluster_license_5licenses} > scripts/artifactory.lic
             - echo "Set Artifactory version, run RT in a container"
-            - >-
-              if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
-               helm repo add artifactory https://charts.jfrog.io
-               helm repo update
-               add_run_variables ARTIFACTORY_VERSION=$(helm search repo | grep "artifactory " | awk '{$1=$1};1' |  cut -f3 -d " ")
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              else
-               add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              fi
+            - add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
+            - echo "Artifactory version "${ARTIFACTORY_VERSION}"
             - export ARTIFACTORY_CONTAINER_NAME=artifactory
             - >-
-              docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
+              docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoV6JFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
                     -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Set localhost to a container IP address, since we run docker inside of docker"
             - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
@@ -157,22 +148,22 @@ pipelines:
           inputSteps:
             - name: build_and_run_tf_provider
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderRepoV6JFrog
         execution:
           onStart:
             - echo "Preparing for work..."
           onExecute:
             - printenv
-            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
-            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
-            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
-            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
+            - export PR_URL=${res_GitHubTFProviderRepoV6JFrog_commitUrl}
+            - export PR_COMMITTER=${res_GitHubTFProviderRepoV6JFrog_committerLogin}
+            - export PR_BRANCH=${res_GitHubTFProviderRepoV6JFrog_headCommitRef}
+            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoV6JFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
             - >-
-              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
+              if [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoV6JFrog_headCommitRef}" != main ]]; then
                 echo "The pipeline was triggered by the PR, add Artifactory version to CHANGELOG.md and send the PR data to slack channel."
-                cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
-                echo "Checking out the branch ${res_GitHubTFProviderRepoJFrog_headCommitRef} where the PR was created from."
-                git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
+                cd ${res_GitHubTFProviderRepoV6JFrog_resourcePath}
+                echo "Checking out the branch ${res_GitHubTFProviderRepoV6JFrog_headCommitRef} where the PR was created from."
+                git checkout -b ${res_GitHubTFProviderRepoV6JFrog_headCommitRef}
                 sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
                 head -10 CHANGELOG.md
                 git add CHANGELOG.md
@@ -185,7 +176,7 @@ pipelines:
                   git config --get user.name
                   git config --get user.email
                   git commit --author="JFrog CI <jfrog-solutions-ci+1@jfrog.com>" -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
-                  git push https://${res_GitHubTFProviderRepoJFrog_gitProvider_token}${TFProviderRepo}
+                  git push https://${res_GitHubTFProviderRepoV6JFrog_gitProvider_token}${TFProviderRepo}
                 else
                   echo "There is nothing to commit: Artifactory version hadn't changed."
                 fi
@@ -193,8 +184,8 @@ pipelines:
           onSuccess:
             - echo "Success"
             - >-
-              if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
-                send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
+              if [[ ! -z ${res_GitHubTFProviderRepoV6JFrog_headCommitRef} ]]; then
+                send_notification partnership_slack --text "<${res_GitHubTFProviderRepoV6JFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
               fi
           onFailure:
             - >-
