@@ -633,12 +633,6 @@ func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.Res
 		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
 			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
 		}
-	} else {
-		if _, ok := diff.GetOk("external_dependencies_patterns"); ok {
-			if len(diff.Get("external_dependencies_patterns").([]interface{})) != 0 {
-				return fmt.Errorf("if `external_dependencies_enabled` is set to `false`, `external_dependencies_patterns` list can not be set")
-			}
-		}
 	}
 
 	return nil
