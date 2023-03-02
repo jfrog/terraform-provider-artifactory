@@ -11,7 +11,7 @@ func DataSourceArtifactoryLocalNugetRepository() *schema.Resource {
 		return &local.NugetLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: "nuget",
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 			MaxUniqueSnapshots:       0,
 			ForceNugetAuthentication: false,

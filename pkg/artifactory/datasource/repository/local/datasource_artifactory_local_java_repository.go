@@ -13,7 +13,7 @@ func DataSourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool)
 		return &local.JavaLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: repoType,
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil
