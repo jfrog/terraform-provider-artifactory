@@ -1,4 +1,4 @@
-module github.com/jfrog/terraform-provider-artifactory/v6
+module github.com/jfrog/terraform-provider-artifactory/v7
 
 // if you need to do local dev, literally just uncomment the line below
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared

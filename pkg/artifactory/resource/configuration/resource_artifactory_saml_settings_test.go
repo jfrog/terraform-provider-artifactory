@@ -7,8 +7,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 )
 
 const SamlSettingsTemplateFull = `
