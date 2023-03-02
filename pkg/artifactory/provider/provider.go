@@ -8,20 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
-	datasource_local "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/local"
-	datasource_security "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/security"
-	datasource_user "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/user"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/replication"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/user"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository/local"
+	datasource_security "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/security"
+	datasource_user "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -146,11 +146,26 @@ func Provider() *schema.Provider {
 	}
 
 	dataSourceMap := map[string]*schema.Resource{
-		"artifactory_file":              datasource.ArtifactoryFile(),
-		"artifactory_fileinfo":          datasource.ArtifactoryFileInfo(),
-		"artifactory_group":             datasource_security.DataSourceArtifactoryGroup(),
-		"artifactory_user":              datasource_user.DataSourceArtifactoryUser(),
-		"artifactory_permission_target": datasource_security.DataSourceArtifactoryPermissionTarget(),
+		"artifactory_file":                                datasource.ArtifactoryFile(),
+		"artifactory_fileinfo":                            datasource.ArtifactoryFileInfo(),
+		"artifactory_group":                               datasource_security.DataSourceArtifactoryGroup(),
+		"artifactory_user":                                datasource_user.DataSourceArtifactoryUser(),
+		"artifactory_permission_target":                   datasource_security.DataSourceArtifactoryPermissionTarget(),
+		"artifactory_local_alpine_repository":             datasource_local.DataSourceArtifactoryLocalAlpineRepository(),
+		"artifactory_local_cargo_repository":              datasource_local.DataSourceArtifactoryLocalCargoRepository(),
+		"artifactory_local_debian_repository":             datasource_local.DataSourceArtifactoryLocalDebianRepository(),
+		"artifactory_local_docker_v2_repository":          datasource_local.DataSourceArtifactoryLocalDockerV2Repository(),
+		"artifactory_local_docker_v1_repository":          datasource_local.DataSourceArtifactoryLocalDockerV1Repository(),
+		"artifactory_local_maven_repository":              datasource_local.DataSourceArtifactoryLocalJavaRepository("maven", false),
+		"artifactory_local_nuget_repository":              datasource_local.DataSourceArtifactoryLocalNugetRepository(),
+		"artifactory_local_rpm_repository":                datasource_local.DataSourceArtifactoryLocalRpmRepository(),
+		"artifactory_local_terraform_module_repository":   datasource_local.DataSourceArtifactoryLocalTerraformRepository("module"),
+		"artifactory_local_terraform_provider_repository": datasource_local.DataSourceArtifactoryLocalTerraformRepository("provider"),
+	}
+
+	for _, repoType := range repository.GradleLikeRepoTypes {
+		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
+		dataSourceMap[localResourceName] = datasource_local.DataSourceArtifactoryLocalJavaRepository(repoType, true)
 	}
 
 	for _, repoType := range local.RepoTypesLikeGeneric {
