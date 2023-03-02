@@ -1,4 +1,4 @@
-## 7.1.1 (March 2, 2023).
+## 7.1.1 (March 2, 2023). Tested on Artifactory 7.55.2
 
 BUG FIXES:
 * resource/artifactory_remote_docker_repository, resource/artifactory_remote_helm_repository: fixed the issue when `externalDependenciesEnabled` was impossible to update. 
