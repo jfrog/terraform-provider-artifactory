@@ -11,7 +11,7 @@ func DataSourceArtifactoryLocalCargoRepository() *schema.Resource {
 		return &local.CargoLocalRepoParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: "cargo",
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 		}, nil
 	}

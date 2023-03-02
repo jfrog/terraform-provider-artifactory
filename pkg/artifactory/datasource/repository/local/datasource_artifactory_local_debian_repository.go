@@ -11,7 +11,7 @@ func DataSourceArtifactoryLocalDebianRepository() *schema.Resource {
 		return &local.DebianLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: "debian",
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 		}, nil
 	}
