@@ -10,7 +10,7 @@ endif
 PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
-PROVIDER_VERSION?=$(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+PROVIDER_VERSION?=$(shell git tag --sort=-creatordate  | grep v7 | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_PROVIDER_VERSION := $(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
 SONAR_SCANNER_VERSION?=4.7.0.2747

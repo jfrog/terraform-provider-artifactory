@@ -6,7 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
