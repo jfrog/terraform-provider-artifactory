@@ -1,0 +1,24 @@
+---
+subcategory: "Remote Repositories"
+---
+# Artifactory Remote Conan Repository Data Resource
+
+Retrieves a remote Conan repository.
+
+## Example Usage
+
+```hcl
+data "artifactory_remote_conan_repository" "my-remote-conan" {
+  key = "my-remote-conan"
+}
+```
+
+## Argument Reference
+
+The following argument is supported:
+
+* `key` - (Required) the identity key of the repo.
+
+## Attribute Reference
+
+The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):

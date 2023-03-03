@@ -12,7 +12,7 @@ type GenericRemoteRepo struct {
 	PropagateQueryParams bool `json:"propagateQueryParams"`
 }
 
-const genericPackageType = "generic"
+const GenericPackageType = "generic"
 
 var GenericRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 	genericSchema := util.MergeMaps(
@@ -25,7 +25,7 @@ var GenericRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 				Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 			},
 		},
-		repository.RepoLayoutRefSchema(rclass, genericPackageType),
+		repository.RepoLayoutRefSchema(rclass, GenericPackageType),
 	)
 
 	return genericSchema
@@ -36,14 +36,14 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	var unpackGenericRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := GenericRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, genericPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, GenericPackageType),
 			PropagateQueryParams:       d.GetBool("propagate_query_params", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, genericPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, GenericPackageType)()
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 		return &GenericRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        rclass,
-				PackageType:   genericPackageType,
+				PackageType:   GenericPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil

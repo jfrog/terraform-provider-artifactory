@@ -29,6 +29,6 @@ func DataSourceArtifactoryRemotePypiRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      pypiSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(pypiSchema), constructor),
-		Description: "Provides a data source for a remote PyPI repository",
+		Description: "Provides a data source for a remote Pypi repository",
 	}
 }

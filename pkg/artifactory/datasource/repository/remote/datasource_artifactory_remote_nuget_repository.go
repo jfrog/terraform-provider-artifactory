@@ -29,6 +29,6 @@ func DataSourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      nugetSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(nugetSchema), constructor),
-		Description: "Provides a data source for a remote Nuget repository",
+		Description: "Provides a data source for a remote NuGet repository",
 	}
 }

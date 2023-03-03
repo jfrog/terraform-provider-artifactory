@@ -1,0 +1,24 @@
+---
+subcategory: "Remote Repositories"
+---
+# Artifactory Remote Go Repository Data Resource
+
+Retrieves a remote Go repository.
+
+## Example Usage
+
+```hcl
+data "artifactory_remote_go_repository" "my-remote-go" {
+  key = "my-remote-go"
+}
+```
+
+## Argument Reference
+
+The following argument is supported:
+
+* `key` - (Required) the identity key of the repo.
+
+## Attribute Reference
+
+The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):

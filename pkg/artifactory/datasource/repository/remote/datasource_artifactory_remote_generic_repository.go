@@ -1,8 +1,6 @@
 package remote
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -11,10 +9,8 @@ import (
 )
 
 func DataSourceArtifactoryRemoteGenericRepository() *schema.Resource {
-	const packageType = "generic"
-
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.GenericPackageType)()
 		if err != nil {
 			return nil, err
 		}
@@ -22,7 +18,7 @@ func DataSourceArtifactoryRemoteGenericRepository() *schema.Resource {
 		return &remote.GenericRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        rclass,
-				PackageType:   packageType,
+				PackageType:   remote.GenericPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
@@ -33,6 +29,6 @@ func DataSourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      genericSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(genericSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a remote %s repository", packageType),
+		Description: "Provides a data source for a remote Generic repository",
 	}
 }
