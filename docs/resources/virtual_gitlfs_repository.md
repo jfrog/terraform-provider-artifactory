@@ -9,7 +9,7 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 ## Example Usage
 
 ```hcl
-resource "artifactory_virtual_cgitlfs_repository" "foo-gitlfs" {
+resource "artifactory_virtual_gitlfs_repository" "foo-gitlfs" {
   key               = "foo-gitlfs"
   repositories      = []
   description       = "A test virtual repo"
