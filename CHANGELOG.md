@@ -1,4 +1,4 @@
-## 6.31.0 (March 2, 2023)
+## 6.31.0 (March 2, 2023). Tested on Artifactory 7.49.8
 
 FEATURES:
 * datasource/artifactory_local_*_repository: Adds new data sources for all local repository types.
