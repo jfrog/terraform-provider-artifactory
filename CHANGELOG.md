@@ -1,3 +1,10 @@
+## 6.31.0 (March 3, 2023). Tested on Artifactory 7.49.8
+
+FEATURES:
+* datasource/artifactory_local_*_repository: Adds new data sources for all local repository types.
+  PR:    [#677](https://github.com/jfrog/terraform-provider-artifactory/pull/677)
+  Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+
 ## 6.30.4 (March 3, 2023). Tested on Artifactory 7.49.8
 
 BUG FIXES:

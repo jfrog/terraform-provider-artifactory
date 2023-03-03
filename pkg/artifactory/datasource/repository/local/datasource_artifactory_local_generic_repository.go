@@ -10,7 +10,7 @@ func DataSourceArtifactoryLocalGenericRepository(repoType string) *schema.Resour
 	constructor := func() (interface{}, error) {
 		return &local.RepositoryBaseParams{
 			PackageType: repoType,
-			Rclass:      "local",
+			Rclass:      rclass,
 		}, nil
 	}
 
