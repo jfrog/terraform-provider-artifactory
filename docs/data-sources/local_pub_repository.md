@@ -9,8 +9,8 @@ Retrieves a local pub repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_pub_repository" "terraform-local-test-pub-repo" {
-  key = "terraform-local-test-pub-repo"
+data "artifactory_local_pub_repository" "local-test-pub-repo" {
+  key = "local-test-pub-repo"
 }
 ```
 

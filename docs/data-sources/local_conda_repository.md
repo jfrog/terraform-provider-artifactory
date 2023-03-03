@@ -9,8 +9,8 @@ Retrieves a local conda repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_conda_repository" "terraform-local-test-conda-repo" {
-  key = "terraform-local-test-conda-repo"
+data "artifactory_local_conda_repository" "local-test-conda-repo" {
+  key = "local-test-conda-repo"
 }
 ```
 

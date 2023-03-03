@@ -9,8 +9,8 @@ Retrieves a local pypi repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_pypi_repository" "terraform-local-test-pypi-repo" {
-  key = "terraform-local-test-pypi-repo"
+data "artifactory_local_pypi_repository" "local-test-pypi-repo" {
+  key = "local-test-pypi-repo"
 }
 ```
 

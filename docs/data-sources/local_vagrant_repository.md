@@ -9,8 +9,8 @@ Retrieves a local vagrant repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_vagrant_repository" "terraform-local-test-vagrant-repo" {
-  key = "terraform-local-test-vagrant-repo"
+data "artifactory_local_vagrant_repository" "local-test-vagrant-repo" {
+  key = "local-test-vagrant-repo"
 }
 ```
 

@@ -9,8 +9,8 @@ Retrieves a local Bower repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_bower_repository" "terraform-local-test-bower-repo" {
-  key = "terraform-local-test-bower-repo"
+data "artifactory_local_bower_repository" "local-test-bower-repo" {
+  key = "local-test-bower-repo"
 }
 ```
 

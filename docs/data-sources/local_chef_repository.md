@@ -9,8 +9,8 @@ Retrieves a local Chef repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_chef_repository" "terraform-local-test-chef-repo" {
-  key = "terraform-local-test-chef-repo"
+data "artifactory_local_chef_repository" "local-test-chef-repo" {
+  key = "local-test-chef-repo"
 }
 ```
 

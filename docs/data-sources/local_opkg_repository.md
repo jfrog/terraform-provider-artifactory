@@ -9,8 +9,8 @@ Retrieves a local opkg repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_opkg_repository" "terraform-local-test-opkg-repo" {
-  key = "terraform-local-test-opkg-repo"
+data "artifactory_local_opkg_repository" "local-test-opkg-repo" {
+  key = "local-test-opkg-repo"
 }
 ```
 

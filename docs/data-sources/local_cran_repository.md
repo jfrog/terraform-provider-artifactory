@@ -9,8 +9,8 @@ Retrieves a local cran repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_cran_repository" "terraform-local-test-cran-repo" {
-  key = "terraform-local-test-cran-repo"
+data "artifactory_local_cran_repository" "local-test-cran-repo" {
+  key = "local-test-cran-repo"
 }
 ```
 

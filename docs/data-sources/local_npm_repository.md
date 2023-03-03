@@ -9,8 +9,8 @@ Retrieves a local npm repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_npm_repository" "terraform-local-test-npm-repo" {
-  key = "terraform-local-test-npm-repo"
+data "artifactory_local_npm_repository" "local-test-npm-repo" {
+  key = "local-test-npm-repo"
 }
 ```
 

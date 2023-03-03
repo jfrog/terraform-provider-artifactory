@@ -9,8 +9,8 @@ Retrieves a local gitlfs repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_gitlfs_repository" "terraform-local-test-gitlfs-repo" {
-  key = "terraform-local-test-gitlfs-repo"
+data "artifactory_local_gitlfs_repository" "local-test-gitlfs-repo" {
+  key = "local-test-gitlfs-repo"
 }
 ```
 

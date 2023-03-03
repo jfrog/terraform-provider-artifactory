@@ -9,8 +9,8 @@ Retrieves a local helm repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_helm_repository" "terraform-local-test-helm-repo" {
-  key = "terraform-local-test-helm-repo"
+data "artifactory_local_helm_repository" "local-test-helm-repo" {
+  key = "local-test-helm-repo"
 }
 ```
 

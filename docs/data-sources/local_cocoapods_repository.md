@@ -9,8 +9,8 @@ Retrieves a local cocoapods repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_cocoapods_repository" "terraform-local-test-cocoapods-repo" {
-  key = "terraform-local-test-cocoapods-repo"
+data "artifactory_local_cocoapods_repository" "local-test-cocoapods-repo" {
+  key = "local-test-cocoapods-repo"
 }
 ```
 

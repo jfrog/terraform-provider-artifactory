@@ -9,8 +9,8 @@ Retrieves a local go repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_go_repository" "terraform-local-test-go-repo" {
-  key = "terraform-local-test-go-repo"
+data "artifactory_local_go_repository" "local-test-go-repo" {
+  key = "local-test-go-repo"
 }
 ```
 

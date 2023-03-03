@@ -9,8 +9,8 @@ Retrieves a local terraformbackend repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_terraformbackend_repository" "terraform-local-test-terraformbackend-repo" {
-  key = "terraform-local-test-terraformbackend-repo"
+data "artifactory_local_terraformbackend_repository" "local-test-terraformbackend-repo" {
+  key = "local-test-terraformbackend-repo"
 }
 ```
 

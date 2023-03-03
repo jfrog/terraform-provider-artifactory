@@ -9,8 +9,8 @@ Retrieves a local gems repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_gems_repository" "terraform-local-test-gems-repo" {
-  key = "terraform-local-test-gems-repo"
+data "artifactory_local_gems_repository" "local-test-gems-repo" {
+  key = "local-test-gems-repo"
 }
 ```
 

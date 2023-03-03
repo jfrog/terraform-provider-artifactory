@@ -9,8 +9,8 @@ Retrieves a local conan repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_conan_repository" "terraform-local-test-conan-repo" {
-  key = "terraform-local-test-conan-repo"
+data "artifactory_local_conan_repository" "local-test-conan-repo" {
+  key = "local-test-conan-repo"
 }
 ```
 

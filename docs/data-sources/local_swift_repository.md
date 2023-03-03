@@ -9,8 +9,8 @@ Retrieves a local swift repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_swift_repository" "terraform-local-test-swift-repo" {
-  key = "terraform-local-test-swift-repo"
+data "artifactory_local_swift_repository" "local-test-swift-repo" {
+  key = "local-test-swift-repo"
 }
 ```
 

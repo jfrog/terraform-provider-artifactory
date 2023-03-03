@@ -9,8 +9,8 @@ Retrieves a local puppet repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_puppet_repository" "terraform-local-test-puppet-repo" {
-  key = "terraform-local-test-puppet-repo"
+data "artifactory_local_puppet_repository" "local-test-puppet-repo" {
+  key = "local-test-puppet-repo"
 }
 ```
 

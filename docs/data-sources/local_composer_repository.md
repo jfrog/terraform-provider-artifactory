@@ -9,8 +9,8 @@ Retrieves a local composer repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_composer_repository" "terraform-local-test-composer-repo" {
-  key = "terraform-local-test-composer-repo"
+data "artifactory_local_composer_repository" "local-test-composer-repo" {
+  key = "local-test-composer-repo"
 }
 ```
 

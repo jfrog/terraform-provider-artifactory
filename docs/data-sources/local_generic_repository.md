@@ -9,8 +9,8 @@ Retrieves a local generic repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_local_generic_repository" "terraform-local-test-generic-repo" {
-  key = "terraform-local-test-generic-repo"
+data "artifactory_local_generic_repository" "local-test-generic-repo" {
+  key = "local-test-generic-repo"
 }
 ```
 
