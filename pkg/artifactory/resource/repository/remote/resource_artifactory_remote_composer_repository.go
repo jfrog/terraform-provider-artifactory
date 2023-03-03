@@ -14,23 +14,30 @@ type ComposerRemoteRepo struct {
 	ComposerRegistryUrl string `json:"composerRegistryUrl"`
 }
 
-func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
-	const packageType = "composer"
+const ComposerPackageType = "composer"
 
-	var composerRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, VcsRemoteRepoSchema, map[string]*schema.Schema{
-		"composer_registry_url": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "https://packagist.org",
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
+var ComposerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	return util.MergeMaps(
+		BaseRemoteRepoSchema(isResource),
+		VcsRemoteRepoSchema,
+		map[string]*schema.Schema{
+			"composer_registry_url": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "https://packagist.org",
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+				Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
+			},
 		},
-	}, repository.RepoLayoutRefSchema("remote", packageType))
+		repository.RepoLayoutRefSchema(rclass, ComposerPackageType),
+	)
+}
 
+func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	var unpackComposerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := ComposerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, ComposerPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			ComposerRegistryUrl:        d.GetString("composer_registry_url", false),
 		}
@@ -38,19 +45,21 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, ComposerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &ComposerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        "remote",
-				PackageType:   packageType,
+				Rclass:        rclass,
+				PackageType:   ComposerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	return mkResourceSchema(composerRemoteSchema, packer.Default(composerRemoteSchema), unpackComposerRemoteRepo, constructor)
+	composerSchema := ComposerRemoteSchema(true)
+
+	return mkResourceSchema(composerSchema, packer.Default(composerSchema), unpackComposerRemoteRepo, constructor)
 }

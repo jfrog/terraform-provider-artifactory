@@ -653,7 +653,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepository(t *testing.T) {
-	for _, repoType := range virtual.RepoTypesLikeGeneric {
+	for _, repoType := range virtual.PackageTypesLikeGeneric {
 		// TODO: workaround due to bug in Artifactory 7.55.2, 'bypass_head_requests' inconsistency for terraform repo type.
 		if repoType != "terraform" {
 			title := fmt.Sprintf(
@@ -667,7 +667,7 @@ func TestAccVirtualRepository(t *testing.T) {
 			})
 		}
 	}
-	for _, repoType := range virtual.RepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
 		title := fmt.Sprintf(
 			"TestVirtual%sRepo",
 			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
@@ -682,7 +682,7 @@ func TestAccVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		title := fmt.Sprintf("TestVirtual%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
 		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{

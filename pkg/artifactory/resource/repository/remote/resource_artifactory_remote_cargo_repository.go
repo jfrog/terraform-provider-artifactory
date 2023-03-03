@@ -15,34 +15,49 @@ type CargoRemoteRepo struct {
 	EnableSparseIndex bool   `json:"cargoInternalIndex"`
 }
 
-func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
-	const packageType = "cargo"
+const CargoPackageType = "cargo"
 
-	var cargoRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
-		"git_registry_url": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `This is the index url, expected to be a git repository. Default value in UI is "https://github.com/rust-lang/crates.io-index"`,
+var CargoRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	cargoSchema := util.MergeMaps(
+		BaseRemoteRepoSchema(isResource),
+		map[string]*schema.Schema{
+			"git_registry_url": {
+				Type:         schema.TypeString,
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+				Description:  `This is the index url, expected to be a git repository. Default value in UI is "https://github.com/rust-lang/crates.io-index"`,
+			},
+			"anonymous_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
+					"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
+			},
+			"enable_sparse_index": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
+			},
 		},
-		"anonymous_access": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
-				"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
-		},
-		"enable_sparse_index": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
-		},
-	}, repository.RepoLayoutRefSchema("remote", packageType))
+		repository.RepoLayoutRefSchema(rclass, CargoPackageType),
+	)
+
+	if isResource {
+		cargoSchema["git_registry_url"].Required = true
+	} else {
+		cargoSchema["git_registry_url"].Required = false
+		cargoSchema["git_registry_url"].Optional = true
+	}
+
+	return cargoSchema
+}
+
+func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := CargoRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, CargoPackageType),
 			RegistryUrl:                d.GetString("git_registry_url", false),
 			AnonymousAccess:            d.GetBool("anonymous_access", false),
 			EnableSparseIndex:          d.GetBool("enable_sparse_index", false),
@@ -53,11 +68,13 @@ func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &CargoRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      "remote",
-				PackageType: packageType,
+				Rclass:      rclass,
+				PackageType: CargoPackageType,
 			},
 		}, nil
 	}
 
-	return mkResourceSchema(cargoRemoteSchema, packer.Default(cargoRemoteSchema), unpackCargoRemoteRepo, constructor)
+	cargoSchema := CargoRemoteSchema(true)
+
+	return mkResourceSchema(cargoSchema, packer.Default(cargoSchema), unpackCargoRemoteRepo, constructor)
 }
