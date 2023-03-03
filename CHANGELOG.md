@@ -1,4 +1,12 @@
-## 6.30.3 (February 28, 2023)
+## 6.30.4 (March 3, 2023). Tested on Artifactory 7.49.8
+
+BUG FIXES:
+* resource/artifactory_remote_docker_repository, resource/artifactory_remote_helm_repository: fixed the issue when `external_dependencies_enabled` was impossible to update.
+  Removed constraints from `external_dependencies_patterns` attribute, now it can be set when `external_dependencies_enabled` is set to false. This is a workaround for the Artifactory API behavior, when the default value [**] is assigned instead of an empty list on the update repository call.
+  PR: [#678](https://github.com/jfrog/terraform-provider-artifactory/pull/678)
+  Issue: [#673](https://github.com/jfrog/terraform-provider-artifactory/issues/673)
+
+## 6.30.3 (February 28, 2023).
 
 BUG FIXES:
 * resource/artifactory_file: Fix `/` in artifact path being escaped. Issue: [#666](https://github.com/jfrog/terraform-provider-artifactory/issues/666) PR: [#669](https://github.com/jfrog/terraform-provider-artifactory/pull/669)

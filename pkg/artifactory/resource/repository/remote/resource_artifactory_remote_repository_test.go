@@ -100,6 +100,25 @@ func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
 	resource.Test(t, testCase)
 }
 
+func TestAccRemoteDockerRepositoryDepFalse(t *testing.T) {
+	const packageType = "docker"
+	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"external_dependencies_enabled":  false,
+		"enable_token_authentication":    true,
+		"block_pushing_schema1":          true,
+		"priority_resolution":            false,
+		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false,
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	})
+	resource.Test(t, testCase)
+}
+
 func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
 	const failKey = `
 		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
@@ -120,32 +139,6 @@ func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
 			{
 				Config:      failKey,
 				ExpectError: regexp.MustCompile(".*if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set.*"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteDockerRepositoryDependenciesFalseListFails(t *testing.T) {
-	const failKey = `
-		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
-			key                     		= "remote-docker"
-			url                     		= "https://registry.npmjs.org/"
-			retrieval_cache_period_seconds 	= 70
-			enable_token_authentication    	= true
-			block_pushing_schema1          	= true
-			priority_resolution            	= false
-			external_dependencies_enabled   = false
-			external_dependencies_patterns 	= ["**/hub.docker.io/**", "**/bintray.jfrog.io/**"]
-		}
-	`
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      failKey,
-				ExpectError: regexp.MustCompile(".*if `external_dependencies_enabled` is set to `false`, `external_dependencies_patterns` list can not be set.*"),
 			},
 		},
 	})
@@ -334,6 +327,23 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  true,
+		"priority_resolution":            false,
+		"external_dependencies_patterns": []interface{}{"**github.com**"},
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+	}))
+}
+
+func TestAccRemoteHelmRepositoryDepFalse(t *testing.T) {
+	const packageType = "helm"
+	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
+		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"external_dependencies_enabled":  false,
 		"priority_resolution":            false,
 		"external_dependencies_patterns": []interface{}{"**github.com**"},
 		"content_synchronisation": map[string]interface{}{
