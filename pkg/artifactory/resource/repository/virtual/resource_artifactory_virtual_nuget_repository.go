@@ -45,5 +45,10 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(nugetVirtualSchema, packer.Default(nugetVirtualSchema), unpackNugetVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		nugetVirtualSchema,
+		packer.Default(nugetVirtualSchema),
+		unpackNugetVirtualRepository,
+		constructor,
+	)
 }

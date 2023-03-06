@@ -26,7 +26,7 @@ type RepositoryBaseParams struct {
 
 type RepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
 	RepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
 func (bp RepositoryBaseParams) Id() string {

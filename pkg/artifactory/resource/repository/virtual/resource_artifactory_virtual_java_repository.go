@@ -72,6 +72,11 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 		}, nil
 	}
 
-	return repository.MkResourceSchema(mavenVirtualSchema, packer.Default(mavenVirtualSchema), unpackMavenVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		mavenVirtualSchema,
+		packer.Default(mavenVirtualSchema),
+		unpackMavenVirtualRepository,
+		constructor,
+	)
 
 }
