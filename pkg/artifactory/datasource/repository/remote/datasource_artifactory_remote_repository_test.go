@@ -635,6 +635,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
 					resource.TestCheckResourceAttr(fqrn, "terraform_registry_url", "https://registry.terraform.io"),
 					resource.TestCheckResourceAttr(fqrn, "terraform_providers_url", "https://releases.hashicorp.com"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "true"),
 				),
 			},
 		},
