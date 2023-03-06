@@ -52,5 +52,10 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(alpineVirtualSchema, packer.Default(alpineVirtualSchema), unpackAlpineVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		alpineVirtualSchema,
+		packer.Default(alpineVirtualSchema),
+		unpackAlpineVirtualRepository,
+		constructor,
+	)
 }
