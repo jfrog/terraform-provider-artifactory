@@ -265,10 +265,10 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		`resource "artifactory_remote_docker_repository" "{{ .name }}" {
 		    key                            = "{{ .name }}"
 		    url                            = "http://tempurl.org"
-			external_dependencies_enabled  = true
-			enable_token_authentication    = true
-			block_pushing_schema1          = true
-			external_dependencies_patterns = ["*foo"]
+		    external_dependencies_enabled  = true
+		    enable_token_authentication    = true
+		    block_pushing_schema1          = true
+		    external_dependencies_patterns = ["*foo"]
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
@@ -346,7 +346,7 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 		`resource "artifactory_remote_go_repository" "{{ .name }}" {
 		    key              = "{{ .name }}"
 		    url              = "http://tempurl.org"
-			vcs_git_provider = "GITHUB"
+		    vcs_git_provider = "GITHUB"
 		}
 
 		data "artifactory_remote_go_repository" "{{ .name }}" {
@@ -384,9 +384,9 @@ func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
 		`resource "artifactory_remote_helm_repository" "{{ .name }}" {
 		    key                            = "{{ .name }}"
 		    url                            = "http://tempurl.org"
-			helm_charts_base_url           = "http://tempurl.org"
-			external_dependencies_enabled  = true
-			external_dependencies_patterns = ["*foo"]
+		    helm_charts_base_url           = "http://tempurl.org"
+		    external_dependencies_enabled  = true
+		    external_dependencies_patterns = ["*foo"]
 		}
 
 		data "artifactory_remote_helm_repository" "{{ .name }}" {
@@ -432,22 +432,21 @@ var commonJavaParams = func() map[string]interface{} {
 }
 
 const javaRepositoryBasic = `
-    resource "{{ .resource_name }}" "{{ .name }}" {
-		key                 			 = "{{ .name }}"
-		url                              = "{{ .url }}"
-		fetch_jars_eagerly               = {{ .fetch_jars_eagerly }}
-		fetch_sources_eagerly            = {{ .fetch_sources_eagerly }}
-		remote_repo_checksum_policy_type = "{{ .remote_repo_checksum_policy_type }}"
-		handle_releases                  = {{ .handle_releases }}
-		handle_snapshots                 = {{ .handle_snapshots }}
-		suppress_pom_consistency_checks  = {{ .suppress_pom_consistency_checks }}
-		reject_invalid_jars              = {{ .reject_invalid_jars }}
-    }
+resource "{{ .resource_name }}" "{{ .name }}" {
+    key                              = "{{ .name }}"
+    url                              = "{{ .url }}"
+    fetch_jars_eagerly               = {{ .fetch_jars_eagerly }}
+    fetch_sources_eagerly            = {{ .fetch_sources_eagerly }}
+    remote_repo_checksum_policy_type = "{{ .remote_repo_checksum_policy_type }}"
+    handle_releases                  = {{ .handle_releases }}
+    handle_snapshots                 = {{ .handle_snapshots }}
+    suppress_pom_consistency_checks  = {{ .suppress_pom_consistency_checks }}
+    reject_invalid_jars              = {{ .reject_invalid_jars }}
+}
 
-	data "{{ .resource_name }}" "{{ .name }}" {
-    	key = {{ .resource_name }}.{{ .name }}.id
-    }
-`
+data "{{ .resource_name }}" "{{ .name }}" {
+    key = {{ .resource_name }}.{{ .name }}.id
+}`
 
 func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("%s-remote", packageType)
@@ -532,8 +531,8 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 		`resource "artifactory_remote_nuget_repository" "{{ .name }}" {
 		    key                        = "{{ .name }}"
 		    url                        = "http://tempurl.org"
-			feed_context_path          = "/foo"
-			force_nuget_authentication = true
+		    feed_context_path          = "/foo"
+		    force_nuget_authentication = true
 		}
 
 		data "artifactory_remote_nuget_repository" "{{ .name }}" {
@@ -613,7 +612,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 		`resource "artifactory_remote_terraform_repository" "{{ .name }}" {
 		    key                  = "{{ .name }}"
 		    url                  = "http://tempurl.org"
-			bypass_head_requests = true
+		    bypass_head_requests = true
 		}
 
 		data "artifactory_remote_terraform_repository" "{{ .name }}" {
@@ -652,7 +651,7 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 		`resource "artifactory_remote_vcs_repository" "{{ .name }}" {
 		    key                  = "{{ .name }}"
 		    url                  = "http://tempurl.org"
-			max_unique_snapshots = 2
+		    max_unique_snapshots = 2
 		}
 
 		data "artifactory_remote_vcs_repository" "{{ .name }}" {
