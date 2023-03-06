@@ -20,7 +20,7 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 
 	type NpmVirtualRepositoryParams struct {
 		ExternalDependenciesVirtualRepositoryParams
-		VirtualRetrievalCachePeriodSecs int `json:"virtualRetrievalCachePeriodSecs"`
+		VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs,omitempty"`
 	}
 
 	var unpackNpmVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {

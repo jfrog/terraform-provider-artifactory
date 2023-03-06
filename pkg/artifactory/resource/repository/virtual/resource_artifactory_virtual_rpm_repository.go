@@ -61,5 +61,10 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(rpmVirtualSchema, packer.Default(rpmVirtualSchema), unpackRpmVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		rpmVirtualSchema,
+		packer.Default(rpmVirtualSchema),
+		unpackRpmVirtualRepository,
+		constructor,
+	)
 }

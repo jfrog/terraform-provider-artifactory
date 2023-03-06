@@ -51,5 +51,10 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(helmVirtualSchema, packer.Default(helmVirtualSchema), unpackHelmVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		helmVirtualSchema,
+		packer.Default(helmVirtualSchema),
+		unpackHelmVirtualRepository,
+		constructor,
+	)
 }
