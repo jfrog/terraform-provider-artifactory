@@ -10,7 +10,7 @@ Retrieves a local alpine repository.
 
 ```hcl
 data "artifactory_local_alpine_repository" "local-test-alpine-repo-basic" {
-  key = "terraform-local-test-alpine-repo-basic"
+  key = "local-test-alpine-repo-basic"
 }
 ```
 
