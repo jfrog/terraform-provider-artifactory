@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote GitLfs Repository Data Resource
+# Artifactory Remote GitLfs Repository Data Source
 
 Retrieves a remote GitLfs repository.
 

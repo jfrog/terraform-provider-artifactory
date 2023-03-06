@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote VCS Repository Data Resource
+# Artifactory Remote VCS Repository Data Source
 
 Retrieves a remote VCS repository.
 

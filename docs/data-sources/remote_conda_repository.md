@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Conda Repository Data Resource
+# Artifactory Remote Conda Repository Data Source
 
 Retrieves a remote Conda repository.
 

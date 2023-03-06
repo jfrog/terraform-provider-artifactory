@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote CRAN Repository Data Resource
+# Artifactory Remote CRAN Repository Data Source
 
 Retrieves a remote CRAN repository.
 

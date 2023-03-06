@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Opkg Repository Data Resource
+# Artifactory Remote Opkg Repository Data Source
 
 Retrieves a remote Opkg repository.
 

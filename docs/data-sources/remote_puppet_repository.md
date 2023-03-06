@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Peppet Repository Data Resource
+# Artifactory Remote Peppet Repository Data Source
 
 Retrieves a remote Peppet repository.
 

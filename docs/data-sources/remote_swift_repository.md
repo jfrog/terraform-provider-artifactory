@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Swift Repository Data Resource
+# Artifactory Remote Swift Repository Data Source
 
 Retrieves a remote Swift repository.
 

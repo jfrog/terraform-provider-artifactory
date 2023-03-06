@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote NuGet Repository Data Resource
+# Artifactory Remote NuGet Repository Data Source
 
 Retrieves a remote NuGet repository.
 

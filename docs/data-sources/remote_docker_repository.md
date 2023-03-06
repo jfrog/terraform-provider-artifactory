@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Docker Repository Data Resource
+# Artifactory Remote Docker Repository Data Source
 
 Retrieves a remote Docker repository.
 

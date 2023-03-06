@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote P2 Repository Data Resource
+# Artifactory Remote P2 Repository Data Source
 
 Retrieves a remote P2 repository.
 

@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Debian Repository Data Resource
+# Artifactory Remote Debian Repository Data Source
 
 Retrieves a remote Debian repository.
 

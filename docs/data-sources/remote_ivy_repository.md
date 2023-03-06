@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Ivy Repository Data Resource
+# Artifactory Remote Ivy Repository Data Source
 
 Retrieves a remote Ivy repository.
 

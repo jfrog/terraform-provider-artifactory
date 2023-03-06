@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Cargo Repository Data Resource
+# Artifactory Remote Cargo Repository Data Source
 
 Retrieves a remote Cargo repository.
 

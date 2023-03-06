@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote SBT Repository Data Resource
+# Artifactory Remote SBT Repository Data Source
 
 Retrieves a remote SBT repository.
 

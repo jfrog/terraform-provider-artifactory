@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Gradle Repository Data Resource
+# Artifactory Remote Gradle Repository Data Source
 
 Retrieves a remote Gradle repository.
 

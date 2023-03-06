@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Alpine Repository Data Resource
+# Artifactory Remote Alpine Repository Data Source
 
 Retrieves a remote Alpine repository.
 

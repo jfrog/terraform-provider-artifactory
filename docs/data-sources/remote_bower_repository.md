@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Bower Repository Data Resource
+# Artifactory Remote Bower Repository Data Source
 
 Retrieves a remote Bower repository.
 

@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Rpm Repository Data Resource
+# Artifactory Remote Rpm Repository Data Source
 
 Retrieves a remote Rpm repository.
 

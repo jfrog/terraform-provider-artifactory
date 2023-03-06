@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Composer Repository Data Resource
+# Artifactory Remote Composer Repository Data Source
 
 Retrieves a remote Composer repository.
 

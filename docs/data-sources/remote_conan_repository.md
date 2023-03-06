@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Conan Repository Data Resource
+# Artifactory Remote Conan Repository Data Source
 
 Retrieves a remote Conan repository.
 

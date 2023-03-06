@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Terraform Repository Data Resource
+# Artifactory Remote Terraform Repository Data Source
 
 Retrieves a remote Terraform repository.
 

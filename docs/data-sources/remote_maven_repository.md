@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Maven Repository Data Resource
+# Artifactory Remote Maven Repository Data Source
 
 Retrieves a remote Maven repository.
 

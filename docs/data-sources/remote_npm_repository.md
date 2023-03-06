@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Npm Repository Data Resource
+# Artifactory Remote Npm Repository Data Source
 
 Retrieves a remote Npm repository.
 

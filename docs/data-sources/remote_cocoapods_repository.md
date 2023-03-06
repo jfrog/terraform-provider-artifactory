@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote CocoaPods Repository Data Resource
+# Artifactory Remote CocoaPods Repository Data Source
 
 Retrieves a remote CocoaPods repository.
 

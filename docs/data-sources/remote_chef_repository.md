@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Chef Repository Data Resource
+# Artifactory Remote Chef Repository Data Source
 
 Retrieves a remote Chef repository.
 

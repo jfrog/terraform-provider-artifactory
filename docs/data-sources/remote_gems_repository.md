@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Gems Repository Data Resource
+# Artifactory Remote Gems Repository Data Source
 
 Retrieves a remote Gems repository.
 

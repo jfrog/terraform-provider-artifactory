@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Helm Repository Data Resource
+# Artifactory Remote Helm Repository Data Source
 
 Retrieves a remote Helm repository.
 

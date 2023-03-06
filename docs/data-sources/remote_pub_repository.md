@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Pub Repository Data Resource
+# Artifactory Remote Pub Repository Data Source
 
 Retrieves a remote Pub repository.
 

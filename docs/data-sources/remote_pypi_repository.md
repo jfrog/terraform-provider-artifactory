@@ -1,7 +1,7 @@
 ---
 subcategory: "Remote Repositories"
 ---
-# Artifactory Remote Pypi Repository Data Resource
+# Artifactory Remote Pypi Repository Data Source
 
 Retrieves a remote Pypi repository.
 
