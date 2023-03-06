@@ -1,4 +1,4 @@
-## 7.1.2 (March 6, 2023).
+## 7.1.2 (March 6, 2023). Tested on Artifactory 7.55.4
 
 BUG FIXES:
 * Changed location of data sources docs so that they render properly in the terraform registry.
