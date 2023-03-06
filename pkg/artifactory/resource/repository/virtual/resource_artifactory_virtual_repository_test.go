@@ -821,6 +821,13 @@ func TestAccVirtualAlpineRepository(t *testing.T) {
 	}))
 }
 
+func TestAccVirtualAlpineRepositoryZeroRetrievalPeriod(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
+		"description":                    "alpine virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 0,
+	}))
+}
+
 func TestAccVirtualNugetRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("nuget", t, map[string]interface{}{
 		"description":                "nuget virtual repository public description testing.",
