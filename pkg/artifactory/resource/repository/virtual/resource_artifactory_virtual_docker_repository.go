@@ -44,5 +44,10 @@ func ResourceArtifactoryVirtualDockerRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerVirtualSchema, packer.Default(dockerVirtualSchema), unpackDockerVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		dockerVirtualSchema,
+		packer.Default(dockerVirtualSchema),
+		unpackDockerVirtualRepository,
+		constructor,
+	)
 }

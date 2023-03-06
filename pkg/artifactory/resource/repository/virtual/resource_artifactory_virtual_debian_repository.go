@@ -84,5 +84,10 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(debianVirtualSchema, packer.Default(debianVirtualSchema), unpackDebianVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		debianVirtualSchema,
+		packer.Default(debianVirtualSchema),
+		unpackDebianVirtualRepository,
+		constructor,
+	)
 }

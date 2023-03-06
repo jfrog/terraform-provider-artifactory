@@ -1,3 +1,9 @@
+## 7.1.3 (March 6, 2023). Tested on Artifactory 7.55.4
+
+BUG FIXES:
+* resource/artifactory_virtual_npm_repository: fixed import issue for `retrieval_cache_period_seconds` attribute.
+ PR [#685](https://github.com/jfrog/terraform-provider-artifactory/pull/685)
+
 ## 7.1.2 (March 6, 2023). Tested on Artifactory 7.55.4
 
 BUG FIXES:

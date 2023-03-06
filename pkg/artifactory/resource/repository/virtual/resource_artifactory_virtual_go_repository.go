@@ -59,5 +59,10 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(goVirtualSchema, packer.Default(goVirtualSchema), unpackGoVirtualRepository, constructor)
+	return repository.MkResourceSchema(
+		goVirtualSchema,
+		packer.Default(goVirtualSchema),
+		unpackGoVirtualRepository,
+		constructor,
+	)
 }
