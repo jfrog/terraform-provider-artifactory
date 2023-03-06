@@ -1,4 +1,4 @@
-## 6.31.1 (March 6, 2023).
+## 6.31.1 (March 6, 2023). Tested on Artifactory 7.49.8
 
 BUG FIXES:
 * resource/artifactory_virtual_npm_repository: fixed import issue for `retrieval_cache_period_seconds` attribute.
