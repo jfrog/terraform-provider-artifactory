@@ -25,7 +25,7 @@ func Provider() *schema.Provider {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DefaultFunc:      schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_URL", "JFROG_URL"}, "http://localhost:8082"),
-				ValidateDiagFunc: validator.All(validator.StringIsNotEmpty, validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 			},
 			"api_key": {
 				Type:             schema.TypeString,
