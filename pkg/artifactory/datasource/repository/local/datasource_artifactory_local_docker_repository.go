@@ -2,6 +2,7 @@ package local
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -27,7 +28,7 @@ func DataSourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
 	return &schema.Resource{
 		Schema:      local.DockerV2LocalSchema,
-		ReadContext: MkRepoReadDataSource(pkr, constructor),
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
 	}
 }
 
@@ -50,7 +51,7 @@ func DataSourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 
 	return &schema.Resource{
 		Schema:      skeema,
-		ReadContext: MkRepoReadDataSource(packer.Default(local.DockerV1LocalSchema), constructor),
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.DockerV1LocalSchema), constructor),
 		Description: "Provides a data source for a local docker (v1) repository",
 	}
 }

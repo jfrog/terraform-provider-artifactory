@@ -13,24 +13,31 @@ type VcsRemoteRepo struct {
 	MaxUniqueSnapshots int `json:"maxUniqueSnapshots"`
 }
 
-func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
-	const packageType = "vcs"
+const VcsPackageType = "vcs"
 
-	var vcsRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, VcsRemoteRepoSchema, map[string]*schema.Schema{
-		"max_unique_snapshots": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
-			Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
-				"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
-				"no limit, and unique snapshots are not cleaned up.",
+var VcsRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	return util.MergeMaps(
+		BaseRemoteRepoSchema(isResource),
+		VcsRemoteRepoSchema,
+		map[string]*schema.Schema{
+			"max_unique_snapshots": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+				Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
+					"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
+					"no limit, and unique snapshots are not cleaned up.",
+			},
 		},
-	}, repository.RepoLayoutRefSchema("remote", packageType))
+		repository.RepoLayoutRefSchema(rclass, VcsPackageType),
+	)
+}
 
+func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	var UnpackVcsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := VcsRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, VcsPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			MaxUniqueSnapshots:         d.GetInt("max_unique_snapshots", false),
 		}
@@ -38,19 +45,21 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, VcsPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &VcsRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        "remote",
-				PackageType:   packageType,
+				Rclass:        rclass,
+				PackageType:   VcsPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	return mkResourceSchema(vcsRemoteSchema, packer.Default(vcsRemoteSchema), UnpackVcsRemoteRepo, constructor)
+	vcsSchema := VcsRemoteSchema(true)
+
+	return mkResourceSchema(vcsSchema, packer.Default(vcsSchema), UnpackVcsRemoteRepo, constructor)
 }

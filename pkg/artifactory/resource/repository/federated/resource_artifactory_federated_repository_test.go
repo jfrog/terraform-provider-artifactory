@@ -143,7 +143,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 }
 
 func TestAccFederatedRepoGenericTypes(t *testing.T) {
-	for _, repo := range federated.RepoTypesLikeGeneric {
+	for _, repo := range federated.PackageTypesLikeGeneric {
 		title := cases.Title(language.AmericanEnglish).String(repo)
 		t.Run(title, func(t *testing.T) {
 			resource.Test(federatedTestCase(repo, t))
@@ -991,8 +991,8 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	}
 }
 
-func TestAccFederatedAllGradleLikeRepoTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		title := cases.Title(language.AmericanEnglish).String(repoType)
 		t.Run(title, func(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))

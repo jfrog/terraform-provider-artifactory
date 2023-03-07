@@ -25,7 +25,7 @@ All generic repo arguments are supported, in addition to:
 * `description` - (Optional) Public description.
 * `notes` - (Optional) Internal description.
 * `url` - (Required) The remote repo URL.
-* `propagate_query_params` - (Optional, Default: false) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
+* `propagate_query_params` - (Optional, Default: `false`) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
 
 
 ## Import

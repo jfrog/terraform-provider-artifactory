@@ -227,7 +227,7 @@ var RepoTypesSupported = []string{
 	"vcs",
 }
 
-var GradleLikeRepoTypes = []string{
+var GradleLikePackageTypes = []string{
 	"gradle",
 	"sbt",
 	"ivy",
