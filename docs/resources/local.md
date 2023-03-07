@@ -46,7 +46,7 @@ retention period. You will be able to change it via Xray settings.
 merged only from repositories set with this field
 * `property_sets` - (Optional) List of property set name
 * `archive_browsing_enabled` - (Optional) When set, you may view content such as HTML or Javadoc files directly from
-Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from
+Artifactory. This may not be safe and therefore requires strict content moderation to prevent malicious users from
 uploading content that may compromise security (e.g., cross-site scripting attacks).
 * `download_direct` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.

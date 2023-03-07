@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported for al
   only from repositories set with this field
 * `property_sets` - List of property set names
 * `archive_browsing_enabled` - When set, you may view content such as HTML or Javadoc files directly from
-  Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from
+  Artifactory. This may not be safe and therefore requires strict content moderation to prevent malicious users from
   uploading content that may compromise security (e.g., cross-site scripting attacks).
 * `download_direct` - When set, download requests to this repository will redirect the client to download the
   artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
