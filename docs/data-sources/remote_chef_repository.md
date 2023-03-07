@@ -8,8 +8,8 @@ Retrieves a remote Chef repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_chef_repository" "my-remote-chef" {
-  key = "my-remote-chef"
+data "artifactory_remote_chef_repository" "remote-chef" {
+  key = "remote-chef"
 }
 ```
 

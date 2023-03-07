@@ -8,8 +8,8 @@ Retrieves a remote Rpm repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_rpm_repository" "my-remote-rpm" {
-  key = "my-remote-rpm"
+data "artifactory_remote_rpm_repository" "remote-rpm" {
+  key = "remote-rpm"
 }
 ```
 

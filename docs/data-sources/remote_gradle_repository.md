@@ -8,8 +8,8 @@ Retrieves a remote Gradle repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_gradle_repository" "my-remote-gradle" {
-  key = "my-remote-gradle"
+data "artifactory_remote_gradle_repository" "remote-gradle" {
+  key = "remote-gradle"
 }
 ```
 

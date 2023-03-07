@@ -8,8 +8,8 @@ Retrieves a remote Gems repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_gems_repository" "my-remote-gems" {
-  key = "my-remote-gems"
+data "artifactory_remote_gems_repository" "remote-gems" {
+  key = "remote-gems"
 }
 ```
 

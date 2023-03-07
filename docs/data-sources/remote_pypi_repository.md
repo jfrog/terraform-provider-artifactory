@@ -8,8 +8,8 @@ Retrieves a remote Pypi repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_pypi_repository" "my-remote-pypi" {
-  key = "my-remote-pypi"
+data "artifactory_remote_pypi_repository" "remote-pypi" {
+  key = "remote-pypi"
 }
 ```
 

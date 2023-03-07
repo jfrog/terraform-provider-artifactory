@@ -8,8 +8,8 @@ Retrieves a remote Swift repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_swift_repository" "my-remote-swift" {
-  key = "my-remote-swift"
+data "artifactory_remote_swift_repository" "remote-swift" {
+  key = "remote-swift"
 }
 ```
 

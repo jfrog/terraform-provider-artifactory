@@ -8,8 +8,8 @@ Retrieves a remote Docker repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_docker_repository" "my-remote-docker" {
-  key = "my-remote-docker"
+data "artifactory_remote_docker_repository" "remote-docker" {
+  key = "remote-docker"
 }
 ```
 

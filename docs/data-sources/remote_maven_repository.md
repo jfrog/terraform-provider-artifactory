@@ -8,8 +8,8 @@ Retrieves a remote Maven repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_maven_repository" "my-remote-maven" {
-  key = "my-remote-maven"
+data "artifactory_remote_maven_repository" "remote-maven" {
+  key = "remote-maven"
 }
 ```
 

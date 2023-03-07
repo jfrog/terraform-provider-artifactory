@@ -8,8 +8,8 @@ Retrieves a remote Bower repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_bower_repository" "my-remote-bower" {
-  key = "my-remote-bower"
+data "artifactory_remote_bower_repository" "remote-bower" {
+  key = "remote-bower"
 }
 ```
 

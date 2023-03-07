@@ -8,8 +8,8 @@ Retrieves a remote Composer repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_composer_repository" "my-remote-composer" {
-  key = "my-remote-composer"
+data "artifactory_remote_composer_repository" "remote-composer" {
+  key = "remote-composer"
 }
 ```
 

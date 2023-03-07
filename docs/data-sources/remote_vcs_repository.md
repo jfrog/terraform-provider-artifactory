@@ -8,8 +8,8 @@ Retrieves a remote VCS repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_vcs_repository" "my-remote-vcs" {
-  key = "my-remote-vcs"
+data "artifactory_remote_vcs_repository" "remote-vcs" {
+  key = "remote-vcs"
 }
 ```
 

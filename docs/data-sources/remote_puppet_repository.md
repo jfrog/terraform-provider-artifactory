@@ -8,8 +8,8 @@ Retrieves a remote Peppet repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_peppet_repository" "my-remote-peppet" {
-  key = "my-remote-peppet"
+data "artifactory_remote_peppet_repository" "remote-peppet" {
+  key = "remote-peppet"
 }
 ```
 

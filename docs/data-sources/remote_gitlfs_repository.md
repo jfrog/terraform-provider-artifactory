@@ -8,8 +8,8 @@ Retrieves a remote GitLfs repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_gitlfs_repository" "my-remote-gitlfs" {
-  key = "my-remote-gitlfs"
+data "artifactory_remote_gitlfs_repository" "remote-gitlfs" {
+  key = "remote-gitlfs"
 }
 ```
 

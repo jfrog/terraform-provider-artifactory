@@ -8,8 +8,8 @@ Retrieves a remote Opkg repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_opkg_repository" "my-remote-opkg" {
-  key = "my-remote-opkg"
+data "artifactory_remote_opkg_repository" "remote-opkg" {
+  key = "remote-opkg"
 }
 ```
 

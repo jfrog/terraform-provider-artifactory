@@ -8,8 +8,8 @@ Retrieves a remote Generic repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_generic_repository" "my-remote-generic" {
-  key = "my-remote-generic"
+data "artifactory_remote_generic_repository" "remote-generic" {
+  key = "remote-generic"
 }
 ```
 

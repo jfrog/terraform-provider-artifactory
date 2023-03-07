@@ -8,8 +8,8 @@ Retrieves a remote Helm repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_helm_repository" "my-remote-helm" {
-  key = "my-remote-helm"
+data "artifactory_remote_helm_repository" "remote-helm" {
+  key = "remote-helm"
 }
 ```
 

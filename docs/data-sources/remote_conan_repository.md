@@ -8,8 +8,8 @@ Retrieves a remote Conan repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_conan_repository" "my-remote-conan" {
-  key = "my-remote-conan"
+data "artifactory_remote_conan_repository" "remote-conan" {
+  key = "remote-conan"
 }
 ```
 

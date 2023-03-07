@@ -8,8 +8,8 @@ Retrieves a remote Pub repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_pub_repository" "my-remote-pub" {
-  key = "my-remote-pub"
+data "artifactory_remote_pub_repository" "remote-pub" {
+  key = "remote-pub"
 }
 ```
 

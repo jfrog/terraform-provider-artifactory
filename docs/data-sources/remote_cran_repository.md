@@ -8,8 +8,8 @@ Retrieves a remote CRAN repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_cran_repository" "my-remote-cran" {
-  key = "my-remote-cran"
+data "artifactory_remote_cran_repository" "remote-cran" {
+  key = "remote-cran"
 }
 ```
 

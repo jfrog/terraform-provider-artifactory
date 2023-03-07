@@ -8,8 +8,8 @@ Retrieves a remote Alpine repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_alpine_repository" "my-remote-alpine" {
-  key = "my-remote-alpine"
+data "artifactory_remote_alpine_repository" "remote-alpine" {
+  key = "remote-alpine"
 }
 ```
 

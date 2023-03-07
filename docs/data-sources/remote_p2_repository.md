@@ -8,8 +8,8 @@ Retrieves a remote P2 repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_p2_repository" "my-remote-p2" {
-  key = "my-remote-p2"
+data "artifactory_remote_p2_repository" "remote-p2" {
+  key = "remote-p2"
 }
 ```
 

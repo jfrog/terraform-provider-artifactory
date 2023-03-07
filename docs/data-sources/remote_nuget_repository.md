@@ -8,8 +8,8 @@ Retrieves a remote NuGet repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_nuget_repository" "my-remote-nuget" {
-  key = "my-remote-nuget"
+data "artifactory_remote_nuget_repository" "remote-nuget" {
+  key = "remote-nuget"
 }
 ```
 

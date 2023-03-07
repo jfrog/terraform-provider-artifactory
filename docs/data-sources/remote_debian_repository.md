@@ -8,8 +8,8 @@ Retrieves a remote Debian repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_debian_repository" "my-remote-debian" {
-  key = "my-remote-debian"
+data "artifactory_remote_debian_repository" "remote-debian" {
+  key = "remote-debian"
 }
 ```
 

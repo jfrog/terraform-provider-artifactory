@@ -8,8 +8,8 @@ Retrieves a remote Terraform repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_terraform_repository" "my-remote-terraform" {
-  key = "my-remote-terraform"
+data "artifactory_remote_terraform_repository" "remote-terraform" {
+  key = "remote-terraform"
 }
 ```
 

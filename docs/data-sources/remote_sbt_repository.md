@@ -8,8 +8,8 @@ Retrieves a remote SBT repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_sbt_repository" "my-remote-sbt" {
-  key = "my-remote-sbt"
+data "artifactory_remote_sbt_repository" "remote-sbt" {
+  key = "remote-sbt"
 }
 ```
 

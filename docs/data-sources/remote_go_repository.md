@@ -8,8 +8,8 @@ Retrieves a remote Go repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_go_repository" "my-remote-go" {
-  key = "my-remote-go"
+data "artifactory_remote_go_repository" "remote-go" {
+  key = "remote-go"
 }
 ```
 

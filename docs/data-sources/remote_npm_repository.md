@@ -8,8 +8,8 @@ Retrieves a remote Npm repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_npm_repository" "my-remote-npm" {
-  key = "my-remote-npm"
+data "artifactory_remote_npm_repository" "remote-npm" {
+  key = "remote-npm"
 }
 ```
 

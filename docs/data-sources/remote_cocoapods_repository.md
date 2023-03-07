@@ -8,8 +8,8 @@ Retrieves a remote CocoaPods repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_cocoapods_repository" "my-remote-cocoapods" {
-  key = "my-remote-cocoapods"
+data "artifactory_remote_cocoapods_repository" "remote-cocoapods" {
+  key = "remote-cocoapods"
 }
 ```
 

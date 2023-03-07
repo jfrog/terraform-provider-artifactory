@@ -8,8 +8,8 @@ Retrieves a remote Conda repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_conda_repository" "my-remote-conda" {
-  key = "my-remote-conda"
+data "artifactory_remote_conda_repository" "remote-conda" {
+  key = "remote-conda"
 }
 ```
 

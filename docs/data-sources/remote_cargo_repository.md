@@ -8,8 +8,8 @@ Retrieves a remote Cargo repository.
 ## Example Usage
 
 ```hcl
-data "artifactory_remote_cargo_repository" "my-remote-cargo" {
-  key = "my-remote-cargo"
+data "artifactory_remote_cargo_repository" "remote-cargo" {
+  key = "remote-cargo"
 }
 ```
 
