@@ -22,3 +22,5 @@ The following argument is supported:
 ## Attribute Reference
 
 The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+
+* `force_conan_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.

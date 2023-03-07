@@ -22,3 +22,5 @@ The following argument is supported:
 ## Attribute Reference
 
 The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+
+* `vcs_git_provider` - (Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".
