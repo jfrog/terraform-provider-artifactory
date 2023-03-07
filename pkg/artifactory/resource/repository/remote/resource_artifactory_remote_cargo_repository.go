@@ -45,7 +45,6 @@ var CargoRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 	if isResource {
 		cargoSchema["git_registry_url"].Required = true
 	} else {
-		cargoSchema["git_registry_url"].Required = false
 		cargoSchema["git_registry_url"].Optional = true
 	}
 
