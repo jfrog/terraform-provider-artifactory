@@ -39,13 +39,13 @@ The following arguments are supported:
 
 * `key` - (Required) The identity key of the webhook. Must be between 2 and 200 characters. Cannot contain spaces.
 * `description` - (Optional) Webhook description. Max length 1000 characters.
-* `enabled` - (Optional) Status of webhook. Default to 'true'.
-* `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: "uploaded", "deleted", "promoted".
+* `enabled` - (Optional) Status of webhook. Default to `true`.
+* `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: `uploaded`, `deleted`, `promoted`.
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_build` - (Required) Trigger on any build.
   * `selected_builds` - (Required) Trigger on this list of build names.
-  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: "org/apache/**".
-  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: "org/apache/**".
+  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: `org/apache/**`.
+  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\n Ant-style path expressions are supported (*, *\*, ?).\nFor example: `org/apache/**`.
 * `handler` - (Required) At least one is required.
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
   * `secret` - (Optional) Secret authentication token that will be sent to the configured URL. The value will be sent as `x-jfrog-event-auth` header.

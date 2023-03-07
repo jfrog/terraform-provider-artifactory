@@ -60,8 +60,8 @@ The following arguments are supported:
 * `visible` - (Optional) Defines if the list visible and assignable to the repository or artifact. Default value is `true`.
 * `property` - (Required) A list of properties that will be part of the property set.
   * `name` - (Required) The name pf the property.
-  * `closed_predefined_values` - (Required) Disables "multiple_choice" if set to "false" at the same time with multiple_choice set to "true". Default value is `false`
-  * `multiple_choice` - (Optional) Defines if user can select multiple values. "closed_predefined_values" should be set to `true`. Default value is `false`.
+  * `closed_predefined_values` - (Required) Disables `multiple_choice` if set to `false` at the same time with multiple_choice set to `true`. Default value is `false`
+  * `multiple_choice` - (Optional) Defines if user can select multiple values. `closed_predefined_values` should be set to `true`. Default value is `false`.
     * `predefined_value` - (Required) Properties in the property set.  
       * `name` - (Required) Predefined property name.
       * `default_value` - (Required) Whether the value is selected by default in the UI.

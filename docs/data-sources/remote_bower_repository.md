@@ -23,4 +23,4 @@ The following argument is supported:
 
 The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
 
-* `bower_registry_url` - (Optional) Proxy remote Bower repository. Default value is "https://registry.bower.io".
+* `bower_registry_url` - (Optional) Proxy remote Bower repository. Default value is `https://registry.bower.io`.

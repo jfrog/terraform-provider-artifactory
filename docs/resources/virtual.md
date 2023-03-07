@@ -32,7 +32,7 @@ The following arguments are supported:
   When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
   We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider 
   to manage the list of repositories. Default value - `default`.
-* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: "DEV" or "PROD".
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV` or `PROD`.
   The attribute should only be used if the repository is already assigned to the existing project. 
   If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state 
   drift during the update.
@@ -41,7 +41,7 @@ The following arguments are supported:
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/\*\*/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/\*).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/*\*/z/\*. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Repository layout key for the virtual repository.
-* `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: false) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
+* `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: `false`) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
 * `default_deployment_repo` - (Optional) Default repository to deploy artifacts.
 
 ## Import
