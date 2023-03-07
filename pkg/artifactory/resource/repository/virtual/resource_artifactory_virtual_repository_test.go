@@ -16,6 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -44,6 +45,12 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -108,6 +115,12 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "default_deployment_repo", ""),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -150,6 +163,12 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -184,6 +203,12 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "7100"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -216,6 +241,12 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -259,6 +290,12 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -293,6 +330,12 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "use_namespaces", fmt.Sprintf("%t", useNamespaces)),
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -433,6 +476,12 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("virtual", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -484,6 +533,12 @@ func TestAccVirtualRepository_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "artifactory_requests_can_retrieve_remote_artifacts", "false"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -520,6 +575,12 @@ func TestNugetPackageCreationFull(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "nuget-default"),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -563,6 +624,12 @@ func TestAccVirtualRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "com/google/**"),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -609,6 +676,12 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -728,6 +801,12 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	}
 }
@@ -736,6 +815,13 @@ func TestAccVirtualAlpineRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
 		"description":                    "alpine virtual repository public description testing.",
 		"retrieval_cache_period_seconds": 650,
+	}))
+}
+
+func TestAccVirtualAlpineRepositoryZeroRetrievalPeriod(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
+		"description":                    "alpine virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 0,
 	}))
 }
 
@@ -799,6 +885,12 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
 				),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	})
 }
@@ -823,7 +915,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 			key                               = "{{ .name }}"
 			repositories                      = ["{{ .remoteRepoName }}"]
 			external_dependencies_enabled     = true
-			retrieval_cache_period_seconds    = 650
+			retrieval_cache_period_seconds    = 0
 			external_dependencies_patterns    = ["**/github.com/**", "**/go.googlesource.com/**"]
 			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
 
@@ -844,12 +936,18 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
-					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "0"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -886,6 +984,12 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
 					resource.TestCheckResourceAttr(fqrn, "repositories.#", "0"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
