@@ -726,7 +726,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepository(t *testing.T) {
-	for _, repoType := range virtual.RepoTypesLikeGeneric {
+	for _, repoType := range virtual.PackageTypesLikeGeneric {
 		title := fmt.Sprintf(
 			"TestVirtual%sRepo",
 			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
@@ -737,7 +737,7 @@ func TestAccVirtualRepository(t *testing.T) {
 			}))
 		})
 	}
-	for _, repoType := range virtual.RepoTypesLikeGenericWithRetrievalCachePeriodSecs {
+	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
 		title := fmt.Sprintf(
 			"TestVirtual%sRepo",
 			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
@@ -752,7 +752,7 @@ func TestAccVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		title := fmt.Sprintf("TestVirtual%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
 		t.Run(title, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{

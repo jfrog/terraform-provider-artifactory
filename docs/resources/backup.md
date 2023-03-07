@@ -43,7 +43,7 @@ The following arguments are supported:
 * `exclude_new_repositories`     - (Optional) When set, new repositories will not be automatically added to the backup. Default value is `false`.
 * `send_mail_on_error`           - (Optional) If set, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is `true`.
 * `verify_disk_space`            - (Optional) If set, Artifactory will verify that the backup target location has enough disk space available to hold the backed up data. If there is not enough space available, Artifactory will abort the backup and write a message in the log file. Applicable only to non-incremental backups.
-* `export_mission_control`       - (Optional) When set to true, mission control will not be automatically added to the backup. Default value is 'false'.
+* `export_mission_control`       - (Optional) When set to true, mission control will not be automatically added to the backup. Default value is `false`.
 
 ## Import
 

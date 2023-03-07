@@ -11,19 +11,21 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const MavenPackageType = "maven"
+
 func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
-	mavenRemoteSchema := getJavaRemoteSchema("maven", false)
+	mavenRemoteSchema := JavaRemoteSchema(true, MavenPackageType, false)
 
 	var unpackMavenRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackJavaRemoteRepo(data, "maven")
+		repo := UnpackJavaRemoteRepo(data, MavenPackageType)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &JavaRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      "remote",
-				PackageType: "maven",
+				Rclass:      rclass,
+				PackageType: MavenPackageType,
 			},
 			SuppressPomConsistencyChecks: false,
 		}, nil
@@ -38,7 +40,7 @@ var resourceMavenV1 = &schema.Resource{
 
 // Old schema, the one needs to be migrated (seconds -> secs)
 var mavenRemoteSchemaV1 = util.MergeMaps(
-	getJavaRemoteSchema("maven", false),
+	JavaRemoteSchema(true, MavenPackageType, false),
 	map[string]*schema.Schema{
 		"metadata_retrieval_timeout_seconds": {
 			Type:         schema.TypeInt,

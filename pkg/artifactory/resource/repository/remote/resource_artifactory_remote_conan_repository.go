@@ -12,41 +12,49 @@ type ConanRemoteRepo struct {
 	ForceConanAuthentication bool `json:"forceConanAuthentication"`
 }
 
-func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
-	const packageType = "conan"
+const ConanPackageType = "conan"
 
-	var conanRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, map[string]*schema.Schema{
-		"force_conan_authentication": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: `Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
+var ConanRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	return util.MergeMaps(
+		BaseRemoteRepoSchema(isResource),
+		map[string]*schema.Schema{
+			"force_conan_authentication": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
+			},
 		},
-	}, repository.RepoLayoutRefSchema("remote", packageType))
+		repository.RepoLayoutRefSchema(rclass, ConanPackageType),
+	)
+}
 
+func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	var unpackConanRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := ConanRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, ConanPackageType),
 			ForceConanAuthentication:   d.GetBool("force_conan_authentication", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, ConanPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &ConanRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        "remote",
-				PackageType:   packageType,
+				Rclass:        rclass,
+				PackageType:   ConanPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	return mkResourceSchema(conanRemoteSchema, packer.Default(conanRemoteSchema), unpackConanRemoteRepo, constructor)
+	conanSchema := ConanRemoteSchema(true)
+
+	return mkResourceSchema(conanSchema, packer.Default(conanSchema), unpackConanRemoteRepo, constructor)
 }

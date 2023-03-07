@@ -16,35 +16,35 @@ import (
 	"golang.org/x/text/language"
 )
 
-func TestAccDataSourceLocalAllRepoTypes(t *testing.T) {
-	for _, repoType := range local.RepoTypesLikeGeneric {
-		title := fmt.Sprintf("%s", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+func TestAccDataSourceLocalAllPackageTypes(t *testing.T) {
+	for _, packageType := range local.PackageTypesLikeGeneric {
+		title := fmt.Sprintf("%s", cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)))
 		t.Run(title, func(t *testing.T) {
-			resource.Test(mkTestCase(repoType, t))
+			resource.Test(mkTestCase(packageType, t))
 		})
 	}
 }
 
-func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, test.RandomInt())
-	resourceName := fmt.Sprintf("data.artifactory_local_%s_repository.%s", repoType, name)
+func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("terraform-local-%s-%d-full", packageType, test.RandomInt())
+	resourceName := fmt.Sprintf("data.artifactory_local_%s_repository.%s", packageType, name)
 	xrayIndex := test.RandBool()
 
 	params := map[string]interface{}{
-		"repoType":  repoType,
-		"name":      name,
-		"xrayIndex": xrayIndex,
+		"packageType": packageType,
+		"name":        name,
+		"xrayIndex":   xrayIndex,
 	}
 	config := util.ExecuteTemplate("TestAccLocalRepository", `
-		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
+		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 		  description = "Test repo for {{ .name }}"
 		  notes       = "Test repo for {{ .name }}"
 		  xray_index  = {{ .xrayIndex }}
 		}
 
-		data "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
-		  key = artifactory_local_{{ .repoType }}_repository.{{ .name }}.id
+		data "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
+		  key = artifactory_local_{{ .packageType }}_repository.{{ .name }}.id
 		}
 	`, params)
 
@@ -58,7 +58,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "package_type", packageType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 				),
 			},
@@ -412,18 +412,19 @@ var commonJavaParams = map[string]interface{}{
 
 const localJavaRepositoryBasic = `
     resource "{{ .resource_name }}" "{{ .name }}" {
-      key                 			  = "{{ .name }}"
-      checksum_policy_type            = "{{ .checksum_policy_type }}"
-      snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
-      max_unique_snapshots            = {{ .max_unique_snapshots }}
-      handle_releases                 = {{ .handle_releases }}
-      handle_snapshots                = {{ .handle_snapshots }}
-      suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
+		key                 			= "{{ .name }}"
+		checksum_policy_type            = "{{ .checksum_policy_type }}"
+		snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
+		max_unique_snapshots            = {{ .max_unique_snapshots }}
+		handle_releases                 = {{ .handle_releases }}
+		handle_snapshots                = {{ .handle_snapshots }}
+		suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
     }
-    data "{{ .resource_name }}" "{{ .name }}" {
-      key = {{ .resource_name }}.{{ .name }}.id
+
+	data "{{ .resource_name }}" "{{ .name }}" {
+    	key = {{ .resource_name }}.{{ .name }}.id
     }
-	`
+`
 
 func TestAccDataSourceLocalMavenRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("maven-local", "data.artifactory_local_maven_repository")
@@ -487,8 +488,8 @@ func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*
 	}
 }
 
-func TestAccAllGradleLikeDataSourceLocalRepoTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+func TestAccDataSourceLocalAllGradleLikePackageTypes(t *testing.T) {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		t.Run(fmt.Sprintf("TestDataSourceLocal%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(makeDataSourceLocalGradleLikeRepoTestCase(repoType, t))
 		})

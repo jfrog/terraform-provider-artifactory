@@ -1,3 +1,11 @@
+## 6.32.0 (March 7, 2023)
+
+FEATURES:
+
+* datasource/artifactory_remote_*_repository: Adds new data sources for all remote repository package types.
+  PR:    [#682](https://github.com/jfrog/terraform-provider-artifactory/pull/682) 
+  Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+
 ## 6.31.1 (March 6, 2023). Tested on Artifactory 7.49.8
 
 BUG FIXES:

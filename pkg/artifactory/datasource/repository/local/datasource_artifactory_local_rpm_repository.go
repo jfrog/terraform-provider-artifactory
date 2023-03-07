@@ -2,6 +2,7 @@ package local
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
@@ -22,7 +23,7 @@ func DataSourceArtifactoryLocalRpmRepository() *schema.Resource {
 
 	return &schema.Resource{
 		Schema:      local.RpmLocalSchema,
-		ReadContext: MkRepoReadDataSource(packer.Default(local.RpmLocalSchema), constructor),
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.RpmLocalSchema), constructor),
 		Description: "Data source for a local rpm repository",
 	}
 }
