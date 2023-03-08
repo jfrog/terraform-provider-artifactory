@@ -40,7 +40,7 @@ func mkTclForRepConfg(name, cron, url, proxy string) string {
 	)
 }
 
-func TestInvalidCronSingleReplication(t *testing.T) {
+func TestAccSingleReplicationInvalidCron(t *testing.T) {
 
 	_, _, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t), "")
@@ -57,7 +57,7 @@ func TestInvalidCronSingleReplication(t *testing.T) {
 	})
 }
 
-func TestInvalidUrlSingleReplication(t *testing.T) {
+func TestAccSingleReplicationInvalidUrl(t *testing.T) {
 
 	_, fqrn, name := test.MkNames("lib-local", "artifactory_single_replication_config")
 	var failCron = mkTclForRepConfg(name, "0 0 * * * ?", "bad_url", "")
@@ -101,6 +101,12 @@ func TestAccSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "proxy", testProxy),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})

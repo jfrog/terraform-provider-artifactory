@@ -175,6 +175,12 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "replications.*.*", "https://dummyurl.com/"),
 				),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replications.0.password", "replications.1.password"}, // this attribute is not being sent via API, can't be imported
+			},
 		},
 	})
 }
