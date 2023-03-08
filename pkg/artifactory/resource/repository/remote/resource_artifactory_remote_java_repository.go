@@ -5,19 +5,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func ResourceArtifactoryRemoteJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	javaRemoteSchema := getJavaRemoteSchema(repoType, suppressPom)
+func ResourceArtifactoryRemoteJavaRepository(packageType string, suppressPom bool) *schema.Resource {
+	javaRemoteSchema := JavaRemoteSchema(true, packageType, suppressPom)
 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackJavaRemoteRepo(data, repoType)
+		repo := UnpackJavaRemoteRepo(data, packageType)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &JavaRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      "remote",
-				PackageType: repoType,
+				Rclass:      rclass,
+				PackageType: packageType,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil

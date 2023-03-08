@@ -26,14 +26,14 @@ type RepositoryBaseParams struct {
 
 type RepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
 	RepositoryBaseParams
-	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs,omitempty"`
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
 }
 
 func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var RepoTypesLikeGeneric = []string{
+var PackageTypesLikeGeneric = []string{
 	"gems",
 	"generic",
 	"gitlfs",
@@ -46,7 +46,7 @@ var RepoTypesLikeGeneric = []string{
 	"terraform",
 }
 
-var RepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"chef",
 	"conan",
 	"conda",

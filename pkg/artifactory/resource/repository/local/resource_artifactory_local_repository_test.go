@@ -936,7 +936,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 }
 
 func TestAccLocalAllRepoTypes(t *testing.T) {
-	for _, repo := range local.RepoTypesLikeGeneric {
+	for _, repo := range local.PackageTypesLikeGeneric {
 		title := fmt.Sprintf("TestLocal%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repo)))
 		t.Run(title, func(t *testing.T) {
 			resource.Test(mkTestCase(repo, t))
@@ -988,7 +988,7 @@ func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.
 
 // Test case to cover when repoLayoutRef not left as blank and set to some value other than default
 func TestAccAllLocalRepoTypes(t *testing.T) {
-	for _, repo := range local.RepoTypesLikeGeneric {
+	for _, repo := range local.PackageTypesLikeGeneric {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repo))), func(t *testing.T) {
 			resource.Test(makeLocalRepoTestCase(repo, t))
 		})
@@ -1033,7 +1033,7 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 }
 
 func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		t.Run(fmt.Sprintf("TestLocal%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
 			resource.Test(makeLocalGradleLikeRepoTestCase(repoType, t))
 		})

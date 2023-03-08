@@ -451,7 +451,7 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 }
 
 func TestAccRemoteAllRepository(t *testing.T) {
-	for _, repoType := range remote.RepoTypesLikeBasic {
+	for _, repoType := range remote.PackageTypesLikeBasic {
 		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
@@ -538,7 +538,7 @@ func TestAccRemoteTerraformRepository(t *testing.T) {
 }
 
 func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikeRepoTypes {
+	for _, repoType := range repository.GradleLikePackageTypes {
 		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
@@ -956,7 +956,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 }
 
 func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
-	for _, repoType := range remote.RepoTypesLikeBasic {
+	for _, repoType := range remote.PackageTypesLikeBasic {
 		const remoteGemsRepoBasicWithPropagate = `
 		resource "artifactory_remote_%s_repository" "%s" {
 			key                     		= "%s"

@@ -2,6 +2,7 @@ package local
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
@@ -13,7 +14,7 @@ func DataSourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool)
 		return &local.JavaLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: repoType,
-				Rclass:      "local",
+				Rclass:      rclass,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil
@@ -21,7 +22,7 @@ func DataSourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool)
 
 	return &schema.Resource{
 		Schema:      javaLocalSchema,
-		ReadContext: MkRepoReadDataSource(packer.Default(javaLocalSchema), constructor),
-		Description: "Data source for a local java repository of type: " + repoType,
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(javaLocalSchema), constructor),
+		Description: "Data source for a local Java repository of type: " + repoType,
 	}
 }

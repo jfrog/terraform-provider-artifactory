@@ -29,8 +29,8 @@ The following attributes are supported, along with the [common list of attribute
   RPMs are stored under 'fedora/linux/$releasever/$basearch', specify a depth of 4. Once the number of snapshots exceeds
   this setting, older versions are removed. A value of 0 (default) indicates there is no limit, and unique snapshots are
   not cleaned up.
-* `calculate_yum_metadata` - Default: false.
-* `enable_file_lists_indexing` - Default: false.
+* `calculate_yum_metadata` - Default: `false`.
+* `enable_file_lists_indexing` - Default: `false`.
 * `yum_group_file_names` - A comma separated list of XML file names containing RPM group component
   definitions. Artifactory includes the group definitions as part of the calculated RPM metadata, as well as
   automatically generating a gzipped version of the group files, if required. Default is empty string.
