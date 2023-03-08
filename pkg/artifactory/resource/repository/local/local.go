@@ -11,7 +11,7 @@ import (
 
 const rclass = "local"
 
-var RepoTypesLikeGeneric = []string{
+var PackageTypesLikeGeneric = []string{
 	"bower",
 	"chef",
 	"cocoapods",

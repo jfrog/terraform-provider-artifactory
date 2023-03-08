@@ -10,7 +10,7 @@ import (
 
 const rclass = "federated"
 
-var RepoTypesLikeGeneric = []string{
+var PackageTypesLikeGeneric = []string{
 	"bower",
 	"chef",
 	"cocoapods",

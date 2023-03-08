@@ -26,7 +26,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
-* `force_conan_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is 'false'.
+* `force_conan_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is `false`.
 
 ## Import
 

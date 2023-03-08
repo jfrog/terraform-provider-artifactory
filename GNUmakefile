@@ -10,7 +10,7 @@ endif
 PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
-PROVIDER_VERSION?=$(shell git tag --sort=-creatordate | head -1 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+PROVIDER_VERSION?=$(shell git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
 NEXT_PROVIDER_VERSION := $(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
 SONAR_SCANNER_VERSION?=4.7.0.2747
@@ -50,7 +50,7 @@ attach:
 
 acceptance: fmt
 	export TF_ACC=true && \
-		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 20m ./pkg/...
+		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 2 -parallel 20 -timeout 30m ./pkg/...
 
 coverage:
 	go tool cover -html=coverage.txt

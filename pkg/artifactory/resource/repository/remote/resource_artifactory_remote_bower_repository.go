@@ -14,23 +14,31 @@ type BowerRemoteRepo struct {
 	BowerRegistryUrl string `json:"bowerRegistryUrl"`
 }
 
-func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
-	const packageType = "bower"
+const BowerPackageType = "bower"
 
-	var bowerRemoteSchema = util.MergeMaps(baseRemoteRepoSchemaV2, VcsRemoteRepoSchema, map[string]*schema.Schema{
-		"bower_registry_url": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "https://registry.bower.io",
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
+var BowerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	return util.MergeMaps(
+		BaseRemoteRepoSchema(isResource),
+		VcsRemoteRepoSchema,
+		map[string]*schema.Schema{
+			"bower_registry_url": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "https://registry.bower.io",
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+				Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
+			},
 		},
-	}, repository.RepoLayoutRefSchema("remote", packageType))
+		repository.RepoLayoutRefSchema(rclass, BowerPackageType),
+	)
+}
+
+func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: s}
 		repo := BowerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, packageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, BowerPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
 		}
@@ -38,19 +46,21 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef("remote", packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, BowerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &BowerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        "remote",
-				PackageType:   packageType,
+				Rclass:        rclass,
+				PackageType:   BowerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	return mkResourceSchema(bowerRemoteSchema, packer.Default(bowerRemoteSchema), unpackBowerRemoteRepo, constructor)
+	bowerSchema := BowerRemoteSchema(true)
+
+	return mkResourceSchema(bowerSchema, packer.Default(bowerSchema), unpackBowerRemoteRepo, constructor)
 }

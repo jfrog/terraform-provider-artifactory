@@ -33,7 +33,7 @@ func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var RepoTypesLikeGeneric = []string{
+var PackageTypesLikeGeneric = []string{
 	"gems",
 	"generic",
 	"gitlfs",
@@ -46,7 +46,7 @@ var RepoTypesLikeGeneric = []string{
 	"terraform",
 }
 
-var RepoTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"chef",
 	"conan",
 	"conda",
