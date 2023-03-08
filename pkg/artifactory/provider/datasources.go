@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource"
-	datasource_local "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository/local"
-	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository/remote"
-	datasource_security "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/security"
-	datasource_user "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/user"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/local"
+	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/remote"
+	datasource_security "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/security"
+	datasource_user "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
