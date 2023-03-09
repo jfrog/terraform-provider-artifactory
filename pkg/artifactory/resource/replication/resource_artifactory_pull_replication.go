@@ -122,6 +122,7 @@ func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Di
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
 	setValue("enable_event_replication", config.EnableEventReplication)
+	setValue("url", config.URL)
 	setValue("username", config.Username)
 	setValue("enabled", config.Enabled)
 	setValue("sync_deletes", config.SyncDeletes)
