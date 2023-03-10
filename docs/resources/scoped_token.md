@@ -5,9 +5,10 @@ subcategory: "Security"
 
 Provides an Artifactory Scoped Token resource. This can be used to create and manage Artifactory Scoped Tokens.
 
-**Note:** Scoped Tokens will be stored in the raw state as plain-text. [Read more about sensitive data in
+!>Scoped Tokens will be stored in the raw state as plain-text. [Read more about sensitive data in
 state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+~>Token would not be saved by Artifactory if `expires_in` is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See [Persistency Threshold](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold) for details.
 
 ## Example Usages
 ### Create a new Artifactory scoped token for an existing user
