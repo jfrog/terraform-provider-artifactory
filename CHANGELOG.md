@@ -1,4 +1,4 @@
-## 7.2.1 (March 6, 2023). Tested on Artifactory 7.55.6
+## 7.2.1 (March 13, 2023). Tested on Artifactory 7.55.6
 
 IMPROVEMENTS:
 
