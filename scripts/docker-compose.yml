@@ -8,6 +8,7 @@ services:
       - "8082:8082"
     volumes:
       - ./artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro # This file is not part of the repo. You need to provide this license file.
+      - ./access.config.patch.yml:/opt/jfrog/artifactory/var/etc/access/access.config.patch.yml:ro # This file is not part of the repo. You need to provide this license file.
 
   artifactory-2:
     image: releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION:-latest}

@@ -27,10 +27,10 @@ function getAccessKey() {
   scoped_access_key=$(curl --location --request POST "${url}/access/api/v1/tokens" \
                       --header "Authorization: Bearer ${access_key}" \
                       --header "Content-Type: application/x-www-form-urlencoded" \
-                      --data-urlencode "expires_in=3600" \
+                      --data-urlencode "expires_in=0" \
                       --data-urlencode "username=admin" \
-                      --data-urlencode "scope=applied-permissions/user" \
-                      --data-urlencode "description=Created_with_script_in_TF_provider" | jq .access_token)
+                      --data-urlencode "scope=applied-permissions/admin" \
+                      --data-urlencode "description=Created_with_script_in_TF_provider" | jq -r .access_token)
 
-  echo "${scoped_access_key}"
+  echo ${scoped_access_key}
 }

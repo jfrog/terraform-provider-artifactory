@@ -9,8 +9,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -57,7 +55,7 @@ func TestAccPullReplicationInvalidCron(t *testing.T) {
 	})
 }
 
-func TestAccCronExpressions(t *testing.T) {
+func TestPullReplicationLocalRepoCron(t *testing.T) {
 	cronExpressions := [...]string{
 		"10/20 15 14 5-10 * ? *",
 		"* 5,7,9 14-16 * * ? *",
@@ -74,8 +72,7 @@ func TestAccCronExpressions(t *testing.T) {
 		"0 0 2 ? * MON-SAT",
 	}
 	for _, cron := range cronExpressions {
-		title := fmt.Sprintf("TestPullReplicationLocalRepoCron_%s", cases.Title(language.AmericanEnglish).String(cron))
-		t.Run(title, func(t *testing.T) {
+		t.Run(cron, func(t *testing.T) {
 			resource.Test(pullReplicationLocalRepoTestCase(cron, t))
 		})
 	}
@@ -108,8 +105,10 @@ func pullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*tes
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
 	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
-	config := mkTclForPullRepConfg(name, "0 0 * * * ?", acctest.GetArtifactoryUrl(t))
-	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", acctest.GetArtifactoryUrl(t))
+	url := acctest.GetArtifactoryUrl(t)
+	config := mkTclForPullRepConfg(name, "0 0 * * * ?", url)
+	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", url)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -122,6 +121,7 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", url),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
@@ -133,10 +133,17 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "1 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", url),
 					resource.TestCheckResourceAttr(fqrn, "username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "password", "Passw0rd!"),
 					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})
@@ -184,6 +191,12 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "sync_properties", "false"),
 					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "false"),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})

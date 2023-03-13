@@ -12,7 +12,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestInvalidCronFails(t *testing.T) {
+func TestAccReplicationConfigInvalidCronFails(t *testing.T) {
 	const invalidCron = `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
@@ -41,7 +41,7 @@ func TestInvalidCronFails(t *testing.T) {
 	})
 }
 
-func TestInvalidReplicationUrlFails(t *testing.T) {
+func TestAccReplicationConfigInvalidUrlFails(t *testing.T) {
 	const invalidUrl = `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
@@ -70,7 +70,7 @@ func TestInvalidReplicationUrlFails(t *testing.T) {
 	})
 }
 
-func TestAccReplication_full(t *testing.T) {
+func TestAccReplicationConfig_full(t *testing.T) {
 	const testProxy = "test-proxy"
 	_, fqrn, name := test.MkNames("lib-local", "artifactory_replication_config")
 	params := map[string]interface{}{
@@ -119,6 +119,12 @@ func TestAccReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "replications.0.username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "replications.0.proxy", testProxy),
 				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replications.0.password"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})
