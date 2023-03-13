@@ -1,8 +1,12 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -11,29 +15,21 @@ import (
 
 type DockerFederatedRepositoryParams struct {
 	local.DockerLocalRepositoryParams
-	Members []Member `hcl:"member" json:"members"`
+	Members []federated.Member `hcl:"member" json:"members"`
 }
 
-func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
+func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	packageType := "docker"
 
 	dockerV2FederatedSchema := util.MergeMaps(
 		local.DockerV2LocalSchema,
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV2Repository(data, rclass),
-			Members:                     unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*DockerFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -57,29 +53,25 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerV2FederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
+	return &schema.Resource{
+		Schema:      dockerV2FederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated docker V2 repository"),
+	}
 }
 
-func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
+func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	packageType := "docker"
 
 	dockerFederatedSchema := util.MergeMaps(
 		local.DockerV1LocalSchema,
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV1Repository(data, rclass),
-			Members:                     unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*DockerFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -100,5 +92,9 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerFederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
+	return &schema.Resource{
+		Schema:      dockerFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated docker V1 repository"),
+	}
 }

@@ -1,39 +1,35 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
+func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	packageType := "alpine"
 
 	type AlpineFederatedRepositoryParams struct {
 		local.AlpineLocalRepoParams
-		Members []Member `hcl:"member" json:"members"`
+		Members []federated.Member `hcl:"member" json:"members"`
 	}
 
 	alpineFederatedSchema := util.MergeMaps(
 		local.AlpineLocalSchema,
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := AlpineFederatedRepositoryParams{
-			AlpineLocalRepoParams: local.UnpackLocalAlpineRepository(data, rclass),
-			Members:               unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*AlpineFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -57,5 +53,9 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(alpineFederatedSchema, pkr, unpackFederatedAlpineRepository, constructor)
+	return &schema.Resource{
+		Schema:      alpineFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated alpine repository"),
+	}
 }

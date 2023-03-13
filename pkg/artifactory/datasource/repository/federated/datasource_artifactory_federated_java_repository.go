@@ -1,39 +1,34 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
+func DataSourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 
 	type JavaFederatedRepositoryParams struct {
 		local.JavaLocalRepositoryParams
-		Members []Member `hcl:"member" json:"members"`
+		Members []federated.Member `hcl:"member" json:"members"`
 	}
 
 	javaFederatedSchema := util.MergeMaps(
 		local.GetJavaRepoSchema(repoType, suppressPom),
 		MemberSchema,
-		repository.RepoLayoutRefSchema("federated", repoType),
+		resource_repository.RepoLayoutRefSchema("federated", repoType),
 	)
-
-	var unpackFederatedJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := JavaFederatedRepositoryParams{
-			JavaLocalRepositoryParams: local.UnpackLocalJavaRepository(data, rclass, repoType),
-			Members:                   unpackMembers(data),
-		}
-
-		return repo, repo.Id(), nil
-	}
 
 	var packJavaMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*JavaFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -58,5 +53,9 @@ func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom boo
 		}, nil
 	}
 
-	return repository.MkResourceSchema(javaFederatedSchema, pkr, unpackFederatedJavaRepository, constructor)
+	return &schema.Resource{
+		Schema:      javaFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated %s repository", repoType),
+	}
 }

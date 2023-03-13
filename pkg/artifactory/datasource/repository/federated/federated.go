@@ -1,45 +1,16 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const rclass = "federated"
 
-var PackageTypesLikeGeneric = []string{
-	"bower",
-	"chef",
-	"cocoapods",
-	"composer",
-	"conan",
-	"conda",
-	"cran",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"helm",
-	"npm",
-	"opkg",
-	"puppet",
-	"pypi",
-	"swift",
-	"vagrant",
-}
-
-type Member struct {
-	Url     string `hcl:"url" json:"url"`
-	Enabled bool   `hcl:"enabled" json:"enabled"`
-}
-
 var MemberSchema = map[string]*schema.Schema{
 	"member": {
 		Type:     schema.TypeSet,
-		Required: true,
+		Optional: true,
 		Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
 			"automatically be added with the combination of the configured base URL and `key` field value. " +
 			"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
@@ -62,49 +33,4 @@ var MemberSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-}
-
-func unpackMembers(data *schema.ResourceData) []Member {
-	d := &util.ResourceData{ResourceData: data}
-	var members []Member
-
-	if v, ok := d.GetOkExists("member"); ok {
-		federatedMembers := v.(*schema.Set).List()
-		if len(federatedMembers) == 0 {
-			return members
-		}
-
-		for _, federatedMember := range federatedMembers {
-			id := federatedMember.(map[string]interface{})
-
-			member := Member{
-				Url:     id["url"].(string),
-				Enabled: id["enabled"].(bool),
-			}
-			members = append(members, member)
-		}
-	}
-	return members
-}
-
-func PackMembers(members []Member, d *schema.ResourceData) error {
-	setValue := util.MkLens(d)
-
-	var federatedMembers []interface{}
-
-	for _, member := range members {
-		federatedMember := map[string]interface{}{
-			"url":     member.Url,
-			"enabled": member.Enabled,
-		}
-
-		federatedMembers = append(federatedMembers, federatedMember)
-	}
-
-	errors := setValue("member", federatedMembers)
-	if errors != nil && len(errors) > 0 {
-		return fmt.Errorf("failed saving members to state %q", errors)
-	}
-
-	return nil
 }

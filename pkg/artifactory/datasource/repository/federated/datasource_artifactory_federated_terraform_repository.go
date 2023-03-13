@@ -1,8 +1,12 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -11,29 +15,21 @@ import (
 
 type TerraformFederatedRepositoryParams struct {
 	local.RepositoryBaseParams
-	Members []Member `hcl:"member" json:"members"`
+	Members []federated.Member `hcl:"member" json:"members"`
 }
 
-func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
+func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
 
 	terraformFederatedSchema := util.MergeMaps(
 		local.GetTerraformLocalSchema(registryType),
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: local.UnpackLocalTerraformRepository(data, rclass, registryType),
-			Members:              unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packTerraformMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*TerraformFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -54,6 +50,9 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 			},
 		}, nil
 	}
-
-	return repository.MkResourceSchema(terraformFederatedSchema, pkr, unpackFederatedTerraformRepository, constructor)
+	return &schema.Resource{
+		Schema:      terraformFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated terraform-%s repository", registryType),
+	}
 }

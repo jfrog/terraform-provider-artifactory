@@ -1,8 +1,12 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -11,29 +15,21 @@ import (
 
 type NugetFederatedRepositoryParams struct {
 	local.NugetLocalRepositoryParams
-	Members []Member `hcl:"member" json:"members"`
+	Members []federated.Member `hcl:"member" json:"members"`
 }
 
-func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
+func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	packageType := "nuget"
 
 	nugetFederatedSchema := util.MergeMaps(
 		local.NugetLocalSchema,
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := NugetFederatedRepositoryParams{
-			NugetLocalRepositoryParams: local.UnpackLocalNugetRepository(data, rclass),
-			Members:                    unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packNugetMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*NugetFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -57,5 +53,9 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(nugetFederatedSchema, pkr, unpackFederatedNugetRepository, constructor)
+	return &schema.Resource{
+		Schema:      nugetFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated nuget repository"),
+	}
 }

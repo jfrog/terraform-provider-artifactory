@@ -1,39 +1,35 @@
 package federated
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
+func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	packageType := "debian"
 
 	type DebianFederatedRepositoryParams struct {
 		local.DebianLocalRepositoryParams
-		Members []Member `hcl:"member" json:"members"`
+		Members []federated.Member `hcl:"member" json:"members"`
 	}
 
 	debianFederatedSchema := util.MergeMaps(
 		local.DebianLocalSchema,
 		MemberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
-
-	var unpackFederatedDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := DebianFederatedRepositoryParams{
-			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, rclass),
-			Members:                     unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
 
 	var packDebianMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*DebianFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -57,5 +53,9 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(debianFederatedSchema, pkr, unpackFederatedDebianRepository, constructor)
+	return &schema.Resource{
+		Schema:      debianFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: fmt.Sprintf("Provides a data source for a federated debian repository"),
+	}
 }
