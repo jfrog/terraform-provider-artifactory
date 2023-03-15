@@ -5,7 +5,7 @@ FEATURES:
 * datasource/artifactory_federated_*_repository: Adds new data sources for all federated repository package types.
   PR:     [#693](https://github.com/jfrog/terraform-provider-artifactory/pull/693)
   Issues:
-  * [#684](https://github.com/jfrog/terraform-provider-artifactory/issues/684)
+  * [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
   * [#692](https://github.com/jfrog/terraform-provider-artifactory/issues/692)
 
 ## 7.2.1 (March 13, 2023). Tested on Artifactory 7.55.6
