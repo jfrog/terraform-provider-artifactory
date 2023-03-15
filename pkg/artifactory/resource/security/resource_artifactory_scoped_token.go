@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -25,6 +24,12 @@ type AccessTokenPostResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 	Scope        string `json:"scope"`
 	TokenType    string `json:"token_type"`
+}
+
+type AccessTokenErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Detail  string `json:"detail"`
 }
 
 func (a AccessTokenPostResponse) Id() string {
@@ -149,7 +154,8 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Description: "The amount of time, in seconds, it would take for the token to expire. " +
 				"An admin shall be able to set whether expiry is mandatory, what is the default expiry, " +
 				"and what is the maximum expiry allowed. Must be non-negative. Default value is based on " +
-				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.",
+				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details. " +
+				"Token would not be saved by Artifactory if this is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
 		},
 		"refreshable": {
 			Type:        schema.TypeBool,
@@ -240,15 +246,22 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	var accessTokenRead = func(_ context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		accessToken := AccessTokenGet{}
 
+		id := data.Id()
+
 		resp, err := m.(*resty.Client).R().
-			SetPathParam("id", data.Id()).
+			SetPathParam("id", id).
 			SetResult(&accessToken).
 			Get("access/api/v1/tokens/{id}")
 
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
 				data.SetId("")
-				return nil
+
+				return diag.Diagnostics{{
+					Severity: diag.Warning,
+					Summary:  fmt.Sprintf("Scoped token %s not found or not created", id),
+					Detail:   "Token would not be saved by Artifactory if 'expires_in' is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
+				}}
 			}
 			return diag.FromErr(err)
 		}
@@ -307,21 +320,19 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	}
 
 	var accessTokenDelete = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+		respError := AccessTokenErrorResponse{}
+		id := data.Id()
 
 		_, err := m.(*resty.Client).R().
-			SetPathParam("id", data.Id()).
+			SetPathParam("id", id).
+			SetError(&respError).
 			Delete("access/api/v1/tokens/{id}")
 
 		if err != nil {
-			d := &util.ResourceData{ResourceData: data}
-
-			expiry := time.Unix(int64(d.GetInt("expiry", false)), 0)
-			issuedAt := time.Unix(int64(d.GetInt("issued_at", false)), 0)
-
 			return diag.Diagnostics{{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Failed to revoke scoped token %s", data.Id()),
-				Detail:   fmt.Sprintf("Token expiration time: %s, issued at: %s", expiry, issuedAt),
+				Summary:  fmt.Sprintf("Failed to revoke scoped token %s", id),
+				Detail:   respError.Detail,
 			}}
 		}
 

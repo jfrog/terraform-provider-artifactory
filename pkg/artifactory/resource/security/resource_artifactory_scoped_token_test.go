@@ -367,3 +367,40 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		},
 	})
 }
+
+func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
+	_, _, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+			description = "test description"
+			expires_in  = {{ .expires_in }}
+		}`,
+		map[string]interface{}{
+			"name":       name,
+			"expires_in": 600, // any value > 0 and less than default persistency threshold (10800) will result in token not being saved.
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      accessTokenConfig,
+				ExpectError: regexp.MustCompile("Provider produced inconsistent result after apply"),
+			},
+		},
+	})
+}
