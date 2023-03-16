@@ -161,14 +161,14 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
 				proxy 								= "{{ .proxy }}"
-				enabled 							= true
+				enabled 							= false
 				socket_timeout_millis 				= 16000
 				sync_deletes 						= true
 				sync_properties 					= true
 				sync_statistics 					= true
 				include_path_prefix_pattern 		= "/some-repo/"
 				exclude_path_prefix_pattern 		= "/some-other-repo/"
-				check_binary_existence_in_filestore = false
+				check_binary_existence_in_filestore = true
 
 			}
 			replications {
