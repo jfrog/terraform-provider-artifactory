@@ -160,10 +160,12 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 		}
 
 		resource "artifactory_pull_replication" "{{ .repoconfig_name }}" {
-			repo_key = "{{ .remote_name }}"
-			cron_exp = "0 0 12 ? * MON *"
+			repo_key 				 = "{{ .remote_name }}"
+			cron_exp 				 = "0 0 12 ? * MON *"
+			sync_deletes 			 = true
+			sync_properties 		 = false
 			enable_event_replication = false
-			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
+			depends_on 				 = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
 	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
@@ -187,7 +189,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 ? * MON *"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "false"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
-					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "false"),
+					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "true"),
 					resource.TestCheckResourceAttr(fqrn, "sync_properties", "false"),
 					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "false"),
 				),

@@ -12,7 +12,35 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+// PullReplication this is the structure for a PULL replication on a remote repo
+type PullReplication struct {
+	Enabled                         bool   `json:"enabled"`
+	CronExp                         string `json:"cronExp"`
+	SyncDeletes                     bool   `json:"syncDeletes"`
+	SyncProperties                  bool   `json:"syncProperties"`
+	PathPrefix                      string `json:"pathPrefix"`
+	RepoKey                         string `json:"repoKey"`
+	ReplicationKey                  string `json:"replicationKey"`
+	EnableEventReplication          bool   `json:"enableEventReplication"`
+	Username                        string `json:"username"`
+	Password                        string `json:"password"`
+	URL                             string `json:"url"`
+	CheckBinaryExistenceInFilestore bool   `json:"checkBinaryExistenceInFilestore"`
+}
+
 var pullReplicationSchema = map[string]*schema.Schema{
+	"repo_key": {
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "Repository name.",
+	},
+	"cron_exp": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "The Cron expression that determines when the next replication will be triggered.",
+	},
 	"url": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -48,19 +76,16 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"sync_deletes": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, items that were deleted locally should also be deleted remotely (also applies to properties metadata). Note that enabling this option, will delete artifacts on the target that do not exist in the source repository. Default value is `false`.",
 	},
 	"sync_properties": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
-	},
-	"sync_statistics": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Computed: true,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, the task also synchronizes the properties of replicated artifacts. Default value is `true`",
 	},
 	"path_prefix": {
 		Type:     schema.TypeString,
@@ -78,22 +103,12 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Description: "When true, enables distributed checksum storage. For more information, see " +
 			"[Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).",
 	},
-}
-
-func ResourceArtifactoryPullReplication() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourcePullReplicationCreate,
-		ReadContext:   resourcePullReplicationRead,
-		UpdateContext: resourcePullReplicationUpdate,
-		DeleteContext: resourceReplicationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema:      util.MergeMaps(replicationSchemaCommon, pullReplicationSchema),
-		Description: "Used for configuring pull replication on local or remote repos.",
-	}
+	"enable_event_replication": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, each event will trigger replication of the artifacts changed in this event. This can be any type of event on artifact, e.g. add, deleted or property change. Default value is `false`.",
+	},
 }
 
 func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
@@ -153,22 +168,6 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 	return resourcePullReplicationRead(ctx, d, m)
 }
 
-// PullReplication this is the structure for a PULL replication on a remote repo
-type PullReplication struct {
-	Enabled                         bool   `json:"enabled"`
-	CronExp                         string `json:"cronExp"`
-	SyncDeletes                     bool   `json:"syncDeletes"`
-	SyncProperties                  bool   `json:"syncProperties"`
-	PathPrefix                      string `json:"pathPrefix"`
-	RepoKey                         string `json:"repoKey"`
-	ReplicationKey                  string `json:"replicationKey"`
-	EnableEventReplication          bool   `json:"enableEventReplication"`
-	Username                        string `json:"username"`
-	Password                        string `json:"password"`
-	URL                             string `json:"url"`
-	CheckBinaryExistenceInFilestore bool   `json:"checkBinaryExistenceInFilestore"`
-}
-
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
@@ -212,4 +211,21 @@ func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(replicationConfig.RepoKey)
 
 	return resourcePullReplicationRead(ctx, d, m)
+}
+
+func ResourceArtifactoryPullReplication() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourcePullReplicationCreate,
+		ReadContext:   resourcePullReplicationRead,
+		UpdateContext: resourcePullReplicationUpdate,
+		DeleteContext: resourceReplicationDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema:             pullReplicationSchema,
+		Description:        "Used for configuring pull replication on local or remote repos.",
+		DeprecationMessage: "This resource is replaced by `artifactory_remote_repository_replication` for clarity. Please consider the migration.",
+	}
 }
