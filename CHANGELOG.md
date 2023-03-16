@@ -1,3 +1,11 @@
+## 6.32.1 (March 16, 2023)
+
+IMPROVEMENTS:
+
+* resource/artifactory_scoped_token: When `expires_in` attribute is set to value that is less than Artifactory's persistency threshold then the token is created but never saved to the database. Add a warning message so users can potentially figure out why the Terraform state is invalid.
+  PR:    [#695](https://github.com/jfrog/terraform-provider-artifactory/pull/695) 
+  Issue: [#684](https://github.com/jfrog/terraform-provider-artifactory/issues/684)
+
 ## 6.32.0 (March 8, 2023). Tested on Artifactory 7.49.8
 
 FEATURES:
