@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type ReplicationBody struct {
+type localMultiReplicationBody struct {
 	Username                        string `json:"username"`
 	Password                        string `json:"password"`
 	URL                             string `json:"url"`
@@ -27,35 +27,37 @@ type ReplicationBody struct {
 	SyncDeletes                     bool   `json:"syncDeletes"`
 	SyncProperties                  bool   `json:"syncProperties"`
 	SyncStatistics                  bool   `json:"syncStatistics"`
-	PathPrefix                      string `json:"pathPrefix"`
+	IncludePathPrefixPattern        string `json:"includePathPrefixPattern"`
+	ExcludePathPrefixPattern        string `json:"excludePathPrefixPattern"`
 	CheckBinaryExistenceInFilestore bool   `json:"checkBinaryExistenceInFilestore"`
 }
 
-type getReplicationBody struct {
-	ReplicationBody
-	ProxyRef string `json:"proxyRef"`
+type getLocalMultiReplicationBody struct {
+	localMultiReplicationBody
+	ProxyRef       string `json:"proxyRef"`
+	ReplicationKey string `json:"replicationKey"`
 }
 
-type updateReplicationBody struct {
-	ReplicationBody
+type updateLocalMultiReplicationBody struct {
+	localMultiReplicationBody
 	Proxy string `json:"proxy"`
 }
 
-type GetPushReplication struct {
-	RepoKey                string               `json:"-"`
-	CronExp                string               `json:"cronExp,omitempty"`
-	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
-	Replications           []getReplicationBody `json:"replications,omitempty"`
+type GetLocalMultiReplication struct {
+	RepoKey                string                         `json:"-"`
+	CronExp                string                         `json:"cronExp,omitempty"`
+	EnableEventReplication bool                           `json:"enableEventReplication,omitempty"`
+	Replications           []getLocalMultiReplicationBody `json:"replications,omitempty"`
 }
 
-type UpdatePushReplication struct {
-	RepoKey                string                  `json:"-"`
-	CronExp                string                  `json:"cronExp,omitempty"`
-	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []updateReplicationBody `json:"replications,omitempty"`
+type UpdateLocalMultiReplication struct {
+	RepoKey                string                            `json:"-"`
+	CronExp                string                            `json:"cronExp,omitempty"`
+	EnableEventReplication bool                              `json:"enableEventReplication,omitempty"`
+	Replications           []updateLocalMultiReplicationBody `json:"replications,omitempty"`
 }
 
-var pushReplicationSchema = map[string]*schema.Schema{
+var localReplicationSchema = map[string]*schema.Schema{
 	"url": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -74,20 +76,14 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "The HTTP authentication username.",
+		Description:      "The username on the remote Artifactory instance.",
 	},
 	"password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "Use either the HTTP authentication password or identity token.",
-	},
-	"enabled": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     true,
-		Description: "When set, enables replication of this repository to the target specified in `url` attribute. Default value is `true`.",
+		Description:      "Use either the HTTP authentication password or identity token (https://www.jfrog.com/confluence/display/JFROG/User+Profile#UserProfile-IdentityTokenidentitytoken).",
 	},
 	"sync_deletes": {
 		Type:        schema.TypeBool,
@@ -99,42 +95,63 @@ var pushReplicationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     true,
-		Description: "When set, the task also synchronizes the properties of replicated artifacts. Default value is `true`",
+		Description: "When set, the task also synchronizes the properties of replicated artifacts. Default value is `true`.",
 	},
 	"sync_statistics": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "When set, the task also synchronizes artifact download statistics. Set to avoid inadvertent cleanup at the target instance when setting up replication for disaster recovery. Default value is `false`",
+		Description: "When set, the task also synchronizes artifact download statistics. Set to avoid inadvertent cleanup at the target instance when setting up replication for disaster recovery. Default value is `false`.",
 	},
-	"path_prefix": {
-		Type:     schema.TypeString,
-		Optional: true,
+	"enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "When set, enables replication of this repository to the target specified in `url` attribute. Default value is `true`.",
+	},
+	"include_path_prefix_pattern": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
+	"exclude_path_prefix_pattern": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default, no artifacts are excluded.",
 	},
 	"proxy": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "A proxy configuration to use when communicating with the remote instance.",
+		Description: "Proxy key from Artifactory Proxies settings. The proxy configuration will be used when communicating with the remote instance.",
+	},
+	"replication_key": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "Replication ID. The ID is known only after the replication is created, for this reason it's `Computed` and can not be set by the user in HCL.",
 	},
 	"check_binary_existence_in_filestore": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Default:  false,
-		Description: "Enabling the `check_binary_existence_in_filestore` flag requires an Enterprise+ license. When true, enables distributed checksum storage. For more information, see " +
-			"[Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).",
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enabling the `check_binary_existence_in_filestore` flag requires an Enterprise Plus license. When true, enables distributed checksum storage. For more information, see [Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).",
 	},
 }
 
-var pushRepMultipleSchema = map[string]*schema.Schema{
+var localMultiReplicationSchema = map[string]*schema.Schema{
+	"repo_key": {
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "Repository name.",
+	},
 	"cron_exp": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ValidateDiagFunc: validator.CronLength,
 		Description:      "Cron expression to control the operation frequency.",
-	},
-	"repo_key": {
-		Type:     schema.TypeString,
-		Required: true,
 	},
 	"enable_event_replication": {
 		Type:        schema.TypeBool,
@@ -146,21 +163,21 @@ var pushRepMultipleSchema = map[string]*schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: pushReplicationSchema,
+			Schema: localReplicationSchema,
 		},
 	},
 }
 
-func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
+func unpackLocalMultiReplication(s *schema.ResourceData) UpdateLocalMultiReplication {
 	d := &util.ResourceData{ResourceData: s}
-	pushReplication := new(UpdatePushReplication)
+	pushReplication := new(UpdateLocalMultiReplication)
 
 	repo := d.GetString("repo_key", false)
 
 	if v, ok := d.GetOk("replications"); ok {
 		arr := v.([]interface{})
 
-		tmp := make([]updateReplicationBody, 0, len(arr))
+		tmp := make([]updateLocalMultiReplicationBody, 0, len(arr))
 		pushReplication.Replications = tmp
 
 		for i, o := range arr {
@@ -172,7 +189,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 
 			m := o.(map[string]interface{})
 
-			var replication updateReplicationBody
+			var replication updateLocalMultiReplicationBody
 
 			replication.RepoKey = repo
 			replication.CronExp = d.GetString("cron_exp", false)
@@ -205,8 +222,12 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 				replication.SyncStatistics = v.(bool)
 			}
 
-			if prefix, ok := m["path_prefix"]; ok {
-				replication.PathPrefix = prefix.(string)
+			if include, ok := m["include_path_prefix_pattern"]; ok {
+				replication.IncludePathPrefixPattern = include.(string)
+			}
+
+			if exclude, ok := m["exclude_path_prefix_pattern"]; ok {
+				replication.ExcludePathPrefixPattern = exclude.(string)
 			}
 
 			if _, ok := m["proxy"]; ok {
@@ -228,7 +249,7 @@ func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
 	return *pushReplication
 }
 
-func packPushReplication(pushReplication *GetPushReplication, d *schema.ResourceData) diag.Diagnostics {
+func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
 	setValue := util.MkLens(d)
 
@@ -266,8 +287,10 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 			replication["sync_deletes"] = repl.SyncDeletes
 			replication["sync_properties"] = repl.SyncProperties
 			replication["sync_statistics"] = repl.SyncStatistics
-			replication["path_prefix"] = repl.PathPrefix
+			replication["include_path_prefix_pattern"] = repl.IncludePathPrefixPattern
+			replication["exclude_path_prefix_pattern"] = repl.ExcludePathPrefixPattern
 			replication["proxy"] = repl.ProxyRef
+			replication["replication_key"] = repl.ReplicationKey
 			replication["check_binary_existence_in_filestore"] = repl.CheckBinaryExistenceInFilestore
 			replications = append(replications, replication)
 		}
@@ -281,9 +304,12 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 	return nil
 }
 
-func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	pushReplication := unpackPushReplication(d)
+func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	pushReplication := unpackLocalMultiReplication(d)
 
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
+		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
+	}
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
@@ -292,19 +318,19 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(pushReplication.RepoKey)
-	return resourcePushReplicationRead(ctx, d, m)
+	return resourceLocalMultiReplicationRead(ctx, d, m)
 }
 
-func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
-	var replications []getReplicationBody
+	var replications []getLocalMultiReplicationBody
 	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	repConfig := GetPushReplication{
+	repConfig := GetLocalMultiReplication{
 		RepoKey:      d.Id(),
 		Replications: replications,
 	}
@@ -312,12 +338,15 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 		repConfig.EnableEventReplication = replications[0].EnableEventReplication
 		repConfig.CronExp = replications[0].CronExp
 	}
-	return packPushReplication(&repConfig, d)
+	return packLocalMultiReplication(&repConfig, d)
 }
 
-func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	pushReplication := unpackPushReplication(d)
+func resourceLocalMultiReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	pushReplication := unpackLocalMultiReplication(d)
 
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
+		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
+	}
 	_, err := m.(*resty.Client).R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
@@ -326,22 +355,21 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	return resourcePushReplicationRead(ctx, d, m)
+	return resourceLocalMultiReplicationRead(ctx, d, m)
 }
 
-func ResourceArtifactoryPushReplication() *schema.Resource {
+func ResourceArtifactoryLocalRepositoryMultiReplication() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePushReplicationCreate,
-		ReadContext:   resourcePushReplicationRead,
-		UpdateContext: resourcePushReplicationUpdate,
+		CreateContext: resourceLocalMultiReplicationCreate,
+		ReadContext:   resourceLocalMultiReplicationRead,
+		UpdateContext: resourceLocalMultiReplicationUpdate,
 		DeleteContext: resourceReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:             pushRepMultipleSchema,
-		Description:        "Add or replace multiple replication configurations for given repository key. Supported by local repositories. Artifactory Enterprise license is required.",
-		DeprecationMessage: "This resource is replaced by `artifactory_local_repository_multi_replication` for clarity. All the attributes are identical, please consider the migration.",
+		Description: "Add or replace multiple replication configurations for given repository key. Supported by local repositories. Artifactory Enterprise license is required.",
+		Schema:      localMultiReplicationSchema,
 	}
 }

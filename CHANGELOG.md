@@ -1,3 +1,12 @@
+## 6.33.0 (March 17, 2023).
+
+IMPROVEMENTS:
+
+* resource/artifactory_push_replication and artifactory_push_replication are deprecated in favor of several new resources, listed below. Most of the attributes are not `Computed` anymore, so users can set and modify them.
+* resource/artifactory_local_repository_multi_replication, artifactory_local_repository_single_replication and artifactory_remote_repository_replication were added instead of deprecated resources, listed above. Resource names reflect resource logic more clear, new attributes added.
+  PR: [#]()
+  Issue: [#547](https://github.com/jfrog/terraform-provider-artifactory/issues/547)
+
 ## 6.32.0 (March 8, 2023). Tested on Artifactory 7.49.8
 
 FEATURES:
