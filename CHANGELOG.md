@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## 6.33.0 (March 17, 2023). Tested on Artifactory 7.49.8
 
 IMPROVEMENTS:
@@ -6,6 +7,15 @@ IMPROVEMENTS:
 * resource/artifactory_local_repository_multi_replication, artifactory_local_repository_single_replication and artifactory_remote_repository_replication were added instead of deprecated resources, listed above. Resource names reflect resource logic more clear, new attributes added.
   PR: [#697](https://github.com/jfrog/terraform-provider-artifactory/pull/697)
   Issue: [#547](https://github.com/jfrog/terraform-provider-artifactory/issues/547)
+=======
+## 6.32.1 (March 17, 2023). Tested on Artifactory 7.49.8
+
+BUG FIXES:
+
+* provider: Fix panic if attribute list contain empty string (`""`) value.
+PR:    [#700](https://github.com/jfrog/terraform-provider-artifactory/pull/700)
+Issue: [#679](https://github.com/jfrog/terraform-provider-artifactory/issues/679)
+>>>>>>> v6
 
 ## 6.32.0 (March 8, 2023). Tested on Artifactory 7.49.8
 
