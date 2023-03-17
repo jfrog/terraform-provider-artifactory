@@ -8,7 +8,7 @@ Push replication is used to synchronize Local Repositories, and is implemented b
 See the [Official Documentation](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-PushReplication).
 This resource replaces `artifactory_push_replication` and used to create a replication of one local repository to multiple repositories on the remote server. 
 
-~> This resource requires Artifactory Enterprise license. Use `local_repository_single_replication` with other licenses.
+~> This resource requires Artifactory Enterprise license. Use `artifactory_local_repository_single_replication` with other licenses.
 
 ## Example Usage
 
@@ -46,13 +46,13 @@ resource "artifactory_local_repository_multi_replication" "foo-rep" {
   cron_exp                  = "0 0 * * * ?"
   enable_event_replication  = true
 
-	replications {
+	replication {
       url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest.key}"
       username = "$var.artifactory_username"
       password = "$var.artifactory_password"
       enabled  = true
 	}
-    replications {
+    replication {
       url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest1.key}"
       username = "$var.artifactory_username"
       password = "$var.artifactory_password"
@@ -68,7 +68,7 @@ The following arguments are supported:
 * `repo_key` - (Required) Repository name.
 * `cron_exp` - (Required) A valid CRON expression that you can use to control replication frequency. Eg: `0 0 12 * * ? *`, `0 0 2 ? * MON-SAT *`. Note: use 6 or 7 parts format - Seconds, Minutes Hours, Day Of Month, Month, Day Of Week, Year (optional). Specifying both a day-of-week AND a day-of-month parameter is not supported. One of them should be replaced by `?`. Incorrect: `* 5,7,9 14/2 * * WED,SAT *`, correct: `* 5,7,9 14/2 ? * WED,SAT *`. See details in [Cron Trigger Tutorial](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).
 * `enable_event_replication` - (Optional) When set, each event will trigger replication of the artifacts changed in this event. This can be any type of event on artifact, e.g. add, deleted or property change. Default value is `false`.
-* `replications` - (Optional)
+* `replication` - (Optional) List of replications minimum 1 element.
     * `url` - (Required) The URL of the target local repository on a remote Artifactory server. Use the format `https://<artifactory_url>/artifactory/<repository_name>`.
     * `socket_timeout_millis` - (Optional) The network timeout in milliseconds to use for remote operations. Default value is `15000`.
     * `username` - (Required) Username on the remote Artifactory instance.

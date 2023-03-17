@@ -3,6 +3,7 @@ package replication
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,9 +23,13 @@ var replicationSchemaEnableEventReplication = map[string]*schema.Schema{
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().
+	resp, err := m.(*resty.Client).R().
 		AddRetryCondition(client.RetryOnMergeError).
 		Delete(EndpointPath + d.Id())
+	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+		d.SetId("")
+		return nil
+	}
 	return diag.FromErr(err)
 }
 

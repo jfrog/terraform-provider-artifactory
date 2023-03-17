@@ -3,6 +3,7 @@ package replication
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -46,14 +47,14 @@ type updateLocalMultiReplicationBody struct {
 type GetLocalMultiReplication struct {
 	RepoKey                string                         `json:"-"`
 	CronExp                string                         `json:"cronExp,omitempty"`
-	EnableEventReplication bool                           `json:"enableEventReplication,omitempty"`
+	EnableEventReplication bool                           `json:"enableEventReplication"`
 	Replications           []getLocalMultiReplicationBody `json:"replications,omitempty"`
 }
 
 type UpdateLocalMultiReplication struct {
 	RepoKey                string                            `json:"-"`
 	CronExp                string                            `json:"cronExp,omitempty"`
-	EnableEventReplication bool                              `json:"enableEventReplication,omitempty"`
+	EnableEventReplication bool                              `json:"enableEventReplication"`
 	Replications           []updateLocalMultiReplicationBody `json:"replications,omitempty"`
 }
 
@@ -159,9 +160,10 @@ var localMultiReplicationSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "When set, each event will trigger replication of the artifacts changed in this event. This can be any type of event on artifact, e.g. add, deleted or property change. Default value is `false`.",
 	},
-	"replications": {
+	"replication": {
 		Type:     schema.TypeList,
 		Optional: true,
+		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: localReplicationSchema,
 		},
@@ -174,7 +176,7 @@ func unpackLocalMultiReplication(s *schema.ResourceData) UpdateLocalMultiReplica
 
 	repo := d.GetString("repo_key", false)
 
-	if v, ok := d.GetOk("replications"); ok {
+	if v, ok := d.GetOk("replication"); ok {
 		arr := v.([]interface{})
 
 		tmp := make([]updateLocalMultiReplicationBody, 0, len(arr))
@@ -231,7 +233,7 @@ func unpackLocalMultiReplication(s *schema.ResourceData) UpdateLocalMultiReplica
 			}
 
 			if _, ok := m["proxy"]; ok {
-				replication.Proxy = repository.HandleResetWithNonExistentValue(d, fmt.Sprintf("replications.%d.proxy", i))
+				replication.Proxy = repository.HandleResetWithNonExistentValue(d, fmt.Sprintf("replication.%d.proxy", i))
 			}
 
 			if pass, ok := m["password"]; ok {
@@ -259,9 +261,9 @@ func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *sch
 
 	if pushReplication.Replications != nil {
 
-		// Get replications from TF state
+		// Get replication list from TF state
 		var tfReplications []interface{}
-		if v, ok := d.GetOkExists("replications"); ok {
+		if v, ok := d.GetOkExists("replication"); ok {
 			tfReplications = v.([]interface{})
 		}
 
@@ -295,7 +297,7 @@ func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *sch
 			replications = append(replications, replication)
 		}
 
-		errors = setValue("replications", replications)
+		errors = setValue("replication", replications)
 	}
 	if errors != nil && len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
@@ -324,9 +326,13 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*resty.Client)
 	var replications []getLocalMultiReplicationBody
-	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
+	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
+		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 
