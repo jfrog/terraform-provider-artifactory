@@ -1,10 +1,19 @@
-## 7.2.2 (March 17, 2023)
+## 7.3.1 (March 17, 2023)
 
 BUG FIXES:
 
 * provider: Fix panic if attribute list contain empty string (`""`) value.
 PR:    [#698](https://github.com/jfrog/terraform-provider-artifactory/pull/698)
 Issue: [#679](https://github.com/jfrog/terraform-provider-artifactory/issues/679)
+
+## 7.3.0 (March 17, 2023). Tested on Artifactory 7.55.8
+
+IMPROVEMENTS:
+
+* resource/artifactory_push_replication and artifactory_push_replication are deprecated in favor of several new resources, listed below. Most of the attributes are not `Computed` anymore, so users can set and modify them.
+* resource/artifactory_local_repository_multi_replication, artifactory_local_repository_single_replication and artifactory_remote_repository_replication were added instead of deprecated resources, listed above. Resource names reflect resource logic more clear, new attributes added. 
+ PR: [#694](https://github.com/jfrog/terraform-provider-artifactory/pull/694)
+ Issue: [#547](https://github.com/jfrog/terraform-provider-artifactory/issues/547)
 
 ## 7.2.1 (March 13, 2023). Tested on Artifactory 7.55.6
 
