@@ -1,3 +1,11 @@
+## 7.2.2 (March 17, 2023)
+
+BUG FIXES:
+
+* provider: Fix panic if attribute list contain empty string (`""`) value.
+PR:    [#698](https://github.com/jfrog/terraform-provider-artifactory/pull/698)
+Issue: [#679](https://github.com/jfrog/terraform-provider-artifactory/issues/679)
+
 ## 7.2.1 (March 13, 2023). Tested on Artifactory 7.55.6
 
 IMPROVEMENTS:
