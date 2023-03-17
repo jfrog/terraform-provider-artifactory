@@ -46,13 +46,13 @@ resource "artifactory_local_repository_multi_replication" "foo-rep" {
   cron_exp                  = "0 0 * * * ?"
   enable_event_replication  = true
 
-	replications {
+	replication {
       url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest.key}"
       username = "$var.artifactory_username"
       password = "$var.artifactory_password"
       enabled  = true
 	}
-    replications {
+    replication {
       url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest1.key}"
       username = "$var.artifactory_username"
       password = "$var.artifactory_password"
