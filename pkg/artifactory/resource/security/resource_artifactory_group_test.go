@@ -353,7 +353,7 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Users in the group: %s \n", group.UsersNames)
+
 		if len(group.UsersNames) != expectedCount {
 			return fmt.Errorf("error: Group %s has wrong number of members. Expected: %d  Actual: %d", rs.Primary.ID, expectedCount, len(group.UsersNames))
 		}
