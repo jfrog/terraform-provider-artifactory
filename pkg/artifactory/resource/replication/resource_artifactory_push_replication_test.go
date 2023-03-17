@@ -1,7 +1,6 @@
 package replication_test
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -175,21 +174,12 @@ func TestAccPushReplication_full(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "replications.*.*", "https://dummyurl.com/"),
 				),
 			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replications.0.password", "replications.1.password"}, // this attribute is not being sent via API, can't be imported
+			},
 		},
 	})
-}
-
-func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
-
-		exists, _ := repConfigExists(rs.Primary.ID, acctest.Provider.Meta())
-		if exists {
-			return fmt.Errorf("error: Replication %s still exists", id)
-		}
-		return nil
-	}
 }
