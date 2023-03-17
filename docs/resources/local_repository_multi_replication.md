@@ -8,7 +8,7 @@ Push replication is used to synchronize Local Repositories, and is implemented b
 See the [Official Documentation](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-PushReplication).
 This resource replaces `artifactory_push_replication` and used to create a replication of one local repository to multiple repositories on the remote server.
 
-~> This resource requires Artifactory Enterprise license. Use `local_repository_single_replication` with other licenses.
+~> This resource requires Artifactory Enterprise license. Use `artifactory_local_repository_single_replication` with other licenses.
 
 ## Example Usage
 

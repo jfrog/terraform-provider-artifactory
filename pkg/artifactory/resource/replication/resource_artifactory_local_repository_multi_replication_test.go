@@ -22,7 +22,7 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
 
-			replications {
+			replication {
 				url = "http://localhost:8080"
 				username = "%s"
 				password = "%s"
@@ -52,7 +52,7 @@ func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
-			replications {
+			replication {
 				url = "not a URL"
 				username = "%s"
 				password = "Passw0rd!"
@@ -91,7 +91,7 @@ func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
-			replications {
+			replication {
 				url = "{{ .url }}"
 				username = "{{ .username }}"
 				password = "Passw0rd!"
@@ -130,7 +130,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
-			replications {
+			replication {
 				url 								= "{{ .url }}"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
@@ -156,7 +156,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
-			replications {
+			replication {
 				url 								= "{{ .url }}"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
@@ -171,7 +171,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				check_binary_existence_in_filestore = false
 
 			}
-			replications {
+			replication {
 				url 								= "https://dummyurl.com/"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
@@ -206,12 +206,12 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "replications.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.url", acctest.GetArtifactoryUrl(t)),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.username", acctest.RtDefaultUser),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.password", "Passw0rd!"),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.proxy", testProxy),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.check_binary_existence_in_filestore", "false"),
+					resource.TestCheckResourceAttr(fqrn, "replication.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.url", acctest.GetArtifactoryUrl(t)),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.check_binary_existence_in_filestore", "false"),
 				),
 			},
 			{
@@ -220,26 +220,26 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
-					resource.TestCheckResourceAttr(fqrn, "replications.#", "2"),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.username", acctest.RtDefaultUser),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.password", "Passw0rd!"),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.proxy", testProxy),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.enabled", "true"),
-					resource.TestCheckResourceAttr(fqrn, "replications.0.check_binary_existence_in_filestore", "false"),
-					resource.TestCheckResourceAttr(fqrn, "replications.1.username", acctest.RtDefaultUser),
-					resource.TestCheckResourceAttr(fqrn, "replications.1.password", "Passw0rd!"),
-					resource.TestCheckResourceAttr(fqrn, "replications.1.proxy", testProxy),
-					resource.TestCheckResourceAttr(fqrn, "replications.1.enabled", "false"),
-					resource.TestCheckResourceAttr(fqrn, "replications.1.check_binary_existence_in_filestore", "true"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "replications.*.*", acctest.GetArtifactoryUrl(t)),
-					resource.TestCheckTypeSetElemAttr(fqrn, "replications.*.*", "https://dummyurl.com/"),
+					resource.TestCheckResourceAttr(fqrn, "replication.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.check_binary_existence_in_filestore", "false"),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.password", "Passw0rd!"),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.check_binary_existence_in_filestore", "true"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "replication.*.*", acctest.GetArtifactoryUrl(t)),
+					resource.TestCheckTypeSetElemAttr(fqrn, "replication.*.*", "https://dummyurl.com/"),
 				),
 			},
 			{
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"replications.0.password", "replications.1.password"}, // this attribute is not being sent via API, can't be imported
+				ImportStateVerifyIgnore: []string{"replication.0.password", "replication.1.password"}, // this attribute is not being sent via API, can't be imported
 			},
 		},
 	})

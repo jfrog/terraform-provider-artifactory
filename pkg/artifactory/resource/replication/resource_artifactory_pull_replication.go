@@ -76,16 +76,19 @@ var pullReplicationSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"sync_deletes": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "When set, items that were deleted locally should also be deleted remotely (also applies to properties metadata). Note that enabling this option, will delete artifacts on the target that do not exist in the source repository. Default value is `false`.",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
 	},
 	"sync_properties": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "When set, the task also synchronizes the properties of replicated artifacts. Default value is `true`",
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
+	},
+	"sync_statistics": {
+		Type:     schema.TypeBool,
+		Optional: true,
+		Computed: true,
 	},
 	"path_prefix": {
 		Type:     schema.TypeString,

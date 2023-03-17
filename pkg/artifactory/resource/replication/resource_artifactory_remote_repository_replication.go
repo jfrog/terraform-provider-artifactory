@@ -2,6 +2,7 @@ package replication
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -158,9 +159,13 @@ func resourceRemoteReplicationRead(_ context.Context, d *schema.ResourceData, m 
 
 	var replication getRemoteReplicationBody
 
-	_, err := c.R().SetResult(&replication).Get(EndpointPath + d.Id())
+	resp, err := c.R().SetResult(&replication).Get(EndpointPath + d.Id())
 
 	if err != nil {
+		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 
