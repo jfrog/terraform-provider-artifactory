@@ -32,5 +32,5 @@ function getAccessKey() {
                       --data-urlencode "scope=applied-permissions/admin" \
                       --data-urlencode "description=Created_with_script_in_TF_provider" | jq -r .access_token)
 
-  echo ${scoped_access_key}
+  echo "${scoped_access_key}"
 }
