@@ -18,10 +18,12 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
+// To make tests work add `ARTIFACTORY_URL_2=http://artifactory-2:8081` or `ARTIFACTORY_URL_2=http://host.docker.internal:9081`
 func skipFederatedRepo() (bool, string) {
 	if len(os.Getenv("ARTIFACTORY_URL_2")) > 0 {
 		return false, "Env var `ARTIFACTORY_URL_2` is set. Executing test."
@@ -37,7 +39,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 
 	name := fmt.Sprintf("federated-generic-%d-full", rand.Int())
 	resourceType := "artifactory_federated_generic_repository"
-	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
+	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
@@ -68,17 +70,23 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "member.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMember2Url),
-					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "member.1.url", federatedMember1Url),
-					resource.TestCheckResourceAttr(resourceName, "member.1.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember2Url),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "member.1.url", federatedMember1Url),
+					resource.TestCheckResourceAttr(fqrn, "member.1.enabled", "true"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -91,7 +99,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 
 	name := fmt.Sprintf("federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-	resourceName := fmt.Sprintf("%s.%s", resourceType, name)
+	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	xrayIndex := test.RandBool()
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -121,22 +129,28 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoTypeAdjusted),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test federated repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test federated repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repoTypeAdjusted),
+					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 
-					resource.TestCheckResourceAttr(resourceName, "member.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "member.0.url", federatedMemberUrl),
-					resource.TestCheckResourceAttr(resourceName, "member.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	}
@@ -200,6 +214,12 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -346,6 +366,7 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -414,6 +435,7 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -599,6 +621,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -669,6 +692,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -740,6 +764,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -785,6 +810,7 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -849,6 +875,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -931,6 +958,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -986,6 +1014,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	}
@@ -1182,6 +1211,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -1231,6 +1261,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	}
