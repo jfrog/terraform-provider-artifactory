@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -16,19 +14,14 @@ import (
 func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	packageType := "alpine"
 
-	type AlpineFederatedRepositoryParams struct {
-		local.AlpineLocalRepoParams
-		Members []federated.Member `hcl:"member" json:"members"`
-	}
-
 	alpineFederatedSchema := util.MergeMaps(
 		local.AlpineLocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*AlpineFederatedRepositoryParams).Members
+		members := repo.(*federated.AlpineFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +36,7 @@ func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &AlpineFederatedRepositoryParams{
+		return &federated.AlpineFederatedRepositoryParams{
 			AlpineLocalRepoParams: local.AlpineLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -56,6 +49,6 @@ func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      alpineFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated alpine repository"),
+		Description: "Provides a data source for a federated alpine repository",
 	}
 }

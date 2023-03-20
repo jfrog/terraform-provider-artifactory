@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -13,22 +11,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-type RpmFederatedRepositoryParams struct {
-	local.RpmLocalRepositoryParams
-	Members []federated.Member `hcl:"member" json:"members"`
-}
-
 func DataSourceArtifactoryFederatedRpmRepository() *schema.Resource {
 	packageType := "rpm"
 
 	rpmFederatedSchema := util.MergeMaps(
 		local.RpmLocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packRpmMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*RpmFederatedRepositoryParams).Members
+		members := repo.(*federated.RpmFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +36,7 @@ func DataSourceArtifactoryFederatedRpmRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &RpmFederatedRepositoryParams{
+		return &federated.RpmFederatedRepositoryParams{
 			RpmLocalRepositoryParams: local.RpmLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -60,6 +53,6 @@ func DataSourceArtifactoryFederatedRpmRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      rpmFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated RPM repository"),
+		Description: "Provides a data source for a federated RPM repository",
 	}
 }

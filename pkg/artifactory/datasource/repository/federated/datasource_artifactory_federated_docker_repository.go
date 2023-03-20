@@ -13,22 +13,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-type DockerFederatedRepositoryParams struct {
-	local.DockerLocalRepositoryParams
-	Members []federated.Member `hcl:"member" json:"members"`
-}
-
 func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	packageType := "docker"
 
 	dockerV2FederatedSchema := util.MergeMaps(
 		local.DockerV2LocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*DockerFederatedRepositoryParams).Members
+		members := repo.(*federated.DockerFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +38,7 @@ func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &DockerFederatedRepositoryParams{
+		return &federated.DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -65,12 +60,12 @@ func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 
 	dockerFederatedSchema := util.MergeMaps(
 		local.DockerV1LocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*DockerFederatedRepositoryParams).Members
+		members := repo.(*federated.DockerFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -82,7 +77,7 @@ func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &DockerFederatedRepositoryParams{
+		return &federated.DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -95,6 +90,6 @@ func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      dockerFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated docker V1 repository"),
+		Description: "Provides a data source for a federated docker V1 repository",
 	}
 }

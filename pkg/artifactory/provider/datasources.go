@@ -82,9 +82,9 @@ func datasourcesMap() map[string]*schema.Resource {
 		dataSourcesMap[remoteDataSourceName] = datasource_remote.DataSourceArtifactoryRemoteBasicRepository(packageType)
 	}
 
-	for _, repoType := range federated.PackageTypesLikeGeneric {
-		federatedDataSourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-		dataSourcesMap[federatedDataSourceName] = datasource_federated.DataSourceArtifactoryFederatedGenericRepository(repoType)
+	for _, packageType := range federated.PackageTypesLikeGeneric {
+		federatedDataSourceName := fmt.Sprintf("artifactory_federated_%s_repository", packageType)
+		dataSourcesMap[federatedDataSourceName] = datasource_federated.DataSourceArtifactoryFederatedGenericRepository(packageType)
 	}
 
 	return util.AddTelemetry(productId, dataSourcesMap)

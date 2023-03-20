@@ -13,18 +13,13 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func DataSourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
-	localRepoSchema := local.GetGenericRepoSchema(repoType)
+func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
+	localRepoSchema := local.GetGenericRepoSchema(packageType)
 
-	var federatedSchema = util.MergeMaps(localRepoSchema, MemberSchema, resource_repository.RepoLayoutRefSchema(rclass, repoType))
-
-	type FederatedRepositoryParams struct {
-		local.RepositoryBaseParams
-		Members []federated.Member `hcl:"member" json:"members"`
-	}
+	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, resource_repository.RepoLayoutRefSchema(rclass, packageType))
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*FederatedRepositoryParams).Members
+		members := repo.(*federated.FederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -39,9 +34,9 @@ func DataSourceArtifactoryFederatedGenericRepository(repoType string) *schema.Re
 	)
 
 	constructor := func() (interface{}, error) {
-		return &FederatedRepositoryParams{
+		return &federated.FederatedRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: local.GetPackageType(repoType),
+				PackageType: local.GetPackageType(packageType),
 				Rclass:      rclass,
 			},
 		}, nil
@@ -50,6 +45,6 @@ func DataSourceArtifactoryFederatedGenericRepository(repoType string) *schema.Re
 	return &schema.Resource{
 		Schema:      federatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated %s repository", repoType),
+		Description: fmt.Sprintf("Provides a data source for a federated %s repository", packageType),
 	}
 }

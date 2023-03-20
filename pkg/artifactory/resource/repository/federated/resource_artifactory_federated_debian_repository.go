@@ -9,17 +9,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+type DebianFederatedRepositoryParams struct {
+	local.DebianLocalRepositoryParams
+	Members []Member `hcl:"member" json:"members"`
+}
+
 func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	packageType := "debian"
 
-	type DebianFederatedRepositoryParams struct {
-		local.DebianLocalRepositoryParams
-		Members []Member `hcl:"member" json:"members"`
-	}
-
 	debianFederatedSchema := util.MergeMaps(
 		local.DebianLocalSchema,
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

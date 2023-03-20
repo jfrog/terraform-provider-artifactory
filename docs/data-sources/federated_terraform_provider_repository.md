@@ -3,7 +3,7 @@ subcategory: "Federated Repositories"
 ---
 # Artifactory Federated Terraform Provider Repository Data Source
 
-Retrieves a federated Generic repository.
+Retrieves a federated terraform provider repository.
 
 ## Example Usage
 

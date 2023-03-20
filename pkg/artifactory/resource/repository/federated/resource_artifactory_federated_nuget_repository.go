@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 
 	nugetFederatedSchema := util.MergeMaps(
 		local.NugetLocalSchema,
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

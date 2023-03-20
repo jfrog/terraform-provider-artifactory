@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -13,22 +11,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-type NugetFederatedRepositoryParams struct {
-	local.NugetLocalRepositoryParams
-	Members []federated.Member `hcl:"member" json:"members"`
-}
-
 func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	packageType := "nuget"
 
 	nugetFederatedSchema := util.MergeMaps(
 		local.NugetLocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packNugetMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*NugetFederatedRepositoryParams).Members
+		members := repo.(*federated.NugetFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +36,7 @@ func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &NugetFederatedRepositoryParams{
+		return &federated.NugetFederatedRepositoryParams{
 			NugetLocalRepositoryParams: local.NugetLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -56,6 +49,6 @@ func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      nugetFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated nuget repository"),
+		Description: "Provides a data source for a federated nuget repository",
 	}
 }

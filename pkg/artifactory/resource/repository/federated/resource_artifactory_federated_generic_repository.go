@@ -9,15 +9,15 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+type FederatedRepositoryParams struct {
+	local.RepositoryBaseParams
+	Members []Member `hcl:"member" json:"members"`
+}
+
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
 	localRepoSchema := local.GetGenericRepoSchema(repoType)
 
-	var federatedSchema = util.MergeMaps(localRepoSchema, MemberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
-
-	type FederatedRepositoryParams struct {
-		local.RepositoryBaseParams
-		Members []Member `hcl:"member" json:"members"`
-	}
+	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := FederatedRepositoryParams{

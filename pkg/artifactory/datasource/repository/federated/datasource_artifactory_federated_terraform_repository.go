@@ -13,22 +13,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-type TerraformFederatedRepositoryParams struct {
-	local.RepositoryBaseParams
-	Members []federated.Member `hcl:"member" json:"members"`
-}
-
 func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
 
 	terraformFederatedSchema := util.MergeMaps(
 		local.GetTerraformLocalSchema(registryType),
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packTerraformMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*TerraformFederatedRepositoryParams).Members
+		members := repo.(*federated.TerraformFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,13 +38,14 @@ func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *sch
 	)
 
 	constructor := func() (interface{}, error) {
-		return &TerraformFederatedRepositoryParams{
+		return &federated.TerraformFederatedRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: packageType,
 				Rclass:      rclass,
 			},
 		}, nil
 	}
+
 	return &schema.Resource{
 		Schema:      terraformFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),

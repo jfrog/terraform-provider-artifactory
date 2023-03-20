@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -16,19 +14,14 @@ import (
 func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	packageType := "debian"
 
-	type DebianFederatedRepositoryParams struct {
-		local.DebianLocalRepositoryParams
-		Members []federated.Member `hcl:"member" json:"members"`
-	}
-
 	debianFederatedSchema := util.MergeMaps(
 		local.DebianLocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packDebianMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*DebianFederatedRepositoryParams).Members
+		members := repo.(*federated.DebianFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +36,7 @@ func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &DebianFederatedRepositoryParams{
+		return &federated.DebianFederatedRepositoryParams{
 			DebianLocalRepositoryParams: local.DebianLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -56,6 +49,6 @@ func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      debianFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated debian repository"),
+		Description: "Provides a data source for a federated debian repository",
 	}
 }

@@ -9,17 +9,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+type AlpineFederatedRepositoryParams struct {
+	local.AlpineLocalRepoParams
+	Members []Member `hcl:"member" json:"members"`
+}
+
 func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	packageType := "alpine"
 
-	type AlpineFederatedRepositoryParams struct {
-		local.AlpineLocalRepoParams
-		Members []Member `hcl:"member" json:"members"`
-	}
-
 	alpineFederatedSchema := util.MergeMaps(
 		local.AlpineLocalSchema,
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

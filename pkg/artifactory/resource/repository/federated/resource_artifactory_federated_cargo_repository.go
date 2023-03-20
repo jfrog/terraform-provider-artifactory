@@ -9,17 +9,17 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+type CargoFederatedRepositoryParams struct {
+	local.CargoLocalRepoParams
+	Members []Member `hcl:"member" json:"members"`
+}
+
 func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	packageType := "cargo"
 
-	type CargoFederatedRepositoryParams struct {
-		local.CargoLocalRepoParams
-		Members []Member `hcl:"member" json:"members"`
-	}
-
 	cargoFederatedSchema := util.MergeMaps(
 		local.CargoLocalSchema,
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

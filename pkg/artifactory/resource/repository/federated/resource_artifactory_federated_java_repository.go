@@ -9,16 +9,16 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
+type JavaFederatedRepositoryParams struct {
+	local.JavaLocalRepositoryParams
+	Members []Member `hcl:"member" json:"members"`
+}
 
-	type JavaFederatedRepositoryParams struct {
-		local.JavaLocalRepositoryParams
-		Members []Member `hcl:"member" json:"members"`
-	}
+func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 
 	javaFederatedSchema := util.MergeMaps(
 		local.GetJavaRepoSchema(repoType, suppressPom),
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema("federated", repoType),
 	)
 

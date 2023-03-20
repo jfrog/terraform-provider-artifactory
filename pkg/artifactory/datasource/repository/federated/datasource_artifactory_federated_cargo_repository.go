@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
@@ -16,19 +14,14 @@ import (
 func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	packageType := "cargo"
 
-	type CargoFederatedRepositoryParams struct {
-		local.CargoLocalRepoParams
-		Members []federated.Member `hcl:"member" json:"members"`
-	}
-
 	cargoFederatedSchema := util.MergeMaps(
 		local.CargoLocalSchema,
-		MemberSchema,
+		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var packCargoMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*CargoFederatedRepositoryParams).Members
+		members := repo.(*federated.CargoFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -43,7 +36,7 @@ func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &CargoFederatedRepositoryParams{
+		return &federated.CargoFederatedRepositoryParams{
 			CargoLocalRepoParams: local.CargoLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -56,6 +49,6 @@ func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      cargoFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated cargo repository"),
+		Description: "Provides a data source for a federated cargo repository",
 	}
 }

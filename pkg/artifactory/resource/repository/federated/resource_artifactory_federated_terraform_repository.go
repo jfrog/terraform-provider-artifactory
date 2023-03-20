@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	terraformFederatedSchema := util.MergeMaps(
 		local.GetTerraformLocalSchema(registryType),
-		MemberSchema,
+		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

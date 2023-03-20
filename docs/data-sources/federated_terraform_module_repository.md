@@ -3,7 +3,7 @@ subcategory: "Federated Repositories"
 ---
 # Artifactory Federated Terraform Module Repository Data Source
 
-Retrieves a federated Generic repository.
+Retrieves a federated terraform module repository.
 
 ## Example Usage
 

@@ -13,21 +13,16 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func DataSourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-
-	type JavaFederatedRepositoryParams struct {
-		local.JavaLocalRepositoryParams
-		Members []federated.Member `hcl:"member" json:"members"`
-	}
+func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 
 	javaFederatedSchema := util.MergeMaps(
-		local.GetJavaRepoSchema(repoType, suppressPom),
-		MemberSchema,
-		resource_repository.RepoLayoutRefSchema("federated", repoType),
+		local.GetJavaRepoSchema(packageType, suppressPom),
+		memberSchema,
+		resource_repository.RepoLayoutRefSchema("federated", packageType),
 	)
 
 	var packJavaMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*JavaFederatedRepositoryParams).Members
+		members := repo.(*federated.JavaFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -42,10 +37,10 @@ func DataSourceArtifactoryFederatedJavaRepository(repoType string, suppressPom b
 	)
 
 	constructor := func() (interface{}, error) {
-		return &JavaFederatedRepositoryParams{
+		return &federated.JavaFederatedRepositoryParams{
 			JavaLocalRepositoryParams: local.JavaLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: repoType,
+					PackageType: packageType,
 					Rclass:      rclass,
 				},
 				SuppressPomConsistencyChecks: suppressPom,
@@ -56,6 +51,6 @@ func DataSourceArtifactoryFederatedJavaRepository(repoType string, suppressPom b
 	return &schema.Resource{
 		Schema:      javaFederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated %s repository", repoType),
+		Description: fmt.Sprintf("Provides a data source for a federated %s repository", packageType),
 	}
 }
