@@ -92,7 +92,7 @@ You can either access it via API, or web browser - it requires admin level crede
 $ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
 ```
 
-```js
+```json
 {
   "type" : "Enterprise Plus Trial",
   "validThrough" : "Jan 29, 2022",
@@ -108,6 +108,10 @@ The following 3 license types (`jq .type`) do **NOT** support APIs:
 ## Versioning
 
 In general, this project follows [Terraform Versioning Specification](https://www.terraform.io/plugin/sdkv2/best-practices/versioning#versioning-specification) as closely as we can for tagging releases of the package.
+
+## Developers Wiki
+
+You can find building, testing and debugging information in the [Developers Wiki](https://github.com/jfrog/terraform-provider-artifactory/wiki) on GitHub.
 
 ## Contributors
 See the [contribution guide](CONTRIBUTIONS.md).
