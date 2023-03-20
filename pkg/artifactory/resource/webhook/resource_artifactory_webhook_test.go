@@ -8,17 +8,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var domainRepoTypeLookup = map[string]string{
