@@ -3,13 +3,15 @@ package webhook_test
 import (
 	"context"
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -356,6 +358,12 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				Config: webhookConfig,
 				Check:  resource.ComposeTestCheckFunc(testChecks...),
 			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
 		},
 	}
 }
@@ -435,6 +443,12 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 			{
 				Config: config3,
 				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", thirdToken)),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
