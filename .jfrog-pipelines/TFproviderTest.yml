@@ -19,7 +19,7 @@ pipelines:
         configuration:
           #nodePool: default
           priority: 1
-          timeoutSeconds: 1800 # 30 minutes
+          timeoutSeconds: 2400 # 40 minutes
           runtime:
             type: image
             image:
@@ -71,8 +71,8 @@ pipelines:
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
-            - add_run_variables PROVIDER_VERSION=$(head -1 CHANGELOG.md | awk '{print $2}')
-            - export NEXT_PROVIDER_VERSION=$(echo ${PROVIDER_VERSION}| awk -F '.' '{print $1 "." $2 "." $3 +1 }')
+            - add_run_variables PROVIDER_VERSION=$(git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+            - export NEXT_PROVIDER_VERSION=${PROVIDER_VERSION}
             - echo "Provider version from the CHANGELOG.md ${PROVIDER_VERSION}"
             - echo ${NEXT_PROVIDER_VERSION}
             - echo "Rename the build to make it work on Ubuntu"

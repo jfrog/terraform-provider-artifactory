@@ -160,10 +160,10 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 		}
 
 		resource "artifactory_pull_replication" "{{ .repoconfig_name }}" {
-			repo_key = "{{ .remote_name }}"
-			cron_exp = "0 0 12 ? * MON *"
+			repo_key 				 = "{{ .remote_name }}"
+			cron_exp 				 = "0 0 12 ? * MON *"
 			enable_event_replication = false
-			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
+			depends_on 				 = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
 	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{

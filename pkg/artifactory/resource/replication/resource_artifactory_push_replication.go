@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/exp/slices"
 )
 
@@ -52,16 +53,6 @@ type UpdatePushReplication struct {
 	CronExp                string                  `json:"cronExp,omitempty"`
 	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
 	Replications           []updateReplicationBody `json:"replications,omitempty"`
-}
-
-var pushRepMultipleSchema = map[string]*schema.Schema{
-	"replications": {
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: pushReplicationSchema,
-		},
-	},
 }
 
 var pushReplicationSchema = map[string]*schema.Schema{
@@ -127,19 +118,30 @@ var pushReplicationSchema = map[string]*schema.Schema{
 	},
 }
 
-func ResourceArtifactoryPushReplication() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourcePushReplicationCreate,
-		ReadContext:   resourcePushReplicationRead,
-		UpdateContext: resourcePushReplicationUpdate,
-		DeleteContext: resourceReplicationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+var pushRepMultipleSchema = map[string]*schema.Schema{
+	"cron_exp": {
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: validator.CronLength,
+		Description:      "Cron expression to control the operation frequency.",
+	},
+	"repo_key": {
+		Type:     schema.TypeString,
+		Required: true,
+	},
+	"enable_event_replication": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set, each event will trigger replication of the artifacts changed in this event. This can be any type of event on artifact, e.g. add, deleted or property change. Default value is `false`.",
+	},
+	"replications": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: pushReplicationSchema,
 		},
-
-		Schema: util.MergeMaps(replicationSchemaCommon, pushRepMultipleSchema),
-	}
+	},
 }
 
 func unpackPushReplication(s *schema.ResourceData) UpdatePushReplication {
@@ -320,9 +322,19 @@ func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, 
 	return resourcePushReplicationRead(ctx, d, m)
 }
 
-func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().
-		AddRetryCondition(client.RetryOnMergeError).
-		Delete(EndpointPath + d.Id())
-	return diag.FromErr(err)
+func ResourceArtifactoryPushReplication() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourcePushReplicationCreate,
+		ReadContext:   resourcePushReplicationRead,
+		UpdateContext: resourcePushReplicationUpdate,
+		DeleteContext: resourceReplicationDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema:             pushRepMultipleSchema,
+		Description:        "Add or replace multiple replication configurations for given repository key. Supported by local repositories. Artifactory Enterprise license is required.",
+		DeprecationMessage: "This resource is replaced by `artifactory_local_repository_multi_replication` for clarity. All the attributes are identical, please consider the migration.",
+	}
 }
