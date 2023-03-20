@@ -31,6 +31,7 @@ func skipFederatedRepo() (bool, string) {
 }
 
 // In order to run this test, make sure your environment variables are set properly:
+// https://github.com/jfrog/terraform-provider-artifactory/wiki/Testing#enable-acceptance-tests
 func TestAccFederatedRepoWithMembers(t *testing.T) {
 	if skip, reason := skipFederatedRepo(); skip {
 		t.Skipf(reason)
