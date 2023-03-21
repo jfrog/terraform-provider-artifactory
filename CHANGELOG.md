@@ -1,3 +1,11 @@
+## 6.34.0 (March 21, 2023).
+
+FEATURES:
+
+* datasource/artifactory_federated_*_repository: Adds new data sources for all federated repository package types.
+  PR:   [#703](https://github.com/jfrog/terraform-provider-artifactory/pull/703)
+  Issue:[#679](https://github.com/jfrog/terraform-provider-artifactory/issues/679)
+
 ## 6.33.0 (March 17, 2023). Tested on Artifactory 7.49.8
 
 IMPROVEMENTS:
@@ -20,7 +28,7 @@ Issue: [#679](https://github.com/jfrog/terraform-provider-artifactory/issues/679
 FEATURES:
 
 * datasource/artifactory_remote_*_repository: Adds new data sources for all remote repository package types.
-  PR:    [#689](https://github.com/jfrog/terraform-provider-artifactory/pull/689) 
+  PR:    [#689](https://github.com/jfrog/terraform-provider-artifactory/pull/689)
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
 
 ## 6.31.1 (March 6, 2023). Tested on Artifactory 7.49.8
