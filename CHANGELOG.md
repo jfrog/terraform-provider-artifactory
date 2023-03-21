@@ -1,3 +1,13 @@
+## 7.4.0 (March 20, 2023). Tested on Artifactory 7.55.8
+
+FEATURES:
+
+* datasource/artifactory_federated_*_repository: Adds new data sources for all federated repository package types.
+  PR:     [#693](https://github.com/jfrog/terraform-provider-artifactory/pull/693)
+  Issues:
+  * [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
+  * [#692](https://github.com/jfrog/terraform-provider-artifactory/issues/692)
+
 ## 7.3.1 (March 17, 2023). Tested on Artifactory 7.55.8
 
 BUG FIXES:
@@ -20,7 +30,7 @@ IMPROVEMENTS:
 IMPROVEMENTS:
 
 * resource/artifactory_scoped_token: When `expires_in` attribute is set to value that is less than Artifactory's persistency threshold then the token is created but never saved to the database. Add a warning message so users can potentially figure out why the Terraform state is invalid.
-  PR:    [#691](https://github.com/jfrog/terraform-provider-artifactory/pull/691) 
+  PR:    [#691](https://github.com/jfrog/terraform-provider-artifactory/pull/691)
   Issue: [#684](https://github.com/jfrog/terraform-provider-artifactory/issues/684)
 
 ## 7.2.0 (March 6, 2023). Tested on Artifactory 7.55.6
@@ -28,7 +38,7 @@ IMPROVEMENTS:
 FEATURES:
 
 * datasource/artifactory_remote_*_repository: Adds new data sources for all remote repository package types.
-  PR:    [#682](https://github.com/jfrog/terraform-provider-artifactory/pull/682) 
+  PR:    [#682](https://github.com/jfrog/terraform-provider-artifactory/pull/682)
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
 
 ## 7.1.3 (March 6, 2023). Tested on Artifactory 7.55.4

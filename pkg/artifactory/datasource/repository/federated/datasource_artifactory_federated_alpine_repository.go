@@ -2,38 +2,27 @@ package federated
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-type AlpineFederatedRepositoryParams struct {
-	local.AlpineLocalRepoParams
-	Members []Member `hcl:"member" json:"members"`
-}
-
-func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
+func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	packageType := "alpine"
 
 	alpineFederatedSchema := util.MergeMaps(
 		local.AlpineLocalSchema,
 		memberSchema,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
-	var unpackFederatedAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := AlpineFederatedRepositoryParams{
-			AlpineLocalRepoParams: local.UnpackLocalAlpineRepository(data, rclass),
-			Members:               unpackMembers(data),
-		}
-		return repo, repo.Id(), nil
-	}
-
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*AlpineFederatedRepositoryParams).Members
-		return PackMembers(members, d)
+		members := repo.(*federated.AlpineFederatedRepositoryParams).Members
+		return federated.PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -47,7 +36,7 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &AlpineFederatedRepositoryParams{
+		return &federated.AlpineFederatedRepositoryParams{
 			AlpineLocalRepoParams: local.AlpineLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
@@ -57,5 +46,9 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(alpineFederatedSchema, pkr, unpackFederatedAlpineRepository, constructor)
+	return &schema.Resource{
+		Schema:      alpineFederatedSchema,
+		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
+		Description: "Provides a data source for a federated alpine repository",
+	}
 }

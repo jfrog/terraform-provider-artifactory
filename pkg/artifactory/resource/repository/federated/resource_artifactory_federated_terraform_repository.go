@@ -33,7 +33,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	var packTerraformMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*TerraformFederatedRepositoryParams).Members
-		return packMembers(members, d)
+		return PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
