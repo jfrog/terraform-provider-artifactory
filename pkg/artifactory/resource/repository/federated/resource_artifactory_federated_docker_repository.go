@@ -33,7 +33,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*DockerFederatedRepositoryParams).Members
-		return packMembers(members, d)
+		return PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
@@ -79,7 +79,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*DockerFederatedRepositoryParams).Members
-		return packMembers(members, d)
+		return PackMembers(members, d)
 	}
 
 	pkr := packer.Compose(
