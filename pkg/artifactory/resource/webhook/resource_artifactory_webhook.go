@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
 )
@@ -261,7 +262,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
-		_, err := m.(*resty.Client).R().
+		_, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
 			Get(WhUrl)
@@ -287,7 +288,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(*resty.Client).R().
+		_, err = m.(util.ProvderMetadata).Client.R().
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
 			Post(webhooksUrl)
@@ -308,7 +309,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(*resty.Client).R().
+		_, err = m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
@@ -325,7 +326,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "deleteWebhook")
 
-		resp, err := m.(*resty.Client).R().
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			Delete(WhUrl)
 

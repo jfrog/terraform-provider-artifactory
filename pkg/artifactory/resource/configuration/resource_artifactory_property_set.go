@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
@@ -203,7 +203,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 		propertySetConfigs := PropertySets{}
 
-		_, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -276,7 +276,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	var resourcePropertySetDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
 
-		response, err := m.(*resty.Client).R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

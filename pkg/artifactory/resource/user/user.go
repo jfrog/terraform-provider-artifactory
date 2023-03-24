@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -122,7 +122,7 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 
 	userName := d.Id()
 	user := User{}
-	resp, err := m.(*resty.Client).R().SetResult(&user).Get(UsersEndpointPath + userName)
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -143,7 +143,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(*resty.Client).R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -154,7 +154,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if user.Groups == nil {
 		user.Groups = []string{}
-		_, errGroupUpdate := m.(*resty.Client).R().SetBody(user).Post(UsersEndpointPath + user.Name)
+		_, errGroupUpdate := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			return diag.FromErr(errGroupUpdate)
 		}
@@ -164,7 +164,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		result := &User{}
-		resp, e := m.(*resty.Client).R().SetResult(result).Get(UsersEndpointPath + user.Name)
+		resp, e := m.(util.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
 
 		if e != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -187,7 +187,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
-	_, err := m.(*resty.Client).R().SetBody(user).Post(UsersEndpointPath + user.Name)
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,7 +201,7 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	d := &util.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(*resty.Client).R().Delete(UsersEndpointPath + userName)
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

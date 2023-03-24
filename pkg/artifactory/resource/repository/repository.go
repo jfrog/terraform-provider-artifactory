@@ -65,7 +65,7 @@ func MkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(*resty.Client).R().
+		_, err = m.(util.ProvderMetadata).Client.R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			SetPathParam("key", key).
@@ -87,7 +87,7 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 		}
 
 		// repo must be a pointer
-		resp, err := m.(*resty.Client).R().
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetResult(repo).
 			SetPathParam("key", d.Id()).
 			Get(RepositoriesEndpoint)
@@ -110,7 +110,7 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(*resty.Client).R().
+		_, err = m.(util.ProvderMetadata).Client.R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			SetPathParam("key", d.Id()).
@@ -135,9 +135,9 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 
 			var err error
 			if assignToProject {
-				err = assignRepoToProject(key, newProjectKey, m.(*resty.Client))
+				err = assignRepoToProject(key, newProjectKey, m.(util.ProvderMetadata).Client)
 			} else if unassignFromProject {
-				err = unassignRepoFromProject(key, m.(*resty.Client))
+				err = unassignRepoFromProject(key, m.(util.ProvderMetadata).Client)
 			}
 
 			if err != nil {
@@ -167,7 +167,7 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 }
 
 func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
@@ -184,7 +184,7 @@ func Retry400(response *resty.Response, _ error) bool {
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := CheckRepo(d.Id(), m.(*resty.Client).R().AddRetryCondition(Retry400))
+	_, err := CheckRepo(d.Id(), m.(util.ProvderMetadata).Client.R().AddRetryCondition(Retry400))
 	return err == nil, err
 }
 

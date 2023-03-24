@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
@@ -206,7 +207,7 @@ var keyPairPacker = packer.Universal(
 func createKeyPair(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
 
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(keyPair).
 		Post(KeypairEndPoint)
@@ -236,7 +237,7 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 }
 
 func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(KeypairEndPoint + d.Id())
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(KeypairEndPoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

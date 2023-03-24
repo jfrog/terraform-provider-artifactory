@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -44,7 +44,7 @@ func ResourceArtifactoryAnonymousUser() *schema.Resource {
 
 		userName := d.Id()
 		user := &AnonymousUser{}
-		resp, err := m.(*resty.Client).R().SetResult(user).Get(UsersEndpointPath + userName)
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(user).Get(UsersEndpointPath + userName)
 
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
