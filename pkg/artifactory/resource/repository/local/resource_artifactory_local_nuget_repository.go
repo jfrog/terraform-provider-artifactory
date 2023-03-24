@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const nugetPackageType = "nuget"
+
 var NugetLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
@@ -25,7 +27,7 @@ var NugetLocalSchema = util.MergeMaps(
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "nuget"),
+	repository.RepoLayoutRefSchema(rclass, nugetPackageType),
 )
 
 type NugetLocalRepositoryParams struct {
@@ -37,7 +39,7 @@ type NugetLocalRepositoryParams struct {
 func UnpackLocalNugetRepository(data *schema.ResourceData, rclass string) NugetLocalRepositoryParams {
 	d := &util.ResourceData{ResourceData: data}
 	return NugetLocalRepositoryParams{
-		RepositoryBaseParams:     UnpackBaseRepo(rclass, data, "nuget"),
+		RepositoryBaseParams:     UnpackBaseRepo(rclass, data, nugetPackageType),
 		MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
 		ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 	}
@@ -53,8 +55,8 @@ func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &NugetLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: "nuget",
-				Rclass:      "local",
+				PackageType: nugetPackageType,
+				Rclass:      rclass,
 			},
 			MaxUniqueSnapshots:       0,
 			ForceNugetAuthentication: false,

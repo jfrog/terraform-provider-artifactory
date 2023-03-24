@@ -12,15 +12,82 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"golang.org/x/exp/slices"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const defaultProjectKey = "default"
+
+var BaseRepoSchema = map[string]*schema.Schema{
+	"key": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ForceNew:     true,
+		ValidateFunc: RepoKeyValidator,
+		Description:  "A mandatory identifier for the repository that must be unique. Must be 3 - 10 lowercase alphanumeric and hyphen characters. It cannot begin with a number or contain spaces or special characters.",
+	},
+	"project_key": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          "default",
+		ValidateDiagFunc: validator.ProjectKey,
+		Description:      "Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+	},
+	"project_environments": {
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		MinItems: 1,
+		MaxItems: 2,
+		Set:      schema.HashString,
+		Optional: true,
+		Computed: true,
+		Description: "Project environment for assigning this repository to. Allow values: \"DEV\", \"PROD\", or one of custom environment. " +
+			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
+			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
+			"state drift during the update.",
+	},
+	"package_type": {
+		Type:     schema.TypeString,
+		Required: false,
+		Computed: true,
+		ForceNew: true,
+	},
+	"description": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Public description.",
+	},
+	"notes": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Internal description.",
+	},
+	"includes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "**/*",
+		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
+			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+	},
+	"excludes_pattern": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
+			"By default no artifacts are excluded.",
+	},
+	"repo_layout_ref": {
+		Type:     schema.TypeString,
+		Optional: true,
+		// The default value in the UI is simple-default, in API maven-2-default. Provider will always override it ro math the UI.
+		ValidateDiagFunc: ValidateRepoLayoutRefSchemaOverride,
+		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
+	},
+}
 
 var CompressionFormats = map[string]*schema.Schema{
 	"index_compression_formats": {
@@ -263,14 +330,20 @@ func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
 	return value
 }
 
-func ProjectEnvironmentsDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+const CustomProjectEnvironmentSupportedVersion = "7.53.1"
+
+func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
+		providerMetadata := meta.(util.ProvderMetadata)
 
-		for _, projectEnvironment := range projectEnvironments {
-			if !slices.Contains(ProjectEnvironmentsSupported, projectEnvironment.(string)) {
-				return fmt.Errorf("project_environment %s not allowed", projectEnvironment)
-			}
+		isSupported, err := util.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
+		if err != nil {
+			return fmt.Errorf("Failed to check version %s", err)
+		}
+
+		if len(projectEnvironments) == 2 && isSupported {
+			return fmt.Errorf("For Artifactory %s or later, only one environment can be assigned to a repository.", CustomProjectEnvironmentSupportedVersion)
 		}
 	}
 

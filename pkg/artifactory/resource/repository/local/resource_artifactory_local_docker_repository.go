@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-const packageType = "docker"
+const dockerPackageType = "docker"
 
 type DockerLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -55,7 +55,7 @@ var DockerV2LocalSchema = util.MergeMaps(
 func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
 	d := &util.ResourceData{ResourceData: data}
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, packageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, dockerPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		DockerApiVersion:     "V2",
 		TagRetention:         d.GetInt("tag_retention", false),
@@ -74,7 +74,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: dockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V2",
@@ -108,12 +108,12 @@ var DockerV1LocalSchema = util.MergeMaps(
 			Computed: true,
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "docker"),
+	repository.RepoLayoutRefSchema(rclass, "docker"),
 )
 
 func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, packageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, dockerPackageType),
 		DockerApiVersion:     "V1",
 		MaxUniqueTags:        0,
 		TagRetention:         1,
@@ -133,7 +133,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: dockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V1",

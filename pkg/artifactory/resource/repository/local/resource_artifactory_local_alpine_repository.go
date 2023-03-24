@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const alpinePackageType = "alpine"
+
 var AlpineLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
@@ -17,7 +19,7 @@ var AlpineLocalSchema = util.MergeMaps(
 				"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "alpine"),
+	repository.RepoLayoutRefSchema(rclass, alpinePackageType),
 	repository.CompressionFormats,
 )
 
@@ -29,7 +31,7 @@ type AlpineLocalRepoParams struct {
 func UnpackLocalAlpineRepository(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
 	d := &util.ResourceData{ResourceData: data}
 	return AlpineLocalRepoParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "alpine"),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, alpinePackageType),
 		PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),
 	}
 }
@@ -43,7 +45,7 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &AlpineLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: "alpine",
+				PackageType: alpinePackageType,
 				Rclass:      rclass,
 			},
 		}, nil

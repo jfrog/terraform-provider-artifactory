@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 type RepositoryBaseParams struct {
@@ -53,89 +52,28 @@ var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"cran",
 }
 
-var BaseVirtualRepoSchema = map[string]*schema.Schema{
-	"key": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The Repository Key. A mandatory identifier for the repository and must be unique. It cannot begin with a number or contain spaces or special characters. For local repositories, we recommend using a '-local' suffix (e.g. 'libs-release-local').",
+var BaseVirtualRepoSchema = util.MergeMaps(
+	repository.BaseRepoSchema,
+	map[string]*schema.Schema{
+		"repositories": {
+			Type:        schema.TypeList,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Optional:    true,
+			Description: "The effective list of actual repositories included in this virtual repository.",
+		},
+		"artifactory_requests_can_retrieve_remote_artifacts": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
+		},
+		"default_deployment_repo": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Default repository to deploy artifacts.",
+		},
 	},
-	"project_key": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          "default",
-		ValidateDiagFunc: validator.ProjectKey,
-		Description:      "Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
-	},
-	"project_environments": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		MaxItems: 2,
-		Set:      schema.HashString,
-		Optional: true,
-		Computed: true,
-		Description: "Project environment for assigning this repository to. Allow values: \"DEV\" or \"PROD\". " +
-			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
-			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
-			"state drift during the update.",
-	},
-	"package_type": {
-		Type:        schema.TypeString,
-		Required:    false,
-		Computed:    true,
-		ForceNew:    true,
-		Description: "The Package Type. This must be specified when the repository is created, and once set, cannot be changed.",
-	},
-	"description": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Description: "A free text field that describes the content and purpose of the repository. " +
-			"If you choose to insert a link into this field, clicking the link will prompt the user to confirm that " +
-			"they might be redirected to a new domain.",
-	},
-	"notes": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "A free text field to add additional notes about the repository. These are only visible to the administrator.",
-	},
-	"includes_pattern": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  "**/*",
-		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
-			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
-	},
-	"excludes_pattern": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
-			"By default no artifacts are excluded.",
-	},
-	"repo_layout_ref": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: repository.ValidateRepoLayoutRefSchemaOverride,
-		Description:      "Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.",
-	},
-	"repositories": {
-		Type:        schema.TypeList,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: "The effective list of actual repositories included in this virtual repository.",
-	},
-
-	"artifactory_requests_can_retrieve_remote_artifacts": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
-	},
-	"default_deployment_repo": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Default repository to deploy artifacts.",
-	},
-}
+)
 
 func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
 	d := &util.ResourceData{ResourceData: s}

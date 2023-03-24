@@ -10,7 +10,7 @@ import (
 func GetTerraformLocalSchema(registryType string) map[string]*schema.Schema {
 	return util.MergeMaps(
 		BaseLocalRepoSchema,
-		repository.RepoLayoutRefSchema("local", "terraform_"+registryType),
+		repository.RepoLayoutRefSchema(rclass, "terraform_"+registryType),
 	)
 }
 
