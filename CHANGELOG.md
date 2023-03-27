@@ -1,3 +1,11 @@
+## 7.4.1 (March 28, 2023)
+
+IMPROVEMENTS:
+
+* resource/artifactory_*_repository: Updates `project_environments` attribute validation. Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 onward, only one value (`DEV`, `PROD`, or one of custom environment) is allowed.
+PR:    [#706](https://github.com/jfrog/terraform-provider-artifactory/pull/706)
+Issue: [#705](https://github.com/jfrog/terraform-provider-artifactory/issues/705)
+
 ## 7.4.0 (March 20, 2023). Tested on Artifactory 7.55.8
 
 FEATURES:
