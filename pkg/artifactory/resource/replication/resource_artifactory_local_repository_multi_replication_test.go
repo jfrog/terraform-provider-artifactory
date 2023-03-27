@@ -12,23 +12,29 @@ import (
 )
 
 func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
-	const invalidCron = `
-		resource "artifactory_local_maven_repository" "lib-local" {
-			key = "lib-local"
+	_, _, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	params := map[string]interface{}{
+		"repo_name": name,
+	}
+	invalidCron := util.ExecuteTemplate(
+		"TestAccLocalMultiReplicationInvalidPushCronFails",
+		`resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
 		}
 
-		resource "artifactory_local_repository_multi_replication" "lib-local" {
-			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
+		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
+			repo_key = "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
 			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
 
 			replication {
 				url = "http://localhost:8080"
-				username = "%s"
-				password = "%s"
+				username = "test-user"
+				password = "test-password"
 			}
-		}
-	`
+		}`,
+		params)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -42,23 +48,30 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 }
 
 func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
-	const invalidUrl = `
-		resource "artifactory_local_maven_repository" "lib-local" {
-			key = "lib-local"
+	_, _, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	params := map[string]interface{}{
+		"repo_name": name,
+	}
+	invalidUrl := util.ExecuteTemplate(
+		"TestAccLocalMultiReplicationInvalidUrlFails",
+		`resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
 		}
 
-		resource "artifactory_local_repository_multi_replication" "lib-local" {
-			repo_key = "${artifactory_local_maven_repository.lib-local.key}"
-			cron_exp = "0 0 * * * ?"
+		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
+			repo_key = "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
+			cron_exp = "0 0 blah foo boo ?"
 			enable_event_replication = true
 
 			replication {
 				url = "not a URL"
-				username = "%s"
-				password = "Passw0rd!"
+				username = "test-user"
+				password = "test-password"
 			}
-		}
-	`
+		}`,
+		params,
+	)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
