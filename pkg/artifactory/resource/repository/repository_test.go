@@ -125,7 +125,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 	})
 }
 
-func TestAccRepository_CanSetTwoProjectEnvironments(t *testing.T) {
+func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
@@ -158,8 +158,7 @@ func TestAccRepository_CanSetTwoProjectEnvironments(t *testing.T) {
 			{
 				SkipFunc: func() (bool, error) {
 					meta := acctest.Provider.Meta().(util.ProvderMetadata)
-					isSupported, err := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
-					return isSupported, err
+					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
@@ -172,7 +171,49 @@ func TestAccRepository_CanSetTwoProjectEnvironments(t *testing.T) {
 	})
 }
 
-func TestAccRepository_InvalidProjectEnvironments_7_53_1(t *testing.T) {
+func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+
+	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = "{{ .projectKey }}"
+	 	  project_environments = ["Foo"]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.CreateProject(t, projectKey)
+		},
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			acctest.DeleteProject(t, projectKey)
+			return acctest.CheckRepo(id, request)
+		}),
+		Steps: []resource.TestStep{
+			{
+				SkipFunc: func() (bool, error) {
+					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+				},
+				Config:      localRepositoryBasic,
+				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
+			},
+		},
+	})
+}
+
+func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", test.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/exp/slices"
 
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
@@ -342,8 +343,17 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, met
 			return fmt.Errorf("Failed to check version %s", err)
 		}
 
-		if len(projectEnvironments) == 2 && isSupported {
-			return fmt.Errorf("For Artifactory %s or later, only one environment can be assigned to a repository.", CustomProjectEnvironmentSupportedVersion)
+		if isSupported {
+			if len(projectEnvironments) == 2 {
+				return fmt.Errorf("For Artifactory %s or later, only one environment can be assigned to a repository.", CustomProjectEnvironmentSupportedVersion)
+			}
+		} else { // Before 7.53.1
+			projectEnvironments := data.(*schema.Set).List()
+			for _, projectEnvironment := range projectEnvironments {
+				if !slices.Contains(ProjectEnvironmentsSupported, projectEnvironment.(string)) {
+					return fmt.Errorf("project_environment %s not allowed", projectEnvironment)
+				}
+			}
 		}
 	}
 
