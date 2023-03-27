@@ -48,6 +48,7 @@ var BaseRepoSchema = map[string]*schema.Schema{
 		Optional: true,
 		Computed: true,
 		Description: "Project environment for assigning this repository to. Allow values: \"DEV\", \"PROD\", or one of custom environment. " +
+			"Before Artifactory 7.53.1, up to 2 values (\"DEV\" and \"PROD\") are allowed. From 7.53.1 onward, only one value is allowed. " +
 			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
 			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
 			"state drift during the update.",
