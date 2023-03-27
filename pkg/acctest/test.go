@@ -200,9 +200,8 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
-	restyClient := GetTestResty(t)
 
-	err := configuration.SendConfigurationPatch(body, restyClient)
+	err := configuration.SendConfigurationPatch(body, Provider.Meta())
 	if err != nil {
 		t.Fatal(err)
 	}

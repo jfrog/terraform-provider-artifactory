@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -272,7 +272,7 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_ldap_setting."+id]
 		if !ok {

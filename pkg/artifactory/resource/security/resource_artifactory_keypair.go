@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -221,7 +220,7 @@ func createKeyPair(ctx context.Context, d *schema.ResourceData, m interface{}) d
 func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	data := KeyPairPayLoad{}
-	resp, err := meta.(*resty.Client).R().SetResult(&data).Get(KeypairEndPoint + d.Id())
+	resp, err := meta.(util.ProvderMetadata).Client.R().SetResult(&data).Get(KeypairEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
