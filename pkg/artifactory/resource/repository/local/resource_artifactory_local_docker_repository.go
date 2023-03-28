@@ -49,7 +49,7 @@ var DockerV2LocalSchema = util.MergeMaps(
 			Description: "The Docker API version to use. This cannot be set",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "docker"),
+	repository.RepoLayoutRefSchema(rclass, dockerPackageType),
 )
 
 func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
@@ -108,7 +108,7 @@ var DockerV1LocalSchema = util.MergeMaps(
 			Computed: true,
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, "docker"),
+	repository.RepoLayoutRefSchema(rclass, dockerPackageType),
 )
 
 func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
