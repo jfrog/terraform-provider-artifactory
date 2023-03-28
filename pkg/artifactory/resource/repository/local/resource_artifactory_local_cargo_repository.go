@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const cargoPackageType = "cargo"
+
 var CargoLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
@@ -23,7 +25,7 @@ var CargoLocalSchema = util.MergeMaps(
 			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "cargo"),
+	repository.RepoLayoutRefSchema(rclass, cargoPackageType),
 	repository.CompressionFormats,
 )
 
@@ -36,7 +38,7 @@ type CargoLocalRepoParams struct {
 func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
 	d := &util.ResourceData{ResourceData: data}
 	return CargoLocalRepoParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, "cargo"),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, cargoPackageType),
 		AnonymousAccess:      d.GetBool("anonymous_access", false),
 		EnableSparseIndex:    d.GetBool("enable_sparse_index", false),
 	}
@@ -52,8 +54,8 @@ func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &CargoLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: "cargo",
-				Rclass:      "local",
+				PackageType: cargoPackageType,
+				Rclass:      rclass,
 			},
 		}, nil
 	}

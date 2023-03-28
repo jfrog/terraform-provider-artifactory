@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
@@ -162,7 +162,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 		key := data.GetString("key", false)
 
 		proxiesConfig := Proxies{}
-		_, err := m.(*resty.Client).R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -208,7 +208,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	var resourceProxyDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		proxiesConfig := &Proxies{}
 
-		response, err := m.(*resty.Client).R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

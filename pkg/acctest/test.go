@@ -18,6 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -85,9 +86,9 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		c := Provider.Meta().(*resty.Client)
+		providerMeta := Provider.Meta().(util.ProvderMetadata)
 
-		resp, err := check(rs.Primary.ID, c.R())
+		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
 			if resp != nil {
 				switch resp.StatusCode() {
@@ -199,9 +200,8 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
-	restyClient := GetTestResty(t)
 
-	err := configuration.SendConfigurationPatch(body, restyClient)
+	err := configuration.SendConfigurationPatch(body, Provider.Meta())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,9 +3,9 @@ package configuration
 import (
 	"context"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v3"
 )
@@ -191,7 +191,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 	}
 
 	var resourceOauthSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		c := m.(*resty.Client)
+		c := m.(util.ProvderMetadata).Client
 
 		oauthSettings := OauthSettings{}
 

@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const debianPackageType = "debian"
+
 var DebianLocalSchema = util.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
@@ -28,7 +30,7 @@ var DebianLocalSchema = util.MergeMaps(
 			Deprecated:  "You shouldn't be using this",
 		},
 	},
-	repository.RepoLayoutRefSchema("local", "debian"),
+	repository.RepoLayoutRefSchema(rclass, debianPackageType),
 	repository.CompressionFormats,
 )
 
@@ -43,7 +45,7 @@ type DebianLocalRepositoryParams struct {
 func UnpackLocalDebianRepository(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
 	d := &util.ResourceData{ResourceData: data}
 	return DebianLocalRepositoryParams{
-		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, "debian"),
+		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, debianPackageType),
 		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
 		SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
 		TrivialLayout:           d.GetBool("trivial_layout", false),
@@ -61,8 +63,8 @@ func ResourceArtifactoryLocalDebianRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &DebianLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: "debian",
-				Rclass:      "local",
+				PackageType: debianPackageType,
+				Rclass:      rclass,
 			},
 		}, nil
 	}

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -159,7 +159,7 @@ func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Di
 func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Put(EndpointPath + replicationConfig.RepoKey)
@@ -174,7 +174,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(*resty.Client).R().SetResult(&result).Get(EndpointPath + d.Id())
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -203,7 +203,7 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + replicationConfig.RepoKey)

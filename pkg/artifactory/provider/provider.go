@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,8 +100,33 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
+	version, err := getArtifactoryVersion(restyBase)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
 	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	return restyBase, nil
+	return util.ProvderMetadata{
+		Client:             restyBase,
+		ArtifactoryVersion: version,
+	}, nil
+}
+
+func getArtifactoryVersion(client *resty.Client) (string, error) {
+	type ArtifactoryVersion struct {
+		Version string `json:"version"`
+	}
+
+	artifactoryVersion := ArtifactoryVersion{}
+	_, err := client.R().
+		SetResult(&artifactoryVersion).
+		Get("/artifactory/api/system/version")
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to get Artifactory version. %s", err)
+	}
+
+	return artifactoryVersion.Version, nil
 }
