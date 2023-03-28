@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -156,7 +157,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + group.Name)
+	_, err = m.(util.ProvderMetadata).Client.R().SetBody(group).Put(GroupsEndpoint + group.Name)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -190,7 +191,7 @@ func resourceGroupRead(_ context.Context, d *schema.ResourceData, m interface{})
 
 	group := Group{}
 	url := fmt.Sprintf("%s%s?includeUsers=%t", GroupsEndpoint, d.Id(), includeUsers)
-	resp, err := m.(*resty.Client).R().SetResult(&group).Get(url)
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&group).Get(url)
 
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -220,12 +221,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 	// this results in a group where users are not managed by artifactory if users_names is not set.
 
 	if includeUsers {
-		_, err := m.(*resty.Client).R().SetBody(group).Put(GroupsEndpoint + d.Id())
+		_, err := m.(util.ProvderMetadata).Client.R().SetBody(group).Put(GroupsEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
-		_, err = m.(*resty.Client).R().SetBody(group).Post(GroupsEndpoint + d.Id())
+		_, err = m.(util.ProvderMetadata).Client.R().SetBody(group).Post(GroupsEndpoint + d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -236,7 +237,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 func resourceGroupDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().Delete(GroupsEndpoint + d.Id())
+	resp, err := m.(util.ProvderMetadata).Client.R().Delete(GroupsEndpoint + d.Id())
 
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
 		d.SetId("")
@@ -246,7 +247,7 @@ func resourceGroupDelete(_ context.Context, d *schema.ResourceData, m interface{
 }
 
 func resourceGroupExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	return groupExists(m.(*resty.Client), d.Id())
+	return groupExists(m.(util.ProvderMetadata).Client, d.Id())
 }
 
 func groupExists(client *resty.Client, groupName string) (bool, error) {

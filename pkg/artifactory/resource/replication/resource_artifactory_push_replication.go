@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -277,7 +277,7 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
@@ -289,7 +289,7 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*resty.Client)
+	c := m.(util.ProvderMetadata).Client
 	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -311,7 +311,7 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + "multiple/" + d.Id())

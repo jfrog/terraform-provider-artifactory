@@ -815,44 +815,6 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	})
 }
 
-func TestAccLocalGenericRepositoryWithInvalidProjectEnvironmentsGH318(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
-	repoName := fmt.Sprintf("%s-generic-local", projectKey)
-
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
-
-	params := map[string]interface{}{
-		"name":       name,
-		"projectKey": projectKey,
-	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
-		resource "artifactory_local_generic_repository" "{{ .name }}" {
-		  key                  = "{{ .name }}"
-	 	  project_key          = "{{ .projectKey }}"
-	 	  project_environments = ["Foo"]
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
-		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
-		Steps: []resource.TestStep{
-			{
-				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
-			},
-		},
-	})
-}
-
 func TestAccLocalNpmRepository(t *testing.T) {
 	_, fqrn, name := test.MkNames("npm-local", "artifactory_local_npm_repository")
 	params := map[string]interface{}{

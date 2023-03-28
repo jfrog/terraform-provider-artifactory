@@ -3,8 +3,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/predicate"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/predicate"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -248,7 +248,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 
 		id := data.Id()
 
-		resp, err := m.(*resty.Client).R().
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("id", id).
 			SetResult(&accessToken).
 			Get("access/api/v1/tokens/{id}")
@@ -301,7 +301,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		accessToken.GrantType = "client_credentials"
 
 		result := AccessTokenPostResponse{}
-		_, err = m.(*resty.Client).R().
+		_, err = m.(util.ProvderMetadata).Client.R().
 			SetBody(accessToken).
 			SetResult(&result).
 			Post("access/api/v1/tokens")
@@ -323,7 +323,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		respError := AccessTokenErrorResponse{}
 		id := data.Id()
 
-		_, err := m.(*resty.Client).R().
+		_, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("id", id).
 			SetError(&respError).
 			Delete("access/api/v1/tokens/{id}")

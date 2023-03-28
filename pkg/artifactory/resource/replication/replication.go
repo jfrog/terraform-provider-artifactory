@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const EndpointPath = "artifactory/api/replications/"
@@ -23,7 +24,7 @@ var replicationSchemaEnableEventReplication = map[string]*schema.Schema{
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(*resty.Client).R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		Delete(EndpointPath + d.Id())
 	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
@@ -39,7 +40,7 @@ type repoConfiguration struct {
 
 func getRepositoryRclass(repoKey string, m interface{}) (string, error) {
 	repoConfig := repoConfiguration{}
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetResult(&repoConfig).
 		Get("artifactory/api/repositories/" + repoKey)
 	if err != nil {

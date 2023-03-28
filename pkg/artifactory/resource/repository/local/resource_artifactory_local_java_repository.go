@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func GetJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Schema {
+func GetJavaRepoSchema(packageType string, suppressPom bool) map[string]*schema.Schema {
 	return util.MergeMaps(
 		BaseLocalRepoSchema,
 		map[string]*schema.Schema{
@@ -65,7 +65,7 @@ func GetJavaRepoSchema(repoType string, suppressPom bool) map[string]*schema.Sch
 					"behavior by setting the Suppress POM Consistency Checks checkbox.",
 			},
 		},
-		repository.RepoLayoutRefSchema("local", repoType),
+		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 }
 
@@ -79,10 +79,10 @@ type JavaLocalRepositoryParams struct {
 	SuppressPomConsistencyChecks bool   `hcl:"suppress_pom_consistency_checks" json:"suppressPomConsistencyChecks"`
 }
 
-var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, repoType string) JavaLocalRepositoryParams {
+var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, packageType string) JavaLocalRepositoryParams {
 	d := &util.ResourceData{ResourceData: data}
 	return JavaLocalRepositoryParams{
-		RepositoryBaseParams:         UnpackBaseRepo(rclass, data, repoType),
+		RepositoryBaseParams:         UnpackBaseRepo(rclass, data, packageType),
 		ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
 		SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
 		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
@@ -92,19 +92,19 @@ var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, r
 	}
 }
 
-func ResourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
+func ResourceArtifactoryLocalJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalJavaRepository(data, "local", repoType)
+		repo := UnpackLocalJavaRepository(data, rclass, packageType)
 		return repo, repo.Id(), nil
 	}
 
-	javaLocalSchema := GetJavaRepoSchema(repoType, suppressPom)
+	javaLocalSchema := GetJavaRepoSchema(packageType, suppressPom)
 
 	constructor := func() (interface{}, error) {
 		return &JavaLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: repoType,
-				Rclass:      "local",
+				PackageType: packageType,
+				Rclass:      rclass,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil

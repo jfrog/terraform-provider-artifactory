@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -142,7 +142,7 @@ func TestAccManagedUser(t *testing.T) {
 
 func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*resty.Client)
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

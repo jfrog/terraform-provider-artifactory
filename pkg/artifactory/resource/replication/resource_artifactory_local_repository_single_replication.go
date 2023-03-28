@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -203,7 +203,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
@@ -215,7 +215,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*resty.Client)
+	c := m.(util.ProvderMetadata).Client
 
 	var replication []getLocalSingleReplicationBody
 
@@ -241,7 +241,7 @@ func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(*resty.Client).R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())

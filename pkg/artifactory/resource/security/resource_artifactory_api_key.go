@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -58,7 +58,7 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
 
-	_, err := m.(*resty.Client).R().SetResult(&data).Post(ApiKeyEndpoint)
+	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -72,7 +72,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
-	_, err := m.(*resty.Client).R().SetResult(&data).Get(ApiKeyEndpoint)
+	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -84,6 +84,6 @@ func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}
 }
 
 func apiKeyRevoke(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(ApiKeyEndpoint)
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(ApiKeyEndpoint)
 	return diag.FromErr(err)
 }

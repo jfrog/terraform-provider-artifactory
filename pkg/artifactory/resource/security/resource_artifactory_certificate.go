@@ -11,10 +11,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -165,7 +165,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 }
 
 func FindCertificate(alias string, m interface{}) (*CertificateDetails, error) {
-	c := m.(*resty.Client)
+	c := m.(util.ProvderMetadata).Client
 	certificates := new([]CertificateDetails)
 	_, err := c.R().SetResult(certificates).Get(CertificateEndpoint)
 
@@ -258,7 +258,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	_, err = m.(*resty.Client).R().SetBody(content).SetHeader("content-type", "text/plain").Post(CertificateEndpoint + d.Id())
+	_, err = m.(util.ProvderMetadata).Client.R().SetBody(content).SetHeader("content-type", "text/plain").Post(CertificateEndpoint + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -268,7 +268,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceCertificateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(*resty.Client).R().Delete(CertificateEndpoint + d.Id())
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(CertificateEndpoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
