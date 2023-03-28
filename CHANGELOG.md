@@ -1,3 +1,10 @@
+## 7.4.2 (March 28, 2023)
+
+IMPROVEMENTS:
+
+* `project_key` attribute validation for all the resources has been changed to match Artifactory requirements since 7.56.2 - the length should be between 2-32 characters.
+  PR: [#]()
+
 ## 7.4.1 (March 28, 2023). Tested on Artifactory 7.55.9
 
 IMPROVEMENTS:
