@@ -243,7 +243,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	federatedRepositoryConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
 			key         = "{{ .name }}"
-		 	project_key = "invalid-project-key-too-long"
+		 	project_key = "invalid-project-key-too-long-really-long"
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -265,7 +265,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      federatedRepositoryConfig,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 20 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 2 - 32 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})
