@@ -702,7 +702,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key-too-long"
+	 	  project_key          = "invalid-project-key-too-long-really-long"
 		}
 	`, params)
 
@@ -719,7 +719,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      virualRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 20 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*project_key must be 2 - 32 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})
