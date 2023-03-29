@@ -1,3 +1,11 @@
+## 7.4.3 (March 29, 2023). Tested on Artifactory 7.55.9
+
+BUG FIXES:
+
+* resource/artifactory_scoped_token: Fix not able to set `expires_in` with `0` value for non-expiring token.
+
+PR: [#708](https://github.com/jfrog/terraform-provider-artifactory/pull/708)
+
 ## 7.4.2 (March 28, 2023). Tested on Artifactory 7.55.9
 
 IMPROVEMENTS:

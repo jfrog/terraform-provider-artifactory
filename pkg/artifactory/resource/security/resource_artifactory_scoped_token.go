@@ -42,7 +42,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		GrantType   string `json:"grant_type"`
 		Username    string `json:"username,omitempty"`
 		Scope       string `json:"scope,omitempty"`
-		ExpiresIn   int    `json:"expires_in,omitempty"`
+		ExpiresIn   int    `json:"expires_in"`
 		Refreshable bool   `json:"refreshable"`
 		Description string `json:"description"`
 		Audience    string `json:"audience,omitempty"`
