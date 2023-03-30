@@ -367,3 +367,38 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		},
 	})
 }
+
+func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
+	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+			description = "test description"
+			expires_in  = 0
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check:  resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
+			},
+		},
+	})
+}
