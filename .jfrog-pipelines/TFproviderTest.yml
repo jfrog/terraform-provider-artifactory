@@ -37,12 +37,16 @@ pipelines:
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.49.8
-            GO_VERSION: 1.18
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
             SONAR_SCANNER_OPTS: "-server"
         execution:
           onStart:
+            - echo "Sending status to GitHub."
+            - export STATE="pending"
+            - export DESCRIPTION="Pipeline run is in progress."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - echo "Preparing for work. Install Helm, Terraform, GoReleaser, and SonarQube"
             - ls -al && pwd
             - echo "Helm 3 install"
@@ -65,21 +69,17 @@ pipelines:
             #- curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
             #- unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           onExecute:
-            - add_run_variables gitHubRepoUrl=${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl}
-            - add_run_variables TFProviderRepo=$(echo ${gitHubRepoUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            - add_run_variables repoFolder=$(echo "${res_GitHubTFProviderRepoJFrog_gitRepoFullName}" | sed -e 's/.*\///g')
+            - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - add_run_variables PROVIDER_VERSION=$(git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-            - export NEXT_PROVIDER_VERSION=${PROVIDER_VERSION}
-            - echo "Provider version from the CHANGELOG.md ${PROVIDER_VERSION}"
-            - echo ${NEXT_PROVIDER_VERSION}
+            - echo "Provider version is ${PROVIDER_VERSION}"
             - echo "Rename the build to make it work on Ubuntu"
             - cat GNUmakefile | sed -e "s/darwin_amd64/linux_amd64/g" > GNUmakefile.tmp
             - cp GNUmakefile.tmp GNUmakefile && rm GNUmakefile.tmp
             - cat GNUmakefile
-            - cat sample.tf | sed -e "s/version =.*/version = \"${NEXT_PROVIDER_VERSION}\"/g" > sample.tf.tmp
+            - cat sample.tf | sed -e "s/version =.*/version = \"${PROVIDER_VERSION}\"/g" > sample.tf.tmp
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
             - echo "Save RT licenses from the variable to the license file"
@@ -141,7 +141,11 @@ pipelines:
             - echo "Success"
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
-            - echo "Failure"
+            - echo "Failure, sending status to GitHub and Slack."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name}> step"
           onComplete:
             - echo "Complete"
@@ -199,9 +203,18 @@ pipelines:
             - echo "Success"
             - >-
               if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
+                export STATE="success"
+                export DESCRIPTION="All tests passed successfully."
+                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
                 send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
               fi
           onFailure:
+            - echo "Failure, sending status to GitHub and Slack."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
