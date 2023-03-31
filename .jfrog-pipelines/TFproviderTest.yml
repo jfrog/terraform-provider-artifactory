@@ -42,6 +42,11 @@ pipelines:
             SONAR_SCANNER_OPTS: "-server"
         execution:
           onStart:
+            - echo "Sending status to GitHub."
+            - export STATE="pending"
+            - export DESCRIPTION="Pipeline run is in progress."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoV6JFrog_gitProvider_token} ${res_GitHubTFProviderRepoV6JFrog_gitRepoFullName} ${res_GitHubTFProviderRepoV6JFrog_commitSha}
             - echo "Preparing for work. Install Terraform, GoReleaser, and SonarQube"
             - ls -al && pwd
             - sudo apt update
@@ -128,7 +133,11 @@ pipelines:
             - echo "Success"
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
-            - echo "Failure"
+            - echo "Failure, sending status to GitHub and Slack."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoV6JFrog_gitProvider_token} ${res_GitHubTFProviderRepoV6JFrog_gitRepoFullName} ${res_GitHubTFProviderRepoV6JFrog_commitSha}
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name}> step"
           onComplete:
             - echo "Complete"
@@ -186,9 +195,18 @@ pipelines:
             - echo "Success"
             - >-
               if [[ ! -z ${res_GitHubTFProviderRepoV6JFrog_headCommitRef} ]]; then
+                export STATE="success"
+                export DESCRIPTION="All tests passed successfully."
+                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoV6JFrog_gitProvider_token} ${res_GitHubTFProviderRepoV6JFrog_gitRepoFullName} ${res_GitHubTFProviderRepoV6JFrog_commitSha}
                 send_notification partnership_slack --text "<${res_GitHubTFProviderRepoV6JFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
               fi
           onFailure:
+            - echo "Failure, sending status to GitHub and Slack."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoV6JFrog_gitProvider_token} ${res_GitHubTFProviderRepoV6JFrog_gitRepoFullName} ${res_GitHubTFProviderRepoV6JFrog_commitSha}
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
