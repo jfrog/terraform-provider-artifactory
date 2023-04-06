@@ -1,3 +1,10 @@
 token:
   persistency:
     persistent-expiry-threshold: 10800 # Available from Artifactory 7.8.0 - (seconds) token with expiry (expirationTime-issuedAt) below this value will not be persistent. set to -1 to make all tokens persistent. lowering this value will effectively revoke all tokens with expiry below the old value and above the new revocable-expiry-threshold.
+integrations-enabled: true
+integration-templates: 
+  - id: "1" 
+    name: "Slack integration" 
+    redirect-uri: "https://<your saas connector hostname>/v1/oauth2/login/redirect"
+    scope: "applied-permissions/user"
+
