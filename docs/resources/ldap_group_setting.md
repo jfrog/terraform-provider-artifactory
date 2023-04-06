@@ -16,7 +16,7 @@ structure for managing group-based permissions.
 # Configure Artifactory LDAP setting
 resource "artifactory_ldap_group_setting" "ldap_group_name" {
   name                    = "ldap_group_name"
-  enabled_ldap            = "ldap_name"
+  ldap_setting_key        = "ldap_name"
   group_base_dn           = ""
   group_name_attribute    = "cn"
   group_member_attribute  = "uniqueMember"
@@ -34,7 +34,7 @@ Reference Link: [JFrog LDAP](https://www.jfrog.com/confluence/display/JFROG/LDAP
 The following arguments are supported:
 
 * `name`                          - (Required) Ldap group setting name.
-* `enabled_ldap`                  - (Required) The LDAP setting you want to use for group retrieval.
+* `ldap_setting_key`              - (Required) The LDAP setting key you want to use for group retrieval. The value for this field corresponds to 'enabledLdap' field of the ldap group setting XML block of system configuration.
 * `group_base_dn`                 - (Optional) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.
 * `group_name_attribute`          - (Required) Attribute on the group entry denoting the group name. Used when importing groups.
 * `group_member_attribute`        - (Required) A multi-value attribute on the group entry containing user DNs or IDs of the group members (e.g., uniqueMember,member).
