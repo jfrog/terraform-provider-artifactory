@@ -51,5 +51,5 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		}, nil
 	}
 
-	return repository.MkResourceSchema(federatedSchema, pkr, unpackFederatedRepository, constructor)
+	return mkResourceSchema(federatedSchema, pkr, unpackFederatedRepository, constructor)
 }

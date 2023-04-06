@@ -100,5 +100,5 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerFederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
+	return mkResourceSchema(dockerFederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
 }

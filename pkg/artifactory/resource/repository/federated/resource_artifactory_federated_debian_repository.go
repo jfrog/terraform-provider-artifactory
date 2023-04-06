@@ -57,5 +57,5 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(debianFederatedSchema, pkr, unpackFederatedDebianRepository, constructor)
+	return mkResourceSchema(debianFederatedSchema, pkr, unpackFederatedDebianRepository, constructor)
 }

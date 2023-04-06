@@ -37,7 +37,7 @@ The following arguments are supported, along with the [common list of arguments 
     * `url` - (Required) Full URL to ending with the repository name.
     * `enabled` - (Required) Represents the active state of the federated member. It is supported to change the enabled
       status of my own member. The config will be updated on the other federated members automatically.
-
+* `cleanup_on_delete` - (Optional) Delete all federated members on `terraform destroy` if set to `true`. Default is `false`. This attribute is added to match Terraform logic, so all the resources, created by the provider, must be removed on cleanup. Artifactory's behavior for the federated repositories is different, all the federated repositories stay after the user deletes the initial federated repository. **Caution**: if set to `true` all the repositories in the federation will be deleted, including repositories on other Artifactory instances in the "Circle of trust". This operation can not be reverted.
 
 
 ## Import
