@@ -57,5 +57,5 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(cargoFederatedSchema, pkr, unpackFederatedCargoRepository, constructor)
+	return mkResourceSchema(cargoFederatedSchema, pkr, unpackFederatedCargoRepository, constructor)
 }

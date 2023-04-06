@@ -1,14 +1,23 @@
 package federated
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const rclass = "federated"
+const RepositoriesEndpoint = "artifactory/api/repositories/{key}"
 
 var PackageTypesLikeGeneric = []string{
 	"bower",
@@ -38,6 +47,12 @@ type Member struct {
 
 var MemberSchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"cleanup_on_delete": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances.",
+		},
 		"member": {
 			Type:     schema.TypeSet,
 			Required: isRequired,
@@ -112,4 +127,64 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// For federated repositories we delete all the federated members, if the flag `cleanup_on_delete` is set to `true`
+	s := &util.ResourceData{ResourceData: d}
+	if s.GetBool("cleanup_on_delete", false) {
+		var membersUrl []string
+		if v, ok := d.GetOk("member"); ok {
+			federatedMembers := v.(*schema.Set).List()
+			if len(federatedMembers) == 0 {
+				return nil
+			}
+			for _, federatedMember := range federatedMembers {
+				id := federatedMember.(map[string]interface{})
+				memberUrl := id["url"].(string)
+				membersUrl = append(membersUrl, memberUrl)
+			}
+			for _, memberUrl := range membersUrl {
+				repoName := memberUrl[strings.LastIndex(memberUrl, "/")+1:]
+				idx := strings.LastIndex(memberUrl, "/artifactory")
+				if idx != -1 {
+					memberUrl = memberUrl[:idx]
+				}
+				resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberUrl).R().
+					AddRetryCondition(client.RetryOnMergeError).
+					SetPathParam("key", repoName).
+					Delete(RepositoriesEndpoint)
+				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		AddRetryCondition(client.RetryOnMergeError).
+		SetPathParam("key", d.Id()).
+		Delete(RepositoriesEndpoint)
+
+	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+		d.SetId("")
+		return nil
+	}
+	return diag.FromErr(err)
+}
+
+func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
+	var reader = repository.MkRepoRead(packer, constructor)
+	return &schema.Resource{
+		CreateContext: repository.MkRepoCreate(unpack, reader),
+		ReadContext:   reader,
+		UpdateContext: repository.MkRepoUpdate(unpack, reader),
+		DeleteContext: deleteRepo,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema:        skeema,
+		SchemaVersion: 2,
+		CustomizeDiff: repository.ProjectEnvironmentsDiff,
+	}
 }

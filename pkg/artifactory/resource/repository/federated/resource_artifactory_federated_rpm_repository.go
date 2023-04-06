@@ -61,5 +61,5 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(rpmFederatedSchema, pkr, unpackFederatedRpmRepository, constructor)
+	return mkResourceSchema(rpmFederatedSchema, pkr, unpackFederatedRpmRepository, constructor)
 }

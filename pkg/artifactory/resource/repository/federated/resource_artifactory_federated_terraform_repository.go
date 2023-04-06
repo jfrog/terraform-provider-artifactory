@@ -55,5 +55,5 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 		}, nil
 	}
 
-	return repository.MkResourceSchema(terraformFederatedSchema, pkr, unpackFederatedTerraformRepository, constructor)
+	return mkResourceSchema(terraformFederatedSchema, pkr, unpackFederatedTerraformRepository, constructor)
 }
