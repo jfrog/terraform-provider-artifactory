@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_federated_*_repository: added an attribute `cleanup_on_delete`, if it's set to `true` all the federated member repositories will be deleted on `terraform destroy`. In Artifactory, if the federated repository is deleted in the UI or using the API call, federated members stayed intact to prevent losing the data. This behavior contradicts Terraform logic, when all the resources should be destroyed. 
 * resource/artifactory_ldap_group_setting: fixed documentation.
-PR: []()
+PR: [#714](https://github.com/jfrog/terraform-provider-artifactory/pull/714)
 Issue: [#704](https://github.com/jfrog/terraform-provider-artifactory/issues/704)
 
 ## 7.4.3 (March 29, 2023). Tested on Artifactory 7.55.9
