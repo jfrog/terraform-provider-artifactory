@@ -132,7 +132,8 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 	// For federated repositories we delete all the federated members, if the flag `cleanup_on_delete` is set to `true`
 	s := &util.ResourceData{ResourceData: d}
 	if s.GetBool("cleanup_on_delete", false) {
-		var membersUrl []string
+		// Save base URL from the Client to be able to revert it back after the change below
+		baseURL := m.(util.ProvderMetadata).Client.BaseURL
 		if v, ok := d.GetOk("member"); ok {
 			federatedMembers := v.(*schema.Set).List()
 			if len(federatedMembers) == 0 {
@@ -141,9 +142,6 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 			for _, federatedMember := range federatedMembers {
 				id := federatedMember.(map[string]interface{})
 				memberUrl := id["url"].(string)
-				membersUrl = append(membersUrl, memberUrl)
-			}
-			for _, memberUrl := range membersUrl {
 				repoName := memberUrl[strings.LastIndex(memberUrl, "/")+1:]
 				idx := strings.LastIndex(memberUrl, "/artifactory")
 				if idx != -1 {
@@ -153,10 +151,12 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 					AddRetryCondition(client.RetryOnMergeError).
 					SetPathParam("key", repoName).
 					Delete(RepositoriesEndpoint)
-				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
+					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
 					return diag.FromErr(err)
 				}
 			}
+			m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
 		}
 	}
 

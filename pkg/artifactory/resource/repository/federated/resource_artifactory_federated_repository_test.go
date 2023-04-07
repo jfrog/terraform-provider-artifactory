@@ -43,7 +43,8 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	resourceType := "artifactory_federated_generic_repository"
 	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
-	// For local testing using Charles Proxy with cleanup_on_delete = true, instead of os.Getenv("ARTIFACTORY_URL_2") use "http://localhost.charlesproxy.com:8081"
+	// For local testing using Charles Proxy with cleanup_on_delete = true, instead of os.Getenv("ARTIFACTORY_URL_2") use "http://localhost.charlesproxy.com:9082"
+	// internal hostname of RT2 is http://host.docker.internal:9082, works to create a member, but delete doesn't work with this host name, it needs "http://localhost.charlesproxy.com:9082"
 	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
 	params := map[string]interface{}{
