@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -131,14 +132,12 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// For federated repositories we delete all the federated members, if the flag `cleanup_on_delete` is set to `true`
 	s := &util.ResourceData{ResourceData: d}
+	initialRepoName := s.GetString("key", false)
 	if s.GetBool("cleanup_on_delete", false) {
 		// Save base URL from the Client to be able to revert it back after the change below
 		baseURL := m.(util.ProvderMetadata).Client.BaseURL
 		if v, ok := d.GetOk("member"); ok {
 			federatedMembers := v.(*schema.Set).List()
-			if len(federatedMembers) == 0 {
-				return nil
-			}
 			for _, federatedMember := range federatedMembers {
 				id := federatedMember.(map[string]interface{})
 				memberUrl := id["url"].(string)
@@ -147,13 +146,15 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 				if idx != -1 {
 					memberUrl = memberUrl[:idx]
 				}
-				resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberUrl).R().
-					AddRetryCondition(client.RetryOnMergeError).
-					SetPathParam("key", repoName).
-					Delete(RepositoriesEndpoint)
-				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
-					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-					return diag.FromErr(err)
+				if initialRepoName != repoName || (memberUrl != os.Getenv("ARTIFACTORY_URL") && memberUrl != os.Getenv("JFROG_URL")) {
+					resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberUrl).R().
+						AddRetryCondition(client.RetryOnMergeError).
+						SetPathParam("key", repoName).
+						Delete(RepositoriesEndpoint)
+					if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
+						resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
+						return diag.FromErr(err)
+					}
 				}
 			}
 			m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
