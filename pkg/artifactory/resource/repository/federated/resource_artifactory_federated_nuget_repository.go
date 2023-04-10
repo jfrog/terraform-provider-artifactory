@@ -57,5 +57,5 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(nugetFederatedSchema, pkr, unpackFederatedNugetRepository, constructor)
+	return mkResourceSchema(nugetFederatedSchema, pkr, unpackFederatedNugetRepository, constructor)
 }

@@ -58,5 +58,5 @@ func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom boo
 		}, nil
 	}
 
-	return repository.MkResourceSchema(javaFederatedSchema, pkr, unpackFederatedJavaRepository, constructor)
+	return mkResourceSchema(javaFederatedSchema, pkr, unpackFederatedJavaRepository, constructor)
 }
