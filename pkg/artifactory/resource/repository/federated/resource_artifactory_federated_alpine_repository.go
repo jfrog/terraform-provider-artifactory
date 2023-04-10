@@ -57,5 +57,5 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(alpineFederatedSchema, pkr, unpackFederatedAlpineRepository, constructor)
+	return mkResourceSchema(alpineFederatedSchema, pkr, unpackFederatedAlpineRepository, constructor)
 }

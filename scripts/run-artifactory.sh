@@ -44,5 +44,5 @@ echo "Generate Admin Access Keys for both instances"
 
 echo "export JFROG_ACCESS_TOKEN=$(getAccessKey ${ARTIFACTORY_UI_URL_1})"
 
-# to be able to run federated repo tests add ARTIFACTORY_URL_2=http://host.docker.internal:9081 or ARTIFACTORY_URL_2=http://artifactory-2:8081 variable
+# to be able to run federated repo tests add ARTIFACTORY_URL_2=http://host.docker.internal:9081 or ARTIFACTORY_URL_2=http://artifactory-2:9081 variable
 # see https://github.com/jfrog/terraform-provider-artifactory/wiki/Testing for the details.

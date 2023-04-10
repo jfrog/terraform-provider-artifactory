@@ -43,6 +43,8 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	resourceType := "artifactory_federated_generic_repository"
 	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	// For local testing using Charles Proxy with cleanup_on_delete = true, instead of os.Getenv("ARTIFACTORY_URL_2") use "http://localhost.charlesproxy.com:9082"
+	// internal hostname of RT2 is http://host.docker.internal:9082, works to create a member, but delete doesn't work with this host name, it needs "http://localhost.charlesproxy.com:9082"
 	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
 
 	params := map[string]interface{}{
@@ -85,10 +87,11 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -149,10 +152,11 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	}
@@ -218,10 +222,11 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -365,10 +370,11 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -434,10 +440,11 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -620,10 +627,11 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -691,10 +699,11 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -763,10 +772,11 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -809,10 +819,11 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -874,10 +885,11 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -957,10 +969,11 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -1013,10 +1026,11 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	}
@@ -1210,10 +1224,11 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	})
@@ -1260,10 +1275,11 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
 			},
 		},
 	}
