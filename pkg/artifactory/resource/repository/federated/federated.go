@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -130,35 +130,32 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 	return nil
 }
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// For federated repositories we delete all the federated members, if the flag `cleanup_on_delete` is set to `true`
+	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &util.ResourceData{ResourceData: d}
 	initialRepoName := s.GetString("key", false)
-	if s.GetBool("cleanup_on_delete", false) {
+	if v, ok := d.GetOk("member"); ok && s.GetBool("cleanup_on_delete", false) {
 		// Save base URL from the Client to be able to revert it back after the change below
 		baseURL := m.(util.ProvderMetadata).Client.BaseURL
-		if v, ok := d.GetOk("member"); ok {
-			federatedMembers := v.(*schema.Set).List()
-			for _, federatedMember := range federatedMembers {
-				id := federatedMember.(map[string]interface{})
-				memberUrl := id["url"].(string)
-				repoName := memberUrl[strings.LastIndex(memberUrl, "/")+1:]
-				idx := strings.LastIndex(memberUrl, "/artifactory")
-				if idx != -1 {
-					memberUrl = memberUrl[:idx]
-				}
-				if initialRepoName != repoName || (memberUrl != os.Getenv("ARTIFACTORY_URL") && memberUrl != os.Getenv("JFROG_URL")) {
-					resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberUrl).R().
-						AddRetryCondition(client.RetryOnMergeError).
-						SetPathParam("key", repoName).
-						Delete(RepositoriesEndpoint)
-					if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
-						resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-						return diag.FromErr(err)
-					}
+		federatedMembers := v.(*schema.Set).List()
+		for _, federatedMember := range federatedMembers {
+			id := federatedMember.(map[string]interface{})
+			memberUrl := id["url"].(string) // example "https://artifactory-instance.com/artifactory/federated-generic-repository-example"
+			parsedMemberUrl, _ := url.Parse(memberUrl)
+			memberHost := memberUrl[:strings.Index(memberUrl, parsedMemberUrl.Path)]
+			memberRepoName := strings.ReplaceAll(memberUrl, memberUrl[:strings.LastIndex(memberUrl, "/")+1], "")
+			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, baseURL) {
+				resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberHost).R().
+					AddRetryCondition(client.RetryOnMergeError).
+					SetPathParam("key", memberRepoName).
+					Delete(RepositoriesEndpoint)
+				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
+					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
+					m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
+					return diag.FromErr(err)
 				}
 			}
-			m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
 		}
+		m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
 	}
 
 	resp, err := m.(util.ProvderMetadata).Client.R().
