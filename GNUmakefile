@@ -16,6 +16,8 @@ BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_PRO
 SONAR_SCANNER_VERSION?=4.7.0.2747
 SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
 
+SMOKE_TESTS=(TestAccDataSourceUser_basic|TestAccLocalGenericRepository|TestAccLocalGenericRepositoryWithProjectAttributes|TestAccRemoteRepository_basic|TestAccRemoteRepositoryWithProjectAttributes|TestAccVirtualRepository_basic|TestAccVirtualGenericRepositoryWithProjectAttributes|TestAccFederatedRepoWithMembers|TestAccFederatedRepoWithProjectAttributes|TestAccWebhookAllTypes|TestAccUser_basic|TestAccGroup_basic|TestAccScopedToken_WithDefaults|TestAccPermissionTarget_full|TestAccBackup_full|TestAccGeneralSecurity_full|TestAccLdapGroupSetting_full|TestAccLdapSetting_full|TestAccOauthSettings_full|TestAccPropertySet|TestAccProxy|TestAccLayout_full|TestAccSamlSettings_full)
+
 default: build
 
 install: clean build
@@ -47,6 +49,10 @@ test:
 
 attach:
 	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient attach $$(pgrep terraform-provider-${PRODUCT})
+
+smoke: fmt
+	export TF_ACC=true && \
+		go test -run '${SMOKE_TESTS}' -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -timeout 5m ./pkg/... -count=1
 
 acceptance: fmt
 	export TF_ACC=true && \
