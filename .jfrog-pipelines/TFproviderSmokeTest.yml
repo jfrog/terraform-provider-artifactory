@@ -30,7 +30,7 @@ pipelines:
             - name: partnership_slack
             - name: terraform_artifactory_smoke_test
           inputResources:
-            - name: GitHubTFProviderRepoJFrog
+            - name: GitHubTFProviderRepoSmoke
               trigger: false
         execution:
           onStart:
@@ -44,7 +44,7 @@ pipelines:
             - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
             - sudo apt update && apt-get install terraform && terraform -version
           onExecute:
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
+            - cd ${res_GitHubTFProviderRepoSmoke_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
             - git branch && ls -al
             - add_run_variables PROVIDER_VERSION=$(git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
