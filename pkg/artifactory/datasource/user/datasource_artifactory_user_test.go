@@ -7,17 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
-
-func deleteUser(t *testing.T, name string) error {
-	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
-
-	return err
-}
 
 func TestAccDataSourceUser_basic(t *testing.T) {
 	id := test.RandomInt()
