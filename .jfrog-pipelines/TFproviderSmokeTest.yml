@@ -13,6 +13,10 @@ resources:
         pullRequestUpdate: false
 pipelines:
   - name: tf_provider_artifactory_smoke
+    configuration:
+      environmentVariables:
+        JFROG_URL: "http://localhost:8082"
+        JFROG_ACCESS_TOKEN: ""
     steps:
       - name: build_and_run_tf_provider
         type: Bash
@@ -28,12 +32,16 @@ pipelines:
                   - "1.18"
           integrations:
             - name: partnership_slack
-            - name: terraform_artifactory_smoke_test
           inputResources:
             - name: GitHubTFProviderRepoSmoke
               trigger: false
         execution:
           onStart:
+            - >-
+              if [[ -z ${JFROG_URL} || -z ${JFROG_ACCESS_TOKEN} ]]; then
+                echo "JFROG_URL, JFROG_ACCESS_TOKEN must be supplied to this pipeline"
+                exit 1
+              fi
             - echo "Preparing for work. Install Terraform"
             - ls -al && pwd
             - sudo apt update
@@ -57,8 +65,6 @@ pipelines:
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
             - echo "Add variables needed to run Terraform Provider"
-            - export JFROG_URL=${int_terraform_artifactory_smoke_test_jfrog_url}
-            - export JFROG_ACCESS_TOKEN=${int_terraform_artifactory_smoke_test_jfrog_access_token}
             - export TF_ACC=true
             - make smoke
           onSuccess:
