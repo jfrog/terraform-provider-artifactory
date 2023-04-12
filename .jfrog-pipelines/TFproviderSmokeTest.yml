@@ -1,16 +1,3 @@
-resources:
-  - name: GitHubTFProviderRepoSmoke
-    type: GitRepo
-    configuration:
-      gitProvider: partnership_github
-      path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
-      branches:
-        include: master
-      buildOn:
-        commit: false
-        pullRequestCreate: false
-      cancelPendingRunsOn:
-        pullRequestUpdate: false
 pipelines:
   - name: tf_provider_artifactory_smoke
     configuration:
@@ -35,7 +22,7 @@ pipelines:
           integrations:
             - name: partnership_slack
           inputResources:
-            - name: GitHubTFProviderRepoSmoke
+            - name: GitHubTFProviderRepoJFrog
               trigger: false
         execution:
           onStart:
