@@ -5,7 +5,7 @@ resources:
       gitProvider: partnership_github
       path: jfrog/terraform-provider-artifactory # if path is modified, change the name as well, per Pipelines doc
       branches:
-        include: add-smoke-tests
+        include: master
       buildOn:
         commit: false
         pullRequestCreate: false
