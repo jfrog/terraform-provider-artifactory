@@ -21,4 +21,4 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The [common list of attributes for the remote repositories](remote.md) are supported.
+The [common list of attributes for the remote repositories](../resources/remote.md) is supported.

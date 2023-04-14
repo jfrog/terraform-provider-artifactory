@@ -7,23 +7,22 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
+const HelmPackageType = "helm"
 
-	const packageType = "helm"
-
-	helmVirtualSchema := util.MergeMaps(
-		BaseVirtualRepoSchema,
-		retrievalCachePeriodSecondsSchema,
-		map[string]*schema.Schema{
-			"use_namespaces": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories\nSee https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'",
-			},
+var HelmVirtualSchema = util.MergeMaps(
+	BaseVirtualRepoSchema,
+	RetrievalCachePeriodSecondsSchema,
+	map[string]*schema.Schema{
+		"use_namespaces": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories\nSee https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'",
 		},
-		repository.RepoLayoutRefSchema("virtual", packageType))
+	},
+	repository.RepoLayoutRefSchema(Rclass, HelmPackageType))
 
+func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	type HelmVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		UseNamespaces bool `json:"useNamespaces"`
@@ -32,7 +31,7 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	unpackHelmVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &util.ResourceData{ResourceData: data}
 		repo := HelmVirtualRepositoryParams{
-			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, "helm"),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, HelmPackageType),
 			UseNamespaces: d.GetBool("use_namespaces", false),
 		}
 
@@ -43,8 +42,8 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		return &HelmVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
-					Rclass:      "virtual",
-					PackageType: packageType,
+					Rclass:      Rclass,
+					PackageType: HelmPackageType,
 				},
 			},
 			UseNamespaces: false,
@@ -52,8 +51,8 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	}
 
 	return repository.MkResourceSchema(
-		helmVirtualSchema,
-		packer.Default(helmVirtualSchema),
+		HelmVirtualSchema,
+		packer.Default(HelmVirtualSchema),
 		unpackHelmVirtualRepository,
 		constructor,
 	)

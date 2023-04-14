@@ -8,23 +8,22 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
+const AlpinePackageType = "alpine"
 
-	const packageType = "alpine"
-
-	var alpineVirtualSchema = util.MergeMaps(
-		BaseVirtualRepoSchema,
-		retrievalCachePeriodSecondsSchema,
-		map[string]*schema.Schema{
-			"primary_keypair_ref": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-				Description:      "Primary keypair used to sign artifacts. Default value is empty.",
-			},
+var AlpineVirtualSchema = util.MergeMaps(
+	BaseVirtualRepoSchema,
+	RetrievalCachePeriodSecondsSchema,
+	map[string]*schema.Schema{
+		"primary_keypair_ref": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "Primary keypair used to sign artifacts. Default value is empty.",
 		},
-		repository.RepoLayoutRefSchema("virtual", packageType))
+	},
+	repository.RepoLayoutRefSchema(Rclass, AlpinePackageType))
 
+func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	type AlpineVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
@@ -34,10 +33,10 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: s}
 
 		repo := AlpineVirtualRepositoryParams{
-			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, AlpinePackageType),
 			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		}
-		repo.PackageType = packageType
+		repo.PackageType = AlpinePackageType
 		return &repo, repo.Key, nil
 	}
 
@@ -45,16 +44,16 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		return &AlpineVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
-					Rclass:      "virtual",
-					PackageType: packageType,
+					Rclass:      Rclass,
+					PackageType: AlpinePackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		alpineVirtualSchema,
-		packer.Default(alpineVirtualSchema),
+		AlpineVirtualSchema,
+		packer.Default(AlpineVirtualSchema),
 		unpackAlpineVirtualRepository,
 		constructor,
 	)

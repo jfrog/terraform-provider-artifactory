@@ -21,7 +21,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+The following attributes are supported, along with the [common list of attributes for the remote repositories](../resources/remote.md):
 
 * `fetch_jars_eagerly` - (Optional, Default: `false`) When set, if a POM is requested, Artifactory attempts to fetch the corresponding jar in the background. This will accelerate first access time to the jar when it is subsequently requested. 
 * `fetch_sources_eagerly` - (Optional, Default: `false`) - When set, if a binaries jar is requested, Artifactory attempts to fetch the corresponding source jar in the background. This will accelerate first access time to the source jar when it is subsequently requested.

@@ -10,46 +10,46 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const DebianPackageType = "debian"
+
+var DebianVirtualSchema = util.MergeMaps(
+	BaseVirtualRepoSchema,
+	RetrievalCachePeriodSecondsSchema,
+	map[string]*schema.Schema{
+		"primary_keypair_ref": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "Primary keypair used to sign artifacts. Default is empty.",
+		},
+		"secondary_keypair_ref": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+			Description:      "Secondary keypair used to sign artifacts. Default is empty.",
+		},
+		"optional_index_compression_formats": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			MinItems: 0,
+			Computed: true,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
+			},
+			Description: `Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
+		},
+		"debian_default_architectures": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "amd64,i386",
+			ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
+			StateFunc:        util.FormatCommaSeparatedString,
+			Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
+		},
+	}, repository.RepoLayoutRefSchema(Rclass, DebianPackageType))
+
 func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
-
-	const packageType = "debian"
-
-	var debianVirtualSchema = util.MergeMaps(
-		BaseVirtualRepoSchema,
-		retrievalCachePeriodSecondsSchema,
-		map[string]*schema.Schema{
-			"primary_keypair_ref": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-				Description:      "Primary keypair used to sign artifacts. Default is empty.",
-			},
-			"secondary_keypair_ref": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-				Description:      "Secondary keypair used to sign artifacts. Default is empty.",
-			},
-			"optional_index_compression_formats": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 0,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"bz2", "lzma", "xz"}, false),
-				},
-				Description: `Index file formats you would like to create in addition to the default Gzip (.gzip extension). Supported values are 'bz2','lzma' and 'xz'. Default value is 'bz2'.`,
-			},
-			"debian_default_architectures": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "amd64,i386",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.StringMatch(regexp.MustCompile(`.+(?:,.+)*`), "must be comma separated string"))),
-				StateFunc:        util.FormatCommaSeparatedString,
-				Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
-			},
-		}, repository.RepoLayoutRefSchema("virtual", packageType))
 
 	type DebianVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
@@ -63,13 +63,13 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		d := &util.ResourceData{ResourceData: s}
 
 		repo := DebianVirtualRepositoryParams{
-			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, packageType),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, DebianPackageType),
 			OptionalIndexCompressionFormats:                  d.GetSet("optional_index_compression_formats"),
 			PrimaryKeyPairRef:                                d.GetString("primary_keypair_ref", false),
 			SecondaryKeyPairRef:                              d.GetString("secondary_keypair_ref", false),
 			DebianDefaultArchitectures:                       d.GetString("debian_default_architectures", false),
 		}
-		repo.PackageType = packageType
+		repo.PackageType = DebianPackageType
 		return &repo, repo.Key, nil
 	}
 
@@ -77,16 +77,16 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		return &DebianVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
-					Rclass:      "virtual",
-					PackageType: packageType,
+					Rclass:      Rclass,
+					PackageType: DebianPackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		debianVirtualSchema,
-		packer.Default(debianVirtualSchema),
+		DebianVirtualSchema,
+		packer.Default(DebianVirtualSchema),
 		unpackDebianVirtualRepository,
 		constructor,
 	)

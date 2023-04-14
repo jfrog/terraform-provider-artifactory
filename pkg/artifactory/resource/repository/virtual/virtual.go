@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const Rclass = "virtual"
+
 type RepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
 	ProjectKey                                    string   `json:"projectKey"`
@@ -80,7 +82,7 @@ func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBa
 
 	return RepositoryBaseParams{
 		Key:                 d.GetString("key", false),
-		Rclass:              "virtual",
+		Rclass:              Rclass,
 		ProjectKey:          d.GetString("project_key", false),
 		ProjectEnvironments: d.GetSet("project_environments"),
 		PackageType:         packageType, // must be set independently
@@ -149,7 +151,7 @@ var unpackExternalDependenciesVirtualRepository = func(s *schema.ResourceData, p
 	}
 }
 
-var retrievalCachePeriodSecondsSchema = map[string]*schema.Schema{
+var RetrievalCachePeriodSecondsSchema = map[string]*schema.Schema{
 	"retrieval_cache_period_seconds": {
 		Type:     schema.TypeInt,
 		Optional: true,
