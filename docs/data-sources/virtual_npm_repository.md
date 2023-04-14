@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual NPM Repository Data Source
 
-Retrieves a remote NPM repository.
+Retrieves a virtual NPM repository.
 
 ## Example Usage
 

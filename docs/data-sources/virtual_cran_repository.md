@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Cran Repository Data Source
 
-Retrieves a remote Cran repository.
+Retrieves a virtual Cran repository.
 
 ## Example Usage
 

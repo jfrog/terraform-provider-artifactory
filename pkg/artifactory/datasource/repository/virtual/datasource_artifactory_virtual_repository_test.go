@@ -1,4 +1,4 @@
-package remote_test
+package virtual_test
 
 import (
 	"fmt"
@@ -17,31 +17,28 @@ import (
 )
 
 func TestAccDataSourceVirtualAllGenericLikePackageTypes(t *testing.T) {
-	for _, repoType := range virtual.PackageTypesLikeGeneric {
-		// TODO: workaround due to bug in Artifactory 7.55.2, 'bypass_head_requests' inconsistency for terraform repo type.
-		if repoType != "terraform" {
-			title := fmt.Sprintf(
-				"TestVirtual%sRepo",
-				cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-			)
-			t.Run(title, func(t *testing.T) {
-				resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-					"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
-				}))
-			})
-		}
+	for _, packageType := range virtual.PackageTypesLikeGeneric {
+		title := fmt.Sprintf(
+			"TestVirtual%sRepo",
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)),
+		)
+		t.Run(title, func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
+				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),
+			}))
+		})
 	}
 }
 
 func TestAccDataSourceVirtualAllGenericLikeRetrievalPackageTypes(t *testing.T) {
-	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
+	for _, packageType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
 		title := fmt.Sprintf(
 			"TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)),
 		)
 		t.Run(title, func(t *testing.T) {
-			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
+			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
+				"description":                    fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"retrieval_cache_period_seconds": 650,
 			}))
 		})
@@ -49,12 +46,12 @@ func TestAccDataSourceVirtualAllGenericLikeRetrievalPackageTypes(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualAllGradleLikePackageTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.GradleLikePackageTypes {
 		title := fmt.Sprintf("TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
+			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)))
 		t.Run(title, func(t *testing.T) {
-			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description":                              fmt.Sprintf("%s virtual repository public description testing.", repoType),
+			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
+				"description":                              fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"force_maven_authentication":               true,
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
 			}))
@@ -288,6 +285,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
             url = "https://tempurl.org"
+			bypass_head_requests = true
 		}
 
 		resource "artifactory_virtual_%[1]s_repository" "%[2]s" {

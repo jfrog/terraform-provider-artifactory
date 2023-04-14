@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Chef Repository Data Source
 
-Retrieves a remote Chef repository.
+Retrieves a virtual Chef repository.
 
 ## Example Usage
 

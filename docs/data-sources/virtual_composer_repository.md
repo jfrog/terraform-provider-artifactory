@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual PHP Composer Repository Data Source
 
-Retrieves a remote PHP Composer repository.
+Retrieves a virtual PHP Composer repository.
 
 ## Example Usage
 

@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Helm Repository Data Source
 
-Retrieves a remote Helm repository.
+Retrieves a virtual Helm repository.
 
 ## Example Usage
 

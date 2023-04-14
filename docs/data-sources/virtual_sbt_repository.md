@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual SBT Repository Data Source
 
-Retrieves a remote SBT repository.
+Retrieves a virtual SBT repository.
 
 ## Example Usage
 

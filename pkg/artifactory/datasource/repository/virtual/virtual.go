@@ -1,3 +1,3 @@
-package remote
+package virtual
 
 const rclass = "virtual"

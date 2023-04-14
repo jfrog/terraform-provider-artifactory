@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Terraform Repository Data Source
 
-Retrieves a remote Terraform repository.
+Retrieves a virtual Terraform repository.
 
 ## Example Usage
 

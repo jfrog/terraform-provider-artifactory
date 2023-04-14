@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Alpine Repository Data Source
 
-Retrieves a remote Alpine repository.
+Retrieves a virtual Alpine repository.
 
 ## Example Usage
 

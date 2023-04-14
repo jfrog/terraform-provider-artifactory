@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual P2 Repository Data Source
 
-Retrieves a remote P2 repository.
+Retrieves a virtual P2 repository.
 
 ## Example Usage
 

@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Gems Repository Data Source
 
-Retrieves a remote Gems repository.
+Retrieves a virtual Gems repository.
 
 ## Example Usage
 

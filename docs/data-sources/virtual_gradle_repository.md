@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Gradle Repository Data Source
 
-Retrieves a remote Gradle repository.
+Retrieves a virtual Gradle repository.
 
 ## Example Usage
 

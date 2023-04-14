@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Pub Repository Data Source
 
-Retrieves a remote Pub repository.
+Retrieves a virtual Pub repository.
 
 ## Example Usage
 

@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Rpm Repository Data Source
 
-Retrieves a remote Rpm repository.
+Retrieves a virtual Rpm repository.
 
 ## Example Usage
 

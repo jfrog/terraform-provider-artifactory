@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Puppet Repository Data Source
 
-Retrieves a remote Puppet repository.
+Retrieves a virtual Puppet repository.
 
 ## Example Usage
 

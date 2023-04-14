@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Bower Repository Data Source
 
-Retrieves a remote Bower repository.
+Retrieves a virtual Bower repository.
 
 ## Example Usage
 

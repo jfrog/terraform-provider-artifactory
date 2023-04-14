@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Conan Repository Data Source
 
-Retrieves a remote Conan repository.
+Retrieves a virtual Conan repository.
 
 ## Example Usage
 

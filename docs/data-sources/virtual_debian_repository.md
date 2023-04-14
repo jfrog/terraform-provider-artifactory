@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Debian Repository Data Source
 
-Retrieves a remote Debian repository.
+Retrieves a virtual Debian repository.
 
 ## Example Usage
 

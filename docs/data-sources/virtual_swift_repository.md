@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Pypi Repository Data Source
 
-Retrieves a remote Pypi repository.
+Retrieves a virtual Pypi repository.
 
 ## Example Usage
 

@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Maven Repository Data Source
 
-Retrieves a remote Maven repository.
+Retrieves a virtual Maven repository.
 
 ## Example Usage
 

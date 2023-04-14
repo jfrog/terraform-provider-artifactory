@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Ivy Repository Data Source
 
-Retrieves a remote Ivy repository.
+Retrieves a virtual Ivy repository.
 
 ## Example Usage
 

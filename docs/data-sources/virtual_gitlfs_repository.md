@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Git LFS Repository Data Source
 
-Retrieves a remote Git LFS repository.
+Retrieves a virtual Git LFS repository.
 
 ## Example Usage
 

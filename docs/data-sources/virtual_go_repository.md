@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Go Repository Data Source
 
-Retrieves a remote Go repository.
+Retrieves a virtual Go repository.
 
 ## Example Usage
 

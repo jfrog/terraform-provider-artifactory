@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Generic Repository Data Source
 
-Retrieves a remote Generic repository.
+Retrieves a virtual Generic repository.
 
 ## Example Usage
 

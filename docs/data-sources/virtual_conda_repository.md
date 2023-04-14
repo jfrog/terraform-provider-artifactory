@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Conda Repository Data Source
 
-Retrieves a remote Conda repository.
+Retrieves a virtual Conda repository.
 
 ## Example Usage
 

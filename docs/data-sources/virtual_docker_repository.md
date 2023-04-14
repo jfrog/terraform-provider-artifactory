@@ -3,7 +3,7 @@ subcategory: "Virtual Repositories"
 ---
 # Artifactory Virtual Docker Repository Data Source
 
-Retrieves a remote Docker repository.
+Retrieves a virtual Docker repository.
 
 ## Example Usage
 
