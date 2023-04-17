@@ -21,7 +21,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+The following attributes are supported, along with the [common list of attributes for the remote repositories](../resources/remote.md):
 
 * `vcs_git_provider` - (Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub, Bitbucket, Stash, a remote Artifactory instance or a custom Git repository. Allowed values are: `GITHUB`, `BITBUCKET`, `OLDSTASH`, `STASH`, `ARTIFACTORY`, `CUSTOM`. Default value is `GITHUB`
 * `vcs_git_download_url` - (Optional) This attribute is used when vcs_git_provider is set to `CUSTOM`. Provided URL will be used as proxy.

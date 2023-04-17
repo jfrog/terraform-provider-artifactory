@@ -21,7 +21,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+The following attributes are supported, along with the [common list of attributes for the remote repositories](../resources/remote.md):
 
 * `feed_context_path` - (Optional) When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is `api/v2`.
 * `download_context_path` - (Optional) The context path prefix through which NuGet downloads are served. For example, the NuGet Gallery download URL is `https://nuget.org/api/v2/package`, so the repository URL should be configured as `https://nuget.org` and the download context path should be configured as `api/v2/package`. Default value is `api/v2/package`.

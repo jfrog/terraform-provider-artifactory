@@ -8,12 +8,14 @@ import (
 	datasource_federated "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/federated"
 	datasource_local "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/local"
 	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/remote"
+	datasource_virtual "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/repository/virtual"
 	datasource_security "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/security"
 	datasource_user "github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/datasource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -48,6 +50,15 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_pypi_repository":                  datasource_remote.DataSourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_terraform_repository":             datasource_remote.DataSourceArtifactoryRemoteTerraformRepository(),
 		"artifactory_remote_vcs_repository":                   datasource_remote.DataSourceArtifactoryRemoteVcsRepository(),
+		"artifactory_virtual_alpine_repository":               datasource_virtual.DatasourceArtifactoryVirtualAlpineRepository(),
+		"artifactory_virtual_bower_repository":                datasource_virtual.DatasourceArtifactoryVirtualBowerRepository(),
+		"artifactory_virtual_debian_repository":               datasource_virtual.DatasourceArtifactoryVirtualDebianRepository(),
+		"artifactory_virtual_go_repository":                   datasource_virtual.DatasourceArtifactoryVirtualGoRepository(),
+		"artifactory_virtual_docker_repository":               datasource_virtual.DatasourceArtifactoryVirtualDockerRepository(),
+		"artifactory_virtual_helm_repository":                 datasource_virtual.DatasourceArtifactoryVirtualHelmRepository(),
+		"artifactory_virtual_npm_repository":                  datasource_virtual.DatasourceArtifactoryVirtualNpmRepository(),
+		"artifactory_virtual_nuget_repository":                datasource_virtual.DatasourceArtifactoryVirtualNugetRepository(),
+		"artifactory_virtual_rpm_repository":                  datasource_virtual.DatasourceArtifactoryVirtualRpmRepository(),
 		"artifactory_federated_alpine_repository":             datasource_federated.DataSourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_cargo_repository":              datasource_federated.DataSourceArtifactoryFederatedCargoRepository(),
 		"artifactory_federated_debian_repository":             datasource_federated.DataSourceArtifactoryFederatedDebianRepository(),
@@ -68,6 +79,9 @@ func datasourcesMap() map[string]*schema.Resource {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
 		dataSourcesMap[remoteResourceName] = datasource_remote.DataSourceArtifactoryRemoteJavaRepository(packageType, true)
 
+		virtualDataSourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		dataSourcesMap[virtualDataSourceName] = datasource_virtual.DataSourceArtifactoryVirtualJavaRepository(packageType)
+
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", packageType)
 		dataSourcesMap[federatedResourceName] = datasource_federated.DataSourceArtifactoryFederatedJavaRepository(packageType, true)
 	}
@@ -80,6 +94,15 @@ func datasourcesMap() map[string]*schema.Resource {
 	for _, packageType := range remote.PackageTypesLikeBasic {
 		remoteDataSourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
 		dataSourcesMap[remoteDataSourceName] = datasource_remote.DataSourceArtifactoryRemoteBasicRepository(packageType)
+	}
+
+	for _, packageType := range virtual.PackageTypesLikeGeneric {
+		virtualDataSourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		dataSourcesMap[virtualDataSourceName] = datasource_virtual.DataSourceArtifactoryVirtualGenericRepository(packageType)
+	}
+	for _, packageType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
+		virtualDataSourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		dataSourcesMap[virtualDataSourceName] = datasource_virtual.DataSourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageType)
 	}
 
 	for _, packageType := range federated.PackageTypesLikeGeneric {

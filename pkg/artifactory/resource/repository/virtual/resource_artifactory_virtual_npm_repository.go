@@ -7,16 +7,16 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const NpmPackageType = "npm"
+
+var NpmVirtualSchema = util.MergeMaps(
+	BaseVirtualRepoSchema,
+	RetrievalCachePeriodSecondsSchema,
+	externalDependenciesSchema,
+	repository.RepoLayoutRefSchema(Rclass, NpmPackageType),
+)
+
 func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
-
-	const packageType = "npm"
-
-	var npmVirtualSchema = util.MergeMaps(
-		BaseVirtualRepoSchema,
-		retrievalCachePeriodSecondsSchema,
-		externalDependenciesSchema,
-		repository.RepoLayoutRefSchema("virtual", packageType),
-	)
 
 	type NpmVirtualRepositoryParams struct {
 		ExternalDependenciesVirtualRepositoryParams
@@ -28,7 +28,7 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 
 		repo := NpmVirtualRepositoryParams{
 			VirtualRetrievalCachePeriodSecs:             d.GetInt("retrieval_cache_period_seconds", false),
-			ExternalDependenciesVirtualRepositoryParams: unpackExternalDependenciesVirtualRepository(s, packageType),
+			ExternalDependenciesVirtualRepositoryParams: unpackExternalDependenciesVirtualRepository(s, NpmPackageType),
 		}
 		return &repo, repo.Key, nil
 	}
@@ -37,16 +37,16 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 		return &NpmVirtualRepositoryParams{
 			ExternalDependenciesVirtualRepositoryParams: ExternalDependenciesVirtualRepositoryParams{
 				RepositoryBaseParams: RepositoryBaseParams{
-					Rclass:      "virtual",
-					PackageType: packageType,
+					Rclass:      Rclass,
+					PackageType: NpmPackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		npmVirtualSchema,
-		packer.Default(npmVirtualSchema),
+		NpmVirtualSchema,
+		packer.Default(NpmVirtualSchema),
 		unpackNpmVirtualRepository,
 		constructor,
 	)
