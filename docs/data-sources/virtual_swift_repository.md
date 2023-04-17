@@ -1,15 +1,15 @@
 ---
 subcategory: "Virtual Repositories"
 ---
-# Artifactory Virtual Pypi Repository Data Source
+# Artifactory Virtual Swift Repository Data Source
 
-Retrieves a virtual Pypi repository.
+Retrieves a virtual Swift repository.
 
 ## Example Usage
 
 ```hcl
-data "artifactory_virtual_pypi_repository" "virtual-pypi" {
-  key = "virtual-pypi"
+data "artifactory_virtual_swift_repository" "virtual-swift" {
+  key = "virtual-swift"
 }
 ```
 
