@@ -3,7 +3,7 @@
 FEATURES:
 
 * datasource/artifactory_virtual_*_repository: Adds new data sources for all virtual repository package types.
-  PR:     [#719](https://github.com/jfrog/terraform-provider-artifactory/pull/719)
+  PR:     [#720](https://github.com/jfrog/terraform-provider-artifactory/pull/720)
   Issues: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
 
 ## 6.35.0 (April 10, 2023). Tested on Artifactory 7.49.8
