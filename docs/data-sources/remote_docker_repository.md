@@ -21,7 +21,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+The following attributes are supported, along with the [common list of attributes for the remote repositories](../resources/remote.md):
 
 * `block_pushing_schema1` - (Optional) When set, Artifactory will block the pulling of Docker images with manifest v2 schema 1 from the remote repository (i.e. the upstream). It will be possible to pull images with manifest v2 schema 1 that exist in the cache.
 * `enable_token_authentication` - (Optional) Enable token (Bearer) based authentication.

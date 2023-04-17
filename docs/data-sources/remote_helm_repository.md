@@ -21,7 +21,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attributes are supported, along with the [common list of attributes for the remote repositories](remote.md):
+The following attributes are supported, along with the [common list of attributes for the remote repositories](../resources/remote.md):
 
 * `helm_charts_base_url` - (Optional) No documentation is available. Hopefully you know what this means.
 * `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten. `External Dependency Rewrite` in the UI.
