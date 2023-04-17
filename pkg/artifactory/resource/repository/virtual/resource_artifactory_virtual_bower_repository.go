@@ -7,33 +7,32 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const BowerPackageType = "bower"
+
+var BowerVirtualSchema = util.MergeMaps(
+	BaseVirtualRepoSchema,
+	externalDependenciesSchema,
+	repository.RepoLayoutRefSchema(Rclass, BowerPackageType),
+)
+
 func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
-
-	const packageType = "bower"
-
-	var bowerVirtualSchema = util.MergeMaps(
-		BaseVirtualRepoSchema,
-		externalDependenciesSchema,
-		repository.RepoLayoutRefSchema("virtual", packageType),
-	)
-
 	var unpackBowerVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		repo := unpackExternalDependenciesVirtualRepository(s, packageType)
+		repo := unpackExternalDependenciesVirtualRepository(s, BowerPackageType)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &ExternalDependenciesVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				Rclass:      "virtual",
-				PackageType: packageType,
+				Rclass:      Rclass,
+				PackageType: BowerPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		bowerVirtualSchema,
-		packer.Default(bowerVirtualSchema),
+		BowerVirtualSchema,
+		packer.Default(BowerVirtualSchema),
 		unpackBowerVirtualRepository,
 		constructor,
 	)

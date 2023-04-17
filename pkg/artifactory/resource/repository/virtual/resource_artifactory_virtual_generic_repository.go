@@ -11,7 +11,7 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParams{
 			PackageType: pkt,
-			Rclass:      "virtual",
+			Rclass:      Rclass,
 		}, nil
 	}
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
@@ -19,7 +19,8 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 		return repo, repo.Id(), nil
 	}
 
-	genericSchema := util.MergeMaps(BaseVirtualRepoSchema, repository.RepoLayoutRefSchema("virtual", pkt))
+	genericSchema := util.MergeMaps(BaseVirtualRepoSchema,
+		repository.RepoLayoutRefSchema(Rclass, pkt))
 
 	return repository.MkResourceSchema(genericSchema, packer.Default(genericSchema), unpack, constructor)
 }
@@ -27,14 +28,14 @@ func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
 func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
 	var repoWithRetrivalCachePeriodSecsVirtualSchema = util.MergeMaps(
 		BaseVirtualRepoSchema,
-		retrievalCachePeriodSecondsSchema,
-		repository.RepoLayoutRefSchema("virtual", pkt),
+		RetrievalCachePeriodSecondsSchema,
+		repository.RepoLayoutRefSchema(Rclass, pkt),
 	)
 
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 			RepositoryBaseParams: RepositoryBaseParams{
-				Rclass:      "virtual",
+				Rclass:      Rclass,
 				PackageType: pkt,
 			},
 		}, nil
