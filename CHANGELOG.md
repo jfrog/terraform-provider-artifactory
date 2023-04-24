@@ -3,7 +3,7 @@
 IMPROVEMENTS:
 
 * resource/artifactory_scoped_token: adds reference token exposure on scoped token creation
-  PR [#XXX](https://github.com/jfrog/terraform-provider-artifactory/pull/XXX)
+  PR [#723](https://github.com/jfrog/terraform-provider-artifactory/pull/723)
 
 ## 7.6.0 (April 14, 2023). Tested on Artifactory 7.55.10
 
