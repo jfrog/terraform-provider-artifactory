@@ -171,7 +171,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Optional:    true,
 			Default:     false,
 			ForceNew:    true,
-			Description: "Also create a reference token which can be used like an API key.",
+			Description: "Also create a reference token which can be used like an API key, default is `false`.",
 		},
 		"description": {
 			Type:             schema.TypeString,
@@ -204,9 +204,10 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 			Sensitive: true,
 		},
 		"reference_token": {
-			Type:      schema.TypeString,
-			Computed:  true,
-			Sensitive: true,
+			Type:        schema.TypeString,
+			Computed:    true,
+			Sensitive:   true,
+			Description: "Reference Token (alias to Access Token)",
 		},
 		"token_type": {
 			Type:     schema.TypeString,
