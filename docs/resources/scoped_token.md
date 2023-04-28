@@ -107,6 +107,7 @@ The following arguments are supported:
   * `["applied-permissions/admin", "system:metrics:r", "artifact:generic-local:*"]`
 * `expires_in` - (Optional) The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in `access.config.yaml`. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details.
 * `refreshable` - (Optional) Is this token refreshable? Defaults to `false`
+* `include_reference_token` - (Optional) Should a reference token also be created? Defaults to `false`
 * `description` - (Optional) Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.
 * `audiences` - (Optional) A list of the other instances or services that should accept this token identified by their Service-IDs. Limited to total 255 characters. Default to `*@*` if not set. Service ID must begin with `jfrt@`. For instructions to retrieve the Artifactory Service ID see this [documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-GetServiceID).
 
@@ -116,6 +117,7 @@ The following arguments are supported:
 The following additional attributes are exported:
 
 * `access_token` - Returns the access token to authenticate to Artifactory
+* `reference_token` - Returns the reference token to authenticate to Artifactory
 * `token_type` - Returns the token type
 * `subject` - Returns the token type
 * `expiry` - Returns the token expiry
