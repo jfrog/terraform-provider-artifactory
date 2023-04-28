@@ -3,7 +3,7 @@
 IMPROVEMENTS:
 
 * resource/artifactory_scoped_token: adds reference_token and include_reference_token attributes for the resource.
-  PR [#]()
+  PR [#724](https://github.com/jfrog/terraform-provider-artifactory/pull/724)
 
 ## 6.36.0 (April 17, 2023). Tested on Artifactory 7.49.8
 
