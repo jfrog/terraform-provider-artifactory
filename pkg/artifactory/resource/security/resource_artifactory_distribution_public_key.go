@@ -91,7 +91,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if !resp.IsSuccess() {
+		if resp.IsError() {
 			return diag.FromErr(fmt.Errorf("unable to add key: http request failed: %s", resp.Status()))
 		}
 
@@ -107,7 +107,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if !resp.IsSuccess() {
+		if resp.IsError() {
 			return diag.FromErr(fmt.Errorf("unable to read key: http request failed: %s", resp.Status()))
 		}
 
@@ -128,7 +128,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		if !resp.IsSuccess() {
+		if resp.IsError() {
 			return diag.FromErr(fmt.Errorf("unable to delete key: http request failed: %s", resp.Status()))
 		}
 
