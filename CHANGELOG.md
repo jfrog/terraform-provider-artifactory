@@ -1,3 +1,14 @@
+## 7.8.0 (May 5, 2023)
+
+IMPROVEMENTS:
+
+* Start of the migration from SDK v2 to Terraform Plugin Framework.
+* added provider muxing.
+* resource/artifactory_user, resource/artifactory_anonymous_user and resource/artifactory_managed_user migrated to the framework.
+* added templates and examples for auto-generated documentation for users.
+
+PR [#726](https://github.com/jfrog/terraform-provider-artifactory/pull/726)
+
 ## 7.7.0 (April 26, 2023). Tested on Artifactory 7.55.10
 
 IMPROVEMENTS:
