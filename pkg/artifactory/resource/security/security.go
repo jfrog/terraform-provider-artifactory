@@ -48,3 +48,7 @@ func validatePublicKey(value interface{}, _ cty.Path) diag.Diagnostics {
 
 	return nil
 }
+
+func stripTabs(val interface{}) string {
+	return strings.ReplaceAll(val.(string), "\t", "")
+}

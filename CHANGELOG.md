@@ -1,8 +1,8 @@
-## 7.7.0 (April 14, 2023). Tested on Artifactory 7.55.10
+## 7.8.0 (May 4, 2023). Tested on Artifactory 7.55.10
 
 FEATURES:
 
-* resource/artifactory_trusted_key: Adds new resource to manage trusted keys which are used to verify signed release bundles
+* resource/artifactory_distribution_public_key: Adds new resource to manage distribution public keys which are used to verify signed release bundles
   PR:     [#722](https://github.com/jfrog/terraform-provider-artifactory/pull/722)
   Issues: [#721](https://github.com/jfrog/terraform-provider-artifactory/issues/721)
 

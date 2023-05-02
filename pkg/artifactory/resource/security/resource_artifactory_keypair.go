@@ -104,7 +104,7 @@ func ResourceArtifactoryKeyPair() *schema.Resource {
 }
 
 func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
-	stripped := strings.ReplaceAll(value.(string), "\t", "")
+	stripped := stripTabs(value.(string))
 	var err error
 	// currently can't validate GPG
 	if strings.Contains(stripped, "BEGIN PGP PRIVATE KEY BLOCK") {
@@ -140,10 +140,6 @@ func validatePrivateKey(value interface{}, _ cty.Path) diag.Diagnostics {
 	return nil
 }
 
-func stripTabs(val interface{}) string {
-	return strings.ReplaceAll(val.(string), "\t", "")
-}
-
 func ignoreEmpty(_, _, _ string, _ *schema.ResourceData) bool {
 	return false
 }
@@ -155,8 +151,8 @@ func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
 		PairType:    d.GetString("pair_type", false),
 		Alias:       d.GetString("alias", false),
 		Passphrase:  d.GetString("passphrase", false),
-		PrivateKey:  strings.ReplaceAll(d.GetString("private_key", false), "\t", ""),
-		PublicKey:   strings.ReplaceAll(d.GetString("public_key", false), "\t", ""),
+		PrivateKey:  stripTabs(d.GetString("private_key", false)),
+		PublicKey:   stripTabs(d.GetString("public_key", false)),
 		Unavailable: d.GetBool("unavailable", false),
 	}
 	return &result, result.PairName, nil

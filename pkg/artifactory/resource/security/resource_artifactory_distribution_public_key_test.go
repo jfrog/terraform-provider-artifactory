@@ -6,13 +6,16 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-const resource_name = "artifactory_trusted_key"
+const resource_name = "artifactory_distribution_public_key"
 
-func TestAccTrustedKeyFormatCheck(t *testing.T) {
+func TestAccDistributionPublicKeyFormatCheck(t *testing.T) {
 	id, _, name := test.MkNames("mykey", resource_name)
 	keyBasic := fmt.Sprintf(`
 		resource "%s" "%s" {
@@ -32,7 +35,7 @@ func TestAccTrustedKeyFormatCheck(t *testing.T) {
 	})
 }
 
-func TestAccTrustedKey(t *testing.T) {
+func TestAccDistributionPublicKeyCreate(t *testing.T) {
 	id, fqrn, name := test.MkNames("mykey", resource_name)
 	keyBasic := fmt.Sprintf(`
 		resource "%s" "%s" {
@@ -77,6 +80,7 @@ func TestAccTrustedKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDistributionPublicKeyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: keyBasic,
@@ -89,4 +93,32 @@ func TestAccTrustedKey(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckDistributionPublicKeyDestroy(id string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+
+		rs, ok := s.RootModule().Resources[id]
+		if !ok {
+			return fmt.Errorf("err: Resource id[%s] not found", id)
+		}
+
+		data := security.DistributionPublicKeysList{}
+		resp, err := client.R().SetResult(&data).Get(security.DistributionPublicKeysAPIEndPoint)
+		if err != nil {
+			return err
+		}
+		if resp.IsError() {
+			return fmt.Errorf("unable to read keys: http request failed: %s", resp.Status())
+		}
+
+		for _, key := range data.Keys {
+			if key.KeyID == rs.Primary.ID {
+				return fmt.Errorf("error: Distribution Public Key %s still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
 }

@@ -279,7 +279,7 @@ func TestDownloadFileSkipCheck(t *testing.T) {
 	})
 }
 
-//Copies file from source path to destination path
+// Copies file from source path to destination path
 func copyFile(destPath string, srcPath string) error {
 	destDir := filepath.Dir(destPath)
 	err := os.MkdirAll(destDir, os.ModePerm)
