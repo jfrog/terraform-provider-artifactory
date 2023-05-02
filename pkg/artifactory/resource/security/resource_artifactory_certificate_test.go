@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -60,7 +60,7 @@ func TestAccCertWithFile(t *testing.T) {
 			file = "../../../../samples/cert.pem"
 		}
 	`
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	resource.Test(t, resource.TestCase{
@@ -129,7 +129,7 @@ func TestAccCertificate_full(t *testing.T) {
 		EOF
 		}
 	`
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foobar%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	subbed := fmt.Sprintf(certificateFull, name, name)

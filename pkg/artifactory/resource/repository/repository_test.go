@@ -8,20 +8,20 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
@@ -72,10 +72,10 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
@@ -127,10 +127,10 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 
 func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
@@ -173,10 +173,10 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 
 func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
@@ -215,10 +215,10 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 
 func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,

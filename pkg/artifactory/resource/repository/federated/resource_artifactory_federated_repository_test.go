@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/federated"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
@@ -105,7 +105,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	name := fmt.Sprintf("federated-%s-%d", repoType, rand.Int())
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
-	xrayIndex := test.RandBool()
+	xrayIndex := testutil.RandBool()
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -173,11 +173,11 @@ func TestAccFederatedRepoGenericTypes(t *testing.T) {
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
-	projectEnv := test.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
+	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -234,10 +234,10 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 
 func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_federated_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_federated_generic_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -277,8 +277,8 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccFederatedAlpineRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("alpine-federated", "artifactory_federated_alpine_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
+	_, fqrn, name := testutil.MkNames("alpine-federated", "artifactory_federated_alpine_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -381,10 +381,10 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 }
 
 func TestAccFederatedCargoRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("cargo-federated", "artifactory_federated_cargo_repository")
+	_, fqrn, name := testutil.MkNames("cargo-federated", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
-	anonAccess := test.RandBool()
-	enabledSparseIndex := test.RandBool()
+	anonAccess := testutil.RandBool()
+	enabledSparseIndex := testutil.RandBool()
 
 	params := map[string]interface{}{
 		"anonymous_access":    anonAccess,
@@ -451,9 +451,9 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 }
 
 func TestAccFederatedDebianRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("debian-federated", "artifactory_federated_debian_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
+	_, fqrn, name := testutil.MkNames("debian-federated", "artifactory_federated_debian_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -638,7 +638,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 }
 
 func TestAccFederatedDockerV2Repository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v2_repository")
+	_, fqrn, name := testutil.MkNames("docker-federated", "artifactory_federated_docker_v2_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	template := `
@@ -656,18 +656,18 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 	`
 
 	params := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
+		"block":     testutil.RandBool(),
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
 	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
+		"block":     testutil.RandBool(),
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
@@ -711,7 +711,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 
 // TestAccFederatedDockerRepository tests for backward compatibility
 func TestAccFederatedDockerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_repository")
+	_, fqrn, name := testutil.MkNames("docker-federated", "artifactory_federated_docker_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	template := `
@@ -729,18 +729,18 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 	`
 
 	params := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
+		"block":     testutil.RandBool(),
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
 	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
+		"block":     testutil.RandBool(),
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
@@ -783,7 +783,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 }
 
 func TestAccFederatedDockerV1Repository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-federated", "artifactory_federated_docker_v1_repository")
+	_, fqrn, name := testutil.MkNames("docker-federated", "artifactory_federated_docker_v1_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	template := `
@@ -830,7 +830,7 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 }
 
 func TestAccFederatedNugetRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("nuget-federated", "artifactory_federated_nuget_repository")
+	_, fqrn, name := testutil.MkNames("nuget-federated", "artifactory_federated_nuget_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	template := `
@@ -846,16 +846,16 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 	`
 
 	params := map[string]interface{}{
-		"force_nuget_authentication": test.RandBool(),
-		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"force_nuget_authentication": testutil.RandBool(),
+		"max_unique_snapshots":       testutil.RandSelect(0, 5, 10),
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
 	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
 
 	updates := map[string]interface{}{
-		"force_nuget_authentication": test.RandBool(),
-		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"force_nuget_authentication": testutil.RandBool(),
+		"max_unique_snapshots":       testutil.RandSelect(0, 5, 10),
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
@@ -897,9 +897,9 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 
 var commonJavaParams = map[string]interface{}{
 	"name":                            "",
-	"checksum_policy_type":            test.RandSelect("client-checksums", "server-generated-checksums"),
-	"snapshot_version_behavior":       test.RandSelect("unique", "non-unique", "deployer"),
-	"max_unique_snapshots":            test.RandSelect(0, 5, 10),
+	"checksum_policy_type":            testutil.RandSelect("client-checksums", "server-generated-checksums"),
+	"snapshot_version_behavior":       testutil.RandSelect("unique", "non-unique", "deployer"),
+	"max_unique_snapshots":            testutil.RandSelect(0, 5, 10),
 	"handle_releases":                 true,
 	"handle_snapshots":                true,
 	"suppress_pom_consistency_checks": false,
@@ -922,7 +922,7 @@ const federatedJavaRepositoryBasic = `
 `
 
 func TestAccFederatedMavenRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("maven-federated", "artifactory_federated_maven_repository")
+	_, fqrn, name := testutil.MkNames("maven-federated", "artifactory_federated_maven_repository")
 
 	repoLayoutRef := func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()
 	tempStruct := util.MergeMaps(commonJavaParams)
@@ -982,7 +982,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("%s-federated", repoType)
 	resourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-	_, fqrn, name := test.MkNames(name, resourceName)
+	_, fqrn, name := testutil.MkNames(name, resourceName)
 	tempStruct := util.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
@@ -1046,9 +1046,9 @@ func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
 }
 
 func TestAccFederatedRpmRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("rpm-federated", "artifactory_federated_rpm_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
+	_, fqrn, name := testutil.MkNames("rpm-federated", "artifactory_federated_rpm_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -1237,7 +1237,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*testing.T, resource.TestCase) {
 	resourceName := fmt.Sprintf("terraform-module-%s", registryType)
 	resourceType := fmt.Sprintf("artifactory_federated_terraform_%s_repository", registryType)
-	_, fqrn, name := test.MkNames(resourceName, resourceType)
+	_, fqrn, name := testutil.MkNames(resourceName, resourceType)
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{

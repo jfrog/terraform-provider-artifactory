@@ -5,17 +5,17 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccGroup_basic(t *testing.T) {
-	_, fqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
@@ -45,7 +45,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_full(t *testing.T) {
-	_, fqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	externalId := "test-external-id"
 
 	templates := []string{
@@ -227,7 +227,7 @@ func TestAccGroup_full(t *testing.T) {
 }
 
 func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, fqrn, groupName := test.MkNames("test-group-unmanagedmembers", "artifactory_group")
+	_, fqrn, groupName := testutil.MkNames("test-group-unmanagedmembers", "artifactory_group")
 
 	templates := []string{
 		`

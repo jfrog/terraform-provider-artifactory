@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -125,9 +125,9 @@ func TestAccDataSourceVirtualNugetRepository(t *testing.T) {
 
 func TestAccDataSourceVirtualRpmRepository(t *testing.T) {
 	const packageType = "rpm"
-	_, fqrn, name := test.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1-", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2-", "artifactory_keypair")
+	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1-", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2-", "artifactory_keypair")
 	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
@@ -271,7 +271,7 @@ func TestAccDataSourceVirtualRpmRepository(t *testing.T) {
 }
 
 func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := test.MkNames(fmt.Sprintf("terraform-virtual-%s-repo-full-", packageType),
+	_, fqrn, name := testutil.MkNames(fmt.Sprintf("terraform-virtual-%s-repo-full-", packageType),
 		fmt.Sprintf("artifactory_virtual_%s_repository", packageType))
 	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{
@@ -298,8 +298,8 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 		    key = artifactory_virtual_%[1]s_repository.%[2]s.id
 		}
 	`
-	extraChecks := test.MapToTestChecks(fqrn, extraFields)
-	defaultChecks := test.MapToTestChecks(fqrn, allFields)
+	extraChecks := testutil.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, packageType, name, remoteRepoName, allFieldsHcl)

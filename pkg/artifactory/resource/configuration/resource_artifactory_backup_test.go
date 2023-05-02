@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
@@ -17,9 +17,9 @@ import (
 )
 
 func TestAccBackup_full(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("backup-", "artifactory_backup")
-	_, _, repoResourceName1 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
-	_, _, repoResourceName2 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+	_, fqrn, resourceName := testutil.MkNames("backup-", "artifactory_backup")
+	_, _, repoResourceName1 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+	_, _, repoResourceName2 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
 
 	const BackupTemplateFull = `
 resource "artifactory_backup" "{{ .resourceName }}" {

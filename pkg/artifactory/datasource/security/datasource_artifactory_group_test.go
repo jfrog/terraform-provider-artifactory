@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -45,7 +45,7 @@ func deleteGroup(t *testing.T, groupName string) error {
 }
 
 func TestAccGroup_basic_datasource(t *testing.T) {
-	id, tempFqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	id, tempFqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		data "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
@@ -87,7 +87,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 }
 
 func TestAccGroup_basic_datasource_includeusers_true(t *testing.T) {
-	id, tempFqrn, groupName := test.MkNames("test-group-full", "artifactory_group")
+	id, tempFqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	temp := `
     data "artifactory_group" "{{ .groupName }}" {
       name  = "{{ .groupName }}"

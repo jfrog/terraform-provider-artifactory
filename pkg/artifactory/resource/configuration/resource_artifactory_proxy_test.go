@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -41,7 +41,7 @@ resource "artifactory_proxy" "{{ .resource_name }}" {
 }`
 
 func TestAccProxyCreateUpdate(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("proxy-", "artifactory_proxy")
+	_, fqrn, resourceName := testutil.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
 		"host":                "https://fake-proxy.org",
@@ -123,7 +123,7 @@ func TestAccProxy_importNotFound(t *testing.T) {
 }
 
 func TestAccProxyCustomizeDiff(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("proxy-", "artifactory_proxy")
+	_, fqrn, resourceName := testutil.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
 		"host":                "https://fake-proxy.org",

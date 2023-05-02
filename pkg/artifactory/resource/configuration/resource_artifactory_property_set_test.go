@@ -5,16 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccPropertySetCreate(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
 		"property_set_name": resourceName,
@@ -43,7 +43,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 }
 
 func TestAccPropertySetUpdate(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
 		"property_set_name":        resourceName,
@@ -89,7 +89,7 @@ func TestAccPropertySetUpdate(t *testing.T) {
 }
 
 func TestAccPropertySetCustomizeDiff(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
 		"property_set_name":        resourceName,

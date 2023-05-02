@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -165,14 +165,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId(group.Name)
 
-	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		exists, err := resourceGroupExists(d, m)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error describing group: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("error describing group: %s", err))
 		}
 
 		if !exists {
-			return resource.RetryableError(fmt.Errorf("expected group to be created, but currently not found"))
+			return retry.RetryableError(fmt.Errorf("expected group to be created, but currently not found"))
 		}
 
 		return nil

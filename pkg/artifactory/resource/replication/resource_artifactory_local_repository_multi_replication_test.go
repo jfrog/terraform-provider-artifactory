@@ -4,15 +4,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
-	_, _, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
@@ -48,7 +48,7 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 }
 
 func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
-	_, _, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
@@ -86,7 +86,7 @@ func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
 
 func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 	const testProxy = "test-proxy"
-	_, _, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,
@@ -126,7 +126,7 @@ func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 
 func TestAccLocalMultiReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,

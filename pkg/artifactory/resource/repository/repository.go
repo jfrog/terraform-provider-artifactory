@@ -16,7 +16,7 @@ import (
 
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -326,7 +326,7 @@ func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
 	// When value has changed and is empty string, then it has been removed from
 	// the Terraform configuration.
 	if value == "" && d.HasChange(key) {
-		return fmt.Sprintf("non-existant-value-%d", test.RandomInt())
+		return fmt.Sprintf("non-existant-value-%d", testutil.RandomInt())
 	}
 
 	return value

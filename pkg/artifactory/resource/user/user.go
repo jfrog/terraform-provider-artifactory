@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -162,15 +162,15 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(user.Name)
 
-	retryError := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		result := &User{}
 		resp, e := m.(util.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
 
 		if e != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return resource.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
+				return retry.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
 			}
-			return resource.NonRetryableError(fmt.Errorf("error describing user: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
 
 		PackUser(*result, d)

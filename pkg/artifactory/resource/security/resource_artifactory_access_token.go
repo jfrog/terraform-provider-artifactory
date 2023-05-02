@@ -254,7 +254,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 	// Therefore, Artifactory will expire the token automatically
 	endDateRelative := d.Get("end_date_relative").(string)
 	if endDateRelative == "" {
-		tflog.Debug(ctx, "Token is not revoked. It will expire at "+d.Get("end_date").(string))
+		tflog.Debug(ctx, "AccessToken is not revoked. It will expire at "+d.Get("end_date").(string))
 		return nil
 	}
 
@@ -277,11 +277,11 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			if resp != nil {
 				if resp.StatusCode() == http.StatusNotFound {
-					tflog.Debug(ctx, "Token Revoked")
+					tflog.Debug(ctx, "AccessToken Revoked")
 					return nil
 				}
 				// the original atlassian code considered any error code fine. However, expiring tokens can't be revoked
-				regex := regexp.MustCompile(`.*Token not revocable.*`)
+				regex := regexp.MustCompile(`.*AccessToken not revocable.*`)
 				if regex.MatchString(string(resp.Body()[:])) {
 					return nil
 				}
@@ -292,7 +292,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	// If the duration is set, Artifactory will automatically revoke the token.
-	tflog.Debug(ctx, "Token is not revoked. It will expire at "+d.Get("end_date").(string))
+	tflog.Debug(ctx, "AccessToken is not revoked. It will expire at "+d.Get("end_date").(string))
 
 	return nil
 }

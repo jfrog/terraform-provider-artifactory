@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/remote"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -22,7 +22,7 @@ func TestAccDataSourceRemoteAllBasicPackageTypes(t *testing.T) {
 }
 
 func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-remote-%s-%d", packageType, test.RandomInt())
+	name := fmt.Sprintf("terraform-remote-%s-%d", packageType, testutil.RandomInt())
 	resourceName := fmt.Sprintf("data.artifactory_remote_%s_repository.%s", packageType, name)
 
 	params := map[string]interface{}{
@@ -63,7 +63,7 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 }
 
 func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("bower-remote", "data.artifactory_remote_bower_repository")
+	_, fqrn, name := testutil.MkNames("bower-remote", "data.artifactory_remote_bower_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -100,7 +100,7 @@ func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("cargo-remote", "data.artifactory_remote_cargo_repository")
+	_, fqrn, name := testutil.MkNames("cargo-remote", "data.artifactory_remote_cargo_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -142,7 +142,7 @@ func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("cocoapods-remote", "data.artifactory_remote_cocoapods_repository")
+	_, fqrn, name := testutil.MkNames("cocoapods-remote", "data.artifactory_remote_cocoapods_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -180,7 +180,7 @@ func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("composer-remote", "data.artifactory_remote_composer_repository")
+	_, fqrn, name := testutil.MkNames("composer-remote", "data.artifactory_remote_composer_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -218,7 +218,7 @@ func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteConanRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("conan-remote", "data.artifactory_remote_conan_repository")
+	_, fqrn, name := testutil.MkNames("conan-remote", "data.artifactory_remote_conan_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -256,7 +256,7 @@ func TestAccDataSourceRemoteConanRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("docker-remote", "data.artifactory_remote_docker_repository")
+	_, fqrn, name := testutil.MkNames("docker-remote", "data.artifactory_remote_docker_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -301,7 +301,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("generic-remote", "data.artifactory_remote_generic_repository")
+	_, fqrn, name := testutil.MkNames("generic-remote", "data.artifactory_remote_generic_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -337,7 +337,7 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteGoRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("go-remote", "data.artifactory_remote_go_repository")
+	_, fqrn, name := testutil.MkNames("go-remote", "data.artifactory_remote_go_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -375,7 +375,7 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("helm-remote", "data.artifactory_remote_helm_repository")
+	_, fqrn, name := testutil.MkNames("helm-remote", "data.artifactory_remote_helm_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -421,13 +421,13 @@ var commonJavaParams = func() map[string]interface{} {
 	return map[string]interface{}{
 		"name":                             "",
 		"url":                              "http://tempurl.org",
-		"fetch_jars_eagerly":               test.RandBool(),
-		"fetch_sources_eagerly":            test.RandBool(),
-		"remote_repo_checksum_policy_type": test.RandSelect("generate-if-absent", "fail", "ignore-and-generate", "pass-thru"),
-		"handle_releases":                  test.RandBool(),
-		"handle_snapshots":                 test.RandBool(),
-		"suppress_pom_consistency_checks":  test.RandBool(),
-		"reject_invalid_jars":              test.RandBool(),
+		"fetch_jars_eagerly":               testutil.RandBool(),
+		"fetch_sources_eagerly":            testutil.RandBool(),
+		"remote_repo_checksum_policy_type": testutil.RandSelect("generate-if-absent", "fail", "ignore-and-generate", "pass-thru"),
+		"handle_releases":                  testutil.RandBool(),
+		"handle_snapshots":                 testutil.RandBool(),
+		"suppress_pom_consistency_checks":  testutil.RandBool(),
+		"reject_invalid_jars":              testutil.RandBool(),
 	}
 }
 
@@ -451,7 +451,7 @@ data "{{ .resource_name }}" "{{ .name }}" {
 func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("%s-remote", packageType)
 	resourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
-	_, fqrn, name := test.MkNames(name, resourceName)
+	_, fqrn, name := testutil.MkNames(name, resourceName)
 
 	params := commonJavaParams()
 	params["name"] = name
@@ -492,7 +492,7 @@ func TestAccDataSourceRemoteAllGradleLikePackageTypes(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("maven-remote", "data.artifactory_remote_maven_repository")
+	_, fqrn, name := testutil.MkNames("maven-remote", "data.artifactory_remote_maven_repository")
 
 	params := commonJavaParams()
 	params["name"] = name
@@ -522,7 +522,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("nuget-remote", "data.artifactory_remote_nuget_repository")
+	_, fqrn, name := testutil.MkNames("nuget-remote", "data.artifactory_remote_nuget_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -565,7 +565,7 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemotePypiRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("pypi-remote", "data.artifactory_remote_pypi_repository")
+	_, fqrn, name := testutil.MkNames("pypi-remote", "data.artifactory_remote_pypi_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -603,7 +603,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-remote", "data.artifactory_remote_terraform_repository")
+	_, fqrn, name := testutil.MkNames("terraform-remote", "data.artifactory_remote_terraform_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
@@ -643,7 +643,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 }
 
 func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("vcs-remote", "data.artifactory_remote_vcs_repository")
+	_, fqrn, name := testutil.MkNames("vcs-remote", "data.artifactory_remote_vcs_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}

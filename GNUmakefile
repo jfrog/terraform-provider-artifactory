@@ -68,4 +68,7 @@ fmt:
 	@echo "==> Fixing source code with gofmt..."
 	@go fmt ./...
 
+doc:
+	go generate
+
 .PHONY: build fmt

@@ -219,7 +219,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 			// atlassian to jfrog went from a *[]string to a []string, and both have json attributes of 'on empty omit'
 			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
 			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
-			// it responds with "[**]" which messes us the test. This hack seems to line them up
+			// it responds with "[**]" which messes us the testutil. This hack seems to line them up
 			tmp := util.CastToStringArr(v.(*schema.Set).List())
 			if len(tmp) == 0 {
 				tmp = []string{""}

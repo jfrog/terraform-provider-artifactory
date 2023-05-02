@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
@@ -95,7 +95,7 @@ func TestAccWebhookCriteriaValidation(t *testing.T) {
 }
 
 func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -131,7 +131,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 }
 
 func TestAccWebhookEventTypesValidation(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
 
@@ -172,7 +172,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 }
 
 func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
 
@@ -211,7 +211,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 }
 
 func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
 
@@ -264,7 +264,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 }
 
 func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_%s_webhook.%s", webhookType, name)
 
@@ -278,8 +278,8 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"webhookType": webhookType,
 		"webhookName": name,
 		"eventTypes":  eventTypes,
-		"anyLocal":    test.RandBool(),
-		"anyRemote":   test.RandBool(),
+		"anyLocal":    testutil.RandBool(),
+		"anyRemote":   testutil.RandBool(),
 	}
 	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
@@ -374,7 +374,7 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 		Get(webhook.WhUrl)
 }
 func TestGH476WebHookChangeBearerSet0(t *testing.T) {
-	_, fqrn, name := test.MkNames("foo", "artifactory_artifact_webhook")
+	_, fqrn, name := testutil.MkNames("foo", "artifactory_artifact_webhook")
 
 	format := `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
@@ -398,7 +398,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		  }
 		}
 	`
-	firstToken := test.RandomInt()
+	firstToken := testutil.RandomInt()
 	config1 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
@@ -407,7 +407,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 			"token":       firstToken,
 		},
 	)
-	secondToken := test.RandomInt()
+	secondToken := testutil.RandomInt()
 	config2 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
@@ -416,7 +416,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 			"token":       secondToken,
 		},
 	)
-	thirdToken := test.RandomInt()
+	thirdToken := testutil.RandomInt()
 	config3 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
