@@ -56,6 +56,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
 				),
 			},
 			{
@@ -118,6 +119,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+					resource.TestCheckResourceAttr(fqrn, "include_reference_token", "false"),
 				),
 			},
 			{
