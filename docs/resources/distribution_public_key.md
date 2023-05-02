@@ -21,8 +21,8 @@ resource "artifactory_distribution_public_key" "my-key" {
 
 The following arguments are supported:
 
-* `alias` - (Required) Will be used as a identifier when uploading/retrieving the public key via REST API.
-* `public_key` - (Required) The Public key to add as trusted distribution GPG key.
+* `alias` - (Required) Will be used as an identifier when uploading/retrieving the public key via REST API.
+* `public_key` - (Required) The Public key to add as a trusted distribution GPG key.
 
 The following additional attributes are exported:
 
@@ -30,7 +30,7 @@ The following additional attributes are exported:
 * `fingerprint` - Returns the computed key fingerprint
 * `issued_on` - Returns the date/time when this GPG key was created
 * `issued_by` - Returns the name and eMail address of issuer
-* `valid_until` - Returns the date/time until this GPG key is valid for
+* `valid_until` - Returns the date/time when this GPG key expires.
 
 ## Import
 

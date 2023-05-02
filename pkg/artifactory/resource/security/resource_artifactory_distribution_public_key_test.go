@@ -11,6 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/test"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const resource_name = "artifactory_distribution_public_key"
@@ -90,6 +91,12 @@ func TestAccDistributionPublicKeyCreate(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "fingerprint", "10:16:2c:c5:1c:db:d0:59:ad:86:d3:66:dc:d1:d9:02:65:03:a8:25"),
 					resource.TestCheckResourceAttr(fqrn, "issued_by", "alan <alann@jfrog.com>"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "public_key"),
 			},
 		},
 	})

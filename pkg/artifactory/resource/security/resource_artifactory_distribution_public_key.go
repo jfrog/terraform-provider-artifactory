@@ -15,7 +15,7 @@ import (
 const DistributionPublicKeysAPIEndPoint = "artifactory/api/security/keys/trusted"
 
 type distributionPublicKeyPayLoad struct {
-	KeyID       string `hcl:"key_id" json:"kid"`
+	KeyID       string `json:"kid"`
 	Alias       string `hcl:"alias" json:"alias"`
 	Fingerprint string `hcl:"fingerprint" json:"fingerprint"`
 	PublicKey   string `hcl:"public_key" json:"key"`
@@ -44,7 +44,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		"alias": {
 			Type:         schema.TypeString,
 			Required:     true,
-			Description:  "Will be used as a identifier when uploading/retrieving the public key via REST API.",
+			Description:  "Will be used as an identifier when uploading/retrieving the public key via REST API.",
 			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
@@ -56,7 +56,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		"public_key": {
 			Type:             schema.TypeString,
 			Required:         true,
-			Description:      "The Public key to add as trusted distribution GPG key.",
+			Description:      "The Public key to add as a trusted distribution GPG key.",
 			ForceNew:         true,
 			StateFunc:        stripTabs,
 			ValidateDiagFunc: validatePublicKey,
@@ -74,7 +74,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		"valid_until": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "Returns the date/time until this GPG key is valid for.",
+			Description: "Returns the date/time when this GPG key expires.",
 		},
 	}
 
@@ -91,7 +91,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if resp.IsError() {
+		if !resp.IsSuccess() {
 			return diag.FromErr(fmt.Errorf("unable to add key: http request failed: %s", resp.Status()))
 		}
 
@@ -107,7 +107,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if resp.IsError() {
+		if !resp.IsSuccess() {
 			return diag.FromErr(fmt.Errorf("unable to read key: http request failed: %s", resp.Status()))
 		}
 
@@ -128,10 +128,11 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		if resp.IsError() {
+		if !resp.IsSuccess() {
 			return diag.FromErr(fmt.Errorf("unable to delete key: http request failed: %s", resp.Status()))
 		}
 
+		d.SetId("")
 		return nil
 	}
 
