@@ -1,10 +1,17 @@
-## 7.8.0 (May 4, 2023). Tested on Artifactory 7.55.10
+## 7.8.0 (May 3, 2023). Tested on Artifactory 7.55.10
 
 FEATURES:
 
 * resource/artifactory_distribution_public_key: Adds new resource to manage distribution public keys which are used to verify signed release bundles
   PR:     [#725](https://github.com/jfrog/terraform-provider-artifactory/pull/725)
   Issues: [#721](https://github.com/jfrog/terraform-provider-artifactory/issues/721)
+
+## 7.7.0 (April 26, 2023). Tested on Artifactory 7.55.10
+
+IMPROVEMENTS:
+
+* resource/artifactory_scoped_token: adds reference_token and include_reference_token attributes for the resource.
+  PR [#723](https://github.com/jfrog/terraform-provider-artifactory/pull/723)
 
 ## 7.6.0 (April 14, 2023). Tested on Artifactory 7.55.10
 
