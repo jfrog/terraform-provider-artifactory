@@ -16,12 +16,6 @@ import (
 // can be customized.
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
-var (
-	// these will be set by the goreleaser configuration
-	// to appropriate values for the compiled binary
-	version string = "dev"
-)
-
 func main() {
 	ctx := context.Background()
 
@@ -31,8 +25,8 @@ func main() {
 	flag.Parse()
 
 	providers := []func() tfprotov5.ProviderServer{
-		providerserver.NewProtocol5(provider.New(version)()), // Example terraform-plugin-framework provider
-		provider.Provider().GRPCProvider,                     // Example terraform-plugin-sdk provider
+		providerserver.NewProtocol5(provider.New(provider.Version)()), // Example terraform-plugin-framework provider
+		provider.Provider().GRPCProvider,                              // Example terraform-plugin-sdk provider
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
