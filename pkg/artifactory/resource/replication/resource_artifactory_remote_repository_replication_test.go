@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -79,7 +79,7 @@ func TestAccRemoteReplicationRepo_full(t *testing.T) {
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
-	replicationConfig := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
+	replicationConfig := utilsdk.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
@@ -98,7 +98,7 @@ func TestAccRemoteReplicationRepo_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
+	replicationUpdateConfig := utilsdk.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"

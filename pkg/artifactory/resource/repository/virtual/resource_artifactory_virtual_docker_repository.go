@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const DockerPackageType = "docker"
 
-var DockerVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
+var DockerVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 	"resolve_docker_tags_by_timestamp": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -26,7 +26,7 @@ func ResourceArtifactoryVirtualDockerRepository() *schema.Resource {
 	}
 
 	unpackDockerVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
+		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := DockerVirtualRepositoryParams{
 			RepositoryBaseParams:         UnpackBaseVirtRepo(data, DockerPackageType),
 			ResolveDockerTagsByTimestamp: d.GetBool("resolve_docker_tags_by_timestamp", false),

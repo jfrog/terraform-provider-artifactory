@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type DebianFederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type DebianFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	packageType := "debian"
 
-	debianFederatedSchema := util.MergeMaps(
+	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianLocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),

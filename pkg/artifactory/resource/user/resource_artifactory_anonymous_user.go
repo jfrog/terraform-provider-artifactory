@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/net/context"
 )
 
@@ -17,7 +17,7 @@ func NewArtifactoryAnonymousUserResource() resource.Resource {
 }
 
 type ArtifactoryAnonymousUserResource struct {
-	client util.ProvderMetadata
+	client utilsdk.ProvderMetadata
 }
 
 // ArtifactoryAnonymousUserResourceModel describes the Terraform resource data model to match the
@@ -57,7 +57,7 @@ func (r *ArtifactoryAnonymousUserResource) Configure(ctx context.Context, req re
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(util.ProvderMetadata)
+	r.client = req.ProviderData.(utilsdk.ProvderMetadata)
 }
 
 func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

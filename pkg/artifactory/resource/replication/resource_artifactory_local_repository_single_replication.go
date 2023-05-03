@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type localSingleReplicationBody struct {
@@ -147,7 +147,7 @@ var localSingleReplicationSchema = map[string]*schema.Schema{
 }
 
 func unpackLocalSingleReplication(s *schema.ResourceData) updateLocalSingleReplicationBody {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	return updateLocalSingleReplicationBody{
 		localSingleReplicationBody: localSingleReplicationBody{
@@ -173,7 +173,7 @@ func unpackLocalSingleReplication(s *schema.ResourceData) updateLocalSingleRepli
 func packLocalSingleReplication(singleLocalReplication *GetLocalSingleReplicationBody, d *schema.ResourceData) diag.Diagnostics {
 
 	var errors []error
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 	setValue("url", singleLocalReplication.Replication[0].URL)
 	setValue("socket_timeout_millis", singleLocalReplication.Replication[0].SocketTimeoutMillis)
 	setValue("username", singleLocalReplication.Replication[0].Username)
@@ -203,7 +203,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
@@ -215,7 +215,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 
 	var replication []getLocalSingleReplicationBody
 
@@ -241,7 +241,7 @@ func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())

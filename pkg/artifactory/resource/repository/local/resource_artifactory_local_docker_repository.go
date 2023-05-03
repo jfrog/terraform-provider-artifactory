@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const dockerPackageType = "docker"
@@ -18,7 +18,7 @@ type DockerLocalRepositoryParams struct {
 	BlockPushingSchema1 bool   `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
 }
 
-var DockerV2LocalSchema = util.MergeMaps(
+var DockerV2LocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_tags": {
@@ -53,7 +53,7 @@ var DockerV2LocalSchema = util.MergeMaps(
 )
 
 func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return DockerLocalRepositoryParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, dockerPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
@@ -87,7 +87,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	return repository.MkResourceSchema(DockerV2LocalSchema, pkr, unpackLocalDockerV2Repository, constructor)
 }
 
-var DockerV1LocalSchema = util.MergeMaps(
+var DockerV1LocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_tags": {
@@ -123,7 +123,7 @@ func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) Doc
 
 func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	// this is necessary because of the pointers
-	skeema := util.MergeMaps(DockerV1LocalSchema)
+	skeema := utilsdk.MergeMaps(DockerV1LocalSchema)
 
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := UnpackLocalDockerV1Repository(data, rclass)

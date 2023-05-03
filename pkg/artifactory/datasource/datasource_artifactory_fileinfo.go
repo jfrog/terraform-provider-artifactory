@@ -5,9 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func ArtifactoryFileInfo() *schema.Resource {
@@ -77,7 +77,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetResult(&fileInfo).
 		SetPathParams(map[string]string{
 			"repoKey": repo,
@@ -92,7 +92,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 }
 
 func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) diag.Diagnostics {
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	d.SetId(fileInfo.Id())
 

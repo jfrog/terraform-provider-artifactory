@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -80,7 +80,7 @@ var baseUserSchema = map[string]*schema.Schema{
 }
 
 func unpackUser(s *schema.ResourceData) User {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	return User{
 		Name:                     d.GetString("name", false),
 		Email:                    d.GetString("email", false),
@@ -95,7 +95,7 @@ func unpackUser(s *schema.ResourceData) User {
 
 func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	setValue("name", user.Name)
 	setValue("email", user.Email)
@@ -105,7 +105,7 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
 
 	if user.Groups != nil {
-		errors = setValue("groups", schema.NewSet(schema.HashString, util.CastToInterfaceArr(user.Groups)))
+		errors = setValue("groups", schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(user.Groups)))
 	}
 
 	if errors != nil && len(errors) > 0 {
@@ -118,11 +118,11 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 const UsersEndpointPath = "artifactory/api/security/users/"
 
 func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-	d := &util.ResourceData{ResourceData: rd}
+	d := &utilsdk.ResourceData{ResourceData: rd}
 
 	userName := d.Id()
 	user := User{}
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -143,7 +143,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -154,7 +154,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if user.Groups == nil {
 		user.Groups = []string{}
-		_, errGroupUpdate := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+		_, errGroupUpdate := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			return diag.FromErr(errGroupUpdate)
 		}
@@ -164,7 +164,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		result := &User{}
-		resp, e := m.(util.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
+		resp, e := m.(utilsdk.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
 
 		if e != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -187,7 +187,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
-	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -198,10 +198,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-	d := &util.ResourceData{ResourceData: rd}
+	d := &utilsdk.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

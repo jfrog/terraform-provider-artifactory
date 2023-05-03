@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type BowerRemoteRepo struct {
@@ -17,7 +17,7 @@ type BowerRemoteRepo struct {
 const BowerPackageType = "bower"
 
 var BowerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		VcsRemoteRepoSchema,
 		map[string]*schema.Schema{
@@ -36,7 +36,7 @@ var BowerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := BowerRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, BowerPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),

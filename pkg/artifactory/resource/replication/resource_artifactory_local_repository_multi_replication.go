@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/exp/slices"
 )
@@ -171,7 +171,7 @@ var localMultiReplicationSchema = map[string]*schema.Schema{
 }
 
 func unpackLocalMultiReplication(s *schema.ResourceData) UpdateLocalMultiReplication {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	pushReplication := new(UpdateLocalMultiReplication)
 
 	repo := d.GetString("repo_key", false)
@@ -253,7 +253,7 @@ func unpackLocalMultiReplication(s *schema.ResourceData) UpdateLocalMultiReplica
 
 func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	setValue("repo_key", pushReplication.RepoKey)
 	setValue("cron_exp", pushReplication.CronExp)
@@ -312,7 +312,7 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
@@ -324,7 +324,7 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 	var replications []getLocalMultiReplicationBody
 	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -353,7 +353,7 @@ func resourceLocalMultiReplicationUpdate(ctx context.Context, d *schema.Resource
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + "multiple/" + d.Id())

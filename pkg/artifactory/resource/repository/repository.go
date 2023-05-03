@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/exp/slices"
 
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -134,7 +134,7 @@ func MkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			return diag.FromErr(err)
 		}
 		// repo must be a pointer
-		_, err = m.(util.ProvderMetadata).Client.R().
+		_, err = m.(utilsdk.ProvderMetadata).Client.R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			SetPathParam("key", key).
@@ -156,7 +156,7 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 		}
 
 		// repo must be a pointer
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetResult(repo).
 			SetPathParam("key", d.Id()).
 			Get(RepositoriesEndpoint)
@@ -179,7 +179,7 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(util.ProvderMetadata).Client.R().
+		_, err = m.(utilsdk.ProvderMetadata).Client.R().
 			AddRetryCondition(client.RetryOnMergeError).
 			SetBody(repo).
 			SetPathParam("key", d.Id()).
@@ -204,9 +204,9 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 
 			var err error
 			if assignToProject {
-				err = assignRepoToProject(key, newProjectKey, m.(util.ProvderMetadata).Client)
+				err = assignRepoToProject(key, newProjectKey, m.(utilsdk.ProvderMetadata).Client)
 			} else if unassignFromProject {
-				err = unassignRepoFromProject(key, m.(util.ProvderMetadata).Client)
+				err = unassignRepoFromProject(key, m.(utilsdk.ProvderMetadata).Client)
 			}
 
 			if err != nil {
@@ -236,7 +236,7 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 }
 
 func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
@@ -253,7 +253,7 @@ func Retry400(response *resty.Response, _ error) bool {
 }
 
 func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := CheckRepo(d.Id(), m.(util.ProvderMetadata).Client.R().AddRetryCondition(Retry400))
+	_, err := CheckRepo(d.Id(), m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(Retry400))
 	return err == nil, err
 }
 
@@ -320,7 +320,7 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 // Artifactory REST API will not accept empty string or null to reset value to not set
 // Instead, using a non-existant value works as a workaround
 // To ensure we don't accidentally set the value to a valid value, we use a UUID v4 string
-func HandleResetWithNonExistentValue(d *util.ResourceData, key string) string {
+func HandleResetWithNonExistentValue(d *utilsdk.ResourceData, key string) string {
 	value := d.GetString(key, false)
 
 	// When value has changed and is empty string, then it has been removed from
@@ -337,9 +337,9 @@ const CustomProjectEnvironmentSupportedVersion = "7.53.1"
 func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
-		providerMetadata := meta.(util.ProvderMetadata)
+		providerMetadata := meta.(utilsdk.ProvderMetadata)
 
-		isSupported, err := util.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
+		isSupported, err := utilsdk.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
 		if err != nil {
 			return fmt.Errorf("Failed to check version %s", err)
 		}

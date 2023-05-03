@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type GenericRemoteRepo struct {
@@ -15,7 +15,7 @@ type GenericRemoteRepo struct {
 const GenericPackageType = "generic"
 
 var GenericRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	genericSchema := util.MergeMaps(
+	genericSchema := utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"propagate_query_params": {
@@ -34,7 +34,7 @@ var GenericRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 
 	var unpackGenericRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := GenericRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, GenericPackageType),
 			PropagateQueryParams:       d.GetBool("propagate_query_params", false),
@@ -63,7 +63,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 }
 
 var BasicRepoSchema = func(packageType string, isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(BaseRemoteRepoSchema(isResource), repository.RepoLayoutRefSchema(rclass, packageType))
+	return utilsdk.MergeMaps(BaseRemoteRepoSchema(isResource), repository.RepoLayoutRefSchema(rclass, packageType))
 }
 
 func ResourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {

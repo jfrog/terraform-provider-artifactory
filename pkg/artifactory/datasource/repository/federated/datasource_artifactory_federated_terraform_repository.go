@@ -10,13 +10,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
 
-	terraformFederatedSchema := util.MergeMaps(
+	terraformFederatedSchema := utilsdk.MergeMaps(
 		local.GetTerraformLocalSchema(registryType),
 		memberSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),

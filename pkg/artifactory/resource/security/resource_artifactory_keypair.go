@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const KeypairEndPoint = "artifactory/api/security/keypair/"
@@ -183,7 +183,7 @@ func ignoreEmpty(_, _, _ string, _ *schema.ResourceData) bool {
 }
 
 func unpackKeyPair(s *schema.ResourceData) (interface{}, string, error) {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	result := KeyPairPayLoad{
 		PairName:    d.GetString("pair_name", false),
 		PairType:    d.GetString("pair_type", false),
@@ -206,7 +206,7 @@ var keyPairPacker = packer.Universal(
 func createKeyPair(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	keyPair, key, _ := unpackKeyPair(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(keyPair).
 		Post(KeypairEndPoint)
@@ -220,7 +220,7 @@ func createKeyPair(ctx context.Context, d *schema.ResourceData, m interface{}) d
 func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	data := KeyPairPayLoad{}
-	resp, err := meta.(util.ProvderMetadata).Client.R().SetResult(&data).Get(KeypairEndPoint + d.Id())
+	resp, err := meta.(utilsdk.ProvderMetadata).Client.R().SetResult(&data).Get(KeypairEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -236,7 +236,7 @@ func readKeyPair(_ context.Context, d *schema.ResourceData, meta interface{}) di
 }
 
 func rmKeyPair(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(KeypairEndPoint + d.Id())
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(KeypairEndPoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

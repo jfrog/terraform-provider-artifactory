@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const GeneralSecurityTemplateFull = `
@@ -41,7 +41,7 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 
 func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

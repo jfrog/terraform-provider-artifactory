@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -232,7 +232,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	}
 
 	var unpackAccessTokenPostRequest = func(data *schema.ResourceData) (*AccessTokenPostRequest, error) {
-		d := &util.ResourceData{ResourceData: data}
+		d := &utilsdk.ResourceData{ResourceData: data}
 
 		scopes := d.GetSet("scopes")
 		scopesString := strings.Join(scopes, " ") // Join slice into space-separated string
@@ -264,7 +264,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 
 		id := data.Id()
 
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetPathParam("id", id).
 			SetResult(&accessToken).
 			Get("access/api/v1/tokens/{id}")
@@ -288,7 +288,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 	}
 
 	var packAccessTokenPostResponse = func(d *schema.ResourceData, accessToken AccessTokenPostResponse) diag.Diagnostics {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		setValue("scopes", strings.Split(accessToken.Scope, " "))
 		setValue("expires_in", accessToken.ExpiresIn)
@@ -322,7 +322,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		accessToken.GrantType = "client_credentials"
 
 		result := AccessTokenPostResponse{}
-		_, err = m.(util.ProvderMetadata).Client.R().
+		_, err = m.(utilsdk.ProvderMetadata).Client.R().
 			SetBody(accessToken).
 			SetResult(&result).
 			Post("access/api/v1/tokens")
@@ -344,7 +344,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 		respError := AccessTokenErrorResponse{}
 		id := data.Id()
 
-		_, err := m.(util.ProvderMetadata).Client.R().
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetPathParam("id", id).
 			SetError(&respError).
 			Delete("access/api/v1/tokens/{id}")

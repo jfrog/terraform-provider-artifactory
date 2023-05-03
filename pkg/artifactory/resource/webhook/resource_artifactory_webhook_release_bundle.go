@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type ReleaseBundleWebhookCriteria struct {
@@ -16,13 +16,13 @@ type ReleaseBundleWebhookCriteria struct {
 }
 
 var releaseBundleWebhookSchema = func(webhookType string, version int) map[string]*schema.Schema {
-	return util.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
-				Schema: util.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
 					"any_release_bundle": {
 						Type:        schema.TypeBool,
 						Required:    true,
@@ -51,7 +51,7 @@ var packReleaseBundleCriteria = func(artifactoryCriteria map[string]interface{})
 var unpackReleaseBundleCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
 	return ReleaseBundleWebhookCriteria{
 		AnyReleaseBundle:              terraformCriteria["any_release_bundle"].(bool),
-		RegisteredReleaseBundlesNames: util.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*schema.Set).List()),
+		RegisteredReleaseBundlesNames: utilsdk.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*schema.Set).List()),
 		BaseWebhookCriteria:           baseCriteria,
 	}
 }

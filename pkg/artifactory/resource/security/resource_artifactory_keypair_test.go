@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -151,7 +151,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 	EOF
 	}`
 
-	keyBasic := util.ExecuteTemplate(
+	keyBasic := utilsdk.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{
@@ -161,7 +161,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 		},
 	)
 
-	keyUpdatedPassphrase := util.ExecuteTemplate(
+	keyUpdatedPassphrase := utilsdk.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -166,7 +166,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			depends_on 				 = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = utilsdk.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repoName,
 	})

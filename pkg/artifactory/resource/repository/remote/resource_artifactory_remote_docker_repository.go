@@ -5,13 +5,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const DockerPackageType = "docker"
 
 var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"external_dependencies_enabled": {
@@ -62,7 +62,7 @@ type DockerRemoteRepo struct {
 
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepo{
 			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, DockerPackageType),
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 // Ensure the implementation satisfies the provider.Provider interface.
@@ -120,7 +120,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		)
 	}
 	if config.CheckLicense.IsNull() {
-		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
+		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			resp.Diagnostics.AddError(
 				"Error getting Artifactory license",
@@ -130,7 +130,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		}
 	}
 
-	version, err := util.GetArtifactoryVersion(restyBase)
+	version, err := utilsdk.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error getting Artifactory version",
@@ -139,14 +139,14 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	util.SendUsage(ctx, restyBase, "terraform-provider-artifactory/"+p.version, featureUsage)
+	utilsdk.SendUsage(ctx, restyBase, "terraform-provider-artifactory/"+p.version, featureUsage)
 
-	resp.DataSourceData = util.ProvderMetadata{
+	resp.DataSourceData = utilsdk.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}
 
-	resp.ResourceData = util.ProvderMetadata{
+	resp.ResourceData = utilsdk.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}

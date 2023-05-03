@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const rclass = "local"
@@ -58,7 +58,7 @@ func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var BaseLocalRepoSchema = util.MergeMaps(
+var BaseLocalRepoSchema = utilsdk.MergeMaps(
 	repository.BaseRepoSchema,
 	map[string]*schema.Schema{
 		"includes_pattern": {
@@ -127,7 +127,7 @@ func GetPackageType(repoType string) string {
 }
 
 func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) RepositoryBaseParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	return RepositoryBaseParams{
 		Rclass:                 rclassType,
 		Key:                    d.GetString("key", false),

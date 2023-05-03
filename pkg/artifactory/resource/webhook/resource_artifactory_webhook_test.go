@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -114,7 +114,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		"webhookName": name,
 		"eventTypes":  webhook.DomainEventTypesSupported[webhookType],
 	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
+	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -141,7 +141,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 		"webhookName": name,
 		"eventType":   wrongEventType,
 	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -179,7 +179,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 	params := map[string]interface{}{
 		"webhookName": name,
 	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -218,7 +218,7 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 	params := map[string]interface{}{
 		"webhookName": name,
 	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -281,7 +281,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"anyLocal":    testutil.RandBool(),
 		"anyRemote":   testutil.RandBool(),
 	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
+	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
 			key = "{{ .repoName }}"
 		}
@@ -399,7 +399,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		}
 	`
 	firstToken := testutil.RandomInt()
-	config1 := util.ExecuteTemplate(
+	config1 := utilsdk.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{
@@ -408,7 +408,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		},
 	)
 	secondToken := testutil.RandomInt()
-	config2 := util.ExecuteTemplate(
+	config2 := utilsdk.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{
@@ -417,7 +417,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		},
 	)
 	thirdToken := testutil.RandomInt()
-	config3 := util.ExecuteTemplate(
+	config3 := utilsdk.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{

@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const RpmPackageType = "rpm"
 
-var RpmVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
+var RpmVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 	"primary_keypair_ref": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -37,7 +37,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 	}
 
 	var unpackRpmVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := RpmVirtualRepositoryParams{
 			RepositoryBaseParams: UnpackBaseVirtRepo(s, "rpm"),

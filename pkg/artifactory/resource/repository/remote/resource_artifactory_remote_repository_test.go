@@ -18,7 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -210,11 +210,11 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, repoTemplate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, repoTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testData)),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
+				Config: utilsdk.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
 			},
 			{
@@ -621,7 +621,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
+				Config: utilsdk.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -631,7 +631,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				),
 			},
 			{
-				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
+				Config: utilsdk.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -772,8 +772,8 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"download_direct": true,
 		"cdn_redirect":    false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
 	}
-	allFields := util.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := util.FmtMapToHcl(allFields)
+	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
@@ -879,8 +879,8 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
 	}
-	allFields := util.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := util.FmtMapToHcl(allFields)
+	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
 	const remoteRepoFull = `
 		resource "artifactory_remote_%s_repository" "%s" {
 %s
@@ -1219,7 +1219,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := utilsdk.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -1270,7 +1270,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := utilsdk.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -1322,7 +1322,7 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
+				Config: utilsdk.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -1333,7 +1333,7 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 				),
 			},
 			{
-				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
+				Config: utilsdk.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(

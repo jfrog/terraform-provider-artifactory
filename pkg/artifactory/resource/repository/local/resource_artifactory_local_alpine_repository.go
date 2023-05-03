@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const alpinePackageType = "alpine"
 
-var AlpineLocalSchema = util.MergeMaps(
+var AlpineLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"primary_keypair_ref": {
@@ -29,7 +29,7 @@ type AlpineLocalRepoParams struct {
 }
 
 func UnpackLocalAlpineRepository(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return AlpineLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, alpinePackageType),
 		PrimaryKeyPairRef:    d.GetString("primary_keypair_ref", false),

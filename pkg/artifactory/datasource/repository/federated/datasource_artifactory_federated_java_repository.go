@@ -10,12 +10,12 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 
-	javaFederatedSchema := util.MergeMaps(
+	javaFederatedSchema := utilsdk.MergeMaps(
 		local.GetJavaRepoSchema(packageType, suppressPom),
 		memberSchema,
 		resource_repository.RepoLayoutRefSchema("federated", packageType),

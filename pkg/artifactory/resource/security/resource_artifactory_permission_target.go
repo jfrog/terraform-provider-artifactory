@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const PermissionsEndPoint = "artifactory/api/v2/security/permissions/"
@@ -161,13 +161,13 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 func hashPrincipal(o interface{}) int {
 	p := o.(map[string]interface{})
 	part1 := schema.HashString(p["name"].(string)) + 31
-	permissions := util.CastToStringArr(p["permissions"].(*schema.Set).List())
+	permissions := utilsdk.CastToStringArr(p["permissions"].(*schema.Set).List())
 	part3 := schema.HashString(strings.Join(permissions, ""))
 	return part1 * part3
 }
 
 func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {
 		unpackEntity := func(rawEntityData interface{}) *Actions {
@@ -181,7 +181,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 				for _, v := range permList {
 					id := v.(map[string]interface{})
 
-					permissions[id["name"].(string)] = util.CastToStringArr(id["permissions"].(*schema.Set).List())
+					permissions[id["name"].(string)] = utilsdk.CastToStringArr(id["permissions"].(*schema.Set).List())
 				}
 				return permissions
 			}
@@ -209,7 +209,7 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 
 		// This will always exist
 		{
-			tmp := util.CastToStringArr(permissionData["repositories"].(*schema.Set).List())
+			tmp := utilsdk.CastToStringArr(permissionData["repositories"].(*schema.Set).List())
 			permission.Repositories = tmp
 		}
 
@@ -220,14 +220,14 @@ func unpackPermissionTarget(s *schema.ResourceData) *PermissionTargetParams {
 			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
 			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
 			// it responds with "[**]" which messes us the testutil. This hack seems to line them up
-			tmp := util.CastToStringArr(v.(*schema.Set).List())
+			tmp := utilsdk.CastToStringArr(v.(*schema.Set).List())
 			if len(tmp) == 0 {
 				tmp = []string{""}
 			}
 			permission.IncludePatterns = tmp
 		}
 		if v, ok := permissionData["excludes_pattern"]; ok {
-			tmp := util.CastToStringArr(v.(*schema.Set).List())
+			tmp := utilsdk.CastToStringArr(v.(*schema.Set).List())
 			permission.ExcludePatterns = tmp
 		}
 		if v, ok := permissionData["actions"]; ok {
@@ -265,7 +265,7 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 			for k, v := range e {
 				perm[count] = map[string]interface{}{
 					"name":        k,
-					"permissions": schema.NewSet(schema.HashString, util.CastToInterfaceArr(v)),
+					"permissions": schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(v)),
 				}
 				count++
 			}
@@ -277,15 +277,15 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 
 		if p != nil {
 			if p.IncludePatterns != nil {
-				s["includes_pattern"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.IncludePatterns))
+				s["includes_pattern"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.IncludePatterns))
 			}
 
 			if p.ExcludePatterns != nil {
-				s["excludes_pattern"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.ExcludePatterns))
+				s["excludes_pattern"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.ExcludePatterns))
 			}
 
 			if p.Repositories != nil {
-				s["repositories"] = schema.NewSet(schema.HashString, util.CastToInterfaceArr(p.Repositories))
+				s["repositories"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.Repositories))
 			}
 
 			if p.Actions != nil {
@@ -308,7 +308,7 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 		return []interface{}{s}
 	}
 
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	errors := setValue("name", permissionTarget.Name)
 	if permissionTarget.Repo != nil {
@@ -331,7 +331,7 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 func resourcePermissionTargetCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(util.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -341,7 +341,7 @@ func resourcePermissionTargetCreate(_ context.Context, d *schema.ResourceData, m
 
 func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := new(PermissionTargetParams)
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -356,7 +356,7 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(d)
 
-	if _, err := m.(util.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
+	if _, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -365,13 +365,13 @@ func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
 
 	return diag.FromErr(err)
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
-	resp, err := m.(util.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream permission has been manually removed
 		return false, nil

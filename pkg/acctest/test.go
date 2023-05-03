@@ -19,7 +19,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -87,7 +87,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		providerMeta := Provider.Meta().(util.ProvderMetadata)
+		providerMeta := Provider.Meta().(utilsdk.ProvderMetadata)
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {

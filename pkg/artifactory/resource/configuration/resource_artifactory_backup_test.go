@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -64,14 +64,14 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
 				),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 * * ? *"),
@@ -160,7 +160,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
+				Config: utilsdk.ExecuteTemplate("backup", BackupTemplateFull, fields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
 				),
@@ -177,7 +177,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 
 func testAccBackupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_backup."+id]
 		if !ok {

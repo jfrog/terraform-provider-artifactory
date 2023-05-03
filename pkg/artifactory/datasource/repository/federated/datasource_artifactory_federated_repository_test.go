@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -47,7 +47,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 
 	repoTypeAdjusted := local.GetPackageType(repoType)
 
-	federatedRepositoryConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
@@ -103,7 +103,7 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "RSA"
@@ -228,8 +228,8 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 	`
 	fqrn := "data." + tempFqrn
 
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
-	federatedRepositoryUpdated := util.ExecuteTemplate(
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate(
 		"TestAccFederatedCargoRepository",
 		template,
 		map[string]interface{}{
@@ -389,7 +389,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 		}
 	`
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":         kpId,
 		"kp_name":       kpName,
 		"kp_id2":        kpId2,
@@ -399,7 +399,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 		"memberUrl":     federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
-	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":         kpId,
 		"kp_name":       kpName,
 		"kp_id2":        kpId2,
@@ -479,7 +479,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
 		"block":     testutil.RandBool(),
@@ -488,7 +488,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -548,7 +548,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
 		"block":     testutil.RandBool(),
@@ -557,7 +557,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -610,7 +610,7 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -664,7 +664,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("maven-federated", "artifactory_federated_maven_repository")
 
 	repoLayoutRef := func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()
-	tempStruct := util.MergeMaps(commonJavaParams)
+	tempStruct := utilsdk.MergeMaps(commonJavaParams)
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
 	tempStruct["suppress_pom_consistency_checks"] = false
@@ -683,7 +683,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
+				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataFqrn, "key", name),
 					resource.TestCheckResourceAttr(dataFqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -696,7 +696,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 				),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataFqrn, "key", name),
 					resource.TestCheckResourceAttr(dataFqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
@@ -716,7 +716,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	name := fmt.Sprintf("%s-federated", repoType)
 	resourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	_, resourceFqrn, name := testutil.MkNames(name, resourceName)
-	tempStruct := util.MergeMaps(commonJavaParams)
+	tempStruct := utilsdk.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(resourceFqrn, ".")[0]
@@ -737,7 +737,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 		CheckDestroy:      acctest.VerifyDeleted(resourceFqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(resourceFqrn, federatedJavaRepositoryBasic, tempStruct),
+				Config: utilsdk.ExecuteTemplate(resourceFqrn, federatedJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -749,7 +749,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 				),
 			},
 			{
-				Config: util.ExecuteTemplate(resourceFqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Config: utilsdk.ExecuteTemplate(resourceFqrn, federatedJavaRepositoryBasic, updatedStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
@@ -798,7 +798,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
 
 	updates := map[string]interface{}{
 		"force_nuget_authentication": testutil.RandBool(),
@@ -806,7 +806,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
 
 	fqrn := "data." + tempFqrn
 
@@ -961,7 +961,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 		}
 	`
 
-	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":                      kpId,
 		"kp_name":                    kpName,
 		"kp_id2":                     kpId2,
@@ -972,7 +972,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 		"memberUrl":                  federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
-	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":                      kpId,
 		"kp_name":                    kpName,
 		"kp_id2":                     kpId2,
@@ -1049,7 +1049,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 			key = artifactory_federated_terraform_{{ .registryType }}_repository.{{ .name }}.id
 		}
 	`
-	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedTerraformRepository", template, params)
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedTerraformRepository", template, params)
 
 	fqrn := "data." + tempFqrn
 

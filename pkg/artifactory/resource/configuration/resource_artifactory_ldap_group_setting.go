@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 
 	"github.com/jfrog/terraform-provider-shared/packer"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"gopkg.in/yaml.v3"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -108,11 +108,11 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 	}
 
 	var resourceLdapGroupSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		name := data.GetString("name", false)
 
 		ldapGroupConfigs := XmlLdapGroupConfig{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -162,7 +162,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 
 		rsrcLdapGroupSetting := unpackLdapGroupSetting(d)
 
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -226,7 +226,7 @@ security:
 }
 
 func unpackLdapGroupSetting(s *schema.ResourceData) LdapGroupSetting {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	ldapGroupSetting := LdapGroupSetting{
 		Name:                 d.GetString("name", false),
 		EnabledLdap:          d.GetString("ldap_setting_key", false),

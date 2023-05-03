@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -21,7 +21,7 @@ func TestAccGroup_basic(t *testing.T) {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -133,7 +133,7 @@ func TestAccGroup_full(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			util.ExecuteTemplate(
+			utilsdk.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{
@@ -267,7 +267,7 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			util.ExecuteTemplate(
+			utilsdk.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{"groupName": groupName},
@@ -319,7 +319,7 @@ func TestAccGroup_unmanagedmembers(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -340,7 +340,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {

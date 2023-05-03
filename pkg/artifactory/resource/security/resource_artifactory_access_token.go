@@ -16,8 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 // AccessTokenRevokeOptions jfrog client go has no v1 code and moving to v2 would be a lot of work.
@@ -163,11 +162,11 @@ func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m inte
 		RefreshToken string `json:"refresh_token,omitempty"`
 	}
 
-	client := m.(util.ProvderMetadata).Client
+	client := m.(utilsdk.ProvderMetadata).Client
 	grantType := "client_credentials" // client_credentials is the only supported type
 
 	tokenOptions := AccessTokenOptions{}
-	resourceData := &util.ResourceData{ResourceData: d}
+	resourceData := &utilsdk.ResourceData{ResourceData: d}
 
 	date, expiresIn, err := getDate(d)
 	if err != nil {
@@ -210,7 +209,7 @@ func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(util.ProvderMetadata).Client.R().
+	_, err = m.(utilsdk.ProvderMetadata).Client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetResult(&accessToken).
 		SetFormDataFromValues(values).Post("artifactory/api/security/token")
@@ -271,7 +270,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 		revokeOptions := AccessTokenRevokeOptions{}
 		revokeOptions.Token = d.Get("access_token").(string)
 		values, err := query.Values(revokeOptions)
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetHeader("Content-Type", "application/x-www-form-urlencoded").
 			SetFormDataFromValues(values).Post("artifactory/api/security/token/revoke")
 		if err != nil {

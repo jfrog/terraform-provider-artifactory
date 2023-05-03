@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const ProxyTemplate = `
@@ -75,11 +75,11 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, ProxyTemplate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, ProxyTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyProxy(fqrn, testData)),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, ProxyUpdatedTemplate, testDataUpdated),
+				Config: utilsdk.ExecuteTemplate(fqrn, ProxyUpdatedTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyProxy(fqrn, testDataUpdated)),
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccProxyCustomizeDiff(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config:      util.ExecuteTemplate(fqrn, ProxyUpdatedTemplate, testData),
+				Config:      utilsdk.ExecuteTemplate(fqrn, ProxyUpdatedTemplate, testData),
 				ExpectError: regexp.MustCompile("services cannot be set when platform_default is true"),
 			},
 		},
@@ -198,7 +198,7 @@ func verifyProxy(fqrn string, testData map[string]string) resource.TestCheckFunc
 
 func testAccProxyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_proxy."+id]
 		if !ok {

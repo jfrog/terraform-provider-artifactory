@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 // PullReplication this is the structure for a PULL replication on a remote repo
@@ -115,7 +115,7 @@ var pullReplicationSchema = map[string]*schema.Schema{
 }
 
 func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	replicationConfig := new(ReplicationBody)
 
 	replicationConfig.RepoKey = d.GetString("repo_key", false)
@@ -135,7 +135,7 @@ func unpackPullReplication(s *schema.ResourceData) *ReplicationBody {
 }
 
 func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Diagnostics {
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	setValue("repo_key", config.RepoKey)
 	setValue("cron_exp", config.CronExp)
@@ -159,7 +159,7 @@ func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Di
 func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Put(EndpointPath + replicationConfig.RepoKey)
@@ -174,7 +174,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -203,7 +203,7 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + replicationConfig.RepoKey)

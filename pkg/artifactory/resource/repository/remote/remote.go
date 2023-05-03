@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -99,7 +99,7 @@ var PackageTypesLikeBasic = []string{
 }
 
 var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		repository.BaseRepoSchema,
 		map[string]*schema.Schema{
 			"url": {
@@ -341,7 +341,7 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validator.CommaSeperatedList,
-				StateFunc:        util.FormatCommaSeparatedString,
+				StateFunc:        utilsdk.FormatCommaSeparatedString,
 				Description: "The set of mime types that should override the block_mismatching_mime_types setting. " +
 					"Eg: 'application/json,application/xml'. Default value is empty.",
 			},
@@ -362,7 +362,7 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 	)
 }
 
-var baseRemoteRepoSchemaV1 = util.MergeMaps(
+var baseRemoteRepoSchemaV1 = utilsdk.MergeMaps(
 	BaseRemoteRepoSchema(true),
 	map[string]*schema.Schema{
 		"propagate_query_params": {
@@ -393,7 +393,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 }
 
 func JavaRemoteSchema(isResource bool, packageType string, suppressPom bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"fetch_jars_eagerly": {
@@ -450,7 +450,7 @@ func JavaRemoteSchema(isResource bool, packageType string, suppressPom bool) map
 }
 
 func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) RepositoryRemoteBaseParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	repo := RepositoryRemoteBaseParams{
 		Rclass:                            "remote",
@@ -518,7 +518,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 }
 
 func UnpackVcsRemoteRepo(s *schema.ResourceData) RepositoryVcsParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	return RepositoryVcsParams{
 		VcsGitProvider:    d.GetString("vcs_git_provider", false),
 		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),
@@ -526,7 +526,7 @@ func UnpackVcsRemoteRepo(s *schema.ResourceData) RepositoryVcsParams {
 }
 
 func UnpackJavaRemoteRepo(s *schema.ResourceData, repoType string) JavaRemoteRepo {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	return JavaRemoteRepo{
 		RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, repoType),
 		FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),

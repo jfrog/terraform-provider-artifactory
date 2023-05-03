@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -93,21 +93,21 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	checkLicense := d.Get("check_license").(bool)
 	if checkLicense {
-		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
+		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			return nil, licenseErr
 		}
 	}
 
-	version, err := util.GetArtifactoryVersion(restyBase)
+	version, err := utilsdk.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
-	util.SendUsage(ctx, restyBase, productId, featureUsage)
+	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	return util.ProvderMetadata{
+	return utilsdk.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}, nil

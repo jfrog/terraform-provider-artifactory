@@ -6,8 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
 )
@@ -123,7 +123,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	}
 
 	var unpackPropertySet = func(s *schema.ResourceData) PropertySet {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		propertySet := PropertySet{
 			Name:    d.GetString("name", false),
 			Visible: d.GetBool("visible", false),
@@ -155,7 +155,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	}
 
 	var packPropertySet = func(p *PropertySet, d *schema.ResourceData) diag.Diagnostics {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		setValue("name", p.Name)
 		setValue("visible", p.Visible)
@@ -198,12 +198,12 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	}
 
 	var resourcePropertySetRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		name := data.GetString("name", false)
 
 		propertySetConfigs := PropertySets{}
 
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -276,7 +276,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	var resourcePropertySetDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
 
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

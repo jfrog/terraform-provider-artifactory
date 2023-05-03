@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type NugetRemoteRepo struct {
@@ -20,7 +20,7 @@ type NugetRemoteRepo struct {
 const NugetPackageType = "nuget"
 
 var NugetRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"feed_context_path": {
@@ -63,7 +63,7 @@ var NugetRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 
 	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := NugetRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, NugetPackageType),
 			FeedContextPath:            d.GetString("feed_context_path", false),

@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type CargoFederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type CargoFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	packageType := "cargo"
 
-	cargoFederatedSchema := util.MergeMaps(
+	cargoFederatedSchema := utilsdk.MergeMaps(
 		local.CargoLocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),

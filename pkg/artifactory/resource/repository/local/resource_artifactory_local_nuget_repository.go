@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const nugetPackageType = "nuget"
 
-var NugetLocalSchema = util.MergeMaps(
+var NugetLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_snapshots": {
@@ -37,7 +37,7 @@ type NugetLocalRepositoryParams struct {
 }
 
 func UnpackLocalNugetRepository(data *schema.ResourceData, rclass string) NugetLocalRepositoryParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return NugetLocalRepositoryParams{
 		RepositoryBaseParams:     UnpackBaseRepo(rclass, data, nugetPackageType),
 		MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),

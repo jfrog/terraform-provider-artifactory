@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -70,7 +70,7 @@ func TestAccDataSourceVirtualBowerRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(virtual.BowerPackageType, t, map[string]interface{}{
 		"description":                    "bower virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
-		"external_dependencies_patterns": util.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
+		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
 	}))
 }
 
@@ -79,7 +79,7 @@ func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
 		"description":                        "bower virtual repository public description testing.",
 		"debian_default_architectures":       "i386,amd64",
 		"retrieval_cache_period_seconds":     650,
-		"optional_index_compression_formats": util.CastToInterfaceArr([]string{"bz2", "xz"}),
+		"optional_index_compression_formats": utilsdk.CastToInterfaceArr([]string{"bz2", "xz"}),
 	}))
 }
 
@@ -94,7 +94,7 @@ func TestAccDataSourceVirtualGoRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(virtual.GoPackageType, t, map[string]interface{}{
 		"description":                    "go virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
-		"external_dependencies_patterns": util.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
+		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
 	}))
 }
 
@@ -111,7 +111,7 @@ func TestAccDataSourceVirtualNpmRepository(t *testing.T) {
 		"description":                    "npm virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
 		"retrieval_cache_period_seconds": 650,
-		"external_dependencies_patterns": util.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
+		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
 	}))
 }
 
@@ -128,7 +128,7 @@ func TestAccDataSourceVirtualRpmRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
+	virtualRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -279,8 +279,8 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 		"description": "A test virtual repo",
 		"notes":       "Internal description",
 	}
-	allFields := util.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := util.FmtMapToHcl(allFields)
+	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
 	const virtualRepoFull = `
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
