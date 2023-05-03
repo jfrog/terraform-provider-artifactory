@@ -16,12 +16,12 @@ const DistributionPublicKeysAPIEndPoint = "artifactory/api/security/keys/trusted
 
 type distributionPublicKeyPayLoad struct {
 	KeyID       string `json:"kid"`
-	Alias       string `hcl:"alias" json:"alias"`
-	Fingerprint string `hcl:"fingerprint" json:"fingerprint"`
-	PublicKey   string `hcl:"public_key" json:"key"`
-	IssuedOn    string `hcl:"issued_on" json:"issued_on"`
-	IssuedBy    string `hcl:"issued_by" json:"issued_by"`
-	ValidUntil  string `hcl:"valid_until" json:"valid_until"`
+	Alias       string `json:"alias"`
+	Fingerprint string `json:"fingerprint"`
+	PublicKey   string `json:"key"`
+	IssuedOn    string `json:"issued_on"`
+	IssuedBy    string `json:"issued_by"`
+	ValidUntil  string `json:"valid_until"`
 }
 
 type DistributionPublicKeysList struct {
