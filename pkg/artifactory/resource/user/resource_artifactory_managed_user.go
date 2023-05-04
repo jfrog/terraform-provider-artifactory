@@ -26,7 +26,7 @@ func (r *ArtifactoryManagedUserResource) Metadata(ctx context.Context, req resou
 func (r *ArtifactoryManagedUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	var managedUserSchemaFramework = map[string]schema.Attribute{
 		"password": schema.StringAttribute{
-			MarkdownDescription: "Password for the user. Must be 12 characters with 1 digit, 1 symbol, with upper and lower case letters.",
+			MarkdownDescription: "Password for the user.",
 			Required:            true,
 			Sensitive:           true,
 			Validators:          []validator.String{stringvalidator.LengthAtLeast(12)},

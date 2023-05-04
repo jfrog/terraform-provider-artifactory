@@ -16,9 +16,9 @@ import (
 var Version = "7.0.0" // needs to be exported so make file can update this
 var productId = "terraform-provider-artifactory/" + Version
 
-// Provider Artifactory provider that supports configuration via Access AccessToken
+// SdkV2 Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
-func Provider() *schema.Provider {
+func SdkV2() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {

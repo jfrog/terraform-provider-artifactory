@@ -29,8 +29,8 @@ func TestMuxServer(t *testing.T) {
 			"artifactory": func() (tfprotov5.ProviderServer, error) {
 				ctx := context.Background()
 				providers := []func() tfprotov5.ProviderServer{
-					providerserver.NewProtocol5(provider.New("test")()), // terraform-plugin-framework provider
-					provider.Provider().GRPCProvider,                    // terraform-plugin-sdk provider
+					providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
+					provider.SdkV2().GRPCProvider,                       // terraform-plugin-sdk provider
 				}
 
 				muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)

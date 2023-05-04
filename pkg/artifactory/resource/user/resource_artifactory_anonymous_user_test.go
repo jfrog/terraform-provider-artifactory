@@ -23,7 +23,7 @@ func TestAccAnonymousUser_Importable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAnonymousUser_NotCreatable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		Steps: []resource.TestStep{
 			{

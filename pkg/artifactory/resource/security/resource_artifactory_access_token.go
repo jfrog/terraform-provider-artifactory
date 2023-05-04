@@ -276,7 +276,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			if resp != nil {
 				if resp.StatusCode() == http.StatusNotFound {
-					tflog.Debug(ctx, "AccessToken Revoked")
+					tflog.Debug(ctx, "Access Token Revoked")
 					return nil
 				}
 				// the original atlassian code considered any error code fine. However, expiring tokens can't be revoked

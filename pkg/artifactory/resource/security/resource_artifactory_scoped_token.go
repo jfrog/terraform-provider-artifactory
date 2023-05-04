@@ -157,7 +157,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				"An admin shall be able to set whether expiry is mandatory, what is the default expiry, " +
 				"and what is the maximum expiry allowed. Must be non-negative. Default value is based on " +
 				"configuration in 'access.config.yaml'. See [API documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RevokeTokenbyIDrevoketokenbyid) for details. " +
-				"AccessToken would not be saved by Artifactory if this is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
+				"Access Token would not be saved by Artifactory if this is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
 		},
 		"refreshable": {
 			Type:        schema.TypeBool,
@@ -276,7 +276,7 @@ func ResourceArtifactoryScopedToken() *schema.Resource {
 				return diag.Diagnostics{{
 					Severity: diag.Warning,
 					Summary:  fmt.Sprintf("Scoped token %s not found or not created", id),
-					Detail:   "AccessToken would not be saved by Artifactory if 'expires_in' is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
+					Detail:   "Access Token would not be saved by Artifactory if 'expires_in' is less than the persistency threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details.",
 				}}
 			}
 			return diag.FromErr(err)

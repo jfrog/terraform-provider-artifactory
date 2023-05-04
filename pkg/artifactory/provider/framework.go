@@ -35,8 +35,7 @@ type ArtifactoryProviderModel struct {
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
 func (p *ArtifactoryProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "terraform-provider-artifactory"
-	resp.Version = "7.0.0" // Will be to overwritten in a build process
-	resp.Version = p.version
+	resp.Version = Version
 }
 
 // Schema satisfies the provider.Provider interface for ArtifactoryProvider.
@@ -63,9 +62,9 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Provider specific implementation.
 
-	// Check environment variables first
-	url := os.Getenv("JFROG_URL")
-	accessToken := os.Getenv("JFROG_ACCESS_TOKEN")
+	// Check environment variables, first available OS variable will be assigned to the var
+	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
+	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
 
 	var config ArtifactoryProviderModel
 
@@ -88,7 +87,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	if accessToken == "" {
 		resp.Diagnostics.AddError(
 			"Missing  Access AccessToken Configuration",
-			"While configuring the provider, the API token was not found in "+
+			"While configuring the provider, the Access Token was not found in "+
 				"the JFROG_ACCESS_TOKEN environment variable or provider "+
 				"configuration block access_token attribute.",
 		)
@@ -98,8 +97,8 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	if url == "" {
 		resp.Diagnostics.AddError(
 			"Missing URL Configuration",
-			"While configuring the provider, the endpoint was not found in "+
-				"the JFROG_URL environment variable or provider "+
+			"While configuring the provider, the url was not found in "+
+				"the JFROG_URL/ARTIFACTORY_URL environment variables or provider "+
 				"configuration block url attribute.",
 		)
 		// Not returning early allows the logic to collect all errors.
@@ -119,7 +118,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			fmt.Sprintf("%v", err),
 		)
 	}
-	if config.CheckLicense.IsNull() {
+	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() == true {
 		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			resp.Diagnostics.AddError(
@@ -139,7 +138,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	utilsdk.SendUsage(ctx, restyBase, "terraform-provider-artifactory/"+p.version, featureUsage)
+	utilsdk.SendUsage(ctx, restyBase, "terraform-provider-artifactory/"+Version, featureUsage)
 
 	resp.DataSourceData = utilsdk.ProvderMetadata{
 		Client:             restyBase,
@@ -169,10 +168,17 @@ func (p *ArtifactoryProvider) DataSources(ctx context.Context) []func() datasour
 	}
 }
 
-func New(version string) func() provider.Provider {
+func Framework() func() provider.Provider {
 	return func() provider.Provider {
-		return &ArtifactoryProvider{
-			version: version,
+		return &ArtifactoryProvider{}
+	}
+}
+
+func CheckEnvVars(vars []string, dv string) string {
+	for _, k := range vars {
+		if v := os.Getenv(k); v != "" {
+			return v
 		}
 	}
+	return dv
 }

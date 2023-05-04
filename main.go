@@ -25,8 +25,8 @@ func main() {
 	flag.Parse()
 
 	providers := []func() tfprotov5.ProviderServer{
-		providerserver.NewProtocol5(provider.New(provider.Version)()), // Example terraform-plugin-framework provider
-		provider.Provider().GRPCProvider,                              // Example terraform-plugin-sdk provider
+		providerserver.NewProtocol5(provider.Framework()()), // Example terraform-plugin-framework provider
+		provider.SdkV2().GRPCProvider,                       // Example terraform-plugin-sdk provider
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)

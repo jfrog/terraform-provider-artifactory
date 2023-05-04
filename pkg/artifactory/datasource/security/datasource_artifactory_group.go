@@ -1,15 +1,13 @@
 package security
 
 import (
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/net/context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"golang.org/x/net/context"
 )
 
 func DataSourceArtifactoryGroup() *schema.Resource {

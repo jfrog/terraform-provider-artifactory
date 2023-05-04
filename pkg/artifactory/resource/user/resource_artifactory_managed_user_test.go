@@ -18,7 +18,7 @@ func TestAccManagedUser_no_groups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
 			email       		= "dummy%d@a.com"
-			password			= "Passsw0rd!"
+			password			= "Passs"
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
@@ -26,7 +26,7 @@ func TestAccManagedUser_no_groups(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccManagedUser_empty_groups(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -111,7 +111,7 @@ func TestAccManagedUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{

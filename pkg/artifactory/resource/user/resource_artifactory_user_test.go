@@ -17,12 +17,6 @@ import (
 	//"github.com/mitchellh/go-testing-interface"
 )
 
-var (
-	// these will be set by the goreleaser configuration
-	// to appropriate values for the compiled binary
-	version = "test"
-)
-
 func TestAccUser_basic_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
@@ -45,7 +39,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		PreCheck:     func() { acctest.PreCheck(t) },
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
@@ -89,7 +83,7 @@ func TestAccUser_no_password(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		PreCheck:     func() { acctest.PreCheck(t) },
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
@@ -133,7 +127,7 @@ func TestAccUser_default_group(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		PreCheck:     func() { acctest.PreCheck(t) },
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
@@ -178,7 +172,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		PreCheck:     func() { acctest.PreCheck(t) },
 		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
@@ -230,7 +224,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		CheckDestroy: testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -304,7 +298,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.New(version)()),
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
 		},
 		CheckDestroy: testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{

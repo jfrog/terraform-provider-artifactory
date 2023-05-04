@@ -38,10 +38,10 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	Provider = provider.SdkV2()
 
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		"artifactory": func() (*schema.Provider, error) { return provider.Provider(), nil },
+		"artifactory": func() (*schema.Provider, error) { return provider.SdkV2(), nil },
 	}
 }
 
