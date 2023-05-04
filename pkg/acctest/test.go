@@ -71,7 +71,7 @@ func PreCheck(t *testing.T) {
 }
 
 func GetArtifactoryUrl(t *testing.T) string {
-	return testutil.GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
+	return testutil.GetEnvVarWithFallback(t, "JFROG_URL", "ARTIFACTORY_URL")
 }
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)

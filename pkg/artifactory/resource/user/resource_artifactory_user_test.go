@@ -14,7 +14,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	//"github.com/mitchellh/go-testing-interface"
 )
 
 func TestAccUser_basic_groups(t *testing.T) {
