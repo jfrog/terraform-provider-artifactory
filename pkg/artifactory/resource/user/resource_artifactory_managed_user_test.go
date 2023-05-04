@@ -18,7 +18,7 @@ func TestAccManagedUser_no_groups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
 			email       		= "dummy%d@a.com"
-			password			= "Passs"
+			password			= "Passsw0rd!"
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")

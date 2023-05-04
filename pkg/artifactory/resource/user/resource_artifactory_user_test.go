@@ -33,7 +33,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 			email 				= "{{ .email }}"
 			password			= "Passsw0rd!"
 			admin 				= false
-			groups      		= [ "readers","test" ]
+			groups      		= [ "readers" ]
 		}
 	`, params)
 
@@ -48,7 +48,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 				Config: userNoGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccUser_no_password(t *testing.T) {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
 			admin 				= false
-			groups      		= [ "readers","test" ]
+			groups      		= [ "readers" ]
 		}
 	`, params)
 
@@ -92,7 +92,7 @@ func TestAccUser_no_password(t *testing.T) {
 				Config: userNoGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
 			{
