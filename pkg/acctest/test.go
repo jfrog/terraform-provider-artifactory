@@ -255,7 +255,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 
-	accessToken := testutil.GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
+	accessToken := testutil.GetEnvVarWithFallback(t, "JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN")
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {
