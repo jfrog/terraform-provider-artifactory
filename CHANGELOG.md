@@ -1,4 +1,4 @@
-## 7.8.0 (May 5, 2023)
+## 7.8.0 (May 5, 2023). Tested on Artifactory 7.55.10
 
 IMPROVEMENTS:
 
