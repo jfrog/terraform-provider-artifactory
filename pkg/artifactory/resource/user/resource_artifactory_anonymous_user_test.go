@@ -4,12 +4,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccAnonymousUserImportable(t *testing.T) {
+func TestAccAnonymousUser_Importable(t *testing.T) {
 	const anonymousUserConfig = `
 		resource "artifactory_anonymous_user" "anonymous" {
 		}
@@ -18,15 +21,17 @@ func TestAccAnonymousUserImportable(t *testing.T) {
 	fqrn := "artifactory_anonymous_user.anonymous"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config:           anonymousUserConfig,
 				ResourceName:     fqrn,
 				ImportState:      true,
 				ImportStateId:    "anonymous",
-				ImportStateCheck: validator.CheckImportState("anonymous", "name"),
+				ImportStateCheck: validator.CheckImportState("anonymous", "id"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", "anonymous"),
 				),
@@ -35,7 +40,7 @@ func TestAccAnonymousUserImportable(t *testing.T) {
 	})
 }
 
-func TestAccAnonymousUserNotCreateable(t *testing.T) {
+func TestAccAnonymousUser_NotCreatable(t *testing.T) {
 
 	const anonymousUserConfig = `
 		resource "artifactory_anonymous_user" "anonymous" {
@@ -44,8 +49,10 @@ func TestAccAnonymousUserNotCreateable(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config:      anonymousUserConfig,

@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource"
-	"github.com/jfrog/terraform-provider-shared/test"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -115,7 +115,7 @@ Then download the artifact using SNAPSHOT instead of the actual timestamp in the
 Compare sha256 to match with the file with the latest timestamp.
 */
 func TestDownloadFileWith_path_is_aliased(t *testing.T) {
-	_, _, repoName := test.MkNames("maven-local", "artifactory_local_maven_repository")
+	_, _, repoName := testutil.MkNames("maven-local", "artifactory_local_maven_repository")
 
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 
@@ -169,7 +169,7 @@ path_is_aliased parameter is set to `false`, so provider will send try to find e
 in the filename and will fail.
 */
 func TestDownloadFileWith_path_is_aliased_Negative(t *testing.T) {
-	_, _, repoName := test.MkNames("maven-local", "artifactory_local_maven_repository")
+	_, _, repoName := testutil.MkNames("maven-local", "artifactory_local_maven_repository")
 
 	downloadPath := fmt.Sprintf("%s/multi1-3.7-SNAPSHOT.jar", t.TempDir())
 

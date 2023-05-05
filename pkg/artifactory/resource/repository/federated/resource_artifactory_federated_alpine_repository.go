@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type AlpineFederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type AlpineFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	packageType := "alpine"
 
-	alpineFederatedSchema := util.MergeMaps(
+	alpineFederatedSchema := utilsdk.MergeMaps(
 		local.AlpineLocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),

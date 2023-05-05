@@ -6,8 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const ApiKeyEndpoint = "artifactory/api/security/apiKey"
@@ -44,7 +43,7 @@ func ResourceArtifactoryApiKey() *schema.Resource {
 
 func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	errors := setValue("api_key", apiKey)
 
@@ -58,7 +57,7 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
 
-	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Post(ApiKeyEndpoint)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -72,7 +71,7 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
-	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Get(ApiKeyEndpoint)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -84,6 +83,6 @@ func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}
 }
 
 func apiKeyRevoke(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(ApiKeyEndpoint)
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(ApiKeyEndpoint)
 	return diag.FromErr(err)
 }

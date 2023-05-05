@@ -5,8 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,7 +40,7 @@ func ResourceArtifactoryGeneralSecurity() *schema.Resource {
 }
 
 func resourceGeneralSecurityRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 
 	generalSettings := GeneralSettings{}
 
@@ -96,7 +96,7 @@ security:
 }
 
 func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	security := *new(GeneralSecurity)
 
 	settings := GeneralSettings{
@@ -108,7 +108,7 @@ func unpackGeneralSecurity(s *schema.ResourceData) *GeneralSecurity {
 }
 
 func packGeneralSecurity(s *GeneralSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	errors := setValue("enable_anonymous_access", s.GeneralSettings.AnonAccessEnabled)
 

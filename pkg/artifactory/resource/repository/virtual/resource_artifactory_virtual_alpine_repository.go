@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const AlpinePackageType = "alpine"
 
-var AlpineVirtualSchema = util.MergeMaps(
+var AlpineVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	RetrievalCachePeriodSecondsSchema,
 	map[string]*schema.Schema{
@@ -30,7 +30,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	}
 
 	var unpackAlpineVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := AlpineVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, AlpinePackageType),

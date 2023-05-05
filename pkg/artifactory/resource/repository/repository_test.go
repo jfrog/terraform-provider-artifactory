@@ -8,22 +8,22 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
 		}
@@ -31,7 +31,7 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 		"name": name,
 	})
 
-	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryWithProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = "{{ .projectKey }}"
@@ -72,12 +72,12 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
-	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryWithProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = "{{ .projectKey }}"
@@ -88,7 +88,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 		"projectKey": projectKey,
 	})
 
-	localRepositoryNoProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryNoProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
 		}
@@ -127,16 +127,16 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 
 func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -157,8 +157,8 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
-					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
+					return utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
@@ -173,16 +173,16 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 
 func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -203,8 +203,8 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
-					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
+					return utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
@@ -215,16 +215,16 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 
 func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -245,8 +245,8 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
-					isSupported, err := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
+					isSupported, err := utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 					return !isSupported, err
 				},
 				Config:      localRepositoryBasic,

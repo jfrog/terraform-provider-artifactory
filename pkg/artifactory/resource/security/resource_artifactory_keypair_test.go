@@ -5,16 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
-	id, fqrn, name := test.MkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := testutil.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -49,7 +49,7 @@ func TestAccKeyPairFailPrivateCertCheck(t *testing.T) {
 }
 
 func TestAccKeyPairFailPubCertCheck(t *testing.T) {
-	id, fqrn, name := test.MkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := testutil.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"
@@ -102,7 +102,7 @@ func TestAccKeyPairFailPubCertCheck(t *testing.T) {
 }
 
 func TestAccKeyPairRSA(t *testing.T) {
-	id, fqrn, name := test.MkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := testutil.MkNames("mykp", "artifactory_keypair")
 	template := `
 	resource "artifactory_keypair" "{{ .name }}" {
 		pair_name  = "{{ .name }}"
@@ -151,7 +151,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 	EOF
 	}`
 
-	keyBasic := util.ExecuteTemplate(
+	keyBasic := utilsdk.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{
@@ -161,7 +161,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 		},
 	)
 
-	keyUpdatedPassphrase := util.ExecuteTemplate(
+	keyUpdatedPassphrase := utilsdk.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{
@@ -212,7 +212,7 @@ func TestAccKeyPairRSA(t *testing.T) {
 }
 
 func TestAccKeyPairGPG(t *testing.T) {
-	id, fqrn, name := test.MkNames("mykp", "artifactory_keypair")
+	id, fqrn, name := testutil.MkNames("mykp", "artifactory_keypair")
 	keyBasic := fmt.Sprintf(`
 		resource "artifactory_keypair" "%s" {
 			pair_name  = "%s"

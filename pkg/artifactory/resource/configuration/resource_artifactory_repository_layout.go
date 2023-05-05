@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -72,7 +72,7 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 	}
 
 	var unpackLayout = func(s *schema.ResourceData) Layout {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		return Layout{
 			Name:                             d.GetString("name", false),
 			ArtifactPathPattern:              d.GetString("artifact_path_pattern", false),
@@ -84,11 +84,11 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 	}
 
 	var resourceLayoutRead = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		name := data.GetString("name", false)
 
 		layouts := Layouts{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

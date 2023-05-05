@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccReplicationConfigInvalidCronFails(t *testing.T) {
@@ -72,14 +72,14 @@ func TestAccReplicationConfigInvalidUrlFails(t *testing.T) {
 
 func TestAccReplicationConfig_full(t *testing.T) {
 	const testProxy = "test-proxy"
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_replication_config")
+	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_replication_config")
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationUpdateConfig := util.ExecuteTemplate("ReplicationConfigTemplate", `
+	replicationUpdateConfig := utilsdk.ExecuteTemplate("ReplicationConfigTemplate", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}

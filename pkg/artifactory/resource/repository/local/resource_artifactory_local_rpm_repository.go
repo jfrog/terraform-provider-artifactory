@@ -5,13 +5,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 const rpmPackageType = "rpm"
 
-var RpmLocalSchema = util.MergeMaps(
+var RpmLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"yum_root_depth": {
@@ -69,7 +69,7 @@ type RpmLocalRepositoryParams struct {
 }
 
 func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocalRepositoryParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return RpmLocalRepositoryParams{
 		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, rpmPackageType),
 		RootDepth:               d.GetInt("yum_root_depth", false),

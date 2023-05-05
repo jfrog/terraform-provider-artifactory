@@ -5,10 +5,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func mkTclForPullRepConfg(name, cron, url string) string {
@@ -40,7 +40,7 @@ func mkTclForPullRepConfg(name, cron, url string) string {
 
 func TestAccPullReplicationInvalidCron(t *testing.T) {
 
-	_, _, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	_, _, name := testutil.MkNames("lib-local", "artifactory_pull_replication")
 	var failCron = mkTclForPullRepConfg(name, "0 0 * * * !!", acctest.GetArtifactoryUrl(t))
 
 	resource.Test(t, resource.TestCase{
@@ -79,7 +79,7 @@ func TestPullReplicationLocalRepoCron(t *testing.T) {
 }
 
 func pullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*testing.T, resource.TestCase) {
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_pull_replication")
 	config := mkTclForPullRepConfg(name, cronExpression, acctest.GetArtifactoryUrl(t))
 
 	return t, resource.TestCase{
@@ -104,7 +104,7 @@ func pullReplicationLocalRepoTestCase(cronExpression string, t *testing.T) (*tes
 }
 
 func TestAccPullReplicationLocalRepo(t *testing.T) {
-	_, fqrn, name := test.MkNames("lib-local", "artifactory_pull_replication")
+	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_pull_replication")
 	url := acctest.GetArtifactoryUrl(t)
 	config := mkTclForPullRepConfg(name, "0 0 * * * ?", url)
 	updatedConfig := mkTclForPullRepConfg(name, "1 0 * * * ?", url)
@@ -150,8 +150,8 @@ func TestAccPullReplicationLocalRepo(t *testing.T) {
 }
 
 func TestAccPullReplicationRemoteRepo(t *testing.T) {
-	_, fqrn, name := test.MkNames("lib-remote", "artifactory_pull_replication")
-	_, fqrepoName, repoName := test.MkNames("lib-remote", "artifactory_remote_maven_repository")
+	_, fqrn, name := testutil.MkNames("lib-remote", "artifactory_pull_replication")
+	_, fqrepoName, repoName := testutil.MkNames("lib-remote", "artifactory_remote_maven_repository")
 	var tcl = `
 		resource "artifactory_remote_maven_repository" "{{ .remote_name }}" {
 			key 				  = "{{ .remote_name }}"
@@ -166,7 +166,7 @@ func TestAccPullReplicationRemoteRepo(t *testing.T) {
 			depends_on 				 = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = utilsdk.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repoName,
 	})

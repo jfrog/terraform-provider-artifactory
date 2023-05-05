@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const rclass = "federated"
@@ -86,7 +86,7 @@ var MemberSchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
 var memberSchema = MemberSchemaGenerator(true)
 
 func unpackMembers(data *schema.ResourceData) []Member {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	var members []Member
 
 	if v, ok := d.GetOkExists("member"); ok {
@@ -109,7 +109,7 @@ func unpackMembers(data *schema.ResourceData) []Member {
 }
 
 func PackMembers(members []Member, d *schema.ResourceData) error {
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	var federatedMembers []interface{}
 
@@ -131,11 +131,11 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 }
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
-	s := &util.ResourceData{ResourceData: d}
+	s := &utilsdk.ResourceData{ResourceData: d}
 	initialRepoName := s.GetString("key", false)
 	if v, ok := d.GetOk("member"); ok && s.GetBool("cleanup_on_delete", false) {
 		// Save base URL from the Client to be able to revert it back after the change below
-		baseURL := m.(util.ProvderMetadata).Client.BaseURL
+		baseURL := m.(utilsdk.ProvderMetadata).Client.BaseURL
 		federatedMembers := v.(*schema.Set).List()
 		for _, federatedMember := range federatedMembers {
 			id := federatedMember.(map[string]interface{})
@@ -144,21 +144,21 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 			memberHost := memberUrl[:strings.Index(memberUrl, parsedMemberUrl.Path)]
 			memberRepoName := strings.ReplaceAll(memberUrl, memberUrl[:strings.LastIndex(memberUrl, "/")+1], "")
 			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, baseURL) {
-				resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberHost).R().
+				resp, err := m.(utilsdk.ProvderMetadata).Client.SetBaseURL(memberHost).R().
 					AddRetryCondition(client.RetryOnMergeError).
 					SetPathParam("key", memberRepoName).
 					Delete(RepositoriesEndpoint)
 				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
 					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-					m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
+					m.(utilsdk.ProvderMetadata).Client.SetBaseURL(baseURL)
 					return diag.FromErr(err)
 				}
 			}
 		}
-		m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
+		m.(utilsdk.ProvderMetadata).Client.SetBaseURL(baseURL)
 	}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)

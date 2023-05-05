@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const NugetPackageType = "nuget"
 
-var NugetVirtualSchema = util.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
+var NugetVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
 	"force_nuget_authentication": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -26,7 +26,7 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 	}
 
 	var unpackNugetVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := NugetVirtualRepositoryParams{
 			RepositoryBaseParams:     UnpackBaseVirtRepo(s, NugetPackageType),

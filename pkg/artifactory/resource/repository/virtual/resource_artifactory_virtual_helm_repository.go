@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const HelmPackageType = "helm"
 
-var HelmVirtualSchema = util.MergeMaps(
+var HelmVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	RetrievalCachePeriodSecondsSchema,
 	map[string]*schema.Schema{
@@ -29,7 +29,7 @@ func ResourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	}
 
 	unpackHelmVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: data}
+		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := HelmVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, HelmPackageType),
 			UseNamespaces: d.GetBool("use_namespaces", false),

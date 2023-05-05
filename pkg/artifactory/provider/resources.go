@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/webhook"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func resourcesMap() map[string]*schema.Resource {
@@ -66,10 +66,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_rpm_repository":                  virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":                 virtual.ResourceArtifactoryVirtualHelmRepository(),
 		"artifactory_group":                                   security.ResourceArtifactoryGroup(),
-		"artifactory_user":                                    user.ResourceArtifactoryUser(),
 		"artifactory_unmanaged_user":                          user.ResourceArtifactoryUser(), // alias of artifactory_user
-		"artifactory_managed_user":                            user.ResourceArtifactoryManagedUser(),
-		"artifactory_anonymous_user":                          user.ResourceArtifactoryAnonymousUser(),
 		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
@@ -135,5 +132,5 @@ func resourcesMap() map[string]*schema.Resource {
 		resourcesMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
 	}
 
-	return util.AddTelemetry(productId, resourcesMap)
+	return utilsdk.AddTelemetry(productId, resourcesMap)
 }

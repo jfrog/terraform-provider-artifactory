@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const NpmPackageType = "npm"
 
-var NpmVirtualSchema = util.MergeMaps(
+var NpmVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	RetrievalCachePeriodSecondsSchema,
 	externalDependenciesSchema,
@@ -24,7 +24,7 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 	}
 
 	var unpackNpmVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := NpmVirtualRepositoryParams{
 			VirtualRetrievalCachePeriodSecs:             d.GetInt("retrieval_cache_period_seconds", false),

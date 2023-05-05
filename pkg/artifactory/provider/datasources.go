@@ -16,7 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func datasourcesMap() map[string]*schema.Resource {
@@ -110,5 +110,5 @@ func datasourcesMap() map[string]*schema.Resource {
 		dataSourcesMap[federatedDataSourceName] = datasource_federated.DataSourceArtifactoryFederatedGenericRepository(packageType)
 	}
 
-	return util.AddTelemetry(productId, dataSourcesMap)
+	return utilsdk.AddTelemetry(productId, dataSourcesMap)
 }

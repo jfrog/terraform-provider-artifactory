@@ -7,11 +7,11 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	if err := provider.Provider().InternalValidate(); err != nil {
+	if err := provider.SdkV2().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ = provider.Provider()
+	var _ = provider.SdkV2()
 }

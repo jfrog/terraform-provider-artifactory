@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func GetJavaRepoSchema(packageType string, suppressPom bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseLocalRepoSchema,
 		map[string]*schema.Schema{
 			"checksum_policy_type": {
@@ -80,7 +80,7 @@ type JavaLocalRepositoryParams struct {
 }
 
 var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, packageType string) JavaLocalRepositoryParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return JavaLocalRepositoryParams{
 		RepositoryBaseParams:         UnpackBaseRepo(rclass, data, packageType),
 		ChecksumPolicyType:           d.GetString("checksum_policy_type", false),

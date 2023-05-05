@@ -8,7 +8,7 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryVirtualGenericRepository(packageType string) *schema.Resource {
@@ -49,7 +49,7 @@ func DataSourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageT
 		}, nil
 	}
 
-	var repoWithRetrievalCachePeriodSecsVirtualSchema = util.MergeMaps(
+	var repoWithRetrievalCachePeriodSecsVirtualSchema = utilsdk.MergeMaps(
 		virtual.BaseVirtualRepoSchema,
 		virtual.RetrievalCachePeriodSecondsSchema,
 	)

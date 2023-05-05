@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const MavenPackageType = "maven"
@@ -39,7 +39,7 @@ var resourceMavenV1 = &schema.Resource{
 }
 
 // Old schema, the one needs to be migrated (seconds -> secs)
-var mavenRemoteSchemaV1 = util.MergeMaps(
+var mavenRemoteSchemaV1 = utilsdk.MergeMaps(
 	JavaRemoteSchema(true, MavenPackageType, false),
 	map[string]*schema.Schema{
 		"metadata_retrieval_timeout_seconds": {

@@ -9,16 +9,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 var Version = "7.0.0" // needs to be exported so make file can update this
 var productId = "terraform-provider-artifactory/" + Version
 
-// Provider Artifactory provider that supports configuration via Access Token
+// SdkV2 Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
-func Provider() *schema.Provider {
+func SdkV2() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"url": {
@@ -93,21 +93,21 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	checkLicense := d.Get("check_license").(bool)
 	if checkLicense {
-		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
+		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			return nil, licenseErr
 		}
 	}
 
-	version, err := util.GetArtifactoryVersion(restyBase)
+	version, err := utilsdk.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
-	util.SendUsage(ctx, restyBase, productId, featureUsage)
+	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	return util.ProvderMetadata{
+	return utilsdk.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}, nil

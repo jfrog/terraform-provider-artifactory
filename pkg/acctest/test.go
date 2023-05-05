@@ -11,14 +11,15 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,10 +38,10 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	Provider = provider.SdkV2()
 
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		"artifactory": func() (*schema.Provider, error) { return provider.Provider(), nil },
+		"artifactory": func() (*schema.Provider, error) { return provider.SdkV2(), nil },
 	}
 }
 
@@ -62,7 +63,7 @@ func PreCheck(t *testing.T) {
 			t.Fatalf("Failed to set custom base URL: %v", err)
 		}
 
-		configErr := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform.NewResourceConfigRaw(nil)))
 		if configErr != nil {
 			t.Fatalf("Failed to configure provider %v", configErr)
 		}
@@ -70,7 +71,7 @@ func PreCheck(t *testing.T) {
 }
 
 func GetArtifactoryUrl(t *testing.T) string {
-	return test.GetEnvVarWithFallback(t, "ARTIFACTORY_URL", "JFROG_URL")
+	return testutil.GetEnvVarWithFallback(t, "JFROG_URL", "ARTIFACTORY_URL")
 }
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
@@ -86,7 +87,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		providerMeta := Provider.Meta().(util.ProvderMetadata)
+		providerMeta := Provider.Meta().(utilsdk.ProvderMetadata)
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
@@ -194,7 +195,7 @@ func DeleteRepo(t *testing.T, repo string) {
 
 // GetValidRandomDefaultRepoLayoutRef Usage of the function is strictly restricted to Test Cases
 func GetValidRandomDefaultRepoLayoutRef() string {
-	return test.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
+	return testutil.RandSelect("simple-default", "bower-default", "composer-default", "conan-default", "go-default", "maven-2-default", "ivy-default", "npm-default", "nuget-default", "puppet-default", "sbt-default").(string)
 }
 
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
@@ -254,7 +255,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 
-	accessToken := test.GetEnvVarWithFallback(t, "ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN")
+	accessToken := testutil.GetEnvVarWithFallback(t, "JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN")
 	api := os.Getenv("ARTIFACTORY_API_KEY")
 	restyClient, err = client.AddAuth(restyClient, api, accessToken)
 	if err != nil {

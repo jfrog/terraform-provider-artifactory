@@ -9,22 +9,22 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 func TestAccLocalAlpineRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("alpine-local-test-repo-basic", "artifactory_local_alpine_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair", "artifactory_keypair")
-	localRepositoryBasic := util.ExecuteTemplate("keypair", `
+	_, fqrn, name := testutil.MkNames("alpine-local-test-repo-basic", "artifactory_local_alpine_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
+	localRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "RSA"
@@ -115,10 +115,10 @@ func TestAccLocalAlpineRepository(t *testing.T) {
 }
 
 func TestAccLocalDebianRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("local-debian-repo", "artifactory_local_debian_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
-	localRepositoryBasic := util.ExecuteTemplate("keypair", `
+	_, fqrn, name := testutil.MkNames("local-debian-repo", "artifactory_local_debian_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
+	localRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -264,10 +264,10 @@ func TestAccLocalDebianRepository(t *testing.T) {
 }
 
 func TestAccLocalRpmRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("local-rpm-repo", "artifactory_local_rpm_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2", "artifactory_keypair")
-	localRepositoryBasic := util.ExecuteTemplate("keypair", `
+	_, fqrn, name := testutil.MkNames("local-rpm-repo", "artifactory_local_rpm_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
+	localRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -413,11 +413,11 @@ func TestAccLocalRpmRepository(t *testing.T) {
 }
 
 func TestAccLocalDockerV1Repository(t *testing.T) {
-	_, fqrn, name := test.MkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
+	_, fqrn, name := testutil.MkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerv2Repository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalDockerv2Repository", `
 		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
 		}
@@ -449,14 +449,14 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 }
 
 func TestAccLocalDockerV2Repository(t *testing.T) {
-	_, fqrn, name := test.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
+	_, fqrn, name := testutil.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
 	params := map[string]interface{}{
-		"block":     test.RandBool(),
-		"retention": test.RandSelect(1, 5, 10),
-		"max_tags":  test.RandSelect(0, 5, 10),
+		"block":     testutil.RandBool(),
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
 			tag_retention = {{ .retention }}
@@ -491,11 +491,11 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 }
 
 func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
-	_, fqrn, name := test.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
+	_, fqrn, name := testutil.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
 			key = "{{ .name }}"
 		}
@@ -524,13 +524,13 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 }
 
 func TestAccLocalNugetRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("nuget-local", "artifactory_local_nuget_repository")
+	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
-		"force_nuget_authentication": test.RandBool(),
-		"max_unique_snapshots":       test.RandSelect(0, 5, 10),
+		"force_nuget_authentication": testutil.RandBool(),
+		"max_unique_snapshots":       testutil.RandSelect(0, 5, 10),
 		"name":                       name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalNugetRepository", `
 		resource "artifactory_local_nuget_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
 		  max_unique_snapshots = {{ .max_unique_snapshots }}
@@ -563,11 +563,11 @@ func TestAccLocalNugetRepository(t *testing.T) {
 }
 
 func TestAccLocalTerraformModuleRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-local", "artifactory_local_terraform_module_repository")
+	_, fqrn, name := testutil.MkNames("terraform-local", "artifactory_local_terraform_module_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate(
+	localRepositoryBasic := utilsdk.ExecuteTemplate(
 		"TestAccLocalTerraformModuleRepository",
 		`resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
@@ -599,11 +599,11 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 }
 
 func TestAccLocalTerraformProviderRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("terraform-local", "artifactory_local_terraform_provider_repository")
+	_, fqrn, name := testutil.MkNames("terraform-local", "artifactory_local_terraform_provider_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate(
+	localRepositoryBasic := utilsdk.ExecuteTemplate(
 		"TestAccLocalTerraformProviderRepository",
 		`resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
 		  key            = "{{ .name }}"
@@ -636,9 +636,9 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 
 var commonJavaParams = map[string]interface{}{
 	"name":                            "",
-	"checksum_policy_type":            test.RandSelect("client-checksums", "server-generated-checksums"),
-	"snapshot_version_behavior":       test.RandSelect("unique", "non-unique", "deployer"),
-	"max_unique_snapshots":            test.RandSelect(0, 5, 10),
+	"checksum_policy_type":            testutil.RandSelect("client-checksums", "server-generated-checksums"),
+	"snapshot_version_behavior":       testutil.RandSelect("unique", "non-unique", "deployer"),
+	"max_unique_snapshots":            testutil.RandSelect(0, 5, 10),
 	"handle_releases":                 true,
 	"handle_snapshots":                true,
 	"suppress_pom_consistency_checks": false,
@@ -657,8 +657,8 @@ const localJavaRepositoryBasic = `
 	`
 
 func TestAccLocalMavenRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("maven-local", "artifactory_local_maven_repository")
-	tempStruct := util.MergeMaps(commonJavaParams)
+	_, fqrn, name := testutil.MkNames("maven-local", "artifactory_local_maven_repository")
+	tempStruct := utilsdk.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
@@ -670,7 +670,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Config: utilsdk.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -693,12 +693,12 @@ func TestAccLocalMavenRepository(t *testing.T) {
 }
 
 func TestAccLocalGenericRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("generic-local", "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames("generic-local", "artifactory_local_generic_repository")
 	params := map[string]interface{}{
 		"name":                name,
-		"priority_resolution": test.RandBool(),
+		"priority_resolution": testutil.RandBool(),
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
 		  priority_resolution = "{{ .priority_resolution }}"
@@ -729,18 +729,18 @@ func TestAccLocalGenericRepository(t *testing.T) {
 
 func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
-	projectEnv := test.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
+	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -780,16 +780,16 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -816,11 +816,11 @@ func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 }
 
 func TestAccLocalNpmRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("npm-local", "artifactory_local_npm_repository")
+	_, fqrn, name := testutil.MkNames("npm-local", "artifactory_local_npm_repository")
 	params := map[string]interface{}{
 		"name": name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalNpmRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalNpmRepository", `
 		resource "artifactory_local_npm_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
 		}
@@ -850,7 +850,7 @@ func TestAccLocalNpmRepository(t *testing.T) {
 func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
-	xrayIndex := test.RandBool()
+	xrayIndex := testutil.RandBool()
 	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
 
 	params := map[string]interface{}{
@@ -860,7 +860,7 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 		"cdnRedirect": false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
 
 	}
-	cfg := util.ExecuteTemplate("TestAccLocalRepository", `
+	cfg := utilsdk.ExecuteTemplate("TestAccLocalRepository", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
 		  key           = "{{ .name }}"
 		  description   = "Test repo for {{ .name }}"
@@ -960,8 +960,8 @@ func TestAccAllLocalRepoTypes(t *testing.T) {
 func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	name := fmt.Sprintf("%s-local", repoType)
 	resourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
-	_, fqrn, name := test.MkNames(name, resourceName)
-	tempStruct := util.MergeMaps(commonJavaParams)
+	_, fqrn, name := testutil.MkNames(name, resourceName)
+	tempStruct := utilsdk.MergeMaps(commonJavaParams)
 
 	tempStruct["name"] = name
 	tempStruct["resource_name"] = strings.Split(fqrn, ".")[0]
@@ -973,7 +973,7 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
+				Config: utilsdk.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -1003,13 +1003,13 @@ func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
 }
 
 func TestAccLocalCargoRepository(t *testing.T) {
-	_, fqrn, name := test.MkNames("cargo-local", "artifactory_local_cargo_repository")
+	_, fqrn, name := testutil.MkNames("cargo-local", "artifactory_local_cargo_repository")
 	params := map[string]interface{}{
-		"anonymous_access":    test.RandBool(),
-		"enable_sparse_index": test.RandBool(),
+		"anonymous_access":    testutil.RandBool(),
+		"enable_sparse_index": testutil.RandBool(),
 		"name":                name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalCargoRepository", `
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalCargoRepository", `
 		resource "artifactory_local_cargo_repository" "{{ .name }}" {
 		  key              = "{{ .name }}"
 		  anonymous_access = {{ .anonymous_access }}
