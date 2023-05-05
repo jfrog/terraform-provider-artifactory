@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -66,11 +66,11 @@ func DataSourceArtifactoryUser() *schema.Resource {
 	}
 
 	read := func(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
-		d := &util.ResourceData{ResourceData: rd}
+		d := &utilsdk.ResourceData{ResourceData: rd}
 
 		userName := d.Get("name").(string)
 		userObj := user.User{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&userObj).Get(user.UsersEndpointPath + userName)
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&userObj).Get(user.UsersEndpointPath + userName)
 
 		if err != nil {
 			return diag.FromErr(err)

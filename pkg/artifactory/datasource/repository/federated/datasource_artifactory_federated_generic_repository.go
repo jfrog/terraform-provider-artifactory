@@ -10,13 +10,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
 	localRepoSchema := local.GetGenericRepoSchema(packageType)
 
-	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, resource_repository.RepoLayoutRefSchema(rclass, packageType))
+	var federatedSchema = utilsdk.MergeMaps(localRepoSchema, memberSchema, resource_repository.RepoLayoutRefSchema(rclass, packageType))
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*federated.FederatedRepositoryParams).Members

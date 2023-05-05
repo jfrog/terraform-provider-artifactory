@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
 )
@@ -118,7 +118,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	}
 
 	var unpackProxy = func(s *schema.ResourceData) Proxy {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		return Proxy{
 			Key:               d.GetString("key", false),
 			Host:              d.GetString("host", false),
@@ -134,7 +134,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	}
 
 	var packProxy = func(p *Proxy, d *schema.ResourceData) diag.Diagnostics {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		setValue("key", p.Key)
 		setValue("host", p.Host)
@@ -158,11 +158,11 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	}
 
 	var resourceProxyRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		key := data.GetString("key", false)
 
 		proxiesConfig := Proxies{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -208,7 +208,7 @@ func ResourceArtifactoryProxy() *schema.Resource {
 	var resourceProxyDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		proxiesConfig := &Proxies{}
 
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
+		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

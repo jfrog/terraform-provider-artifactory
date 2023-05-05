@@ -5,7 +5,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const packageType = "docker"
@@ -34,7 +34,7 @@ func DataSourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 
 func DataSourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	// this is necessary because of the pointers
-	skeema := util.MergeMaps(local.DockerV1LocalSchema)
+	skeema := utilsdk.MergeMaps(local.DockerV1LocalSchema)
 
 	constructor := func() (interface{}, error) {
 		return &local.DockerLocalRepositoryParams{

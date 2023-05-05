@@ -6,9 +6,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
 )
@@ -103,7 +103,7 @@ func ResourceArtifactoryBackup() *schema.Resource {
 	}
 
 	var unpackBackup = func(s *schema.ResourceData) Backup {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		backup := Backup{
 			Key:                    d.GetString("key", false),
 			Enabled:                d.GetBool("enabled", false),
@@ -120,11 +120,11 @@ func ResourceArtifactoryBackup() *schema.Resource {
 	}
 
 	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		key := data.GetString("key", false)
 
 		backups := Backups{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

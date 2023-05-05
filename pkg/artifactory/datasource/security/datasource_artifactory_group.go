@@ -1,15 +1,13 @@
 package security
 
 import (
-	"golang.org/x/net/context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"golang.org/x/net/context"
 )
 
 func DataSourceArtifactoryGroup() *schema.Resource {
@@ -17,7 +15,7 @@ func DataSourceArtifactoryGroup() *schema.Resource {
 		group := security.Group{}
 		name := d.Get("name").(string)
 		includeUsers := d.Get("include_users").(string)
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -39,7 +37,7 @@ func DataSourceArtifactoryGroup() *schema.Resource {
 			},
 		}
 
-		includeGroupSchema := util.MergeMaps(security.GroupSchema, includeUsersSchema)
+		includeGroupSchema := utilsdk.MergeMaps(security.GroupSchema, includeUsersSchema)
 		delete(includeGroupSchema, "detach_all_users")
 		return includeGroupSchema
 	}

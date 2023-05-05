@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -127,7 +127,7 @@ func ResourceArtifactorySamlSettings() *schema.Resource {
 }
 
 func resourceSamlSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 
 	samlSettings := SamlSettings{}
 
@@ -183,7 +183,7 @@ security:
 }
 
 func unpackSamlSecurity(ctx context.Context, s *schema.ResourceData) *SamlSecurity {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	security := *new(SamlSecurity)
 
 	settings := SamlSettings{
@@ -208,7 +208,7 @@ func unpackSamlSecurity(ctx context.Context, s *schema.ResourceData) *SamlSecuri
 }
 
 func packSamlSecurity(ctx context.Context, s *SamlSecurity, d *schema.ResourceData) diag.Diagnostics {
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	setValue("enable", s.Saml.Settings.EnableIntegration)
 	setValue("certificate", s.Saml.Settings.Certificate)

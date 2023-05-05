@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type FederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type FederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
 	localRepoSchema := local.GetGenericRepoSchema(repoType)
 
-	var federatedSchema = util.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
+	var federatedSchema = utilsdk.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := FederatedRepositoryParams{

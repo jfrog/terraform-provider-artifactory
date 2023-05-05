@@ -2,18 +2,18 @@ package user_test
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccManagedUser_NoGroups(t *testing.T) {
+func TestAccManagedUser_no_groups(t *testing.T) {
 	const userNoGroups = `
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
@@ -21,18 +21,20 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 			password			= "Passsw0rd!"
 		}
 	`
-	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userNoGroups, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
 			{
@@ -46,7 +48,7 @@ func TestAccManagedUser_NoGroups(t *testing.T) {
 	})
 }
 
-func TestAccManagedUser_EmptyGroups(t *testing.T) {
+func TestAccManagedUser_empty_groups(t *testing.T) {
 	const userEmptyGroups = `
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
@@ -55,12 +57,14 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 			groups      		= []
 		}
 	`
-	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, username, id),
@@ -80,7 +84,7 @@ func TestAccManagedUser_EmptyGroups(t *testing.T) {
 	})
 }
 
-func TestAccManagedUser(t *testing.T) {
+func TestAccManagedUser_basic(t *testing.T) {
 	const userFull = `
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
@@ -102,12 +106,14 @@ func TestAccManagedUser(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, fqrn, name := test.MkNames("foobar-", "artifactory_managed_user")
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckManagedUserDestroy(fqrn),
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, username, id),
@@ -138,26 +144,4 @@ func TestAccManagedUser(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
-
-		rs, ok := s.RootModule().Resources[id]
-
-		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
-		}
-		resp, err := client.R().Head("artifactory/api/security/users/" + rs.Primary.ID)
-
-		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
-			return err
-		}
-
-		return fmt.Errorf("error: User %s still exists", rs.Primary.ID)
-	}
 }

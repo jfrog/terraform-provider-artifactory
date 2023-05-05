@@ -9,20 +9,20 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryBasic = `
@@ -57,7 +57,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	localRepoName := fmt.Sprintf("%s-local", name)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
@@ -126,7 +126,7 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 }
 
 func TestAccVirtualGoRepository_basic(t *testing.T) {
-	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_go_repository")
+	_, fqrn, name := testutil.MkNames("foo", "artifactory_virtual_go_repository")
 	const packageType = "go"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_go_repository" "%s" {
@@ -177,7 +177,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualConanRepository_basic(t *testing.T) {
-	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_conan_repository")
+	_, fqrn, name := testutil.MkNames("foo", "artifactory_virtual_conan_repository")
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_conan_repository" "%s" {
 		  key          = "%s"
@@ -217,7 +217,7 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualGenericRepository_basic(t *testing.T) {
-	_, fqrn, name := test.MkNames("foo", "artifactory_virtual_generic_repository")
+	_, fqrn, name := testutil.MkNames("foo", "artifactory_virtual_generic_repository")
 	const packageType = "generic"
 	var virtualRepositoryBasic = fmt.Sprintf(`
 		resource "artifactory_virtual_generic_repository" "%s" {
@@ -261,7 +261,7 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	const packageType = "maven"
 
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	var virtualRepositoryBasic = fmt.Sprintf(`
@@ -310,14 +310,14 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 }
 
 func TestAccVirtualHelmRepository_basic(t *testing.T) {
-	_, fqrn, name := test.MkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
-	useNamespaces := test.RandBool()
+	_, fqrn, name := testutil.MkNames("virtual-helm-repo", "artifactory_virtual_helm_repository")
+	useNamespaces := testutil.RandBool()
 
 	params := map[string]interface{}{
 		"name":          name,
 		"useNamespaces": useNamespaces,
 	}
-	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
+	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            				 = "{{ .name }}"
 	 	  use_namespaces 				 = {{ .useNamespaces }}
@@ -352,10 +352,10 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 
 func TestAccVirtualRpmRepository(t *testing.T) {
 	const packageType = "rpm"
-	_, fqrn, name := test.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
-	kpId, kpFqrn, kpName := test.MkNames("some-keypair1-", "artifactory_keypair")
-	kpId2, kpFqrn2, kpName2 := test.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
+	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1-", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2-", "artifactory_keypair")
+	virtualRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -499,7 +499,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 }
 
 func TestAccVirtualRepository_update(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryUpdateBefore = `
@@ -556,7 +556,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 }
 
 func TestNugetPackageCreationFull(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_nuget_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -600,7 +600,7 @@ func TestNugetPackageCreationFull(t *testing.T) {
 }
 
 func TestAccVirtualRepository_full(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
 	const virtualRepositoryFull = `
@@ -650,18 +650,18 @@ func TestAccVirtualRepository_full(t *testing.T) {
 func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
-	projectEnv := test.RandSelect("DEV", "PROD").(string)
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
+	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_virtual_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -702,16 +702,16 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
-	projectKey := fmt.Sprintf("t%d", test.RandomInt())
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 
-	_, fqrn, name := test.MkNames(repoName, "artifactory_virtual_generic_repository")
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_virtual_generic_repository")
 
 	params := map[string]interface{}{
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -780,15 +780,15 @@ func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extraFields" as these will overwrite
 func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := test.MkNames("terraform-virtual-test-repo-full-", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
+	_, fqrn, name := testutil.MkNames("terraform-virtual-test-repo-full-", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
 	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{
 		"key":         name,
 		"description": "A test virtual repo",
 		"notes":       "Internal description",
 	}
-	allFields := util.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := util.FmtMapToHcl(allFields)
+	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
 	const virtualRepoFull = `
         resource "artifactory_remote_%[1]s_repository" "%[3]s" {
 			key = "%[3]s"
@@ -801,8 +801,8 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
             depends_on = [artifactory_remote_%[1]s_repository.%[3]s]
 		}
 	`
-	extraChecks := test.MapToTestChecks(fqrn, extraFields)
-	defaultChecks := test.MapToTestChecks(fqrn, allFields)
+	extraChecks := testutil.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
@@ -855,7 +855,7 @@ func TestAccVirtualDockerRepository(t *testing.T) {
 }
 
 func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("bower-virtual-%d", id)
 	remoteRepoName := fmt.Sprintf("bower-remote-%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_bower_repository.%s", name)
@@ -864,7 +864,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualBower", `
+	var virtualBowerRepository = utilsdk.ExecuteTemplate("TestAccVirtualBower", `
 		resource "artifactory_remote_bower_repository" "bower-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -911,7 +911,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 }
 
 func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("npm-virtual-%d", id)
 	remoteRepoName := fmt.Sprintf("npm-remote-%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_npm_repository.%s", name)
@@ -920,7 +920,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualNpmRepository = util.ExecuteTemplate("TestAccVirtualNpm", `
+	var virtualNpmRepository = utilsdk.ExecuteTemplate("TestAccVirtualNpm", `
 		resource "artifactory_remote_npm_repository" "npm-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -969,7 +969,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 }
 
 func TestAccVirtualDebianRepository_full(t *testing.T) {
-	id := test.RandomInt()
+	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_debian_repository.%s", name)
 	const virtualRepositoryBasic = `

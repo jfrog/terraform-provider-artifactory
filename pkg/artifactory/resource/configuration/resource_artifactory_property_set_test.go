@@ -5,16 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccPropertySetCreate(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
 		"property_set_name": resourceName,
@@ -30,7 +30,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
 			{
@@ -43,7 +43,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 }
 
 func TestAccPropertySetUpdate(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
 		"property_set_name":        resourceName,
@@ -72,11 +72,11 @@ func TestAccPropertySetUpdate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testData)),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
+				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccPropertySetUpdate(t *testing.T) {
 }
 
 func TestAccPropertySetCustomizeDiff(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("property-set-", "artifactory_property_set")
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
 		"property_set_name":        resourceName,
@@ -108,7 +108,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
+				Config:      utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
 			},
 			{
@@ -181,7 +181,7 @@ func verifyPropertySetUpdate(fqrn string, testData map[string]string) resource.T
 
 func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_property_set."+id]
 		if !ok {

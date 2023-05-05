@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type remoteReplicationBody struct {
@@ -98,7 +98,7 @@ var remoteReplicationSchema = map[string]*schema.Schema{
 }
 
 func unpackRemoteReplication(s *schema.ResourceData) updateRemoteReplicationBody {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	return updateRemoteReplicationBody{
 		remoteReplicationBody: remoteReplicationBody{
@@ -118,7 +118,7 @@ func unpackRemoteReplication(s *schema.ResourceData) updateRemoteReplicationBody
 func packRemoteReplication(remoteReplication *getRemoteReplicationBody, d *schema.ResourceData) diag.Diagnostics {
 
 	var errors []error
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 	setValue("enable_event_replication", remoteReplication.EnableEventReplication)
 	setValue("enabled", remoteReplication.Enabled)
 	setValue("cron_exp", remoteReplication.CronExp)
@@ -143,7 +143,7 @@ func resourceRemoteReplicationCreate(ctx context.Context, d *schema.ResourceData
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
@@ -155,7 +155,7 @@ func resourceRemoteReplicationCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceRemoteReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 
 	var replication getRemoteReplicationBody
 
@@ -178,7 +178,7 @@ func resourceRemoteReplicationUpdate(ctx context.Context, d *schema.ResourceData
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())

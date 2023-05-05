@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -121,14 +121,14 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: util.MergeMaps(replicationSchemaCommon, repMultipleSchema),
+		Schema: utilsdk.MergeMaps(replicationSchemaCommon, repMultipleSchema),
 		DeprecationMessage: "This resource has been deprecated in favour of the more explicitly name" +
 			"artifactory_push_replication resource.",
 	}
 }
 
 func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	replicationConfig := new(UpdateReplicationConfig)
 
 	repo := d.GetString("repo_key", false)
@@ -201,7 +201,7 @@ func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
 
 func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
 	var errors []error
-	setValue := util.MkLens(d)
+	setValue := utilsdk.MkLens(d)
 
 	setValue("repo_key", replicationConfig.RepoKey)
 	setValue("cron_exp", replicationConfig.CronExp)
@@ -237,7 +237,7 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
@@ -249,7 +249,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -271,7 +271,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

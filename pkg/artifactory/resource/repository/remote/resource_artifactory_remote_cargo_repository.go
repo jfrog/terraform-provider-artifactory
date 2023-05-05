@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type CargoRemoteRepo struct {
@@ -18,7 +18,7 @@ type CargoRemoteRepo struct {
 const CargoPackageType = "cargo"
 
 var CargoRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	cargoSchema := util.MergeMaps(
+	cargoSchema := utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"git_registry_url": {
@@ -54,7 +54,7 @@ var CargoRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
 
 	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := CargoRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, CargoPackageType),
 			RegistryUrl:                d.GetString("git_registry_url", false),

@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type NugetFederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type NugetFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	packageType := "nuget"
 
-	nugetFederatedSchema := util.MergeMaps(
+	nugetFederatedSchema := utilsdk.MergeMaps(
 		local.NugetLocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),

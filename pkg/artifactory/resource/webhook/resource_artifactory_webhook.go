@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"golang.org/x/exp/slices"
 )
 
@@ -118,9 +118,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
-		d := &util.ResourceData{ResourceData: data}
+		d := &utilsdk.ResourceData{ResourceData: data}
 
-		var unpackCriteria = func(d *util.ResourceData, webhookType string) interface{} {
+		var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface{} {
 			var webhookCriteria interface{}
 
 			if v, ok := d.GetOk("criteria"); ok {
@@ -129,8 +129,8 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					id := criteria[0].(map[string]interface{})
 
 					baseCriteria := BaseWebhookCriteria{
-						IncludePatterns: util.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
-						ExcludePatterns: util.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
+						IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
+						ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
 					}
 
 					webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
@@ -155,7 +155,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return headers
 		}
 
-		var unpackHandlers = func(d *util.ResourceData) []Handler {
+		var unpackHandlers = func(d *utilsdk.ResourceData) []Handler {
 			var webhookHandlers []Handler
 
 			if v, ok := d.GetOk("handler"); ok {
@@ -196,7 +196,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packCriteria = func(d *schema.ResourceData, criteria map[string]interface{}) []error {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["criteria"].Elem.(*schema.Resource)
 		packedCriteria := domainPackLookup[webhookType](criteria)
@@ -217,7 +217,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["handler"].Elem.(*schema.Resource)
 
@@ -237,7 +237,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	}
 
 	var packWebhook = func(d *schema.ResourceData, webhook BaseParams) diag.Diagnostics {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		var errors []error
 
@@ -262,7 +262,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
-		_, err := m.(util.ProvderMetadata).Client.R().
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
 			Get(WhUrl)
@@ -288,7 +288,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(util.ProvderMetadata).Client.R().
+		_, err = m.(utilsdk.ProvderMetadata).Client.R().
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
 			Post(webhooksUrl)
@@ -309,7 +309,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(util.ProvderMetadata).Client.R().
+		_, err = m.(utilsdk.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
@@ -326,7 +326,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "deleteWebhook")
 
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			Delete(WhUrl)
 

@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const cargoPackageType = "cargo"
 
-var CargoLocalSchema = util.MergeMaps(
+var CargoLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"anonymous_access": {
@@ -36,7 +36,7 @@ type CargoLocalRepoParams struct {
 }
 
 func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return CargoLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(rclass, data, cargoPackageType),
 		AnonymousAccess:      d.GetBool("anonymous_access", false),

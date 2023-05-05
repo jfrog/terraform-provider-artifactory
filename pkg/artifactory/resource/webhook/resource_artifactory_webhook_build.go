@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type BuildWebhookCriteria struct {
@@ -16,13 +16,13 @@ type BuildWebhookCriteria struct {
 }
 
 var buildWebhookSchema = func(webhookType string, version int) map[string]*schema.Schema {
-	return util.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
-				Schema: util.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
 					"any_build": {
 						Type:        schema.TypeBool,
 						Required:    true,
@@ -51,7 +51,7 @@ var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[str
 var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
 	return BuildWebhookCriteria{
 		AnyBuild:            terraformCriteria["any_build"].(bool),
-		SelectedBuilds:      util.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
+		SelectedBuilds:      utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
 		BaseWebhookCriteria: baseCriteria,
 	}
 }

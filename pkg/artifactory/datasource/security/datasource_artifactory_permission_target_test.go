@@ -4,13 +4,13 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func deletePermissionTarget(t *testing.T, name string) error {
@@ -63,7 +63,7 @@ func createPermissionTarget(targetName string, userName string, t *testing.T) {
 }
 
 func TestAccDataSourcePermissionTarget_full(t *testing.T) {
-	_, fqrn, name := test.MkNames("test-perm", "data.artifactory_permission_target")
+	_, fqrn, name := testutil.MkNames("test-perm", "data.artifactory_permission_target")
 
 	temp := `
   data "artifactory_permission_target" "{{ .permission_name }}" {
@@ -74,7 +74,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		"permission_name": name,
 	}
 
-	_, _, userName := test.MkNames("test-user", "artifactory_unmanaged_user")
+	_, _, userName := testutil.MkNames("test-user", "artifactory_unmanaged_user")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -89,7 +89,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, temp, tempStruct),
+				Config: utilsdk.ExecuteTemplate(fqrn, temp, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.users.#", "1"),

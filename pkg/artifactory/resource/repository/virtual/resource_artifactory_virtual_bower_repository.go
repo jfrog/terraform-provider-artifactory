@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const BowerPackageType = "bower"
 
-var BowerVirtualSchema = util.MergeMaps(
+var BowerVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	externalDependenciesSchema,
 	repository.RepoLayoutRefSchema(Rclass, BowerPackageType),

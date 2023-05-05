@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type CommonJavaVirtualRepositoryParams struct {
@@ -45,14 +45,14 @@ var JavaVirtualSchema = map[string]*schema.Schema{
 }
 
 func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource {
-	var mavenVirtualSchema = util.MergeMaps(
+	var mavenVirtualSchema = utilsdk.MergeMaps(
 		BaseVirtualRepoSchema,
 		JavaVirtualSchema,
 		repository.RepoLayoutRefSchema(Rclass, repoType),
 	)
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := JavaVirtualRepositoryParams{
 			RepositoryBaseParams: UnpackBaseVirtRepo(s, repoType),

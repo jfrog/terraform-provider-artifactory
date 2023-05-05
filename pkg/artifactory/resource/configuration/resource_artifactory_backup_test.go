@@ -5,21 +5,21 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 func TestAccBackup_full(t *testing.T) {
-	_, fqrn, resourceName := test.MkNames("backup-", "artifactory_backup")
-	_, _, repoResourceName1 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
-	_, _, repoResourceName2 := test.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+	_, fqrn, resourceName := testutil.MkNames("backup-", "artifactory_backup")
+	_, _, repoResourceName1 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
+	_, _, repoResourceName2 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
 
 	const BackupTemplateFull = `
 resource "artifactory_backup" "{{ .resourceName }}" {
@@ -64,14 +64,14 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
 				),
 			},
 			{
-				Config: util.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
+				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 * * ? *"),
@@ -160,7 +160,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
+				Config: utilsdk.ExecuteTemplate("backup", BackupTemplateFull, fields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
 				),
@@ -177,7 +177,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 
 func testAccBackupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_backup."+id]
 		if !ok {

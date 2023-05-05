@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/client"
@@ -16,7 +16,7 @@ import (
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
 	const audienceBad = `
-		resource "artifactory_user" "existinguser" {
+		resource "artifactory_unmanaged_user" "existinguser" {
 			name  = "existinguser"
 			email = "existinguser@a.com"
 			admin = false
@@ -26,7 +26,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
-			username = artifactory_user.existinguser.name
+			username = artifactory_unmanaged_user.existinguser.name
 			audience = "bad"
 			refreshable = true
 		}
@@ -47,7 +47,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 func TestAccAccessTokenAudienceGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	const audienceGood = `
-		resource "artifactory_user" "existinguser" {
+		resource "artifactory_unmanaged_user" "existinguser" {
 			name  = "existinguser"
 			email = "existinguser@a.com"
 			admin = false
@@ -57,7 +57,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
-			username = artifactory_user.existinguser.name
+			username = artifactory_unmanaged_user.existinguser.name
 			audience = "jfrt@*"
 			refreshable = true
 		}
@@ -90,7 +90,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 }
 
 const existingUser = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -100,7 +100,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 }
 `
 
@@ -137,7 +137,7 @@ func fixedDateGood() string {
 
 	date := time.Now().Add(time.Second * time.Duration(10)).Format(time.RFC3339)
 	return fmt.Sprintf(`
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -147,7 +147,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date = "%s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 }
 `, date)
 }
@@ -180,7 +180,7 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 }
 
 var fixedDateBad = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -190,7 +190,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date = "2020-01-01T00:00:00+11:00"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 }
 `
 
@@ -211,7 +211,7 @@ func TestAccAccessTokenFixedDateBad(t *testing.T) {
 // I couldn't find a way to retrieve the instance_id for artifactory via the go library.
 // So, we expect this to fail
 const adminToken = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -221,7 +221,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 
 	admin_token {
 		instance_id = "blah"
@@ -244,7 +244,7 @@ func TestAccAccessTokenAdminToken(t *testing.T) {
 }
 
 const refreshableToken = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -255,7 +255,7 @@ resource "artifactory_user" "existinguser" {
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
 	refreshable = true
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 }
 `
 
@@ -350,7 +350,7 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 }
 
 const missingGroup = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -360,7 +360,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 	groups = [
 		"missing-group",
 	]
@@ -382,7 +382,7 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 }
 
 const wildcardGroupGood = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
   email = "existinguser@a.com"
 	admin = false
@@ -392,7 +392,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 	groups = [
 		"*",
 	]
@@ -429,7 +429,7 @@ func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 }
 
 const nonExpiringToken = `
-resource "artifactory_user" "existinguser" {
+resource "artifactory_unmanaged_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -439,7 +439,7 @@ resource "artifactory_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "0s"
-	username = artifactory_user.existinguser.name
+	username = artifactory_unmanaged_user.existinguser.name
 }
 `
 

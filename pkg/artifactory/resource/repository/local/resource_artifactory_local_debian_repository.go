@@ -4,12 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const debianPackageType = "debian"
 
-var DebianLocalSchema = util.MergeMaps(
+var DebianLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
 	map[string]*schema.Schema{
 		"primary_keypair_ref": {
@@ -43,7 +43,7 @@ type DebianLocalRepositoryParams struct {
 }
 
 func UnpackLocalDebianRepository(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
-	d := &util.ResourceData{ResourceData: data}
+	d := &utilsdk.ResourceData{ResourceData: data}
 	return DebianLocalRepositoryParams{
 		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, debianPackageType),
 		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),

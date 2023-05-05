@@ -5,19 +5,19 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccScopedToken_WithDefaults(t *testing.T) {
-	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
+		`resource "artifactory_unmanaged_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -27,7 +27,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_unmanaged_user.test-user.name
 			description = "test description"
 		}`,
 		map[string]interface{}{
@@ -69,11 +69,11 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 }
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
-	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
+		`resource "artifactory_unmanaged_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -83,7 +83,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_unmanaged_user.test-user.name
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -132,9 +132,9 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithGroupScope(t *testing.T) {
-	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_group" "test-group" {
 			name = "{{ .groupName }}"
@@ -172,9 +172,9 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 }
 
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
-	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := util.ExecuteTemplate(
+	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			scopes      = ["foo"]
@@ -197,9 +197,9 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 }
 
 func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
-	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := util.ExecuteTemplate(
+	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_local_generic_repository" "generic-local-1" {
 			key = "generic-local-1"
@@ -279,9 +279,9 @@ func TestAccScopedToken_WithAudience(t *testing.T) {
 }
 
 func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
-	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["{{ .prefix }}@*"]
@@ -313,9 +313,9 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 }
 
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
-	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := util.ExecuteTemplate(
+	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["foo@*"]
@@ -338,14 +338,14 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 }
 
 func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
-	_, _, name := test.MkNames("test-scoped-token", "artifactory_scoped_token")
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	var audiences []string
 	for i := 0; i < 100; i++ {
 		audiences = append(audiences, fmt.Sprintf("jfrt@%d", i))
 	}
 
-	scopedTokenConfig := util.ExecuteTemplate(
+	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences    = [
@@ -371,11 +371,11 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 }
 
 func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
-	_, _, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
+		`resource "artifactory_unmanaged_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -385,7 +385,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_unmanaged_user.test-user.name
 			description = "test description"
 			expires_in  = {{ .expires_in }}
 		}`,
@@ -408,11 +408,11 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 }
 
 func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
-	_, fqrn, name := test.MkNames("test-access-token", "artifactory_scoped_token")
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := util.ExecuteTemplate(
+	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
+		`resource "artifactory_unmanaged_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -422,7 +422,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_unmanaged_user.test-user.name
 			description = "test description"
 			expires_in  = 0
 		}`,

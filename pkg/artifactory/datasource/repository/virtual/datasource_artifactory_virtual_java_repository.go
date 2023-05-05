@@ -8,7 +8,7 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryVirtualJavaRepository(packageType string) *schema.Resource {
@@ -25,7 +25,7 @@ func DataSourceArtifactoryVirtualJavaRepository(packageType string) *schema.Reso
 		}, nil
 	}
 
-	var javaSchema = util.MergeMaps(
+	var javaSchema = utilsdk.MergeMaps(
 		virtual.BaseVirtualRepoSchema,
 		virtual.JavaVirtualSchema,
 	)

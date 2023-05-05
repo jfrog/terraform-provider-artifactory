@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"gopkg.in/yaml.v3"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -154,11 +154,11 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		},
 	}
 	var resourceLdapSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &util.ResourceData{ResourceData: d}
+		data := &utilsdk.ResourceData{ResourceData: d}
 		key := data.GetString("key", false)
 
 		ldapConfigs := XmlLdapConfig{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -213,7 +213,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		rsrcLdapSetting := unpackLdapSetting(d)
 
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -277,7 +277,7 @@ security:
 }
 
 func unpackLdapSetting(s *schema.ResourceData) LdapSetting {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 	ldapSetting := LdapSetting{
 		Key:                      d.GetString("key", false),
 		Enabled:                  d.GetBool("enabled", false),

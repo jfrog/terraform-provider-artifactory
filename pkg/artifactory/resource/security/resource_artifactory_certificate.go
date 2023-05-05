@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const CertificateEndpoint = "artifactory/api/system/security/certificates/"
@@ -165,7 +164,7 @@ func calculateFingerPrint(pemData string) (string, error) {
 }
 
 func FindCertificate(alias string, m interface{}) (*CertificateDetails, error) {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(utilsdk.ProvderMetadata).Client
 	certificates := new([]CertificateDetails)
 	_, err := c.R().SetResult(certificates).Get(CertificateEndpoint)
 
@@ -195,7 +194,7 @@ func resourceCertificateRead(_ context.Context, d *schema.ResourceData, m interf
 	}
 
 	if cert != nil {
-		setValue := util.MkLens(d)
+		setValue := utilsdk.MkLens(d)
 
 		setValue("alias", (*cert).CertificateAlias)
 		setValue("fingerprint", (*cert).FingerPrint)
@@ -258,7 +257,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	_, err = m.(util.ProvderMetadata).Client.R().SetBody(content).SetHeader("content-type", "text/plain").Post(CertificateEndpoint + d.Id())
+	_, err = m.(utilsdk.ProvderMetadata).Client.R().SetBody(content).SetHeader("content-type", "text/plain").Post(CertificateEndpoint + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -268,7 +267,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceCertificateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(CertificateEndpoint + d.Id())
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(CertificateEndpoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

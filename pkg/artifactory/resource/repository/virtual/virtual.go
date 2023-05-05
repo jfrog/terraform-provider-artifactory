@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const Rclass = "virtual"
@@ -54,7 +54,7 @@ var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"cran",
 }
 
-var BaseVirtualRepoSchema = util.MergeMaps(
+var BaseVirtualRepoSchema = utilsdk.MergeMaps(
 	repository.BaseRepoSchema,
 	map[string]*schema.Schema{
 		"repositories": {
@@ -78,7 +78,7 @@ var BaseVirtualRepoSchema = util.MergeMaps(
 )
 
 func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	return RepositoryBaseParams{
 		Key:                 d.GetString("key", false),
@@ -98,7 +98,7 @@ func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBa
 }
 
 func UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s *schema.ResourceData, packageType string) RepositoryBaseParamsWithRetrievalCachePeriodSecs {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	return RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 		RepositoryBaseParams:            UnpackBaseVirtRepo(s, packageType),
@@ -141,7 +141,7 @@ type ExternalDependenciesVirtualRepositoryParams struct {
 }
 
 var unpackExternalDependenciesVirtualRepository = func(s *schema.ResourceData, packageType string) ExternalDependenciesVirtualRepositoryParams {
-	d := &util.ResourceData{ResourceData: s}
+	d := &utilsdk.ResourceData{ResourceData: s}
 
 	return ExternalDependenciesVirtualRepositoryParams{
 		RepositoryBaseParams:           UnpackBaseVirtRepo(s, packageType),

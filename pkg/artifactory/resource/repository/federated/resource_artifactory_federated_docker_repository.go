@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 type DockerFederatedRepositoryParams struct {
@@ -17,7 +17,7 @@ type DockerFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	packageType := "docker"
 
-	dockerV2FederatedSchema := util.MergeMaps(
+	dockerV2FederatedSchema := utilsdk.MergeMaps(
 		local.DockerV2LocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
@@ -63,7 +63,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	packageType := "docker"
 
-	dockerFederatedSchema := util.MergeMaps(
+	dockerFederatedSchema := utilsdk.MergeMaps(
 		local.DockerV1LocalSchema,
 		memberSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),

@@ -6,13 +6,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const HelmPackageType = "helm"
 
 var HelmRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return util.MergeMaps(
+	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"helm_charts_base_url": {
@@ -56,7 +56,7 @@ type HelmRemoteRepo struct {
 
 func ResourceArtifactoryRemoteHelmRepository() *schema.Resource {
 	var unpackHelmRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &util.ResourceData{ResourceData: s}
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := HelmRemoteRepo{
 			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, HelmPackageType),
 			HelmChartsBaseURL:            d.GetString("helm_charts_base_url", false),
