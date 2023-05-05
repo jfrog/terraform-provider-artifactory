@@ -5,7 +5,8 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-/* SendConfigurationPatch updates system configuration using YAML data.
+/*
+	SendConfigurationPatch updates system configuration using YAML data.
 
 See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration
 */

@@ -1,3 +1,11 @@
+## 7.9.0 (May 8, 2023). Tested on Artifactory 7.55.10
+
+FEATURES:
+
+* resource/artifactory_distribution_public_key: Adds new resource to manage distribution public keys which are used to verify signed release bundles
+  PR:     [#725](https://github.com/jfrog/terraform-provider-artifactory/pull/725)
+  Issues: [#721](https://github.com/jfrog/terraform-provider-artifactory/issues/721)
+
 ## 7.8.0 (May 5, 2023). Tested on Artifactory 7.55.10
 
 IMPROVEMENTS:

@@ -77,6 +77,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_api_key":                                 security.ResourceArtifactoryApiKey(),
 		"artifactory_access_token":                            security.ResourceArtifactoryAccessToken(),
 		"artifactory_scoped_token":                            security.ResourceArtifactoryScopedToken(),
+		"artifactory_distribution_public_key":                 security.ResourceArtifactoryDistributionPublicKey(),
 		"artifactory_general_security":                        configuration.ResourceArtifactoryGeneralSecurity(),
 		"artifactory_oauth_settings":                          configuration.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":                           configuration.ResourceArtifactorySamlSettings(),
