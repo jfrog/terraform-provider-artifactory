@@ -8,7 +8,7 @@ resources:
         include: master
       buildOn:
         commit: false
-        pullRequestCreate: true
+        pullRequestCreate: false
       cancelPendingRunsOn:
         pullRequestUpdate: true
 pipelines:
