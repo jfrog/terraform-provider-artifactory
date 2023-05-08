@@ -29,6 +29,7 @@ type ArtifactoryProvider struct {
 type ArtifactoryProviderModel struct {
 	Url          types.String `tfsdk:"url"`
 	AccessToken  types.String `tfsdk:"access_token"`
+	ApiKey       types.String `tfsdk:"api_key"`
 	CheckLicense types.Bool   `tfsdk:"check_license"`
 }
 
@@ -43,17 +44,23 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"url": schema.StringAttribute{
-				MarkdownDescription: "Artifactory URL.",
-				Optional:            true,
+				Description: "Artifactory URL.",
+				Optional:    true,
 			},
 			"access_token": schema.StringAttribute{
-				MarkdownDescription: "This is a access token that can be given to you by your admin under `Identity and Access`. If not set, the 'api_key' attribute value will be used.",
-				Optional:            true,
-				Sensitive:           true,
+				Description: "This is a access token that can be given to you by your admin under `Identity and Access`. If not set, the 'api_key' attribute value will be used.",
+				Optional:    true,
+				Sensitive:   true,
+			},
+			"api_key": schema.StringAttribute{
+				Description:        "API token. Projects functionality will not work with any auth method other than access tokens",
+				DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In September 2022, the option to block the usage/creation of API Keys will be enabled by default, with the option for admins to change it back to enable API Keys. In January 2023, API Keys will be deprecated all together and the option to use them will no longer be available.",
+				Optional:           true,
+				Sensitive:          true,
 			},
 			"check_license": schema.BoolAttribute{
-				MarkdownDescription: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
-				Optional:            true,
+				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
+				Optional:    true,
 			},
 		},
 	}

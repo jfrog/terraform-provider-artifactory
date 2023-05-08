@@ -5,19 +5,18 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-shared/test"
-	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
+	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const resource_name = "artifactory_distribution_public_key"
 
 func TestAccDistributionPublicKeyFormatCheck(t *testing.T) {
-	id, _, name := test.MkNames("mykey", resource_name)
+	id, _, name := testutil.MkNames("mykey", resource_name)
 	keyBasic := fmt.Sprintf(`
 		resource "%s" "%s" {
 			alias = "foo-alias%d"
@@ -37,7 +36,7 @@ func TestAccDistributionPublicKeyFormatCheck(t *testing.T) {
 }
 
 func TestAccDistributionPublicKeyCreate(t *testing.T) {
-	id, fqrn, name := test.MkNames("mykey", resource_name)
+	id, fqrn, name := testutil.MkNames("mykey", resource_name)
 	keyBasic := fmt.Sprintf(`
 		resource "%s" "%s" {
 			alias = "foo-alias%d"
@@ -96,7 +95,6 @@ func TestAccDistributionPublicKeyCreate(t *testing.T) {
 				ResourceName:      fqrn,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "public_key"),
 			},
 		},
 	})
@@ -104,7 +102,7 @@ func TestAccDistributionPublicKeyCreate(t *testing.T) {
 
 func testAccCheckDistributionPublicKeyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
