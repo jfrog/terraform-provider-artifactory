@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	"github.com/jfrog/terraform-provider-shared/util"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const DistributionPublicKeysAPIEndPoint = "artifactory/api/security/keys/trusted"
@@ -84,7 +84,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 
 		result := distributionPublicKeyPayLoad{}
 
-		resp, err := m.(util.ProvderMetadata).Client.R().SetBody(keyPost{
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(keyPost{
 			d.Get("alias").(string),
 			stripTabs(d.Get("public_key").(string)),
 		}).SetResult(&result).Post(DistributionPublicKeysAPIEndPoint)
@@ -103,7 +103,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 	var resourceDistributionPublicKeyRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 		data := DistributionPublicKeysList{}
-		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Get(DistributionPublicKeysAPIEndPoint)
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&data).Get(DistributionPublicKeysAPIEndPoint)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -123,7 +123,7 @@ func ResourceArtifactoryDistributionPublicKey() *schema.Resource {
 	}
 
 	var resourceDistributionPublictedKeyDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		resp, err := m.(util.ProvderMetadata).Client.R().Delete(fmt.Sprintf("%s/%s", DistributionPublicKeysAPIEndPoint, d.Id()))
+		resp, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(fmt.Sprintf("%s/%s", DistributionPublicKeysAPIEndPoint, d.Id()))
 		if err != nil {
 			return diag.FromErr(err)
 		}
