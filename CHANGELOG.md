@@ -1,3 +1,14 @@
+## 7.10.0 (May 8, 2023).
+
+BUG FIXES:
+* Fixed a diff between SDK v2 and Plugin Framework providers schemas, which created a problem during the update process from older versions to 7.8.0
+* Removed default functions for the provider schema attributes. Defaults are set in the configuration step now to avoid schemas conflicts.
+
+  PR:     [#730](https://github.com/jfrog/terraform-provider-artifactory/pull/730)
+  Issues: 
+  * [#728](https://github.com/jfrog/terraform-provider-artifactory/issues/728)
+  * [#729](https://github.com/jfrog/terraform-provider-artifactory/issues/729)
+
 ## 7.9.0 (May 8, 2023). Tested on Artifactory 7.55.10
 
 FEATURES:

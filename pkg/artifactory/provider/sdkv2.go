@@ -24,14 +24,13 @@ func SdkV2() *schema.Provider {
 			"url": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DefaultFunc:      schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_URL", "JFROG_URL"}, "http://localhost:8082"),
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+				Description:      "Artifactory URL.",
 			},
 			"api_key": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Sensitive:        true,
-				DefaultFunc:      schema.EnvDefaultFunc("ARTIFACTORY_API_KEY", nil),
 				ConflictsWith:    []string{"access_token"},
 				ValidateDiagFunc: validator.StringIsNotEmpty,
 				Description:      "API token. Projects functionality will not work with any auth method other than access tokens",
@@ -43,13 +42,11 @@ func SdkV2() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARTIFACTORY_ACCESS_TOKEN", "JFROG_ACCESS_TOKEN"}, nil),
 				Description: "This is a access token that can be given to you by your admin under `Identity and Access`. If not set, the 'api_key' attribute value will be used.",
 			},
 			"check_license": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
 				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
 			},
 		},
@@ -76,23 +73,33 @@ func SdkV2() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 	tflog.Debug(ctx, "providerConfigure")
 
-	URL := d.Get("url")
+	// Check environment variables, first available OS variable will be assigned to the var
+	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "http://localhost:8082")
+	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
 
-	restyBase, err := client.Build(URL.(string), productId)
+	if d.Get("url") != "" {
+		url = d.Get("url").(string)
+	}
+	if d.Get("access_token") != "" {
+		accessToken = d.Get("access_token").(string)
+	}
+	apiKey := d.Get("api_key").(string)
+
+	restyBase, err := client.Build(url, productId)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-
-	apiKey := d.Get("api_key").(string)
-	accessToken := d.Get("access_token").(string)
 
 	restyBase, err = client.AddAuth(restyBase, apiKey, accessToken)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-
+	// Due to migration from SDK v2 to plugin framework, we have to remove defaults from the provider configuration.
+	// https://discuss.hashicorp.com/t/muxing-upgraded-tfsdk-and-framework-provider-with-default-provider-configuration/43945
+	// License check will happen if `check_license` is true or if it's not set.
 	checkLicense := d.Get("check_license").(bool)
-	if checkLicense {
+	_, checkLicenseBoolSet := d.GetOk("check_license")
+	if checkLicense || !checkLicenseBoolSet {
 		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			return nil, licenseErr
