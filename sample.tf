@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "7.0.2"
+      version = "7.10.1"
     }
   }
 }
@@ -370,7 +370,7 @@ resource "artifactory_remote_maven_repository" "maven-remote" {
   fetch_sources_eagerly              = false
   suppress_pom_consistency_checks    = false
   reject_invalid_jars                = true
-  metadata_retrieval_timeout_seconds = 120
+  metadata_retrieval_timeout_secs = 120
 }
 
 resource "artifactory_remote_npm_repository" "thing" {
