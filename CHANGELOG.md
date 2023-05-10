@@ -1,3 +1,12 @@
+## 7.10.1 (May 10, 2023).
+
+BUG FIX: 
+* Fixed bug where `check_license` attribute was always `true` in the SDK v2 provider configuration.
+
+  PR:     [#733](https://github.com/jfrog/terraform-provider-artifactory/pull/733)
+  Issues: [#732](https://github.com/jfrog/terraform-provider-artifactory/issues/732)
+
+
 ## 7.10.0 (May 8, 2023).
 
 BUG FIXES:
