@@ -96,10 +96,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	}
 	// Due to migration from SDK v2 to plugin framework, we have to remove defaults from the provider configuration.
 	// https://discuss.hashicorp.com/t/muxing-upgraded-tfsdk-and-framework-provider-with-default-provider-configuration/43945
-	// License check will happen if `check_license` is true or if it's not set.
-	checkLicense := d.Get("check_license").(bool)
-	_, checkLicenseBoolSet := d.GetOk("check_license")
-	if checkLicense || !checkLicenseBoolSet {
+	checkLicense := true
+	v, checkLicenseBoolSet := d.GetOkExists("check_license")
+	if checkLicenseBoolSet {
+		checkLicense = v.(bool)
+	}
+	if checkLicense {
 		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			return nil, licenseErr
