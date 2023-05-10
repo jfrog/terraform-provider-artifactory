@@ -3,7 +3,7 @@
 BUG FIX: 
 * Fixed bug where `check_license` attribute was always `true` in the SDK v2 provider configuration.
 
-  PR:     [#]()
+  PR:     [#733](https://github.com/jfrog/terraform-provider-artifactory/pull/733)
   Issues: [#732](https://github.com/jfrog/terraform-provider-artifactory/issues/732)
 
 
