@@ -9,7 +9,7 @@ pipelines:
       - name: build_and_run_tf_provider
         type: Bash
         configuration:
-          nodePool: default
+          #nodePool: default
           priority: 1
           timeoutSeconds: 300 # 5 minutes
           runtime:
@@ -19,6 +19,13 @@ pipelines:
                 language: go
                 versions:
                   - "1.18"
+          requiresApproval:
+            approvers:
+              - alexh
+              - danielmi
+            notifications:
+              - integrationName: partnership_slack
+            timeoutSeconds: 172800 # 2 days
           integrations:
             - name: partnership_slack
           inputResources:
