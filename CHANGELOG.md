@@ -1,10 +1,10 @@
-## 7.11.0 (May 16, 2023).
+## 7.11.0 (May 16, 2023). Tested on Artifactory 7.55.13
 
 IMPROVEMENTS:
 
 * resource/artifactory_group is migrated to Plugin Framework, improved attribute validation.
 
-  PR:     [#]()
+  PR:     [#734](https://github.com/jfrog/terraform-provider-artifactory/pull/734)
 
 BUG FIXES: 
 
