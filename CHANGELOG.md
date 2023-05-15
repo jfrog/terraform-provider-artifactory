@@ -1,3 +1,18 @@
+## 7.11.0 (May 16, 2023).
+
+IMPROVEMENTS:
+
+* resource/artifactory_group is migrated to Plugin Framework, improved attribute validation.
+
+  PR:     [#]()
+
+BUG FIXES: 
+
+* fixed the issue when nil pointer happens in some cases if JFROG_URL is not set. 
+
+  Issues: [#731](https://github.com/jfrog/terraform-provider-artifactory/issues/731)
+
+
 ## 7.10.1 (May 10, 2023).
 
 BUG FIX: 
@@ -139,6 +154,7 @@ BUG FIXES:
 BUG FIXES:
 * Changed location of data sources docs so that they render properly in the terraform registry.
   PR: [#683](https://github.com/jfrog/terraform-provider-artifactory/pull/683)
+
 ## 7.1.1 (March 2, 2023). Tested on Artifactory 7.55.2
 
 BUG FIXES:

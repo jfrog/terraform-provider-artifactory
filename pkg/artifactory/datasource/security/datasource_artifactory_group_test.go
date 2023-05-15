@@ -8,13 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
+	datasourcesec "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/security"
+	resourcesec "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func createGroup(groupName string, description string, id string, t *testing.T) {
-	group := security.Group{
+	group := datasourcesec.Group{
 		Name:            groupName,
 		Description:     description,
 		ExternalId:      id,
@@ -29,7 +30,7 @@ func createGroup(groupName string, description string, id string, t *testing.T) 
 	}
 
 	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().SetBody(group).Put(security.GroupsEndpoint + group.Name)
+	_, err := restyClient.R().SetBody(group).Put(resourcesec.GroupsEndpoint + group.Name)
 
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +40,7 @@ func createGroup(groupName string, description string, id string, t *testing.T) 
 
 func deleteGroup(t *testing.T, groupName string) error {
 	restyClient := acctest.GetTestResty(t)
-	_, err := restyClient.R().Delete(security.GroupsEndpoint + groupName)
+	_, err := restyClient.R().Delete(resourcesec.GroupsEndpoint + groupName)
 
 	return err
 }
@@ -61,7 +62,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 			acctest.PreCheck(t)
 			createGroup(groupName, description, strconv.Itoa(id), t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,

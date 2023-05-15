@@ -10,6 +10,9 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,6 +39,26 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 // not prevent reconfiguration that may happen should the address of
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
+
+// ProtoV5MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
+// during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
+var ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+	"artifactory": func() (tfprotov5.ProviderServer, error) {
+		ctx := context.Background()
+		providers := []func() tfprotov5.ProviderServer{
+			providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
+			provider.SdkV2().GRPCProvider,                       // terraform-plugin-sdk provider
+		}
+
+		muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return muxServer.ProviderServer(), nil
+	},
+}
 
 func init() {
 	Provider = provider.SdkV2()

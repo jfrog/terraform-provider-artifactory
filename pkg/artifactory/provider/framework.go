@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -98,7 +99,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 				"the JFROG_ACCESS_TOKEN environment variable or provider "+
 				"configuration block access_token attribute.",
 		)
-		// Not returning early allows the logic to collect all errors.
+		return
 	}
 
 	if url == "" {
@@ -108,7 +109,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 				"the JFROG_URL/ARTIFACTORY_URL environment variables or provider "+
 				"configuration block url attribute.",
 		)
-		// Not returning early allows the logic to collect all errors.
+		return
 	}
 
 	restyBase, err := client.Build(url, productId)
@@ -130,7 +131,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		if licenseErr != nil {
 			resp.Diagnostics.AddError(
 				"Error getting Artifactory license",
-				fmt.Sprintf("%v", err),
+				fmt.Sprintf("%v", licenseErr),
 			)
 			return
 		}
@@ -142,6 +143,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			"Error getting Artifactory version",
 			"The provider functionality might be affected by the absence of Artifactory version in the context.",
 		)
+		return
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
@@ -165,6 +167,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		user.NewArtifactoryUserResource,
 		user.NewArtifactoryManagedUserResource,
 		user.NewArtifactoryAnonymousUserResource,
+		security.NewArtifactoryGroupResource,
 	}
 }
 

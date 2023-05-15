@@ -3,19 +3,23 @@ package security_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccGroup_basic(t *testing.T) {
-	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
+func TestAccGroup_defaults(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-basic-", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
 			name  = "{{ .groupName }}"
@@ -24,27 +28,225 @@ func TestAccGroup_basic(t *testing.T) {
 	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "auto_join", "false"),
+					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(fqrn, "realm", "internal"),
+					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "false"),
+					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(groupName, "name"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
+				ImportStateVerifyIgnore: []string{"detach_all_users", "users_names"}, // `detach_all_users` attribute is not being sent via API, can't be imported, `users_names` can't be imported due to API specifics
 			},
 		},
 	})
 }
 
-func TestAccGroup_full(t *testing.T) {
+func TestAccGroup__full(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group"
+			external_id      = "externalID"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			detach_all_users = true
+			watch_manager    = true
+			policy_manager   = true
+			reports_manager  = true
+			users_names 	 = ["anonymous", "admin"]
+		}
+	`
+
+	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test group"),
+					resource.TestCheckResourceAttr(fqrn, "external_id", "externalID"),
+					resource.TestCheckResourceAttr(fqrn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
+					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
+					resource.TestCheckResourceAttr(fqrn, "watch_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "policy_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "reports_manager", "true"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
+				ImportStateVerifyIgnore: []string{"detach_all_users", "users_names"}, // `detach_all_users` attribute is not being sent via API, can't be imported, `users_names` can't be imported due to API specifics
+			},
+		},
+	})
+}
+
+func TestAccGroup_bool_conflict(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group"
+			external_id      = "externalID"
+			auto_join        = true
+			admin_privileges = true
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			detach_all_users = true
+			watch_manager    = true
+			policy_manager   = true
+			reports_manager  = true
+			users_names 	 = ["anonymous", "admin"]
+		}
+	`
+
+	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*can not be set to.*"),
+			},
+		},
+	})
+}
+
+func TestAccGroup_unmanaged_members_update(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-unmanaged-members", "artifactory_group")
+
+	templates := []string{
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group 0"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			users_names = ["anonymous", "admin"]
+		}
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group 1"
+			auto_join        = false
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+		}
+		`,
+		`
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group 2"
+			auto_join        = false
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			detach_all_users = true
+		}
+		`,
+	}
+	var configs []string
+	for step, template := range templates {
+		configs = append(
+			configs,
+			utilsdk.ExecuteTemplate(
+				fmt.Sprint(step),
+				template,
+				map[string]string{"groupName": groupName},
+			),
+		)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: configs[0],
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckResourceAttr(fqrn, "auto_join", "true"),
+					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
+					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
+					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
+					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+				),
+			},
+			{
+				Config: configs[1],
+				Check: resource.ComposeTestCheckFunc(
+					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+				),
+			},
+			{
+				Config: configs[2],
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
+					testAccDirectCheckGroupMembershipFw(fqrn, 0),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
+				ImportStateVerifyIgnore: []string{"detach_all_users"}, // this attribute is not being sent via API, can't be imported
+			},
+		},
+	})
+}
+
+func TestAccGroup_full_update(t *testing.T) {
 	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	externalId := "test-external-id"
 
@@ -145,9 +347,11 @@ func TestAccGroup_full(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
+		PreCheck: func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
+			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+		},
+		CheckDestroy: testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -159,7 +363,7 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
 					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembership(fqrn, 0),
+					testAccDirectCheckGroupMembershipFw(fqrn, 0),
 				),
 			},
 			{
@@ -168,7 +372,7 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership(fqrn, 2),
+					testAccDirectCheckGroupMembershipFw(fqrn, 2),
 				),
 			},
 			{
@@ -176,14 +380,14 @@ func TestAccGroup_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "anonymous"),
-					testAccDirectCheckGroupMembership(fqrn, 1),
+					testAccDirectCheckGroupMembershipFw(fqrn, 1),
 				),
 			},
 			{
 				Config: configs[3],
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembership(fqrn, 1),
+					testAccDirectCheckGroupMembershipFw(fqrn, 1),
 				),
 			},
 			{
@@ -192,7 +396,7 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembership(fqrn, 2),
+					testAccDirectCheckGroupMembershipFw(fqrn, 2),
 				),
 			},
 			{
@@ -200,7 +404,7 @@ func TestAccGroup_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership(fqrn, 0),
+					testAccDirectCheckGroupMembershipFw(fqrn, 0),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
@@ -213,97 +417,6 @@ func TestAccGroup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "true"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "true"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "true"),
-				),
-			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
-				ImportStateVerifyIgnore: []string{"detach_all_users"}, // this attribute is not being sent via API, can't be imported
-			},
-		},
-	})
-}
-
-func TestAccGroup_unmanagedmembers(t *testing.T) {
-	_, fqrn, groupName := testutil.MkNames("test-group-unmanagedmembers", "artifactory_group")
-
-	templates := []string{
-		`
-		resource "artifactory_group" "{{ .groupName }}" {
-			name             = "{{ .groupName }}"
-			description 	 = "Test group"
-			auto_join        = true
-			admin_privileges = false
-			realm            = "test"
-			realm_attributes = "Some attribute"
-			users_names = ["anonymous", "admin"]
-		}
-		`,
-		`
-		resource "artifactory_group" "{{ .groupName }}" {
-			name             = "{{ .groupName }}"
-			description 	 = "Test group"
-			auto_join        = false
-			admin_privileges = false
-			realm            = "test"
-			realm_attributes = "Some attribute"
-		}
-		`,
-		`
-		resource "artifactory_group" "{{ .groupName }}" {
-			name             = "{{ .groupName }}"
-			description 	 = "Test group"
-			auto_join        = false
-			admin_privileges = false
-			realm            = "test"
-			realm_attributes = "Some attribute"
-			detach_all_users = true
-		}
-		`,
-	}
-	var configs []string
-	for step, template := range templates {
-		configs = append(
-			configs,
-			utilsdk.ExecuteTemplate(
-				fmt.Sprint(step),
-				template,
-				map[string]string{"groupName": groupName},
-			),
-		)
-	}
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupDestroy(fqrn),
-		Steps: []resource.TestStep{
-			{
-				Config: configs[0],
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", groupName),
-					resource.TestCheckResourceAttr(fqrn, "auto_join", "true"),
-					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
-					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
-					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
-					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
-					testAccDirectCheckGroupMembership(fqrn, 2),
-				),
-			},
-			{
-				Config: configs[1],
-				Check: resource.ComposeTestCheckFunc(
-					testAccDirectCheckGroupMembership(fqrn, 2),
-					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-				),
-			},
-			{
-				Config: configs[2],
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembership(fqrn, 0),
 				),
 			},
 			{
@@ -338,7 +451,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	}
 }
 
-func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
+func testAccDirectCheckGroupMembershipFw(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
@@ -347,7 +460,7 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		group := security.Group{}
+		group := security.ArtifactoryGroupResourceAPIModel{}
 		_, err := client.R().SetResult(&group).Get(security.GroupsEndpoint + rs.Primary.ID + "?includeUsers=true")
 		if err != nil {
 			return err
