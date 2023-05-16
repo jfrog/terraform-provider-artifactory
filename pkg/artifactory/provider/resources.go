@@ -65,7 +65,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_go_repository":                   virtual.ResourceArtifactoryVirtualGoRepository(),
 		"artifactory_virtual_rpm_repository":                  virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":                 virtual.ResourceArtifactoryVirtualHelmRepository(),
-		"artifactory_group":                                   security.ResourceArtifactoryGroup(),
 		"artifactory_unmanaged_user":                          user.ResourceArtifactoryUser(), // alias of artifactory_user
 		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),

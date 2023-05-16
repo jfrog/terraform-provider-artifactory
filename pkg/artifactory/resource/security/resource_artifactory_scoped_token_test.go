@@ -151,8 +151,8 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,

@@ -1,0 +1,1 @@
+terraform import artifactory_group.terraform-group mygroup

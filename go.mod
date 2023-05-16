@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/hashicorp/terraform-plugin-testing v1.2.0
-	github.com/jfrog/terraform-provider-shared v1.15.0
+	github.com/jfrog/terraform-provider-shared v1.16.2
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
@@ -73,4 +73,4 @@ require (
 	gopkg.in/ldap.v2 v2.5.1 // indirect
 )
 
-go 1.18
+go 1.19
