@@ -2,8 +2,8 @@ package security
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,7 +25,7 @@ func NewArtifactoryGroupResource() resource.Resource {
 }
 
 type ArtifactoryGroupResource struct {
-	client utilsdk.ProvderMetadata
+	ProviderData utilsdk.ProvderMetadata
 }
 
 // ArtifactoryGroupResourceModel describes the Terraform resource data model to match the
@@ -149,7 +149,7 @@ func (r *ArtifactoryGroupResource) Configure(ctx context.Context, req resource.C
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
 }
 
 func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -180,7 +180,9 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 		ReportsManager:  data.ReportsManager.ValueBool(),
 	}
 
-	response, err := r.client.Client.R().SetBody(group).Put(GroupsEndpoint + group.Name)
+	response, err := r.ProviderData.Client.R().
+		SetBody(group).
+		Put(GroupsEndpoint + group.Name)
 
 	if err != nil {
 		unableToCreateResourceError(resp, err)
@@ -212,8 +214,10 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 	group := &ArtifactoryGroupResourceAPIModel{}
 
 	includeUsers := len(data.UsersNames.Elements()) > 0 || data.DetachAllUsers.ValueBool()
-	url := fmt.Sprintf("%s%v?includeUsers=%v", GroupsEndpoint, data.Id.ValueString(), includeUsers)
-	response, err := r.client.Client.R().SetResult(group).Get(url)
+	response, err := r.ProviderData.Client.R().
+		SetQueryParam("includeUsers", strconv.FormatBool(includeUsers)).
+		SetResult(group).
+		Get(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -273,7 +277,9 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 	includeUsers := len(group.UsersNames) > 0 || data.DetachAllUsers.ValueBool()
 	if includeUsers {
 		// Create call
-		response, err := r.client.Client.R().SetBody(group).Put(GroupsEndpoint + group.Name)
+		response, err := r.ProviderData.Client.R().
+			SetBody(group).
+			Put(GroupsEndpoint + group.Name)
 		if err != nil {
 			unableToUpdateResourceError(resp, err)
 			return
@@ -286,7 +292,9 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 		}
 	} else {
 		// Update call
-		response, err := r.client.Client.R().SetBody(group).Post(GroupsEndpoint + group.Name)
+		response, err := r.ProviderData.Client.R().
+			SetBody(group).
+			Post(GroupsEndpoint + group.Name)
 		if err != nil {
 			unableToUpdateResourceError(resp, err)
 			return
@@ -311,7 +319,8 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	response, err := r.client.Client.R().Delete(GroupsEndpoint + data.Id.ValueString())
+	response, err := r.ProviderData.Client.R().
+		Delete(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -373,7 +382,7 @@ func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group *Arti
 
 func unableToCreateResourceError(resp *resource.CreateResponse, err error) {
 	resp.Diagnostics.AddError(
-		"Unable to Update Resource",
+		"Unable to Create Resource",
 		"An unexpected error occurred while creating the resource update request. "+
 			"Please report this issue to the provider developers.\n\n"+
 			"JSON Error: "+err.Error(),
@@ -383,7 +392,7 @@ func unableToCreateResourceError(resp *resource.CreateResponse, err error) {
 func unableToUpdateResourceError(resp *resource.UpdateResponse, err error) {
 	resp.Diagnostics.AddError(
 		"Unable to Update Resource",
-		"An unexpected error occurred while creating the resource update request. "+
+		"An unexpected error occurred while updating the resource update request. "+
 			"Please report this issue to the provider developers.\n\n"+
 			"JSON Error: "+err.Error(),
 	)

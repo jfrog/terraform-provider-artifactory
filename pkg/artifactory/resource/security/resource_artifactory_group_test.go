@@ -59,7 +59,7 @@ func TestAccGroup_defaults(t *testing.T) {
 	})
 }
 
-func TestAccGroup__full(t *testing.T) {
+func TestAccGroup_full(t *testing.T) {
 	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
