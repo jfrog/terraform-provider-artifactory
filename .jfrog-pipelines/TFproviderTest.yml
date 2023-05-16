@@ -26,7 +26,7 @@ pipelines:
               auto:
                 language: go
                 versions:
-                  - "1.18"
+                  - "1.19"
           requiresApproval:
             approvers:
               - alexh
