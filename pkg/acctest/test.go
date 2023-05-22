@@ -48,7 +48,7 @@ func init() {
 	Provider = provider.SdkV2()
 
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		"artifactory": func() (*schema.Provider, error) { return provider.SdkV2(), nil },
+		"artifactory": func() (*schema.Provider, error) { return Provider, nil },
 	}
 
 	ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
@@ -56,7 +56,7 @@ func init() {
 			ctx := context.Background()
 			providers := []func() tfprotov5.ProviderServer{
 				providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
-				provider.SdkV2().GRPCProvider,                       // terraform-plugin-sdk provider
+				Provider.GRPCProvider,                               // terraform-plugin-sdk provider
 			}
 
 			muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)

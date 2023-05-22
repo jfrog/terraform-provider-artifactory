@@ -243,7 +243,7 @@ func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceDat
 		return packLocalSingleReplication(&replication, d)
 	}
 
-	return nil
+	return diag.Errorf("Error during converting the API call payload.")
 }
 
 func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
