@@ -1,3 +1,13 @@
+## 7.11.1 (May 23, 2023)
+
+IMPROVEMENTS: 
+
+* resource/artifactory_local_repository_single_replication: the resource can deal with different license types (Enterprise and ProX) to create replications. 
+The reason the change introduced, is the API response body is different for different license types.
+
+PR:     [#]()
+Issue:  [#718](https://github.com/jfrog/terraform-provider-artifactory/issues/718)
+
 ## 7.11.0 (May 16, 2023). Tested on Artifactory 7.55.13
 
 IMPROVEMENTS:
