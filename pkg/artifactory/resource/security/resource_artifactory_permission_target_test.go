@@ -76,7 +76,7 @@ const permissionFull = `
 	//	key 	     = "{{ .repo_name }}"
 	//}
 
-	resource "artifactory_unmanaged_user" "test-user" {
+	resource "artifactory_managed_user" "test-user" {
 		name     = "terraform"
 		email    = "test-user@artifactory-terraform.com"
 		password = "Passsw0rd!"
@@ -92,7 +92,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_unmanaged_user.test-user.name
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "annotate", "delete"]
 			}
 
@@ -110,7 +110,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_unmanaged_user.test-user.name
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "manage", "annotate", "delete"]
 			}
 
@@ -128,7 +128,7 @@ const permissionFull = `
 
 		actions {
 			users {
-				name        = artifactory_unmanaged_user.test-user.name
+				name        = artifactory_managed_user.test-user.name
 				permissions = ["read", "write", "managedXrayMeta", "distribute"]
 			}
 
@@ -145,14 +145,14 @@ const permissionFull = `
 func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 	_, _, repoName := testutil.MkNames("test-perm-repo", "artifactory_local_generic_repository")
-	_, _, username := testutil.MkNames("artifactory_unmanaged_user", "artifactory_unmanaged_user")
+	_, _, username := testutil.MkNames("artifactory_managed_user", "artifactory_managed_user")
 	testConfig := `
 		resource "artifactory_local_generic_repository" "{{ .repo_name }}" {
 		  key             = "{{ .repo_name }}"
 		  repo_layout_ref = "simple-default"
 		}
 
-		resource "artifactory_unmanaged_user" "{{ .username }}" {
+		resource "artifactory_managed_user" "{{ .username }}" {
 		  name                       = "{{ .username }}"
 		  email                      = "example@example.com"
 		  groups                     = ["readers"]
@@ -171,7 +171,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 			]
 			actions {
 			  users {
-				name        = artifactory_unmanaged_user.{{ .username }}.name
+				name        = artifactory_managed_user.{{ .username }}.name
 				permissions = ["annotate", "read", "write", "delete"]
 			  }
 			}
@@ -184,9 +184,9 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 	}
 	foo := utilsdk.ExecuteTemplate(permFqrn, testConfig, variables)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: foo,
@@ -216,9 +216,9 @@ func TestAccPermissionTarget_full(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
@@ -260,9 +260,9 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
@@ -311,9 +311,9 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testPermissionTargetCheckDestroy(permFqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),

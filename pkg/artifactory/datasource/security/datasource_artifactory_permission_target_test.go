@@ -74,14 +74,14 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		"permission_name": name,
 	}
 
-	_, _, userName := testutil.MkNames("test-user", "artifactory_unmanaged_user")
+	_, _, userName := testutil.MkNames("test-user", "artifactory_managed_user")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			createPermissionTarget(name, userName, t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			err := deletePermissionTarget(t, name)
 			_ = acctest.DeleteUser(t, userName)
