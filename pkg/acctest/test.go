@@ -42,30 +42,33 @@ var testAccProviderConfigure sync.Once
 
 // ProtoV5MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
 // during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
-var ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"artifactory": func() (tfprotov5.ProviderServer, error) {
-		ctx := context.Background()
-		providers := []func() tfprotov5.ProviderServer{
-			providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
-			provider.SdkV2().GRPCProvider,                       // terraform-plugin-sdk provider
-		}
-
-		muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return muxServer.ProviderServer(), nil
-	},
-}
+var ProtoV5MuxProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 func init() {
 	Provider = provider.SdkV2()
 
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		"artifactory": func() (*schema.Provider, error) { return provider.SdkV2(), nil },
+		"artifactory": func() (*schema.Provider, error) { return Provider, nil },
 	}
+
+	ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+		"artifactory": func() (tfprotov5.ProviderServer, error) {
+			ctx := context.Background()
+			providers := []func() tfprotov5.ProviderServer{
+				providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
+				Provider.GRPCProvider,                               // terraform-plugin-sdk provider
+			}
+
+			muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return muxServer.ProviderServer(), nil
+		},
+	}
+
 }
 
 // PreCheck This function should be present in every acceptance test.
@@ -224,8 +227,9 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
-
-	err := configuration.SendConfigurationPatch(body, Provider.Meta())
+	restyClient := GetTestResty(t)
+	metadata := utilsdk.ProvderMetadata{Client: restyClient}
+	err := configuration.SendConfigurationPatch(body, metadata)
 	if err != nil {
 		t.Fatal(err)
 	}

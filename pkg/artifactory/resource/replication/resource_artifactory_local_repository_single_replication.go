@@ -2,6 +2,7 @@ package replication
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,10 +39,6 @@ type getLocalSingleReplicationBody struct {
 type updateLocalSingleReplicationBody struct {
 	localSingleReplicationBody
 	Proxy string `json:"proxy"`
-}
-
-type GetLocalSingleReplicationBody struct {
-	Replication []getLocalSingleReplicationBody
 }
 
 var localSingleReplicationSchema = map[string]*schema.Schema{
@@ -170,25 +167,25 @@ func unpackLocalSingleReplication(s *schema.ResourceData) updateLocalSingleRepli
 	}
 }
 
-func packLocalSingleReplication(singleLocalReplication *GetLocalSingleReplicationBody, d *schema.ResourceData) diag.Diagnostics {
+func packLocalSingleReplication(singleLocalReplication *getLocalSingleReplicationBody, d *schema.ResourceData) diag.Diagnostics {
 
 	var errors []error
 	setValue := utilsdk.MkLens(d)
-	setValue("url", singleLocalReplication.Replication[0].URL)
-	setValue("socket_timeout_millis", singleLocalReplication.Replication[0].SocketTimeoutMillis)
-	setValue("username", singleLocalReplication.Replication[0].Username)
-	setValue("enable_event_replication", singleLocalReplication.Replication[0].EnableEventReplication)
-	setValue("enabled", singleLocalReplication.Replication[0].Enabled)
-	setValue("cron_exp", singleLocalReplication.Replication[0].CronExp)
-	setValue("sync_deletes", singleLocalReplication.Replication[0].SyncDeletes)
-	setValue("sync_properties", singleLocalReplication.Replication[0].SyncProperties)
-	setValue("sync_statistics", singleLocalReplication.Replication[0].SyncStatistics)
-	setValue("repo_key", singleLocalReplication.Replication[0].RepoKey)
-	setValue("include_path_prefix_pattern", singleLocalReplication.Replication[0].IncludePathPrefixPattern)
-	setValue("exclude_path_prefix_pattern", singleLocalReplication.Replication[0].ExcludePathPrefixPattern)
-	setValue("proxy", singleLocalReplication.Replication[0].ProxyRef)
-	setValue("replication_key", singleLocalReplication.Replication[0].ReplicationKey)
-	errors = setValue("check_binary_existence_in_filestore", singleLocalReplication.Replication[0].CheckBinaryExistenceInFilestore)
+	setValue("url", singleLocalReplication.URL)
+	setValue("socket_timeout_millis", singleLocalReplication.SocketTimeoutMillis)
+	setValue("username", singleLocalReplication.Username)
+	setValue("enable_event_replication", singleLocalReplication.EnableEventReplication)
+	setValue("enabled", singleLocalReplication.Enabled)
+	setValue("cron_exp", singleLocalReplication.CronExp)
+	setValue("sync_deletes", singleLocalReplication.SyncDeletes)
+	setValue("sync_properties", singleLocalReplication.SyncProperties)
+	setValue("sync_statistics", singleLocalReplication.SyncStatistics)
+	setValue("repo_key", singleLocalReplication.RepoKey)
+	setValue("include_path_prefix_pattern", singleLocalReplication.IncludePathPrefixPattern)
+	setValue("exclude_path_prefix_pattern", singleLocalReplication.ExcludePathPrefixPattern)
+	setValue("proxy", singleLocalReplication.ProxyRef)
+	setValue("replication_key", singleLocalReplication.ReplicationKey)
+	errors = setValue("check_binary_existence_in_filestore", singleLocalReplication.CheckBinaryExistenceInFilestore)
 
 	if errors != nil && len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
@@ -216,10 +213,9 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(utilsdk.ProvderMetadata).Client
+	var replicationInterface interface{}
 
-	var replication []getLocalSingleReplicationBody
-
-	resp, err := c.R().SetResult(&replication).Get(EndpointPath + d.Id())
+	resp, err := c.R().SetResult(&replicationInterface).Get(EndpointPath + d.Id())
 
 	if err != nil {
 		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
@@ -228,11 +224,26 @@ func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceDat
 		}
 		return diag.FromErr(err)
 	}
-	repConfig := GetLocalSingleReplicationBody{
-		Replication: replication,
+
+	replicationList, ok := replicationInterface.([]interface{})
+	if ok {
+		jsonData, _ := json.Marshal(replicationList)
+		var replications []getLocalSingleReplicationBody
+		json.Unmarshal(jsonData, &replications)
+
+		return packLocalSingleReplication(&replications[0], d)
 	}
 
-	return packLocalSingleReplication(&repConfig, d)
+	replicationObj, ok := replicationInterface.(interface{})
+	if ok {
+		jsonData, _ := json.Marshal(replicationObj)
+		var replication getLocalSingleReplicationBody
+		json.Unmarshal(jsonData, &replication)
+
+		return packLocalSingleReplication(&replication, d)
+	}
+
+	return diag.Errorf("Error during converting the API call payload.")
 }
 
 func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
