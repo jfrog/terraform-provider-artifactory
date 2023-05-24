@@ -16,7 +16,7 @@ import (
 
 func TestAccAccessTokenAudienceBad(t *testing.T) {
 	const audienceBad = `
-		resource "artifactory_unmanaged_user" "existinguser" {
+		resource "artifactory_managed_user" "existinguser" {
 			name  = "existinguser"
 			email = "existinguser@a.com"
 			admin = false
@@ -26,15 +26,15 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
-			username = artifactory_unmanaged_user.existinguser.name
+			username = artifactory_managed_user.existinguser.name
 			audience = "bad"
 			refreshable = true
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config:      audienceBad,
@@ -47,7 +47,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 func TestAccAccessTokenAudienceGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	const audienceGood = `
-		resource "artifactory_unmanaged_user" "existinguser" {
+		resource "artifactory_managed_user" "existinguser" {
 			name  = "existinguser"
 			email = "existinguser@a.com"
 			admin = false
@@ -57,15 +57,15 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 
 		resource "artifactory_access_token" "foobar" {
 			end_date_relative = "1s"
-			username = artifactory_unmanaged_user.existinguser.name
+			username = artifactory_managed_user.existinguser.name
 			audience = "jfrt@*"
 			refreshable = true
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: audienceGood,
@@ -90,7 +90,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 }
 
 const existingUser = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -100,16 +100,16 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 }
 `
 
 func TestAccAccessTokenExistingUser(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: existingUser,
@@ -137,7 +137,7 @@ func fixedDateGood() string {
 
 	date := time.Now().Add(time.Second * time.Duration(10)).Format(time.RFC3339)
 	return fmt.Sprintf(`
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -147,7 +147,7 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date = "%s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 }
 `, date)
 }
@@ -155,9 +155,9 @@ resource "artifactory_access_token" "foobar" {
 func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: fixedDateGood(),
@@ -180,7 +180,7 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 }
 
 var fixedDateBad = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -190,15 +190,15 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date = "2020-01-01T00:00:00+11:00"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 }
 `
 
 func TestAccAccessTokenFixedDateBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config:      fixedDateBad,
@@ -211,7 +211,7 @@ func TestAccAccessTokenFixedDateBad(t *testing.T) {
 // I couldn't find a way to retrieve the instance_id for artifactory via the go library.
 // So, we expect this to fail
 const adminToken = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -221,7 +221,7 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 
 	admin_token {
 		instance_id = "blah"
@@ -231,9 +231,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenAdminToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config:      adminToken,
@@ -244,7 +244,7 @@ func TestAccAccessTokenAdminToken(t *testing.T) {
 }
 
 const refreshableToken = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -255,16 +255,16 @@ resource "artifactory_unmanaged_user" "existinguser" {
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
 	refreshable = true
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 }
 `
 
 func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: refreshableToken,
@@ -350,7 +350,7 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 }
 
 const missingGroup = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -360,7 +360,7 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 	groups = [
 		"missing-group",
 	]
@@ -369,9 +369,9 @@ resource "artifactory_access_token" "foobar" {
 
 func TestAccAccessTokenMissingGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config:      missingGroup,
@@ -382,7 +382,7 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 }
 
 const wildcardGroupGood = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
   email = "existinguser@a.com"
 	admin = false
@@ -392,7 +392,7 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "1s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 	groups = [
 		"*",
 	]
@@ -402,9 +402,9 @@ resource "artifactory_access_token" "foobar" {
 func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: wildcardGroupGood,
@@ -429,7 +429,7 @@ func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 }
 
 const nonExpiringToken = `
-resource "artifactory_unmanaged_user" "existinguser" {
+resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
     email = "existinguser@a.com"
 	admin = false
@@ -439,16 +439,16 @@ resource "artifactory_unmanaged_user" "existinguser" {
 
 resource "artifactory_access_token" "foobar" {
 	end_date_relative = "0s"
-	username = artifactory_unmanaged_user.existinguser.name
+	username = artifactory_managed_user.existinguser.name
 }
 `
 
 func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
 				Config: nonExpiringToken,
