@@ -17,7 +17,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_unmanaged_user" "test-user" {
+		`resource "artifactory_managed_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -27,7 +27,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_unmanaged_user.test-user.name
+			username    = artifactory_managed_user.test-user.name
 			description = "test description"
 		}`,
 		map[string]interface{}{
@@ -36,9 +36,9 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -73,7 +73,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_unmanaged_user" "test-user" {
+		`resource "artifactory_managed_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -83,7 +83,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_unmanaged_user.test-user.name
+			username    = artifactory_managed_user.test-user.name
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -96,8 +96,8 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -375,7 +375,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_unmanaged_user" "test-user" {
+		`resource "artifactory_managed_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -385,7 +385,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_unmanaged_user.test-user.name
+			username    = artifactory_managed_user.test-user.name
 			description = "test description"
 			expires_in  = {{ .expires_in }}
 		}`,
@@ -396,8 +396,8 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
@@ -412,7 +412,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_unmanaged_user" "test-user" {
+		`resource "artifactory_managed_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -422,7 +422,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_unmanaged_user.test-user.name
+			username    = artifactory_managed_user.test-user.name
 			description = "test description"
 			expires_in  = 0
 		}`,
@@ -432,8 +432,8 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
