@@ -1,3 +1,11 @@
+## 7.12.0 (May 30, 2023). Tested on Artifactory 7.55.14
+
+IMPROVEMENTS:
+
+* resource/scoped_token is migrated to Plugin Framework, improved attribute validation.
+
+  PR:     [#741](https://github.com/jfrog/terraform-provider-artifactory/pull/741)
+
 ## 7.11.1 (May 23, 2023). Tested on Artifactory 7.55.14
 
 IMPROVEMENTS: 
