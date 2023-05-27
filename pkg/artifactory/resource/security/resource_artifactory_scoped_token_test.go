@@ -12,12 +12,12 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-func TestAccScopedToken_WithDefaults(t *testing.T) {
+func TestAccScopedToken_WithDefaults_fw(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -27,7 +27,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 		}`,
 		map[string]interface{}{
@@ -68,12 +68,12 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithAttributes(t *testing.T) {
+func TestAccScopedToken_WithAttributes_fw(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -83,7 +83,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -131,7 +131,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithGroupScope(t *testing.T) {
+func TestAccScopedToken_WithGroupScope_fw(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -171,8 +171,8 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
-	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
+func TestAccScopedToken_WithInvalidScopes_fw(t *testing.T) {
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token_fe")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -185,18 +185,18 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>]:<actions>'.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
 			},
 		},
 	})
 }
 
-func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
+func TestAccScopedToken_WithTooLongScopes_fw(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
@@ -258,27 +258,27 @@ func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*total combined length of scopes field exceeds 500 characters:.*"),
+				ExpectError: regexp.MustCompile(".*Scopes length exceeds 500 characters.*"),
 			},
 		},
 	})
 }
 
-func TestAccScopedToken_WithAudience(t *testing.T) {
+func TestAccScopedToken_WithAudience_fw(t *testing.T) {
 
 	for _, prefix := range []string{"jfrt", "jfxr", "jfpip", "jfds", "jfmc", "jfac", "jfevt", "jfmd", "jfcon", "*"} {
 		t.Run(prefix, func(t *testing.T) {
-			resource.Test(mkAudienceTestCase(prefix, t))
+			resource.Test(mkAudienceTestCase_fw(prefix, t))
 		})
 	}
 }
 
-func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
+func mkAudienceTestCase_fw(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -293,8 +293,8 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 	)
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -312,7 +312,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 	}
 }
 
-func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
+func TestAccScopedToken_WithInvalidAudiences_fw(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
@@ -326,18 +326,18 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must either begin with jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or \*.*`),
+				ExpectError: regexp.MustCompile(`.*must either begin with jfrt, jfxr, jfpip,.*`),
 			},
 		},
 	})
 }
 
-func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
+func TestAccScopedToken_WithTooLongAudiences_fw(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	var audiences []string
@@ -359,23 +359,23 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*total combined length of audiences field exceeds 255 characters:.*"),
+				ExpectError: regexp.MustCompile(".*Audiences length exceeds 255 characters.*"),
 			},
 		},
 	})
 }
 
-func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
+func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold_fw(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -385,7 +385,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 			expires_in  = {{ .expires_in }}
 		}`,
@@ -401,18 +401,18 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
-				ExpectError: regexp.MustCompile("Provider produced inconsistent result after apply"),
+				ExpectError: regexp.MustCompile("Unable to Refresh Resource"),
 			},
 		},
 	})
 }
 
-func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
+func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken_fw(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -422,7 +422,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 			expires_in  = 0
 		}`,

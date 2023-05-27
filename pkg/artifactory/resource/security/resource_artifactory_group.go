@@ -220,13 +220,7 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 		Get(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Refresh Resource",
-			"An unexpected error occurred while attempting to refresh resource state. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		unableToRefreshResourceError(resp, err)
 		return
 	}
 
@@ -323,25 +317,13 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 		Delete(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		unableToDeleteResourceError(resp, err)
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Status: "+response.Status(),
-		)
-
+		unableToDeleteResourceError(resp, err)
 		return
 	}
 
@@ -378,22 +360,4 @@ func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group *Arti
 	r.WatchManager = types.BoolValue(group.WatchManager)
 	r.PolicyManager = types.BoolValue(group.PolicyManager)
 	r.ReportsManager = types.BoolValue(group.ReportsManager)
-}
-
-func unableToCreateResourceError(resp *resource.CreateResponse, err error) {
-	resp.Diagnostics.AddError(
-		"Unable to Create Resource",
-		"An unexpected error occurred while creating the resource update request. "+
-			"Please report this issue to the provider developers.\n\n"+
-			"JSON Error: "+err.Error(),
-	)
-}
-
-func unableToUpdateResourceError(resp *resource.UpdateResponse, err error) {
-	resp.Diagnostics.AddError(
-		"Unable to Update Resource",
-		"An unexpected error occurred while updating the resource update request. "+
-			"Please report this issue to the provider developers.\n\n"+
-			"JSON Error: "+err.Error(),
-	)
 }
