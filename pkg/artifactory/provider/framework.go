@@ -169,6 +169,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		user.NewArtifactoryAnonymousUserResource,
 		security.NewArtifactoryGroupResource,
 		security.NewArtifactoryScopedTokenResource,
+		security.NewPermissionTargetResource,
 	}
 }
 

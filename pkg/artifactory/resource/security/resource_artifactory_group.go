@@ -185,13 +185,13 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 		Put(GroupsEndpoint + group.Name)
 
 	if err != nil {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusCreated {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
@@ -275,13 +275,13 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 			SetBody(group).
 			Put(GroupsEndpoint + group.Name)
 		if err != nil {
-			unableToUpdateResourceError(resp, err)
+			utilfw.UnableToUpdateResourceError(resp, err.Error())
 			return
 		}
 
 		// Return error if the HTTP status code is not 200 OK
 		if response.StatusCode() != http.StatusCreated {
-			unableToUpdateResourceError(resp, err)
+			utilfw.UnableToUpdateResourceError(resp, response.String())
 			return
 		}
 	} else {
@@ -290,13 +290,13 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 			SetBody(group).
 			Post(GroupsEndpoint + group.Name)
 		if err != nil {
-			unableToUpdateResourceError(resp, err)
+			utilfw.UnableToUpdateResourceError(resp, err.Error())
 			return
 		}
 
 		// Return error if the HTTP status code is not 200 OK
 		if response.StatusCode() != http.StatusOK {
-			unableToUpdateResourceError(resp, err)
+			utilfw.UnableToUpdateResourceError(resp, response.String())
 			return
 		}
 	}
