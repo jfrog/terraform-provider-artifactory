@@ -298,12 +298,12 @@ func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescriptio
 			},
 			"repositories": schema.SetAttribute{
 				ElementType:         types.StringType,
-				Optional:            true,
+				Optional:            true, // this attribute can't be set to required as SingleNestedBlock doesn't support it. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
 				MarkdownDescription: repoDescription,
 			},
 		},
 		Validators: []validator.Object{
-			validatorfw.RequireIfDefined(path.Expressions{
+			validatorfw.RequireIfDefined(path.Expressions{ // use customer validator to ensure 'repositories' attribute is set if this block is defined in configuration. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
 				path.MatchRelative().AtName("repositories"),
 			}...),
 		},
