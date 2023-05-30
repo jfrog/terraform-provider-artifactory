@@ -297,11 +297,15 @@ func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescriptio
 				MarkdownDescription: "The default value will be [] if nothing is supplied",
 			},
 			"repositories": schema.SetAttribute{
-				ElementType: types.StringType,
-				Required:    true,
-				// Optional:            true,
+				ElementType:         types.StringType,
+				Optional:            true,
 				MarkdownDescription: repoDescription,
 			},
+		},
+		Validators: []validator.Object{
+			validatorfw.RequireIfDefined(path.Expressions{
+				path.MatchRelative().AtName("repositories"),
+			}...),
 		},
 		Blocks: map[string]schema.Block{
 			"actions": schema.SingleNestedBlock{
@@ -309,9 +313,6 @@ func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescriptio
 					"users":  actionsAttributeBlock,
 					"groups": actionsAttributeBlock,
 				},
-				// Validators: []validator.Object{
-				// 	objectvalidator.IsRequired(),
-				// },
 			},
 		},
 		MarkdownDescription: description,
