@@ -336,29 +336,14 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 }
 
 func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, error) {
-	type Version struct {
-		Version  string `json:"version"`
-		Revision string `json:"revision"`
-	}
-
-	restyClient := GetTestResty(t)
-	ver := Version{}
-
-	_, err := restyClient.R().
-		SetResult(&ver).
-		Get("/artifactory/api/system/version")
-	if err != nil {
-		return false, err
-	}
-
-	fmt.Printf("Ver: %v\n", ver)
 
 	fixedVersion, err := version.NewVersion(instanceVersions)
 	if err != nil {
 		return false, err
 	}
 
-	runtimeVersion, err := version.NewVersion(ver.Version)
+	meta := Provider.Meta().(utilsdk.ProvderMetadata)
+	runtimeVersion, err := version.NewVersion(meta.ArtifactoryVersion)
 	if err != nil {
 		return false, err
 	}
