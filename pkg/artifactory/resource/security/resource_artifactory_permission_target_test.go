@@ -3,6 +3,7 @@ package security_test
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 
@@ -400,6 +401,53 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateCheck:  validator.CheckImportState(permName, "name"),
+			},
+		},
+	})
+}
+
+func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
+	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
+	_, _, repoName := testutil.MkNames("test-perm-repo", "artifactory_local_generic_repository")
+	_, _, username := testutil.MkNames("artifactory_managed_user", "artifactory_managed_user")
+	testConfig := `
+		resource "artifactory_managed_user" "{{ .username }}" {
+		  name                       = "{{ .username }}"
+		  email                      = "example@example.com"
+		  groups                     = ["readers"]
+		  admin                      = false
+		  disable_ui_access          = true
+		  internal_password_disabled = true
+		  password 					 = "Passw0rd!"
+		}
+
+		resource "artifactory_permission_target" "{{ .perm_name }}" {
+		  name = "{{ .perm_name }}"
+		  repo {
+			includes_pattern = ["**"]
+
+			actions {
+			  users {
+				name        = artifactory_managed_user.{{ .username }}.name
+				permissions = ["annotate", "read", "write", "delete"]
+			  }
+			}
+		  }
+		}`
+	variables := map[string]string{
+		"perm_name": permName,
+		"username":  username,
+		"repo_name": repoName,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
+		Steps: []resource.TestStep{
+			{
+				Config:      utilsdk.ExecuteTemplate(permFqrn, testConfig, variables),
+				ExpectError: regexp.MustCompile(".*Attribute repo.repositories must be set when repo is defined.*"),
 			},
 		},
 	})
