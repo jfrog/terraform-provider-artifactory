@@ -17,7 +17,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -27,7 +27,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 		}`,
 		map[string]interface{}{
@@ -73,7 +73,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -83,7 +83,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -185,12 +185,12 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must be '<resource-type>:<target>\[/<sub-resource>]:<actions>'.*`),
+				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
 			},
 		},
 	})
@@ -258,12 +258,12 @@ func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*total combined length of scopes field exceeds 500 characters:.*"),
+				ExpectError: regexp.MustCompile(".*Scopes length exceeds 500 characters.*"),
 			},
 		},
 	})
@@ -293,8 +293,8 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 	)
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -326,12 +326,12 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*must either begin with jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or \*.*`),
+				ExpectError: regexp.MustCompile(`.*must either begin with jfrt, jfxr, jfpip,.*`),
 			},
 		},
 	})
@@ -359,12 +359,12 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(".*total combined length of audiences field exceeds 255 characters:.*"),
+				ExpectError: regexp.MustCompile(".*Audiences length exceeds 255 characters.*"),
 			},
 		},
 	})
@@ -375,7 +375,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -385,7 +385,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 			expires_in  = {{ .expires_in }}
 		}`,
@@ -401,7 +401,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
-				ExpectError: regexp.MustCompile("Provider produced inconsistent result after apply"),
+				ExpectError: regexp.MustCompile("Unable to Refresh Resource"),
 			},
 		},
 	})
@@ -412,7 +412,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_managed_user" "test-user" {
+		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
 		    email             = "testuser@tempurl.org"
 			admin             = true
@@ -422,7 +422,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_managed_user.test-user.name
+			username    = artifactory_user.test-user.name
 			description = "test description"
 			expires_in  = 0
 		}`,

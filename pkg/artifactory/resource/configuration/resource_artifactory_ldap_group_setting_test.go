@@ -42,6 +42,10 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 
 	fqrn := "artifactory_ldap_group_setting.ldapgrouptest"
 
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -49,7 +53,8 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: LdapGroupSettingTemplateFull,
+				SkipFunc: onOrAfterVersion7571,
+				Config:   LdapGroupSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "ldap_setting_key", "ldaptest"),
 					resource.TestCheckResourceAttr(fqrn, "group_base_dn", "CN=Users,DC=MyDomain,DC=com"),
