@@ -298,7 +298,7 @@ func (r *ArtifactoryScopedTokenResource) Create(ctx context.Context, req resourc
 	if len(audiencesString) > 255 {
 		resp.Diagnostics.AddError(
 			"Audiences length exceeds 255 characters",
-			"total combined length of audiences field exceeds 500 characters:"+scopesString,
+			"total combined length of audiences field exceeds 255 characters:"+audiencesString,
 		)
 		return
 	}

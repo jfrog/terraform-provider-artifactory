@@ -12,7 +12,7 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-func TestAccScopedToken_WithDefaults_fw(t *testing.T) {
+func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -68,7 +68,7 @@ func TestAccScopedToken_WithDefaults_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithAttributes_fw(t *testing.T) {
+func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -131,7 +131,7 @@ func TestAccScopedToken_WithAttributes_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithGroupScope_fw(t *testing.T) {
+func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -171,8 +171,8 @@ func TestAccScopedToken_WithGroupScope_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithInvalidScopes_fw(t *testing.T) {
-	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token_fe")
+func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
+	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -196,7 +196,7 @@ func TestAccScopedToken_WithInvalidScopes_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithTooLongScopes_fw(t *testing.T) {
+func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
@@ -269,16 +269,16 @@ func TestAccScopedToken_WithTooLongScopes_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithAudience_fw(t *testing.T) {
+func TestAccScopedToken_WithAudience(t *testing.T) {
 
 	for _, prefix := range []string{"jfrt", "jfxr", "jfpip", "jfds", "jfmc", "jfac", "jfevt", "jfmd", "jfcon", "*"} {
 		t.Run(prefix, func(t *testing.T) {
-			resource.Test(mkAudienceTestCase_fw(prefix, t))
+			resource.Test(mkAudienceTestCase(prefix, t))
 		})
 	}
 }
 
-func mkAudienceTestCase_fw(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
+func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -312,7 +312,7 @@ func mkAudienceTestCase_fw(prefix string, t *testing.T) (*testing.T, resource.Te
 	}
 }
 
-func TestAccScopedToken_WithInvalidAudiences_fw(t *testing.T) {
+func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	scopedTokenConfig := utilsdk.ExecuteTemplate(
@@ -337,7 +337,7 @@ func TestAccScopedToken_WithInvalidAudiences_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithTooLongAudiences_fw(t *testing.T) {
+func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
 	var audiences []string
@@ -370,7 +370,7 @@ func TestAccScopedToken_WithTooLongAudiences_fw(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold_fw(t *testing.T) {
+func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
@@ -407,7 +407,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold_fw(t *testing.
 	})
 }
 
-func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken_fw(t *testing.T) {
+func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(

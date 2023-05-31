@@ -4,9 +4,11 @@ IMPROVEMENTS:
 
 * resource/scoped_token is migrated to Plugin Framework, improved attribute validation.
 
-  PR:     [#741](https://github.com/jfrog/terraform-provider-artifactory/pull/741)
+PR:     [#741](https://github.com/jfrog/terraform-provider-artifactory/pull/741)
 
-Note: Resources `ldap_group_setting` and `ldap_setting` won't work with Artifactory version > 7.57.1. 
+NOTES:
+
+Resources `ldap_group_setting` and `ldap_setting` won't work with Artifactory version => 7.57.1. 
 The new API was implemented to manage LDAP configuration and the new resource will be added later. 
 
 ## 7.11.1 (May 23, 2023). Tested on Artifactory 7.55.14
