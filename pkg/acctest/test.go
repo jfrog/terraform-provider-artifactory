@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
@@ -332,4 +333,39 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, error) {
+	type Version struct {
+		Version  string `json:"version"`
+		Revision string `json:"revision"`
+	}
+
+	restyClient := GetTestResty(t)
+	ver := Version{}
+
+	_, err := restyClient.R().
+		SetResult(&ver).
+		Get("/artifactory/api/system/version")
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Printf("Ver: %v\n", ver)
+
+	fixedVersion, err := version.NewVersion(instanceVersions)
+	if err != nil {
+		return false, err
+	}
+
+	runtimeVersion, err := version.NewVersion(ver.Version)
+	if err != nil {
+		return false, err
+	}
+
+	skipTest := runtimeVersion.GreaterThanOrEqual(fixedVersion)
+	if skipTest {
+		t.Skip(fmt.Printf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String()))
+	}
+	return skipTest, nil
 }

@@ -5,13 +5,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/configuration"
 )
 
 func TestAccLdapSetting_full(t *testing.T) {
@@ -42,6 +42,9 @@ resource "artifactory_ldap_setting" "ldaptest" {
 	manager_dn = "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com"
 	manager_password = "testmgrpaswd"
 }`
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
 
 	fqrn := "artifactory_ldap_setting.ldaptest"
 
@@ -52,7 +55,8 @@ resource "artifactory_ldap_setting" "ldaptest" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: LdapSettingTemplateFull,
+				SkipFunc: onOrAfterVersion7571,
+				Config:   LdapSettingTemplateFull,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "ldap_url", "ldap://ldaptestldap"),
@@ -145,6 +149,9 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 	user_dn_pattern = "uid={0},ou=People"
 	email_attribute = "mail_attr"
 }`
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
 
 	fqrn := "artifactory_ldap_setting.ldaptestemailattr"
 	resource.Test(t, resource.TestCase{
@@ -154,7 +161,8 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: LdapSettingTemplateNoEmailAttr,
+				SkipFunc: onOrAfterVersion7571,
+				Config:   LdapSettingTemplateNoEmailAttr,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
@@ -225,6 +233,10 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 	ldap_url = "ldap://ldaptestldap"
 }`
 
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
+
 	fqrn := "artifactory_ldap_setting.ldaptestuserdnsearchfilter"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -233,7 +245,8 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: LdapSettingTemplateUserDnNoSearchFilter,
+				SkipFunc: onOrAfterVersion7571,
+				Config:   LdapSettingTemplateUserDnNoSearchFilter,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", "ou=People, uid={0}"),
