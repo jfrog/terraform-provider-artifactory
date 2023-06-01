@@ -11,7 +11,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func NewArtifactoryAnonymousUserResource() resource.Resource {
+func NewAnonymousUserResource() resource.Resource {
 
 	return &ArtifactoryAnonymousUserResource{}
 }

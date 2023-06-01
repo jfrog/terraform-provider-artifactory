@@ -19,7 +19,7 @@ import (
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
-func NewArtifactoryGroupResource() resource.Resource {
+func NewGroupResource() resource.Resource {
 
 	return &ArtifactoryGroupResource{}
 }
