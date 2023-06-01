@@ -303,7 +303,7 @@ func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescriptio
 			},
 		},
 		Validators: []validator.Object{
-			validatorfw.RequireIfDefined(path.Expressions{ // use customer validator to ensure 'repositories' attribute is set if this block is defined in configuration. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
+			validatorfw.RequireIfDefined(path.Expressions{ // use custom validator to ensure 'repositories' attribute is set if this block is defined in configuration. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
 				path.MatchRelative().AtName("repositories"),
 			}...),
 		},
@@ -398,13 +398,7 @@ func (r *PermissionTargetResource) Read(ctx context.Context, req resource.ReadRe
 		Get(PermissionsEndPoint + data.Id.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Refresh Resource",
-			"An unexpected error occurred while attempting to refresh resource state. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -464,25 +458,13 @@ func (r *PermissionTargetResource) Delete(ctx context.Context, req resource.Dele
 		Delete(PermissionsEndPoint + data.Id.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Status: "+response.Status(),
-		)
-
+		utilfw.UnableToDeleteResourceError(resp, response.Status())
 		return
 	}
 

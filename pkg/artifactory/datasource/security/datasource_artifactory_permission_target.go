@@ -92,11 +92,12 @@ func BuildPermissionTargetSchema() map[string]*schema.Schema {
 					Description: `The default value will be [] if nothing is supplied`,
 				},
 				"repositories": {
-					Type:        schema.TypeSet,
-					Elem:        &schema.Schema{Type: schema.TypeString},
-					Set:         schema.HashString,
-					Description: "You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified.",
-					Required:    true,
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{Type: schema.TypeString},
+					Set:  schema.HashString,
+					Description: "You can specify the name `ANY` in the repositories section in order to apply to all repositories, " +
+						"`ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified.",
+					Required: true,
 				},
 				"actions": {
 					Type:     schema.TypeList,
@@ -114,7 +115,8 @@ func BuildPermissionTargetSchema() map[string]*schema.Schema {
 		},
 	}
 	buildSchema := principalSchema
-	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
+	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, ` +
+		"validation of sets/lists is not allowed. Artifactory will reject the request if you change this"
 
 	return map[string]*schema.Schema{
 		"name": {
