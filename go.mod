@@ -1,7 +1,7 @@
 module github.com/jfrog/terraform-provider-artifactory/v7
 
 // if you need to do local dev, literally just uncomment the line below
-//replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
+// replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
 require (
 	github.com/go-resty/resty/v2 v2.7.0
@@ -15,10 +15,10 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/hashicorp/terraform-plugin-testing v1.2.0
-	github.com/jfrog/terraform-provider-shared v1.16.2
+	github.com/jfrog/terraform-provider-shared v1.17.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.2
-	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/net v0.8.0
 	golang.org/x/text v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -66,7 +66,7 @@ require (
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
+	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d // indirect
 	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect

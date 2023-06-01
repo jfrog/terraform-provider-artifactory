@@ -164,11 +164,12 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		user.NewArtifactoryUserResource,
-		user.NewArtifactoryManagedUserResource,
-		user.NewArtifactoryAnonymousUserResource,
-		security.NewArtifactoryGroupResource,
-		security.NewArtifactoryScopedTokenResource,
+		user.NewUserResource,
+		user.NewManagedUserResource,
+		user.NewAnonymousUserResource,
+		security.NewGroupResource,
+		security.NewScopedTokenResource,
+		security.NewPermissionTargetResource,
 	}
 }
 

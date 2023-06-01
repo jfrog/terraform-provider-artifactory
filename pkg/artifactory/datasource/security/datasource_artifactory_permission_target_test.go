@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/acctest"
+	datasource "github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/datasource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -23,30 +24,30 @@ func deletePermissionTarget(t *testing.T, name string) error {
 func createPermissionTarget(targetName string, userName string, t *testing.T) {
 	acctest.CreateUserUpdatable(t, userName, "terraform@email.com")
 
-	actions := security.Actions{
+	actions := datasource.Actions{
 		Users:  map[string][]string{userName: {"read", "write"}},
 		Groups: map[string][]string{"readers": {"read"}},
 	}
-	repoTarget := security.PermissionTargetSection{
+	repoTarget := datasource.PermissionTargetSection{
 		IncludePatterns: []string{"foo/**"},
 		ExcludePatterns: []string{"bar/**"},
 		Repositories:    []string{"example-repo-local"},
 		Actions:         &actions,
 	}
-	buildTarget := security.PermissionTargetSection{
+	buildTarget := datasource.PermissionTargetSection{
 		IncludePatterns: []string{"foo/**"},
 		ExcludePatterns: []string{"bar/**"},
 		Repositories:    []string{"artifactory-build-info"},
 		Actions:         nil,
 	}
-	releaseBundleTarget := security.PermissionTargetSection{
+	releaseBundleTarget := datasource.PermissionTargetSection{
 		IncludePatterns: []string{"foo/**"},
 		ExcludePatterns: []string{"bar/**"},
 		Repositories:    []string{"release-bundles"},
 		Actions:         nil,
 	}
 
-	permissionTarget := security.PermissionTargetParams{
+	permissionTarget := datasource.PermissionTargetParams{
 		Name:          targetName,
 		Repo:          &repoTarget,
 		Build:         &buildTarget,

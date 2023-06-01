@@ -69,7 +69,6 @@ func init() {
 			return muxServer.ProviderServer(), nil
 		},
 	}
-
 }
 
 // PreCheck This function should be present in every acceptance test.

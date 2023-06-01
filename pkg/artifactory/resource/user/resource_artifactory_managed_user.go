@@ -10,7 +10,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func NewArtifactoryManagedUserResource() resource.Resource {
+func NewManagedUserResource() resource.Resource {
 
 	return &ArtifactoryManagedUserResource{}
 }

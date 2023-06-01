@@ -1,10 +1,22 @@
+## 8.0.0 (June 1, 2023). Tested on Artifactory 7.59.9
+
+BREAKING CHANGES:
+
+* resource/artifactory_permission_targets has been removed. It has been marked as deprecated since April 2022.
+
+IMPROVEMENTS: 
+
+* resource/artifactory_permission_target is migrated to Plugin Framework, improved attribute validation.
+
+  PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/42)
+
 ## 7.11.2 (May 30, 2023). Tested on Artifactory 7.59.9
 
 IMPROVEMENTS:
 
 * resource/scoped_token is migrated to Plugin Framework, improved attribute validation.
 
-PR:     [#741](https://github.com/jfrog/terraform-provider-artifactory/pull/741)
+PR: [#741](https://github.com/jfrog/terraform-provider-artifactory/pull/741)
 
 NOTES:
 
@@ -18,8 +30,8 @@ IMPROVEMENTS:
 * resource/artifactory_local_repository_single_replication: the resource can deal with different license types (Enterprise and ProX) to create replications. 
 The reason the change introduced, is the API response body is different for different license types.
 
-PR:     [#737](https://github.com/jfrog/terraform-provider-artifactory/pull/737)
-Issue:  [#718](https://github.com/jfrog/terraform-provider-artifactory/issues/718)
+PR:    [#737](https://github.com/jfrog/terraform-provider-artifactory/pull/737)
+Issue: [#718](https://github.com/jfrog/terraform-provider-artifactory/issues/718)
 
 ## 7.11.0 (May 16, 2023). Tested on Artifactory 7.55.13
 

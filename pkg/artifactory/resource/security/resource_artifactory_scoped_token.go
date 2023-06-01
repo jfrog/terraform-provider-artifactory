@@ -26,18 +26,18 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-func NewArtifactoryScopedTokenResource() resource.Resource {
+func NewScopedTokenResource() resource.Resource {
 
-	return &ArtifactoryScopedTokenResource{}
+	return &ScopedTokenResource{}
 }
 
-type ArtifactoryScopedTokenResource struct {
+type ScopedTokenResource struct {
 	ProviderData utilsdk.ProvderMetadata
 }
 
-// ArtifactoryScopedTokenResourceModel describes the Terraform resource data model to match the
+// ScopedTokenResourceModel describes the Terraform resource data model to match the
 // resource schema.
-type ArtifactoryScopedTokenResourceModel struct {
+type ScopedTokenResourceModel struct {
 	Id                    types.String `tfsdk:"id"`
 	GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
@@ -94,11 +94,11 @@ type AccessTokenGetAPIModel struct {
 	Refreshable bool   `json:"refreshable"`
 }
 
-func (r *ArtifactoryScopedTokenResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ScopedTokenResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "artifactory_scoped_token"
 }
 
-func (r *ArtifactoryScopedTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Create scoped tokens for any of the services in your JFrog Platform and to " +
 			"manage user access to these services. If left at the default setting, the token will " +
@@ -261,7 +261,7 @@ func (r *ArtifactoryScopedTokenResource) Schema(ctx context.Context, req resourc
 
 var serviceTypesScopedToken = []string{"jfrt", "jfxr", "jfpip", "jfds", "jfmc", "jfac", "jfevt", "jfmd", "jfcon"}
 
-func (r *ArtifactoryScopedTokenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ScopedTokenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -269,8 +269,8 @@ func (r *ArtifactoryScopedTokenResource) Configure(ctx context.Context, req reso
 	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
 }
 
-func (r *ArtifactoryScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *ArtifactoryScopedTokenResourceModel
+func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data *ScopedTokenResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -348,8 +348,8 @@ func (r *ArtifactoryScopedTokenResource) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // All attributes are assigned in data
 }
 
-func (r *ArtifactoryScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *ArtifactoryScopedTokenResourceModel
+func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *ScopedTokenResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -389,13 +389,13 @@ func (r *ArtifactoryScopedTokenResource) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ArtifactoryScopedTokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *ScopedTokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Scoped tokens are not updatable
 	return
 }
 
-func (r *ArtifactoryScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data ArtifactoryScopedTokenResourceModel
+func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data ScopedTokenResourceModel
 	respError := AccessTokenErrorResponseAPIModel{}
 
 	// Read Terraform prior state data into the model
@@ -422,14 +422,14 @@ func (r *ArtifactoryScopedTokenResource) Delete(ctx context.Context, req resourc
 }
 
 // ImportState imports the resource into the Terraform state.
-func (r *ArtifactoryScopedTokenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ScopedTokenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.AddError(
 		"Import is not supported",
 		"resource artifactory_scoped_token doesn't support import.",
 	)
 }
 
-func (r *ArtifactoryScopedTokenResourceModel) PostResponseToState(ctx context.Context,
+func (r *ScopedTokenResourceModel) PostResponseToState(ctx context.Context,
 	accessTokenResp *AccessTokenPostResponseAPIModel, accessTokenPostBody *AccessTokenPostRequestAPIModel, getResult *AccessTokenGetAPIModel) {
 
 	r.Id = types.StringValue(accessTokenResp.TokenId)
@@ -466,7 +466,7 @@ func (r *ArtifactoryScopedTokenResourceModel) PostResponseToState(ctx context.Co
 	r.Issuer = types.StringValue(getResult.Issuer)
 }
 
-func (r *ArtifactoryScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGetAPIModel) {
+func (r *ScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGetAPIModel) {
 	r.Id = types.StringValue(accessToken.TokenId)
 	r.Subject = types.StringValue(accessToken.Subject)
 	r.Expiry = types.Int64Value(accessToken.Expiry)

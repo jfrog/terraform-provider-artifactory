@@ -66,7 +66,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_rpm_repository":                  virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":                 virtual.ResourceArtifactoryVirtualHelmRepository(),
 		"artifactory_unmanaged_user":                          user.ResourceArtifactoryUser(), // alias of artifactory_user
-		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
 		"artifactory_local_repository_single_replication":     replication.ResourceArtifactoryLocalRepositorySingleReplication(),
@@ -79,7 +78,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_general_security":                        configuration.ResourceArtifactoryGeneralSecurity(),
 		"artifactory_oauth_settings":                          configuration.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":                           configuration.ResourceArtifactorySamlSettings(),
-		"artifactory_permission_targets":                      security.ResourceArtifactoryPermissionTargets(), // Deprecated. Remove in V7
 		"artifactory_replication_config":                      replication.ResourceArtifactoryReplicationConfig(),
 		"artifactory_single_replication_config":               replication.ResourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),

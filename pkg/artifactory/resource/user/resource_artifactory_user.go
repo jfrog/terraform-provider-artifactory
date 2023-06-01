@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func NewArtifactoryUserResource() resource.Resource {
+func NewUserResource() resource.Resource {
 
 	return &ArtifactoryUserResource{}
 }
