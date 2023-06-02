@@ -45,6 +45,10 @@ var testAccProviderConfigure sync.Once
 // during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
 var ProtoV5MuxProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
+var ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+	"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+}
+
 func init() {
 	Provider = provider.SdkV2()
 
