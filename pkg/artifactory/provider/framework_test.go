@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v7/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
 )
 
 func TestMuxServer(t *testing.T) {
