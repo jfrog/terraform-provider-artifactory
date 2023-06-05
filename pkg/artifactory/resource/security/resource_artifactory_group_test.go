@@ -29,7 +29,7 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.7.0",
+						VersionConstraint: "7.10.1",
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
@@ -496,8 +496,8 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 			return err
 		}
 
-		if len(group.UsersNames) != expectedCount {
-			return fmt.Errorf("error: Group %s has wrong number of members. Expected: %d  Actual: %d", rs.Primary.ID, expectedCount, len(group.UsersNames))
+		if len(*group.UsersNames) != expectedCount {
+			return fmt.Errorf("error: Group %s has wrong number of members. Expected: %d  Actual: %d", rs.Primary.ID, expectedCount, len(*group.UsersNames))
 		}
 
 		return nil
