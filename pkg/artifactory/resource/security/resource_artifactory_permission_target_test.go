@@ -147,6 +147,44 @@ const permissionFull = `
 	}
 `
 
+func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
+	rand.Seed(time.Now().UnixNano())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
+
+	data := map[string]string{
+		"repo_name":       repoName,
+		"permission_name": name,
+	}
+
+	config := utilsdk.ExecuteTemplate(fqrn, permissionFull, data)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.11.2",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "repo.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "build.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "release_bundle.#", "1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 	_, _, repoName := testutil.MkNames("test-perm-repo", "artifactory_local_generic_repository")
@@ -196,9 +234,9 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 				Config: utilsdk.ExecuteTemplate(permFqrn, testConfig, variables),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.0.permissions.#", "4"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", "4"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
 				),
 			},
 			{
@@ -213,7 +251,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 
 func TestAccPermissionTarget_full(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	repoName := fmt.Sprintf("terraform-local-docker-%d", rand.Int())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
@@ -230,21 +268,21 @@ func TestAccPermissionTarget_full(t *testing.T) {
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.excludes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.excludes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
 			},
 			{
@@ -259,7 +297,7 @@ func TestAccPermissionTarget_full(t *testing.T) {
 
 func TestAccPermissionTarget_user_permissions(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	repoName := fmt.Sprintf("terraform-local-docker-%d", rand.Int())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
@@ -277,40 +315,40 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.0.name", "terraform"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.0.permissions.#", "4"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.actions.users.0.permissions.*", "read"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.actions.users.0.permissions.*", "write"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.actions.users.0.permissions.*", "annotate"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.actions.users.0.permissions.*", "delete"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.name", "terraform"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.0.permissions.#", "4"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "write"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "annotate"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.users.0.permissions.*", "delete"),
 
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.0.name", "readers"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.0.permissions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.actions.groups.0.permissions.*", "read"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.0.name", "readers"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "repo.0.actions.0.groups.0.permissions.*", "read"),
 
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.0.name", "terraform"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.0.permissions.#", "5"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.users.0.permissions.*", "read"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.users.0.permissions.*", "write"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.users.0.permissions.*", "manage"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.users.0.permissions.*", "annotate"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.users.0.permissions.*", "delete"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.0.name", "terraform"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.0.permissions.#", "5"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "write"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "manage"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "annotate"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.users.0.permissions.*", "delete"),
 
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.0.name", "readers"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.0.permissions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "build.actions.groups.0.permissions.*", "read"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.0.name", "readers"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "build.0.actions.0.groups.0.permissions.*", "read"),
 
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.0.name", "terraform"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.0.permissions.#", "4"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.actions.users.0.permissions.*", "read"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.actions.users.0.permissions.*", "write"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.actions.users.0.permissions.*", "managedXrayMeta"),
-					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.actions.users.0.permissions.*", "distribute"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.0.name", "terraform"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.#", "4"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "read"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "write"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "managedXrayMeta"),
+					resource.TestCheckTypeSetElemAttr(permFqrn, "release_bundle.0.actions.0.users.0.permissions.*", "distribute"),
 				),
 			},
 			{
@@ -325,7 +363,7 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 
 func TestAccPermissionTarget_addBuild(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	repoName := fmt.Sprintf("terraform-local-docker-%d", rand.Int())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
 	tempStruct := map[string]string{
@@ -342,12 +380,12 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.includes_pattern.0", "**"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.excludes_pattern.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.0", "**"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.excludes_pattern.#", "0"),
 				),
 			},
 			{
@@ -355,11 +393,11 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "build.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.excludes_pattern.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.excludes_pattern.#", "0"),
 				),
 			},
 			{
@@ -368,32 +406,32 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
 					resource.TestCheckResourceAttr(permFqrn, "build.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.groups.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.excludes_pattern.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "0"),
 				),
 			},
 			{
 				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.excludes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "build.excludes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.users.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.actions.groups.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "release_bundle.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "build.0.excludes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.users.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.actions.0.groups.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.repositories.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.includes_pattern.#", "1"),
+					resource.TestCheckResourceAttr(permFqrn, "release_bundle.0.excludes_pattern.#", "1"),
 				),
 			},
 			{
@@ -447,7 +485,7 @@ func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      utilsdk.ExecuteTemplate(permFqrn, testConfig, variables),
-				ExpectError: regexp.MustCompile(".*Attribute repo.repositories must be set when repo is defined.*"),
+				ExpectError: regexp.MustCompile(".*Missing required argument.*"),
 			},
 		},
 	})

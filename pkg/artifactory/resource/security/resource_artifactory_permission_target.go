@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	// "github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	validatorfw "github.com/jfrog/terraform-provider-shared/validator/fw"
@@ -37,15 +37,14 @@ type PermissionTargetResource struct {
 type PermissionTargetResourceModel struct {
 	Id            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
-	Repo          types.Object `tfsdk:"repo"`
-	Build         types.Object `tfsdk:"build"`
-	ReleaseBundle types.Object `tfsdk:"release_bundle"`
+	Repo          types.Set    `tfsdk:"repo"`
+	Build         types.Set    `tfsdk:"build"`
+	ReleaseBundle types.Set    `tfsdk:"release_bundle"`
 }
 
-func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, resourceActions types.Object) Actions {
+func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, resourceActions types.Set) Actions {
 	setToMap := func(sourceSet types.Set, mapToUpdate *map[string][]string) {
-		setElements := sourceSet.Elements()
-		for _, setElement := range setElements {
+		for _, setElement := range sourceSet.Elements() {
 			attrs := setElement.(types.Object).Attributes()
 			permissions := utilfw.StringSetToStrings(attrs["permissions"].(types.Set))
 			(*mapToUpdate)[attrs["name"].(types.String).ValueString()] = permissions
@@ -56,7 +55,8 @@ func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, r
 		Users:  map[string][]string{},
 		Groups: map[string][]string{},
 	}
-	actionsAttrs := resourceActions.Attributes()
+	actionsElm := resourceActions.Elements()[0].(types.Object)
+	actionsAttrs := actionsElm.Attributes()
 
 	setToMap(actionsAttrs["users"].(types.Set), &actions.Users)
 	setToMap(actionsAttrs["groups"].(types.Set), &actions.Groups)
@@ -64,15 +64,13 @@ func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, r
 	return actions
 }
 
-func (r *PermissionTargetResourceModel) toSectionAPIModel(ctx context.Context, resourceSection types.Object) *PermissionTargetSection {
-	tflog.Debug(ctx, "toSectionAPIModel", map[string]interface{}{
-		"resourceSection": resourceSection,
-	})
+func (r *PermissionTargetResourceModel) toSectionAPIModel(ctx context.Context, resourceSection types.Set) *PermissionTargetSection {
 	if resourceSection.IsUnknown() || resourceSection.IsNull() {
 		return nil
 	}
-	sectionAttrs := resourceSection.Attributes()
-	repoActions := r.toActionsAPIModel(ctx, sectionAttrs["actions"].(types.Object))
+	sectionElms := resourceSection.Elements()
+	sectionAttrs := sectionElms[0].(types.Object).Attributes()
+	repoActions := r.toActionsAPIModel(ctx, sectionAttrs["actions"].(types.Set))
 
 	return &PermissionTargetSection{
 		IncludePatterns: utilfw.StringSetToStrings(sectionAttrs["includes_pattern"].(types.Set)),
@@ -128,38 +126,38 @@ func (r *PermissionTargetResourceModel) ToState(ctx context.Context, diags diag.
 	}
 }
 
-var namePermissionAttrTypes = map[string]attr.Type{
-	"name":        types.StringType,
-	"permissions": types.SetType{types.StringType},
-}
-
-var actionsAttrTypes = map[string]attr.Type{
-	"users": types.SetType{
-		types.ObjectType{
-			AttrTypes: namePermissionAttrTypes,
-		},
-	},
-	"groups": types.SetType{
-		types.ObjectType{
-			AttrTypes: namePermissionAttrTypes,
-		},
-	},
-}
-
-func (r *PermissionTargetResourceModel) sectionFromAPIModel(ctx context.Context, section *PermissionTargetSection) (types.Object, diag.Diagnostics) {
+func (r *PermissionTargetResourceModel) sectionFromAPIModel(ctx context.Context, section *PermissionTargetSection) (types.Set, diag.Diagnostics) {
 	includesPatterns, diags := types.SetValueFrom(ctx, types.StringType, section.IncludePatterns)
 	if diags != nil {
-		return types.Object{}, diags
+		return types.Set{}, diags
 	}
 
 	excludesPatterns, diags := types.SetValueFrom(ctx, types.StringType, section.ExcludePatterns)
 	if diags != nil {
-		return types.Object{}, diags
+		return types.Set{}, diags
 	}
 
 	repos, diags := types.SetValueFrom(ctx, types.StringType, section.Repositories)
 	if diags != nil {
-		return types.Object{}, diags
+		return types.Set{}, diags
+	}
+
+	var namePermissionAttrTypes = map[string]attr.Type{
+		"name":        types.StringType,
+		"permissions": types.SetType{ElemType: types.StringType},
+	}
+
+	var actionsAttrTypes = map[string]attr.Type{
+		"users": types.SetType{
+			ElemType: types.ObjectType{
+				AttrTypes: namePermissionAttrTypes,
+			},
+		},
+		"groups": types.SetType{
+			ElemType: types.ObjectType{
+				AttrTypes: namePermissionAttrTypes,
+			},
+		},
 	}
 
 	actionFromAPIModel := func(action map[string][]string) (types.Set, diag.Diagnostics) {
@@ -186,35 +184,49 @@ func (r *PermissionTargetResourceModel) sectionFromAPIModel(ctx context.Context,
 
 	actionsUsers, diags := actionFromAPIModel(section.Actions.Users)
 	if diags != nil {
-		return types.Object{}, diags
+		return types.Set{}, diags
 	}
 
 	actionsGroups, diags := actionFromAPIModel(section.Actions.Groups)
 	if diags != nil {
-		return types.Object{}, diags
+		return types.Set{}, diags
 	}
 
-	return types.ObjectValueMust(
-		map[string]attr.Type{
-			"includes_pattern": types.SetType{types.StringType},
-			"excludes_pattern": types.SetType{types.StringType},
-			"repositories":     types.SetType{types.StringType},
-			"actions": types.ObjectType{
-				AttrTypes: actionsAttrTypes,
-			},
-		}, map[string]attr.Value{
+	sectionAttrType := map[string]attr.Type{
+		"includes_pattern": types.SetType{ElemType: types.StringType},
+		"excludes_pattern": types.SetType{ElemType: types.StringType},
+		"repositories":     types.SetType{ElemType: types.StringType},
+		"actions": types.SetType{ElemType: types.ObjectType{
+			AttrTypes: actionsAttrTypes},
+		},
+	}
+
+	actionsObjs := types.ObjectValueMust(
+		actionsAttrTypes,
+		map[string]attr.Value{
+			"users":  actionsUsers,
+			"groups": actionsGroups,
+		},
+	)
+
+	sectionObj := types.ObjectValueMust(
+		sectionAttrType,
+		map[string]attr.Value{
 			"includes_pattern": includesPatterns,
 			"excludes_pattern": excludesPatterns,
 			"repositories":     repos,
-			"actions": types.ObjectValueMust(
-				actionsAttrTypes,
-				map[string]attr.Value{
-					"users":  actionsUsers,
-					"groups": actionsGroups,
-				},
+			"actions": types.SetValueMust(
+				types.ObjectType{AttrTypes: actionsAttrTypes},
+				[]attr.Value{actionsObjs},
 			),
 		},
+	)
+
+	return types.SetValueMust(
+		types.ObjectType{AttrTypes: sectionAttrType},
+		[]attr.Value{sectionObj},
 	), nil
+
 }
 
 // PermissionTargetResourceAPIModel describes the API data model. Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
@@ -279,41 +291,47 @@ var actionsAttributeBlock = schema.SetNestedBlock{
 	},
 }
 
-func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescription string) schema.SingleNestedBlock {
-	return schema.SingleNestedBlock{
-		Attributes: map[string]schema.Attribute{
-			"includes_pattern": schema.SetAttribute{
-				ElementType:         types.StringType,
-				Optional:            true,
-				Computed:            true,
-				Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{types.StringValue("**")})),
-				MarkdownDescription: `The default value will be [""] if nothing is supplied`,
-			},
-			"excludes_pattern": schema.SetAttribute{
-				ElementType:         types.StringType,
-				Optional:            true,
-				Computed:            true,
-				Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{})),
-				MarkdownDescription: "The default value will be [] if nothing is supplied",
-			},
-			"repositories": schema.SetAttribute{
-				ElementType:         types.StringType,
-				Optional:            true, // this attribute can't be set to required as SingleNestedBlock doesn't support it. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
-				MarkdownDescription: repoDescription,
-			},
-		},
-		Validators: []validator.Object{
-			validatorfw.RequireIfDefined(path.Expressions{ // use custom validator to ensure 'repositories' attribute is set if this block is defined in configuration. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
-				path.MatchRelative().AtName("repositories"),
-			}...),
-		},
-		Blocks: map[string]schema.Block{
-			"actions": schema.SingleNestedBlock{
-				Blocks: map[string]schema.Block{
-					"users":  actionsAttributeBlock,
-					"groups": actionsAttributeBlock,
+func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescription string) schema.SetNestedBlock {
+	return schema.SetNestedBlock{
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"includes_pattern": schema.SetAttribute{
+					ElementType:         types.StringType,
+					Optional:            true,
+					Computed:            true,
+					Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{types.StringValue("**")})),
+					MarkdownDescription: `The default value will be [""] if nothing is supplied`,
+				},
+				"excludes_pattern": schema.SetAttribute{
+					ElementType:         types.StringType,
+					Optional:            true,
+					Computed:            true,
+					Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{})),
+					MarkdownDescription: "The default value will be [] if nothing is supplied",
+				},
+				"repositories": schema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					// Optional:            true, // this attribute can't be set to required as SingleNestedBlock doesn't support it. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
+					MarkdownDescription: repoDescription,
 				},
 			},
+			Blocks: map[string]schema.Block{
+				"actions": schema.SetNestedBlock{
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"users":  actionsAttributeBlock,
+							"groups": actionsAttributeBlock,
+						},
+					},
+					Validators: []validator.Set{
+						setvalidator.SizeBetween(1, 1),
+					},
+				},
+			},
+		},
+		Validators: []validator.Set{
+			setvalidator.SizeBetween(1, 1),
 		},
 		MarkdownDescription: description,
 	}
