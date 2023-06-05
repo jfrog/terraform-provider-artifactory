@@ -11,14 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,8 +39,8 @@ type ScopedTokenResource struct {
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
 // resource schema.
 type ScopedTokenResourceModel struct {
-	Id                    types.String `tfsdk:"id"`
-	GrantType             types.String `tfsdk:"grant_type"`
+	Id types.String `tfsdk:"id"`
+	// GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
 	Scopes                types.Set    `tfsdk:"scopes"`
 	ExpiresIn             types.Int64  `tfsdk:"expires_in"`
@@ -107,21 +108,24 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"grant_type": schema.StringAttribute{
-				MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("client_credentials"),
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
-			},
+			// "grant_type": schema.StringAttribute{
+			// 	MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
+			// 	Optional:            true,
+			// 	Computed:            true,
+			// 	Default:             stringdefault.StaticString("client_credentials"),
+			// 	PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
+			// },
 			"username": schema.StringAttribute{
 				MarkdownDescription: "The user name for which this token is created. The username is based " +
 					"on the authenticated user - either from the user of the authenticated token or based " +
 					"on the username (if basic auth was used). The username is then used to set the subject " +
 					"of the token: <service-id>/users/<username>. Limited to 255 characters.",
 				Optional:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
 				Validators:    []validator.String{stringvalidator.LengthBetween(1, 255)},
 			},
 			"scopes": schema.SetAttribute{
@@ -154,10 +158,13 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
 					" `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
 					" `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`",
-				Optional:      true,
-				Computed:      true,
-				ElementType:   types.StringType,
-				PlanModifiers: []planmodifier.Set{setplanmodifier.RequiresReplace()},
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplaceIfConfigured(),
+					setplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(stringvalidator.Any(
 						stringvalidator.OneOf(
@@ -176,37 +183,53 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/using-the-revocable-and-persistency-thresholds) for details.",
 				Optional:            true,
 				Computed:            true,
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.RequiresReplace()},
-				Validators:          []validator.Int64{int64validator.AtLeast(0)},
+				Default:             int64default.StaticInt64(0),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplaceIfConfigured(),
+					int64planmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Int64{int64validator.AtLeast(0)},
 			},
 			"refreshable": schema.BoolAttribute{
 				MarkdownDescription: "Is this token refreshable? Default is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplaceIfConfigured(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"include_reference_token": schema.BoolAttribute{
 				MarkdownDescription: "Also create a reference token which can be used like an API key. Default is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplaceIfConfigured(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.",
 				Optional:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
-				Validators:          []validator.String{stringvalidator.LengthBetween(0, 1024)},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{stringvalidator.LengthBetween(0, 1024)},
 			},
 			"audiences": schema.SetAttribute{
 				MarkdownDescription: "A list of the other instances or services that should accept this " +
 					"token identified by their Service-IDs. Limited to total 255 characters. " +
 					"Default to '*@*' if not set. Service ID must begin with valid JFrog service type. " +
 					"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *. For instructions to retrieve the Artifactory Service ID see this [documentation](https://jfrog.com/help/r/jfrog-rest-apis/get-service-id)",
-				Optional:      true,
-				ElementType:   types.StringType,
-				PlanModifiers: []planmodifier.Set{setplanmodifier.RequiresReplace()},
+				Optional:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplaceIfConfigured(),
+					setplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(stringvalidator.All(
 						stringvalidator.LengthAtLeast(1),
@@ -224,36 +247,44 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Returns the access token to authenticate to Artifactory.",
 				Sensitive:           true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"refresh_token": schema.StringAttribute{
 				MarkdownDescription: "Refresh token.",
 				Sensitive:           true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"reference_token": schema.StringAttribute{
 				MarkdownDescription: "Reference Token (alias to Access Token).",
 				Sensitive:           true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"token_type": schema.StringAttribute{
 				MarkdownDescription: "Returns the token type.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"subject": schema.StringAttribute{
 				MarkdownDescription: "Returns the token type.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"expiry": schema.Int64Attribute{
 				MarkdownDescription: "Returns the token expiry.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"issued_at": schema.Int64Attribute{
 				MarkdownDescription: "Returns the token issued at date/time.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"issuer": schema.StringAttribute{
 				MarkdownDescription: "Returns the token issuer.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -305,7 +336,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Convert from Terraform data model into API data model
 	accessTokenPostBody := AccessTokenPostRequestAPIModel{
-		GrantType:             data.GrantType.ValueString(),
+		GrantType:             "client_credentials",
 		Username:              data.Username.ValueString(),
 		Scope:                 scopesString,
 		ExpiresIn:             data.ExpiresIn.ValueInt64(),
@@ -341,8 +372,13 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		SetResult(&getResult).
 		Get("access/api/v1/tokens/{id}")
 
+	if err != nil {
+		unableToCreateResourceError(resp, err)
+		return
+	}
+
 	// Assign the attribute values for the resource in the state
-	data.PostResponseToState(ctx, &postResult, &accessTokenPostBody, &getResult)
+	resp.Diagnostics.Append(data.PostResponseToState(ctx, &postResult, &accessTokenPostBody, &getResult)...)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // All attributes are assigned in data
@@ -357,7 +393,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	// Convert from Terraform data model into API data model
-	accessToken := &AccessTokenGetAPIModel{}
+	var accessToken AccessTokenGetAPIModel
 
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("id", data.Id.ValueString()).
@@ -383,7 +419,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.GetResponseToState(accessToken)
+	data.GetResponseToState(&accessToken)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -391,7 +427,6 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 
 func (r *ScopedTokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Scoped tokens are not updatable
-	return
 }
 
 func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -430,40 +465,42 @@ func (r *ScopedTokenResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 func (r *ScopedTokenResourceModel) PostResponseToState(ctx context.Context,
-	accessTokenResp *AccessTokenPostResponseAPIModel, accessTokenPostBody *AccessTokenPostRequestAPIModel, getResult *AccessTokenGetAPIModel) {
+	accessTokenResp *AccessTokenPostResponseAPIModel, accessTokenPostBody *AccessTokenPostRequestAPIModel, getResult *AccessTokenGetAPIModel) diag.Diagnostics {
 
 	r.Id = types.StringValue(accessTokenResp.TokenId)
+
 	if len(accessTokenResp.Scope) > 0 {
 		scopesList := strings.Split(accessTokenResp.Scope, " ")
-		r.Scopes, _ = types.SetValueFrom(ctx, types.StringType, scopesList)
+		scopes, diags := types.SetValueFrom(ctx, types.StringType, scopesList)
+		if diags != nil {
+			return diags
+		}
+		r.Scopes = scopes
 	}
+
 	r.ExpiresIn = types.Int64Value(accessTokenResp.ExpiresIn)
+
 	r.AccessToken = types.StringValue(accessTokenResp.AccessToken)
 
 	// only have refresh token if 'refreshable' is set to true in the request
 	r.RefreshToken = types.StringNull()
-	if accessTokenPostBody.Refreshable {
-		if len(accessTokenResp.RefreshToken) > 0 {
-			r.RefreshToken = types.StringValue(accessTokenResp.RefreshToken)
-		}
+	if accessTokenPostBody.Refreshable && len(accessTokenResp.RefreshToken) > 0 {
+		r.RefreshToken = types.StringValue(accessTokenResp.RefreshToken)
 	}
 
 	// only have reference token if 'include_reference_token' is set to true in the request
 	r.ReferenceToken = types.StringNull()
-	if accessTokenPostBody.IncludeReferenceToken {
-		if len(accessTokenResp.ReferenceToken) > 0 {
-			r.ReferenceToken = types.StringValue(accessTokenResp.ReferenceToken)
-		}
+	if accessTokenPostBody.IncludeReferenceToken && len(accessTokenResp.ReferenceToken) > 0 {
+		r.ReferenceToken = types.StringValue(accessTokenResp.ReferenceToken)
 	}
-	if len(accessTokenPostBody.Description) > 0 {
-		r.Description = types.StringValue(accessTokenPostBody.Description) // was null, but now cty.StringVal("<null>").
-	}
-	r.Refreshable = types.BoolValue(accessTokenPostBody.Refreshable)
+
 	r.TokenType = types.StringValue(accessTokenResp.TokenType)
 	r.Subject = types.StringValue(getResult.Subject)
 	r.Expiry = types.Int64Value(getResult.Expiry) // could be absent in the get response!
 	r.IssuedAt = types.Int64Value(getResult.IssuedAt)
 	r.Issuer = types.StringValue(getResult.Issuer)
+
+	return nil
 }
 
 func (r *ScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGetAPIModel) {
@@ -476,6 +513,16 @@ func (r *ScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGe
 		r.Description = types.StringValue(accessToken.Description)
 	}
 	r.Refreshable = types.BoolValue(accessToken.Refreshable)
+
+	// Need to set empty string for null state value to avoid state drift. Weird!
+	if r.RefreshToken.IsNull() {
+		r.RefreshToken = types.StringValue("")
+	}
+
+	// Need to set empty string for null state value to avoid state drift. Weird!
+	if r.ReferenceToken.IsNull() {
+		r.ReferenceToken = types.StringValue("")
+	}
 }
 
 func CheckAccessToken(id string, request *resty.Request) (*resty.Response, error) {
