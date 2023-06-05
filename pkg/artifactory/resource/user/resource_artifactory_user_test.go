@@ -16,6 +16,53 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}
+	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserUpgrade", `
+		resource "artifactory_user" "{{ .name }}" {
+			name        		= "{{ .name }}"
+			email 				= "{{ .email }}"
+			password			= "Passsw0rd!"
+			groups      		= [ "readers" ]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.7.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: userNoGroups,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "groups.0", "readers"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   userNoGroups,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccUser_basic_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
