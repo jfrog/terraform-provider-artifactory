@@ -11,7 +11,6 @@ import (
 )
 
 func NewManagedUserResource() resource.Resource {
-
 	return &ArtifactoryManagedUserResource{}
 }
 

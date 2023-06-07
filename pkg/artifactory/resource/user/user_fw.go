@@ -4,12 +4,13 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -49,6 +50,9 @@ type ArtifactoryUserResourceAPIModel struct {
 var baseUserSchemaFramework = map[string]schema.Attribute{
 	"id": schema.StringAttribute{
 		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
 	},
 	"name": schema.StringAttribute{
 		MarkdownDescription: "Username for user.",
@@ -98,14 +102,6 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		ElementType:         types.StringType,
 		Optional:            true,
 		Computed:            true,
-		Default: setdefault.StaticValue(
-			types.SetValueMust(
-				types.StringType,
-				[]attr.Value{
-					types.StringValue("readers"),
-				},
-			),
-		),
 	},
 }
 
@@ -125,7 +121,6 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	groups := utilfw.StringSetToStrings(data.Groups)
 	// Convert from Terraform data model into API data model
 	user := &ArtifactoryUserResourceAPIModel{
 		Name:                     data.Name.ValueString(),
@@ -135,7 +130,10 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		ProfileUpdatable:         data.ProfileUpdatable.ValueBool(),
 		DisableUIAccess:          data.DisableUIAccess.ValueBool(),
 		InternalPasswordDisabled: data.InternalPasswordDisabled.ValueBool(),
-		Groups:                   groups,
+	}
+
+	if !data.Groups.IsNull() {
+		user.Groups = utilfw.StringSetToStrings(data.Groups)
 	}
 
 	if user.Password == "" {
@@ -202,10 +200,13 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	}
 
 	// Parse user struct into the state
-	data.ToState(ctx, user) // not necessary with empty response, we only need an Id
+	resp.Diagnostics.Append(data.ToState(ctx, user)...) // not necessary with empty response, we only need an Id
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 }
 
 func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -243,7 +244,10 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.ToState(ctx, user)
+	resp.Diagnostics.Append(data.ToState(ctx, user)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -255,7 +259,6 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	groups := utilfw.StringSetToStrings(data.Groups)
 	// Convert from Terraform data model into API data model
 	user := &ArtifactoryUserResourceAPIModel{
 		Name:                     data.Name.ValueString(),
@@ -265,7 +268,10 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		ProfileUpdatable:         data.ProfileUpdatable.ValueBool(),
 		DisableUIAccess:          data.DisableUIAccess.ValueBool(),
 		InternalPasswordDisabled: data.InternalPasswordDisabled.ValueBool(),
-		Groups:                   groups,
+	}
+
+	if !data.Groups.IsNull() {
+		user.Groups = utilfw.StringSetToStrings(data.Groups)
 	}
 
 	response, err := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
@@ -350,7 +356,7 @@ func (r *ArtifactoryBaseUserResource) ImportState(ctx context.Context, req resou
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 
 }
-func (r *ArtifactoryUserResourceModel) ToState(ctx context.Context, user *ArtifactoryUserResourceAPIModel) {
+func (r *ArtifactoryUserResourceModel) ToState(ctx context.Context, user *ArtifactoryUserResourceAPIModel) diag.Diagnostics {
 	r.Id = types.StringValue(user.Name)
 	r.Name = types.StringValue(user.Name)
 	r.Email = types.StringValue(user.Email)
@@ -359,6 +365,12 @@ func (r *ArtifactoryUserResourceModel) ToState(ctx context.Context, user *Artifa
 	r.DisableUIAccess = types.BoolValue(user.DisableUIAccess)
 	r.InternalPasswordDisabled = types.BoolValue(user.InternalPasswordDisabled)
 	if user.Groups != nil {
-		r.Groups, _ = types.SetValueFrom(ctx, types.StringType, user.Groups)
+		groups, diags := types.SetValueFrom(ctx, types.StringType, user.Groups)
+		if diags.HasError() {
+			return diags
+		}
+		r.Groups = groups
 	}
+
+	return nil
 }
