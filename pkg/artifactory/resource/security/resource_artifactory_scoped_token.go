@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,7 +29,6 @@ import (
 )
 
 func NewScopedTokenResource() resource.Resource {
-
 	return &ScopedTokenResource{}
 }
 
@@ -39,8 +39,8 @@ type ScopedTokenResource struct {
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
 // resource schema.
 type ScopedTokenResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	// GrantType             types.String `tfsdk:"grant_type"`
+	Id                    types.String `tfsdk:"id"`
+	GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
 	Scopes                types.Set    `tfsdk:"scopes"`
 	ExpiresIn             types.Int64  `tfsdk:"expires_in"`
@@ -112,13 +112,16 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "grant_type": schema.StringAttribute{
-			// 	MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
-			// 	Optional:            true,
-			// 	Computed:            true,
-			// 	Default:             stringdefault.StaticString("client_credentials"),
-			// 	PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
-			// },
+			"grant_type": schema.StringAttribute{
+				MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("client_credentials"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"username": schema.StringAttribute{
 				MarkdownDescription: "The user name for which this token is created. The username is based " +
 					"on the authenticated user - either from the user of the authenticated token or based " +
@@ -213,6 +216,8 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -379,6 +384,9 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Assign the attribute values for the resource in the state
 	resp.Diagnostics.Append(data.PostResponseToState(ctx, &postResult, &accessTokenPostBody, &getResult)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // All attributes are assigned in data
@@ -419,7 +427,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.GetResponseToState(&accessToken)
+	data.GetResponseToState(ctx, &accessToken)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -503,8 +511,11 @@ func (r *ScopedTokenResourceModel) PostResponseToState(ctx context.Context,
 	return nil
 }
 
-func (r *ScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGetAPIModel) {
+func (r *ScopedTokenResourceModel) GetResponseToState(ctx context.Context, accessToken *AccessTokenGetAPIModel) {
 	r.Id = types.StringValue(accessToken.TokenId)
+	if r.GrantType.IsNull() {
+		r.GrantType = types.StringValue("client_credentials")
+	}
 	r.Subject = types.StringValue(accessToken.Subject)
 	r.Expiry = types.Int64Value(accessToken.Expiry)
 	r.IssuedAt = types.Int64Value(accessToken.IssuedAt)
@@ -514,12 +525,14 @@ func (r *ScopedTokenResourceModel) GetResponseToState(accessToken *AccessTokenGe
 	}
 	r.Refreshable = types.BoolValue(accessToken.Refreshable)
 
-	// Need to set empty string for null state value to avoid state drift. Weird!
+	// Need to set empty string for null state value to avoid state drift.
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
 	if r.RefreshToken.IsNull() {
 		r.RefreshToken = types.StringValue("")
 	}
 
-	// Need to set empty string for null state value to avoid state drift. Weird!
+	// Need to set empty string for null state value to avoid state drift.
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
 	if r.ReferenceToken.IsNull() {
 		r.ReferenceToken = types.StringValue("")
 	}

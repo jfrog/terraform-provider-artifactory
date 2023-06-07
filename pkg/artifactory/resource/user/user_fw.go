@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -37,14 +38,14 @@ type ArtifactoryUserResourceModel struct {
 
 // ArtifactoryUserResourceAPIModel describes the API data model.
 type ArtifactoryUserResourceAPIModel struct {
-	Name                     string   `json:"name"`
-	Email                    string   `json:"email"`
-	Password                 string   `json:"password,omitempty"`
-	Admin                    bool     `json:"admin"`
-	ProfileUpdatable         bool     `json:"profileUpdatable"`
-	DisableUIAccess          bool     `json:"disableUIAccess"`
-	InternalPasswordDisabled bool     `json:"internalPasswordDisabled"`
-	Groups                   []string `json:"groups"`
+	Name                     string    `json:"name"`
+	Email                    string    `json:"email"`
+	Password                 string    `json:"password,omitempty"`
+	Admin                    bool      `json:"admin"`
+	ProfileUpdatable         bool      `json:"profileUpdatable"`
+	DisableUIAccess          bool      `json:"disableUIAccess"`
+	InternalPasswordDisabled bool      `json:"internalPasswordDisabled"`
+	Groups                   *[]string `json:"groups,omitempty"`
 }
 
 var baseUserSchemaFramework = map[string]schema.Attribute{
@@ -102,6 +103,9 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		ElementType:         types.StringType,
 		Optional:            true,
 		Computed:            true,
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.UseStateForUnknown(),
+		},
 	},
 }
 
@@ -122,7 +126,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	}
 
 	// Convert from Terraform data model into API data model
-	user := &ArtifactoryUserResourceAPIModel{
+	user := ArtifactoryUserResourceAPIModel{
 		Name:                     data.Name.ValueString(),
 		Email:                    data.Email.ValueString(),
 		Password:                 data.Password.ValueString(),
@@ -132,8 +136,9 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		InternalPasswordDisabled: data.InternalPasswordDisabled.ValueBool(),
 	}
 
-	if !data.Groups.IsNull() {
-		user.Groups = utilfw.StringSetToStrings(data.Groups)
+	if !data.Groups.IsUnknown() && !data.Groups.IsNull() {
+		groups := utilfw.StringSetToStrings(data.Groups)
+		user.Groups = &groups
 	}
 
 	if user.Password == "" {
@@ -185,7 +190,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
 	// Workaround: We use following POST call to update the user's groups config to empty group.
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
-	if len(user.Groups) == 0 {
+	if !data.Groups.IsUnknown() && !data.Groups.IsNull() && len(data.Groups.Elements()) == 0 {
 		_, errGroupUpdate := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			resp.Diagnostics.AddError(
@@ -199,8 +204,30 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		}
 	}
 
+	// perform an explicit read from the API to ensure all the fields are updated, especially 'groups'
+	response, err = r.client.Client.R().SetResult(&user).Get(UsersEndpointPath + user.Name)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Refresh Resource",
+			"An unexpected error occurred while attempting to refresh resource state. "+
+				"Please retry the operation or report this issue to the provider developers.\n\n"+
+				"HTTP Error: "+err.Error(),
+		)
+
+		return
+	}
+
+	// Treat HTTP 404 Not Found status as a signal to recreate resource
+	// and return early
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	// Parse user struct into the state
-	resp.Diagnostics.Append(data.ToState(ctx, user)...) // not necessary with empty response, we only need an Id
+	resp.Diagnostics.Append(data.ToState(ctx, &user)...) // not necessary with empty response, we only need an Id
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -219,9 +246,9 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	// Convert from Terraform data model into API data model
-	user := &ArtifactoryUserResourceAPIModel{}
+	user := ArtifactoryUserResourceAPIModel{}
 
-	response, err := r.client.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
+	response, err := r.client.Client.R().SetResult(&user).Get(UsersEndpointPath + data.Id.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -244,7 +271,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	resp.Diagnostics.Append(data.ToState(ctx, user)...)
+	resp.Diagnostics.Append(data.ToState(ctx, &user)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -260,7 +287,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	// Convert from Terraform data model into API data model
-	user := &ArtifactoryUserResourceAPIModel{
+	user := ArtifactoryUserResourceAPIModel{
 		Name:                     data.Name.ValueString(),
 		Email:                    data.Email.ValueString(),
 		Password:                 data.Password.ValueString(),
@@ -270,8 +297,9 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		InternalPasswordDisabled: data.InternalPasswordDisabled.ValueBool(),
 	}
 
-	if !data.Groups.IsNull() {
-		user.Groups = utilfw.StringSetToStrings(data.Groups)
+	if !data.Groups.IsUnknown() && !data.Groups.IsNull() {
+		groups := utilfw.StringSetToStrings(data.Groups)
+		user.Groups = &groups
 	}
 
 	response, err := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
@@ -310,7 +338,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	data.ToState(ctx, user)
+	data.ToState(ctx, &user)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

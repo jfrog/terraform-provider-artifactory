@@ -175,11 +175,13 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "build.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "release_bundle.#", "1"),
 				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
 	})

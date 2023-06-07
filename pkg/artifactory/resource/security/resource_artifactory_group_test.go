@@ -29,7 +29,7 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.10.1",
+						VersionConstraint: "7.7.0",
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
@@ -48,11 +48,13 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "users_names"),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
 	})
@@ -79,7 +81,7 @@ func TestAccGroup_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "auto_join", "false"),
 					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
 					resource.TestCheckResourceAttr(fqrn, "realm", "internal"),
-					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "detach_all_users"),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
@@ -313,7 +315,7 @@ func TestAccGroup_full_update(t *testing.T) {
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
-			users_names = ["anonymous"]
+			users_names      = ["anonymous"]
 		}
 		`,
 		`
@@ -334,7 +336,7 @@ func TestAccGroup_full_update(t *testing.T) {
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
-			users_names = ["anonymous", "admin"]
+			users_names      = ["anonymous", "admin"]
 		}
 		`,
 		`
@@ -496,8 +498,8 @@ func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terra
 			return err
 		}
 
-		if len(*group.UsersNames) != expectedCount {
-			return fmt.Errorf("error: Group %s has wrong number of members. Expected: %d  Actual: %d", rs.Primary.ID, expectedCount, len(*group.UsersNames))
+		if len(group.UsersNames) != expectedCount {
+			return fmt.Errorf("error: Group %s has wrong number of members. Expected: %d  Actual: %d", rs.Primary.ID, expectedCount, len(group.UsersNames))
 		}
 
 		return nil

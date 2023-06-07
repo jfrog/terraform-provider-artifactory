@@ -49,11 +49,13 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
 	})

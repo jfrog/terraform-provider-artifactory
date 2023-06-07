@@ -48,11 +48,13 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
 	})
@@ -171,6 +173,7 @@ func TestAccUser_default_group(t *testing.T) {
 				Config: userNoGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "groups.0", "readers"),
 				),
 			},
@@ -195,7 +198,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -211,7 +214,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: userEmptyGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),

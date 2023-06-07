@@ -59,11 +59,13 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
 	})
@@ -170,7 +172,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfxr@*"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
-					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckResourceAttrSet(fqrn, "refresh_token"),
 					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
 					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
 					resource.TestCheckResourceAttrSet(fqrn, "subject"),

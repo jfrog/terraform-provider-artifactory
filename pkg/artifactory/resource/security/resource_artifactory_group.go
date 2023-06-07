@@ -53,17 +53,17 @@ type ArtifactoryGroupResourceModel struct {
 
 // ArtifactoryGroupResourceAPIModel describes the API data model.
 type ArtifactoryGroupResourceAPIModel struct {
-	Name            string    `json:"name"`
-	Description     string    `json:"description,omitempty"`
-	ExternalId      string    `json:"externalId,omitempty"`
-	AutoJoin        bool      `json:"autoJoin"`
-	AdminPrivileges bool      `json:"adminPrivileges"`
-	Realm           string    `json:"realm"`
-	RealmAttributes string    `json:"realmAttributes,omitempty"`
-	UsersNames      *[]string `json:"userNames"`
-	WatchManager    bool      `json:"watchManager"`
-	PolicyManager   bool      `json:"policyManager"`
-	ReportsManager  bool      `json:"reportsManager"`
+	Name            string   `json:"name"`
+	Description     string   `json:"description,omitempty"`
+	ExternalId      string   `json:"externalId,omitempty"`
+	AutoJoin        bool     `json:"autoJoin"`
+	AdminPrivileges bool     `json:"adminPrivileges"`
+	Realm           string   `json:"realm"`
+	RealmAttributes string   `json:"realmAttributes,omitempty"`
+	UsersNames      []string `json:"userNames"`
+	WatchManager    bool     `json:"watchManager"`
+	PolicyManager   bool     `json:"policyManager"`
+	ReportsManager  bool     `json:"reportsManager"`
 }
 
 func (r *ArtifactoryGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -87,10 +87,20 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description for the group.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"external_id": schema.StringAttribute{
 				MarkdownDescription: "New external group ID used to configure the corresponding group in Azure AD.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"auto_join": schema.BoolAttribute{
 				MarkdownDescription: "When this parameter is set, any new users defined in the system are automatically assigned to this group.",
@@ -114,10 +124,18 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("internal"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"realm_attributes": schema.StringAttribute{
 				MarkdownDescription: "The realm attributes for the group.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"users_names": schema.SetAttribute{
 				MarkdownDescription: "List of users assigned to the group. If not set or empty, Terraform will not manage group membership.",
@@ -139,18 +157,21 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"policy_manager": schema.BoolAttribute{
 				MarkdownDescription: "When this override is set, User in the group can set Xray security and compliance policies. Default value is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"reports_manager": schema.BoolAttribute{
 				MarkdownDescription: "When this override is set, User in the group can manage Xray Reports on any resource type. Default value is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -187,7 +208,7 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 	}
 	if !data.UsersNames.IsNull() {
 		usersNames := utilfw.StringSetToStrings(data.UsersNames)
-		group.UsersNames = &usersNames
+		group.UsersNames = usersNames
 	}
 
 	response, err := r.ProviderData.Client.R().
@@ -278,7 +299,7 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 		AdminPrivileges: data.AdminPrivileges.ValueBool(),
 		Realm:           data.Realm.ValueString(),
 		RealmAttributes: data.RealmAttributes.ValueString(),
-		UsersNames:      &usersNames,
+		UsersNames:      usersNames,
 		WatchManager:    data.WatchManager.ValueBool(),
 		PolicyManager:   data.PolicyManager.ValueBool(),
 		ReportsManager:  data.ReportsManager.ValueBool(),
@@ -288,7 +309,7 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 	// This recreates the group with the same permissions and updated users.
 	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
 	// this results in a group where users are not managed by artifactory if users_names is not set.
-	includeUsers := len(*group.UsersNames) > 0 || getDetachUsersValue(data)
+	includeUsers := len(group.UsersNames) > 0 || getDetachUsersValue(data)
 	if includeUsers {
 		// Create call
 		response, err := r.ProviderData.Client.R().
@@ -322,6 +343,9 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	resp.Diagnostics.Append(data.ToState(ctx, group)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -354,14 +378,21 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-
 }
 
 func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group ArtifactoryGroupResourceAPIModel) diag.Diagnostics {
 	r.Id = types.StringValue(group.Name)
 	r.Name = types.StringValue(group.Name)
+
+	if r.Description.IsNull() {
+		r.Description = types.StringValue("")
+	}
 	if group.Description != "" {
 		r.Description = types.StringValue(group.Description)
+	}
+
+	if r.ExternalId.IsNull() {
+		r.ExternalId = types.StringValue("")
 	}
 	if group.ExternalId != "" {
 		r.ExternalId = types.StringValue(group.ExternalId)
@@ -369,21 +400,23 @@ func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group Artif
 	r.AutoJoin = types.BoolValue(group.AutoJoin)
 	r.AdminPrivileges = types.BoolValue(group.AdminPrivileges)
 	r.Realm = types.StringValue(group.Realm)
+
+	// Need to set empty string for null state value to avoid state drift.
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
+	if r.RealmAttributes.IsNull() {
+		r.RealmAttributes = types.StringValue("")
+	}
 	if group.RealmAttributes != "" {
 		r.RealmAttributes = types.StringValue(group.RealmAttributes)
 	}
 
 	// We have to check if the value is not null to prevent an error "...unexpected new value: .users_names: was null, but now cty.SetValEmpty(cty.String)."
 	if !r.UsersNames.IsNull() {
-		if group.UsersNames == nil {
-			r.UsersNames = types.SetNull(types.StringType)
-		} else {
-			usersNames, diags := types.SetValueFrom(ctx, types.StringType, group.UsersNames)
-			if diags != nil {
-				return diags
-			}
-			r.UsersNames = usersNames
+		usersNames, diags := types.SetValueFrom(ctx, types.StringType, group.UsersNames)
+		if diags != nil {
+			return diags
 		}
+		r.UsersNames = usersNames
 	}
 
 	r.WatchManager = types.BoolValue(group.WatchManager)
