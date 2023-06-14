@@ -341,7 +341,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Convert from Terraform data model into API data model
 	accessTokenPostBody := AccessTokenPostRequestAPIModel{
-		GrantType:             "client_credentials",
+		GrantType:             data.GrantType.ValueString(),
 		Username:              data.Username.ValueString(),
 		Scope:                 scopesString,
 		ExpiresIn:             data.ExpiresIn.ValueInt64(),
