@@ -164,7 +164,7 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.11.2",
+						VersionConstraint: "7.7.0", // need to use 7.7.0 instead of 7.11.2 due to artifactory_managed_user changes after 7.7.0
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
