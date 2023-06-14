@@ -145,7 +145,7 @@ func TestAccUser_no_password(t *testing.T) {
 	})
 }
 
-func TestAccUser_default_group(t *testing.T) {
+func TestAccUser_no_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")
@@ -155,7 +155,7 @@ func TestAccUser_default_group(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -170,11 +170,10 @@ func TestAccUser_default_group(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: userEmptyGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "groups.0", "readers"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
