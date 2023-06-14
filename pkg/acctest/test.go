@@ -3,7 +3,6 @@ package acctest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -418,14 +417,15 @@ func (p PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest
 		return
 	}
 
+	var errStrings []string
 	for _, rc := range req.Plan.ResourceChanges {
 		if !rc.Change.Actions.NoOp() {
-			err = errors.Join(err, fmt.Errorf("expected empty plan, but %s has planned action(s): %v", rc.Address, rc.Change.Actions))
+			errStrings = append(errStrings, fmt.Sprintf("expected empty plan, but %s has planned action(s): %v", rc.Address, rc.Change.Actions))
 		}
 	}
 
 	if err != nil {
-		resp.Error = err
+		resp.Error = fmt.Errorf(strings.Join(errStrings, "\n"))
 		return
 	}
 }
