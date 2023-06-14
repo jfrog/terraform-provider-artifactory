@@ -19,7 +19,7 @@ pipelines:
         configuration:
           #nodePool: default
           priority: 1
-          timeoutSeconds: 2400 # 40 minutes
+          timeoutSeconds: 3600 # 60 minutes
           runtime:
             type: image
             image:
