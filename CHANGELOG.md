@@ -1,3 +1,17 @@
+## 8.1.0 (June 15, 2023)
+
+NOTES:
+
+Due to the complexity of maintaining backward compatibility when migrating from Terraform SDKv2 to plugin-framework, we inadvertently changed these resources schema without the necessary acceptance test coverage. With help from HashiCorp Terraform team, we think we have fixed these issues and maintained backward compatibility.
+
+However, if you have created new resources using these resource types after they were initially migrated, you may now have state drift when you upgrade to this version. This is caused by the fix in this version, which revert the resource schema to mimic behavior from pre-migration provider.
+
+BUG FIX:
+* resource/artifactory_group, resource/artifactory_scoped_token, resource/artifactory_managed_user, resource/artifactory_user, resource_permission_target: Fixed unintended state drift when upgrading from pre-migrated provider.
+
+PR: [#750](https://github.com/jfrog/terraform-provider-artifactory/pull/750)
+Issues: [#744](https://github.com/jfrog/terraform-provider-artifactory/issues/744)
+
 ## 8.0.0 (June 1, 2023). Tested on Artifactory 7.59.9
 
 BREAKING CHANGES:
