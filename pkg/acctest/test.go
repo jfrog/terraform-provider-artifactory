@@ -2,6 +2,7 @@ package acctest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,9 +14,12 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/configuration"
@@ -44,6 +48,10 @@ var testAccProviderConfigure sync.Once
 // ProtoV5MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
 // during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
 var ProtoV5MuxProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
+var ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+	"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+}
 
 func init() {
 	Provider = provider.SdkV2()
@@ -352,4 +360,78 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 		t.Skip(fmt.Printf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String()))
 	}
 	return skipTest, nil
+}
+
+var ConfigPlanChecks = resource.ConfigPlanChecks{
+	PostApplyPreRefresh: []plancheck.PlanCheck{
+		DebugPlan("PostApplyPreRefresh"),
+	},
+	PostApplyPostRefresh: []plancheck.PlanCheck{
+		DebugPlan("PostApplyPostRefresh"),
+	},
+}
+
+var _ plancheck.PlanCheck = PlanCheck{}
+
+type PlanCheck struct {
+	Stage string
+}
+
+func (p PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var err error
+
+	rc, err := json.Marshal(req.Plan.ResourceChanges[0])
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	pv, err := json.Marshal(req.Plan.PlannedValues)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	ps, err := json.Marshal(req.Plan.PriorState)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	rd, err := json.Marshal(req.Plan.ResourceDrift)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	tflog.Debug(ctx, "CheckPlan", map[string]interface{}{
+		"stage":                                  p.Stage,
+		"req.Plan.ResourceChanges.ResourceDrift": string(rd),
+		"req.Plan.ResourceChanges":               string(rc),
+		"req.Plan.PlannedValues":                 string(pv),
+		"req.Plan.PriorState":                    string(ps),
+	})
+
+	if len(req.Plan.ResourceDrift) > 0 {
+		resp.Error = fmt.Errorf("expected empty plan, but has resouce drifts(s): %v", req.Plan.ResourceDrift)
+		return
+	}
+
+	var errStrings []string
+	for _, rc := range req.Plan.ResourceChanges {
+		if !rc.Change.Actions.NoOp() {
+			errStrings = append(errStrings, fmt.Sprintf("expected empty plan, but %s has planned action(s): %v", rc.Address, rc.Change.Actions))
+		}
+	}
+
+	if err != nil {
+		resp.Error = fmt.Errorf(strings.Join(errStrings, "\n"))
+		return
+	}
+}
+
+func DebugPlan(stage string) plancheck.PlanCheck {
+	return PlanCheck{
+		Stage: stage,
+	}
 }

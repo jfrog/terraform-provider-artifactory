@@ -5,11 +5,17 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -20,7 +26,6 @@ import (
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
 func NewGroupResource() resource.Resource {
-
 	return &ArtifactoryGroupResource{}
 }
 
@@ -71,6 +76,9 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the group.",
@@ -79,10 +87,20 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description for the group.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"external_id": schema.StringAttribute{
 				MarkdownDescription: "New external group ID used to configure the corresponding group in Azure AD.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"auto_join": schema.BoolAttribute{
 				MarkdownDescription: "When this parameter is set, any new users defined in the system are automatically assigned to this group.",
@@ -106,39 +124,54 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("internal"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"realm_attributes": schema.StringAttribute{
 				MarkdownDescription: "The realm attributes for the group.",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"users_names": schema.SetAttribute{
 				MarkdownDescription: "List of users assigned to the group. If not set or empty, Terraform will not manage group membership.",
 				ElementType:         types.StringType,
 				Optional:            true,
+				Computed:            true,
+				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"detach_all_users": schema.BoolAttribute{
 				MarkdownDescription: "When this is set to `true`, an empty or missing usernames array will detach all users from the group.",
 				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"watch_manager": schema.BoolAttribute{
 				MarkdownDescription: "When this override is set, User in the group can manage Xray Watches on any resource type. Default value is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"policy_manager": schema.BoolAttribute{
 				MarkdownDescription: "When this override is set, User in the group can set Xray security and compliance policies. Default value is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"reports_manager": schema.BoolAttribute{
 				MarkdownDescription: "When this override is set, User in the group can manage Xray Reports on any resource type. Default value is `false`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -160,11 +193,6 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	userNames := []string{}
-	if !data.UsersNames.IsNull() {
-		userNames = utilfw.StringSetToStrings(data.UsersNames)
-	}
-
 	// Convert from Terraform data model into API data model
 	group := &ArtifactoryGroupResourceAPIModel{
 		Name:            data.Name.ValueString(),
@@ -174,10 +202,13 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 		AdminPrivileges: data.AdminPrivileges.ValueBool(),
 		Realm:           data.Realm.ValueString(),
 		RealmAttributes: data.RealmAttributes.ValueString(),
-		UsersNames:      userNames,
 		WatchManager:    data.WatchManager.ValueBool(),
 		PolicyManager:   data.PolicyManager.ValueBool(),
 		ReportsManager:  data.ReportsManager.ValueBool(),
+	}
+	if !data.UsersNames.IsNull() {
+		usersNames := utilfw.StringSetToStrings(data.UsersNames)
+		group.UsersNames = usersNames
 	}
 
 	response, err := r.ProviderData.Client.R().
@@ -195,11 +226,20 @@ func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	// Assign the resource ID for teh resource in the state
+	// Assign the resource ID for the resource in the state
 	data.Id = types.StringValue(group.Name)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func getDetachUsersValue(resource *ArtifactoryGroupResourceModel) bool {
+	detachAllUsers := false
+	if !resource.DetachAllUsers.IsNull() && !resource.DetachAllUsers.IsUnknown() {
+		detachAllUsers = resource.DetachAllUsers.ValueBool()
+	}
+
+	return detachAllUsers
 }
 
 func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -211,12 +251,13 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Convert from Terraform data model into API data model
-	group := &ArtifactoryGroupResourceAPIModel{}
+	group := ArtifactoryGroupResourceAPIModel{}
 
-	includeUsers := len(data.UsersNames.Elements()) > 0 || data.DetachAllUsers.ValueBool()
+	includeUsers := len(data.UsersNames.Elements()) > 0 || getDetachUsersValue(data)
+
 	response, err := r.ProviderData.Client.R().
 		SetQueryParam("includeUsers", strconv.FormatBool(includeUsers)).
-		SetResult(group).
+		SetResult(&group).
 		Get(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
@@ -226,15 +267,17 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
+	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
-
 		return
 	}
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.ToState(ctx, group, includeUsers)
+	resp.Diagnostics.Append(data.ToState(ctx, group)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -247,10 +290,8 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	// Convert from Terraform data model into API data model
-	userNames := utilfw.StringSetToStrings(data.UsersNames)
-
-	// Convert from Terraform data model into API data model
-	group := &ArtifactoryGroupResourceAPIModel{
+	usersNames := utilfw.StringSetToStrings(data.UsersNames)
+	group := ArtifactoryGroupResourceAPIModel{
 		Name:            data.Name.ValueString(),
 		Description:     data.Description.ValueString(),
 		ExternalId:      data.ExternalId.ValueString(),
@@ -258,7 +299,7 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 		AdminPrivileges: data.AdminPrivileges.ValueBool(),
 		Realm:           data.Realm.ValueString(),
 		RealmAttributes: data.RealmAttributes.ValueString(),
-		UsersNames:      userNames,
+		UsersNames:      usersNames,
 		WatchManager:    data.WatchManager.ValueBool(),
 		PolicyManager:   data.PolicyManager.ValueBool(),
 		ReportsManager:  data.ReportsManager.ValueBool(),
@@ -268,11 +309,11 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 	// This recreates the group with the same permissions and updated users.
 	// Update instead uses POST which prevents removing users and since it is only used when membership is empty
 	// this results in a group where users are not managed by artifactory if users_names is not set.
-	includeUsers := len(group.UsersNames) > 0 || data.DetachAllUsers.ValueBool()
+	includeUsers := len(group.UsersNames) > 0 || getDetachUsersValue(data)
 	if includeUsers {
 		// Create call
 		response, err := r.ProviderData.Client.R().
-			SetBody(group).
+			SetBody(&group).
 			Put(GroupsEndpoint + group.Name)
 		if err != nil {
 			utilfw.UnableToUpdateResourceError(resp, err.Error())
@@ -301,7 +342,10 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 		}
 	}
 
-	data.ToState(ctx, group, includeUsers)
+	resp.Diagnostics.Append(data.ToState(ctx, group)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -334,13 +378,21 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-
 }
-func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group *ArtifactoryGroupResourceAPIModel, includeUsers bool) {
+
+func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group ArtifactoryGroupResourceAPIModel) diag.Diagnostics {
 	r.Id = types.StringValue(group.Name)
 	r.Name = types.StringValue(group.Name)
+
+	if r.Description.IsNull() {
+		r.Description = types.StringValue("")
+	}
 	if group.Description != "" {
 		r.Description = types.StringValue(group.Description)
+	}
+
+	if r.ExternalId.IsNull() {
+		r.ExternalId = types.StringValue("")
 	}
 	if group.ExternalId != "" {
 		r.ExternalId = types.StringValue(group.ExternalId)
@@ -348,16 +400,28 @@ func (r *ArtifactoryGroupResourceModel) ToState(ctx context.Context, group *Arti
 	r.AutoJoin = types.BoolValue(group.AutoJoin)
 	r.AdminPrivileges = types.BoolValue(group.AdminPrivileges)
 	r.Realm = types.StringValue(group.Realm)
+
+	// Need to set empty string for null state value to avoid state drift.
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
+	if r.RealmAttributes.IsNull() {
+		r.RealmAttributes = types.StringValue("")
+	}
 	if group.RealmAttributes != "" {
 		r.RealmAttributes = types.StringValue(group.RealmAttributes)
 	}
+
 	// We have to check if the value is not null to prevent an error "...unexpected new value: .users_names: was null, but now cty.SetValEmpty(cty.String)."
 	if !r.UsersNames.IsNull() {
-		if group.UsersNames != nil {
-			r.UsersNames, _ = types.SetValueFrom(ctx, types.StringType, group.UsersNames)
+		usersNames, diags := types.SetValueFrom(ctx, types.StringType, group.UsersNames)
+		if diags != nil {
+			return diags
 		}
+		r.UsersNames = usersNames
 	}
+
 	r.WatchManager = types.BoolValue(group.WatchManager)
 	r.PolicyManager = types.BoolValue(group.PolicyManager)
 	r.ReportsManager = types.BoolValue(group.ReportsManager)
+
+	return nil
 }

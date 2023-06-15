@@ -5,16 +5,60 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
+
+func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}
+	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserUpgrade", `
+		resource "artifactory_user" "{{ .name }}" {
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.7.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: userNoGroups,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   userNoGroups,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
 
 func TestAccUser_basic_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
@@ -28,20 +72,18 @@ func TestAccUser_basic_groups(t *testing.T) {
 	}
 	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
-			name        		= "{{ .name }}"
-			email 				= "{{ .email }}"
-			password			= "Passsw0rd!"
-			admin 				= false
-			groups      		= [ "readers" ]
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!"
+			admin 	 = false
+			groups   = [ "readers" ]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: userNoGroups,
@@ -73,19 +115,17 @@ func TestAccUser_no_password(t *testing.T) {
 	}
 	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
-			name        		= "{{ .name }}"
-			email 				= "{{ .email }}"
-			admin 				= false
-			groups      		= [ "readers" ]
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			admin  = false
+			groups = [ "readers" ]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: userNoGroups,
@@ -105,7 +145,7 @@ func TestAccUser_no_password(t *testing.T) {
 	})
 }
 
-func TestAccUser_default_group(t *testing.T) {
+func TestAccUser_no_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")
@@ -115,7 +155,7 @@ func TestAccUser_default_group(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -125,17 +165,15 @@ func TestAccUser_default_group(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: userEmptyGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.0", "readers"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -159,7 +197,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -170,17 +208,15 @@ func TestAccUser_empty_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: userEmptyGroups,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					//resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -221,11 +257,9 @@ func TestAccUser_all_attributes(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, id, id),
@@ -295,11 +329,9 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: userInitial,

@@ -12,6 +12,65 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
+func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	config := utilsdk.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.11.1",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "description", ""),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
+					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
+					resource.TestCheckResourceAttrSet(fqrn, "subject"),
+					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
+					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
+					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
@@ -114,6 +173,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfxr@*"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckResourceAttrSet(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
 					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
 					resource.TestCheckResourceAttrSet(fqrn, "subject"),
 					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
@@ -401,7 +461,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
-				ExpectError: regexp.MustCompile("Unable to Refresh Resource"),
+				ExpectError: regexp.MustCompile("Unable to Create Resource"),
 			},
 		},
 	})

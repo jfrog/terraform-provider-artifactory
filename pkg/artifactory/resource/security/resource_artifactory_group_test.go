@@ -6,17 +6,59 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
+
+func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-upgrade-", "artifactory_group")
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+	`
+	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.7.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+					resource.TestCheckNoResourceAttr(fqrn, "admin_privileges"),
+					resource.TestCheckNoResourceAttr(fqrn, "auto_join"),
+					resource.TestCheckNoResourceAttr(fqrn, "description"),
+					resource.TestCheckNoResourceAttr(fqrn, "detach_all_users"),
+					resource.TestCheckNoResourceAttr(fqrn, "external_id"),
+					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
+					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "realm"),
+					resource.TestCheckNoResourceAttr(fqrn, "realm_attributes"),
+					resource.TestCheckNoResourceAttr(fqrn, "users_names"),
+					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
 
 func TestAccGroup_defaults(t *testing.T) {
 	_, fqrn, groupName := testutil.MkNames("test-group-basic-", "artifactory_group")
@@ -28,11 +70,9 @@ func TestAccGroup_defaults(t *testing.T) {
 	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -41,7 +81,7 @@ func TestAccGroup_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "auto_join", "false"),
 					resource.TestCheckResourceAttr(fqrn, "admin_privileges", "false"),
 					resource.TestCheckResourceAttr(fqrn, "realm", "internal"),
-					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "detach_all_users"),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
@@ -81,11 +121,9 @@ func TestAccGroup_full(t *testing.T) {
 	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -139,11 +177,9 @@ func TestAccGroup_bool_conflict(t *testing.T) {
 	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
@@ -202,11 +238,9 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 		)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -217,13 +251,13 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
 					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
 				Config: configs[1],
 				Check: resource.ComposeTestCheckFunc(
-					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 				),
 			},
@@ -232,7 +266,7 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 0),
+					testAccDirectCheckGroupMembership(fqrn, 0),
 				),
 			},
 			{
@@ -281,7 +315,7 @@ func TestAccGroup_full_update(t *testing.T) {
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
-			users_names = ["anonymous"]
+			users_names      = ["anonymous"]
 		}
 		`,
 		`
@@ -302,7 +336,7 @@ func TestAccGroup_full_update(t *testing.T) {
 			admin_privileges = false
 			realm            = "test"
 			realm_attributes = "Some attribute"
-			users_names = ["anonymous", "admin"]
+			users_names      = ["anonymous", "admin"]
 		}
 		`,
 		`
@@ -347,11 +381,9 @@ func TestAccGroup_full_update(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckGroupDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: configs[0],
@@ -363,7 +395,7 @@ func TestAccGroup_full_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "realm", "test"),
 					resource.TestCheckResourceAttr(fqrn, "realm_attributes", "Some attribute"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 0),
+					testAccDirectCheckGroupMembership(fqrn, 0),
 				),
 			},
 			{
@@ -372,7 +404,7 @@ func TestAccGroup_full_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
@@ -380,14 +412,14 @@ func TestAccGroup_full_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "anonymous"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 1),
+					testAccDirectCheckGroupMembership(fqrn, 1),
 				),
 			},
 			{
 				Config: configs[3],
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 1),
+					testAccDirectCheckGroupMembership(fqrn, 1),
 				),
 			},
 			{
@@ -396,7 +428,7 @@ func TestAccGroup_full_update(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.0", "admin"),
 					resource.TestCheckResourceAttr(fqrn, "users_names.1", "anonymous"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 2),
+					testAccDirectCheckGroupMembership(fqrn, 2),
 				),
 			},
 			{
@@ -404,7 +436,7 @@ func TestAccGroup_full_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "users_names.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "detach_all_users", "true"),
-					testAccDirectCheckGroupMembershipFw(fqrn, 0),
+					testAccDirectCheckGroupMembership(fqrn, 0),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "policy_manager", "false"),
 					resource.TestCheckResourceAttr(fqrn, "reports_manager", "false"),
@@ -451,7 +483,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	}
 }
 
-func testAccDirectCheckGroupMembershipFw(id string, expectedCount int) func(*terraform.State) error {
+func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
 
