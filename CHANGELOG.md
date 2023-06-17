@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_remote_*_repository: new attribute `disable_proxy` was added. When set to `true`, proxy settings are ignored for the remote repository.  
   
-  PR:    [#]()
+  PR:    [#751](https://github.com/jfrog/terraform-provider-artifactory/pull/751)
   Issue: [#739](https://github.com/jfrog/terraform-provider-artifactory/issues/739)
 
 ## 8.1.0 (June 15, 2023). Tested on Artifactory 7.59.9
