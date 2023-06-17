@@ -22,6 +22,49 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+func TestAccRemoteUpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
+
+	params := map[string]string{
+		"name": name,
+	}
+
+	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+		resource "artifactory_remote_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.7.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "go-default"),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://gocenter.io"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
 
@@ -1200,6 +1243,161 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
+
+	params := map[string]string{
+		"name": name,
+	}
+	// Default proxy will be assigned to the repository no matter what, and it's impossible to remove it by submitting an empty string or
+	// removing the attribute. If `disable_proxy` is set to true, then both repo and default proxies are removed and not returned in the
+	// GET body.
+	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+		resource "artifactory_proxy" "my-proxy" {
+		  	key               = "my-proxy"
+		  	host              = "my-proxy.mycompany.com"
+		  	port              = 8888
+		  	username          = "user1"
+		  	password          = "password"
+		  	nt_host           = "MYCOMPANY.COM"
+		  	nt_domain         = "MYCOMPANY"
+		  	platform_default  = false
+		  	redirect_to_hosts = ["redirec-host.mycompany.com"]
+		  	services          = ["jfrt"]
+		}		
+
+		resource "artifactory_remote_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			disable_proxy 	= true
+			depends_on 		= [artifactory_proxy.my-proxy]
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteDisableProxyGH739(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
+
+	params := map[string]string{
+		"name": name,
+	}
+	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+		resource "artifactory_proxy" "my-proxy" {
+		  	key               = "my-proxy"
+		  	host              = "my-proxy.mycompany.com"
+		  	port              = 8888
+		  	username          = "user1"
+		  	password          = "password"
+		  	nt_host           = "MYCOMPANY.COM"
+		  	nt_domain         = "MYCOMPANY"
+		  	platform_default  = false
+		  	redirect_to_hosts = ["redirec-host.mycompany.com"]
+		}		
+
+		resource "artifactory_remote_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			proxy 			= "my-proxy"
+			depends_on 		= [artifactory_proxy.my-proxy]
+		}
+
+	`, params)
+
+	configUpdate := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+		resource "artifactory_remote_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			disable_proxy 	= true
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "proxy", "my-proxy"),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", "false"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", "true"),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteDisableDefaultProxyConflictAttrGH739(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
+
+	params := map[string]string{
+		"name": name,
+	}
+	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+		resource "artifactory_remote_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			url             = "https://gocenter.io"
+			disable_proxy 	= true
+			proxy 			= "my-proxy"
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*if `disable_proxy` is set to `true`, `proxy` can't be set"),
 			},
 		},
 	})
