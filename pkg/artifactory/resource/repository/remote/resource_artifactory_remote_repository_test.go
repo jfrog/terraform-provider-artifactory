@@ -22,7 +22,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccRemoteUpgradeFromSDKv2(t *testing.T) {
+func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
 
 	params := map[string]string{
@@ -43,7 +43,7 @@ func TestAccRemoteUpgradeFromSDKv2(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.7.0",
+						VersionConstraint: "8.1.0",
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
