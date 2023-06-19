@@ -26,6 +26,7 @@ type RepositoryRemoteBaseParams struct {
 	Username                          string                             `json:"username"`
 	Password                          string                             `json:"password,omitempty"` // must have 'omitempty' to avoid sending an empty string on update, if attribute is ignored by the provider.
 	Proxy                             string                             `json:"proxy"`
+	DisableProxy                      bool                               `json:"disableProxy"`
 	Description                       string                             `json:"description"`
 	Notes                             string                             `json:"notes"`
 	IncludesPattern                   string                             `json:"includesPattern"`
@@ -121,7 +122,13 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 			"proxy": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Proxy key from Artifactory Proxies settings",
+				Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
+			},
+			"disable_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -462,6 +469,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		Username:                          d.GetString("username", false),
 		Password:                          d.GetString("password", false),
 		Proxy:                             d.GetString("proxy", false),
+		DisableProxy:                      d.GetBool("disable_proxy", false),
 		Description:                       d.GetString("description", false),
 		Notes:                             d.GetString("notes", false),
 		IncludesPattern:                   d.GetString("includes_pattern", false),
@@ -567,6 +575,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		CustomizeDiff: customdiff.All(
 			repository.ProjectEnvironmentsDiff,
 			verifyExternalDependenciesDockerAndHelm,
+			verifyDisableProxy,
 		),
 	}
 }
@@ -586,6 +595,17 @@ func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.Res
 		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
 			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
 		}
+	}
+
+	return nil
+}
+
+func verifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	disableProxy := diff.Get("disable_proxy").(bool)
+	proxy := diff.Get("proxy").(string)
+
+	if disableProxy && len(proxy) > 0 {
+		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil

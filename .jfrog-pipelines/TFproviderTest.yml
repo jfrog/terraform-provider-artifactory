@@ -67,6 +67,7 @@ pipelines:
             - gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
             - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
             - sudo apt update && apt-get install terraform && terraform -version
+            - add_run_variables TERRAFORM_VERSION=$(terraform -version | grep "Terraform v" | awk '{print $2}')
             - echo "Install GoReleaser"
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
@@ -189,7 +190,7 @@ pipelines:
                 cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
                 echo "Checking out the branch ${res_GitHubTFProviderRepoJFrog_headCommitRef} where the PR was created from."
                 git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
-                sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION}/" CHANGELOG.md
+                sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION} with Terraform CLI ${TERRAFORM_VERSION}/" CHANGELOG.md
                 head -10 CHANGELOG.md
                 git add CHANGELOG.md
                 export REGEX="Changes to be committed*"
