@@ -1,4 +1,4 @@
-## 8.2.1 (June 21, 2023).
+## 8.2.1 (June 21, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.1
 
 IMPROVEMENTS:
 
