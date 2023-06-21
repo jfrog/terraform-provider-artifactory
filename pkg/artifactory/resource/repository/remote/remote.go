@@ -142,7 +142,7 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 			"remote_repo_layout_ref": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Repository layout key for the remote layout mapping.",
+				Description: "Repository layout key for the remote layout mapping. Repository can be created without this attribute (or set to an empty string). Once it's set, it can't be removed by passing an empty string or removing the attribute, that will be ignored by the Artifactory API. UI shows an error message, if the user tries to remove the value.",
 			},
 			"hard_fail": {
 				Type:     schema.TypeBool,
@@ -576,6 +576,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 			repository.ProjectEnvironmentsDiff,
 			verifyExternalDependenciesDockerAndHelm,
 			verifyDisableProxy,
+			verifyRemoteRepoLayoutRef,
 		),
 	}
 }
@@ -617,4 +618,20 @@ func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 	}
 
 	return rawState, nil
+}
+
+func verifyRemoteRepoLayoutRef(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	ref := diff.Get("remote_repo_layout_ref").(string)
+	isChanged := diff.HasChange("remote_repo_layout_ref")
+
+	if isChanged && len(ref) == 0 {
+		return fmt.Errorf("empty remote_repo_layout_ref will not remove the actual attribute value and will be ignored by the API, " +
+			"thus will create a state drift on the next plan. Please add the attribute, according to the repository type")
+	}
+
+	return nil
+}
+
+func (r RepositoryRemoteBaseParams) GetRclass() string {
+	return r.Rclass
 }

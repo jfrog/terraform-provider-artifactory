@@ -1,3 +1,12 @@
+## 8.2.1 (June 21, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.1
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_*_repository: changed behavior of attribute `remote_repo_layout_ref` to match the UI behavior. User still can create a repo without that attribute, but once it's set, it can't be removed or updated with an empty string. 
+
+  PR: [#755](https://github.com/jfrog/terraform-provider-artifactory/pull/755)
+  Issue: [#746](https://github.com/jfrog/terraform-provider-artifactory/issues/746)
+
 ## 8.2.0 (June 19, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.0
 
 IMPROVEMENTS:
@@ -205,13 +214,13 @@ FEATURES:
 
 BUG FIXES:
 * resource/artifactory_virtual_npm_repository: fixed import issue for `retrieval_cache_period_seconds` attribute.
- PR [#685](https://github.com/jfrog/terraform-provider-artifactory/pull/685)
+PR [#685](https://github.com/jfrog/terraform-provider-artifactory/pull/685)
 
 ## 7.1.2 (March 6, 2023). Tested on Artifactory 7.55.4
 
 BUG FIXES:
 * Changed location of data sources docs so that they render properly in the terraform registry.
-  PR: [#683](https://github.com/jfrog/terraform-provider-artifactory/pull/683)
+PR: [#683](https://github.com/jfrog/terraform-provider-artifactory/pull/683)
 
 ## 7.1.1 (March 2, 2023). Tested on Artifactory 7.55.2
 
@@ -225,6 +234,7 @@ Removed constraints from `external_dependencies_patterns` attribute, now it can 
 
 FEATURES:
 * datasource/artifactory_local_*_repository: Adds new data sources for all local repository types.
+
   PR:    [#664](https://github.com/jfrog/terraform-provider-artifactory/pull/664)
   Issue: [#548](https://github.com/jfrog/terraform-provider-artifactory/issues/548)
 
