@@ -1133,6 +1133,81 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 	})
 }
 
+func TestAccRemoteRepository_AttemptToRemoveRemoteRepoLayout_GH746(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("terraform-remote-test-cran-remote-", "artifactory_remote_cran_repository")
+
+	remoteRepositoryInit := fmt.Sprintf(`
+		resource "artifactory_remote_cran_repository" "%s" {
+			key              = "%s"
+			repo_layout_ref  = "bower-default"
+			url              = "https://cran.r-project.org/"
+			notes            = "managed by terraform"
+			property_sets    = ["artifactory"]
+			unused_artifacts_cleanup_period_hours = 10100
+			retrieval_cache_period_seconds        = 600
+			missed_cache_period_seconds           = 1800
+			remote_repo_layout_ref 			      = "bower-default"
+		}
+	`, name, name)
+
+	remoteRepositoryUpdateNoAttribute := fmt.Sprintf(`
+		resource "artifactory_remote_cran_repository" "%s" {
+			key              					  = "%s"
+			repo_layout_ref  					  = "bower-default"
+			url              					  = "https://cran.r-project.org/"
+			notes            					  = "managed by terraform"
+			property_sets    					  = ["artifactory"]
+			unused_artifacts_cleanup_period_hours = 10100
+			retrieval_cache_period_seconds        = 600
+			missed_cache_period_seconds           = 1800
+		}
+	`, name, name)
+
+	remoteRepositoryUpdateEmptyAttribute := fmt.Sprintf(`
+		resource "artifactory_remote_cran_repository" "%s" {
+			key              					  = "%s"
+			repo_layout_ref  					  = "bower-default"
+			url              					  = "https://cran.r-project.org/"
+			notes            					  = "managed by terraform"
+			property_sets    					  = ["artifactory"]
+			unused_artifacts_cleanup_period_hours = 10100
+			retrieval_cache_period_seconds        = 600
+			missed_cache_period_seconds           = 1800
+			remote_repo_layout_ref 			      = ""
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryInit,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
+				),
+			},
+			{
+				Config:      remoteRepositoryUpdateNoAttribute,
+				ExpectError: regexp.MustCompile(".*empty remote_repo_layout_ref will not remove the actual attribute value.*"),
+			},
+			{
+				Config:      remoteRepositoryUpdateEmptyAttribute,
+				ExpectError: regexp.MustCompile(".*empty remote_repo_layout_ref will not remove the actual attribute value.*"),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
 // https://github.com/jfrog/terraform-provider-artifactory/issues/241
 func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
