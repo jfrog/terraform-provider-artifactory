@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_remote_*_repository: changed behavior of attribute `remote_repo_layout_ref` to match the UI behavior. User still can create a repo without that attribute, but once it's set, it can't be removed or updated with an empty string. 
 
-  PR: [#]()
+  PR: [#755](https://github.com/jfrog/terraform-provider-artifactory/pull/755)
   Issue: [#746](https://github.com/jfrog/terraform-provider-artifactory/issues/746)
 
 ## 8.2.0 (June 19, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.0
