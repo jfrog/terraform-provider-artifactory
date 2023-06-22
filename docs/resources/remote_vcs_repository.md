@@ -5,7 +5,7 @@ subcategory: "Remote Repositories"
 
 Creates a remote VCS repository.
 
-Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/VCS+Repositories).
+Official documentation can be found [here](https://jfrog.com/help/r/jfrog-artifactory-documentation/vcs-repositories).
 
 ## Example Usage
 
