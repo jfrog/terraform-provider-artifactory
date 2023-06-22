@@ -10,7 +10,7 @@ resources:
         commit: false
         pullRequestCreate: true
       cancelPendingRunsOn:
-        pullRequestUpdate: true
+        pullRequestUpdate: false
 pipelines:
   - name: tf_provider_artifactory
     steps:
