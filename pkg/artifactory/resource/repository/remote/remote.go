@@ -62,6 +62,10 @@ type RepositoryRemoteBaseParams struct {
 	CdnRedirect                       bool                               `json:"cdnRedirect"`
 }
 
+func (r RepositoryRemoteBaseParams) GetRclass() string {
+	return r.Rclass
+}
+
 type JavaRemoteRepo struct {
 	RepositoryRemoteBaseParams
 	FetchJarsEagerly             bool   `json:"fetchJarsEagerly"`
@@ -394,7 +398,7 @@ var VcsRemoteRepoSchema = map[string]*schema.Schema{
 	"vcs_git_download_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.All(validation.StringIsNotEmpty, validation.IsURLWithHTTPorHTTPS)),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 		Description:      `This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
 	},
 }
@@ -630,8 +634,4 @@ func verifyRemoteRepoLayoutRef(_ context.Context, diff *schema.ResourceDiff, _ i
 	}
 
 	return nil
-}
-
-func (r RepositoryRemoteBaseParams) GetRclass() string {
-	return r.Rclass
 }
