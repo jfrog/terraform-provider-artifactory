@@ -1,4 +1,4 @@
-## 8.2.2 (June 22, 2023).
+## 8.2.2 (June 22, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.1
 
 BUG FIX:
 * resource/artifactory_remote_vcs_repository: IsURLWithHTTPorHTTPS check was removed from the `vcs_git_download_url` attribute to allow use formatted string with placeholders, like `{0}/{1}/+archive/{2}.{3}` with `CUSTOM` Git provider.
