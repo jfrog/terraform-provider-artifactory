@@ -1,4 +1,4 @@
-## 8.2.3 (June 28, 2023)
+## 8.2.3 (June 28, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.2
 
 BUG FIX:
 * provider: fixed "Error: Plugin did not respond" issue. Traced to a [Terraform framework library bug](https://github.com/hashicorp/terraform-plugin-framework/pull/772). Updated `terraform-plugin-framework` from v1.3.0 to [v1.3.1](https://github.com/hashicorp/terraform-plugin-framework/releases/tag/v1.3.1)
