@@ -4,7 +4,7 @@ IMPROVEMENTS:
 
 * New resources added: resource/artifact_custom_webhook, resource/artifact_property_custom_webhook, resource/artifactory_release_bundle_custom_webhook, resource/build_custom_webhook, resource/distribution_custom_webhook, resource/docker_custom_webhook, resource/release_bundle_custom_webhook. These new resource allow to create custom webhooks. [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/create-a-new-webhook-subscription?page=38), [Custom Webhooks documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/custom-webhooks?page=3). 
 
-PR:[#]()
+PR:[#762](https://github.com/jfrog/terraform-provider-artifactory/pull/762)
 Issue:[#738](https://github.com/jfrog/terraform-provider-artifactory/issues/738)
 
 
