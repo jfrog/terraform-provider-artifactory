@@ -3,6 +3,7 @@ package security_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -10,9 +11,33 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
+	version := "7.11.1"
+	title := fmt.Sprintf(
+		"TestScopedToken_v%s",
+		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
+	)
+	t.Run(title, func(t *testing.T) {
+		resource.Test(scopedTokenUpgradeTestCase(version, t))
+	})
+}
+
+func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
+	version := "7.2.0"
+	title := fmt.Sprintf(
+		"TestScopedToken_v%s",
+		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
+	)
+	t.Run(title, func(t *testing.T) {
+		resource.Test(scopedTokenUpgradeTestCase(version, t))
+	})
+}
+
+func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	config := utilsdk.ExecuteTemplate(
@@ -28,18 +53,19 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.test-user.name
+		    expires_in  = 31536000
 		}`,
 		map[string]interface{}{
 			"name": name,
 		},
 	)
 
-	resource.Test(t, resource.TestCase{
+	return t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.11.1",
+						VersionConstraint: version,
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
@@ -48,7 +74,7 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
 					resource.TestCheckResourceAttr(fqrn, "description", ""),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
@@ -68,7 +94,7 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
 			},
 		},
-	})
+	}
 }
 
 func TestAccScopedToken_WithDefaults(t *testing.T) {
