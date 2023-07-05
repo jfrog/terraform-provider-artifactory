@@ -15,8 +15,8 @@ type BuildWebhookCriteria struct {
 	SelectedBuilds []string `json:"selectedBuilds"`
 }
 
-var buildWebhookSchema = func(webhookType string, version int) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version), map[string]*schema.Schema{
+var buildWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
 		"criteria": {
 			Type:     schema.TypeSet,
 			Required: true,

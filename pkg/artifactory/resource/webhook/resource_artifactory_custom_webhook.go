@@ -5,96 +5,156 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/validator"
 
 	"golang.org/x/exp/slices"
 )
 
-var TypesSupported = []string{
-	"artifact",
-	"artifact_property",
-	"docker",
-	"build",
-	"release_bundle",
-	"distribution",
-	"artifactory_release_bundle",
+func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"key": {
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.All(
+					validation.StringLenBetween(2, 200),
+					validation.StringDoesNotContainAny(" "),
+				),
+			),
+			Description: "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
+		},
+		"description": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 1000)),
+			Description:      "Description of webhook. Max length 1000 characters.",
+		},
+		"enabled": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Status of webhook. Default to 'true'",
+		},
+		"event_types": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MinItems: 1,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
+				"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
+		},
+		"handler": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MinItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"url": {
+						Type:     schema.TypeString,
+						Required: true,
+						ValidateDiagFunc: validation.ToDiagFunc(
+							validation.All(
+								validation.IsURLWithHTTPorHTTPS,
+								validation.StringIsNotEmpty,
+							),
+						),
+						Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
+					},
+					"secrets": {
+						Type:     schema.TypeMap,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'\"")),
+						},
+						Description: "A set of sensitive values that will be injected in the request (headers and/or payload), comprise of key/value pair.",
+					},
+					"proxy": {
+						Type:     schema.TypeString,
+						Optional: true,
+						ValidateDiagFunc: validator.All(
+							validator.StringIsNotEmpty,
+							validator.StringIsNotURL,
+						),
+						Description: "Proxy key from Artifactory UI (Administration -> Proxies -> Configuration)",
+					},
+					"http_headers": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair. Used in custom webhooks.",
+					},
+					"payload": {
+						Type:             schema.TypeString,
+						Optional:         true,
+						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+						Description:      "This attribute is used to build the request body. Used in custom webhooks",
+					},
+				},
+			},
+		},
+	}
 }
 
-var DomainEventTypesSupported = map[string][]string{
-	"artifact":                   {"deployed", "deleted", "moved", "copied", "cached"},
-	"artifact_property":          {"added", "deleted"},
-	"docker":                     {"pushed", "deleted", "promoted"},
-	"build":                      {"uploaded", "deleted", "promoted"},
-	"release_bundle":             {"created", "signed", "deleted"},
-	"distribution":               {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
-	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
+type CustomBaseParams struct {
+	Key         string          `json:"key"`
+	Description string          `json:"description"`
+	Enabled     bool            `json:"enabled"`
+	EventFilter EventFilter     `json:"event_filter"`
+	Handlers    []CustomHandler `json:"handlers"`
 }
 
-type BaseParams struct {
-	Key         string      `json:"key"`
-	Description string      `json:"description"`
-	Enabled     bool        `json:"enabled"`
-	EventFilter EventFilter `json:"event_filter"`
-	Handlers    []Handler   `json:"handlers"`
-}
-
-func (w BaseParams) Id() string {
+func (w CustomBaseParams) Id() string {
 	return w.Key
 }
 
-type EventFilter struct {
-	Domain     string      `json:"domain"`
-	EventTypes []string    `json:"event_types"`
-	Criteria   interface{} `json:"criteria"`
+type CustomHandler struct {
+	HandlerType string         `json:"handler_type"`
+	Url         string         `json:"url"`
+	Secrets     []KeyValuePair `json:"secrets"`
+	Proxy       string         `json:"proxy"`
+	HttpHeaders []KeyValuePair `json:"http_headers"`
+	Payload     string         `json:"payload,omitempty"`
 }
 
-type Handler struct {
-	HandlerType       string         `json:"handler_type"`
-	Url               string         `json:"url"`
-	Secret            string         `json:"secret"`
-	Proxy             string         `json:"proxy"`
-	CustomHttpHeaders []KeyValuePair `json:"custom_http_headers"`
-}
-type KeyValuePair struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+type SecretName struct {
+	Name string `json:"name"`
 }
 
-const webhooksUrl = "/event/api/v1/subscriptions"
-
-const WhUrl = webhooksUrl + "/{webhookKey}"
-
-const currentSchemaVersion = 2
-
-var unpackKeyValuePair = func(keyValuePairs map[string]interface{}) []KeyValuePair {
-	var KVPairs []KeyValuePair
-	for key, value := range keyValuePairs {
-		keyValuePair := KeyValuePair{
-			Name:  key,
-			Value: value.(string),
-		}
-		KVPairs = append(KVPairs, keyValuePair)
-	}
-
-	return KVPairs
-}
-
-var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{} {
+var packKeyValuePairNoValue = func(keyValuePairs []KeyValuePair, d *schema.ResourceData, url string) map[string]interface{} {
 	KVPairs := make(map[string]interface{})
+	// Get secrets from TF state
+	var secrets map[string]interface{}
+	if v, ok := d.GetOk("handler"); ok {
+		handlers := v.(*schema.Set).List()
+		for _, handler := range handlers {
+			h := handler.(map[string]interface{})
+			// if url match, merge secret maps
+			if h["url"] == url {
+				secrets = utilsdk.MergeMaps(secrets, h["secrets"].(map[string]interface{}))
+			}
+		}
+	}
+	// We assign secret the value from the state, because it's not returned in the API body response
 	for _, keyValuePair := range keyValuePairs {
-		KVPairs[keyValuePair.Name] = keyValuePair.Value
+		if v, ok := secrets[keyValuePair.Name]; ok {
+			KVPairs[keyValuePair.Name] = v.(string)
+		}
 	}
 
 	return KVPairs
 }
 
-func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
+func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 
 	var domainCriteriaLookup = map[string]interface{}{
 		"artifact":                   RepoWebhookCriteria{},
@@ -108,13 +168,13 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 	var domainSchemaLookup = func(version int) map[string]map[string]*schema.Schema {
 		return map[string]map[string]*schema.Schema{
-			"artifact":                   repoWebhookSchema(webhookType, version, false),
-			"artifact_property":          repoWebhookSchema(webhookType, version, false),
-			"docker":                     repoWebhookSchema(webhookType, version, false),
-			"build":                      buildWebhookSchema(webhookType, version, false),
-			"release_bundle":             releaseBundleWebhookSchema(webhookType, version, false),
-			"distribution":               releaseBundleWebhookSchema(webhookType, version, false),
-			"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, false),
+			"artifact":                   repoWebhookSchema(webhookType, version, true),
+			"artifact_property":          repoWebhookSchema(webhookType, version, true),
+			"docker":                     repoWebhookSchema(webhookType, version, true),
+			"build":                      buildWebhookSchema(webhookType, version, true),
+			"release_bundle":             releaseBundleWebhookSchema(webhookType, version, true),
+			"distribution":               releaseBundleWebhookSchema(webhookType, version, true),
+			"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, true),
 		}
 	}
 
@@ -138,7 +198,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		"artifactory_release_bundle": unpackReleaseBundleCriteria,
 	}
 
-	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
+	var unpackWebhook = func(data *schema.ResourceData) (CustomBaseParams, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 
 		var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface{} {
@@ -161,8 +221,8 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookCriteria
 		}
 
-		var unpackHandlers = func(d *utilsdk.ResourceData) []Handler {
-			var webhookHandlers []Handler
+		var unpackHandlers = func(d *utilsdk.ResourceData) []CustomHandler {
+			var webhookHandlers []CustomHandler
 
 			if v, ok := d.GetOk("handler"); ok {
 				handlers := v.(*schema.Set).List()
@@ -171,12 +231,13 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
 					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
-						webhookHandler := Handler{
-							HandlerType:       "webhook",
-							Url:               h["url"].(string),
-							Secret:            h["secret"].(string),
-							Proxy:             h["proxy"].(string),
-							CustomHttpHeaders: unpackKeyValuePair(h["custom_http_headers"].(map[string]interface{})),
+						webhookHandler := CustomHandler{
+							HandlerType: "custom-webhook",
+							Url:         h["url"].(string),
+							Secrets:     unpackKeyValuePair(h["secrets"].(map[string]interface{})),
+							Proxy:       h["proxy"].(string),
+							HttpHeaders: unpackKeyValuePair(h["http_headers"].(map[string]interface{})),
+							Payload:     h["payload"].(string),
 						}
 						webhookHandlers = append(webhookHandlers, webhookHandler)
 					}
@@ -186,7 +247,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookHandlers
 		}
 
-		webhook := BaseParams{
+		webhook := CustomBaseParams{
 			Key:         d.GetString("key", false),
 			Description: d.GetString("description", false),
 			Enabled:     d.GetBool("enabled", false),
@@ -213,16 +274,17 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
 	}
 
-	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
+	var packHandlers = func(d *schema.ResourceData, handlers []CustomHandler) []error {
 		setValue := utilsdk.MkLens(d)
 		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["handler"].Elem.(*schema.Resource)
 		packedHandlers := make([]interface{}, len(handlers))
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
-				"url":                 handler.Url,
-				"secret":              handler.Secret,
-				"proxy":               handler.Proxy,
-				"custom_http_headers": packKeyValuePair(handler.CustomHttpHeaders),
+				"url":          handler.Url,
+				"secrets":      packKeyValuePairNoValue(handler.Secrets, d, handler.Url),
+				"proxy":        handler.Proxy,
+				"http_headers": packKeyValuePair(handler.HttpHeaders),
+				"payload":      handler.Payload,
 			}
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
@@ -230,17 +292,17 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return setValue("handler", schema.NewSet(schema.HashResource(resource), packedHandlers))
 	}
 
-	var packWebhook = func(d *schema.ResourceData, webhook BaseParams) diag.Diagnostics {
+	var packWebhook = func(d *schema.ResourceData, webhook CustomBaseParams) diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
 		var errors []error
 
-		errors = append(errors, setValue("key", webhook.Key)...)
-		errors = append(errors, setValue("description", webhook.Description)...)
-		errors = append(errors, setValue("enabled", webhook.Enabled)...)
-		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
-		errors = append(errors, packCriteria(d, webhook.EventFilter.Criteria.(map[string]interface{}))...)
-		errors = append(errors, packHandlers(d, webhook.Handlers)...)
+		setValue("key", webhook.Key)
+		setValue("description", webhook.Description)
+		setValue("enabled", webhook.Enabled)
+		setValue("event_types", webhook.EventFilter.EventTypes)
+		errors = packCriteria(d, webhook.EventFilter.Criteria.(map[string]interface{}))
+		errors = packHandlers(d, webhook.Handlers)
 
 		if len(errors) > 0 {
 			return diag.Errorf("failed to pack webhook %q", errors)
@@ -252,7 +314,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
 
-		webhook := BaseParams{}
+		webhook := CustomBaseParams{}
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
@@ -370,12 +432,6 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 	}
 
-	// Previous version of the schema
-	// see example in https://www.terraform.io/plugin/sdkv2/resources/state-migration#terraform-v0-12-sdk-state-migrations
-	resourceSchemaV1 := &schema.Resource{
-		Schema: domainSchemaLookup(1)[webhookType],
-	}
-
 	return &schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
@@ -388,13 +444,6 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		},
 
 		Schema: domainSchemaLookup(currentSchemaVersion)[webhookType],
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceSchemaV1.CoreConfigSchema().ImpliedType(),
-				Upgrade: ResourceStateUpgradeV1,
-				Version: 1,
-			},
-		},
 
 		CustomizeDiff: customdiff.All(
 			eventTypesDiff,
@@ -402,24 +451,4 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		),
 		Description: "Provides an Artifactory webhook resource",
 	}
-}
-
-// ResourceStateUpgradeV1 see the corresponding unit test TestWebhookResourceStateUpgradeV1
-// for more details on the schema transformation
-func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	rawState["handler"] = []map[string]interface{}{
-		{
-			"url":                 rawState["url"],
-			"secret":              rawState["secret"],
-			"proxy":               rawState["proxy"],
-			"custom_http_headers": rawState["custom_http_headers"],
-		},
-	}
-
-	delete(rawState, "url")
-	delete(rawState, "secret")
-	delete(rawState, "proxy")
-	delete(rawState, "custom_http_headers")
-
-	return rawState, nil
 }

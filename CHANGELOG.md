@@ -1,3 +1,13 @@
+## 8.3.0 (July 5, 2023).
+
+IMPROVEMENTS:
+
+* New resources added: resource/artifact_custom_webhook, resource/artifact_property_custom_webhook, resource/artifactory_release_bundle_custom_webhook, resource/build_custom_webhook, resource/distribution_custom_webhook, resource/docker_custom_webhook, resource/release_bundle_custom_webhook. These new resource allow to create custom webhooks. [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/create-a-new-webhook-subscription?page=38), [Custom Webhooks documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/custom-webhooks?page=3). 
+
+PR:[#]()
+Issue:[#738](https://github.com/jfrog/terraform-provider-artifactory/issues/738)
+
+
 ## 8.2.3 (June 28, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.2
 
 BUG FIX:
