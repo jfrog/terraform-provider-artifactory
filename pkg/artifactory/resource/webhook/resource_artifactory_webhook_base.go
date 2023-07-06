@@ -29,8 +29,11 @@ var baseCriteriaSchema = map[string]*schema.Schema{
 	},
 }
 
-func getBaseSchemaByVersion(webhookType string, version int) map[string]*schema.Schema {
-	if version == 1 {
+func getBaseSchemaByVersion(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	if isCustom {
+		return baseCustomWebhookBaseSchema(webhookType)
+	}
+	if version == 1 && !isCustom {
 		return baseWebhookBaseSchemaV1(webhookType)
 	}
 	return baseWebhookBaseSchemaV2(webhookType)
