@@ -94,72 +94,94 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{}
 	return KVPairs
 }
 
-func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
+var domainCriteriaLookup = map[string]interface{}{
+	"artifact":                   RepoWebhookCriteria{},
+	"artifact_property":          RepoWebhookCriteria{},
+	"docker":                     RepoWebhookCriteria{},
+	"build":                      BuildWebhookCriteria{},
+	"release_bundle":             ReleaseBundleWebhookCriteria{},
+	"distribution":               ReleaseBundleWebhookCriteria{},
+	"artifactory_release_bundle": ReleaseBundleWebhookCriteria{},
+}
 
-	var domainCriteriaLookup = map[string]interface{}{
-		"artifact":                   RepoWebhookCriteria{},
-		"artifact_property":          RepoWebhookCriteria{},
-		"docker":                     RepoWebhookCriteria{},
-		"build":                      BuildWebhookCriteria{},
-		"release_bundle":             ReleaseBundleWebhookCriteria{},
-		"distribution":               ReleaseBundleWebhookCriteria{},
-		"artifactory_release_bundle": ReleaseBundleWebhookCriteria{},
+var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
+	"artifact":                   packRepoCriteria,
+	"artifact_property":          packRepoCriteria,
+	"docker":                     packRepoCriteria,
+	"build":                      packBuildCriteria,
+	"release_bundle":             packReleaseBundleCriteria,
+	"distribution":               packReleaseBundleCriteria,
+	"artifactory_release_bundle": packReleaseBundleCriteria,
+}
+
+var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
+	"artifact":                   unpackRepoCriteria,
+	"artifact_property":          unpackRepoCriteria,
+	"docker":                     unpackRepoCriteria,
+	"build":                      unpackBuildCriteria,
+	"release_bundle":             unpackReleaseBundleCriteria,
+	"distribution":               unpackReleaseBundleCriteria,
+	"artifactory_release_bundle": unpackReleaseBundleCriteria,
+}
+
+var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
+	return map[string]map[string]*schema.Schema{
+		"artifact":                   repoWebhookSchema(webhookType, version, isCustom),
+		"artifact_property":          repoWebhookSchema(webhookType, version, isCustom),
+		"docker":                     repoWebhookSchema(webhookType, version, isCustom),
+		"build":                      buildWebhookSchema(webhookType, version, isCustom),
+		"release_bundle":             releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"distribution":               releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, isCustom),
 	}
+}
 
-	var domainSchemaLookup = func(version int) map[string]map[string]*schema.Schema {
-		return map[string]map[string]*schema.Schema{
-			"artifact":                   repoWebhookSchema(webhookType, version, false),
-			"artifact_property":          repoWebhookSchema(webhookType, version, false),
-			"docker":                     repoWebhookSchema(webhookType, version, false),
-			"build":                      buildWebhookSchema(webhookType, version, false),
-			"release_bundle":             releaseBundleWebhookSchema(webhookType, version, false),
-			"distribution":               releaseBundleWebhookSchema(webhookType, version, false),
-			"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, false),
+var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface{} {
+	var webhookCriteria interface{}
+
+	if v, ok := d.GetOk("criteria"); ok {
+		criteria := v.(*schema.Set).List()
+		if len(criteria) == 1 {
+			id := criteria[0].(map[string]interface{})
+
+			baseCriteria := BaseWebhookCriteria{
+				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
+				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
+			}
+
+			webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
 		}
 	}
 
-	var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-		"artifact":                   packRepoCriteria,
-		"artifact_property":          packRepoCriteria,
-		"docker":                     packRepoCriteria,
-		"build":                      packBuildCriteria,
-		"release_bundle":             packReleaseBundleCriteria,
-		"distribution":               packReleaseBundleCriteria,
-		"artifactory_release_bundle": packReleaseBundleCriteria,
-	}
+	return webhookCriteria
+}
 
-	var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
-		"artifact":                   unpackRepoCriteria,
-		"artifact_property":          unpackRepoCriteria,
-		"docker":                     unpackRepoCriteria,
-		"build":                      unpackBuildCriteria,
-		"release_bundle":             unpackReleaseBundleCriteria,
-		"distribution":               unpackReleaseBundleCriteria,
-		"artifactory_release_bundle": unpackReleaseBundleCriteria,
-	}
+var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map[string]interface{}) []error {
+	setValue := utilsdk.MkLens(d)
+
+	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*schema.Resource)
+	packedCriteria := domainPackLookup[webhookType](criteria)
+
+	packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, criteria["includePatterns"].([]interface{}))
+	packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, criteria["excludePatterns"].([]interface{}))
+
+	return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
+}
+
+var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
+	"artifact":                   repoCriteriaValidation,
+	"artifact_property":          repoCriteriaValidation,
+	"docker":                     repoCriteriaValidation,
+	"build":                      buildCriteriaValidation,
+	"release_bundle":             releaseBundleCriteriaValidation,
+	"distribution":               releaseBundleCriteriaValidation,
+	"artifactory_release_bundle": releaseBundleCriteriaValidation,
+}
+
+func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
-
-		var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface{} {
-			var webhookCriteria interface{}
-
-			if v, ok := d.GetOk("criteria"); ok {
-				criteria := v.(*schema.Set).List()
-				if len(criteria) == 1 {
-					id := criteria[0].(map[string]interface{})
-
-					baseCriteria := BaseWebhookCriteria{
-						IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
-						ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
-					}
-
-					webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
-				}
-			}
-
-			return webhookCriteria
-		}
 
 		var unpackHandlers = func(d *utilsdk.ResourceData) []Handler {
 			var webhookHandlers []Handler
@@ -201,21 +223,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return webhook, nil
 	}
 
-	var packCriteria = func(d *schema.ResourceData, criteria map[string]interface{}) []error {
-		setValue := utilsdk.MkLens(d)
-
-		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["criteria"].Elem.(*schema.Resource)
-		packedCriteria := domainPackLookup[webhookType](criteria)
-
-		packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, criteria["includePatterns"].([]interface{}))
-		packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, criteria["excludePatterns"].([]interface{}))
-
-		return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
-	}
-
 	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
 		setValue := utilsdk.MkLens(d)
-		resource := domainSchemaLookup(currentSchemaVersion)[webhookType]["handler"].Elem.(*schema.Resource)
+		resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["handler"].Elem.(*schema.Resource)
 		packedHandlers := make([]interface{}, len(handlers))
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
@@ -239,7 +249,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		errors = append(errors, setValue("description", webhook.Description)...)
 		errors = append(errors, setValue("enabled", webhook.Enabled)...)
 		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
-		errors = append(errors, packCriteria(d, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
@@ -332,16 +342,6 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-		"artifact":                   repoCriteriaValidation,
-		"artifact_property":          repoCriteriaValidation,
-		"docker":                     repoCriteriaValidation,
-		"build":                      buildCriteriaValidation,
-		"release_bundle":             releaseBundleCriteriaValidation,
-		"distribution":               releaseBundleCriteriaValidation,
-		"artifactory_release_bundle": releaseBundleCriteriaValidation,
-	}
-
 	var eventTypesDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "eventTypesDiff")
 
@@ -373,7 +373,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	// Previous version of the schema
 	// see example in https://www.terraform.io/plugin/sdkv2/resources/state-migration#terraform-v0-12-sdk-state-migrations
 	resourceSchemaV1 := &schema.Resource{
-		Schema: domainSchemaLookup(1)[webhookType],
+		Schema: domainSchemaLookup(1, false, webhookType)[webhookType],
 	}
 
 	return &schema.Resource{
@@ -387,7 +387,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: domainSchemaLookup(currentSchemaVersion)[webhookType],
+		Schema: domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType],
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceSchemaV1.CoreConfigSchema().ImpliedType(),
