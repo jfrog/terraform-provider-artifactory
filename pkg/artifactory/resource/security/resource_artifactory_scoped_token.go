@@ -207,7 +207,6 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Also create a reference token which can be used like an API key. Default is `false`.",
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplaceIfConfigured(),
 					boolplanmodifier.UseStateForUnknown(),
@@ -502,6 +501,7 @@ func (r *ScopedTokenResourceModel) PostResponseToState(ctx context.Context,
 		r.ReferenceToken = types.StringValue(accessTokenResp.ReferenceToken)
 	}
 
+	r.IncludeReferenceToken = types.BoolValue(accessTokenPostBody.IncludeReferenceToken)
 	r.TokenType = types.StringValue(accessTokenResp.TokenType)
 	r.Subject = types.StringValue(getResult.Subject)
 	r.Expiry = types.Int64Value(getResult.Expiry) // could be absent in the get response!

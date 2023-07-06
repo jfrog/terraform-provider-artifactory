@@ -1,3 +1,11 @@
+## 8.3.1 (July 5, 2023). Tested on Artifactory 7.59.12 with Terraform CLI v1.5.2
+
+BUG FIX:
+* resource/artifactory_scoped_token: default value `false` is removed from `include_reference_token` attribute to avoid state drift, when the provider updating from version below 7.7.0 to the latest. 
+
+PR: [#763](https://github.com/jfrog/terraform-provider-artifactory/pull/763)
+Issues:[#758](https://github.com/jfrog/terraform-provider-artifactory/issues/758), [#761](https://github.com/jfrog/terraform-provider-artifactory/issues/761)
+
 ## 8.3.0 (July 5, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.2
 
 IMPROVEMENTS:

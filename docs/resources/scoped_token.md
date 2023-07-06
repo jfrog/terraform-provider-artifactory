@@ -77,7 +77,7 @@ resource "artifactory_scoped_token" "audience" {
 - `description` (String) Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.
 - `expires_in` (Number) The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/using-the-revocable-and-persistency-thresholds) for details.
 - `grant_type` (String) The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.
-- `include_reference_token` (Boolean) Also create a reference token which can be used like an API key. Default is `false`.
+- `include_reference_token` (Boolean) Also create a reference token which can be used like an API key.
 - `refreshable` (Boolean) Is this token refreshable? Default is `false`.
 - `scopes` (Set of String) The scope of access that the token provides. Access to the REST API is always provided by default. Administrators can set any scope, while non-admin users can only set the scope to a subset of the groups to which they belong.
   The supported scopes include:
