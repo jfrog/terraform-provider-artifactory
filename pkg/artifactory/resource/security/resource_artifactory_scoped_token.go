@@ -207,7 +207,6 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Also create a reference token which can be used like an API key. Default is `false`.",
 				Optional:            true,
 				Computed:            true,
-				//Default:             booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplaceIfConfigured(),
 					boolplanmodifier.UseStateForUnknown(),
