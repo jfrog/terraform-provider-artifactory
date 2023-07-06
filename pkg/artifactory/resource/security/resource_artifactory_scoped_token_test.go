@@ -16,9 +16,10 @@ import (
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
+	// Version 7.11.1 is the last version before we migrated the resource from SDKv2 to Plugin Framework
 	version := "7.11.1"
 	title := fmt.Sprintf(
-		"TestScopedToken_v%s",
+		"TestScopedToken_upgrade_from_v%s",
 		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
 	)
 	t.Run(title, func(t *testing.T) {
@@ -27,9 +28,11 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 }
 
 func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
+	// Version 7.2.0 doesn't have `include_reference_token` attribute
+	// This test verifies that there is no state drift on update
 	version := "7.2.0"
 	title := fmt.Sprintf(
-		"TestScopedToken_v%s",
+		"TestScopedToken_upgrade_from_v%s",
 		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
 	)
 	t.Run(title, func(t *testing.T) {
