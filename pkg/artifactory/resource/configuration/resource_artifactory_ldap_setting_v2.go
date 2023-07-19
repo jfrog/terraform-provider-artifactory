@@ -239,7 +239,7 @@ func (r *ArtifactoryLdapSettingResource) Create(ctx context.Context, req resourc
 	}
 
 	// Convert from Terraform data model into API data model
-	ldapSearch := &LdapSearchAPIModel{
+	ldapSearch := LdapSearchAPIModel{
 		SearchFilter:  data.SearchFilter.ValueString(),
 		SearchBase:    data.SearchBase.ValueString(),
 		SearchSubTree: data.SearchSubTree.ValueBool(),
@@ -248,12 +248,12 @@ func (r *ArtifactoryLdapSettingResource) Create(ctx context.Context, req resourc
 	if !data.ManagerPassword.IsNull() {
 		ldapSearch.ManagerPassword = data.ManagerPassword.ValueString()
 	}
-	ldap := &ArtifactoryLdapSettingResourceAPIModel{
+	ldap := ArtifactoryLdapSettingResourceAPIModel{
 		Key:                      data.Key.ValueString(),
 		Enabled:                  data.Enabled.ValueBool(),
 		LdapUrl:                  data.LdapUrl.ValueString(),
 		UserDnPattern:            data.UserDnPattern.ValueString(),
-		Search:                   *ldapSearch,
+		Search:                   ldapSearch,
 		AutoCreateUser:           data.AutoCreateUser.ValueBool(),
 		EmailAttribute:           data.EmailAttribute.ValueString(),
 		LdapPoisoningProtection:  data.LdapPoisoningProtection.ValueBool(),
