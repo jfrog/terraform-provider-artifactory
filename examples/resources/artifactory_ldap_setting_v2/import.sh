@@ -1,0 +1,1 @@
+terraform import artifactory_ldap_setting_v2.ldap ldap1
