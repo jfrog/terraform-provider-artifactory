@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
@@ -170,6 +171,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		security.NewGroupResource,
 		security.NewScopedTokenResource,
 		security.NewPermissionTargetResource,
+		configuration.NewLdapSettingResource,
 	}
 }
 
