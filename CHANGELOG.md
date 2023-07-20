@@ -1,3 +1,13 @@
+## 8.4.0 (July 21, 2023). 
+
+IMPROVEMENTS:
+* resource/artifactory_ldap_setting_v2 and artifactory_ldap_group_setting_v2 were added to replace `artifactory_ldap_setting` and `artifactory_ldap_group_setting`. The new resources uses a new API access endpoint, introduced in Artifactory 7.57.1 and will work on both self-hosted and SaaS versions starting from 7.57.1 and above. 
+ Older resources will still work on self-hosted Artifactory versions below 7.57.1.
+ [LDAP](https://jfrog.com/help/r/jfrog-rest-apis/ldap-setting?page=40) and [LDAP group](https://jfrog.com/help/r/jfrog-rest-apis/ldap-group-setting) API documentation. 
+
+PR:[#769](https://github.com/jfrog/terraform-provider-artifactory/pull/769)
+Issues:[#768](https://github.com/jfrog/terraform-provider-artifactory/issues/768), [#749](https://github.com/jfrog/terraform-provider-artifactory/issues/749)
+
 ## 8.3.1 (July 5, 2023). Tested on Artifactory 7.59.12 with Terraform CLI v1.5.2
 
 BUG FIX:
