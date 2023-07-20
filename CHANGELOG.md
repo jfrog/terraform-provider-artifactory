@@ -5,7 +5,7 @@ IMPROVEMENTS:
  Older resources will still work on self-hosted Artifactory versions below 7.57.1.
  [LDAP](https://jfrog.com/help/r/jfrog-rest-apis/ldap-setting?page=40) and [LDAP group](https://jfrog.com/help/r/jfrog-rest-apis/ldap-group-setting) API documentation. 
 
-PR:[#769](https://github.com/jfrog/terraform-provider-artifactory/pull/769)
+PR:[#769](https://github.com/jfrog/terraform-provider-artifactory/pull/769), [#770](https://github.com/jfrog/terraform-provider-artifactory/pull/770)
 Issues:[#768](https://github.com/jfrog/terraform-provider-artifactory/issues/768), [#749](https://github.com/jfrog/terraform-provider-artifactory/issues/749)
 
 ## 8.3.1 (July 5, 2023). Tested on Artifactory 7.59.12 with Terraform CLI v1.5.2
