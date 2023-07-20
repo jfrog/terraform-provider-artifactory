@@ -130,7 +130,7 @@ type SecretName struct {
 	Name string `json:"name"`
 }
 
-var packSecrets = func(keyValuePairs []KeyValuePair, d *schema.ResourceData, url string) map[string]interface{} {
+var packSecretsCustom = func(keyValuePairs []KeyValuePair, d *schema.ResourceData, url string) map[string]interface{} {
 	KVPairs := make(map[string]interface{})
 	// Get secrets from TF state
 	var secrets map[string]interface{}
@@ -207,7 +207,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
 				"url":          handler.Url,
-				"secrets":      packSecrets(handler.Secrets, d, handler.Url),
+				"secrets":      packSecretsCustom(handler.Secrets, d, handler.Url),
 				"proxy":        handler.Proxy,
 				"http_headers": packKeyValuePair(handler.HttpHeaders),
 				"payload":      handler.Payload,
