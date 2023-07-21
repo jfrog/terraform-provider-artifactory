@@ -320,7 +320,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				}
 			}
 			handler {
-				url                 = "https://tempurl.org"
+				url                 = "https://tempurl.com"
 				secret              = "fake-secret-2"
 				custom_http_headers = {
 					header-3 = "value-3"
@@ -349,7 +349,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://tempurl.com"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", "fake-secret-2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-3", "value-3"),
@@ -372,10 +372,11 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				Check:  resource.ComposeTestCheckFunc(testChecks...),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"handler.0.secret", "handler.1.secret"},
 			},
 		},
 	}

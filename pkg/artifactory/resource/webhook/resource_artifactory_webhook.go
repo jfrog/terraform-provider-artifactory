@@ -178,6 +178,23 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	"artifactory_release_bundle": releaseBundleCriteriaValidation,
 }
 
+var packSecret = func(d *schema.ResourceData, url string) string {
+	// Get secret from TF state
+	var secret string
+	if v, ok := d.GetOk("handler"); ok {
+		handlers := v.(*schema.Set).List()
+		for _, handler := range handlers {
+			h := handler.(map[string]interface{})
+			// if urls match, assign the secret value from the state
+			if h["url"] == url {
+				secret = h["secret"].(string)
+			}
+		}
+	}
+
+	return secret
+}
+
 func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
@@ -226,11 +243,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
 		setValue := utilsdk.MkLens(d)
 		resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["handler"].Elem.(*schema.Resource)
-		packedHandlers := make([]interface{}, len(handlers))
+		var packedHandlers []interface{}
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
 				"url":                 handler.Url,
-				"secret":              handler.Secret,
+				"secret":              packSecret(d, handler.Url),
 				"proxy":               handler.Proxy,
 				"custom_http_headers": packKeyValuePair(handler.CustomHttpHeaders),
 			}
