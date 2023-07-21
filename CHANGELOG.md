@@ -1,4 +1,4 @@
-## 8.4.0 (July 21, 2023). 
+## 8.4.0 (July 21, 2023). Tested on Artifactory 7.63.5 with Terraform CLI v1.5.3
 
 IMPROVEMENTS:
 * resource/artifactory_ldap_setting_v2 and resource/artifactory_ldap_group_setting_v2 were added to replace `artifactory_ldap_setting` and `artifactory_ldap_group_setting`. The new resources uses a new API access endpoint, introduced in Artifactory 7.57.1 and will work on both self-hosted and SaaS versions starting from 7.57.1 and above. 
