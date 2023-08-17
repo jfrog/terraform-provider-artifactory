@@ -358,13 +358,13 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Post("access/api/v1/tokens")
 
 	if err != nil {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusOK {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
@@ -377,7 +377,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Get("access/api/v1/tokens/{id}")
 
 	if err != nil {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
@@ -407,20 +407,18 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 		SetResult(&accessToken).
 		Get("access/api/v1/tokens/{id}")
 
-	if err != nil {
-		unableToRefreshResourceError(resp, err)
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
-			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
-		)
-		resp.State.RemoveResource(ctx)
-
+	if err != nil {
+		if response.StatusCode() == http.StatusNotFound {
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
+				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 

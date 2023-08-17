@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/net/context"
 )
@@ -82,22 +83,14 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 
 	response, err := r.client.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Refresh Resource",
-			"An unexpected error occurred while attempting to refresh resource state. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-
+	if err != nil {
+		if response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 

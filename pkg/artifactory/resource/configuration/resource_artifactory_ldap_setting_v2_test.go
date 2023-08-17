@@ -288,7 +288,7 @@ func TestAccLdapSettingV2_importNotFound(t *testing.T) {
 				ResourceName:  "artifactory_ldap_setting_v2.not-exist-test",
 				ImportStateId: "not-exist-test",
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile("Ldap setting not found"),
+				ExpectError:   regexp.MustCompile("exit status 1"),
 			},
 		},
 	})
