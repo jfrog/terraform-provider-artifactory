@@ -240,7 +240,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+		if response.StatusCode() == http.StatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
 		}

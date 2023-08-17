@@ -410,7 +410,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+		if response.StatusCode() == http.StatusNotFound {
 			resp.Diagnostics.AddWarning(
 				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
 				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
