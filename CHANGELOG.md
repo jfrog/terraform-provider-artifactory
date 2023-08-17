@@ -3,7 +3,7 @@
 BUG FIX:
 * resource/artifactory_group, resource/artifactory_permission_target, resource/artifactory_scoped_token, resource/artifactory_ldap_setting_v2, resource/artifactory_ldap_group_setting_v2, resource/artifactory_*_user: fixed handling of HTTP response 404. When the resource was removed outside of Terraform configuration, it will be recreated without error out on 404. 
 
-PR: [#]()
+PR: [#781](https://github.com/jfrog/terraform-provider-artifactory/pull/781)
 Issues: [#776](https://github.com/jfrog/terraform-provider-artifactory/issues/776), [#775](https://github.com/jfrog/terraform-provider-artifactory/issues/775), [#772](https://github.com/jfrog/terraform-provider-artifactory/issues/772)
 
 ## 8.4.0 (July 21, 2023). Tested on Artifactory 7.63.5 with Terraform CLI v1.5.3
