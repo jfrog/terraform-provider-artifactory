@@ -187,25 +187,13 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	response, err := r.client.Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Resource",
-			"An unexpected error occurred while attempting to create the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusCreated {
-		resp.Diagnostics.AddError(
-			"Unable to Create Resource",
-			"An unexpected error occurred while attempting to create the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Status: "+response.Status(),
-		)
-
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
@@ -217,13 +205,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Groups = &[]string{}
 		_, errGroupUpdate := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Create Resource",
-				"An unexpected error occurred while attempting to create the resource. "+
-					"Please retry the operation or report this issue to the provider developers.\n\n"+
-					"HTTP Status: "+response.Status(),
-			)
-
+			utilfw.UnableToCreateResourceError(resp, response.String())
 			return
 		}
 
@@ -255,22 +237,14 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 
 	response, err := r.client.Client.R().SetResult(&user).Get(UsersEndpointPath + state.Id.ValueString())
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Refresh Resource",
-			"An unexpected error occurred while attempting to refresh resource state. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-
+	if err != nil {
+		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 
@@ -312,36 +286,13 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 	response, err := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Update Resource",
-			"An unexpected error occurred while creating the resource update request. "+
-				"Please report this issue to the provider developers.\n\n"+
-				"JSON Error: "+err.Error(),
-		)
-
-		return
-	}
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Update Resource",
-			"An unexpected error occurred while attempting to update the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		utilfw.UnableToUpdateResourceError(resp, response.String())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(
-			"Unable to Update Resource",
-			"An unexpected error occurred while attempting to update the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Status: "+response.Status(),
-		)
-
+		utilfw.UnableToUpdateResourceError(resp, response.String())
 		return
 	}
 
@@ -360,25 +311,13 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	response, err := r.client.Client.R().Delete(UsersEndpointPath + state.Id.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
+		utilfw.UnableToDeleteResourceError(resp, response.String())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(
-			"Unable to Delete Resource",
-			"An unexpected error occurred while attempting to delete the resource. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Status: "+response.Status(),
-		)
-
+		utilfw.UnableToDeleteResourceError(resp, response.String())
 		return
 	}
 
