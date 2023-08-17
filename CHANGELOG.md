@@ -1,4 +1,4 @@
-## 8.4.1 (July 17, 2023).
+## 8.4.1 (July 17, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
 
 BUG FIX:
 * resource/artifactory_group, resource/artifactory_permission_target, resource/artifactory_scoped_token, resource/artifactory_ldap_setting_v2, resource/artifactory_ldap_group_setting_v2, resource/artifactory_*_user: fixed handling of HTTP response 404. When the resource was removed outside of Terraform configuration, it will be recreated without error out on 404. 
