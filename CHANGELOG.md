@@ -1,3 +1,10 @@
+## 8.4.2 (August 22, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+IMPROVEMENTS:
+* resource/artifactory_access_token: Add missing deprecation message to documentation. The message has been part of the provider since [6.8.0](https://github.com/jfrog/terraform-provider-artifactory/releases/tag/v6.8.0) but was missing from the documentation on Terraform registry.
+
+PR: [#783](https://github.com/jfrog/terraform-provider-artifactory/pull/783)
+
 ## 8.4.1 (July 17, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
 
 BUG FIX:

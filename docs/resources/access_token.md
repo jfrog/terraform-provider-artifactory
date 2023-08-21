@@ -3,11 +3,12 @@ subcategory: "Security"
 ---
 # Artifactory Access Token Resource
 
+!> **Warning:** This resource is being deprecated and replaced by `artifactory_scoped_token` since [v6.8.0](https://github.com/jfrog/terraform-provider-artifactory/releases/tag/v6.8.0).
+
 Provides an Artifactory Access Token resource. This can be used to create and manage Artifactory Access Tokens.
 
 ~> **Note:** Access Tokens will be stored in the raw state as plain-text. [Read more about sensitive data in
 state](https://www.terraform.io/docs/state/sensitive-data.html).
-
 
 ## Example Usages
 ### Create a new Artifactory Access Token for an existing user
