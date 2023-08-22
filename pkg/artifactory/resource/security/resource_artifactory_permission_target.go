@@ -55,11 +55,13 @@ func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, r
 		Users:  map[string][]string{},
 		Groups: map[string][]string{},
 	}
-	actionsElm := resourceActions.Elements()[0].(types.Object)
-	actionsAttrs := actionsElm.Attributes()
 
-	setToMap(actionsAttrs["users"].(types.Set), &actions.Users)
-	setToMap(actionsAttrs["groups"].(types.Set), &actions.Groups)
+	if len(resourceActions.Elements()) > 0 {
+		actionsElm := resourceActions.Elements()[0].(types.Object)
+		actionsAttrs := actionsElm.Attributes()
+		setToMap(actionsAttrs["users"].(types.Set), &actions.Users)
+		setToMap(actionsAttrs["groups"].(types.Set), &actions.Groups)
+	}
 
 	return actions
 }
