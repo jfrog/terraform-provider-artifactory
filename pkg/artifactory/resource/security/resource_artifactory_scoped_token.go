@@ -42,6 +42,7 @@ type ScopedTokenResourceModel struct {
 	Id                    types.String `tfsdk:"id"`
 	GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
+	ProjectKey            types.String `tfsdk:"project_key"`
 	Scopes                types.Set    `tfsdk:"scopes"`
 	ExpiresIn             types.Int64  `tfsdk:"expires_in"`
 	Refreshable           types.Bool   `tfsdk:"refreshable"`
@@ -77,6 +78,7 @@ type AccessTokenErrorResponseAPIModel struct {
 type AccessTokenPostRequestAPIModel struct {
 	GrantType             string `json:"grant_type"`
 	Username              string `json:"username,omitempty"`
+	ProjectKey            string `json:"project_key"`
 	Scope                 string `json:"scope,omitempty"`
 	ExpiresIn             int64  `json:"expires_in"`
 	Refreshable           bool   `json:"refreshable"`
@@ -130,6 +132,16 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
 				Validators:    []validator.String{stringvalidator.LengthBetween(1, 255)},
+			},
+			"project_key": schema.StringAttribute{
+				MarkdownDescription: "The project for which this token is created. Enter the project name on which you want to apply this token.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
+						"must be 2 - 32 lowercase alphanumeric and hyphen characters",
+					),
+				},
 			},
 			"scopes": schema.SetAttribute{
 				MarkdownDescription: "The scope of access that the token provides. Access to the REST API is always " +
@@ -342,6 +354,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 	accessTokenPostBody := AccessTokenPostRequestAPIModel{
 		GrantType:             data.GrantType.ValueString(),
 		Username:              data.Username.ValueString(),
+		ProjectKey:            data.ProjectKey.ValueString(),
 		Scope:                 scopesString,
 		ExpiresIn:             data.ExpiresIn.ValueInt64(),
 		Refreshable:           data.Refreshable.ValueBool(),
