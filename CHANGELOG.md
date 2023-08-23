@@ -1,7 +1,8 @@
 ## 8.4.3. (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
 
 IMPROVEMENTS: 
-* resource/artifactory_permission_target: added 0 length check for `actions` block. Upgraded Terraform Plugin Framework to 1.3.5. 
+* resource/artifactory_permission_target: added 0 length check for `actions` block. 
+* Upgraded Terraform Plugin Framework to 1.3.5. 
 
 PR: [#785](https://github.com/jfrog/terraform-provider-artifactory/pull/785)
 Issues: [#782](https://github.com/jfrog/terraform-provider-artifactory/issues/782)
