@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
@@ -158,6 +159,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+	projectKey := fmt.Sprintf("test-project-%d", testutil.RandomInt())
 
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -172,6 +174,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.test-user.name
+			project_key = "{{ .projectKey }}"
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -179,18 +182,27 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			audiences   = ["jfrt@1", "jfxr@*"]
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":       name,
+			"projectKey": projectKey,
 		},
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.CreateProject(t, projectKey)
+		},
 		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			acctest.DeleteProject(t, projectKey)
+			return security.CheckAccessToken(id, request)
+		}),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),

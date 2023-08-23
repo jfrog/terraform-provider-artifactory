@@ -1,3 +1,10 @@
+## 8.5.0 (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+IMPROVEMENTS:
+* resource/artifactory_scoped_token: Add `project_key` attribute to support creating token for a project.
+
+PR: [#787](https://github.com/jfrog/terraform-provider-artifactory/pull/787)
+
 ## 8.4.3. (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
 
 IMPROVEMENTS: 
