@@ -147,6 +147,59 @@ const permissionFull = `
 	}
 `
 
+const testLength = `
+	// we can't auto create the repo because of race conditions'
+	resource "artifactory_local_docker_v2_repository" "{{ .repo_name }}" {
+		key = "{{ .repo_name }}"
+	}
+
+	resource "artifactory_permission_target" "{{ .permission_name }}" {
+	  name = "{{ .permission_name }}"
+
+	  repo {
+		includes_pattern = ["foo/**"]
+		repositories     = ["{{ .repo_name }}"]
+
+		actions {
+		}
+	  }
+	  depends_on = [artifactory_local_docker_v2_repository.{{ .repo_name }}]
+	}
+`
+
+func TestAccPermissionTarget_emptyActions(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
+	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
+
+	tempStruct := map[string]string{
+		"repo_name":       repoName,
+		"permission_name": permName,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: utilsdk.ExecuteTemplate(permFqrn, testLength, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(permFqrn, "name", permName),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "0"),
+				),
+			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
+			},
+		},
+	})
+}
+
 func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
 	rand.Seed(time.Now().UnixNano())
