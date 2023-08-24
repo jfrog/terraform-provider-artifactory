@@ -229,6 +229,7 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"username":                       "admin",
 		"password":                       "password1",
 		"xray_index":                     "false",
+		"disable_url_normalization":      "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -244,6 +245,7 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"username":                       "admin1",
 		"password":                       "password",
 		"xray_index":                     "true",
+		"disable_url_normalization":      "true",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -286,9 +288,10 @@ resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
   property_sets                  = [
     "artifactory",
   ]
-  username                       = "{{ .username }}"
-  password                       = "{{ .password }}"
-  xray_index 					 = {{ .xray_index }}
+  username                  = "{{ .username }}"
+  password                  = "{{ .password }}"
+  xray_index                = {{ .xray_index }}
+  disable_url_normalization = {{ .disable_url_normalization }}
 }
 `
 
@@ -305,6 +308,7 @@ func verifyRepository(fqrn string, testData map[string]string) resource.TestChec
 		resource.TestCheckResourceAttr(fqrn, "proxy", testData["proxy"]),
 		resource.TestCheckResourceAttr(fqrn, "username", testData["username"]),
 		resource.TestCheckResourceAttr(fqrn, "xray_index", testData["xray_index"]),
+		resource.TestCheckResourceAttr(fqrn, "disable_url_normalization", testData["disable_url_normalization"]),
 	)
 }
 
