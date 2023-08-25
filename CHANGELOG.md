@@ -1,3 +1,11 @@
+## 8.6.0 (August 25, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.6
+
+IMPROVEMENTS:
+* resource/artifactory_remote_docker_repository: Add `disable_url_normalization` attribute to support disabling URL normalization.
+
+PR: [#788](https://github.com/jfrog/terraform-provider-artifactory/pull/788)
+Issue: [#784](https://github.com/jfrog/terraform-provider-artifactory/issues/784)
+
 ## 8.5.0 (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
 
 IMPROVEMENTS:

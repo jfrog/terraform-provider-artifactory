@@ -79,7 +79,11 @@ provider "artifactory" {
 ```
 
 ### JFrog API Key Header
+
+!> **Warning** An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API Key Deprecation Process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process).
+
 Artifactory API keys may be used via the `X-JFrog-Art-Api` header by providing the `api_key` field in the provider block.
+
 Getting this value from the environment is supported with the `ARTIFACTORY_API_KEY` variable.
 
 Usage:
@@ -97,6 +101,6 @@ The following arguments are supported:
 
 * `url` - (Optional) URL of Artifactory. This can also be sourced from the `ARTIFACTORY_URL` environment variable.
 * `access_token` - (Optional) This can also be sourced from `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variables.
-* `api_key` - (Optional) API key for api auth. Uses `X-JFrog-Art-Api` header.
+* `api_key` - (Optional, deprecated) API key for api auth. Uses `X-JFrog-Art-Api` header.
   Conflicts with `access_token`. This can also be sourced from the `ARTIFACTORY_API_KEY` environment variable.
 * `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.
