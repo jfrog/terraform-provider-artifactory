@@ -1,4 +1,4 @@
-## 8.8.0 (Sep 5, 2023)
+## 8.8.0 (Sep 5, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
 
 IMPROVEMENTS:
 * resource/artifactory_user, resource/artifactory_unmanaged_user, resource/artifactory_managed_user: Add validation to `name` attribute to match JFrog platform behavior. PR: [#794](https://github.com/jfrog/terraform-provider-artifactory/pull/794) Issue: [#790](https://github.com/jfrog/terraform-provider-artifactory/issues/790)
