@@ -16,12 +16,18 @@ var HelmRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 		BaseRemoteRepoSchema(isResource),
 		map[string]*schema.Schema{
 			"helm_charts_base_url": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.Any(
+						validation.IsURLWithScheme([]string{"http", "https", "oci"}),
+						validation.StringIsEmpty,
+					),
+				),
 				Description: "Base URL for the translation of chart source URLs in the index.yaml of virtual repos. " +
-					"Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url.",
+					"Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url. " +
+					"Support http/https/oci protocol scheme.",
 			},
 			"external_dependencies_enabled": {
 				Type:        schema.TypeBool,

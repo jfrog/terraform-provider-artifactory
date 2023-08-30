@@ -369,20 +369,30 @@ func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 }
 
 func TestAccRemoteHelmRepository(t *testing.T) {
-	const packageType = "helm"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"external_dependencies_enabled":  true,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**github.com**"},
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	}))
+	testCase := []string{"http", "https", "oci"}
+
+	for _, tc := range testCase {
+		t.Run(tc, testAccRemoteHelmRepository(t, tc))
+	}
+}
+
+func testAccRemoteHelmRepository(t *testing.T, scheme string) func(t *testing.T) {
+	return func(t *testing.T) {
+		const packageType = "helm"
+		resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+			"helm_charts_base_url":           fmt.Sprintf("%s://github.com/rust-lang/foo.index", scheme),
+			"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+			"external_dependencies_enabled":  true,
+			"priority_resolution":            false,
+			"external_dependencies_patterns": []interface{}{"**github.com**"},
+			"content_synchronisation": map[string]interface{}{
+				"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+				"statistics_enabled":              true,
+				"properties_enabled":              true,
+				"source_origin_absence_detection": true,
+			},
+		}))
+	}
 }
 
 func TestAccRemoteHelmRepositoryDepFalse(t *testing.T) {
