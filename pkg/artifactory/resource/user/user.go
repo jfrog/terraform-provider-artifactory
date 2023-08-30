@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -29,11 +30,19 @@ type User struct {
 
 var baseUserSchema = map[string]*schema.Schema{
 	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "Username for user.",
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		ValidateDiagFunc: validation.ToDiagFunc(
+			validation.All(
+				validation.StringIsNotEmpty,
+				validation.StringMatch(
+					regexp.MustCompile(`^[a-z0-9.\-_\@]+$`),
+					"may contain lowercase letters, numbers and symbols: '.-_@'",
+				),
+			),
+		),
+		Description: "Username for user. May contain lowercase letters, numbers and symbols: '.-_@'",
 	},
 	"email": {
 		Type:             schema.TypeString,

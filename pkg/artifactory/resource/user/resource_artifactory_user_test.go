@@ -3,6 +3,7 @@ package user_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -230,10 +231,50 @@ func TestAccUser_empty_groups(t *testing.T) {
 	})
 }
 
+func TestAccUser_invalidName(t *testing.T) {
+	testCase := []struct {
+		name       string
+		username   string
+		errorRegex string
+	}{
+		{"Empty", "", `.*Invalid Attribute Value Length.*`},
+		{"Uppercase", "test_user_Uppercase", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+		{"Symbols", "test_user_!", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccUserInvalidName(t, tc.username, tc.errorRegex))
+	}
+}
+
+func testAccUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		const userNoGroups = `
+			resource "artifactory_user" "%s" {
+				name  = "%s"
+				email = "dummy%d@a.com"
+			}
+		`
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_user")
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(userNoGroups, name, username, id),
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
 func TestAccUser_all_attributes(t *testing.T) {
 	const userFull = `
 		resource "artifactory_user" "%s" {
-			name        				= "dummy_user%d"
+			name        				= "%s"
 			email       				= "dummy%d@a.com"
 			password					= "Passw0rd!"
 			admin    					= true
@@ -245,7 +286,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 	`
 	const userUpdated = `
 		resource "artifactory_user" "%s" {
-			name        				= "dummy_user%d"
+			name        				= "%s"
 			email       				= "dummy%d@a.com"
 			password					= "Passw0rd!"
 			admin    					= false
@@ -255,14 +296,15 @@ func TestAccUser_all_attributes(t *testing.T) {
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
-	username := fmt.Sprintf("dummy_user%d", id)
+	username := fmt.Sprintf("dummy_user-@%d.", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, id, id),
+				Config: fmt.Sprintf(userFull, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
@@ -274,7 +316,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(userUpdated, name, id, id),
+				Config: fmt.Sprintf(userUpdated, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
