@@ -1,3 +1,8 @@
+## 8.7.0 (August 30, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
+
+IMPROVEMENTS:
+* resource/artifactory_remote_helm_repository: Add support of `oci` scheme to `helm_charts_base_url` attribute. PR: [#793](https://github.com/jfrog/terraform-provider-artifactory/pull/793)
+
 ## 8.6.0 (August 25, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.6
 
 IMPROVEMENTS:
