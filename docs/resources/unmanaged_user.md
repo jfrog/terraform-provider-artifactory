@@ -27,7 +27,7 @@ resource "artifactory_unmanaged_user" "test-user" {
 
 The following arguments are supported:
 
-* `name` - (Required) Username for user.
+* `name` - (Required) Username for user. May contain lowercase letters, numbers and symbols: '.-_@'
 * `email` - (Required) Email for user.
 * `password` - (Optional) Password for the user. When omitted, a random password is generated using the following password policy: 12 characters with 1 digit, 1 symbol, with upper and lower case letters.
 * `admin` - (Optional) When enabled, this user is an administrator with all the ensuing privileges. Default value is `false`.

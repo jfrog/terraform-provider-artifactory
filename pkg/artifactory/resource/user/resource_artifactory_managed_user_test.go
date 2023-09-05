@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -132,6 +133,46 @@ func TestAccManagedUser_empty_groups(t *testing.T) {
 	})
 }
 
+func TestAccManagedUser_invalidName(t *testing.T) {
+	testCase := []struct {
+		name       string
+		username   string
+		errorRegex string
+	}{
+		{"Empty", "", `.*Invalid Attribute Value Length.*`},
+		{"Uppercase", "test_user_Uppercase", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+		{"Symbols", "test_user_!", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccManagedUserInvalidName(t, tc.username, tc.errorRegex))
+	}
+}
+
+func testAccManagedUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		const userNoGroups = `
+			resource "artifactory_managed_user" "%s" {
+				name  = "%s"
+				email = "dummy%d@a.com"
+			}
+		`
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_managed_user")
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(userNoGroups, name, username, id),
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
 func TestAccManagedUser_basic(t *testing.T) {
 	const userFull = `
 		resource "artifactory_managed_user" "%s" {
@@ -154,8 +195,9 @@ func TestAccManagedUser_basic(t *testing.T) {
 			groups      		= [ "readers" ]
 		}
 	`
-	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
-	username := fmt.Sprintf("dummy_user%d", id)
+	id, fqrn, name := testutil.MkNames("test-", "artifactory_managed_user")
+	username := fmt.Sprintf("dummy_user-@%d.", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){

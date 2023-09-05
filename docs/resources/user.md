@@ -34,7 +34,7 @@ resource "artifactory_user" "test-user" {
 ### Required
 
 - `email` (String) Email for user.
-- `name` (String) Username for user.
+- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: '.-_@'
 
 ### Optional
 

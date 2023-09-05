@@ -23,7 +23,9 @@ package user
 import (
 	"context"
 	"net/http"
+	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -34,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -78,8 +81,15 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		},
 	},
 	"name": schema.StringAttribute{
-		MarkdownDescription: "Username for user.",
+		MarkdownDescription: "Username for user. May contain lowercase letters, numbers and symbols: '.-_@'",
 		Required:            true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+			stringvalidator.RegexMatches(
+				regexp.MustCompile(`^[a-z0-9.\-_\@]+$`),
+				"may contain lowercase letters, numbers and symbols: '.-_@'",
+			),
+		},
 	},
 	"email": schema.StringAttribute{
 		MarkdownDescription: "Email for user.",

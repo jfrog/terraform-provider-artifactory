@@ -3,6 +3,7 @@ package user_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
+func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
@@ -80,7 +81,7 @@ func TestAccUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	})
 }
 
-func TestAccUser_basic(t *testing.T) {
+func TestAccUnmanagedUser_basic(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
@@ -117,7 +118,7 @@ func TestAccUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
+func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 	const userBasic = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
@@ -153,10 +154,10 @@ func TestAccUserShouldCreateWithoutPassword(t *testing.T) {
 	})
 }
 
-func TestAccUser_full(t *testing.T) {
+func TestAccUnmanagedUser_full(t *testing.T) {
 	const userFull = `
 		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passw0rd!"
 			admin    			= true
@@ -167,7 +168,7 @@ func TestAccUser_full(t *testing.T) {
 	`
 	const userNonAdminNoProfUpd = `
 		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "dummy_user%d"
+			name        		= "%s"
 			email       		= "dummy%d@a.com"
 			password			= "Passw0rd!"
 			admin    			= false
@@ -176,14 +177,15 @@ func TestAccUser_full(t *testing.T) {
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
-	username := fmt.Sprintf("dummy_user%d", id)
+	username := fmt.Sprintf("dummy_user-@%d.", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, id, id),
+				Config: fmt.Sprintf(userFull, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
@@ -194,7 +196,7 @@ func TestAccUser_full(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, id, id),
+				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
@@ -213,11 +215,51 @@ func TestAccUser_full(t *testing.T) {
 	})
 }
 
-func TestAccUser_NoGroups(t *testing.T) {
+func TestAccUnmanagedUser_invalidName(t *testing.T) {
+	testCase := []struct {
+		name       string
+		username   string
+		errorRegex string
+	}{
+		{"Empty", "", `.*expected "name" to not be an empty string.*`},
+		{"Uppercase", "test_user_Uppercase", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+		{"Symbols", "test_user_!", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccUnmanagedUserInvalidName(t, tc.username, tc.errorRegex))
+	}
+}
+
+func testAccUnmanagedUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		const userNoGroups = `
+			resource "artifactory_unmanaged_user" "%s" {
+				name  = "%s"
+				email = "dummy%d@a.com"
+			}
+		`
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_unmanaged_user")
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { acctest.PreCheck(t) },
+			ProviderFactories: acctest.ProviderFactories,
+			CheckDestroy:      testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(userNoGroups, name, username, id),
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
+func TestAccUnmanagedUser_NoGroups(t *testing.T) {
 	const userNoGroups = `
 		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
+			name  = "%s"
+			email = "dummy%d@a.com"
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
@@ -245,12 +287,12 @@ func TestAccUser_NoGroups(t *testing.T) {
 	})
 }
 
-func TestAccUser_EmptyGroups(t *testing.T) {
+func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 	const userEmptyGroups = `
 		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
-			groups      		= []
+			name   = "%s"
+			email  = "dummy%d@a.com"
+			groups = []
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
