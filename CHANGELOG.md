@@ -1,4 +1,4 @@
-## 8.8.1 (Sep 7, 2023)
+## 8.8.1 (Sep 7, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
 
 BUG FIX:
 * resource/artifactory_scoped_token: Fix state drift with `description` attribute when upgrading from 7.11.2.
