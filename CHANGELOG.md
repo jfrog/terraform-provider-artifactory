@@ -1,3 +1,10 @@
+## 8.8.1 (Sep 7, 2023)
+
+BUG FIX:
+* resource/artifactory_scoped_token: Fix state drift with `description` attribute when upgrading from 7.11.2.
+
+PR: [#796](https://github.com/jfrog/terraform-provider-artifactory/pull/796) Issue: [#792](https://github.com/jfrog/terraform-provider-artifactory/issues/792)
+
 ## 8.8.0 (Sep 5, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
 
 IMPROVEMENTS:
@@ -629,7 +636,7 @@ BUG FIXES:
 
 IMPROVEMENTS:
 
-* resources/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handled correctly.
+* resource/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handled correctly.
 
 ## 6.19.0 (October 25, 2022). Tested on Artifactory 7.46.10
 
