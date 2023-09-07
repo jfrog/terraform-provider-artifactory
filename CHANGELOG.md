@@ -1,4 +1,4 @@
-## 8.9.0 (Sep 8, 2023)
+## 8.9.0 (Sep 8, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
 
 FEATURES:
 * resource/artifactory_global_environment: add a new resource for managing global environment. PR: [#797](https://github.com/jfrog/terraform-provider-artifactory/pull/797) Issue: [#773](https://github.com/jfrog/terraform-provider-artifactory/issues/773)
