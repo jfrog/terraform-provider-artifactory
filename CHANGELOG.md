@@ -1,4 +1,4 @@
-## 8.9.1 (Sep 11, 2023)
+## 8.9.1 (Sep 11, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
 BUG FIX:
 * resource/artifactory_local_\*\_repository, resource/artifactory_remote_\*\_repository, resource/artifactory_virtual_\*\_repository, resource/artifactory_federated_\*\_repository: fix unable to set `description` and `notes` attributes with empty text.
 
