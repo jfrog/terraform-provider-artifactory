@@ -3,8 +3,8 @@ package remote_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"reflect"
 	"regexp"
 	"testing"
@@ -797,7 +797,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
 func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 	certificateAlias := fmt.Sprintf("certificate-%d", testutil.RandomInt())
 
 	defaultFields := map[string]interface{}{
@@ -807,7 +807,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"password": "Passw0rd!",
 		"proxy":    "",
 
-		//"description":                        "foo", // the server returns this suffixed. Test separate
+		"description":                    "description",
 		"notes":                          "notes",
 		"includes_pattern":               "**/*.js",
 		"excludes_pattern":               "**/*.jsx",
@@ -852,6 +852,15 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
 
+	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
+		"description": "",
+		"notes":       "",
+	})
+	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
+	updatedConfig := fmt.Sprintf(remoteRepoFull, repoType, name, updatedFieldsHcl)
+	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
+	updatedChecks = append(updatedChecks, extraChecks...)
+
 	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
 		deleteTestCertificate(t, certificateAlias, security.CertificateEndpoint)
 		return acctest.CheckRepo(id, request.AddRetryCondition(client.NeverRetry))
@@ -870,6 +879,10 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
 			{
+				Config: updatedConfig,
+				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
+			},
+			{
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -883,7 +896,7 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 func addTestCertificate(t *testing.T, certificateAlias string, certificateEndpoint string) {
 	restyClient := acctest.GetTestResty(t)
 
-	certFileBytes, err := ioutil.ReadFile("../../../../../samples/cert.pem")
+	certFileBytes, err := os.ReadFile("../../../../../samples/cert.pem")
 	if err != nil {
 		t.Fatal(err)
 	}
