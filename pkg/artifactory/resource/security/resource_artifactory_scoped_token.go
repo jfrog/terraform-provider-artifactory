@@ -93,7 +93,7 @@ type AccessTokenGetAPIModel struct {
 	Expiry      int64  `json:"expiry"`
 	IssuedAt    int64  `json:"issued_at"`
 	Issuer      string `json:"issuer"`
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	Refreshable bool   `json:"refreshable"`
 }
 
@@ -531,19 +531,21 @@ func (r *ScopedTokenResourceModel) GetResponseToState(ctx context.Context, acces
 	r.Expiry = types.Int64Value(accessToken.Expiry)
 	r.IssuedAt = types.Int64Value(accessToken.IssuedAt)
 	r.Issuer = types.StringValue(accessToken.Issuer)
+
+	if r.Description.IsNull() {
+		r.Description = types.StringValue("")
+	}
 	if len(accessToken.Description) > 0 {
 		r.Description = types.StringValue(accessToken.Description)
 	}
+
 	r.Refreshable = types.BoolValue(accessToken.Refreshable)
 
 	// Need to set empty string for null state value to avoid state drift.
-	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2
 	if r.RefreshToken.IsNull() {
 		r.RefreshToken = types.StringValue("")
 	}
-
-	// Need to set empty string for null state value to avoid state drift.
-	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
 	if r.ReferenceToken.IsNull() {
 		r.ReferenceToken = types.StringValue("")
 	}

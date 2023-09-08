@@ -3,7 +3,6 @@ package security_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -12,17 +11,12 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 	// Version 7.11.1 is the last version before we migrated the resource from SDKv2 to Plugin Framework
 	version := "7.11.1"
-	title := fmt.Sprintf(
-		"TestScopedToken_upgrade_from_v%s",
-		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
-	)
+	title := fmt.Sprintf("from_v%s", version)
 	t.Run(title, func(t *testing.T) {
 		resource.Test(scopedTokenUpgradeTestCase(version, t))
 	})
@@ -32,12 +26,68 @@ func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
 	// Version 7.2.0 doesn't have `include_reference_token` attribute
 	// This test verifies that there is no state drift on update
 	version := "7.2.0"
-	title := fmt.Sprintf(
-		"TestScopedToken_upgrade_from_v%s",
-		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
-	)
+	title := fmt.Sprintf("from_v%s", version)
 	t.Run(title, func(t *testing.T) {
 		resource.Test(scopedTokenUpgradeTestCase(version, t))
+	})
+}
+
+func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+	config := utilsdk.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+		    expires_in  = 31536000
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.11.2",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckNoResourceAttr(fqrn, "description"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
+					resource.TestCheckResourceAttrSet(fqrn, "subject"),
+					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
+					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
+					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
 	})
 }
 
@@ -104,23 +154,35 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	template := `resource "artifactory_user" "test-user" {
+		name              = "testuser"
+		email             = "testuser@tempurl.org"
+		admin             = true
+		disable_ui_access = false
+		groups            = ["readers"]
+		password          = "Passw0rd!"
+	}
+
+	resource "artifactory_scoped_token" "{{ .name }}" {
+		username    = artifactory_user.test-user.name
+		description = "{{ .description }}"
+	}`
+
 	accessTokenConfig := utilsdk.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
-			admin             = true
-			disable_ui_access = false
-			groups            = ["readers"]
-			password          = "Passw0rd!"
-		}
-
-		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
-			description = "test description"
-		}`,
+		template,
 		map[string]interface{}{
-			"name": name,
+			"name":        name,
+			"description": "",
+		},
+	)
+
+	accessTokenUpdatedConfig := utilsdk.ExecuteTemplate(
+		"TestAccScopedToken",
+		template,
+		map[string]interface{}{
+			"name":        name,
+			"description": "test updated description",
 		},
 	)
 
@@ -136,7 +198,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/user"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
-					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
+					resource.TestCheckResourceAttr(fqrn, "description", ""),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
@@ -146,6 +208,12 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+				),
+			},
+			{
+				Config: accessTokenUpdatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "description", "test updated description"),
 				),
 			},
 			{
