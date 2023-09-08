@@ -1,0 +1,1 @@
+terraform import artifactory_global_environment.dev-env myenv
