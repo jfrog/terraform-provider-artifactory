@@ -39,8 +39,8 @@ type RepositoryBaseParams struct {
 	ProjectEnvironments    []string `json:"environments"`
 	Rclass                 string   `json:"rclass"`
 	PackageType            string   `hcl:"package_type" json:"packageType,omitempty"`
-	Description            string   `hcl:"description" json:"description,omitempty"`
-	Notes                  string   `hcl:"notes" json:"notes,omitempty"`
+	Description            string   `json:"description"`
+	Notes                  string   `json:"notes"`
 	IncludesPattern        string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
 	ExcludesPattern        string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
 	RepoLayoutRef          string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`

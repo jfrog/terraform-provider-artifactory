@@ -741,11 +741,7 @@ func TestAccVirtualRepository(t *testing.T) {
 	for _, repoType := range virtual.PackageTypesLikeGeneric {
 		// TODO: workaround due to bug in Artifactory 7.55.2, 'bypass_head_requests' inconsistency for terraform repo type.
 		if repoType != "terraform" {
-			title := fmt.Sprintf(
-				"TestVirtual%sRepo",
-				cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-			)
-			t.Run(title, func(t *testing.T) {
+			t.Run(repoType, func(t *testing.T) {
 				resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 					"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				}))
@@ -753,11 +749,7 @@ func TestAccVirtualRepository(t *testing.T) {
 		}
 	}
 	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
-		title := fmt.Sprintf(
-			"TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"retrieval_cache_period_seconds": 650,
@@ -807,6 +799,14 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
 
+	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
+		"description": "",
+		"notes":       "",
+	})
+	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
+	updatedConfig := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, updatedFieldsHcl)
+	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
+
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -815,6 +815,10 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 			{
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
+			},
+			{
+				Config: updatedConfig,
+				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
 			},
 			{
 				ResourceName:      fqrn,
