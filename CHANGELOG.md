@@ -1,4 +1,13 @@
+## 8.9.2 (Sep 14, 2023)
+
+IMPROVEMENTS:
+* Fix incorrect description for remote repository attribute `block_mismatching_mime_types`. Issue: [#799](https://github.com/jfrog/terraform-provider-artifactory/pull/799)
+* Add multiple users and groups HCL example for `artifactory_permission_target` resource. Issue: [#800](https://github.com/jfrog/terraform-provider-artifactory/pull/800)
+
+PR: [#802](https://github.com/jfrog/terraform-provider-artifactory/pull/802)
+
 ## 8.9.1 (Sep 11, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
+
 BUG FIX:
 * resource/artifactory_local_\*\_repository, resource/artifactory_remote_\*\_repository, resource/artifactory_virtual_\*\_repository, resource/artifactory_federated_\*\_repository: fix unable to set `description` and `notes` attributes with empty text.
 
