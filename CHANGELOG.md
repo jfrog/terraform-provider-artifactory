@@ -1,4 +1,14 @@
+## 9.0.0 (Sep 15, 2023)
+
+IMPROVEMENTS:
+* resource/artifactory_\*\_repository: remove default value of "default" from `project_key` attribute. This is a REST API bug fix that is part of Artifactory v7.68.7 (self-hosted) and v7.67.0 (cloud). Existing Terraform state with "default" value should be automatically migrated to "" on `terraform apply`. No state drift should occurs on `terraform plan`. Issue: [#779](https://github.com/jfrog/terraform-provider-artifactory/issues/779) 
+* Fix incorrect description for remote repository attribute `block_mismatching_mime_types`. Issue: [#799](https://github.com/jfrog/terraform-provider-artifactory/pull/799)
+* Add multiple users and groups HCL example for `artifactory_permission_target` resource. Issue: [#800](https://github.com/jfrog/terraform-provider-artifactory/pull/800)
+
+PR: [#804](https://github.com/jfrog/terraform-provider-artifactory/pull/804)
+
 ## 8.9.1 (Sep 11, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
+
 BUG FIX:
 * resource/artifactory_local_\*\_repository, resource/artifactory_remote_\*\_repository, resource/artifactory_virtual_\*\_repository, resource/artifactory_federated_\*\_repository: fix unable to set `description` and `notes` attributes with empty text.
 
