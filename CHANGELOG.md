@@ -1,4 +1,4 @@
-## 9.0.0 (Sep 15, 2023)
+## 9.0.0 (Sep 15, 2023). Tested on Artifactory 7.68.7 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:
 * resource/artifactory_\*\_repository: remove default value of "default" from `project_key` attribute. This is a REST API bug fix that is part of Artifactory v7.68.7 (self-hosted) and v7.67.0 (cloud). Existing Terraform state with "default" value should be automatically migrated to "" on `terraform apply`. No state drift should occurs on `terraform plan`. Issue: [#779](https://github.com/jfrog/terraform-provider-artifactory/issues/779) 
