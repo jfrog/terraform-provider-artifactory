@@ -555,6 +555,10 @@ var resourceV1 = &schema.Resource{
 	Schema: baseRemoteRepoSchemaV1,
 }
 
+var resourceV2 = &schema.Resource{
+	Schema: baseRemoteRepoSchemaV2,
+}
+
 func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
 	return &schema.Resource{
@@ -572,10 +576,17 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 				Upgrade: ResourceStateUpgradeV1,
 				Version: 1,
 			},
+			{
+				// this only works because the schema hasn't changed, except the removal of default value
+				// from `project_key` attribute.
+				Type:    resourceV2.CoreConfigSchema().ImpliedType(),
+				Upgrade: repository.ResourceUpgradeProjectKey,
+				Version: 2,
+			},
 		},
 
 		Schema:        skeema,
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		CustomizeDiff: customdiff.All(
 			repository.ProjectEnvironmentsDiff,
 			verifyExternalDependenciesDockerAndHelm,

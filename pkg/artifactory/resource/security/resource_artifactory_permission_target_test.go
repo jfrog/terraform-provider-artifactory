@@ -221,7 +221,8 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
-				Config: config,
+				Config:             config,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.#", "1"),
