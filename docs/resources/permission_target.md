@@ -23,9 +23,19 @@ resource "artifactory_permission_target" "test-perm" {
         permissions = ["read", "write"]
       }
 
+      users {
+        name        = "user1"
+        permissions = ["read", "write"]
+      }
+
       groups {
         name        = "readers"
         permissions = ["read"]
+      }
+
+      groups {
+        name        = "dev"
+        permissions = ["read", "write"]
       }
     }
   }
@@ -37,6 +47,11 @@ resource "artifactory_permission_target" "test-perm" {
     actions {
       users {
         name        = "anonymous"
+        permissions = ["read"]
+      }
+
+      users {
+        name        = "user1"
         permissions = ["read", "write"]
       }
     }

@@ -22,8 +22,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-const defaultProjectKey = "default"
-
 var BaseRepoSchema = map[string]*schema.Schema{
 	"key": {
 		Type:         schema.TypeString,
@@ -35,7 +33,6 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "default",
 		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
@@ -198,8 +195,8 @@ func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schem
 			newProjectKey := newProject.(string)
 			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
 
-			assignToProject := oldProjectKey == defaultProjectKey && len(newProjectKey) > 0
-			unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == defaultProjectKey
+			assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
+			unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
 			tflog.Debug(ctx, fmt.Sprintf("assignToProject: %v, unassignFromProject: %v", assignToProject, unassignFromProject))
 
 			var err error
@@ -251,13 +248,6 @@ func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 func Retry400(response *resty.Response, _ error) bool {
 	return response.StatusCode() == http.StatusBadRequest
 }
-
-func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := CheckRepo(d.Id(), m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(Retry400))
-	return err == nil, err
-}
-
-var repoTypeValidator = validation.StringInSlice(RepoTypesSupported, false)
 
 var RepoKeyValidator = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
@@ -341,12 +331,12 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, met
 
 		isSupported, err := utilsdk.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
 		if err != nil {
-			return fmt.Errorf("Failed to check version %s", err)
+			return fmt.Errorf("failed to check version %s", err)
 		}
 
 		if isSupported {
 			if len(projectEnvironments) == 2 {
-				return fmt.Errorf("For Artifactory %s or later, only one environment can be assigned to a repository.", CustomProjectEnvironmentSupportedVersion)
+				return fmt.Errorf("for Artifactory %s or later, only one environment can be assigned to a repository", CustomProjectEnvironmentSupportedVersion)
 			}
 		} else { // Before 7.53.1
 			projectEnvironments := data.(*schema.Set).List()
@@ -373,8 +363,33 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		},
 
 		Schema:        skeema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				// this only works because the schema hasn't changed, except the removal of default value
+				// from `project_key` attribute. Future common schema changes that involve attributes should
+				// figure out a way to create a previous and new version.
+				Type:    resourceV0(skeema).CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceUpgradeProjectKey,
+				Version: 0,
+			},
+		},
 		CustomizeDiff: ProjectEnvironmentsDiff,
 	}
+}
+
+func resourceV0(skeema map[string]*schema.Schema) *schema.Resource {
+	return &schema.Resource{
+		Schema: skeema,
+	}
+}
+
+func ResourceUpgradeProjectKey(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if rawState["project_key"] == "default" {
+		rawState["project_key"] = ""
+	}
+
+	return rawState, nil
 }
 
 const RepositoriesEndpoint = "artifactory/api/repositories/{key}"

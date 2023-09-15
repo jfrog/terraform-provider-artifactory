@@ -118,7 +118,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 				Config: localRepositoryNoProjectKey,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "project_key", "default"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", ""),
 				),
 			},
 		},
@@ -250,7 +250,7 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 					return !isSupported, err
 				},
 				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(fmt.Sprintf(".*For Artifactory %s or later, only one environment can be assigned to a repository..*", repository.CustomProjectEnvironmentSupportedVersion)),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory %s or later, only one environment can be assigned to a repository.*", repository.CustomProjectEnvironmentSupportedVersion)),
 			},
 		},
 	})

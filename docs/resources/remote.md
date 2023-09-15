@@ -37,10 +37,7 @@ All generic repo arguments are supported, in addition to:
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.
 * `description` - (Optional) Public description.
 * `notes` - (Optional) Internal description.
-* `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters.
-  When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
-  We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider
-  to manage the list of repositories. Default value - `default`.
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash. We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider to manage the list of repositories.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV` or `PROD`.
   Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 onward, only one value is allowed.
   The attribute should only be used if the repository is already assigned to the existing project.
@@ -68,7 +65,7 @@ All generic repo arguments are supported, in addition to:
 * `assumed_offline_period_secs` - (Optional, Default: `300`) The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline.
 * `share_configuration` - (Optional) The attribute is 'Computed', so it's not managed by the Provider. There is no corresponding field in the UI, but the attribute is returned by Get.
 * `synchronize_properties` - (Optional, Default: `false`) When set, remote artifacts are fetched along with their properties.
-* `block_mismatching_mime_types` - (Optional, Default: `true`) Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request. Note: dafault value in the UI is `true`, but it is `false` if the repo was created using the API call. We are copying the UI behavior.
+* `block_mismatching_mime_types` - (Optional, Default: `true`) If set, artifacts will fail to download if a mismatch is detected between requested and received mimetype, according to the list specified in the system properties file under blockedMismatchingMimeTypes. You can override by adding mimetypes to the override list `mismatching_mime_types_override_list`.
 * `mismatching_mime_types_override_list` - (Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.
 * `property_sets` - (Optional) List of property set names.
 * `allow_any_host_auth` - (Optional, Default: `false`) Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.

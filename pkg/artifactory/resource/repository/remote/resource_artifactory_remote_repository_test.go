@@ -47,7 +47,8 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
-				Config: config,
+				Config:             config,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "go-default"),

@@ -182,7 +182,22 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		},
 
 		Schema:        skeema,
-		SchemaVersion: 2,
+		SchemaVersion: 3,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				// this only works because the schema hasn't changed, except the removal of default value
+				// from `project_key` attribute.
+				Type:    resourceV2(skeema).CoreConfigSchema().ImpliedType(),
+				Upgrade: repository.ResourceUpgradeProjectKey,
+				Version: 2,
+			},
+		},
 		CustomizeDiff: repository.ProjectEnvironmentsDiff,
+	}
+}
+
+func resourceV2(skeema map[string]*schema.Schema) *schema.Resource {
+	return &schema.Resource{
+		Schema: skeema,
 	}
 }
