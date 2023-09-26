@@ -3,7 +3,7 @@ attributes:
   space:
     instanceType: large
     editor:
-      type: Idea
+      type: GoLand
 components:
   - name: image-build
     image:
