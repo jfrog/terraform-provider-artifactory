@@ -1,0 +1,13 @@
+schemaVersion: 2.2.0
+attributes:
+  space:
+    instanceType: large
+    editor:
+      type: Idea
+components:
+  - name: image-build
+    image:
+      # (Required)
+      imageName: jfrog:latest
+      dockerfile:
+        uri: .
