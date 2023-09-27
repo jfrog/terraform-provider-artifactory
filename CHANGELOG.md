@@ -1,4 +1,4 @@
-## 9.1.0 (Sep 28, 2023)
+## 9.1.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:
 * resource/artifactory_local_conan_repository, resource/artifactory_virtual_conan_repository, resource/artifactory_federated_conan_repository: add `force_conan_authentication` attribute
