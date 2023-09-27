@@ -1,23 +1,28 @@
-# Fetch the dependencies
-FROM golang:1.15-alpine AS builder
+FROM alpine AS base
+RUN apk add --no-cache git terraform wget make openssh && \
+    wget -q https://github.com/goreleaser/goreleaser/releases/download/v1.19.2/goreleaser_1.19.2_x86_64.apk  && \
+    wget -q https://go.dev/dl/go1.19.2.linux-amd64.tar.gz && \
+    rm -rf /usr/local/go && \
+    tar -C /usr/local -xzf go1.19.2.linux-amd64.tar.gz && \
+	apk add --allow-untrusted goreleaser_1.19.2_x86_64.apk && \
+    mkdir -p /src/terraform-provider-artifactory
+ENV PATH=$PATH:/usr/local/go/bin
+WORKDIR /root
 
-RUN apk add --update ca-certificates git gcc g++ libc-dev
-WORKDIR /src/
-
-ENV GO111MODULE=on
-
-COPY go.mod .
-COPY go.sum .
-
+FROM base as builder
+COPY . .
 RUN go mod download
+RUN make
+WORKDIR /root/v5-v6-migrator
+RUN make
 
-COPY pkg/ /src/pkg/
-COPY main.go /src/
+FROM hashicorp/terraform as plugin
+RUN adduser -S jfrog
+WORKDIR /home/jfrog
+COPY --from=builder /src/terraform-provider-artifactory/terraform-provider-artifactory /home/jfrog/.terraform.d/plugins/
 
-RUN CGO_ENABLED=0 GOOS=linux go build
-
-
-# Build the final image
-FROM hashicorp/terraform:0.13
-
-COPY --from=builder /src/terraform-provider-artifactory /root/.terraform.d/plugins/
+FROM alpine as migrator
+RUN adduser -S jfrog
+WORKDIR /home/jfrog
+COPY --from=builder /src/terraform-provider-artifactory/v5-v6-migrator/tf-v5-migrator /home/jfrog/tf-v5-migrator
+WORKDIR /home/jfrog
