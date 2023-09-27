@@ -25,7 +25,6 @@ var PackageTypesLikeGeneric = []string{
 	"chef",
 	"cocoapods",
 	"composer",
-	"conan",
 	"conda",
 	"cran",
 	"gems",
@@ -129,6 +128,7 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 
 	return nil
 }
+
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &utilsdk.ResourceData{ResourceData: d}

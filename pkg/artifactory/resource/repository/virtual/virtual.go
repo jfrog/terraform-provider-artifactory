@@ -49,7 +49,6 @@ var PackageTypesLikeGeneric = []string{
 
 var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	"chef",
-	"conan",
 	"conda",
 	"cran",
 }

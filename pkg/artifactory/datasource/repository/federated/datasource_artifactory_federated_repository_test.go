@@ -88,7 +88,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	}
 }
 
-func TestAccFederatedRepoGenericTypes(t *testing.T) {
+func TestAccDataSourceFederatedRepoGenericTypes(t *testing.T) {
 	for _, repo := range federated.PackageTypesLikeGeneric {
 		title := cases.Title(language.AmericanEnglish).String(repo)
 		t.Run(title, func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestAccFederatedRepoGenericTypes(t *testing.T) {
 	}
 }
 
-func TestAccFederatedAlpineRepository(t *testing.T) {
+func TestAccDataSourceFederatedAlpineRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("alpine-federated", "artifactory_federated_alpine_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
 
@@ -199,7 +199,7 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 	})
 }
 
-func TestAccFederatedCargoRepository(t *testing.T) {
+func TestAccDataSourceFederatedCargoRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("cargo-federated", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 	anonAccess := testutil.RandBool()
@@ -267,7 +267,72 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 	})
 }
 
-func TestAccFederatedDebianRepository(t *testing.T) {
+func TestAccDataSourceFederatedConanRepository(t *testing.T) {
+	_, tempFqrn, name := testutil.MkNames("conan-federated", "artifactory_federated_conan_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	forceConanAuthentication := testutil.RandBool()
+
+	params := map[string]interface{}{
+		"force_conan_authentication": forceConanAuthentication,
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+
+	template := `
+		resource "artifactory_federated_conan_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			force_conan_authentication = {{ .force_conan_authentication }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+
+		data "artifactory_federated_conan_repository" "{{ .name }}" {
+			key = artifactory_federated_conan_repository.{{ .name }}.id
+		}
+	`
+	fqrn := "data." + tempFqrn
+
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedConanRepository", template, params)
+
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate(
+		"TestAccFederatedConanRepository",
+		template,
+		map[string]interface{}{
+			"force_conan_authentication": !forceConanAuthentication,
+			"name":                       name,
+			"memberUrl":                  federatedMemberUrl,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", !forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceFederatedDebianRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("debian-federated", "artifactory_federated_debian_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
@@ -451,7 +516,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 		},
 	})
 }
-func TestAccFederatedDockerV2Repository(t *testing.T) {
+func TestAccDataSourceFederatedDockerV2Repository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("docker-federated", "data.artifactory_federated_docker_v2_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -520,7 +585,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 }
 
 // TestAccFederatedDockerRepository tests for backward compatibility
-func TestAccFederatedDockerRepository(t *testing.T) {
+func TestAccDataSourceFederatedDockerRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("docker-federated", "data.artifactory_federated_docker_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -588,7 +653,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 	})
 }
 
-func TestAccFederatedDockerV1Repository(t *testing.T) {
+func TestAccDataSourceFederatedDockerV1Repository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("docker-federated", "data.artifactory_federated_docker_v1_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -660,7 +725,7 @@ const federatedJavaRepositoryBasic = `
 	}
 `
 
-func TestAccFederatedMavenRepository(t *testing.T) {
+func TestAccDataSourceFederatedMavenRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("maven-federated", "artifactory_federated_maven_repository")
 
 	repoLayoutRef := func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "maven")(); return r.(string) }()
@@ -764,7 +829,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	}
 }
 
-func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
+func TestAccDataSourceFederatedAllGradleLikePackageTypes(t *testing.T) {
 	for _, repoType := range repository.GradleLikePackageTypes {
 		title := cases.Title(language.AmericanEnglish).String(repoType)
 		t.Run(title, func(t *testing.T) {
@@ -773,7 +838,7 @@ func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
 	}
 }
 
-func TestAccFederatedNugetRepository(t *testing.T) {
+func TestAccDataSourceFederatedNugetRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("nuget-federated", "artifactory_federated_nuget_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
@@ -837,7 +902,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 	})
 }
 
-func TestAccFederatedRpmRepository(t *testing.T) {
+func TestAccDataSourceFederatedRpmRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("rpm-federated", "artifactory_federated_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
@@ -1073,7 +1138,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 	}
 }
 
-func TestAccFederatedTerraformRepositories(t *testing.T) {
+func TestAccDataSourceFederatedTerraformRepositories(t *testing.T) {
 	for _, registryType := range []string{"module", "provider"} {
 		title := cases.Title(language.AmericanEnglish).String(registryType)
 		t.Run(title, func(t *testing.T) {

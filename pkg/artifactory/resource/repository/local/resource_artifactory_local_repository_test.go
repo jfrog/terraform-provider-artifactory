@@ -1076,3 +1076,39 @@ func TestAccLocalCargoRepository(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLocalConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-local", "artifactory_local_conan_repository")
+	params := map[string]interface{}{
+		"force_conan_authentication": testutil.RandBool(),
+		"name":                       name,
+	}
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalConanRepository", `
+		resource "artifactory_local_conan_repository" "{{ .name }}" {
+		  key                        = "{{ .name }}"
+		  force_conan_authentication = {{ .force_conan_authentication }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", params["force_conan_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}

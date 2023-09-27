@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemotecoConanRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.ConanPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, resource_repository.ConanPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
-		return &remote.ConanRemoteRepo{
+		return &remote.ConanRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        rclass,
-				PackageType:   remote.ConanPackageType,
+				PackageType:   resource_repository.ConanPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	conanSchema := remote.ConanRemoteSchema(false)
+	conanSchema := remote.ConanSchema(false)
 
 	return &schema.Resource{
 		Schema:      conanSchema,
