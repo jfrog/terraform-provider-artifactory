@@ -39,7 +39,7 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	"project_environments": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
-		MinItems: 1,
+		MinItems: 0,
 		MaxItems: 2,
 		Set:      schema.HashString,
 		Optional: true,
