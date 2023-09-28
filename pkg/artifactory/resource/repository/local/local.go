@@ -15,7 +15,6 @@ var PackageTypesLikeGeneric = []string{
 	"chef",
 	"cocoapods",
 	"composer",
-	"conan",
 	"conda",
 	"cran",
 	"gems",

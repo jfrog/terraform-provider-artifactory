@@ -74,6 +74,14 @@ func TestAccDataSourceVirtualBowerRepository(t *testing.T) {
 	}))
 }
 
+func TestAccDataSourceVirtualConanRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase(repository.ConanPackageType, t, map[string]interface{}{
+		"description":                    "conan virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 60,
+		"force_conan_authentication":     true,
+	}))
+}
+
 func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(virtual.DebianPackageType, t, map[string]interface{}{
 		"description":                        "bower virtual repository public description testing.",
@@ -271,7 +279,7 @@ func TestAccDataSourceVirtualRpmRepository(t *testing.T) {
 }
 
 func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames(fmt.Sprintf("terraform-virtual-%s-repo-full-", packageType),
+	_, fqrn, name := testutil.MkNames(fmt.Sprintf("virtual-%s-repo-full-", packageType),
 		fmt.Sprintf("artifactory_virtual_%s_repository", packageType))
 	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{

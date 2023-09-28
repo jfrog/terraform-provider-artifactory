@@ -14,15 +14,14 @@ import (
 
 func TestAccDataSourceRemoteAllBasicPackageTypes(t *testing.T) {
 	for _, packageType := range remote.PackageTypesLikeBasic {
-		title := fmt.Sprintf("%s", packageType)
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkTestCase(packageType, t))
 		})
 	}
 }
 
 func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-remote-%s-%d", packageType, testutil.RandomInt())
+	name := fmt.Sprintf("remote-%s-%d", packageType, testutil.RandomInt())
 	resourceName := fmt.Sprintf("data.artifactory_remote_%s_repository.%s", packageType, name)
 
 	params := map[string]interface{}{

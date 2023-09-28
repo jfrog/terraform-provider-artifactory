@@ -844,6 +844,14 @@ func TestAccVirtualAlpineRepositoryZeroRetrievalPeriod(t *testing.T) {
 	}))
 }
 
+func TestAccVirtualConanRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("conan", t, map[string]interface{}{
+		"description":                    "conan virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 650,
+		"force_conan_authentication":     true,
+	}))
+}
+
 func TestAccVirtualNugetRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("nuget", t, map[string]interface{}{
 		"description":                "nuget virtual repository public description testing.",

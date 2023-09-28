@@ -187,6 +187,39 @@ func TestAccDataSourceLocalCargoRepository(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceLocalConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-local", "data.artifactory_local_conan_repository")
+	params := map[string]interface{}{
+		"force_conan_authentication": testutil.RandBool(),
+		"name":                       name,
+	}
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalConanRepository", `
+		resource "artifactory_local_conan_repository" "{{ .name }}" {
+		  key                        = "{{ .name }}"
+		  force_conan_authentication = {{ .force_conan_authentication }}
+		}
+
+		data "artifactory_local_conan_repository" "{{ .name }}" {
+		  key = artifactory_local_conan_repository.{{ .name }}.id
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", params["force_conan_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceLocalDebianRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("local-debian-repo", "data.artifactory_local_debian_repository")
 	kpId, _, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")

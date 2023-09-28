@@ -1,3 +1,12 @@
+## 9.1.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+* resource/artifactory_local_conan_repository, resource/artifactory_virtual_conan_repository, resource/artifactory_federated_conan_repository: add `force_conan_authentication` attribute
+* data/artifactory_local_conan_repository, data/artifactory_virtual_conan_repository, data/artifactory_federated_conan_repository: add support for `force_conan_authentication` attribute
+
+PR: [#810](https://github.com/jfrog/terraform-provider-artifactory/pull/810)
+Issue: [#808](https://github.com/jfrog/terraform-provider-artifactory/issues/808)
+
 ## 9.0.0 (Sep 15, 2023). Tested on Artifactory 7.68.7 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:

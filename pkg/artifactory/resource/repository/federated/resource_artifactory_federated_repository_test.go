@@ -450,6 +450,72 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 	})
 }
 
+func TestAccFederatedConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-federated", "artifactory_federated_conan_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	forceConanAuthentication := testutil.RandBool()
+
+	params := map[string]interface{}{
+		"force_conan_authentication": forceConanAuthentication,
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+
+	template := `
+		resource "artifactory_federated_conan_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			force_conan_authentication = {{ .force_conan_authentication }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedConanRepository", template, params)
+
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate(
+		"TestAccFederatedCargoRepository",
+		template,
+		map[string]interface{}{
+			"force_conan_authentication": !forceConanAuthentication,
+			"name":                       name,
+			"memberUrl":                  federatedMemberUrl,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", !forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
+}
+
 func TestAccFederatedDebianRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("debian-federated", "artifactory_federated_debian_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
