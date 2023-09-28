@@ -4,208 +4,359 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	validatorfw "github.com/jfrog/terraform-provider-shared/validator/fw"
 
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
 )
 
-type Backup struct {
-	Key                    string   `xml:"key" yaml:"key"`
-	CronExp                string   `xml:"cronExp" yaml:"cronExp"`
-	Enabled                bool     `xml:"enabled" yaml:"enabled"`
-	RetentionPeriodHours   int      `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
-	ExcludedRepositories   []string `xml:"excludedRepositories>repositoryRef" yaml:"excludedRepositories"`
-	CreateArchive          bool     `xml:"createArchive" yaml:"createArchive"`
-	ExcludeNewRepositories bool     `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
-	SendMailOnError        bool     `xml:"sendMailOnError" yaml:"sendMailOnError"`
-	VerifyDiskSpace        bool     `xml:"precalculate" yaml:"precalculate"`
-	ExportMissionControl   bool     `xml:"exportMissionControl" yaml:"exportMissionControl"`
+type BackupAPIModel struct {
+	Key                    string    `xml:"key" yaml:"key"`
+	CronExp                string    `xml:"cronExp" yaml:"cronExp"`
+	Enabled                bool      `xml:"enabled" yaml:"enabled"`
+	RetentionPeriodHours   int64     `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
+	ExcludedRepositories   *[]string `xml:"excludedRepositories>repositoryRef" yaml:"excludedRepositories"`
+	CreateArchive          bool      `xml:"createArchive" yaml:"createArchive"`
+	ExcludeNewRepositories bool      `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
+	SendMailOnError        bool      `xml:"sendMailOnError" yaml:"sendMailOnError"`
+	VerifyDiskSpace        bool      `xml:"precalculate" yaml:"precalculate"`
+	ExportMissionControl   bool      `xml:"exportMissionControl" yaml:"exportMissionControl"`
 }
 
-func (b Backup) Id() string {
-	return b.Key
+func (m BackupAPIModel) Id() string {
+	return m.Key
 }
 
 type Backups struct {
-	BackupArr []Backup `xml:"backups>backup" yaml:"backup"`
+	BackupArr []BackupAPIModel `xml:"backups>backup" yaml:"backup"`
 }
 
-func ResourceArtifactoryBackup() *schema.Resource {
-	var backupSchema = map[string]*schema.Schema{
-		"key": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "Backup config name.",
-		},
-		"enabled": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Flag to enable or disable the backup config. Default value is 'true'.",
-		},
-		"cron_exp": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validator.Cron,
-			Description:      "Cron expression to control the backup frequency.",
-		},
-		"retention_period_hours": {
-			Type:             schema.TypeInt,
-			Optional:         true,
-			Default:          168,
-			ValidateDiagFunc: validator.IntAtLeast(0),
-			Description:      "The number of hours to keep a backup before Artifactory will clean it up to free up disk space. Applicable only to non-incremental backups. Default value is 168 hours ie: 7 days.",
-		},
-		"excluded_repositories": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+type BackupResourceModel struct {
+	Key                    types.String `tfsdk:"key"`
+	Enabled                types.Bool   `tfsdk:"enabled"`
+	CronExp                types.String `tfsdk:"cron_exp"`
+	RetentionPeriodHours   types.Int64  `tfsdk:"retention_period_hours"`
+	ExcludedRepositories   types.List   `tfsdk:"excluded_repositories"`
+	CreateArchive          types.Bool   `tfsdk:"create_archive"`
+	ExcludeNewRepositories types.Bool   `tfsdk:"exclude_new_repositories"`
+	SendMailOnError        types.Bool   `tfsdk:"send_mail_on_error"`
+	VerifyDiskSpace        types.Bool   `tfsdk:"verify_disk_space"`
+	ExportMissionControl   types.Bool   `tfsdk:"export_mission_control"`
+}
+
+func (r *BackupResourceModel) toAPIModel(ctx context.Context, backup *BackupAPIModel) diag.Diagnostics {
+	// Convert from Terraform resource model into API model
+	var excludedRepositories []string
+	diags := r.ExcludedRepositories.ElementsAs(ctx, &excludedRepositories, true)
+	if diags != nil {
+		return diags
+	}
+
+	*backup = BackupAPIModel{
+		Key:                    r.Key.ValueString(),
+		Enabled:                r.Enabled.ValueBool(),
+		CronExp:                r.CronExp.ValueString(),
+		RetentionPeriodHours:   r.RetentionPeriodHours.ValueInt64(),
+		CreateArchive:          r.CreateArchive.ValueBool(),
+		ExcludeNewRepositories: r.ExcludeNewRepositories.ValueBool(),
+		SendMailOnError:        r.SendMailOnError.ValueBool(),
+		ExcludedRepositories:   &excludedRepositories,
+		VerifyDiskSpace:        r.VerifyDiskSpace.ValueBool(),
+		ExportMissionControl:   r.ExportMissionControl.ValueBool(),
+	}
+
+	return nil
+}
+
+func (r *BackupResourceModel) FromAPIModel(ctx context.Context, backup *BackupAPIModel) diag.Diagnostics {
+	r.Key = types.StringValue(backup.Key)
+	r.Enabled = types.BoolValue(backup.Enabled)
+	r.CronExp = types.StringValue(backup.CronExp)
+	r.RetentionPeriodHours = types.Int64Value(backup.RetentionPeriodHours)
+	r.CreateArchive = types.BoolValue(backup.CreateArchive)
+	r.ExcludeNewRepositories = types.BoolValue(backup.ExcludeNewRepositories)
+	r.SendMailOnError = types.BoolValue(backup.SendMailOnError)
+
+	excludedRepositories, diags := types.ListValueFrom(ctx, types.StringType, backup.ExcludedRepositories)
+	if diags != nil {
+		return diags
+	}
+	r.ExcludedRepositories = excludedRepositories
+	r.VerifyDiskSpace = types.BoolValue(backup.VerifyDiskSpace)
+	r.ExportMissionControl = types.BoolValue(backup.ExportMissionControl)
+
+	return nil
+}
+
+func NewBackupResource() resource.Resource {
+	return &BackupResource{}
+}
+
+type BackupResource struct {
+	ProviderData utilsdk.ProvderMetadata
+}
+
+func (r *BackupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "artifactory_backup"
+}
+
+func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Provides an Artifactory backup config resource. This resource configuration corresponds to backup config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages the automatic and periodic backups of the entire Artifactory instance.",
+		Attributes: map[string]schema.Attribute{
+			"key": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
-			Description: "List of excluded repositories from the backup. Default is empty list.",
-		},
-		"create_archive": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "If set to true, backups will be created within a Zip archive (Slow and CPU intensive). Default value is 'false'",
-		},
-		"exclude_new_repositories": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set to true, new repositories will not be automatically added to the backup. Default value is 'false'.",
-		},
-		"send_mail_on_error": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "If set to true, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is 'true'.",
-		},
-		"verify_disk_space": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "If set, Artifactory will verify that the backup target location has enough disk space available to hold the backed up data. If there is not enough space available, Artifactory will abort the backup and write a message in the log file. Applicable only to non-incremental backups.",
-		},
-		"export_mission_control": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set to true, mission control will not be automatically added to the backup. Default value is 'false'.",
+			"enabled": schema.BoolAttribute{
+				MarkdownDescription: "Flag to enable or disable the backup config. Default value is `true`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+			},
+			"cron_exp": schema.StringAttribute{
+				MarkdownDescription: "Cron expression to control the backup frequency.",
+				Required:            true,
+				Validators: []validator.String{
+					validatorfw.IsCron(),
+				},
+			},
+			"retention_period_hours": schema.Int64Attribute{
+				MarkdownDescription: "The number of hours to keep a backup before Artifactory will clean it up to free up disk space. Applicable only to non-incremental backups. Default value is 168 hours i.e. 7 days.",
+				Optional:            true,
+				Computed:            true,
+				Default:             int64default.StaticInt64(168),
+				Validators: []validator.Int64{
+					int64validator.AtLeast(0),
+				},
+			},
+			"excluded_repositories": schema.ListAttribute{
+				MarkdownDescription: "List of excluded repositories from the backup. Default is empty list.",
+				Optional:            true,
+				ElementType:         types.StringType,
+			},
+			"create_archive": schema.BoolAttribute{
+				MarkdownDescription: "If set to true, backups will be created within a Zip archive (Slow and CPU intensive). Default value is `false`",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"exclude_new_repositories": schema.BoolAttribute{
+				MarkdownDescription: "When set to true, new repositories will not be automatically added to the backup. Default value is `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"send_mail_on_error": schema.BoolAttribute{
+				MarkdownDescription: "If set to true, all Artifactory administrators will be notified by email if any problem is encountered during backup. Default value is `true`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+			},
+			"verify_disk_space": schema.BoolAttribute{
+				MarkdownDescription: "If set, Artifactory will verify that the backup target location has enough disk space available to hold the backed up data. If there is not enough space available, Artifactory will abort the backup and write a message in the log file. Applicable only to non-incremental backups. Default value is `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"export_mission_control": schema.BoolAttribute{
+				MarkdownDescription: "When set to true, mission control will not be automatically added to the backup. Default value is `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
 		},
 	}
+}
 
-	var unpackBackup = func(s *schema.ResourceData) Backup {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		backup := Backup{
-			Key:                    d.GetString("key", false),
-			Enabled:                d.GetBool("enabled", false),
-			CronExp:                d.GetString("cron_exp", false),
-			RetentionPeriodHours:   d.GetInt("retention_period_hours", false),
-			CreateArchive:          d.GetBool("create_archive", false),
-			ExcludeNewRepositories: d.GetBool("exclude_new_repositories", false),
-			SendMailOnError:        d.GetBool("send_mail_on_error", false),
-			ExcludedRepositories:   d.GetList("excluded_repositories"),
-			VerifyDiskSpace:        d.GetBool("verify_disk_space", false),
-			ExportMissionControl:   d.GetBool("export_mission_control", false),
-		}
-		return backup
+func (r *BackupResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+}
+
+func (r *BackupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data *BackupResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var resourceBackupRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &utilsdk.ResourceData{ResourceData: d}
-		key := data.GetString("key", false)
-
-		backups := Backups{}
-		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
-		if err != nil {
-			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
-		}
-
-		matchedBackup := FindConfigurationById[Backup](backups.BackupArr, key)
-		if matchedBackup == nil {
-			d.SetId("")
-			return nil
-		}
-
-		pkr := packer.Default(backupSchema)
-
-		return diag.FromErr(pkr(matchedBackup, d))
+	var backup BackupAPIModel
+	resp.Diagnostics.Append(data.toAPIModel(ctx, &backup)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var resourceBackupUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		unpackedBackup := unpackBackup(d)
+	/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
 
-		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
 
-		There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	GET call structure has "backups -> backup -> Array of backup config blocks".
 
-		GET call structure has "backups -> backup -> Array of backup config blocks".
+	PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
 
-		PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
+	Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
 
-		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
-
-		See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration for patching system configuration
-		using YAML
-		*/
-		var constructBody = map[string]map[string]Backup{}
-		constructBody["backups"] = map[string]Backup{}
-		constructBody["backups"][unpackedBackup.Key] = unpackedBackup
-		content, err := yaml.Marshal(&constructBody)
-
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		err = SendConfigurationPatch(content, m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// we should only have one backup config resource, using same id
-		d.SetId(unpackedBackup.Key)
-		return resourceBackupRead(ctx, d, m)
+	See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration for patching system configuration
+	using YAML
+	*/
+	var constructBody = map[string]map[string]BackupAPIModel{}
+	constructBody["backups"] = map[string]BackupAPIModel{}
+	constructBody["backups"][backup.Key] = backup
+	content, err := yaml.Marshal(&constructBody)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
 	}
 
-	var resourceBackupDelete = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		rsrcBackup := unpackBackup(d)
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
 
-		deleteBackupConfig := fmt.Sprintf(`
+	// Assign the resource ID for the resource in the state
+	data.Key = types.StringValue(backup.Key)
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *BackupResourceModel
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	backups := Backups{}
+	_, err := r.ProviderData.Client.R().
+		SetResult(&backups).
+		Get("artifactory/api/system/configuration")
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		return
+	}
+
+	matchedBackup := FindConfigurationById[BackupAPIModel](backups.BackupArr, data.Key.ValueString())
+	if matchedBackup == nil {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("key"),
+			"no matching backup found",
+			data.Key.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	// Convert from the API data model to the Terraform data model
+	// and refresh any attribute values.
+	resp.Diagnostics.Append(data.FromAPIModel(ctx, matchedBackup)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *BackupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data *BackupResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	// Convert from Terraform data model into API data model
+	var backup BackupAPIModel
+	resp.Diagnostics.Append(data.toAPIModel(ctx, &backup)...)
+
+	/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+
+	There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+
+	GET call structure has "backups -> backup -> Array of backup config blocks".
+
+	PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
+
+	Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
+
+	See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration for patching system configuration
+	using YAML
+	*/
+	var constructBody = map[string]map[string]BackupAPIModel{}
+	constructBody["backups"] = map[string]BackupAPIModel{}
+	constructBody["backups"][backup.Key] = backup
+	content, err := yaml.Marshal(&constructBody)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(data.FromAPIModel(ctx, &backup)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *BackupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data BackupResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var backup BackupAPIModel
+	resp.Diagnostics.Append(data.toAPIModel(ctx, &backup)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	deleteBackupConfig := fmt.Sprintf(`
 backups:
   %s: ~
-`, rsrcBackup.Key)
+`, backup.Key)
 
-		err := SendConfigurationPatch([]byte(deleteBackupConfig), m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		d.SetId("")
-		return nil
+	err := SendConfigurationPatch([]byte(deleteBackupConfig), r.ProviderData)
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
+		return
 	}
 
-	return &schema.Resource{
-		UpdateContext: resourceBackupUpdate,
-		CreateContext: resourceBackupUpdate,
-		DeleteContext: resourceBackupDelete,
-		ReadContext:   resourceBackupRead,
+	// If the logic reaches here, it implicitly succeeded and will remove
+	// the resource from state if there are no other errors.
+}
 
-		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("key", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		Schema:      backupSchema,
-		Description: "Provides an Artifactory backup config resource. This resource configuration corresponds to backup config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages the automatic and periodic backups of the entire Artifactory instance",
-	}
+// ImportState imports the resource into the Terraform state.
+func (r *BackupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }
