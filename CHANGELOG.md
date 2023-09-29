@@ -1,3 +1,9 @@
+## 9.2.1 (Sep 29, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+
+* Update module path to `/v9` PR: [#814](https://github.com/jfrog/terraform-provider-artifactory/pull/814)
+
 ## 9.2.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:
