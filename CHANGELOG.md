@@ -1,3 +1,9 @@
+## 9.2.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+
+* resource/artifactory_backup is migrated to Plugin Framework. PR: [#812](https://github.com/jfrog/terraform-provider-artifactory/pull/812)
+
 ## 9.1.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:

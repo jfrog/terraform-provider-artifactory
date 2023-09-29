@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	// "github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -471,6 +470,9 @@ func (r *PermissionTargetResource) Delete(ctx context.Context, req resource.Dele
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	response, err := r.ProviderData.Client.R().
 		Delete(PermissionsEndPoint + data.Id.ValueString())

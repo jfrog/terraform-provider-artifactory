@@ -85,7 +85,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_single_replication_config":               replication.ResourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
-		"artifactory_backup":                                  configuration.ResourceArtifactoryBackup(),
 		"artifactory_repository_layout":                       configuration.ResourceArtifactoryRepositoryLayout(),
 		"artifactory_property_set":                            configuration.ResourceArtifactoryPropertySet(),
 		"artifactory_proxy":                                   configuration.ResourceArtifactoryProxy(),
