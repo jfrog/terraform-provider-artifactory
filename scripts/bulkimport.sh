@@ -2,6 +2,10 @@
 ${DEBUG:+set -x}
 set -e
 set -o errexit -o pipefail -o noclobber -o nounset
+shopt -s expand_aliases
+
+# shellcheck disable=SC2139
+alias curl="curl -snL${DEBUG:+v}f"
 
 HOME=${HOME:-"~"}
 
@@ -10,14 +14,20 @@ command -v jq >/dev/null || (echo "You must install jq to proceed" >&2 && exit 1
 command -v terraform >/dev/null || (echo "You must install terraform to proceed" >&2 && exit 1)
 
 function usage {
-	echo "${0} [{--users |-u} {--repos|-r} | {--groups|-g}] -h|--host https://\${host}" >&2
-	echo "duplicate resource declarations are de duped (see below)"
-	echo "example: ${0} -u --repos --users -h https://myartifactory.com > import.tf"
+	echo "${0} [{--users |-u} {--repos|-r} | {--groups|-g} | {--all | -a}] -h|--host https://\${host}
+	duplicate resource declarations are de duped (see below)
+
+	example:
+	${0} -u --repos --users -h https://myartifactory.com > import.tf
+	terraform plan -no-color -generate-config-out generated.tf -out ${RANDOM}-out -parallelism=10
+  terraform apply -no-color -parallelism=10
+
+  You may enable debug with: DEBUG=1 ${0} ..." >&2
 	exit 1
 }
 
 resources=()
-while getopts urdga:-: OPT; do
+while getopts urdgah:-: OPT; do
 	# shellcheck disable=SC2154
 	if [ "$OPT" = "-" ]; then # long option: reformulate OPT and OPTARG
 		OPT="${OPTARG%%=*}"      # extract long option name
@@ -35,9 +45,11 @@ while getopts urdga:-: OPT; do
 	g | groups)
 		resources+=(groups)
 		;;
-	a | artifactory-url)
+	h | host)
 		host="${OPTARG}"
-		grep -qE 'http(s)?://.*' <<<"${host}" || (echo "malformed url name: ${host}. must be of the form http(s)?://.*" && exit 1)
+		;;
+	a | all)
+		resources=(users repos groups)
 		;;
 	??*)
 		usage
@@ -69,20 +81,23 @@ function assert_netrc {
 	echo "${location}"
 }
 
+function toHost {
+	local host="${1:?You must supply a host}"
+	host="${host/https:\/\//}"
+	echo "${host/http:\/\//}"
+}
 function hasNetRcEntry {
 	local h="${1:?No host supplied}"
-
-	h="${h/https:\/\//}"
-  h="${h/http:\/\//}"
-  grep -qE "machine[ ]+${h}" "$(assert_netrc)"
+  grep -qE "machine[ ]+${h}" "$(toHost "${h}")"
 }
 
 function write_netrc {
 	local host="${1:?You must supply a host name}"
 	local netrc
 	netrc=$(assert_netrc)
-	read -r -p "please enter the username for ${host}: " username
-	read -rs -p "enter the api token (will not be echoed): " token
+	host=$(toHost "${host}")
+	read -r -p "Please enter the username for ${host}: " username
+	read -rs -p "Enter the api token (will not be echoed): " token
 	# append only to both files
 	cat <<-EOF  >> "${netrc}"
 		machine ${host}
@@ -94,71 +109,73 @@ function write_netrc {
 
 # if they have no netrc file at all, create the file and add an entry
 if ! hasNetRcEntry "${host}" ; then
-	echo "added entry to $(write_netrc "${host}" )  needed for curl" >&2
+	cat <<-EOF >&2
+
+	added entry
+	to $(netrc_location)
+	for $(write_netrc "${host}" )"
+	EOF
 fi
 
 function repos {
-	# jq '.resources |map({type,name})' terraform.tfstate # make sure to not include anything already in state
-	# we'll make our internal jq structure match that of the tf state file so we can subtract them easy
 	local host="${1:?You must supply the artifactory host}"
 	# literally, usage of jq is 6x faster than bash/read/etc
-	# GET "${host}/artifactory/api/repositories" returns {key,type,packageType,url} where
-	# url) points to the UI for that resource??
-	# packageType) is cased ??
-	# type) is upcased and in "${host}/artifactory/api/repositories/${key}" it's not AND it's called rclass
-	local url="${host}/artifactory/api/repositories"
-	curl -snLf "${url}" | jq -re  --arg u "${url}" '.[] | "\($u)/\(.key)"' |
-		xargs -P 10 curl -snLf |
-			jq -sre '
-				group_by(.packageType == "docker" and .rclass == "local") |
-				(.[0] | map({
-						type: "artifactory_\(.rclass)_\(.packageType)_repository.\(.key)",
-						name: key
-					})
-				) +
-				(.[1] | map({
-						type: "artifactory_\(.rclass | ascii_downcase)_\(.packageType | ascii_downcase)_\(.dockerApiVersion | ascii_downcase)_repository.\(.key)",
-						name: key
-					})
-				) | .[] |
+	curl  "${host}/artifactory/api/repositories" |
+		jq -re 'map({
+					 		key,
+					 		type: (.type | ascii_downcase),
+					 		packageType: (.packageType | ascii_downcase)
+					 }) |
+					 group_by(.packageType == "docker" and .type == "local") |
+						(.[0] | map({
+								type: "artifactory_\(.type)_\(.packageType)_repository.\(.key)",
+								name: .key
+							})
+						) +
+						(.[1] | map({
+								type: "artifactory_local_docker_v2_repository.\(.key)",
+								name: .key
+							})
+						) | .[] |
 "import {
   to = \(.type)
   id = \"\(.name)\"
 }"'
+
 } && export -f repos
 
 function accessTokens {
 	local host="${1:?You must supply the artifactory host}"
 	return 1
-	curl -snLf "${host}/artifactory/api/repositories/artifactory/api/security/token"
+	curl "${host}/artifactory/api/repositories/artifactory/api/security/token"
 }
 
 function ldapGroups {
 	local host="${1:?You must supply the artifactory host}"
 	return 1
-	curl -snLf "${host}/access/api/v1/ldap/groups"
+	curl "${host}/access/api/v1/ldap/groups"
 }
 
 function apiKeys {
 	local host="${1:?You must supply the artifactory host}"
 	return 1
-	curl -snLf "${host}/artifactory/api/security/apiKey"
+	curl "${host}/artifactory/api/security/apiKey"
 
 }
 
 function groups {
 	local host="${1:?You must supply the artifactory host}"
-	curl -snLf "${host}/artifactory/api/security/groups" |
+	curl "${host}/artifactory/api/security/groups" |
 		jq -re '.[].name |
-  "import {
-    to = artifactory_group.\(.)
-    id = \"\(.)\"
+"import {
+  to = artifactory_group.\(. | ascii_downcase)
+  id = \"\(.)\"
 }"'
 }
 
 function certificates {
 	local host="${1:?You must supply the artifactory host}"
-	curl -snLf "${host}/artifactory/api/system/security/certificates/" |
+	curl "${host}/artifactory/api/system/security/certificates/" |
 		jq -re '.[] |
 "import {
 	to = artifactory_certificate.\(.certificateAlias)
@@ -170,7 +187,7 @@ function distributionPublicKeys {
 	local host="${1:?You must supply the artifactory host}"
 	# untested
 	return 1
-	curl -snLf "${host}/artifactory/api/security/keys/trusted" |
+	curl "${host}/artifactory/api/security/keys/trusted" |
 	jq -re '.keys[] | "
 import {
   to = artifactory_distribution_public_key.\(.alias)
@@ -182,7 +199,7 @@ function permissions {
 	#	these names have spaces in them
 	local host="${1:?You must supply the artifactory host}"
 	return 1 # untested
-	curl -snLf "${host}/artifactory/api/v2/security/permissions/" |
+	curl "${host}/artifactory/api/v2/security/permissions/" |
 		jq -re '.[] | select(.name | startswith("INTERNAL") | not) | "
 import {
 	to = artifactory_permission_target.\(.name)
@@ -192,7 +209,7 @@ import {
 function keyPairs {
 	local host="${1:?You must supply the artifactory host}"
 	return 1 # untested
-	curl -snLf "${host}/artifactory/api/security/keypair/" |
+	curl "${host}/artifactory/api/security/keypair/" |
 		jq -re '.[] | "
 import {
   to = artifactory_keypair.\(.pairName)
@@ -202,8 +219,11 @@ import {
 function users {
 	#	.name has values in it that artifactory will never accept, like email@. Not sure if in that case it should just be user-$RANDOM
 	local host="${1:?You must supply the artifactory host}"
-	curl -snLf "${host}/artifactory/api/security/users" | jq -re '.[] |
-	{user: .name | capture("(?<user>\\w+)@(?<domain>\\w+)").user, name}|
+	curl "${host}/artifactory/api/security/users" | jq -re '.[] |
+		{
+			user: .name | capture("(?<user>\\w+)@(?<domain>\\w+)").user,
+			name
+		}|
 	"import {
   to = artifactory_user.\(.user)
   id = \"\(.name)\"
@@ -232,9 +252,17 @@ function output {
 		done)
 	EOF
 }
+if ! grep -qE 'http(s)?://.*' <<<"${host}"; then
+	echo "malformed url name: ${host}. must be of the form http(s)?://.*"
+	exit 1
+fi
 
 # shellcheck disable=SC2046
 output "${host}" $(echo "${resources[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-# out="$RANDOM-out"
-#terraform plan -generate-config-out generated.tf -out "${out} -parallelism=10
-#terraform apply -parallelism=10
+out="$RANDOM-out"
+# everytime I try to automate this, I get 'This character is not used within the language.' - it's generating something funky
+echo "please run :
+
+terraform plan -no-color -generate-config-out generated.tf -out ${out} -parallelism=10
+terraform apply -no-color -parallelism=10
+" >&2
