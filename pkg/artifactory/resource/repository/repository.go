@@ -39,7 +39,7 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	"project_environments": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
-		MinItems: 1,
+		MinItems: 0,
 		MaxItems: 2,
 		Set:      schema.HashString,
 		Optional: true,
@@ -300,7 +300,7 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: GetDefaultRepoLayoutRef(repositoryType, packageType),
-			Description: "Repository layout key for the local repository",
+			Description: fmt.Sprintf("Repository layout key for the %s repository", repositoryType),
 		},
 	}
 }
@@ -415,11 +415,11 @@ type SupportedRepoClasses struct {
 }
 
 // GetDefaultRepoLayoutRef return the default repo layout by Repository Type & Package Type
-func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+func GetDefaultRepoLayoutRef(repositoryType, packageType string) func() (interface{}, error) {
 	return func() (interface{}, error) {
 		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
 			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
 		}
-		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
+		return nil, fmt.Errorf("default repo layout not found for repository type %s & package type %s", repositoryType, packageType)
 	}
 }

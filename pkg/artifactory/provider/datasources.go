@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource"
-	datasource_federated "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/repository/federated"
-	datasource_local "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/repository/local"
-	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/repository/remote"
-	datasource_virtual "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/repository/virtual"
-	datasource_security "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/security"
-	datasource_user "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/user"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/remote"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource"
+	datasource_federated "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/repository/federated"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/repository/local"
+	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/repository/remote"
+	datasource_virtual "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/repository/virtual"
+	datasource_security "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/security"
+	datasource_user "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/datasource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/virtual"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -28,6 +28,7 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_user":                                    datasource_user.DataSourceArtifactoryUser(),
 		"artifactory_local_alpine_repository":                 datasource_local.DataSourceArtifactoryLocalAlpineRepository(),
 		"artifactory_local_cargo_repository":                  datasource_local.DataSourceArtifactoryLocalCargoRepository(),
+		"artifactory_local_conan_repository":                  datasource_local.DataSourceArtifactoryLocalConanRepository(),
 		"artifactory_local_debian_repository":                 datasource_local.DataSourceArtifactoryLocalDebianRepository(),
 		"artifactory_local_docker_v2_repository":              datasource_local.DataSourceArtifactoryLocalDockerV2Repository(),
 		"artifactory_local_docker_v1_repository":              datasource_local.DataSourceArtifactoryLocalDockerV1Repository(),
@@ -53,6 +54,7 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_alpine_repository":               datasource_virtual.DatasourceArtifactoryVirtualAlpineRepository(),
 		"artifactory_virtual_bower_repository":                datasource_virtual.DatasourceArtifactoryVirtualBowerRepository(),
 		"artifactory_virtual_debian_repository":               datasource_virtual.DatasourceArtifactoryVirtualDebianRepository(),
+		"artifactory_virtual_conan_repository":                datasource_virtual.DatasourceArtifactoryVirtualConanRepository(),
 		"artifactory_virtual_go_repository":                   datasource_virtual.DatasourceArtifactoryVirtualGoRepository(),
 		"artifactory_virtual_docker_repository":               datasource_virtual.DatasourceArtifactoryVirtualDockerRepository(),
 		"artifactory_virtual_helm_repository":                 datasource_virtual.DatasourceArtifactoryVirtualHelmRepository(),
@@ -61,6 +63,7 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_rpm_repository":                  datasource_virtual.DatasourceArtifactoryVirtualRpmRepository(),
 		"artifactory_federated_alpine_repository":             datasource_federated.DataSourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_cargo_repository":              datasource_federated.DataSourceArtifactoryFederatedCargoRepository(),
+		"artifactory_federated_conan_repository":              datasource_federated.DataSourceArtifactoryFederatedConanRepository(),
 		"artifactory_federated_debian_repository":             datasource_federated.DataSourceArtifactoryFederatedDebianRepository(),
 		"artifactory_federated_docker_v1_repository":          datasource_federated.DataSourceArtifactoryFederatedDockerV1Repository(),
 		"artifactory_federated_docker_v2_repository":          datasource_federated.DataSourceArtifactoryFederatedDockerV2Repository(),

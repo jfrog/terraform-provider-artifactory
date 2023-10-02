@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/replication"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/remote"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/user"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/webhook"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -22,6 +22,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_keypair":                                 security.ResourceArtifactoryKeyPair(),
 		"artifactory_federated_alpine_repository":             federated.ResourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_cargo_repository":              federated.ResourceArtifactoryFederatedCargoRepository(),
+		"artifactory_federated_conan_repository":              federated.ResourceArtifactoryFederatedConanRepository(),
 		"artifactory_federated_debian_repository":             federated.ResourceArtifactoryFederatedDebianRepository(),
 		"artifactory_federated_docker_repository":             federated.ResourceArtifactoryFederatedDockerV2Repository(), // Alias for backward compatibility
 		"artifactory_federated_docker_v1_repository":          federated.ResourceArtifactoryFederatedDockerV1Repository(),
@@ -35,6 +36,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_local_maven_repository":                  local.ResourceArtifactoryLocalJavaRepository("maven", false),
 		"artifactory_local_alpine_repository":                 local.ResourceArtifactoryLocalAlpineRepository(),
 		"artifactory_local_cargo_repository":                  local.ResourceArtifactoryLocalCargoRepository(),
+		"artifactory_local_conan_repository":                  local.ResourceArtifactoryLocalConanRepository(),
 		"artifactory_local_debian_repository":                 local.ResourceArtifactoryLocalDebianRepository(),
 		"artifactory_local_docker_v2_repository":              local.ResourceArtifactoryLocalDockerV2Repository(),
 		"artifactory_local_docker_v1_repository":              local.ResourceArtifactoryLocalDockerV1Repository(),
@@ -57,6 +59,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_vcs_repository":                   remote.ResourceArtifactoryRemoteVcsRepository(),
 		"artifactory_virtual_alpine_repository":               virtual.ResourceArtifactoryVirtualAlpineRepository(),
 		"artifactory_virtual_bower_repository":                virtual.ResourceArtifactoryVirtualBowerRepository(),
+		"artifactory_virtual_conan_repository":                virtual.ResourceArtifactoryVirtualConanRepository(),
 		"artifactory_virtual_debian_repository":               virtual.ResourceArtifactoryVirtualDebianRepository(),
 		"artifactory_virtual_docker_repository":               virtual.ResourceArtifactoryVirtualDockerRepository(),
 		"artifactory_virtual_maven_repository":                virtual.ResourceArtifactoryVirtualJavaRepository("maven"),
@@ -82,7 +85,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_single_replication_config":               replication.ResourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
-		"artifactory_backup":                                  configuration.ResourceArtifactoryBackup(),
 		"artifactory_repository_layout":                       configuration.ResourceArtifactoryRepositoryLayout(),
 		"artifactory_property_set":                            configuration.ResourceArtifactoryPropertySet(),
 		"artifactory_proxy":                                   configuration.ResourceArtifactoryProxy(),

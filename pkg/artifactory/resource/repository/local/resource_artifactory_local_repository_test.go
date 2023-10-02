@@ -10,10 +10,10 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -1065,6 +1065,42 @@ func TestAccLocalCargoRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
 					resource.TestCheckResourceAttr(fqrn, "enable_sparse_index", fmt.Sprintf("%t", params["enable_sparse_index"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccLocalConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-local", "artifactory_local_conan_repository")
+	params := map[string]interface{}{
+		"force_conan_authentication": testutil.RandBool(),
+		"name":                       name,
+	}
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalConanRepository", `
+		resource "artifactory_local_conan_repository" "{{ .name }}" {
+		  key                        = "{{ .name }}"
+		  force_conan_authentication = {{ .force_conan_authentication }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", params["force_conan_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{

@@ -1,4 +1,4 @@
-module github.com/jfrog/terraform-provider-artifactory/v8
+module github.com/jfrog/terraform-provider-artifactory/v9
 
 // if you need to do local dev, literally just uncomment the line below
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.28.0
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
-	github.com/jfrog/terraform-provider-shared v1.17.0
+	github.com/jfrog/terraform-provider-shared v1.19.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819

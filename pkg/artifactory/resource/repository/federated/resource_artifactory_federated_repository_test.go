@@ -11,11 +11,11 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -437,6 +437,72 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", !anonAccess)),
 					resource.TestCheckResourceAttr(fqrn, "enable_sparse_index", fmt.Sprintf("%t", !enabledSparseIndex)),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccFederatedConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-federated", "artifactory_federated_conan_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	forceConanAuthentication := testutil.RandBool()
+
+	params := map[string]interface{}{
+		"force_conan_authentication": forceConanAuthentication,
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+
+	template := `
+		resource "artifactory_federated_conan_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			force_conan_authentication = {{ .force_conan_authentication }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedConanRepository", template, params)
+
+	federatedRepositoryUpdated := utilsdk.ExecuteTemplate(
+		"TestAccFederatedCargoRepository",
+		template,
+		map[string]interface{}{
+			"force_conan_authentication": !forceConanAuthentication,
+			"name":                       name,
+			"memberUrl":                  federatedMemberUrl,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", !forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{

@@ -38,11 +38,9 @@ All generic repo arguments are supported, in addition to:
 * `description` - (Optional) Public description.
 * `notes` - (Optional) Internal description.
 * `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash. We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider to manage the list of repositories.
-* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV` or `PROD`.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV`, `PROD`, or one of custom environment.
   Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 onward, only one value is allowed.
-  The attribute should only be used if the repository is already assigned to the existing project.
-  If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state
-  drift during the update.
+  The attribute should only be used if the repository is already assigned to the existing project. If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during the update.
 * `url` - (Required) The remote repo URL.
 * `username` - (Optional)
 * `password` - (Optional)
@@ -56,7 +54,7 @@ All generic repo arguments are supported, in addition to:
 * `offline` - (Optional, Default: `false`) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution. Default is `false`.
 * `xray_index` - (Optional, Default: `false`) Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.  Default is `false`.
-* `store_artifacts_locally` - (Optional, Default: `false`) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
+* `store_artifacts_locally` - (Optional, Default: `true`) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
 * `socket_timeout_millis` - (Optional, Default: `15000`) Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.
 * `local_address` - (Optional) The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.
 * `retrieval_cache_period_seconds` - (Optional, Default: `7200`) The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.

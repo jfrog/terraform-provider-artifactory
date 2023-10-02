@@ -31,6 +31,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `retrieval_cache_period_seconds` - (Optional, Default: `7200`) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
+* `force_conan_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is `false`.
 
 ## Import
 
