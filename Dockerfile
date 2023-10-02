@@ -27,9 +27,11 @@ WORKDIR /home/jfrog
 COPY --from=builder /src/terraform-provider-artifactory/v5-v6-migrator/tf-v5-migrator /home/jfrog/tf-v5-migrator
 
 FROM alpine as importer
-RUN apk add --no-cache jq curl bash
+RUN apk add --no-cache jq curl bash terraform
 RUN adduser -S jfrog
 WORKDIR /home/jfrog
+COPY scripts/bulkimport.sh /home/jfrog
+RUN chown -R jfrog /home/jfrog
 USER jfrog
-COPY scripts/bulkimport.sh .
-ENTRYPOINT ./bulkimport.sh
+ENTRYPOINT bash
+CMD /home/jfrog/bulkimport.sh

@@ -108,7 +108,7 @@ function write_netrc {
 }
 
 # if they have no netrc file at all, create the file and add an entry
-if ! hasNetRcEntry "${host}" ; then
+if ! hasNetRcEntry "${host:?Host not defined}" ; then
 	cat <<-EOF >&2
 
 	added entry
