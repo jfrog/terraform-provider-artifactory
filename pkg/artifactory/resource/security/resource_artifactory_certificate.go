@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -71,7 +70,7 @@ func ResourceArtifactoryCertificate() *schema.Resource {
 					if _, err := os.Stat(value.(string)); err != nil {
 						return nil, append(errors, err)
 					}
-					data, err := ioutil.ReadFile(value.(string))
+					data, err := os.ReadFile(value.(string))
 					if err != nil {
 						return nil, append(errors, err)
 					}
@@ -109,7 +108,7 @@ func ResourceArtifactoryCertificate() *schema.Resource {
 }
 
 func calculateFingerprint(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-	content, err := getContentFromDiff(d)
+	content, _ := getContentFromDiff(d)
 	fingerprint, err := calculateFingerPrint(content)
 	if err != nil {
 		return err
@@ -203,7 +202,7 @@ func resourceCertificateRead(_ context.Context, d *schema.ResourceData, m interf
 		setValue("issued_to", (*cert).IssuedTo)
 		errors := setValue("valid_until", (*cert).ValidUntil)
 
-		if errors != nil && len(errors) > 0 {
+		if len(errors) > 0 {
 			return diag.Errorf("failed to pack certificate %q", errors)
 		}
 
@@ -227,7 +226,7 @@ func getContentFromDiff(d *schema.ResourceDiff) (string, error) {
 		return content.(string), nil
 	}
 	if fileExists {
-		data, err := ioutil.ReadFile(file.(string))
+		data, err := os.ReadFile(file.(string))
 		if err != nil {
 			return "", err
 		}
@@ -242,7 +241,7 @@ func getContentFromData(d *schema.ResourceData) (string, error) {
 		return content.(string), nil
 	}
 	if file, ok := d.GetOk("file"); ok {
-		data, err := ioutil.ReadFile(file.(string))
+		data, err := os.ReadFile(file.(string))
 		if err != nil {
 			return "", err
 		}

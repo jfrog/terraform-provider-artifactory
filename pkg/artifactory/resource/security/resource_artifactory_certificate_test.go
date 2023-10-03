@@ -33,6 +33,7 @@ func TestAccCertHasFileAndContentFails(t *testing.T) {
 		},
 	})
 }
+
 func TestAccCertWithFileMissing(t *testing.T) {
 	const certWithMissingFile = `
 		resource "artifactory_certificate" "fail" {

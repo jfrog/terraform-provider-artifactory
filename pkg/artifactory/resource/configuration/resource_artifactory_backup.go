@@ -246,14 +246,14 @@ func (r *BackupResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *BackupResourceModel
+	var state *BackupResourceModel
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	backups := Backups{}
+	var backups Backups
 	_, err := r.ProviderData.Client.R().
 		SetResult(&backups).
 		Get("artifactory/api/system/configuration")
@@ -262,12 +262,12 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	matchedBackup := FindConfigurationById[BackupAPIModel](backups.BackupArr, data.Key.ValueString())
+	matchedBackup := FindConfigurationById[BackupAPIModel](backups.BackupArr, state.Key.ValueString())
 	if matchedBackup == nil {
 		resp.Diagnostics.AddAttributeWarning(
 			path.Root("key"),
 			"no matching backup found",
-			data.Key.ValueString(),
+			state.Key.ValueString(),
 		)
 		resp.State.RemoveResource(ctx)
 		return
@@ -275,13 +275,13 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	resp.Diagnostics.Append(data.FromAPIModel(ctx, matchedBackup)...)
+	resp.Diagnostics.Append(state.FromAPIModel(ctx, matchedBackup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *BackupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -340,16 +340,10 @@ func (r *BackupResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	var backup BackupAPIModel
-	resp.Diagnostics.Append(data.toAPIModel(ctx, &backup)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	deleteBackupConfig := fmt.Sprintf(`
 backups:
   %s: ~
-`, backup.Key)
+`, data.Key.ValueString())
 
 	err := SendConfigurationPatch([]byte(deleteBackupConfig), r.ProviderData)
 	if err != nil {
