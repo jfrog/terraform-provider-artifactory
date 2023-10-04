@@ -88,7 +88,7 @@ function toHost {
 }
 function hasNetRcEntry {
 	local h="${1:?No host supplied}"
-  grep -qE "machine[ ]+${h}" "$(toHost "${h}")"
+  grep -qE "machine[ ]+$(toHost "${h}")" <<< "$(netrc_location)"
 }
 
 function write_netrc {
@@ -108,41 +108,72 @@ function write_netrc {
 }
 
 # if they have no netrc file at all, create the file and add an entry
-if ! hasNetRcEntry "${host:?Host not defined}" ; then
-	cat <<-EOF >&2
-
-	added entry
-	to $(netrc_location)
-	for $(write_netrc "${host}" )"
-	EOF
-fi
+#if ! grep -qE "machine[ ]+$(toHost "${h}")" <<< "$(netrc_location)" ; then
+#	cat <<-EOF >&2
+#
+#	added entry
+#	to $(netrc_location)
+#	for $(write_netrc "${host}" )"
+#	EOF
+#fi
 
 function repos {
+	# jq '.resources |map({type,name})' terraform.tfstate # make sure to not include anything already in state
+	# we'll make our internal jq structure match that of the tf state file so we can subtract them easy
 	local host="${1:?You must supply the artifactory host}"
 	# literally, usage of jq is 6x faster than bash/read/etc
-	curl  "${host}/artifactory/api/repositories" |
-		jq -re 'map({
-					 		key,
-					 		type: (.type | ascii_downcase),
-					 		packageType: (.packageType | ascii_downcase)
-					 }) |
-					 group_by(.packageType == "docker" and .type == "local") |
-						(.[0] | map({
-								type: "artifactory_\(.type)_\(.packageType)_repository.\(.key)",
-								name: .key
-							})
-						) +
-						(.[1] | map({
-								type: "artifactory_local_docker_v2_repository.\(.key)",
-								name: .key
-							})
-						) | .[] |
+	# GET "${host}/artifactory/api/repositories" returns {key,type,packageType,url} where
+	# url) points to the UI for that resource??
+	# packageType) is cased ??
+	# type) is upcased and in "${host}/artifactory/api/repositories/${key}" it's not AND it's called rclass
+	local tempJson
+	tempJson="$(mktemp)-$RANDOM"
+	local url="${host}/artifactory/api/repositories"
+	# we have to sort out the wheat from the chaffee. We're normalizing the input while we sort it out
+	# and we choose to map to 'rclass' from '.type' because that's how the Go code maps it
+	curl -snLf "${url}" |
+		jq 'map({
+					key,
+					rclass: (.type | ascii_downcase),
+					packageType : (.packageType | ascii_downcase)
+				}) |
+				group_by(.packageType == "docker" and .rclass == "local") |
+				{
+					safe: .[0],
+					docker_remap: .[1]
+				}
+		' > "${tempJson}"
+
+  # the URL that comes in the original payload refers to the UI endpoint. Dumb
+	jq -re  --arg u "${url}" '.docker_remap[] | "\($u)/\(.key)"' "${tempJson}" |
+		#grab the docker-local repos. Curl when used this xargs doesn't seem to be picking up the alias
+		xargs -n 10 -P 10 curl -snLf | tee onlydocker.json |
+		# this was literally the only field we couldn't get from before and, apparently it's no longer possible to
+		# even set docker V1 in RT (even though there is a check, you get an error if you try). But for legacy reason, we
+		# have to go fetch them. This would be 1 line to simply fetch all repo data and remap it. But SOMEONE is worried about
+		# scalability
+		jq -sre 'map(.dockerApiVersion |= ascii_downcase)' |
+			# combined step 1 with the tf state and step 3, and give them saner names. But what if they have no tf file??
+			cat "${tempJson}" - | jq -sre '
+				{
+					safe: .[0].safe,
+					docker:.[1:][0]
+				} |
+				((.safe | map({
+						type: "artifactory_\(.rclass)_\(.packageType)_repository.\(.key | ascii_downcase)",
+						name: .key
+					})
+				) +
+				(.docker | map({
+						type: "artifactory_\(.rclass)_\(.packageType)_\(.dockerApiVersion)_repository.\(.key)",
+						name: .key
+					})
+				)) | .[] |
 "import {
   to = \(.type)
   id = \"\(.name)\"
 }"'
-
-} && export -f repos
+}
 
 function accessTokens {
 	local host="${1:?You must supply the artifactory host}"
@@ -229,6 +260,7 @@ function users {
   id = \"\(.name)\"
 }"'
 }
+
 
 
 function output {
