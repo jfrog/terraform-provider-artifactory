@@ -260,7 +260,17 @@ function users {
   id = \"\(.name)\"
 }"'
 }
-
+function format {
+	local resourceType="${1:?You must supply a resource type}"
+	local key="${2:?You must supply a key}"
+	local alias="${3:-${key}}"
+	cat <<-EOF
+	import {
+	  to = $resourceType.$alias
+	  id = "$key"
+	}
+	EOF
+}
 
 
 function output {
