@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/text/cases"
@@ -71,6 +71,14 @@ func TestAccDataSourceVirtualBowerRepository(t *testing.T) {
 		"description":                    "bower virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
 		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
+	}))
+}
+
+func TestAccDataSourceVirtualConanRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase(repository.ConanPackageType, t, map[string]interface{}{
+		"description":                    "conan virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 60,
+		"force_conan_authentication":     true,
 	}))
 }
 
@@ -271,7 +279,7 @@ func TestAccDataSourceVirtualRpmRepository(t *testing.T) {
 }
 
 func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames(fmt.Sprintf("terraform-virtual-%s-repo-full-", packageType),
+	_, fqrn, name := testutil.MkNames(fmt.Sprintf("virtual-%s-repo-full-", packageType),
 		fmt.Sprintf("artifactory_virtual_%s_repository", packageType))
 	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{

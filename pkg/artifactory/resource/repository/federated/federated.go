@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
@@ -25,7 +25,6 @@ var PackageTypesLikeGeneric = []string{
 	"chef",
 	"cocoapods",
 	"composer",
-	"conan",
 	"conda",
 	"cran",
 	"gems",
@@ -129,6 +128,7 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 
 	return nil
 }
+
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &utilsdk.ResourceData{ResourceData: d}

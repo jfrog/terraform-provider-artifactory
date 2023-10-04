@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
