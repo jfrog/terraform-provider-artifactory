@@ -1,10 +1,15 @@
+## 9.4.0 (Oct 5, 2023)
+
+FEATURES:
+
+* resource/artifactory_mail_server: add a new resource for managing mail server configuration. PR: [#819](https://github.com/jfrog/terraform-provider-artifactory/pull/819) Issue: [#735](https://github.com/jfrog/terraform-provider-artifactory/issues/735)
+
 ## 9.3.0 (Oct 3, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.5.7
 
 IMPROVEMENTS:
 
 * resource/artifactory_distribution_public_key is migrated to Plugin Framework. PR: [#817](https://github.com/jfrog/terraform-provider-artifactory/pull/817)
 * resource/artifactory_remote_\*\_repository: Fix incorrect default value for `store_artifacts_locally` attribute in documentation. PR: [#816](https://github.com/jfrog/terraform-provider-artifactory/pull/816)
-
 
 ## 9.2.1 (Sep 29, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
 
