@@ -1,0 +1,1 @@
+terraform import artifactory_mail_server.my-mail-server mymailserver

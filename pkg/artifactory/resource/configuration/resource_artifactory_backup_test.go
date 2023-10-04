@@ -139,7 +139,7 @@ func TestAccBackup_invalid_cron(t *testing.T) {
 			{
 				Config:       config,
 				ResourceName: "artifactory_backup.invalid-cron-test",
-				ExpectError:  regexp.MustCompile("value must match be a valid cron expression"),
+				ExpectError:  regexp.MustCompile("value must be a valid cron expression"),
 			},
 		},
 	})

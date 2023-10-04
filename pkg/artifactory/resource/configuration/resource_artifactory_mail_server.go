@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,7 +27,7 @@ type MailServerAPIModel struct {
 	Username       string `xml:"username" yaml:"username"`
 	Password       string `xml:"password" yaml:"password"`
 	Port           int64  `xml:"port" yaml:"port"`
-	SubjectPrefix  string `xml:"subjectPrefix>repositoryRef" yaml:"subjectPrefix"`
+	SubjectPrefix  string `xml:"subjectPrefix" yaml:"subjectPrefix"`
 	UseSSL         bool   `xml:"ssl" yaml:"ssl"`
 	UseTLS         bool   `xml:"tls" yaml:"tls"`
 }
@@ -72,7 +73,6 @@ func (r *MailServerResourceModel) FromAPIModel(ctx context.Context, mailServer *
 	r.From = types.StringValue(mailServer.From)
 	r.Host = types.StringValue(mailServer.Host)
 	r.Username = types.StringValue(mailServer.Username)
-	r.Password = types.StringValue(mailServer.Password)
 	r.Port = types.Int64Value(mailServer.Port)
 	r.SubjectPrefix = types.StringValue(mailServer.SubjectPrefix)
 	r.UseSSL = types.BoolValue(mailServer.UseSSL)
@@ -95,7 +95,7 @@ func (r *MailServerResource) Metadata(ctx context.Context, req resource.Metadata
 
 func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Provides an Artifactory backup config resource. This resource configuration corresponds to backup config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages the automatic and periodic backups of the entire Artifactory instance.",
+		MarkdownDescription: "Provides an Artifactory mail server config resource. This resource configuration corresponds to mail server config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages mail server settings of the Artifactory instance.",
 		Attributes: map[string]schema.Attribute{
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "When set, mail notifications are enabled.",
@@ -106,6 +106,7 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsURLHttpOrHttps(),
 				},
 			},
 			"from": schema.StringAttribute{
@@ -113,6 +114,7 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsEmail(),
 				},
 			},
 			"host": schema.StringAttribute{
@@ -153,11 +155,13 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"use_ssl": schema.BoolAttribute{
 				MarkdownDescription: "When set to 'true', uses a secure connection to the mail server.",
 				Optional:            true,
+				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 			},
 			"use_tls": schema.BoolAttribute{
 				MarkdownDescription: "When set to 'true', uses Transport Layer Security when connecting to the mail server.",
 				Optional:            true,
+				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 			},
 		},
@@ -240,7 +244,7 @@ func (r *MailServerResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	if mailServer.Server == nil {
 		resp.Diagnostics.AddAttributeWarning(
-			path.Root("key"),
+			path.Root("host"),
 			"no mail server found",
 			"",
 		)
@@ -328,5 +332,7 @@ func (r *MailServerResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 // ImportState imports the resource into the Terraform state.
 func (r *MailServerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// "host" attribute is used here but it's a noop. There's only ever one mail server on Artifactory
+	// so there's no need to use ID to fetch.
 	resource.ImportStatePassthroughID(ctx, path.Root("host"), req, resp)
 }
