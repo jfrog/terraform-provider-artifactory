@@ -13,9 +13,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-var Version = "7.0.0" // needs to be exported so make file can update this
-var productId = "terraform-provider-artifactory/" + Version
-
 // SdkV2 Artifactory provider that supports configuration via Access Token
 // Supported resources are repos, users, groups, replications, and permissions
 func SdkV2() *schema.Provider {

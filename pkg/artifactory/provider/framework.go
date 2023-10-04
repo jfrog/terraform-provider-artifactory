@@ -127,7 +127,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			fmt.Sprintf("%v", err),
 		)
 	}
-	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() == true {
+	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
 		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			resp.Diagnostics.AddError(
@@ -159,7 +159,6 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}
-
 }
 
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.
