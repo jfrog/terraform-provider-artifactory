@@ -72,10 +72,6 @@ pipelines:
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
             - sudo apt install goreleaser
-            # TODO: enable after migration to repo21
-            #- echo "Install SonarQube"
-            #- curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-            #- unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           onExecute:
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
@@ -141,9 +137,6 @@ pipelines:
             - unset ARTIFACTORY_PASSWORD
             - export TF_ACC=true
             - make acceptance
-            # TODO: enable after migration to repo21
-            #- export SONAR_TOKEN=${int_terraform_artifactory_sonarqube_token}
-            #- make scan
             - make install
           onSuccess:
             - echo "Success"
