@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-${DEBUG:+set -x}
+${DEBUG:+set -xv}
 set -e
-set -o errexit -o pipefail -o noclobber -o nounset
+set -o errexit -o pipefail -o noclobber
 shopt -s expand_aliases
 
 # shellcheck disable=SC2139
@@ -74,6 +74,7 @@ function netrc_location {
   			;;
   	esac
 }
+
 function assert_netrc {
 	local location
 	location="$(netrc_location)"
@@ -86,9 +87,10 @@ function toHost {
 	host="${host/https:\/\//}"
 	echo "${host/http:\/\//}"
 }
+
 function hasNetRcEntry {
 	local h="${1:?No host supplied}"
-  grep -qE "machine[ ]+$(toHost "${h}")" <<< "$(netrc_location)"
+  grep -qE "machine[ ]+$(toHost "${h}")" "$(assert_netrc)"
 }
 
 function write_netrc {
@@ -107,15 +109,24 @@ function write_netrc {
 	echo "${host}"
 }
 
+if ! grep -qE 'http(s)?://.*' <<<"${host:-}"; then
+	echo "malformed url name: '${host}'. must be of the form http(s)?://.*"
+	exit 1
+fi
+
 # if they have no netrc file at all, create the file and add an entry
-#if ! grep -qE "machine[ ]+$(toHost "${h}")" <<< "$(netrc_location)" ; then
-#	cat <<-EOF >&2
-#
-#	added entry
-#	to $(netrc_location)
-#	for $(write_netrc "${host}" )"
-#	EOF
-#fi
+if ! hasNetRcEntry "${host}"  ; then
+	cat <<-EOF >&2
+
+	added entry
+	to $(netrc_location)
+	for $(write_netrc "${host}" )"
+	EOF
+fi
+
+function get_tf_state {
+  jq -re '.resources |map({type,name})' terraform.tfstate
+}
 
 function repos {
 	# jq '.resources |map({type,name})' terraform.tfstate # make sure to not include anything already in state
@@ -294,10 +305,6 @@ function output {
 		done)
 	EOF
 }
-if ! grep -qE 'http(s)?://.*' <<<"${host}"; then
-	echo "malformed url name: ${host}. must be of the form http(s)?://.*"
-	exit 1
-fi
 
 # shellcheck disable=SC2046
 output "${host}" $(echo "${resources[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
