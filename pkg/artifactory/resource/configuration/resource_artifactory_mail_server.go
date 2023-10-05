@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -105,7 +106,6 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 				MarkdownDescription: "The Artifactory URL to to link to in all outgoing messages.",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
 					validatorfw_string.IsURLHttpOrHttps(),
 				},
 			},
@@ -113,7 +113,6 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 				MarkdownDescription: "The 'from' address header to use in all outgoing messages.",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
 					validatorfw_string.IsEmail(),
 				},
 			},
@@ -144,6 +143,9 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"port": schema.Int64Attribute{
 				MarkdownDescription: "The port number of the mail server.",
 				Required:            true,
+				Validators: []validator.Int64{
+					int64validator.AtMost(65535),
+				},
 			},
 			"subject_prefix": schema.StringAttribute{
 				MarkdownDescription: "A prefix to use for the subject of all outgoing mails.",
