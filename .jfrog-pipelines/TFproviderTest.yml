@@ -15,7 +15,8 @@ pipelines:
   - name: tf_provider_artifactory
     steps:
       - name: build_and_run_tf_provider
-        type: Bash
+        type: Matrix
+        stepMode: Bash
         configuration:
           #nodePool: default
           priority: 1
@@ -47,6 +48,19 @@ pipelines:
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
             SONAR_SCANNER_OPTS: "-server"
+        stepMultipliers:
+          environmentVariables:
+            - directory: ./pkg/artifactory/datasource
+            - directory: ./pkg/artifactory/datasource/repository
+            - directory: ./pkg/artifactory/datasource/security
+            - directory: ./pkg/artifactory/datasource/user
+            - directory: ./pkg/artifactory/provider
+            - directory: ./pkg/artifactory/resource/configuration
+            - directory: ./pkg/artifactory/resource/replication
+            - directory: ./pkg/artifactory/resource/repository
+            - directory: ./pkg/artifactory/resource/security
+            - directory: ./pkg/artifactory/resource/user
+            - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
             - echo "Sending status to GitHub."
@@ -72,11 +86,8 @@ pipelines:
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
             - sudo apt install goreleaser
-            # TODO: enable after migration to repo21
-            #- echo "Install SonarQube"
-            #- curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-            #- unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           onExecute:
+            - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
@@ -139,11 +150,7 @@ pipelines:
             - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
-            - export TF_ACC=true
-            - make acceptance
-            # TODO: enable after migration to repo21
-            #- export SONAR_TOKEN=${int_terraform_artifactory_sonarqube_token}
-            #- make scan
+            - TF_ACC=true make acceptance TEST=${directory}
             - make install
           onSuccess:
             - echo "Success"
