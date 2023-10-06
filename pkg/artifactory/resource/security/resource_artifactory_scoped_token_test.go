@@ -246,7 +246,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
 		Steps: []resource.TestStep{
 			{
@@ -318,7 +318,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
 			return security.CheckAccessToken(id, request)
@@ -379,7 +379,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -413,7 +413,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -521,7 +521,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -554,7 +554,7 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -587,7 +587,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -624,7 +624,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
@@ -660,7 +660,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,

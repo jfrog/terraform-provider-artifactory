@@ -106,7 +106,7 @@ func TestAccBackup_importNotFound(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        config,
@@ -134,12 +134,12 @@ func TestAccBackup_invalid_cron(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:       config,
 				ResourceName: "artifactory_backup.invalid-cron-test",
-				ExpectError:  regexp.MustCompile("value must match be a valid cron expression"),
+				ExpectError:  regexp.MustCompile("value must be a valid cron expression"),
 			},
 		},
 	})
@@ -180,7 +180,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
