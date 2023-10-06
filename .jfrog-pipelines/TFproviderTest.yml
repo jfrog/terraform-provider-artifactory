@@ -165,14 +165,14 @@ pipelines:
             - make install
           onSuccess:
             - echo "Success"
-            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
+            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
             - export STATE="failure"
             - export DESCRIPTION="Pipeline has failed."
             - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
             - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name}> step"
+            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
 
