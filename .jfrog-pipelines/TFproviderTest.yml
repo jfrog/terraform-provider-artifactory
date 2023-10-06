@@ -115,25 +115,26 @@ pipelines:
                echo "Artifactory version: "${ARTIFACTORY_VERSION}
               fi
             - export ARTIFACTORY_CONTAINER_NAME=artifactory-${steplet_id}
+            - export ARTIFACTORY_PORT=$(expr 8082 + ${steplet_id})
             - >-
               docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-                    -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+                -p ${ARTIFACTORY_PORT}:8082 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Set localhost to a container IP address, since we run docker inside of docker"
             - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
             - echo "Using ${LOCALHOST} as 'localhost' ip address"
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
+            - export ARTIFACTORY_URL="http://${LOCALHOST}:${ARTIFACTORY_PORT}"
             - >-
-              until curl -sf -u admin:password http://${LOCALHOST}:8081/artifactory/api/system/licenses/; do
+              until curl -sf -u admin:password http://${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
                   printf '.'
                   sleep 4
               done
             - echo "Add variables needed to run Terraform Provider"
-            - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=password
             - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
             - sleep 180
-            - sudo curl http://${LOCALHOST}:8082/router/api/v1/system/health
+            - sudo curl http://${ARTIFACTORY_URL}/router/api/v1/system/health
             - >-
               export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
                             --header "accept: application/json, text/plain, */*" \
