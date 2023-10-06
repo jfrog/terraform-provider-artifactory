@@ -48,7 +48,7 @@ pipelines:
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
             SONAR_SCANNER_OPTS: "-server"
-        stepMultipliers:
+        stepletMultipliers:
           environmentVariables:
             - directory: ./pkg/artifactory/datasource
             - directory: ./pkg/artifactory/datasource/repository
@@ -174,7 +174,7 @@ pipelines:
             - name: partnership_slack
             - name: partnership_github
           inputSteps:
-            - name: build_and_run_tf_provider
+            - name: build_and_run_tf_provider_matrix
           inputResources:
             - name: GitHubTFProviderRepoJFrog
         execution:
