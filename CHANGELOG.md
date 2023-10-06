@@ -1,4 +1,4 @@
-## 9.3.1 (Oct 6, 2023)
+## 9.3.1 (Oct 6, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.6.0
 
 BUG FIX:
 * resource/artifactory_scoped_token: Remove default value for `expires_in` attribute which should fix state drift when upgrading from 7.11.2 or earlier. Issue: [#818](https://github.com/jfrog/terraform-provider-artifactory/issues/818) PR: [#820](https://github.com/jfrog/terraform-provider-artifactory/pull/820)
