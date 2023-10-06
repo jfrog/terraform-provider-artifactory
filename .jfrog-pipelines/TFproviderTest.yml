@@ -12,9 +12,9 @@ resources:
       cancelPendingRunsOn:
         pullRequestUpdate: false
 pipelines:
-  - name: tf_provider_artifactory_matrix
+  - name: tf_provider_artifactory
     steps:
-      - name: build_and_run_tf_provider
+      - name: build_and_run_tf_provider_matrix
         type: Matrix
         stepMode: Bash
         configuration:
