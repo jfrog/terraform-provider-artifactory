@@ -14,10 +14,12 @@ resources:
 pipelines:
   - name: tf_provider_artifactory
     steps:
-      - name: build_and_run_tf_provider
-        type: Bash
+      - name: build_and_run_tf_provider_matrix
+        type: Matrix
+        stepMode: Bash
         configuration:
           #nodePool: default
+          multiNode: true
           priority: 1
           timeoutSeconds: 3600 # 60 minutes
           runtime:
@@ -47,6 +49,25 @@ pipelines:
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
             SONAR_SCANNER_OPTS: "-server"
+        stepletMultipliers:
+          environmentVariables:
+            - directory: ./pkg/artifactory/datasource
+            - directory: ./pkg/artifactory/datasource/repository/federated
+            - directory: ./pkg/artifactory/datasource/repository/local
+            - directory: ./pkg/artifactory/datasource/repository/remote
+            - directory: ./pkg/artifactory/datasource/repository/virtual
+            - directory: ./pkg/artifactory/datasource/security
+            - directory: ./pkg/artifactory/datasource/user
+            - directory: ./pkg/artifactory/provider
+            - directory: ./pkg/artifactory/resource/configuration
+            - directory: ./pkg/artifactory/resource/replication
+            - directory: ./pkg/artifactory/resource/repository/federated
+            - directory: ./pkg/artifactory/resource/repository/local
+            - directory: ./pkg/artifactory/resource/repository/remote
+            - directory: ./pkg/artifactory/resource/repository/virtual
+            - directory: ./pkg/artifactory/resource/security
+            - directory: ./pkg/artifactory/resource/user
+            - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
             - echo "Sending status to GitHub."
@@ -73,6 +94,7 @@ pipelines:
             - sudo apt update
             - sudo apt install goreleaser
           onExecute:
+            - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
             - echo "Verify the code contents merged feature branch with master branch (detached mode)"
@@ -102,23 +124,27 @@ pipelines:
             - export ARTIFACTORY_CONTAINER_NAME=artifactory
             - >-
               docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-                    -p8081:8081 -p8082:8082 -p8080:8080 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+                -p 8082:8082 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Set localhost to a container IP address, since we run docker inside of docker"
             - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
             - echo "Using ${LOCALHOST} as 'localhost' ip address"
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
+            - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
             - >-
-              until curl -sf -u admin:password http://${LOCALHOST}:8081/artifactory/api/system/licenses/; do
+              until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
                   printf '.'
                   sleep 4
               done
             - echo "Add variables needed to run Terraform Provider"
-            - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=password
             - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
-            - sleep 180
-            - sudo curl http://${LOCALHOST}:8082/router/api/v1/system/health
+            - >-
+              until curl -sf -u admin:password ${ARTIFACTORY_URL}/ui/login/; do
+                  printf '.'
+                  sleep 4
+              done
+            - sudo curl ${ARTIFACTORY_URL}/router/api/v1/system/health
             - >-
               export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
                             --header "accept: application/json, text/plain, */*" \
@@ -135,19 +161,18 @@ pipelines:
             - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
-            - export TF_ACC=true
-            - make acceptance
+            - TF_ACC=true make acceptance TEST=${directory}
             - make install
           onSuccess:
             - echo "Success"
-            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
+            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
             - export STATE="failure"
             - export DESCRIPTION="Pipeline has failed."
             - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
             - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name}> step"
+            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
 
@@ -160,7 +185,7 @@ pipelines:
             - name: partnership_slack
             - name: partnership_github
           inputSteps:
-            - name: build_and_run_tf_provider
+            - name: build_and_run_tf_provider_matrix
           inputResources:
             - name: GitHubTFProviderRepoJFrog
         execution:
