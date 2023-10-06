@@ -133,7 +133,11 @@ pipelines:
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=password
             - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
-            - sleep 180
+            - >-
+              until curl -sf -u admin:password ${ARTIFACTORY_URL}/ui/login/; do
+                  printf '.'
+                  sleep 4
+              done
             - sudo curl ${ARTIFACTORY_URL}/router/api/v1/system/health
             - >-
               export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
