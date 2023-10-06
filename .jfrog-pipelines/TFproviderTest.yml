@@ -52,13 +52,13 @@ pipelines:
         stepletMultipliers:
           environmentVariables:
             - directory: ./pkg/artifactory/datasource
-            - directory: ./pkg/artifactory/datasource/repository
+            - directory: ./pkg/artifactory/datasource/repository/...
             - directory: ./pkg/artifactory/datasource/security
             - directory: ./pkg/artifactory/datasource/user
             - directory: ./pkg/artifactory/provider
             - directory: ./pkg/artifactory/resource/configuration
             - directory: ./pkg/artifactory/resource/replication
-            - directory: ./pkg/artifactory/resource/repository
+            - directory: ./pkg/artifactory/resource/repository/...
             - directory: ./pkg/artifactory/resource/security
             - directory: ./pkg/artifactory/resource/user
             - directory: ./pkg/artifactory/resource/webhook
