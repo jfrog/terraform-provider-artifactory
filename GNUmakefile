@@ -1,4 +1,4 @@
-TEST?=./...
+TEST?=./pkg/...
 PRODUCT=artifactory
 GO_ARCH=$(shell go env GOARCH)
 TARGET_ARCH=$(shell go env GOOS)_${GO_ARCH}
@@ -52,11 +52,11 @@ attach:
 
 smoke: fmt
 	export TF_ACC=true && \
-		go test -run '${SMOKE_TESTS}' -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -timeout 5m ./pkg/... -count=1
+		go test -run '${SMOKE_TESTS}' -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -timeout 5m $(TEST). -count=1
 
 acceptance: fmt
 	export TF_ACC=true && \
-		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 1h ./pkg/...
+		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 1h $(TEST)
 
 coverage:
 	go tool cover -html=coverage.txt
