@@ -158,11 +158,10 @@ function repos {
   # the URL that comes in the original payload refers to the UI endpoint. Dumb
 	jq -re  --arg u "${url}" '.docker_remap[] | "\($u)/\(.key)"' "${tempJson}" |
 		#grab the docker-local repos. Curl when used this xargs doesn't seem to be picking up the alias
-		xargs -n 10 -P 10 curl -snLf | tee onlydocker.json |
+		xargs -n 10 -P 10 curl -snLf |
 		# this was literally the only field we couldn't get from before and, apparently it's no longer possible to
 		# even set docker V1 in RT (even though there is a check, you get an error if you try). But for legacy reason, we
-		# have to go fetch them. This would be 1 line to simply fetch all repo data and remap it. But SOMEONE is worried about
-		# scalability
+		# have to go fetch them. 
 		jq -sre 'map(.dockerApiVersion |= ascii_downcase)' |
 			# combined step 1 with the tf state and step 3, and give them saner names. But what if they have no tf file??
 			cat "${tempJson}" - | jq -sre '
