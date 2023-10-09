@@ -536,7 +536,7 @@ func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{

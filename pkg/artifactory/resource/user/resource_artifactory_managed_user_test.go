@@ -161,7 +161,7 @@ func testAccManagedUserInvalidName(t *testing.T, username, errorRegex string) fu
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:                 func() { acctest.PreCheck(t) },
-			ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			CheckDestroy:             testAccCheckUserDestroy(fqrn),
 			Steps: []resource.TestStep{
 				{

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	validatorfw "github.com/jfrog/terraform-provider-shared/validator/fw"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 
 	"gopkg.in/yaml.v3"
 )
@@ -136,7 +136,7 @@ func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				MarkdownDescription: "Cron expression to control the backup frequency.",
 				Required:            true,
 				Validators: []validator.String{
-					validatorfw.IsCron(),
+					validatorfw_string.IsCron(),
 				},
 			},
 			"retention_period_hours": schema.Int64Attribute{

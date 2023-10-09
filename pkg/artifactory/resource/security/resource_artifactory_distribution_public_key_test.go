@@ -97,7 +97,7 @@ func TestAccDistributionPublicKey_FormatCheck(t *testing.T) {
 	`, resource_name, name, id)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -112,7 +112,7 @@ func TestAccDistributionPublicKey_Create(t *testing.T) {
 	keyBasic := fmt.Sprintf(template, resource_name, name, name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionPublicKeyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

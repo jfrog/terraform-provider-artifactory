@@ -91,6 +91,64 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 	})
 }
 
+func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-scope-token", "artifactory_scoped_token")
+	config := utilsdk.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			scopes   = ["applied-permissions/user"]
+			username = artifactory_user.test-user.name
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.2.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
+					resource.TestCheckResourceAttrSet(fqrn, "subject"),
+					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
+					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
+					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
@@ -188,7 +246,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
 		Steps: []resource.TestStep{
 			{
@@ -246,7 +304,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
-			expires_in  = 31536000
+			expires_in  = 0
 			audiences   = ["jfrt@1", "jfxr@*"]
 		}`,
 		map[string]interface{}{
@@ -260,7 +318,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
 			return security.CheckAccessToken(id, request)
@@ -275,7 +333,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckResourceAttr(fqrn, "audiences.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@1"),
@@ -321,7 +379,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -355,7 +413,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -463,7 +521,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -496,7 +554,7 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -529,7 +587,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -566,7 +624,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
@@ -602,7 +660,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
