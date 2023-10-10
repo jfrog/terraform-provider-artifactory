@@ -67,7 +67,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 }
 
 func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("terraform-local-test-repo-basic", "artifactory_remote_debian_repository")
+	_, fqrn, name := testutil.MkNames("local-test-repo-basic", "artifactory_remote_debian_repository")
 
 	key := fmt.Sprintf("debian-remote.teleport_%d", testutil.RandomInt())
 	remoteRepositoryBasic := fmt.Sprintf(`
@@ -105,7 +105,7 @@ func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 
 func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	const failKey = `
-		resource "artifactory_remote_npm_repository" "terraform-remote-test-repo-basic" {
+		resource "artifactory_remote_npm_repository" "remote-test-repo-basic" {
 			key                     		= "IHave++special,Chars"
 			url                     		= "https://registry.npmjs.org/"
 			repo_layout_ref         		= "npm-default"
@@ -165,7 +165,7 @@ func TestAccRemoteDockerRepositoryDepFalse(t *testing.T) {
 
 func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
 	const failKey = `
-		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
+		resource "artifactory_remote_docker_repository" "remote-docker-repo-basic" {
 			key                     		= "remote-docker"
 			url                     		= "https://registry.npmjs.org/"
 			retrieval_cache_period_seconds 	= 70
@@ -190,7 +190,7 @@ func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
 
 func TestAccRemoteDockerRepositoryDepListEmptyStringFails(t *testing.T) {
 	const failKey = `
-		resource "artifactory_remote_docker_repository" "terraform-remote-docker-repo-basic" {
+		resource "artifactory_remote_docker_repository" "remote-docker-repo-basic" {
 			key                     		= "remote-docker"
 			url                     		= "https://registry.npmjs.org/"
 			retrieval_cache_period_seconds 	= 70
@@ -427,6 +427,37 @@ func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"source_origin_absence_detection": true,
 		},
 	}))
+}
+
+func TestAccRemoteHuggingFaceRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("local-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
+
+	remoteRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_remote_huggingfaceml_repository" "%s" {
+			key = "%s"
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://huggingface.co"),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
 }
 
 func TestAccRemoteNpmRepository(t *testing.T) {
@@ -718,7 +749,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 
 func TestAccRemoteRepository_basic(t *testing.T) {
 	id := rand.Int()
-	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	name := fmt.Sprintf("remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_npm_repository.%s", name)
 	const remoteRepoBasic = `
 		resource "artifactory_remote_npm_repository" "%s" {
@@ -767,7 +798,7 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 		}
 	`
 	id := testutil.RandomInt()
-	name := fmt.Sprintf("terraform-remote-test-repo-nuget%d", id)
+	name := fmt.Sprintf("remote-test-repo-nuget%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
 
 	resource.Test(t, resource.TestCase{
@@ -921,7 +952,7 @@ func deleteTestCertificate(t *testing.T, certificateAlias string, certificateEnd
 }
 
 func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -1010,7 +1041,7 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 		}
 	`
 	id := testutil.RandomInt()
-	name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+	name := fmt.Sprintf("remote-test-repo-basic%d", id)
 	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
 
 	resource.Test(t, resource.TestCase{
@@ -1048,7 +1079,7 @@ func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
 		}
 	`
 		id := testutil.RandomInt()
-		name := fmt.Sprintf("terraform-remote-test-repo-basic%d", id)
+		name := fmt.Sprintf("remote-test-repo-basic%d", id)
 		fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
 
 		resource.Test(t, resource.TestCase{
@@ -1112,7 +1143,7 @@ func TestRemoteMavenRepoResourceStateUpgradeV1(t *testing.T) {
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-cran-remote-", "artifactory_remote_cran_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-cran-remote-", "artifactory_remote_cran_repository")
 
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
@@ -1172,7 +1203,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 }
 
 func TestAccRemoteRepository_AttemptToRemoveRemoteRepoLayout_GH746(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-cran-remote-", "artifactory_remote_cran_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-cran-remote-", "artifactory_remote_cran_repository")
 
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_cran_repository" "%s" {
@@ -1248,7 +1279,7 @@ func TestAccRemoteRepository_AttemptToRemoveRemoteRepoLayout_GH746(t *testing.T)
 
 // https://github.com/jfrog/terraform-provider-artifactory/issues/241
 func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-repo-docker", "artifactory_remote_docker_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-repo-docker", "artifactory_remote_docker_repository")
 
 	remoteRepositoryInit := fmt.Sprintf(`
 		resource "artifactory_remote_docker_repository" "%s" {
@@ -1286,7 +1317,7 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 }
 
 func TestAccRemoteProxyUpdateGH2(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("terraform-remote-test-go-remote-proxy-", "artifactory_remote_go_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-go-remote-proxy-", "artifactory_remote_go_repository")
 
 	fakeProxy := "test-proxy"
 
