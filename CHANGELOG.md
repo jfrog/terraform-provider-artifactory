@@ -1,3 +1,9 @@
+## 9.5.0 (Oct 11, 2023)
+
+FEATURES:
+
+* resource/artifactory_local_huggingfaceml_repository, resource/artifactory_remote_huggingfaceml_repository: add new local and remote resources for managing Hugging Face repository. PR: [#823](https://github.com/jfrog/terraform-provider-artifactory/pull/823)
+
 ## 9.4.0 (Oct 5, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.6.0
 
 FEATURES:
