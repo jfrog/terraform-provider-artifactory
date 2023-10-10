@@ -1,4 +1,4 @@
-## 9.5.0 (Oct 11, 2023)
+## 9.5.0 (Oct 11, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 FEATURES:
 
