@@ -230,7 +230,6 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"username":                       "admin",
 		"password":                       "password1",
 		"xray_index":                     "false",
-		"disable_url_normalization":      "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -246,7 +245,6 @@ func TestAccRemoteDockerRepoUpdate(t *testing.T) {
 		"username":                       "admin1",
 		"password":                       "password",
 		"xray_index":                     "true",
-		"disable_url_normalization":      "true",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -292,7 +290,6 @@ resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
   username                  = "{{ .username }}"
   password                  = "{{ .password }}"
   xray_index                = {{ .xray_index }}
-  disable_url_normalization = {{ .disable_url_normalization }}
 }
 `
 
@@ -309,7 +306,8 @@ func verifyRepository(fqrn string, testData map[string]string) resource.TestChec
 		resource.TestCheckResourceAttr(fqrn, "proxy", testData["proxy"]),
 		resource.TestCheckResourceAttr(fqrn, "username", testData["username"]),
 		resource.TestCheckResourceAttr(fqrn, "xray_index", testData["xray_index"]),
-		resource.TestCheckResourceAttr(fqrn, "disable_url_normalization", testData["disable_url_normalization"]),
+		resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
+		resource.TestCheckResourceAttr(fqrn, "property_sets.0", "artifactory"),
 	)
 }
 
@@ -837,8 +835,9 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"content_synchronisation": map[string]interface{}{
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
-		"download_direct": true,
-		"cdn_redirect":    false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"download_direct":           true,
+		"cdn_redirect":              false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"disable_url_normalization": true,
 	}
 	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
@@ -959,6 +958,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		"content_synchronisation": map[string]interface{}{
 			"enabled": false, // even when set to true, it seems to come back as false on the wire
 		},
+		"disable_url_normalization": true,
 	}
 	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
