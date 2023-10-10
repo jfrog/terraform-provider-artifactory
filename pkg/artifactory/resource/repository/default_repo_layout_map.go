@@ -147,9 +147,19 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	"helm": {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
-			"local":   true,
-			"remote":  true,
-			"virtual": true, "federated": true,
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
+	"huggingfaceml": {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   false,
+			"federated": false,
 		},
 	},
 	"ivy": {

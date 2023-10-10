@@ -22,6 +22,7 @@ var PackageTypesLikeGeneric = []string{
 	"gitlfs",
 	"go",
 	"helm",
+	"huggingfaceml",
 	"npm",
 	"opkg",
 	"pub",
@@ -60,18 +61,6 @@ func (bp RepositoryBaseParams) Id() string {
 var BaseLocalRepoSchema = utilsdk.MergeMaps(
 	repository.BaseRepoSchema,
 	map[string]*schema.Schema{
-		"includes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
-		},
-		"excludes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
-		},
 		"blacked_out": {
 			Type:        schema.TypeBool,
 			Optional:    true,
