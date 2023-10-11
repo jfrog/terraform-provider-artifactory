@@ -10,8 +10,7 @@ repository-specific arguments, listed in separate repository-specific documents.
 Passwords can only be used when encryption is turned off, according to [Key Encryption instruction](https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption).
 Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
 
-To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible,
-the password diff can be disabled per resource with-- noting that this will require resources to be tainted for an update:
+To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible, the password diff can be disabled per resource with `lifecycle.ignore_changes` -- noting that this will require resources to be tainted for an update:
 
 ```hcl
 lifecycle {
@@ -82,3 +81,4 @@ All generic repo arguments are supported, in addition to:
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
 * `cdn_redirect` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
+* `disable_url_normalization` - (Optional) Whether to disable URL normalization, default is `false`.

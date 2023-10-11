@@ -60,6 +60,7 @@ type RepositoryRemoteBaseParams struct {
 	ListRemoteFolderItems             bool                               `json:"listRemoteFolderItems"`
 	DownloadRedirect                  bool                               `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 	CdnRedirect                       bool                               `json:"cdnRedirect"`
+	DisableURLNormalization           bool                               `hcl:"disable_url_normalization" json:"disableUrlNormalization"`
 }
 
 func (r RepositoryRemoteBaseParams) GetRclass() string {
@@ -369,6 +370,12 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Default:     false,
 				Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
 			},
+			"disable_url_normalization": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether to disable URL normalization, default is `false`.",
+			},
 		},
 	)
 }
@@ -506,6 +513,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		PriorityResolution:                d.GetBool("priority_resolution", false),
 		ListRemoteFolderItems:             d.GetBool("list_remote_folder_items", false),
 		MismatchingMimeTypeOverrideList:   d.GetString("mismatching_mime_types_override_list", false),
+		DisableURLNormalization:           d.GetBool("disable_url_normalization", false),
 	}
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})

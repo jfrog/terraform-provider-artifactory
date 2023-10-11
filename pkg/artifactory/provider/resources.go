@@ -52,6 +52,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_generic_repository":               remote.ResourceArtifactoryRemoteGenericRepository(),
 		"artifactory_remote_go_repository":                    remote.ResourceArtifactoryRemoteGoRepository(),
 		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
+		"artifactory_remote_huggingfaceml_repository":         remote.ResourceArtifactoryRemoteHuggingFaceRepository(),
 		"artifactory_remote_maven_repository":                 remote.ResourceArtifactoryRemoteMavenRepository(),
 		"artifactory_remote_nuget_repository":                 remote.ResourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_pypi_repository":                  remote.ResourceArtifactoryRemotePypiRepository(),
