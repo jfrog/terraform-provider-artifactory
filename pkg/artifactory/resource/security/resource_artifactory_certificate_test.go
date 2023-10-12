@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccCertificate_HasFileAndContentFails(t *testing.T) {
@@ -82,11 +81,12 @@ func TestAccCertificate_WithFile(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "alias"),
-				ImportStateVerifyIgnore: []string{"file"}, // actual certificate is not returned via the API, so it cannot be "imported"
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateId:                        name,
+				ImportStateVerifyIdentifierAttribute: "alias",
+				ImportStateVerifyIgnore:              []string{"file"}, // actual certificate is not returned via the API, so it cannot be "imported"
 			},
 		},
 	})
@@ -154,12 +154,12 @@ func TestAccCertificate_full(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           name,
-				ImportStateCheck:        validator.CheckImportState(name, "alias"),
-				ImportStateVerifyIgnore: []string{"content"}, // actual certificate is not returned via the API, so it cannot be "imported"
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateId:                        name,
+				ImportStateVerifyIdentifierAttribute: "alias",
+				ImportStateVerifyIgnore:              []string{"content"}, // actual certificate is not returned via the API, so it cannot be "imported"
 			},
 		},
 	})
