@@ -14,6 +14,81 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
+func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
+	const certificateFull = `
+		resource "artifactory_certificate" "%s" {
+			alias   = "%s"
+			content = <<EOF
+		-----BEGIN CERTIFICATE-----
+		MIICUjCCAbugAwIBAgIJALRDng3rGeQvMA0GCSqGSIb3DQEBCwUAMEIxCzAJBgNV
+		BAYTAlhYMRUwEwYDVQQHDAxEZWZhdWx0IENpdHkxHDAaBgNVBAoME0RlZmF1bHQg
+		Q29tcGFueSBMdGQwHhcNMTkwNTE3MTAwMzI2WhcNMjkwNTE0MTAwMzI2WjBCMQsw
+		CQYDVQQGEwJYWDEVMBMGA1UEBwwMRGVmYXVsdCBDaXR5MRwwGgYDVQQKDBNEZWZh
+		dWx0IENvbXBhbnkgTHRkMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVBRt7
+		Ua3j7K2htVRu1tw629ZZZQI35RGm/53ffF/QUUFXk35at+IiwYZGGQbOGuN1pdji
+		gki9/Qit/WO/3uadSkGelKOUYD0DIemlhcZt6iPMQq8mYlUkMPZz5Qlj0ldKI3g+
+		Q8Tc/6vEeBv/9jrm9Efg/uwc0DjD8B4Ny6xMHQIDAQABo1AwTjAdBgNVHQ4EFgQU
+		VrBaHnYLayO2lKIUde8etG0H6owwHwYDVR0jBBgwFoAUVrBaHnYLayO2lKIUde8e
+		tG0H6owwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOBgQA4VBFCrbuOsKtY
+		uNlSQCBkTXg907iXihZ+Of/2rerS2gfDCUHdz0xbYdlttNjoGVCA+0alt7ugfYpl
+		fy5aAfCHLXEgYrlhe6oDtCMSskbkKFTEI/bRqwGMDb+9NO/yh2KLbNueKJz9Vs5V
+		GV9pUrgW6c7kLrC9vpHP+47iyQEbnw==
+		-----END CERTIFICATE-----
+		-----BEGIN PRIVATE KEY-----
+		MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBANUFG3tRrePsraG1
+		VG7W3Drb1lllAjflEab/nd98X9BRQVeTflq34iLBhkYZBs4a43Wl2OKCSL39CK39
+		Y7/e5p1KQZ6Uo5RgPQMh6aWFxm3qI8xCryZiVSQw9nPlCWPSV0ojeD5DxNz/q8R4
+		G//2Oub0R+D+7BzQOMPwHg3LrEwdAgMBAAECgYAxWA6GoWQDcRbDZ6qYRkMbi0L6
+		0DAUXIabRYj/dOMI8VmOfMb/IqtKW8PLxw5Rfd8EqJc12PIauFtjWlfZ4TtP9erQ
+		1imw2SpVMAWt4HLUw7oONKgNMnBtVQBCoXLuXcnJbCxeRiV1oJtvrddUJPOtUc+y
+		t5gGTyx/zUAXzPzT7QJBAOvu4CH0Xc+1GdXFUFLzF8B3SFwnOFRERJxFq43dw4t3
+		tXcON/UyegYcQz2JqKcofwRhM4+uXGnWE+9oOOnxL8sCQQDnI1QtMv+tZcqIcmk6
+		1ykyNa530eCfoqAvVTRwPIsAD/DZLC4HJNSQauPXC4Unt1tqmOmUoZmgzYQlVsGO
+		ISa3AkB2xWpPrZUMWz8GPq6RE4+BdIsY2SWiRjvD787NPDaUn07bAG1rIl4LdW7k
+		K8ibXeeTbNtoGX6sSPkALJd6LdDBAkEA5FAhdgRKSh2iUeWxzE18g/xCuli2aPlb
+		AWZIxhUHuKgGYH8jeCsJTR5IsMLQZMrZohIpqId4GT7oqXlo99wHQQJBAOvX+5z6
+		iCooatRyMnwUV6sJ225ZawuJ4sXFt6CA7aOZQ+G5zvG694ONxG9qeF2YnySQp1HH
+		V87CqqFaUigTzmI=
+		-----END PRIVATE KEY-----
+		EOF
+		}
+	`
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("test-%d", id)
+	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
+	config := fmt.Sprintf(certificateFull, name, name)
+	config = strings.Replace(config, "\t", "", -1)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "9.5.1",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "alias", name),
+					resource.TestCheckResourceAttr(fqrn, "fingerprint", "ED:67:0B:D2:84:C2:93:6D:56:6F:A7:4D:5A:CC:B7:AF:8A:C0:1D:2A:7C:F3:4A:57:31:83:22:30:44:5F:63:9D"),
+					resource.TestCheckResourceAttr(fqrn, "issued_by", "Unknown"),
+					resource.TestCheckResourceAttr(fqrn, "issued_on", "2019-05-17T10:03:26.000Z"),
+					resource.TestCheckResourceAttr(fqrn, "issued_to", "Unknown"),
+					resource.TestCheckResourceAttr(fqrn, "valid_until", "2029-05-14T10:03:26.000Z"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccCertificate_HasFileAndContentFails(t *testing.T) {
 	const conflictsResource = `
 		resource "artifactory_certificate" "fail" {
