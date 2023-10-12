@@ -17,7 +17,6 @@ resource "artifactory_remote_docker_repository" "my-remote-docker" {
   enable_token_authentication    = true
   url                            = "https://registry-1.docker.io/"
   block_pushing_schema1          = true
-  disable_url_normalization      = true
 }
 ```
 
@@ -43,7 +42,6 @@ The following arguments are supported, along with the [common list of arguments 
   This value `[**]` must be assigned to the attribute manually, if user don't specify any other non-default values.
   We don't want to make this attribute required, but it must be set to avoid the state drift on update. Note: Artifactory assigns
   `[**]` on update if HCL doesn't have the attribute set or the list is empty.
-* `disable_url_normalization` - (Optional) Whether to disable URL normalization, default is `false`.
 
 ## Import
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -521,6 +522,56 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 	})
 }
 
+func TestAccLocalHuggingFaceMLRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("huggingfaceml-local", "artifactory_local_huggingfaceml_repository")
+
+	params := map[string]interface{}{
+		"name":                     name,
+		"blacked_out":              testutil.RandBool(),
+		"xray_index":               testutil.RandBool(),
+		"property_set":             "artifactory",
+		"archive_browsing_enabled": testutil.RandBool(),
+	}
+	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalHuggingFaceMLRepository", `
+		resource "artifactory_local_huggingfaceml_repository" "{{ .name }}" {
+		  key                      = "{{ .name }}"
+		  blacked_out              = {{ .blacked_out }}
+		  xray_index               = {{ .xray_index }}
+		  property_sets            = ["{{ .property_set }}"]
+		  archive_browsing_enabled = {{ .archive_browsing_enabled }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "blacked_out", strconv.FormatBool(params["blacked_out"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "xray_index", strconv.FormatBool(params["xray_index"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "archive_browsing_enabled", strconv.FormatBool(params["archive_browsing_enabled"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("local", "huggingfaceml")()
+						return r.(string)
+					}()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
 func TestAccLocalNugetRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
@@ -695,11 +746,13 @@ func TestAccLocalGenericRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name":                name,
 		"priority_resolution": testutil.RandBool(),
+		"property_set":        "artifactory",
 	}
 	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                 = "{{ .name }}"
 		  priority_resolution = "{{ .priority_resolution }}"
+		  property_sets       = ["{{ .property_set }}"]
 		}
 	`, params)
 
@@ -713,6 +766,8 @@ func TestAccLocalGenericRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "priority_resolution", fmt.Sprintf("%t", params["priority_resolution"])),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
 				),
 			},
 			{
@@ -845,36 +900,38 @@ func TestAccLocalNpmRepository(t *testing.T) {
 	})
 }
 
-func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
-	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
+func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
+	name := fmt.Sprintf("local-%s-%d-full", packageType, rand.Int())
+	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", packageType, name)
 	xrayIndex := testutil.RandBool()
-	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
+	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", packageType, name)
 
 	params := map[string]interface{}{
-		"repoType":    repoType,
-		"name":        name,
-		"xrayIndex":   xrayIndex,
-		"cdnRedirect": false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
-
+		"packageType":  packageType,
+		"name":         name,
+		"xrayIndex":    xrayIndex,
+		"cdnRedirect":  false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"property_set": "artifactory",
 	}
 	cfg := utilsdk.ExecuteTemplate("TestAccLocalRepository", `
-		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
+		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
 		  key           = "{{ .name }}"
 		  description   = "Test repo for {{ .name }}"
 		  notes         = "Test repo for {{ .name }}"
 		  xray_index    = {{ .xrayIndex }}
 		  cdn_redirect  = {{ .cdnRedirect }}
+		  property_sets = ["{{ .property_set }}"]
 		}
 	`, params)
 
 	updatedCfg := utilsdk.ExecuteTemplate("TestAccLocalRepository", `
-		resource "artifactory_local_{{ .repoType }}_repository" "{{ .name }}" {
+		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
 		  key           = "{{ .name }}"
 		  description   = ""
 		  notes         = ""
 		  xray_index    = {{ .xrayIndex }}
 		  cdn_redirect  = {{ .cdnRedirect }}
+		  property_sets = ["{{ .property_set }}"]
 		}
 	`, params)
 
@@ -887,22 +944,24 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 				Config: cfg,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "package_type", packageType),
 					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 					resource.TestCheckResourceAttr(resourceName, "cdn_redirect", fmt.Sprintf("%t", params["cdnRedirect"])),
+					resource.TestCheckResourceAttr(resourceName, "property_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "property_sets.0", params["property_set"].(string)),
 				),
 			},
 			{
 				Config: updatedCfg,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
+					resource.TestCheckResourceAttr(resourceName, "package_type", packageType),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "notes", ""),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
 					resource.TestCheckResourceAttr(resourceName, "cdn_redirect", fmt.Sprintf("%t", params["cdnRedirect"])),
 				),
@@ -917,10 +976,10 @@ func mkTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	}
 }
 
-func TestAccLocalAllRepoTypes(t *testing.T) {
-	for _, repo := range local.PackageTypesLikeGeneric {
-		t.Run(repo, func(t *testing.T) {
-			resource.Test(mkTestCase(repo, t))
+func TestAccLocalAllPackageTypes(t *testing.T) {
+	for _, packageType := range local.PackageTypesLikeGeneric {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(mkTestCase(packageType, t))
 		})
 	}
 }

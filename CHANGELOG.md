@@ -1,3 +1,15 @@
+## 9.5.1 (Oct 12, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+SECURITY:
+
+* provider: Bump golang.org/x/net from 0.11.0 to 0.17.0 PR: [#824](https://github.com/jfrog/terraform-provider-artifactory/pull/824)
+
+## 9.5.0 (Oct 11, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+FEATURES:
+
+* resource/artifactory_local_huggingfaceml_repository, resource/artifactory_remote_huggingfaceml_repository: add new local and remote resources for managing Hugging Face repository. PR: [#823](https://github.com/jfrog/terraform-provider-artifactory/pull/823)
+
 ## 9.4.0 (Oct 5, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.6.0
 
 FEATURES:
