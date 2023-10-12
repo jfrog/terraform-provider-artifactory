@@ -1,3 +1,9 @@
+## 9.6.0 (Oct 13, 2023)
+
+IMPROVEMENTS:
+
+* resource/artifactory_certificate is migrated to Plugin Framework. PR: [#826](https://github.com/jfrog/terraform-provider-artifactory/pull/826)
+
 ## 9.5.1 (Oct 12, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 SECURITY:
