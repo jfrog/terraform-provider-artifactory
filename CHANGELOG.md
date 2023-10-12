@@ -1,3 +1,9 @@
+## 9.5.1 (Oct 12, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+SECURITY:
+
+* provider: Bump golang.org/x/net from 0.11.0 to 0.17.0 PR: [#824](https://github.com/jfrog/terraform-provider-artifactory/pull/824)
+
 ## 9.5.0 (Oct 11, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 FEATURES:
