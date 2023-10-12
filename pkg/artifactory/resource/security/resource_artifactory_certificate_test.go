@@ -11,40 +11,41 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccCertHasFileAndContentFails(t *testing.T) {
+func TestAccCertificate_HasFileAndContentFails(t *testing.T) {
 	const conflictsResource = `
 		resource "artifactory_certificate" "fail" {
 			alias   = "fail"
-			file = "/this/doesnt/exist.pem"
+			file    = "/this/doesnt/exist.pem"
 			content = "PEM DATA"
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      conflictsResource,
-				ExpectError: regexp.MustCompile(".*only one of `content,file` can be specified, but .* were.*"),
+				ExpectError: regexp.MustCompile(`.*These attributes cannot be configured together: \[content,file\].*`),
 			},
 		},
 	})
 }
 
-func TestAccCertWithFileMissing(t *testing.T) {
+func TestAccCertificate_WithFileMissing(t *testing.T) {
 	const certWithMissingFile = `
 		resource "artifactory_certificate" "fail" {
-			alias   = "fail"
-			file = "/this/doesnt/exist.pem"
+			alias = "fail"
+			file  = "/this/doesnt/exist.pem"
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy("artifactory_certificate.fail"),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy("artifactory_certificate.fail"),
 		Steps: []resource.TestStep{
 			{
 				Config:      certWithMissingFile,
@@ -54,20 +55,20 @@ func TestAccCertWithFileMissing(t *testing.T) {
 	})
 }
 
-func TestAccCertWithFile(t *testing.T) {
+func TestAccCertificate_WithFile(t *testing.T) {
 	const certWithFile = `
 		resource "artifactory_certificate" "%s" {
-			alias   = "%s"
-			file = "../../../../samples/cert.pem"
+			alias = "%s"
+			file  = "../../../../samples/cert.pem"
 		}
 	`
 	id := testutil.RandomInt()
-	name := fmt.Sprintf("foobar%d", id)
+	name := fmt.Sprintf("test-%d", id)
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(certWithFile, name, name),
@@ -137,9 +138,9 @@ func TestAccCertificate_full(t *testing.T) {
 	cleansed := strings.Replace(subbed, "\t", "", -1)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: cleansed,
@@ -156,6 +157,7 @@ func TestAccCertificate_full(t *testing.T) {
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateId:           name,
 				ImportStateCheck:        validator.CheckImportState(name, "alias"),
 				ImportStateVerifyIgnore: []string{"content"}, // actual certificate is not returned via the API, so it cannot be "imported"
 			},
@@ -171,7 +173,8 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
 
-		cert, err := security.FindCertificate(id, acctest.Provider.Meta())
+		m := acctest.Provider.Meta()
+		cert, err := security.FindCertificate(id, m.(utilsdk.ProvderMetadata).Client.R())
 		if err != nil {
 			return err
 		}
