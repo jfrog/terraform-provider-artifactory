@@ -27,8 +27,8 @@ resource "artifactory_remote_maven_repository" "my-remote" {
 The following arguments are supported:
 
 * `alias` - (Required) Name of certificate.
-* `content` - (Optional) PEM-encoded client certificate and private key.
-* `file` - (Optional) Path to the PEM file.
+* `content` - (Optional) PEM-encoded client certificate and private key. Cannot be set with `file` attribute simultaneously.
+* `file` - (Optional) Path to the PEM file. Cannot be set with `content` attribute simultaneously.
 
 ## Attribute Reference
 
