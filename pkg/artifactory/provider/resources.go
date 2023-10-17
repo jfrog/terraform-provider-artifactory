@@ -19,7 +19,6 @@ import (
 
 func resourcesMap() map[string]*schema.Resource {
 	resourcesMap := map[string]*schema.Resource{
-		"artifactory_keypair":                                 security.ResourceArtifactoryKeyPair(),
 		"artifactory_federated_alpine_repository":             federated.ResourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_cargo_repository":              federated.ResourceArtifactoryFederatedCargoRepository(),
 		"artifactory_federated_conan_repository":              federated.ResourceArtifactoryFederatedConanRepository(),

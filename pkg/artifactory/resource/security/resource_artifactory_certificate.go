@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -211,7 +210,6 @@ func (r *CertificateResource) Create(ctx context.Context, req resource.CreateReq
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("cert: %v", cert))
 
 	resp.Diagnostics.Append(plan.FromAPIModel(ctx, cert)...)
 
