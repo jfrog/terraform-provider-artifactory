@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * resource/artifactory_keypair is migrated to Plugin Framework. PR: [#829](https://github.com/jfrog/terraform-provider-artifactory/pull/829)
+* resource/artifactory_mail_server: remove length validation for optional attribute `subject_prefix`. PR: [#830](https://github.com/jfrog/terraform-provider-artifactory/pull/830) Issue: [#828](https://github.com/jfrog/terraform-provider-artifactory/issues/828)
 
 ## 9.6.0 (Oct 13, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
