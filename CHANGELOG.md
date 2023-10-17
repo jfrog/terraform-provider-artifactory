@@ -1,3 +1,9 @@
+## 9.7.0 (Oct 18, 2023)
+
+IMPROVEMENTS:
+
+* resource/artifactory_keypair is migrated to Plugin Framework. PR: [#829](https://github.com/jfrog/terraform-provider-artifactory/pull/829)
+
 ## 9.6.0 (Oct 13, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 IMPROVEMENTS:
