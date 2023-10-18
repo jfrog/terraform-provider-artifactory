@@ -150,9 +150,6 @@ func (r *MailServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"subject_prefix": schema.StringAttribute{
 				MarkdownDescription: "A prefix to use for the subject of all outgoing mails.",
 				Optional:            true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 			"use_ssl": schema.BoolAttribute{
 				MarkdownDescription: "When set to 'true', uses a secure connection to the mail server.",
