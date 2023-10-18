@@ -1,3 +1,14 @@
+## 9.7.1 (Oct 19, 2023)
+
+IMPROVEMENTS:
+
+* provider:
+  * Remove conflict validation between `access_token` and `api_key` attributes. If set, `access_token` will take precedent over `api_key`.
+  * Update documentation to align with actual provider behavior.
+
+PR: [#832](https://github.com/jfrog/terraform-provider-artifactory/pull/832)
+Issue: [#663](https://github.com/jfrog/terraform-provider-artifactory/issues/663)
+
 ## 9.7.0 (Oct 18, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 IMPROVEMENTS:
