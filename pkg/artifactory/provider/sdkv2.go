@@ -19,7 +19,7 @@ func SdkV2() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"url": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 				Description:      "Artifactory URL.",
 			},
@@ -64,15 +64,20 @@ func SdkV2() *schema.Provider {
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 	// Check environment variables, first available OS variable will be assigned to the var
-	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "http://localhost:8082")
+	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
 
 	if v, ok := d.GetOk("url"); ok {
 		url = v.(string)
 	}
+	if url == "" {
+		return nil, diag.Errorf("missing URL Configuration")
+	}
+
 	if v, ok := d.GetOk("access_token"); ok && v != "" {
 		accessToken = v.(string)
 	}
+
 	apiKey := d.Get("api_key").(string)
 
 	restyBase, err := client.Build(url, productId)
@@ -84,6 +89,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
+
 	// Due to migration from SDK v2 to plugin framework, we have to remove defaults from the provider configuration.
 	// https://discuss.hashicorp.com/t/muxing-upgraded-tfsdk-and-framework-provider-with-default-provider-configuration/43945
 	checkLicense := true

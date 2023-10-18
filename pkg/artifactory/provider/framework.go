@@ -29,6 +29,7 @@ type ArtifactoryProvider struct{}
 type ArtifactoryProviderModel struct {
 	Url          types.String `tfsdk:"url"`
 	AccessToken  types.String `tfsdk:"access_token"`
+	ApiKey       types.String `tfsdk:"api_key"`
 	CheckLicense types.Bool   `tfsdk:"check_license"`
 }
 
@@ -44,7 +45,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			"url": schema.StringAttribute{
 				Description: "Artifactory URL.",
-				Required:    true,
+				Optional:    true,
 				Validators: []validator.String{
 					validatorfw_string.IsURLHttpOrHttps(),
 				},
@@ -57,6 +58,12 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
+			"api_key": schema.StringAttribute{
+				Description:        "API token. Projects functionality will not work with any auth method other than access tokens",
+				DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available.",
+				Optional:           true,
+				Sensitive:          true,
+			},
 			"check_license": schema.BoolAttribute{
 				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
 				Optional:    true,
@@ -66,8 +73,6 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 }
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	// Provider specific implementation.
-
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
@@ -90,7 +95,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		resp.Diagnostics.AddError(
 			"Missing JFrog Access Token",
 			"While configuring the provider, the Access Token was not found in "+
-				"the JFROG_ACCESS_TOKEN environment variable or provider "+
+				"the JFROG_ACCESS_TOKEN/ARTIFACTORY_ACCESS_TOKEN environment variable or provider "+
 				"configuration block access_token attribute.",
 		)
 		return
@@ -100,6 +105,16 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		url = config.Url.ValueString()
 	}
 
+	if url == "" {
+		resp.Diagnostics.AddError(
+			"Missing URL Configuration",
+			"While configuring the provider, the url was not found in "+
+				"the JFROG_URL/ARTIFACTORY_URL environment variable or provider "+
+				"configuration block url attribute.",
+		)
+		return
+	}
+
 	restyBase, err := client.Build(url, productId)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -107,6 +122,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			err.Error(),
 		)
 	}
+
 	restyBase, err = client.AddAuth(restyBase, "", accessToken)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -114,6 +130,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			err.Error(),
 		)
 	}
+
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
 		if licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseErr != nil {
 			resp.Diagnostics.AddError(
