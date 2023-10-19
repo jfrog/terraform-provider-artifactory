@@ -5,27 +5,25 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
 // Ensure the implementation satisfies the provider.Provider interface.
 var _ provider.Provider = &ArtifactoryProvider{}
 
-type ArtifactoryProvider struct {
-	// Version is an example field that can be set with an actual provider
-	// version on release, "dev" when the provider is built and ran locally,
-	// and "test" when running acceptance testing.
-	version string
-}
+type ArtifactoryProvider struct{}
 
 // ArtifactoryProviderModel describes the provider data model.
 type ArtifactoryProviderModel struct {
@@ -48,11 +46,17 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 			"url": schema.StringAttribute{
 				Description: "Artifactory URL.",
 				Optional:    true,
+				Validators: []validator.String{
+					validatorfw_string.IsURLHttpOrHttps(),
+				},
 			},
 			"access_token": schema.StringAttribute{
-				Description: "This is a access token that can be given to you by your admin under `Identity and Access`. If not set, the 'api_key' attribute value will be used.",
+				Description: "This is a access token that can be given to you by your admin under `User Management -> Access Tokens`.",
 				Optional:    true,
 				Sensitive:   true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"api_key": schema.StringAttribute{
 				Description:        "API token. Projects functionality will not work with any auth method other than access tokens",
@@ -69,8 +73,6 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 }
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	// Provider specific implementation.
-
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
@@ -89,25 +91,25 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		accessToken = config.AccessToken.ValueString()
 	}
 
-	if config.Url.ValueString() != "" {
-		url = config.Url.ValueString()
-	}
-
 	if accessToken == "" {
 		resp.Diagnostics.AddError(
-			"Missing  Access AccessToken Configuration",
+			"Missing JFrog Access Token",
 			"While configuring the provider, the Access Token was not found in "+
-				"the JFROG_ACCESS_TOKEN environment variable or provider "+
+				"the JFROG_ACCESS_TOKEN/ARTIFACTORY_ACCESS_TOKEN environment variable or provider "+
 				"configuration block access_token attribute.",
 		)
 		return
+	}
+
+	if config.Url.ValueString() != "" {
+		url = config.Url.ValueString()
 	}
 
 	if url == "" {
 		resp.Diagnostics.AddError(
 			"Missing URL Configuration",
 			"While configuring the provider, the url was not found in "+
-				"the JFROG_URL/ARTIFACTORY_URL environment variables or provider "+
+				"the JFROG_URL/ARTIFACTORY_URL environment variable or provider "+
 				"configuration block url attribute.",
 		)
 		return
@@ -117,19 +119,20 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating Resty client",
-			fmt.Sprintf("%v", err),
+			err.Error(),
 		)
 	}
+
 	restyBase, err = client.AddAuth(restyBase, "", accessToken)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding Auth to Resty client",
-			fmt.Sprintf("%v", err),
+			err.Error(),
 		)
 	}
+
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
-		if licenseErr != nil {
+		if licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseErr != nil {
 			resp.Diagnostics.AddError(
 				"Error getting Artifactory license",
 				fmt.Sprintf("%v", licenseErr),
@@ -140,15 +143,15 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 	version, err := utilsdk.GetArtifactoryVersion(restyBase)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error getting Artifactory version",
-			"The provider functionality might be affected by the absence of Artifactory version in the context.",
+			fmt.Sprintf("The provider functionality might be affected by the absence of Artifactory version in the context. %v", err),
 		)
 		return
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	utilsdk.SendUsage(ctx, restyBase, "terraform-provider-artifactory/"+Version, featureUsage)
+	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
 
 	resp.DataSourceData = utilsdk.ProvderMetadata{
 		Client:             restyBase,
