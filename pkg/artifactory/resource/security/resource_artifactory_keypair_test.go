@@ -96,7 +96,7 @@ EOF
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   keyPairConfig,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -129,7 +129,7 @@ EOF
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ EOF
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -265,7 +265,7 @@ EOF
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -409,7 +409,7 @@ EOF
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

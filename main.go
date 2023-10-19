@@ -6,9 +6,10 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	provider "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/provider"
 )
 
@@ -24,24 +25,33 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	providers := []func() tfprotov5.ProviderServer{
-		providerserver.NewProtocol5(provider.Framework()()), // Example terraform-plugin-framework provider
-		provider.SdkV2().GRPCProvider,                       // Example terraform-plugin-sdk provider
-	}
-
-	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
-
+	upgradedSdkServer, err := tf5to6server.UpgradeServer(
+		ctx,
+		provider.SdkV2().GRPCProvider, // terraform-plugin-sdk provider
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var serveOpts []tf5server.ServeOpt
-
-	if debug {
-		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
+	providers := []func() tfprotov6.ProviderServer{
+		providerserver.NewProtocol6(provider.Framework()()), // terraform-plugin-framework provider
+		func() tfprotov6.ProviderServer {
+			return upgradedSdkServer
+		},
 	}
 
-	err = tf5server.Serve(
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var serveOpts []tf6server.ServeOpt
+
+	if debug {
+		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
+	}
+
+	err = tf6server.Serve(
 		"registry.terraform.io/jfrog/artifactory",
 		muxServer.ProviderServer,
 		serveOpts...,

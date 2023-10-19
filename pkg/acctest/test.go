@@ -13,9 +13,10 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,12 +46,12 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
 
-// ProtoV5MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
+// ProtoV6MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
 // during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
-var ProtoV5MuxProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+var ProtoV6MuxProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 
-var ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+var ProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"artifactory": providerserver.NewProtocol6WithError(provider.Framework()()),
 }
 
 func init() {
@@ -60,15 +61,26 @@ func init() {
 		"artifactory": func() (*schema.Provider, error) { return Provider, nil },
 	}
 
-	ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		"artifactory": func() (tfprotov5.ProviderServer, error) {
+	ProtoV6MuxProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+		"artifactory": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
-			providers := []func() tfprotov5.ProviderServer{
-				providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
-				Provider.GRPCProvider,                               // terraform-plugin-sdk provider
+
+			upgradedSdkServer, err := tf5to6server.UpgradeServer(
+				ctx,
+				provider.SdkV2().GRPCProvider, // terraform-plugin-sdk provider
+			)
+			if err != nil {
+				return nil, err
 			}
 
-			muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+			providers := []func() tfprotov6.ProviderServer{
+				providerserver.NewProtocol6(provider.Framework()()), // terraform-plugin-framework provider
+				func() tfprotov6.ProviderServer {
+					return upgradedSdkServer
+				},
+			}
+
+			muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
 
 			if err != nil {
 				return nil, err

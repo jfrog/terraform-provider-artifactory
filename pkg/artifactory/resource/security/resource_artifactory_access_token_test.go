@@ -33,7 +33,7 @@ func TestAccAccessTokenAudienceBad(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func TestAccAccessTokenAudienceGood(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAccessTokenExistingUser(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAccessTokenFixedDateGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -197,7 +197,7 @@ resource "artifactory_access_token" "foobar" {
 func TestAccAccessTokenFixedDateBad(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +232,7 @@ resource "artifactory_access_token" "foobar" {
 func TestAccAccessTokenAdminToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +263,7 @@ func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -370,7 +370,7 @@ resource "artifactory_access_token" "foobar" {
 func TestAccAccessTokenMissingGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenNotCreated("artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -403,7 +403,7 @@ func TestAccAccessTokenWildcardGroupGood(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{
@@ -447,7 +447,7 @@ func TestAccAccessTokenNonExpiringToken(t *testing.T) {
 	fqrn := "artifactory_access_token.foobar"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testAccCheckAccessTokenDestroy(t, "artifactory_access_token.foobar"),
 		Steps: []resource.TestStep{
 			{

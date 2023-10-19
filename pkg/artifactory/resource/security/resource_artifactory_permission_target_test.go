@@ -176,7 +176,7 @@ func TestAccPermissionTarget_noActions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -278,7 +278,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
@@ -312,7 +312,7 @@ func TestAccPermissionTarget_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
@@ -358,7 +358,7 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
@@ -424,7 +424,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{

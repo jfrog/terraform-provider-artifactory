@@ -80,7 +80,7 @@ func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -99,7 +99,7 @@ func TestAccCertificate_HasFileAndContentFails(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      conflictsResource,
@@ -118,7 +118,7 @@ func TestAccCertificate_WithFileMissing(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy("artifactory_certificate.fail"),
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccCertificate_WithFile(t *testing.T) {
 	fqrn := fmt.Sprintf("artifactory_certificate.%s", name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +214,7 @@ func TestAccCertificate_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

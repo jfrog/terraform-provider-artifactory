@@ -82,7 +82,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 			acctest.PreCheck(t)
 			createPermissionTarget(name, userName, t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			err := deletePermissionTarget(t, name)
 			_ = acctest.DeleteUser(t, userName)

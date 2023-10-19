@@ -51,7 +51,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapGroupSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -146,7 +146,7 @@ func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 
 		Steps: []resource.TestStep{
 			{

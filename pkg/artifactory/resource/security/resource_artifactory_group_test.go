@@ -51,7 +51,7 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -71,7 +71,7 @@ func TestAccGroup_defaults(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccGroup_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccGroup_bool_conflict(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +239,7 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -382,7 +382,7 @@ func TestAccGroup_full_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

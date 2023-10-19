@@ -78,7 +78,7 @@ func TestAccDistributionPublicKey_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   keyBasic,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -97,7 +97,7 @@ func TestAccDistributionPublicKey_FormatCheck(t *testing.T) {
 	`, resource_name, name, id)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      keyBasic,
@@ -112,7 +112,7 @@ func TestAccDistributionPublicKey_Create(t *testing.T) {
 	keyBasic := fmt.Sprintf(template, resource_name, name, name)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckDistributionPublicKeyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

@@ -52,7 +52,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -82,7 +82,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccUser_no_password(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -166,7 +166,7 @@ func TestAccUser_no_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -259,7 +259,7 @@ func testAccUserInvalidName(t *testing.T, username, errorRegex string) func(t *t
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:                 func() { acctest.PreCheck(t) },
-			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 			CheckDestroy:             testAccCheckUserDestroy(fqrn),
 			Steps: []resource.TestStep{
 				{
@@ -300,7 +300,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -372,7 +372,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{

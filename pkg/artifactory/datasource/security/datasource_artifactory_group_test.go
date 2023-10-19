@@ -62,7 +62,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 			acctest.PreCheck(t)
 			createGroup(groupName, description, strconv.Itoa(id), t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
