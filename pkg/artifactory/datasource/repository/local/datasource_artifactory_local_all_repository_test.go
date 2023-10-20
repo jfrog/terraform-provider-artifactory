@@ -28,6 +28,8 @@ func TestAccDataSourceLocalAllRepository(t *testing.T) {
 
 		data "artifactory_local_all_repository" "{{ .name }}" {
 		  package_type = "alpine"
+
+		  depends_on = [artifactory_local_alpine_repository.{{ .repoName }}]
 		}
 	`, params)
 

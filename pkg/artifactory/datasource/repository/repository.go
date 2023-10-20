@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,19 +16,35 @@ import (
 )
 
 type DataSourceModel struct {
-	Key                 types.String `tfsdk:"key"`
-	ProjectKey          types.String `tfsdk:"project_key"`
-	ProjectEnvironments types.Set    `tfsdk:"project_environments"`
-	PackageType         types.String `tfsdk:"package_type"`
-	Description         types.String `tfsdk:"description"`
-	Notes               types.String `tfsdk:"notes"`
-	IncludesPattern     types.Set    `tfsdk:"includes_pattern"`
-	ExcludesPattern     types.Set    `tfsdk:"excludes_pattern"`
-	RepoLayoutRef       types.String `tfsdk:"repo_layout_ref"`
+	Key             types.String `tfsdk:"key"`
+	ProjectKey      types.String `tfsdk:"project_key"`
+	Environments    types.Set    `tfsdk:"environments"`
+	PackageType     types.String `tfsdk:"package_type"`
+	Description     types.String `tfsdk:"description"`
+	Notes           types.String `tfsdk:"notes"`
+	IncludesPattern types.String `tfsdk:"includes_pattern"`
+	ExcludesPattern types.String `tfsdk:"excludes_pattern"`
+	RepoLayoutRef   types.String `tfsdk:"repo_layout_ref"`
 }
 
-func (m DataSourceModel) FromAPIModel(ctx context.Context, data APIModel) diag.Diagnostics {
-	return nil
+func (m DataSourceModel) SetValueFromAPIModel(ctx context.Context, data APIModel) (map[string]attr.Value, diag.Diagnostics) {
+	environments, diag := types.SetValueFrom(ctx, types.StringType, data.Environments)
+	if diag != nil {
+		return nil, diag
+	}
+
+	value := map[string]attr.Value{
+		"key":              types.StringValue(data.Key),
+		"project_key":      types.StringValue(data.ProjectKey),
+		"environments":     environments,
+		"package_type":     types.StringValue(data.PackageType),
+		"description":      types.StringValue(data.Description),
+		"notes":            types.StringValue(data.Notes),
+		"includes_pattern": types.StringValue(data.IncludesPattern),
+		"excludes_pattern": types.StringValue(data.ExcludesPattern),
+		"repo_layout_ref":  types.StringValue(data.RepoLayoutRef),
+	}
+	return value, nil
 }
 
 var RepoSchema map[string]schema.Attribute = map[string]schema.Attribute{
@@ -49,8 +66,21 @@ type APIModel struct {
 	PackageType     string   `json:"package_type"`
 	Description     string   `json:"description"`
 	Notes           string   `json:"notes"`
-	IncludesPattern string   `json:"includes_patterns"`
-	ExcludesPattern string   `json:"excludes_patterns"`
+	IncludesPattern string   `json:"includes_pattern"`
+	ExcludesPattern string   `json:"excludes_pattern"`
+	RepoLayoutRef   string   `json:"repo_layout_ref"`
+}
+
+var BaseAttrType = map[string]attr.Type{
+	"key":              types.StringType,
+	"project_key":      types.StringType,
+	"environments":     types.SetType{ElemType: types.StringType},
+	"package_type":     types.StringType,
+	"description":      types.StringType,
+	"notes":            types.StringType,
+	"includes_pattern": types.StringType,
+	"excludes_pattern": types.StringType,
+	"repo_layout_ref":  types.StringType,
 }
 
 const EndPoint = "artifactory/api/repositories/"

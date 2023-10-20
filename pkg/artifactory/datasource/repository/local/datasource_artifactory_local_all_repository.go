@@ -54,31 +54,34 @@ type AllLocalDataSourceModel struct {
 	Repos       types.Set    `tfsdk:"repos"`
 }
 
-var repoAttrType = map[string]attr.Type{
-	"debian_trivial_layout":              types.BoolType,
-	"checksum_policy_type":               types.StringType,
-	"handle_releases":                    types.BoolType,
-	"handle_snapshots":                   types.BoolType,
-	"max_unique_snapshots":               types.Int64Type,
-	"max_unique_tags":                    types.Int64Type,
-	"snapshot_version_behavior":          types.StringType,
-	"supporess_pom_consistency_checks":   types.BoolType,
-	"blacked_out":                        types.BoolType,
-	"xray_index":                         types.BoolType,
-	"property_sets":                      types.SetType{ElemType: types.StringType},
-	"archive_browsing_enabled":           types.BoolType,
-	"calculate_yum_metadata":             types.BoolType,
-	"yum_root_depth":                     types.Int64Type,
-	"docker_api_version":                 types.StringType,
-	"enable_file_lists_indexing":         types.BoolType,
-	"optional_index_compression_formats": types.SetType{ElemType: types.StringType},
-	"download_direct":                    types.BoolType,
-	"cdn_redirect":                       types.BoolType,
-	"block_pushing_schema_1":             types.BoolType,
-	"primary_key_pair_ref":               types.StringType,
-	"secondary_key_pair_ref":             types.StringType,
-	"priority_resolution":                types.BoolType,
-}
+var localRepoAttrType = utilsdk.MergeMaps(
+	repository.BaseAttrType,
+	map[string]attr.Type{
+		"debian_trivial_layout":              types.BoolType,
+		"checksum_policy_type":               types.StringType,
+		"handle_releases":                    types.BoolType,
+		"handle_snapshots":                   types.BoolType,
+		"max_unique_snapshots":               types.Int64Type,
+		"max_unique_tags":                    types.Int64Type,
+		"snapshot_version_behavior":          types.StringType,
+		"supporess_pom_consistency_checks":   types.BoolType,
+		"blacked_out":                        types.BoolType,
+		"xray_index":                         types.BoolType,
+		"property_sets":                      types.SetType{ElemType: types.StringType},
+		"archive_browsing_enabled":           types.BoolType,
+		"calculate_yum_metadata":             types.BoolType,
+		"yum_root_depth":                     types.Int64Type,
+		"docker_api_version":                 types.StringType,
+		"enable_file_lists_indexing":         types.BoolType,
+		"optional_index_compression_formats": types.SetType{ElemType: types.StringType},
+		"download_direct":                    types.BoolType,
+		"cdn_redirect":                       types.BoolType,
+		"block_pushing_schema_1":             types.BoolType,
+		"primary_key_pair_ref":               types.StringType,
+		"secondary_key_pair_ref":             types.StringType,
+		"priority_resolution":                types.BoolType,
+	},
+)
 
 func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []LocalAPIModel) diag.Diagnostics {
 
@@ -95,45 +98,48 @@ func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []Local
 			return diag
 		}
 
-		// dataSourceModel := repository.DataSourceModel{}
-		// diag = dataSourceModel.FromAPIModel(ctx, d.APIModel)
-		// if diag != nil {
-		// 	return diag
-		// }
+		dataSourceModel := repository.DataSourceModel{}
+		value, diag := dataSourceModel.SetValueFromAPIModel(ctx, d.APIModel)
+		if diag != nil {
+			return diag
+		}
 
 		repo := types.ObjectValueMust(
-			repoAttrType,
-			map[string]attr.Value{
-				"debian_trivial_layout":              types.BoolValue(d.DebianTrivialLayout),
-				"checksum_policy_type":               types.StringValue(d.ChecksumPolicyType),
-				"handle_releases":                    types.BoolValue(d.HandleReleases),
-				"handle_snapshots":                   types.BoolValue(d.HandleSnapshots),
-				"max_unique_snapshots":               types.Int64Value(d.MaxUniqueSnapshots),
-				"max_unique_tags":                    types.Int64Value(d.MaxUniqueTags),
-				"snapshot_version_behavior":          types.StringValue(d.SnapshotVersionBehavior),
-				"supporess_pom_consistency_checks":   types.BoolValue(d.SupporessPomConsistencyChecks),
-				"blacked_out":                        types.BoolValue(d.BlackOut),
-				"xray_index":                         types.BoolValue(d.XrayIndex),
-				"property_sets":                      propertySets,
-				"archive_browsing_enabled":           types.BoolValue(d.ArchiveBrowsingEnabled),
-				"calculate_yum_metadata":             types.BoolValue(d.CalculateYumMetadata),
-				"yum_root_depth":                     types.Int64Value(d.YumRootDepth),
-				"docker_api_version":                 types.StringValue(d.DockerApiVersion),
-				"enable_file_lists_indexing":         types.BoolValue(d.EnableFileListsIndexing),
-				"optional_index_compression_formats": optionalIndexCompressionFormats,
-				"download_direct":                    types.BoolValue(d.DownloadRedirect),
-				"cdn_redirect":                       types.BoolValue(d.CDNRedirect),
-				"block_pushing_schema_1":             types.BoolValue(d.BlockPushingSchema1),
-				"primary_key_pair_ref":               types.StringValue(d.PrimaryKeyPairRef),
-				"secondary_key_pair_ref":             types.StringValue(d.SecondaryKeyPairRef),
-				"priority_resolution":                types.BoolValue(d.PriorityResolution),
-			},
+			localRepoAttrType,
+			utilsdk.MergeMaps(
+				value,
+				map[string]attr.Value{
+					"debian_trivial_layout":              types.BoolValue(d.DebianTrivialLayout),
+					"checksum_policy_type":               types.StringValue(d.ChecksumPolicyType),
+					"handle_releases":                    types.BoolValue(d.HandleReleases),
+					"handle_snapshots":                   types.BoolValue(d.HandleSnapshots),
+					"max_unique_snapshots":               types.Int64Value(d.MaxUniqueSnapshots),
+					"max_unique_tags":                    types.Int64Value(d.MaxUniqueTags),
+					"snapshot_version_behavior":          types.StringValue(d.SnapshotVersionBehavior),
+					"supporess_pom_consistency_checks":   types.BoolValue(d.SupporessPomConsistencyChecks),
+					"blacked_out":                        types.BoolValue(d.BlackOut),
+					"xray_index":                         types.BoolValue(d.XrayIndex),
+					"property_sets":                      propertySets,
+					"archive_browsing_enabled":           types.BoolValue(d.ArchiveBrowsingEnabled),
+					"calculate_yum_metadata":             types.BoolValue(d.CalculateYumMetadata),
+					"yum_root_depth":                     types.Int64Value(d.YumRootDepth),
+					"docker_api_version":                 types.StringValue(d.DockerApiVersion),
+					"enable_file_lists_indexing":         types.BoolValue(d.EnableFileListsIndexing),
+					"optional_index_compression_formats": optionalIndexCompressionFormats,
+					"download_direct":                    types.BoolValue(d.DownloadRedirect),
+					"cdn_redirect":                       types.BoolValue(d.CDNRedirect),
+					"block_pushing_schema_1":             types.BoolValue(d.BlockPushingSchema1),
+					"primary_key_pair_ref":               types.StringValue(d.PrimaryKeyPairRef),
+					"secondary_key_pair_ref":             types.StringValue(d.SecondaryKeyPairRef),
+					"priority_resolution":                types.BoolValue(d.PriorityResolution),
+				},
+			),
 		)
 
 		repos = append(repos, repo)
 	}
 
-	reposSet, d := types.SetValue(types.ObjectType{AttrTypes: repoAttrType}, repos)
+	reposSet, d := types.SetValue(types.ObjectType{AttrTypes: localRepoAttrType}, repos)
 	if d != nil {
 		return d
 	}
@@ -154,7 +160,7 @@ var allLocalReposSchema map[string]schema.Attribute = utilsdk.MergeMaps(
 		"max_unique_tags":                    schema.Int64Attribute{Computed: true},
 		"snapshot_version_behavior":          schema.StringAttribute{Computed: true},
 		"supporess_pom_consistency_checks":   schema.BoolAttribute{Computed: true},
-		"black_out":                          schema.BoolAttribute{Computed: true},
+		"blacked_out":                        schema.BoolAttribute{Computed: true},
 		"xray_index":                         schema.BoolAttribute{Computed: true},
 		"property_sets":                      schema.SetAttribute{ElementType: types.StringType, Computed: true},
 		"archive_browsing_enabled":           schema.BoolAttribute{Computed: true},
