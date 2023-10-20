@@ -51,7 +51,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 				},
 			},
 			"access_token": schema.StringAttribute{
-				Description: "This is a access token that can be given to you by your admin under `User Management -> Access Tokens`.",
+				Description: "This is a access token that can be given to you by your admin under `User Management -> Access Tokens`. If not set, the 'api_key' attribute value will be used.",
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
@@ -59,7 +59,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 				},
 			},
 			"api_key": schema.StringAttribute{
-				Description:        "API token. Projects functionality will not work with any auth method other than access tokens",
+				Description:        "API key. If `access_token` attribute, `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variable is set, the provider will ignore this attribute.",
 				DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available.",
 				Optional:           true,
 				Sensitive:          true,
@@ -123,7 +123,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		)
 	}
 
-	restyBase, err = client.AddAuth(restyBase, "", accessToken)
+	restyBase, err = client.AddAuth(restyBase, config.ApiKey.ValueString(), accessToken)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding Auth to Resty client",

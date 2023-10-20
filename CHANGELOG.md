@@ -1,3 +1,9 @@
+## 9.7.2 (Oct 19, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.2
+
+BUG FIX:
+
+* provider: Fix schema differences between SDKv2 and Framework providers. PR: [#834](https://github.com/jfrog/terraform-provider-artifactory/pull/834) Issue: [#833](https://github.com/jfrog/terraform-provider-artifactory/issues/833)
+
 ## 9.7.1 (Oct 19, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.2
 
 IMPROVEMENTS:
