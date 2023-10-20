@@ -22,7 +22,7 @@ func TestAccDataSourceLocalAllPackageTypes(t *testing.T) {
 }
 
 func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-local-%s-%d-full", packageType, testutil.RandomInt())
+	name := fmt.Sprintf("local-%s-%d-full", packageType, testutil.RandomInt())
 	resourceName := fmt.Sprintf("data.artifactory_local_%s_repository.%s", packageType, name)
 	xrayIndex := testutil.RandBool()
 

@@ -201,7 +201,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 // DataSources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		datasource_local.NewAllLocalDataSource,
+		datasource_local.NewLocalRepositoriesDataSource,
 	}
 }
 

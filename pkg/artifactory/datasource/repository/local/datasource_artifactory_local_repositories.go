@@ -12,49 +12,22 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-var _ datasource.DataSource = &AllLocalDataSource{}
+var _ datasource.DataSource = &LocalRepositoriesDataSource{}
 
-func NewAllLocalDataSource() datasource.DataSource {
-	return &AllLocalDataSource{}
+func NewLocalRepositoriesDataSource() datasource.DataSource {
+	return &LocalRepositoriesDataSource{}
 }
 
-type AllLocalDataSource struct {
+type LocalRepositoriesDataSource struct {
 	ProviderData utilsdk.ProvderMetadata
 }
 
-type LocalDataSourceModel struct {
-	repository.DataSourceModel
-	DebianTrivialLayout             types.Bool   `tfsdk:"debian_trivial_layout"`
-	ChecksumPolicyType              types.String `tfsdk:"checksum_policy_type"`
-	HandleReleases                  types.Bool   `tfsdk:"handle_releases"`
-	HandleSnapshots                 types.Bool   `tfsdk:"handle_snapshots"`
-	MaxUniqueSnapshots              types.Int64  `tfsdk:"max_unique_snapshots"`
-	MaxUniqueTags                   types.Int64  `tfsdk:"max_unique_tags"`
-	SnapshotVersionBehavior         types.String `tfsdk:"snapshot_version_behavior"`
-	SupporessPomConsistencyChecks   types.Bool   `tfsdk:"supporess_pom_consistency_checks"`
-	BlackOut                        types.Bool   `tfsdk:"blacked_out"`
-	XrayIndex                       types.Bool   `tfsdk:"xray_index"`
-	PropertySets                    types.Set    `tfsdk:"property_sets"`
-	ArchiveBrowsingEnabled          types.Bool   `tfsdk:"archive_browsing_enabled"`
-	CalculateYumMetadata            types.Bool   `tfsdk:"calculate_yum_metadata"`
-	YumRootDepth                    types.Int64  `tfsdk:"yum_root_depth"`
-	DockerApiVersion                types.String `tfsdk:"docker_api_version"`
-	EnableFileListsIndexing         types.Bool   `tfsdk:"enable_file_lists_indexing"`
-	OptionalIndexCompressionFormats types.Set    `tfsdk:"optional_index_compression_formats"`
-	DownloadRedirect                types.Bool   `tfsdk:"download_direct"`
-	CDNRedirect                     types.Bool   `tfsdk:"cdn_redirect"`
-	BlockPushingSchema1             types.Bool   `tfsdk:"block_pushing_schema_1"`
-	PrimaryKeyPairRef               types.String `tfsdk:"primary_key_pair_ref"`
-	SecondaryKeyPairRef             types.String `tfsdk:"secondary_key_pair_ref"`
-	PriorityResolution              types.Bool   `tfsdk:"priority_resolution"`
-}
-
-type AllLocalDataSourceModel struct {
+type LocalRepositoriesDataSourceModel struct {
 	PackageType types.String `tfsdk:"package_type"`
 	Repos       types.Set    `tfsdk:"repos"`
 }
 
-var localRepoAttrType = utilsdk.MergeMaps(
+var localReposAttrType = utilsdk.MergeMaps(
 	repository.BaseAttrType,
 	map[string]attr.Type{
 		"debian_trivial_layout":              types.BoolType,
@@ -83,7 +56,7 @@ var localRepoAttrType = utilsdk.MergeMaps(
 	},
 )
 
-func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []LocalAPIModel) diag.Diagnostics {
+func (m *LocalRepositoriesDataSourceModel) FromAPIModel(ctx context.Context, data []LocalRepositoriesAPIModel) diag.Diagnostics {
 
 	var repos []attr.Value
 
@@ -105,7 +78,7 @@ func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []Local
 		}
 
 		repo := types.ObjectValueMust(
-			localRepoAttrType,
+			localReposAttrType,
 			utilsdk.MergeMaps(
 				value,
 				map[string]attr.Value{
@@ -139,7 +112,7 @@ func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []Local
 		repos = append(repos, repo)
 	}
 
-	reposSet, d := types.SetValue(types.ObjectType{AttrTypes: localRepoAttrType}, repos)
+	reposSet, d := types.SetValue(types.ObjectType{AttrTypes: localReposAttrType}, repos)
 	if d != nil {
 		return d
 	}
@@ -149,7 +122,7 @@ func (m *AllLocalDataSourceModel) FromAPIModel(ctx context.Context, data []Local
 	return nil
 }
 
-var allLocalReposSchema map[string]schema.Attribute = utilsdk.MergeMaps(
+var allLocalRepoSchema map[string]schema.Attribute = utilsdk.MergeMaps(
 	repository.RepoSchema,
 	map[string]schema.Attribute{
 		"debian_trivial_layout":              schema.BoolAttribute{Computed: true},
@@ -178,7 +151,7 @@ var allLocalReposSchema map[string]schema.Attribute = utilsdk.MergeMaps(
 	},
 )
 
-type LocalAPIModel struct {
+type LocalRepositoriesAPIModel struct {
 	repository.APIModel
 	DebianTrivialLayout             bool     `json:"debian_trivial_layout"`
 	ChecksumPolicyType              string   `json:"checksum_policy_type"`
@@ -205,11 +178,11 @@ type LocalAPIModel struct {
 	PriorityResolution              bool     `json:"priority_resolution"`
 }
 
-func (d *AllLocalDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "artifactory_local_all_repository"
+func (d *LocalRepositoriesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = "artifactory_local_repositories"
 }
 
-func (d *AllLocalDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *LocalRepositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"package_type": schema.StringAttribute{
@@ -218,14 +191,14 @@ func (d *AllLocalDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"repos": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
-					Attributes: allLocalReposSchema,
+					Attributes: allLocalRepoSchema,
 				},
 			},
 		},
 	}
 }
 
-func (d *AllLocalDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *LocalRepositoriesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -233,15 +206,15 @@ func (d *AllLocalDataSource) Configure(ctx context.Context, req datasource.Confi
 	d.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
 }
 
-func (d *AllLocalDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AllLocalDataSourceModel
+func (d *LocalRepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data LocalRepositoriesDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var repos []LocalAPIModel
+	var repos []LocalRepositoriesAPIModel
 	_, err := d.ProviderData.Client.R().
 		SetQueryParams(map[string]string{
 			"repositoryType": "local",

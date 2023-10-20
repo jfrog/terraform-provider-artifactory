@@ -10,17 +10,17 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-func TestAccDataSourceLocalAllRepository(t *testing.T) {
+func TestAccDataSourceLocalRepositories(t *testing.T) {
 	_, _, genericRepoName := testutil.MkNames("generic-local", "artifactory_local_generic_repository")
 	_, _, alpineRepoName := testutil.MkNames("alpine-local", "artifactory_local_alpine_repository")
-	_, fqrn, name := testutil.MkNames("all-local", "data.artifactory_local_all_repository")
+	_, fqrn, name := testutil.MkNames("all-local", "data.artifactory_local_repositories")
 
 	params := map[string]interface{}{
 		"genericRepoName": genericRepoName,
 		"alpineRepoName":  alpineRepoName,
 		"name":            name,
 	}
-	config := utilsdk.ExecuteTemplate("TestAccLocalAllRepository", `
+	config := utilsdk.ExecuteTemplate("TestAccLocalRepositories", `
 		resource "artifactory_local_generic_repository" "{{ .genericRepoName }}" {
 		  key         = "{{ .genericRepoName }}"
 		  description = "Test repo for {{ .genericRepoName }}"
@@ -34,7 +34,7 @@ func TestAccDataSourceLocalAllRepository(t *testing.T) {
 		  notes       = "Test repo for {{ .alpineRepoName }}-${count.index}"
 		}
 
-		data "artifactory_local_all_repository" "{{ .name }}" {
+		data "artifactory_local_repositories" "{{ .name }}" {
 		  package_type = "alpine"
 
 		  // ensure all repos are created first before fetching
@@ -45,7 +45,7 @@ func TestAccDataSourceLocalAllRepository(t *testing.T) {
 		}
 
 		output "repo_key_0" {
-			value = tolist(data.artifactory_local_all_repository.{{ .name }}.repos)[0].key
+			value = tolist(data.artifactory_local_repositories.{{ .name }}.repos)[0].key
 		}
 	`, params)
 
