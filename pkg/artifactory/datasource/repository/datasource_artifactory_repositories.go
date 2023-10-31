@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -86,19 +88,22 @@ func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.Sche
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"repository_type": schema.StringAttribute{
-				Optional: true,
+				Description: fmt.Sprintf("Filter for repositories of a specific type. Allowed values are: %s", strings.Join(validRepositoryTypes, ", ")),
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(validRepositoryTypes...),
 				},
 			},
 			"package_type": schema.StringAttribute{
-				Optional: true,
+				Description: fmt.Sprintf("Filter for repositories of a specific package type. Allowed values are: %s", strings.Join(validPackageTypes, ", ")),
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(validPackageTypes...),
 				},
 			},
 			"project_key": schema.StringAttribute{
-				Optional: true,
+				Description: "Filter for repositories assigned to a specific project.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
 						regexp.MustCompile(`^[a-z][a-z0-9\-]{1,31}$`),
@@ -107,7 +112,8 @@ func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.Sche
 				},
 			},
 			"repos": schema.SetNestedAttribute{
-				Computed: true,
+				Description: "A list of repositories.",
+				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"key":          schema.StringAttribute{Computed: true},
@@ -119,6 +125,7 @@ func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.Sche
 				},
 			},
 		},
+		Description: "Returns a list of minimal repository details for all repositories of the specified type.",
 	}
 }
 
