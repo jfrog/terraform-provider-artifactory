@@ -1,3 +1,20 @@
+## 9.7.3 (Nov 2, 2023)
+
+SECURITY:
+
+* provider: Bump google.golang.org/grpc from 1.56.1 to 1.56.3 PR: [#836](https://github.com/jfrog/terraform-provider-artifactory/pull/836)
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add configuration synchronization when creating or updating resource. Issue: [#825](https://github.com/jfrog/terraform-provider-artifactory/issues/825)
+* provider: Add warning message for Terraform CLI version <1.0.0 deprecation
+
+PR: [#840](https://github.com/jfrog/terraform-provider-artifactory/pull/840)
+
+NOTES:
+
+We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
+
 ## 9.7.2 (Oct 19, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.2
 
 BUG FIX:
