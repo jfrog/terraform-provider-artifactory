@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -93,7 +94,12 @@ func PreCheck(t *testing.T) {
 			SetHeader("Content-Type", "text/plain").
 			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
-			t.Fatalf("Failed to set custom base URL: %v", err)
+			t.Fatalf("failed to set custom base URL: %v", err)
+		}
+
+		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform2.NewResourceConfigRaw(nil)))
+		if configErr != nil && configErr.HasError() {
+			t.Fatalf("failed to configure provider %v", configErr)
 		}
 	})
 }
