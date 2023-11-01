@@ -9,14 +9,23 @@
 
 ## Releases
 
-Current provider major release: **7.x**
+Current provider major release: **9.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
 ## Versions
 
-We maintain two major versions of Terraform Provider - 6.x and 7.x. Version 6.x is compatible with the Artifactory versions 7.49.x and below,
-version 7.x is only compatible with Artifactory 7.50.x and above due to changes in the projects functionality.
+Version 6.x is compatible with the Artifactory versions 7.49.x and below.
+
+Version 7.x and 8.x is only compatible with Artifactory between 7.50.x and 7.67.x due to changes in the projects functionality.
+
+Version 9.x is the latest major version and is compatible with latest Artifactory versions (>=7.68.7 (self-hosted) and >=7.67.0 (cloud)).
+
+## Terraform CLI version support
+
+Current version support [Terraform Protocol v5](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-5) which mean Terraform CLI version 0.12 and later. 
+
+~>We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
 
 ## Quick Start
 
