@@ -53,7 +53,19 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		"member1Url":   federatedMember1Url,
 		"member2Url":   federatedMember2Url,
 	}
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+	config := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key         = "{{ .name }}"
+			description = "Test federated repo for {{ .name }}"
+			notes       = "Test federated repo for {{ .name }}"
+
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+		}
+	`, params)
+	updatedConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
@@ -77,7 +89,15 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: federatedRepositoryConfig,
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember1Url),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+				),
+			},
+			{
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember2Url),
