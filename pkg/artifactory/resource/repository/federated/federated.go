@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -122,11 +123,68 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 	}
 
 	errors := setValue("member", federatedMembers)
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return fmt.Errorf("failed saving members to state %q", errors)
 	}
 
 	return nil
+}
+
+func configSync(ctx context.Context, repoKey string, m interface{}) diag.Diagnostics {
+	var ds diag.Diagnostics
+
+	tflog.Info(ctx,
+		"triggering synchronization of the federated member configuration",
+		map[string]interface{}{
+			"repoKey": repoKey,
+		},
+	)
+	_, restErr := m.(utilsdk.ProvderMetadata).Client.R().
+		SetPathParam("repositoryKey", repoKey).
+		Post("artifactory/api/federation/configSync/{repositoryKey}")
+	if restErr != nil {
+		ds = append(ds, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "failed to trigger synchronization of the federated member configuration",
+			Detail:   restErr.Error(),
+		})
+	}
+
+	return ds
+}
+
+func createRepo(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		var ds diag.Diagnostics
+		ds = append(ds, repository.Create(ctx, d, m, unpack)...)
+		if ds.HasError() {
+			return ds
+		}
+
+		ds = append(ds, configSync(ctx, d.Id(), m)...)
+		if ds.HasError() {
+			return ds
+		}
+
+		return append(ds, read(ctx, d, m)...)
+	}
+}
+
+func updateRepo(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		var ds diag.Diagnostics
+		ds = append(ds, repository.Update(ctx, d, m, unpack)...)
+		if ds.HasError() {
+			return ds
+		}
+
+		ds = append(ds, configSync(ctx, d.Id(), m)...)
+		if ds.HasError() {
+			return ds
+		}
+
+		return append(ds, read(ctx, d, m)...)
+	}
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -173,9 +231,9 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
 	return &schema.Resource{
-		CreateContext: repository.MkRepoCreate(unpack, reader),
+		CreateContext: createRepo(unpack, reader),
 		ReadContext:   reader,
-		UpdateContext: repository.MkRepoUpdate(unpack, reader),
+		UpdateContext: updateRepo(unpack, reader),
 		DeleteContext: deleteRepo,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

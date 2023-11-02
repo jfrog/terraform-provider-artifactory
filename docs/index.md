@@ -15,8 +15,13 @@ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
   "validThrough" : "Jan 29, 2022",
   "licensedTo" : "JFrog Ltd"
 }
-
 ```
+
+## Terraform CLI version support
+
+Current version support [Terraform Protocol v5](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-5) which mean Terraform CLI version 0.12 and later. 
+
+~>We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
 
 ## Example Usage
 ```tf

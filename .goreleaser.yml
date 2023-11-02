@@ -14,7 +14,7 @@ builds:
   flags:
     - -trimpath
   ldflags:
-    - '-s -w -X github.com/jfrog/terraform-provider-artifactory/v6/pkg/artifactory/provider.Version={{.Version}}'
+    - '-s -w -X github.com/jfrog/terraform-provider-artifactory/v{{.Major}}/pkg/artifactory/provider.Version={{.Version}}'
   goos:
     - freebsd
     - windows
