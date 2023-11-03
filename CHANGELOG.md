@@ -1,3 +1,9 @@
+## 9.7.4 (Nov 3, 2023)
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_target: Revert back to using Terraform SDKv2 due to unresolved performance issue from Terraform Framework. Issue: [#757](https://github.com/jfrog/terraform-provider-artifactory/issues/757) and [#805](https://github.com/jfrog/terraform-provider-artifactory/issues/805) PR: [#842](https://github.com/jfrog/terraform-provider-artifactory/pull/842)
+
 ## 9.7.3 (Nov 2, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
 
 SECURITY:
@@ -258,7 +264,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_permission_target is migrated to Plugin Framework, improved attribute validation.
 
-  PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/42)
+PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/742)
 
 ## 7.11.2 (May 30, 2023). Tested on Artifactory 7.59.9
 
