@@ -3,238 +3,33 @@ package security
 import (
 	"context"
 	"net/http"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	validatorfw "github.com/jfrog/terraform-provider-shared/validator/fw"
+
+	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
 )
 
 const PermissionsEndPoint = "artifactory/api/v2/security/permissions/"
+const (
+	PermRead            = "read"
+	PermWrite           = "write"
+	PermAnnotate        = "annotate"
+	PermDelete          = "delete"
+	PermManage          = "manage"
+	PermManagedXrayMeta = "managedXrayMeta"
+	PermDistribute      = "distribute"
+)
 
-func NewPermissionTargetResource() resource.Resource {
-	return &PermissionTargetResource{}
-}
-
-type PermissionTargetResource struct {
-	ProviderData utilsdk.ProvderMetadata
-}
-
-// PermissionTargetResourceModel describes the Terraform resource data model to match the
-// resource schema.
-type PermissionTargetResourceModel struct {
-	Id            types.String `tfsdk:"id"`
-	Name          types.String `tfsdk:"name"`
-	Repo          types.Set    `tfsdk:"repo"`
-	Build         types.Set    `tfsdk:"build"`
-	ReleaseBundle types.Set    `tfsdk:"release_bundle"`
-}
-
-func (r *PermissionTargetResourceModel) toActionsAPIModel(ctx context.Context, resourceActions types.Set) Actions {
-	setToMap := func(sourceSet types.Set, mapToUpdate *map[string][]string) {
-		for _, setElement := range sourceSet.Elements() {
-			attrs := setElement.(types.Object).Attributes()
-			permissions := utilfw.StringSetToStrings(attrs["permissions"].(types.Set))
-			(*mapToUpdate)[attrs["name"].(types.String).ValueString()] = permissions
-		}
-	}
-
-	actions := Actions{
-		Users:  map[string][]string{},
-		Groups: map[string][]string{},
-	}
-
-	if len(resourceActions.Elements()) > 0 {
-		actionsElm := resourceActions.Elements()[0].(types.Object)
-		actionsAttrs := actionsElm.Attributes()
-		setToMap(actionsAttrs["users"].(types.Set), &actions.Users)
-		setToMap(actionsAttrs["groups"].(types.Set), &actions.Groups)
-	}
-
-	return actions
-}
-
-func (r *PermissionTargetResourceModel) toSectionAPIModel(ctx context.Context, resourceSection types.Set) *PermissionTargetSection {
-	if resourceSection.IsUnknown() || resourceSection.IsNull() {
-		return nil
-	}
-	sectionElms := resourceSection.Elements()
-	sectionAttrs := sectionElms[0].(types.Object).Attributes()
-	repoActions := r.toActionsAPIModel(ctx, sectionAttrs["actions"].(types.Set))
-
-	return &PermissionTargetSection{
-		IncludePatterns: utilfw.StringSetToStrings(sectionAttrs["includes_pattern"].(types.Set)),
-		ExcludePatterns: utilfw.StringSetToStrings(sectionAttrs["excludes_pattern"].(types.Set)),
-		Repositories:    utilfw.StringSetToStrings(sectionAttrs["repositories"].(types.Set)),
-		Actions:         &repoActions,
-	}
-}
-
-func (r *PermissionTargetResourceModel) toAPIModel(ctx context.Context) PermissionTargetResourceAPIModel {
-	// convert section
-	repo := r.toSectionAPIModel(ctx, r.Repo)
-	build := r.toSectionAPIModel(ctx, r.Build)
-	releaseBundle := r.toSectionAPIModel(ctx, r.ReleaseBundle)
-
-	// Convert from Terraform data model into API data model
-	return PermissionTargetResourceAPIModel{
-		Name:          r.Name.ValueString(),
-		Repo:          repo,
-		Build:         build,
-		ReleaseBundle: releaseBundle,
-	}
-}
-
-func (r *PermissionTargetResourceModel) ToState(ctx context.Context, diags diag.Diagnostics, permissionTarget *PermissionTargetResourceAPIModel) {
-	r.Id = types.StringValue(permissionTarget.Name)
-	r.Name = types.StringValue(permissionTarget.Name)
-
-	var ds diag.Diagnostics
-
-	if permissionTarget.Repo != nil {
-		r.Repo, ds = r.sectionFromAPIModel(ctx, permissionTarget.Repo)
-		if ds != nil {
-			diags.Append(ds...)
-			return
-		}
-	}
-
-	if permissionTarget.Build != nil {
-		r.Build, ds = r.sectionFromAPIModel(ctx, permissionTarget.Build)
-		if ds != nil {
-			diags.Append(ds...)
-			return
-		}
-	}
-
-	if permissionTarget.ReleaseBundle != nil {
-		r.ReleaseBundle, ds = r.sectionFromAPIModel(ctx, permissionTarget.ReleaseBundle)
-		if ds != nil {
-			diags.Append(ds...)
-			return
-		}
-	}
-}
-
-func (r *PermissionTargetResourceModel) sectionFromAPIModel(ctx context.Context, section *PermissionTargetSection) (types.Set, diag.Diagnostics) {
-	includesPatterns, diags := types.SetValueFrom(ctx, types.StringType, section.IncludePatterns)
-	if diags != nil {
-		return types.Set{}, diags
-	}
-
-	excludesPatterns, diags := types.SetValueFrom(ctx, types.StringType, section.ExcludePatterns)
-	if diags != nil {
-		return types.Set{}, diags
-	}
-
-	repos, diags := types.SetValueFrom(ctx, types.StringType, section.Repositories)
-	if diags != nil {
-		return types.Set{}, diags
-	}
-
-	var namePermissionAttrTypes = map[string]attr.Type{
-		"name":        types.StringType,
-		"permissions": types.SetType{ElemType: types.StringType},
-	}
-
-	var actionsAttrTypes = map[string]attr.Type{
-		"users": types.SetType{
-			ElemType: types.ObjectType{
-				AttrTypes: namePermissionAttrTypes,
-			},
-		},
-		"groups": types.SetType{
-			ElemType: types.ObjectType{
-				AttrTypes: namePermissionAttrTypes,
-			},
-		},
-	}
-
-	actionFromAPIModel := func(action map[string][]string) (types.Set, diag.Diagnostics) {
-		objectValues := []attr.Value{}
-		for name, permissions := range action {
-			permissionsSet, diags := types.SetValueFrom(ctx, types.StringType, permissions)
-			if diags != nil {
-				return types.Set{}, diags
-			}
-
-			objectValue := types.ObjectValueMust(
-				namePermissionAttrTypes,
-				map[string]attr.Value{
-					"name":        types.StringValue(name),
-					"permissions": permissionsSet,
-				},
-			)
-			objectValues = append(objectValues, objectValue)
-		}
-		return types.SetValueMust(types.ObjectType{
-			AttrTypes: namePermissionAttrTypes,
-		}, objectValues), nil
-	}
-
-	actionsUsers, diags := actionFromAPIModel(section.Actions.Users)
-	if diags != nil {
-		return types.Set{}, diags
-	}
-
-	actionsGroups, diags := actionFromAPIModel(section.Actions.Groups)
-	if diags != nil {
-		return types.Set{}, diags
-	}
-
-	sectionAttrType := map[string]attr.Type{
-		"includes_pattern": types.SetType{ElemType: types.StringType},
-		"excludes_pattern": types.SetType{ElemType: types.StringType},
-		"repositories":     types.SetType{ElemType: types.StringType},
-		"actions": types.SetType{ElemType: types.ObjectType{
-			AttrTypes: actionsAttrTypes},
-		},
-	}
-
-	actionsObjs := types.ObjectValueMust(
-		actionsAttrTypes,
-		map[string]attr.Value{
-			"users":  actionsUsers,
-			"groups": actionsGroups,
-		},
-	)
-
-	sectionObj := types.ObjectValueMust(
-		sectionAttrType,
-		map[string]attr.Value{
-			"includes_pattern": includesPatterns,
-			"excludes_pattern": excludesPatterns,
-			"repositories":     repos,
-			"actions": types.SetValueMust(
-				types.ObjectType{AttrTypes: actionsAttrTypes},
-				[]attr.Value{actionsObjs},
-			),
-		},
-	)
-
-	return types.SetValueMust(
-		types.ObjectType{AttrTypes: sectionAttrType},
-		[]attr.Value{sectionObj},
-	), nil
-
-}
-
-// PermissionTargetResourceAPIModel describes the API data model. Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
+// PermissionTargetParams Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
 //
 // Using struct pointers to keep the fields null if they are empty.
 // Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
-type PermissionTargetResourceAPIModel struct {
+type PermissionTargetParams struct {
 	Name          string                   `json:"name"`
 	Repo          *PermissionTargetSection `json:"repo,omitempty"`
 	Build         *PermissionTargetSection `json:"build,omitempty"`
@@ -253,254 +48,332 @@ type Actions struct {
 	Groups map[string][]string `json:"groups,omitempty"`
 }
 
-const (
-	PermRead            = "read"
-	PermWrite           = "write"
-	PermAnnotate        = "annotate"
-	PermDelete          = "delete"
-	PermManage          = "manage"
-	PermManagedXrayMeta = "managedXrayMeta"
-	PermDistribute      = "distribute"
-)
-
-func (r *PermissionTargetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_permission_target"
+func ResourceArtifactoryPermissionTargets() *schema.Resource {
+	target := ResourceArtifactoryPermissionTarget()
+	target.DeprecationMessage = "This resource has been deprecated in favour of artifactory_permission_target resource."
+	return target
 }
 
-var actionsAttributeBlock = schema.SetNestedBlock{
-	NestedObject: schema.NestedBlockObject{
-		Attributes: map[string]schema.Attribute{
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"permissions": schema.SetAttribute{
-				ElementType: types.StringType,
-				Required:    true,
-				Validators: []validator.Set{
-					validatorfw.StringInSlice([]string{
-						PermRead,
-						PermAnnotate,
-						PermWrite,
-						PermDelete,
-						PermManage,
-						PermManagedXrayMeta,
-						PermDistribute,
-					}),
+func BuildPermissionTargetSchema() map[string]*schema.Schema {
+	actionSchema := schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Set:      hashPrincipal,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"permissions": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{
+							PermRead,
+							PermAnnotate,
+							PermWrite,
+							PermDelete,
+							PermManage,
+							PermManagedXrayMeta,
+							PermDistribute,
+						}, false),
+					},
+					Set:      schema.HashString,
+					Required: true,
 				},
 			},
 		},
-	},
-}
+	}
 
-func (r *PermissionTargetResource) getPrincipalBlock(description, repoDescription string) schema.SetNestedBlock {
-	return schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"includes_pattern": schema.SetAttribute{
-					ElementType:         types.StringType,
-					Optional:            true,
-					Computed:            true,
-					Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{types.StringValue("**")})),
-					MarkdownDescription: `The default value will be [""] if nothing is supplied`,
+	principalSchema := schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		MinItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"includes_pattern": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [""] if nothing is supplied`,
 				},
-				"excludes_pattern": schema.SetAttribute{
-					ElementType:         types.StringType,
-					Optional:            true,
-					Computed:            true,
-					Default:             setdefault.StaticValue(basetypes.NewSetValueMust(types.StringType, []attr.Value{})),
-					MarkdownDescription: "The default value will be [] if nothing is supplied",
+				"excludes_pattern": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Optional:    true,
+					Description: `The default value will be [] if nothing is supplied`,
 				},
-				"repositories": schema.SetAttribute{
-					ElementType: types.StringType,
+				"repositories": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Set:         schema.HashString,
+					Description: "You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified.",
 					Required:    true,
-					// Optional:            true, // this attribute can't be set to required as SingleNestedBlock doesn't support it. See https://github.com/hashicorp/terraform-plugin-framework/issues/740
-					MarkdownDescription: repoDescription,
 				},
-			},
-			Blocks: map[string]schema.Block{
-				"actions": schema.SetNestedBlock{
-					NestedObject: schema.NestedBlockObject{
-						Blocks: map[string]schema.Block{
-							"users":  actionsAttributeBlock,
-							"groups": actionsAttributeBlock,
+				"actions": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"users":  &actionSchema,
+							"groups": &actionSchema,
 						},
 					},
-					Validators: []validator.Set{
-						setvalidator.SizeBetween(1, 1),
-					},
+					Optional: true,
 				},
 			},
 		},
-		Validators: []validator.Set{
-			setvalidator.SizeBetween(1, 1),
+	}
+	buildSchema := principalSchema
+	buildSchema.Elem.(*schema.Resource).Schema["repositories"].Description = `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`
+
+	return map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
 		},
-		MarkdownDescription: description,
+		"repo":           &principalSchema,
+		"build":          &buildSchema,
+		"release_bundle": &principalSchema,
 	}
 }
 
-func (r *PermissionTargetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Name of permission.",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+func ResourceArtifactoryPermissionTarget() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourcePermissionTargetCreate,
+		ReadContext:   resourcePermissionTargetRead,
+		UpdateContext: resourcePermissionTargetUpdate,
+		DeleteContext: resourcePermissionTargetDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Blocks: map[string]schema.Block{
-			"repo":           r.getPrincipalBlock("Repository permission configuration.", "You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified."),
-			"build":          r.getPrincipalBlock("As for repo but for artifactory-build-info permissions.", `This can only be 1 value: "artifactory-build-info", and currently, validation of sets/lists is not allowed. Artifactory will reject the request if you change this`),
-			"release_bundle": r.getPrincipalBlock("As for repo for for release-bundles permissions.", "You can specify the name `ANY` in the repositories section in order to apply to all repositories, `ANY REMOTE` for all remote repositories and `ANY LOCAL` for all local repositories. The default value will be [] if nothing is specified."),
-		},
+
+		Schema: BuildPermissionTargetSchema(),
 	}
 }
 
-func (r *PermissionTargetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
-	if req.ProviderData == nil {
-		return
-	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+func hashPrincipal(o interface{}) int {
+	p := o.(map[string]interface{})
+	part1 := schema.HashString(p["name"].(string)) + 31
+	permissions := utilsdk.CastToStringArr(p["permissions"].(*schema.Set).List())
+	part3 := schema.HashString(strings.Join(permissions, ""))
+	return part1 * part3
 }
 
-func (r *PermissionTargetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *PermissionTargetResourceModel
+func unpackPermissionTarget(ctx context.Context, s *schema.ResourceData) *PermissionTargetParams {
+	d := &utilsdk.ResourceData{ResourceData: s}
 
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {
+		unpackEntity := func(rawEntityData interface{}) *Actions {
+			unpackPermMap := func(rawPermSet interface{}) map[string][]string {
+				permList := rawPermSet.(*schema.Set).List()
+				if len(permList) == 0 {
+					return nil
+				}
 
-	permissionTarget := data.toAPIModel(ctx)
+				permissions := make(map[string][]string)
+				for _, v := range permList {
+					id := v.(map[string]interface{})
 
-	response, err := r.ProviderData.Client.R().
-		SetBody(permissionTarget).
-		Put(PermissionsEndPoint + permissionTarget.Name)
+					permissions[id["name"].(string)] = utilsdk.CastToStringArr(id["permissions"].(*schema.Set).List())
+				}
+				return permissions
+			}
 
-	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, err.Error())
-		return
-	}
+			entityDataList := rawEntityData.([]interface{})
+			if len(entityDataList) == 0 || entityDataList[0] == nil {
+				return nil
+			}
 
-	// Return error if the HTTP status code is not 200 OK
-	if response.StatusCode() != http.StatusOK {
-		utilfw.UnableToCreateResourceError(resp, response.Status())
-		return
-	}
-
-	// Assign the resource ID for the resource in the state
-	data.Id = types.StringValue(permissionTarget.Name)
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *PermissionTargetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *PermissionTargetResourceModel
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	permissionTarget := &PermissionTargetResourceAPIModel{}
-
-	response, err := r.ProviderData.Client.R().
-		SetResult(permissionTarget).
-		Get(PermissionsEndPoint + data.Id.ValueString())
-
-	// Treat HTTP 404 Not Found status as a signal to recreate resource
-	// and return early
-	if err != nil {
-		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
-			resp.State.RemoveResource(ctx)
-			return
+			entityData := entityDataList[0].(map[string]interface{})
+			return &Actions{
+				Users:  unpackPermMap(entityData["users"]),
+				Groups: unpackPermMap(entityData["groups"]),
+			}
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
-		return
+
+		if rawPermissionData == nil || rawPermissionData.([]interface{})[0] == nil {
+			return nil
+		}
+
+		// It is safe to unpack the zeroth element immediately since permission targets have min size of 1
+		permissionData := rawPermissionData.([]interface{})[0].(map[string]interface{})
+
+		permission := new(PermissionTargetSection)
+
+		// This will always exist
+		tmp := utilsdk.CastToStringArr(permissionData["repositories"].(*schema.Set).List())
+		permission.Repositories = tmp
+
+		// Handle optionals
+		if v, ok := permissionData["includes_pattern"]; ok {
+			// It is not possible to set default values for sets. Because the data type between moving from
+			// atlassian to jfrog went from a *[]string to a []string, and both have json attributes of 'on empty omit'
+			// when the * version was used, this would have cause an [] array to be sent, which artifactory would accept
+			// now that the data type is changed, and [] is ommitted and so when artifactory see the key missing entirely
+			// it responds with "[**]" which messes us the testutil. This hack seems to line them up
+			tmp := utilsdk.CastToStringArr(v.(*schema.Set).List())
+			if len(tmp) == 0 {
+				tmp = []string{""}
+			}
+			permission.IncludePatterns = tmp
+		}
+
+		if v, ok := permissionData["excludes_pattern"]; ok {
+			tmp := utilsdk.CastToStringArr(v.(*schema.Set).List())
+			permission.ExcludePatterns = tmp
+		}
+
+		if v, ok := permissionData["actions"]; ok {
+			permission.Actions = unpackEntity(v)
+		}
+
+		tflog.Debug(ctx, "unpackPermissionTarget", map[string]interface{}{
+			"permission.Actions": permission.Actions,
+		})
+
+		return permission
 	}
 
-	// Convert from the API data model to the Terraform data model
-	// and refresh any attribute values.
-	data.ToState(ctx, resp.Diagnostics, permissionTarget)
+	pTarget := new(PermissionTargetParams)
 
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	pTarget.Name = d.GetString("name", false)
+
+	if v, ok := d.GetOk("repo"); ok {
+		pTarget.Repo = unpackPermission(v)
+	}
+
+	if v, ok := d.GetOk("build"); ok {
+		pTarget.Build = unpackPermission(v)
+	}
+
+	if v, ok := d.GetOk("release_bundle"); ok {
+		pTarget.ReleaseBundle = unpackPermission(v)
+	}
+
+	return pTarget
 }
 
-func (r *PermissionTargetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data *PermissionTargetResourceModel
+func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.ResourceData) diag.Diagnostics {
+	packPermission := func(p *PermissionTargetSection) []interface{} {
+		packPermMap := func(e map[string][]string) []interface{} {
+			perm := make([]interface{}, len(e))
 
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+			count := 0
+			for k, v := range e {
+				perm[count] = map[string]interface{}{
+					"name":        k,
+					"permissions": schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(v)),
+				}
+				count++
+			}
 
-	// Convert from Terraform data model into API data model
-	permissionTarget := data.toAPIModel(ctx)
+			return perm
+		}
 
-	// Update call
-	response, err := r.ProviderData.Client.R().
-		SetBody(permissionTarget).
-		Put(PermissionsEndPoint + permissionTarget.Name)
+		s := map[string]interface{}{}
+
+		if p != nil {
+			if p.IncludePatterns != nil {
+				s["includes_pattern"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.IncludePatterns))
+			}
+
+			if p.ExcludePatterns != nil {
+				s["excludes_pattern"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.ExcludePatterns))
+			}
+
+			if p.Repositories != nil {
+				s["repositories"] = schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(p.Repositories))
+			}
+
+			if p.Actions != nil {
+				perms := make(map[string]interface{})
+
+				if p.Actions.Users != nil {
+					perms["users"] = schema.NewSet(hashPrincipal, packPermMap(p.Actions.Users))
+				}
+
+				if p.Actions.Groups != nil {
+					perms["groups"] = schema.NewSet(hashPrincipal, packPermMap(p.Actions.Groups))
+				}
+
+				if len(perms) > 0 {
+					s["actions"] = []interface{}{perms}
+				}
+			}
+		}
+
+		return []interface{}{s}
+	}
+
+	setValue := utilsdk.MkLens(d)
+
+	errors := setValue("name", permissionTarget.Name)
+	if permissionTarget.Repo != nil {
+		errors = setValue("repo", packPermission(permissionTarget.Repo))
+	}
+	if permissionTarget.Build != nil {
+		errors = setValue("build", packPermission(permissionTarget.Build))
+	}
+
+	if permissionTarget.ReleaseBundle != nil {
+		errors = setValue("release_bundle", packPermission(permissionTarget.ReleaseBundle))
+	}
+
+	if errors != nil && len(errors) > 0 {
+		return diag.Errorf("failed to marshal permission target %q", errors)
+	}
+	return nil
+}
+
+func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	permissionTarget := unpackPermissionTarget(ctx, d)
+
+	if _, err := m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(permissionTarget.Name)
+	return nil
+}
+
+func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	permissionTarget := new(PermissionTargetParams)
+	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
 	if err != nil {
-		utilfw.UnableToUpdateResourceError(resp, err.Error())
-		return
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(err)
 	}
 
-	// Return error if the HTTP status code is not 200 OK
-	if response.StatusCode() != http.StatusOK {
-		utilfw.UnableToUpdateResourceError(resp, response.Status())
-		return
-	}
-
-	data.ToState(ctx, resp.Diagnostics, &permissionTarget)
-
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	return PackPermissionTarget(permissionTarget, d)
 }
 
-func (r *PermissionTargetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data PermissionTargetResourceModel
+func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if _, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
+		return diag.FromErr(err)
 	}
 
-	response, err := r.ProviderData.Client.R().
-		Delete(PermissionsEndPoint + data.Id.ValueString())
-
-	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, err.Error())
-		return
-	}
-
-	// Return error if the HTTP status code is not 200 OK or 404 Not Found
-	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		utilfw.UnableToDeleteResourceError(resp, response.Status())
-		return
-	}
-
-	// If the logic reaches here, it implicitly succeeded and will remove
-	// the resource from state if there are no other errors.
+	d.SetId(permissionTarget.Name)
+	return resourcePermissionTargetRead(ctx, d, m)
 }
 
-// ImportState imports the resource into the Terraform state.
-func (r *PermissionTargetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
+func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
 
-// PermissionTargetParams Copy from https://github.com/jfrog/jfrog-client-go/blob/master/artifactory/services/permissiontarget.go#L116
-//
-// Using struct pointers to keep the fields null if they are empty.
-// Artifactory evaluates inner struct typed fields if they are not null, which can lead to failures in the request.
+	return diag.FromErr(err)
+}
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
 	resp, err := m.(utilsdk.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
