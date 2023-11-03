@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -234,10 +233,6 @@ func unpackPermissionTarget(ctx context.Context, s *schema.ResourceData) *Permis
 		if v, ok := permissionData["actions"]; ok {
 			permission.Actions = unpackEntity(v)
 		}
-
-		tflog.Debug(ctx, "unpackPermissionTarget", map[string]interface{}{
-			"permission.Actions": permission.Actions,
-		})
 
 		return permission
 	}
