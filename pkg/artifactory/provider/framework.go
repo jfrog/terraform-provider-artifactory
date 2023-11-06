@@ -186,7 +186,6 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		user.NewAnonymousUserResource,
 		security.NewGroupResource,
 		security.NewScopedTokenResource,
-		security.NewPermissionTargetResource,
 		security.NewGlobalEnvironmentResource,
 		security.NewDistributionPublicKeyResource,
 		security.NewCertificateResource,
