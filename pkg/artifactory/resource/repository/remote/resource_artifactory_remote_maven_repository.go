@@ -13,21 +13,44 @@ import (
 
 const MavenPackageType = "maven"
 
+type MavenRemoteRepo struct {
+	JavaRemoteRepo
+	RepositoryCurationParams
+}
+
+var MavenRemoteSchema = func(isResource bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(
+		JavaRemoteSchema(isResource, MavenPackageType, false),
+		CurationRemoteRepoSchema,
+	)
+}
+
 func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
-	mavenRemoteSchema := JavaRemoteSchema(true, MavenPackageType, false)
+	mavenRemoteSchema := MavenRemoteSchema(true)
 
 	var unpackMavenRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackJavaRemoteRepo(data, MavenPackageType)
+		d := &utilsdk.ResourceData{ResourceData: data}
+		repo := MavenRemoteRepo{
+			JavaRemoteRepo: UnpackJavaRemoteRepo(data, MavenPackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
+		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		return &JavaRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      rclass,
-				PackageType: MavenPackageType,
+		return &MavenRemoteRepo{
+			JavaRemoteRepo{
+				RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
+					Rclass:      rclass,
+					PackageType: MavenPackageType,
+				},
+				SuppressPomConsistencyChecks: false,
 			},
-			SuppressPomConsistencyChecks: false,
+			RepositoryCurationParams{
+				Curated: false,
+			},
 		}, nil
 	}
 

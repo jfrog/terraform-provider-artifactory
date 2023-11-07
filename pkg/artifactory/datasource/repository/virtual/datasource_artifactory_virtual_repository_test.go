@@ -2,7 +2,6 @@ package virtual_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,17 +11,11 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestAccDataSourceVirtualAllGenericLikePackageTypes(t *testing.T) {
 	for _, packageType := range virtual.PackageTypesLikeGeneric {
-		title := fmt.Sprintf(
-			"TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),
 			}))
@@ -32,11 +25,7 @@ func TestAccDataSourceVirtualAllGenericLikePackageTypes(t *testing.T) {
 
 func TestAccDataSourceVirtualAllGenericLikeRetrievalPackageTypes(t *testing.T) {
 	for _, packageType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
-		title := fmt.Sprintf(
-			"TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
 				"description":                    fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"retrieval_cache_period_seconds": 650,
@@ -47,9 +36,7 @@ func TestAccDataSourceVirtualAllGenericLikeRetrievalPackageTypes(t *testing.T) {
 
 func TestAccDataSourceVirtualAllGradleLikePackageTypes(t *testing.T) {
 	for _, packageType := range repository.GradleLikePackageTypes {
-		title := fmt.Sprintf("TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)))
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
 				"description":                              fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"force_maven_authentication":               true,

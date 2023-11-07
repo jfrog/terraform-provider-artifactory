@@ -13,6 +13,7 @@ const DockerPackageType = "docker"
 var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
+		CurationRemoteRepoSchema,
 		map[string]*schema.Schema{
 			"external_dependencies_enabled": {
 				Type:        schema.TypeBool,
@@ -54,6 +55,7 @@ var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 
 type DockerRemoteRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
@@ -64,7 +66,10 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepo{
-			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, DockerPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, DockerPackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),

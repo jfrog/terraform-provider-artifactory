@@ -2,7 +2,6 @@ package local_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,14 +11,11 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestAccDataSourceLocalAllPackageTypes(t *testing.T) {
 	for _, packageType := range local.PackageTypesLikeGeneric {
-		title := fmt.Sprintf("%s", cases.Title(language.AmericanEnglish).String(strings.ToLower(packageType)))
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkTestCase(packageType, t))
 		})
 	}
@@ -521,9 +517,9 @@ func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*
 }
 
 func TestAccDataSourceLocalAllGradleLikePackageTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
-		t.Run(fmt.Sprintf("TestDataSourceLocal%sRepo", strings.Title(strings.ToLower(repoType))), func(t *testing.T) {
-			resource.Test(makeDataSourceLocalGradleLikeRepoTestCase(repoType, t))
+	for _, packageType := range repository.GradleLikePackageTypes {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(makeDataSourceLocalGradleLikeRepoTestCase(packageType, t))
 		})
 	}
 }

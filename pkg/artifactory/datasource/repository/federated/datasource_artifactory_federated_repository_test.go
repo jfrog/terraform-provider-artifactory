@@ -15,8 +15,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func skipFederatedRepo() (bool, string) {
@@ -89,10 +87,9 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 }
 
 func TestAccDataSourceFederatedRepoGenericTypes(t *testing.T) {
-	for _, repo := range federated.PackageTypesLikeGeneric {
-		title := cases.Title(language.AmericanEnglish).String(repo)
-		t.Run(title, func(t *testing.T) {
-			resource.Test(federatedTestCase(repo, t))
+	for _, packageType := range federated.PackageTypesLikeGeneric {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(federatedTestCase(packageType, t))
 		})
 	}
 }
@@ -827,10 +824,9 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 }
 
 func TestAccDataSourceFederatedAllGradleLikePackageTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
-		title := cases.Title(language.AmericanEnglish).String(repoType)
-		t.Run(title, func(t *testing.T) {
-			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))
+	for _, packageType := range repository.GradleLikePackageTypes {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(makeFederatedGradleLikeRepoTestCase(packageType, t))
 		})
 	}
 }
@@ -1134,8 +1130,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 
 func TestAccDataSourceFederatedTerraformRepositories(t *testing.T) {
 	for _, registryType := range []string{"module", "provider"} {
-		title := cases.Title(language.AmericanEnglish).String(registryType)
-		t.Run(title, func(t *testing.T) {
+		t.Run(registryType, func(t *testing.T) {
 			resource.Test(makeFederatedTerraformRepoTestCase(registryType, t))
 		})
 	}
