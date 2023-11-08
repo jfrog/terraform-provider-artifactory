@@ -47,6 +47,7 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_go_repository":                    datasource_remote.DataSourceArtifactoryRemoteGoRepository(),
 		"artifactory_remote_helm_repository":                  datasource_remote.DataSourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_maven_repository":                 datasource_remote.DataSourceArtifactoryRemoteMavenRepository(),
+		"artifactory_remote_npm_repository":                   datasource_remote.DataSourceArtifactoryRemoteNpmRepository(),
 		"artifactory_remote_nuget_repository":                 datasource_remote.DataSourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_pypi_repository":                  datasource_remote.DataSourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_terraform_repository":             datasource_remote.DataSourceArtifactoryRemoteTerraformRepository(),

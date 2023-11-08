@@ -42,6 +42,7 @@ The following arguments are supported, along with the [common list of arguments 
   This value `[**]` must be assigned to the attribute manually, if user don't specify any other non-default values.
   We don't want to make this attribute required, but it must be set to avoid the state drift on update. Note: Artifactory assigns
   `[**]` on update if HCL doesn't have the attribute set or the list is empty.
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 
 ## Import
 

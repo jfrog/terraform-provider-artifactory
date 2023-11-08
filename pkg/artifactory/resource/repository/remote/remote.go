@@ -95,7 +95,6 @@ var PackageTypesLikeBasic = []string{
 	"debian",
 	"gems",
 	"gitlfs",
-	"npm",
 	"opkg",
 	"p2",
 	"pub",

@@ -1,4 +1,11 @@
-## 9.7.4 (Nov 3, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
+## 9.8.0 (Nov 8, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository, resource/artifactory_remote_maven_repository, resource/artifactory_npm_docker_repository,resource/artifactory_remote_pypi_repository: Add `curated` attribute to support enabling the repository resource for Curation Service. Issue: [#831](https://github.com/jfrog/terraform-provider-artifactory/issues/831) PR: [#844](https://github.com/jfrog/terraform-provider-artifactory/pull/844)
+* resource/artifactory_pull_replication: Add missing deprecation message to documentation. PR: [#843](https://github.com/jfrog/terraform-provider-artifactory/pull/843)
+
+## 9.7.4 (Nov 6, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
 
 IMPROVEMENTS:
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -17,8 +16,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -757,11 +754,10 @@ func TestAccVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
-		title := fmt.Sprintf("TestVirtual%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
-		t.Run(title, func(t *testing.T) {
-			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
+	for _, packageType := range repository.GradleLikePackageTypes {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
+				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
 			}))
 		})

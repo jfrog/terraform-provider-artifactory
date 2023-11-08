@@ -214,7 +214,7 @@ func TestAccRemoteDockerRepositoryDepListEmptyStringFails(t *testing.T) {
 	})
 }
 
-func TestAccRemoteDockerRepoUpdate(t *testing.T) {
+func TestAccRemoteDockerRepo_full(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("docker-remote-", "artifactory_remote_docker_repository")
 	var testData = map[string]string{
 		"resource_name":                  name,
@@ -326,6 +326,7 @@ func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	})
 	resource.Test(t, testCase)
 }
@@ -473,6 +474,7 @@ func TestAccRemoteNpmRepository(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	}))
 }
 
@@ -489,6 +491,7 @@ func TestAccRemoteNpmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	}))
 }
 
@@ -504,6 +507,7 @@ func TestAccRemotePypiRepository(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	}))
 }
 
@@ -520,6 +524,7 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	}))
 }
 
@@ -534,6 +539,7 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 			"properties_enabled":              true,
 			"source_origin_absence_detection": true,
 		},
+		"curated": false,
 	}))
 }
 
@@ -831,12 +837,11 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	certificateAlias := fmt.Sprintf("certificate-%d", testutil.RandomInt())
 
 	defaultFields := map[string]interface{}{
-		"key":      name,
-		"url":      "https://registry.npmjs.org/",
-		"username": "user",
-		"password": "Passw0rd!",
-		"proxy":    "",
-
+		"key":                            name,
+		"url":                            "https://registry.npmjs.org/",
+		"username":                       "user",
+		"password":                       "Passw0rd!",
+		"proxy":                          "",
 		"description":                    "description",
 		"notes":                          "notes",
 		"includes_pattern":               "**/*.js",
