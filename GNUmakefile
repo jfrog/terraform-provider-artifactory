@@ -57,6 +57,7 @@ smoke: fmt
 
 acceptance: fmt
 	export TF_ACC=true && \
+	export TF_LOG=DEBUG && \
 		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 1h $(TEST)
 
 coverage:
