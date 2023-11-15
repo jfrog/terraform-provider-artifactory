@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
@@ -75,6 +76,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// check if Terraform version is >=1.0.0, i.e. support protocol v6
+	tflog.Debug(ctx, fmt.Sprintf("req.TerraformVersion: %s", req.TerraformVersion))
 	supportProtocolV6, err := utilsdk.CheckVersion(req.TerraformVersion, "1.0.0")
 	if err != nil {
 		resp.Diagnostics.Append(diag.NewWarningDiagnostic("failed to check Terraform version", err.Error()))
