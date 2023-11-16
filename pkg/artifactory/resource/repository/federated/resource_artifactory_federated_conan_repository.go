@@ -12,12 +12,13 @@ import (
 type ConanRepositoryParams struct {
 	local.ConanRepoParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
 	conanSchema := utilsdk.MergeMaps(
 		local.ConanSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, repository.ConanPackageType),
 	)
 
@@ -31,7 +32,8 @@ func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
 					ForceConanAuthentication: d.GetBool("force_conan_authentication", false),
 				},
 			},
-			Members: unpackMembers(data),
+			Members:    unpackMembers(data),
+			RepoParams: unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

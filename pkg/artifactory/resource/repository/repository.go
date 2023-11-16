@@ -87,6 +87,20 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	},
 }
 
+var ProxySchema = map[string]*schema.Schema{
+	"proxy": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
+	},
+	"disable_proxy": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
+	},
+}
+
 var CompressionFormats = map[string]*schema.Schema{
 	"index_compression_formats": {
 		Type: schema.TypeSet,
@@ -328,6 +342,17 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, met
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func VerifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	disableProxy := diff.Get("disable_proxy").(bool)
+	proxy := diff.Get("proxy").(string)
+
+	if disableProxy && len(proxy) > 0 {
+		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil

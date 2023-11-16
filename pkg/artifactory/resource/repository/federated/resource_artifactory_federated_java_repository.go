@@ -12,13 +12,14 @@ import (
 type JavaFederatedRepositoryParams struct {
 	local.JavaLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
 
 	javaFederatedSchema := utilsdk.MergeMaps(
 		local.GetJavaRepoSchema(repoType, suppressPom),
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema("federated", repoType),
 	)
 
@@ -26,6 +27,7 @@ func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom boo
 		repo := JavaFederatedRepositoryParams{
 			JavaLocalRepositoryParams: local.UnpackLocalJavaRepository(data, rclass, repoType),
 			Members:                   unpackMembers(data),
+			RepoParams:                unpackRepoParams(data),
 		}
 
 		return repo, repo.Id(), nil

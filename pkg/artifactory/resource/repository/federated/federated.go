@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
@@ -41,49 +42,57 @@ var PackageTypesLikeGeneric = []string{
 	"vagrant",
 }
 
-type Member struct {
-	Url     string `hcl:"url" json:"url"`
-	Enabled bool   `hcl:"enabled" json:"enabled"`
+type RepoParams struct {
+	Proxy        string `json:"proxy"`
+	DisableProxy bool   `json:"disableProxy"`
 }
 
-var MemberSchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"cleanup_on_delete": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances.",
-		},
-		"member": {
-			Type:     schema.TypeSet,
-			Required: isRequired,
-			Optional: !isRequired,
-			Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
-				"automatically be added with the combination of the configured base URL and `key` field value. " +
-				"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
-				" to set up Federated repositories correctly.",
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"url": {
-						Type:             schema.TypeString,
-						Required:         true,
-						Description:      "Full URL to ending with the repositoryName",
-						ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
-					},
-					"enabled": {
-						Type:     schema.TypeBool,
-						Required: true,
-						Description: "Represents the active state of the federated member. It is supported to " +
-							"change the enabled status of my own member. The config will be updated on the other " +
-							"federated members automatically.",
+type Member struct {
+	Url     string `json:"url"`
+	Enabled bool   `json:"enabled"`
+}
+
+var SchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(
+		repository.ProxySchema,
+		map[string]*schema.Schema{
+			"cleanup_on_delete": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances.",
+			},
+			"member": {
+				Type:     schema.TypeSet,
+				Required: isRequired,
+				Optional: !isRequired,
+				Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
+					"automatically be added with the combination of the configured base URL and `key` field value. " +
+					"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
+					" to set up Federated repositories correctly.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Full URL to ending with the repositoryName",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							Description: "Represents the active state of the federated member. It is supported to " +
+								"change the enabled status of my own member. The config will be updated on the other " +
+								"federated members automatically.",
+						},
 					},
 				},
 			},
 		},
-	}
+	)
 }
 
-var memberSchema = MemberSchemaGenerator(true)
+var federatedSchema = SchemaGenerator(true)
 
 func unpackMembers(data *schema.ResourceData) []Member {
 	d := &utilsdk.ResourceData{ResourceData: data}
@@ -106,6 +115,15 @@ func unpackMembers(data *schema.ResourceData) []Member {
 		}
 	}
 	return members
+}
+
+func unpackRepoParams(data *schema.ResourceData) RepoParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+
+	return RepoParams{
+		Proxy:        d.GetString("proxy", false),
+		DisableProxy: d.GetBool("disable_proxy", false),
+	}
 }
 
 func PackMembers(members []Member, d *schema.ResourceData) error {
@@ -250,7 +268,10 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 				Version: 2,
 			},
 		},
-		CustomizeDiff: repository.ProjectEnvironmentsDiff,
+		CustomizeDiff: customdiff.All(
+			repository.ProjectEnvironmentsDiff,
+			repository.VerifyDisableProxy,
+		),
 	}
 }
 

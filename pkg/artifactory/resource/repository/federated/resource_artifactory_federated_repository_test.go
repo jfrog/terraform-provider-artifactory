@@ -115,7 +115,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	})
 }
 
-func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+func genericTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	if skip, reason := skipFederatedRepo(); skip {
 		t.Skipf(reason)
 	}
@@ -124,6 +124,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	xrayIndex := testutil.RandBool()
+	proxyKey := fmt.Sprintf("test-proxy-%d", testutil.RandomInt())
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -131,16 +132,29 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		"name":         name,
 		"xrayIndex":    xrayIndex,
 		"memberUrl":    federatedMemberUrl,
+		"proxyKey":     proxyKey,
+		"disableProxy": false,
 	}
 
 	repoTypeAdjusted := local.GetPackageType(repoType)
 
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+	// Default proxy will be assigned to the repository no matter what, and it's impossible to remove it by submitting an empty string or
+	// removing the attribute. If `disable_proxy` is set to true, then both repo and default proxies are removed and not returned in the
+	// GET body.
+	config := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_proxy" "{{ .proxyKey }}" {
+			key  = "{{ .proxyKey }}"
+			host = "http://tempurl.org"
+			port = 8000
+		}
+
 		resource "{{ .resourceType }}" "{{ .name }}" {
-			key         = "{{ .name }}"
-			description = "Test federated repo for {{ .name }}"
-			notes       = "Test federated repo for {{ .name }}"
-			xray_index  = {{ .xrayIndex }}
+			key           = "{{ .name }}"
+			description   = "Test federated repo for {{ .name }}"
+			notes         = "Test federated repo for {{ .name }}"
+			xray_index    = {{ .xrayIndex }}
+			proxy         = artifactory_proxy.{{ .proxyKey }}.key
+			disable_proxy = {{ .disableProxy }}
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -149,19 +163,68 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		}
 	`, params)
 
+	updatedParams := map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"xrayIndex":    !xrayIndex,
+		"memberUrl":    federatedMemberUrl,
+		"proxyKey":     proxyKey,
+		"disableProxy": true,
+	}
+
+	updatedConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_proxy" "{{ .proxyKey }}" {
+			key  = "{{ .proxyKey }}"
+			host = "http://tempurl.org"
+			port = 8000
+		}
+
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key           = "{{ .name }}"
+			description   = "Test federated repo for {{ .name }}"
+			notes         = "Test federated repo for {{ .name }}"
+			xray_index    = {{ .xrayIndex }}
+			disable_proxy = {{ .disableProxy }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`, updatedParams)
+
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: federatedRepositoryConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", repoTypeAdjusted),
 					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(fqrn, "xray_index", fmt.Sprintf("%t", xrayIndex)),
+					resource.TestCheckResourceAttr(fqrn, "proxy", proxyKey),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", fmt.Sprintf("%t", params["disableProxy"].(bool))),
+
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repoTypeAdjusted),
+					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "xray_index", fmt.Sprintf("%t", !xrayIndex)),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", fmt.Sprintf("%t", updatedParams["disableProxy"].(bool))),
 
 					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
@@ -183,9 +246,45 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 func TestAccFederatedRepoGenericTypes(t *testing.T) {
 	for _, packageType := range federated.PackageTypesLikeGeneric {
 		t.Run(packageType, func(t *testing.T) {
-			resource.Test(federatedTestCase(packageType, t))
+			resource.Test(genericTestCase(packageType, t))
 		})
 	}
+}
+
+func TestAccFederatedRepo_DisableDefaultProxyConflictAttr(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-go-remote-", "artifactory_federated_go_repository")
+	memberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	params := map[string]string{
+		"name":      name,
+		"memberUrl": memberUrl,
+	}
+	config := utilsdk.ExecuteTemplate("TestAccFederatedGoRepository", `
+		resource "artifactory_federated_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			proxy 			= "my-proxy"
+			disable_proxy 	= true
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*if `disable_proxy` is set to `true`, `proxy` can't be set"),
+			},
+		},
+	})
 }
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {

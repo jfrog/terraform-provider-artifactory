@@ -12,6 +12,7 @@ import (
 type NugetFederatedRepositoryParams struct {
 	local.NugetLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 
 	nugetFederatedSchema := utilsdk.MergeMaps(
 		local.NugetLocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 		repo := NugetFederatedRepositoryParams{
 			NugetLocalRepositoryParams: local.UnpackLocalNugetRepository(data, rclass),
 			Members:                    unpackMembers(data),
+			RepoParams:                 unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

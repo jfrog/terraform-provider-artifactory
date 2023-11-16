@@ -14,7 +14,7 @@ import (
 func DataSourceArtifactoryFederatedConanRepository() *schema.Resource {
 	conanSchema := utilsdk.MergeMaps(
 		local.ConanSchema,
-		memberSchema,
+		federatedSchema,
 		resource_repository.RepoLayoutRefSchema(rclass, resource_repository.ConanPackageType),
 	)
 
