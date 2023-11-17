@@ -12,6 +12,7 @@ import (
 type RpmFederatedRepositoryParams struct {
 	local.RpmLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 
 	rpmFederatedSchema := utilsdk.MergeMaps(
 		local.RpmLocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 		repo := RpmFederatedRepositoryParams{
 			RpmLocalRepositoryParams: local.UnpackLocalRpmRepository(data, rclass),
 			Members:                  unpackMembers(data),
+			RepoParams:               unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

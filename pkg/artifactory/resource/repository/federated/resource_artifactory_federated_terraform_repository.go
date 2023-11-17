@@ -12,6 +12,7 @@ import (
 type TerraformFederatedRepositoryParams struct {
 	local.RepositoryBaseParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	terraformFederatedSchema := utilsdk.MergeMaps(
 		local.GetTerraformLocalSchema(registryType),
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 		repo := TerraformFederatedRepositoryParams{
 			RepositoryBaseParams: local.UnpackLocalTerraformRepository(data, rclass, registryType),
 			Members:              unpackMembers(data),
+			RepoParams:           unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

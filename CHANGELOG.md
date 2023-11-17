@@ -1,3 +1,9 @@
+## 9.9.0 (Nov 17, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.4
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add `proxy` and `disable_proxy` attributes. PR: [#848](https://github.com/jfrog/terraform-provider-artifactory/pull/848) Issue: [#838](https://github.com/jfrog/terraform-provider-artifactory/issues/838)
+
 ## 9.8.0 (Nov 8, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.3
 
 IMPROVEMENTS:

@@ -12,6 +12,7 @@ import (
 type CargoFederatedRepositoryParams struct {
 	local.CargoLocalRepoParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 
 	cargoFederatedSchema := utilsdk.MergeMaps(
 		local.CargoLocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		repo := CargoFederatedRepositoryParams{
 			CargoLocalRepoParams: local.UnpackLocalCargoRepository(data, rclass),
 			Members:              unpackMembers(data),
+			RepoParams:           unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}
