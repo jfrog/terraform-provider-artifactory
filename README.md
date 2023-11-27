@@ -25,7 +25,8 @@ Version 9.x is the latest major version and is compatible with latest Artifactor
 
 Current version support [Terraform Protocol v5](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-5) which mean Terraform CLI version 0.12 and later. 
 
-~>We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
+> [!WARNING]
+> We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
 
 ## Quick Start
 
