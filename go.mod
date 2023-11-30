@@ -4,7 +4,7 @@ module github.com/jfrog/terraform-provider-artifactory/v9
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
 require (
-	github.com/go-resty/resty/v2 v2.7.0
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/google/go-querystring v1.1.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-version v1.6.0
