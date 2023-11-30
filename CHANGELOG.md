@@ -1,3 +1,9 @@
+## 9.9.1 (Dec 1, 2023)
+
+BUG FIX:
+
+* Fix incorrect use of empty error message when API fails PR: [#850](https://github.com/jfrog/terraform-provider-artifactory/pull/850) Issue: [#849](https://github.com/jfrog/terraform-provider-artifactory/issues/849)
+
 ## 9.9.0 (Nov 17, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.4
 
 IMPROVEMENTS:
