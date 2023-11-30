@@ -59,4 +59,4 @@ terraform import artifactory_user.test-user myusername
 
 ## Managing groups relationship
 
-See [our recommendation](guides/user_group.md) on how to manage user-group relationship.
+See [our recommendation](../guides/user_group.md) on how to manage user-group relationship.
