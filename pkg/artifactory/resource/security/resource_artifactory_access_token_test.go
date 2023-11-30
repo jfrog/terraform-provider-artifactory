@@ -135,7 +135,7 @@ func TestAccAccessTokenExistingUser(t *testing.T) {
 func fixedDateGood() string {
 	// Create a "fixed date" in the future
 
-	date := time.Now().Add(time.Second * time.Duration(10)).Format(time.RFC3339)
+	date := time.Now().Add(time.Minute * time.Duration(1)).Format(time.RFC3339)
 	return fmt.Sprintf(`
 resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
