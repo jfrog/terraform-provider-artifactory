@@ -94,7 +94,7 @@ func (r *GlobalEnvironmentResource) Create(ctx context.Context, req resource.Cre
 		Post("access/api/v1/environments")
 
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -121,12 +121,12 @@ func (r *GlobalEnvironmentResource) Read(ctx context.Context, req resource.ReadR
 	// Convert from Terraform data model into API data model
 	environments := GlobalEnvironmentsAPIModel{}
 
-	response, err := r.ProviderData.Client.R().
+	_, err := r.ProviderData.Client.R().
 		SetResult(&environments).
 		Get("access/api/v1/environments")
 
 	if err != nil {
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -192,7 +192,7 @@ func (r *GlobalEnvironmentResource) Delete(ctx context.Context, req resource.Del
 		Delete("access/api/v1/environments/{environmentName}")
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 

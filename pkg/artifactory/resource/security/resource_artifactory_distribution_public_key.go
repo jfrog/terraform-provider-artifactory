@@ -202,7 +202,7 @@ func (r *DistributionPublicKeyResource) Read(ctx context.Context, req resource.R
 		if response.StatusCode() == http.StatusNotFound {
 			resp.State.RemoveResource(ctx)
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -236,7 +236,7 @@ func (r *DistributionPublicKeyResource) Delete(ctx context.Context, req resource
 		Delete(fmt.Sprintf("%s/%s", DistributionPublicKeysAPIEndPoint, state.KeyId.ValueString()))
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 

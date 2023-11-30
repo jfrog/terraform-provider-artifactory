@@ -197,7 +197,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	response, err := r.client.Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -254,7 +254,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -296,7 +296,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 	response, err := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
-		utilfw.UnableToUpdateResourceError(resp, response.String())
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
 	}
 
@@ -321,7 +321,7 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	response, err := r.client.Client.R().Delete(UsersEndpointPath + state.Id.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
