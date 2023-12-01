@@ -1,3 +1,9 @@
+## 9.9.1 (Dec 1, 2023)
+
+BUG FIX:
+
+* resource/artifactory_global_environment: Fix incorrect environment from Artifactroy being matched and triggers a state drift. PR: [#851](https://github.com/jfrog/terraform-provider-artifactory/pull/851)
+
 ## 9.9.0 (Nov 17, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.4
 
 IMPROVEMENTS:
