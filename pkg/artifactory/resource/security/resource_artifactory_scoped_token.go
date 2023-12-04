@@ -369,7 +369,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Post("access/api/v1/tokens")
 
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -388,7 +388,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Get("access/api/v1/tokens/{id}")
 
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -429,7 +429,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 

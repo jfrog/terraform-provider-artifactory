@@ -66,7 +66,6 @@ func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resou
 		"Unable to Create Resource",
 		"Anonymous Artifactory user cannot be created. Use `terraform import` instead.",
 	)
-	return
 }
 
 func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -90,7 +89,7 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -112,7 +111,6 @@ func (r *ArtifactoryAnonymousUserResource) Update(ctx context.Context, req resou
 		"Unable to Update Resource",
 		"Anonymous Artifactory user cannot be updated. Use `terraform import` instead.",
 	)
-	return
 }
 
 func (r *ArtifactoryAnonymousUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -120,11 +118,9 @@ func (r *ArtifactoryAnonymousUserResource) Delete(ctx context.Context, req resou
 		"Unable to Delete Resource",
 		"Anonymous Artifactory user cannot be deleted. Use `terraform state rm` instead.",
 	)
-	return
 }
 
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryAnonymousUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-
 }

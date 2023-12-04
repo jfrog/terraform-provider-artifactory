@@ -278,7 +278,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Delete(ctx context.Context, req re
 		Delete(LdapGroupEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
