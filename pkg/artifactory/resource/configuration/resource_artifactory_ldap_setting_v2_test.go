@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -438,7 +439,7 @@ func TestAccLdapSettingV2_user_dn_or_search_filter(t *testing.T) {
 
 func testAccLdapSettingV2Destroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

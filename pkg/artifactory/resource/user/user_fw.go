@@ -38,13 +38,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/sethvargo/go-password/password"
 )
 
 type ArtifactoryBaseUserResource struct {
-	client utilsdk.ProvderMetadata
+	client util.ProvderMetadata
 }
 
 // ArtifactoryUserResourceModel describes the Terraform resource data model to match the
@@ -147,7 +147,7 @@ func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resourc
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.client = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

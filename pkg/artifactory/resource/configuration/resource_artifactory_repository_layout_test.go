@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -105,7 +106,7 @@ func TestAccLayout_importNotFound(t *testing.T) {
 
 func testAccLayoutDestroy(name string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_repository_layout."+name]
 		if !ok {

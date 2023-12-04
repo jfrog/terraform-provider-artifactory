@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/ldap.v2"
 )
 
@@ -29,7 +29,7 @@ func NewLdapGroupSettingResource() resource.Resource {
 }
 
 type ArtifactoryLdapGroupSettingResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 // ArtifactoryLdapGroupSettingResourceModel describes the Terraform resource data model to match the
@@ -141,7 +141,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Configure(ctx context.Context, req
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

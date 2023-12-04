@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
@@ -249,7 +249,7 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 		}
 
 		m := acctest.Provider.Meta()
-		cert, err := security.FindCertificate(id, m.(utilsdk.ProvderMetadata).Client.R())
+		cert, err := security.FindCertificate(id, m.(util.ProvderMetadata).Client.R())
 		if err != nil {
 			return err
 		}

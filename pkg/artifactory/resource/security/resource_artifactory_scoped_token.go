@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func NewScopedTokenResource() resource.Resource {
@@ -32,7 +32,7 @@ func NewScopedTokenResource() resource.Resource {
 }
 
 type ScopedTokenResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
@@ -311,7 +311,7 @@ func (r *ScopedTokenResource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

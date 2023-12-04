@@ -10,6 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -95,7 +96,7 @@ func TestAccGlobalEnvironment_invalid_name(t *testing.T) {
 
 func testAccCheckGlobalEnvironmentDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {

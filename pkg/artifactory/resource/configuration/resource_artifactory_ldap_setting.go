@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"gopkg.in/yaml.v3"
@@ -158,7 +159,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		key := data.GetString("key", false)
 
 		ldapConfigs := XmlLdapConfig{}
-		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -213,7 +214,7 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 
 		rsrcLdapSetting := unpackLdapSetting(d)
 
-		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

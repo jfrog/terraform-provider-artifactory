@@ -12,6 +12,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -157,8 +158,8 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
-					return utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
@@ -203,8 +204,8 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
-					return utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(".*project_environment Foo not allowed.*"),
@@ -245,8 +246,8 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(utilsdk.ProvderMetadata)
-					isSupported, err := utilsdk.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					isSupported, err := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 					return !isSupported, err
 				},
 				Config:      localRepositoryBasic,

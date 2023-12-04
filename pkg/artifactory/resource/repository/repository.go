@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/exp/slices"
 
@@ -142,7 +143,7 @@ func Create(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 		return diag.FromErr(err)
 	}
 	// repo must be a pointer
-	_, err = m.(utilsdk.ProvderMetadata).Client.R().
+	_, err = m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(repo).
 		SetPathParam("key", key).
@@ -175,7 +176,7 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 		}
 
 		// repo must be a pointer
-		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetResult(repo).
 			SetPathParam("key", d.Id()).
 			Get(RepositoriesEndpoint)
@@ -197,7 +198,7 @@ func Update(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 		return diag.FromErr(err)
 	}
 
-	_, err = m.(utilsdk.ProvderMetadata).Client.R().
+	_, err = m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(repo).
 		SetPathParam("key", d.Id()).
@@ -219,9 +220,9 @@ func Update(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 
 		var err error
 		if assignToProject {
-			err = assignRepoToProject(key, newProjectKey, m.(utilsdk.ProvderMetadata).Client)
+			err = assignRepoToProject(key, newProjectKey, m.(util.ProvderMetadata).Client)
 		} else if unassignFromProject {
-			err = unassignRepoFromProject(key, m.(utilsdk.ProvderMetadata).Client)
+			err = unassignRepoFromProject(key, m.(util.ProvderMetadata).Client)
 		}
 
 		if err != nil {
@@ -261,7 +262,7 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 }
 
 func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
@@ -323,9 +324,9 @@ const CustomProjectEnvironmentSupportedVersion = "7.53.1"
 func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
-		providerMetadata := meta.(utilsdk.ProvderMetadata)
+		providerMetadata := meta.(util.ProvderMetadata)
 
-		isSupported, err := utilsdk.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
+		isSupported, err := util.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
 		if err != nil {
 			return fmt.Errorf("failed to check version %s", err)
 		}

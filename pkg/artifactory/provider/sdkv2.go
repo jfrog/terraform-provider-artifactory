@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -58,7 +59,7 @@ func SdkV2() *schema.Provider {
 
 		var ds diag.Diagnostics
 		// check if Terraform version is >=1.0.0, i.e. support protocol v6
-		supportProtocolV6, err := utilsdk.CheckVersion(terraformVersion, "1.0.0")
+		supportProtocolV6, err := util.CheckVersion(terraformVersion, "1.0.0")
 		if err != nil {
 			ds = append(ds, diag.FromErr(err)...)
 		}
@@ -124,7 +125,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
-	version, err := utilsdk.GetArtifactoryVersion(restyBase)
+	version, err := util.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		return nil, diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -134,9 +135,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
-	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
+	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	return utilsdk.ProvderMetadata{
+	return util.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}, nil

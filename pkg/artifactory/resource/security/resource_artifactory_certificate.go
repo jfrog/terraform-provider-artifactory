@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const CertificateEndpoint = "artifactory/api/system/security/certificates/"
@@ -31,7 +31,7 @@ func NewCertificateResource() resource.Resource {
 }
 
 type CertificateResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 // CertificateResourceModel describes the Terraform resource data model to match the
@@ -155,7 +155,7 @@ func (r *CertificateResource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func updateCertificate(content, file, alias basetypes.StringValue, restyRequest *resty.Request) (*resty.Response, error) {

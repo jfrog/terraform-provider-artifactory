@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const DistributionPublicKeysAPIEndPoint = "artifactory/api/security/keys/trusted"
@@ -27,7 +27,7 @@ func NewDistributionPublicKeyResource() resource.Resource {
 }
 
 type DistributionPublicKeyResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 // DistributionPublicKeyResourceModel describes the Terraform resource data model to match the
@@ -138,7 +138,7 @@ func (r *DistributionPublicKeyResource) Configure(ctx context.Context, req resou
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *DistributionPublicKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

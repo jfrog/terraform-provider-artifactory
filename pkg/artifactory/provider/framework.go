@@ -17,6 +17,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
@@ -75,7 +76,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// check if Terraform version is >=1.0.0, i.e. support protocol v6
-	supportProtocolV6, err := utilsdk.CheckVersion(req.TerraformVersion, "1.0.0")
+	supportProtocolV6, err := util.CheckVersion(req.TerraformVersion, "1.0.0")
 	if err != nil {
 		resp.Diagnostics.Append(diag.NewWarningDiagnostic("failed to check Terraform version", err.Error()))
 	}
@@ -155,7 +156,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		}
 	}
 
-	version, err := utilsdk.GetArtifactoryVersion(restyBase)
+	version, err := util.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error getting Artifactory version",
@@ -165,14 +166,14 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
+	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	resp.DataSourceData = utilsdk.ProvderMetadata{
+	resp.DataSourceData = util.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}
 
-	resp.ResourceData = utilsdk.ProvderMetadata{
+	resp.ResourceData = util.ProvderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}

@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/ldap.v2"
 )
 
@@ -30,7 +30,7 @@ func NewLdapSettingResource() resource.Resource {
 }
 
 type ArtifactoryLdapSettingResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 // ArtifactoryLdapSettingResourceModel describes the Terraform resource data model to match the
@@ -227,7 +227,7 @@ func (r *ArtifactoryLdapSettingResource) Configure(ctx context.Context, req reso
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryLdapSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
