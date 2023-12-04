@@ -134,6 +134,7 @@ func (r *GlobalEnvironmentResource) Read(ctx context.Context, req resource.ReadR
 	for _, env := range environments {
 		if env.Name == state.Id.ValueString() {
 			matchedEnvName = &env.Name
+			break
 		}
 	}
 
