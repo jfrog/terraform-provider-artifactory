@@ -11,15 +11,15 @@ import (
 )
 
 func NewManagedUserResource() resource.Resource {
-	return &ArtifactoryManagedUserResource{}
+	return &ArtifactoryManagedUserResource{
+		ArtifactoryBaseUserResource: ArtifactoryBaseUserResource{
+			TypeName: "artifactory_managed_user",
+		},
+	}
 }
 
 type ArtifactoryManagedUserResource struct {
 	ArtifactoryBaseUserResource
-}
-
-func (r *ArtifactoryManagedUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_managed_user"
 }
 
 func (r *ArtifactoryManagedUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

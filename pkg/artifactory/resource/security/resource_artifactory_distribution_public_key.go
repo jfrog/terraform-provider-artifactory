@@ -23,11 +23,14 @@ import (
 const DistributionPublicKeysAPIEndPoint = "artifactory/api/security/keys/trusted"
 
 func NewDistributionPublicKeyResource() resource.Resource {
-	return &DistributionPublicKeyResource{}
+	return &DistributionPublicKeyResource{
+		TypeName: "artifactory_distribution_public_key",
+	}
 }
 
 type DistributionPublicKeyResource struct {
 	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // DistributionPublicKeyResourceModel describes the Terraform resource data model to match the
@@ -70,7 +73,7 @@ type DistributionPublicKeysList struct {
 }
 
 func (r *DistributionPublicKeyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_distribution_public_key"
+	resp.TypeName = r.TypeName
 }
 
 func (r *DistributionPublicKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -142,6 +145,8 @@ func (r *DistributionPublicKeyResource) Configure(ctx context.Context, req resou
 }
 
 func (r *DistributionPublicKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan *DistributionPublicKeyResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -182,6 +187,8 @@ func (r *DistributionPublicKeyResource) Create(ctx context.Context, req resource
 }
 
 func (r *DistributionPublicKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state *DistributionPublicKeyResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -227,6 +234,8 @@ func (r *DistributionPublicKeyResource) Update(ctx context.Context, req resource
 }
 
 func (r *DistributionPublicKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state DistributionPublicKeyResourceModel
 
 	// Read Terraform prior state data into the model

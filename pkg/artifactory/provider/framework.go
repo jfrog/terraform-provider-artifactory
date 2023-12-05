@@ -170,11 +170,13 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 	resp.DataSourceData = util.ProvderMetadata{
 		Client:             restyBase,
+		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
 
 	resp.ResourceData = util.ProvderMetadata{
 		Client:             restyBase,
+		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
 }

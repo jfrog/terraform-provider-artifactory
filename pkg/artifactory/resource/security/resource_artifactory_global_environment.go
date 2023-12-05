@@ -16,11 +16,14 @@ import (
 )
 
 func NewGlobalEnvironmentResource() resource.Resource {
-	return &GlobalEnvironmentResource{}
+	return &GlobalEnvironmentResource{
+		TypeName: "artifactory_global_environment",
+	}
 }
 
 type GlobalEnvironmentResource struct {
 	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 type GlobalEnvironmentPostRequestAPIModel struct {
@@ -36,7 +39,7 @@ type GlobalEnvironmentsAPIModel []struct {
 }
 
 func (r *GlobalEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_global_environment"
+	resp.TypeName = r.TypeName
 }
 
 // GlobalEnvironmentModel describes the Terraform resource data model to match the
@@ -77,6 +80,8 @@ func (r *GlobalEnvironmentResource) Configure(ctx context.Context, req resource.
 }
 
 func (r *GlobalEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan GlobalEnvironmentModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -111,6 +116,8 @@ func (r *GlobalEnvironmentResource) Create(ctx context.Context, req resource.Cre
 }
 
 func (r *GlobalEnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state GlobalEnvironmentModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -153,6 +160,8 @@ func (r *GlobalEnvironmentResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *GlobalEnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan GlobalEnvironmentModel
 	var state GlobalEnvironmentModel
 
@@ -183,6 +192,8 @@ func (r *GlobalEnvironmentResource) Update(ctx context.Context, req resource.Upd
 }
 
 func (r *GlobalEnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state GlobalEnvironmentModel
 
 	// Read Terraform prior state data into the model

@@ -13,12 +13,14 @@ import (
 )
 
 func NewAnonymousUserResource() resource.Resource {
-
-	return &ArtifactoryAnonymousUserResource{}
+	return &ArtifactoryAnonymousUserResource{
+		TypeName: "artifactory_anonymous_user",
+	}
 }
 
 type ArtifactoryAnonymousUserResource struct {
-	client util.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryAnonymousUserResourceModel describes the Terraform resource data model to match the
@@ -34,7 +36,7 @@ type ArtifactoryAnonymousUserResourceAPIModel struct {
 }
 
 func (r *ArtifactoryAnonymousUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_anonymous_user"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryAnonymousUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -58,7 +60,7 @@ func (r *ArtifactoryAnonymousUserResource) Configure(ctx context.Context, req re
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -69,6 +71,8 @@ func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resou
 }
 
 func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryAnonymousUserResourceModel
 
 	// Read Terraform prior state data into the model
@@ -80,7 +84,7 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 	// Convert from Terraform data model into API data model
 	user := &ArtifactoryAnonymousUserResourceAPIModel{}
 
-	response, err := r.client.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
+	response, err := r.ProviderData.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early

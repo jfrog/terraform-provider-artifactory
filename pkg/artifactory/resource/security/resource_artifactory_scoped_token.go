@@ -28,11 +28,14 @@ import (
 )
 
 func NewScopedTokenResource() resource.Resource {
-	return &ScopedTokenResource{}
+	return &ScopedTokenResource{
+		TypeName: "artifactory_scoped_token",
+	}
 }
 
 type ScopedTokenResource struct {
 	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
@@ -97,7 +100,7 @@ type AccessTokenGetAPIModel struct {
 }
 
 func (r *ScopedTokenResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_scoped_token"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -315,6 +318,8 @@ func (r *ScopedTokenResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ScopedTokenResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -403,6 +408,8 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ScopedTokenResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -446,6 +453,8 @@ func (r *ScopedTokenResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ScopedTokenResourceModel
 	respError := AccessTokenErrorResponseAPIModel{}
 
