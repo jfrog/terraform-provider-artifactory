@@ -14,12 +14,14 @@ import (
 )
 
 func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
-	localRepoSchema := local.GetGenericRepoSchema(packageType)
-
-	var federatedSchema = utilsdk.MergeMaps(localRepoSchema, memberSchema, resource_repository.RepoLayoutRefSchema(rclass, packageType))
+	var genericSchema = utilsdk.MergeMaps(
+		local.GetGenericRepoSchema(packageType),
+		federatedSchema,
+		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+	)
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*federated.FederatedRepositoryParams).Members
+		members := repo.(*federated.GenericRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
@@ -34,7 +36,7 @@ func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema
 	)
 
 	constructor := func() (interface{}, error) {
-		return &federated.FederatedRepositoryParams{
+		return &federated.GenericRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(packageType),
 				Rclass:      rclass,
@@ -43,7 +45,7 @@ func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema
 	}
 
 	return &schema.Resource{
-		Schema:      federatedSchema,
+		Schema:      genericSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
 		Description: fmt.Sprintf("Provides a data source for a federated %s repository", packageType),
 	}

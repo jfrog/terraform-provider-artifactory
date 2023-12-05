@@ -95,7 +95,6 @@ var PackageTypesLikeBasic = []string{
 	"debian",
 	"gems",
 	"gitlfs",
-	"npm",
 	"opkg",
 	"p2",
 	"pub",
@@ -107,6 +106,7 @@ var PackageTypesLikeBasic = []string{
 var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		repository.BaseRepoSchema,
+		repository.ProxySchema,
 		map[string]*schema.Schema{
 			"url": {
 				Type:         schema.TypeString,
@@ -123,17 +123,6 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
-			},
-			"proxy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
-			},
-			"disable_proxy": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -598,7 +587,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		CustomizeDiff: customdiff.All(
 			repository.ProjectEnvironmentsDiff,
 			verifyExternalDependenciesDockerAndHelm,
-			verifyDisableProxy,
+			repository.VerifyDisableProxy,
 			verifyRemoteRepoLayoutRef,
 		),
 	}
@@ -619,17 +608,6 @@ func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.Res
 		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
 			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
 		}
-	}
-
-	return nil
-}
-
-func verifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-	disableProxy := diff.Get("disable_proxy").(bool)
-	proxy := diff.Get("proxy").(string)
-
-	if disableProxy && len(proxy) > 0 {
-		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil

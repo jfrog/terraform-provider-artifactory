@@ -3,7 +3,7 @@ subcategory: "Replication"
 ---
 # Artifactory Replication Config Resource
 
-Note: this resource is deprecated in favor of `artifactory_push_replication` resource.
+~> This resource is deprecated in favor of `artifactory_push_replication` resource.
 
 Provides an Artifactory replication config resource. This can be used to create and manage Artifactory replications.
 

@@ -268,6 +268,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		    enable_token_authentication    = true
 		    block_pushing_schema1          = true
 		    external_dependencies_patterns = ["*foo"]
+			curated                        = false
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
@@ -293,6 +294,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "*foo"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},
@@ -497,6 +499,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 	params["name"] = name
 	params["resource_name"] = "artifactory_remote_maven_repository"
 	params["suppress_pom_consistency_checks"] = false
+	params["curated"] = false
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -514,6 +517,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%t", params["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%t", params["suppress_pom_consistency_checks"])),
 					resource.TestCheckResourceAttr(fqrn, "reject_invalid_jars", fmt.Sprintf("%t", params["reject_invalid_jars"])),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},
@@ -571,8 +575,9 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 	config := utilsdk.ExecuteTemplate(
 		"TestAccDataSourceRemotePypiRepository",
 		`resource "artifactory_remote_pypi_repository" "{{ .name }}" {
-		    key = "{{ .name }}"
-		    url = "http://tempurl.org"
+		    key     = "{{ .name }}"
+		    url     = "http://tempurl.org"
+			curated = false
 		}
 
 		data "artifactory_remote_pypi_repository" "{{ .name }}" {
@@ -595,6 +600,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
 					resource.TestCheckResourceAttr(fqrn, "pypi_registry_url", "https://pypi.org"),
 					resource.TestCheckResourceAttr(fqrn, "pypi_repository_suffix", "simple"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},

@@ -15,17 +15,19 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.JavaRemoteRepo{
-			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.MavenPackageType,
-				RepoLayoutRef: repoLayout.(string),
+		return &remote.MavenRemoteRepo{
+			JavaRemoteRepo: remote.JavaRemoteRepo{
+				RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
+					Rclass:        rclass,
+					PackageType:   remote.MavenPackageType,
+					RepoLayoutRef: repoLayout.(string),
+				},
+				SuppressPomConsistencyChecks: false,
 			},
-			SuppressPomConsistencyChecks: false,
 		}, nil
 	}
 
-	mavenSchema := remote.JavaRemoteSchema(false, remote.MavenPackageType, false)
+	mavenSchema := remote.MavenRemoteSchema(false)
 
 	return &schema.Resource{
 		Schema:      mavenSchema,

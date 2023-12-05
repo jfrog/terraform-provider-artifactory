@@ -28,3 +28,5 @@ The following attributes are supported, along with the [common list of arguments
   * `url` - Full URL to ending with the repository name.
   * `enabled` - Represents the active state of the federated member. It is supported to change the enabled
     status of my own member. The config will be updated on the other federated members automatically.
+* `proxy` - Proxy key from Artifactory Proxies settings.
+* `disable_proxy` - When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too.

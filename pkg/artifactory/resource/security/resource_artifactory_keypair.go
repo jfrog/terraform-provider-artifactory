@@ -169,7 +169,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		SetBody(keyPair).
 		Post(KeypairEndPoint)
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -205,7 +205,7 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -234,7 +234,7 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 		Delete(KeypairEndPoint + state.PairName.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 

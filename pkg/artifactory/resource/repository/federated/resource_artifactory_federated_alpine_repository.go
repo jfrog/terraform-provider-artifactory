@@ -9,9 +9,10 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-type AlpineFederatedRepositoryParams struct {
+type AlpineRepositoryParams struct {
 	local.AlpineLocalRepoParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
@@ -19,20 +20,21 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 
 	alpineFederatedSchema := utilsdk.MergeMaps(
 		local.AlpineLocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var unpackFederatedAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := AlpineFederatedRepositoryParams{
+		repo := AlpineRepositoryParams{
 			AlpineLocalRepoParams: local.UnpackLocalAlpineRepository(data, rclass),
 			Members:               unpackMembers(data),
+			RepoParams:            unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*AlpineFederatedRepositoryParams).Members
+		members := repo.(*AlpineRepositoryParams).Members
 		return PackMembers(members, d)
 	}
 
@@ -47,7 +49,7 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	)
 
 	constructor := func() (interface{}, error) {
-		return &AlpineFederatedRepositoryParams{
+		return &AlpineRepositoryParams{
 			AlpineLocalRepoParams: local.AlpineLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,

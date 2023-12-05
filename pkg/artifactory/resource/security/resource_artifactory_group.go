@@ -267,7 +267,7 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		utilfw.UnableToRefreshResourceError(resp, response.String())
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -360,7 +360,7 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 		Delete(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 

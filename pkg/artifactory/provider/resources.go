@@ -53,6 +53,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_huggingfaceml_repository":         remote.ResourceArtifactoryRemoteHuggingFaceRepository(),
 		"artifactory_remote_maven_repository":                 remote.ResourceArtifactoryRemoteMavenRepository(),
+		"artifactory_remote_npm_repository":                   remote.ResourceArtifactoryRemoteNpmRepository(),
 		"artifactory_remote_nuget_repository":                 remote.ResourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_pypi_repository":                  remote.ResourceArtifactoryRemotePypiRepository(),
 		"artifactory_remote_terraform_repository":             remote.ResourceArtifactoryRemoteTerraformRepository(),
@@ -69,6 +70,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_rpm_repository":                  virtual.ResourceArtifactoryVirtualRpmRepository(),
 		"artifactory_virtual_helm_repository":                 virtual.ResourceArtifactoryVirtualHelmRepository(),
 		"artifactory_unmanaged_user":                          user.ResourceArtifactoryUser(), // alias of artifactory_user
+		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
 		"artifactory_local_repository_single_replication":     replication.ResourceArtifactoryLocalRepositorySingleReplication(),

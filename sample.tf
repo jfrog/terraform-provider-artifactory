@@ -3,7 +3,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "9.0.1"
+      version = "9.7.3"
     }
   }
 }
@@ -27,11 +27,13 @@ resource "artifactory_scoped_token" "admin" {
 }
 
 output "user-scoped-token" {
-  value = artifactory_scoped_token.user
+  value     = artifactory_scoped_token.user
+  sensitive = true
 }
 
 output "admin-scoped-token" {
-  value = artifactory_scoped_token.admin
+  value     = artifactory_scoped_token.admin
+  sensitive = true
 }
 
 resource "artifactory_local_bower_repository" "bower-local" {

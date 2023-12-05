@@ -1,3 +1,63 @@
+## 9.9.1 (Dec 4, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
+
+BUG FIX:
+
+* Fix incorrect use of empty error message when API fails PR: [#850](https://github.com/jfrog/terraform-provider-artifactory/pull/850) Issue: [#849](https://github.com/jfrog/terraform-provider-artifactory/issues/849)
+* resource/artifactory_global_environment: Fix incorrect environment from Artifactroy being matched and triggers a state drift. PR: [#851](https://github.com/jfrog/terraform-provider-artifactory/pull/851)
+
+## 9.9.0 (Nov 17, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.4
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add `proxy` and `disable_proxy` attributes. PR: [#848](https://github.com/jfrog/terraform-provider-artifactory/pull/848) Issue: [#838](https://github.com/jfrog/terraform-provider-artifactory/issues/838)
+
+## 9.8.0 (Nov 8, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository, resource/artifactory_remote_maven_repository, resource/artifactory_npm_docker_repository,resource/artifactory_remote_pypi_repository: Add `curated` attribute to support enabling the repository resource for Curation Service. Issue: [#831](https://github.com/jfrog/terraform-provider-artifactory/issues/831) PR: [#844](https://github.com/jfrog/terraform-provider-artifactory/pull/844)
+* resource/artifactory_pull_replication: Add missing deprecation message to documentation. PR: [#843](https://github.com/jfrog/terraform-provider-artifactory/pull/843)
+
+## 9.7.4 (Nov 6, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_target: Revert back to using Terraform SDKv2 due to unresolved performance issue from Terraform Framework. Issue: [#757](https://github.com/jfrog/terraform-provider-artifactory/issues/757) and [#805](https://github.com/jfrog/terraform-provider-artifactory/issues/805) PR: [#842](https://github.com/jfrog/terraform-provider-artifactory/pull/842)
+
+## 9.7.3 (Nov 2, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
+
+SECURITY:
+
+* provider: Bump google.golang.org/grpc from 1.56.1 to 1.56.3 PR: [#836](https://github.com/jfrog/terraform-provider-artifactory/pull/836)
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add configuration synchronization when creating or updating resource. Issue: [#825](https://github.com/jfrog/terraform-provider-artifactory/issues/825)
+* provider: Add warning message for Terraform CLI version <1.0.0 deprecation
+
+PR: [#840](https://github.com/jfrog/terraform-provider-artifactory/pull/840)
+
+NOTES:
+
+We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
+
+## 9.7.2 (Oct 19, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.2
+
+BUG FIX:
+
+* provider: Fix schema differences between SDKv2 and Framework providers. PR: [#834](https://github.com/jfrog/terraform-provider-artifactory/pull/834) Issue: [#833](https://github.com/jfrog/terraform-provider-artifactory/issues/833)
+
+## 9.7.1 (Oct 19, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.2
+
+IMPROVEMENTS:
+
+* provider:
+  * Remove conflict validation between `access_token` and `api_key` attributes. If set, `access_token` will take precedent over `api_key`.
+  * Update documentation to align with actual provider behavior.
+
+PR: [#832](https://github.com/jfrog/terraform-provider-artifactory/pull/832)
+Issue: [#663](https://github.com/jfrog/terraform-provider-artifactory/issues/663)
+
 ## 9.7.0 (Oct 18, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
 
 IMPROVEMENTS:
@@ -224,7 +284,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_permission_target is migrated to Plugin Framework, improved attribute validation.
 
-  PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/42)
+PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/742)
 
 ## 7.11.2 (May 30, 2023). Tested on Artifactory 7.59.9
 

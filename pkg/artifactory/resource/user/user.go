@@ -117,7 +117,7 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 		errors = setValue("groups", schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(user.Groups)))
 	}
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack user %q", errors)
 	}
 

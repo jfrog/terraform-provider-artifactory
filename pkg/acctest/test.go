@@ -94,12 +94,12 @@ func PreCheck(t *testing.T) {
 			SetHeader("Content-Type", "text/plain").
 			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
-			t.Fatalf("Failed to set custom base URL: %v", err)
+			t.Fatalf("failed to set custom base URL: %v", err)
 		}
 
-		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform.NewResourceConfigRaw(nil)))
-		if configErr != nil {
-			t.Fatalf("Failed to configure provider %v", configErr)
+		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform2.NewResourceConfigRaw(nil)))
+		if configErr != nil && configErr.HasError() {
+			t.Fatalf("failed to configure provider %v", configErr)
 		}
 	})
 }

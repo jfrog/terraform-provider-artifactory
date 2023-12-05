@@ -159,15 +159,12 @@ const testLength = `
 	  repo {
 		includes_pattern = ["foo/**"]
 		repositories     = ["{{ .repo_name }}"]
-
-		actions {
-		}
 	  }
 	  depends_on = [artifactory_local_docker_v2_repository.{{ .repo_name }}]
 	}
 `
 
-func TestAccPermissionTarget_emptyActions(t *testing.T) {
+func TestAccPermissionTarget_noActions(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
@@ -186,8 +183,7 @@ func TestAccPermissionTarget_emptyActions(t *testing.T) {
 				Config: utilsdk.ExecuteTemplate(permFqrn, testLength, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "0"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "0"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.#", "0"),
 				),
 			},
 			{
@@ -200,7 +196,7 @@ func TestAccPermissionTarget_emptyActions(t *testing.T) {
 	})
 }
 
-func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
+func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
 	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
@@ -217,12 +213,11 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.7.0", // need to use 7.7.0 instead of 7.11.2 due to artifactory_managed_user changes after 7.7.0
+						VersionConstraint: "9.7.3",
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
-				Config:             config,
-				ExpectNonEmptyPlan: true,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.#", "1"),
@@ -439,8 +434,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "0"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.0", "**"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "0"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.excludes_pattern.#", "0"),
 				),
 			},
@@ -536,7 +530,7 @@ func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{

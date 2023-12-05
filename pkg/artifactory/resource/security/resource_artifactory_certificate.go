@@ -305,7 +305,7 @@ func (r *CertificateResource) Delete(ctx context.Context, req resource.DeleteReq
 		Delete(CertificateEndpoint + state.Alias.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -16,8 +15,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 var domainRepoTypeLookup = map[string]string{
@@ -84,11 +81,7 @@ var releaseBundleTemplate = `
 
 func TestAccWebhookCriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
-		title := fmt.Sprintf(
-			"TestWebhook%sCriteriaValidation",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 		})
 	}
@@ -253,11 +246,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
-		title := fmt.Sprintf(
-			"TestWebhook%s",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(webhookTestCase(webhookType, t))
 		})
 	}
@@ -267,11 +256,7 @@ func TestAccCustomWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
-		title := fmt.Sprintf(
-			"TestWebhook%s",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(customWebhookTestCase(webhookType, t))
 		})
 	}

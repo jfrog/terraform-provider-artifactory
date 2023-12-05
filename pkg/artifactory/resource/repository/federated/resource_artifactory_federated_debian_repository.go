@@ -12,6 +12,7 @@ import (
 type DebianFederatedRepositoryParams struct {
 	local.DebianLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 
 	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianLocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 		repo := DebianFederatedRepositoryParams{
 			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, rclass),
 			Members:                     unpackMembers(data),
+			RepoParams:                  unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

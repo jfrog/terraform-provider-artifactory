@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -88,6 +87,20 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	},
 }
 
+var ProxySchema = map[string]*schema.Schema{
+	"proxy": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
+	},
+	"disable_proxy": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
+	},
+}
+
 var CompressionFormats = map[string]*schema.Schema{
 	"index_compression_formats": {
 		Type: schema.TypeSet,
@@ -123,24 +136,33 @@ type ReadFunc func(d *schema.ResourceData, m interface{}) error
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
 type Constructor func() (interface{}, error)
 
+func Create(ctx context.Context, d *schema.ResourceData, m interface{}, unpack unpacker.UnpackFunc) diag.Diagnostics {
+	repo, key, err := unpack(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	// repo must be a pointer
+	_, err = m.(utilsdk.ProvderMetadata).Client.R().
+		AddRetryCondition(client.RetryOnMergeError).
+		SetBody(repo).
+		SetPathParam("key", key).
+		Put(RepositoriesEndpoint)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(key)
+
+	return nil
+}
+
 func MkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
-
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		repo, key, err := unpack(d)
+		err := Create(ctx, d, m, unpack)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
-		// repo must be a pointer
-		_, err = m.(utilsdk.ProvderMetadata).Client.R().
-			AddRetryCondition(client.RetryOnMergeError).
-			SetBody(repo).
-			SetPathParam("key", key).
-			Put(RepositoriesEndpoint)
 
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		d.SetId(key)
 		return read(ctx, d, m)
 	}
 }
@@ -169,46 +191,52 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 	}
 }
 
+func Update(ctx context.Context, d *schema.ResourceData, m interface{}, unpack unpacker.UnpackFunc) diag.Diagnostics {
+	repo, key, err := unpack(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = m.(utilsdk.ProvderMetadata).Client.R().
+		AddRetryCondition(client.RetryOnMergeError).
+		SetBody(repo).
+		SetPathParam("key", d.Id()).
+		Post(RepositoriesEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(key)
+
+	projectKeyChanged := d.HasChange("project_key")
+	if projectKeyChanged {
+		old, newProject := d.GetChange("project_key")
+		oldProjectKey := old.(string)
+		newProjectKey := newProject.(string)
+
+		assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
+		unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
+
+		var err error
+		if assignToProject {
+			err = assignRepoToProject(key, newProjectKey, m.(utilsdk.ProvderMetadata).Client)
+		} else if unassignFromProject {
+			err = unassignRepoFromProject(key, m.(utilsdk.ProvderMetadata).Client)
+		}
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
 func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		repo, key, err := unpack(d)
+		err := Update(ctx, d, m, unpack)
 		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		_, err = m.(utilsdk.ProvderMetadata).Client.R().
-			AddRetryCondition(client.RetryOnMergeError).
-			SetBody(repo).
-			SetPathParam("key", d.Id()).
-			Post(RepositoriesEndpoint)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		d.SetId(key)
-
-		projectKeyChanged := d.HasChange("project_key")
-		tflog.Debug(ctx, fmt.Sprintf("projectKeyChanged: %v", projectKeyChanged))
-		if projectKeyChanged {
-			old, newProject := d.GetChange("project_key")
-			oldProjectKey := old.(string)
-			newProjectKey := newProject.(string)
-			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
-
-			assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
-			unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
-			tflog.Debug(ctx, fmt.Sprintf("assignToProject: %v, unassignFromProject: %v", assignToProject, unassignFromProject))
-
-			var err error
-			if assignToProject {
-				err = assignRepoToProject(key, newProjectKey, m.(utilsdk.ProvderMetadata).Client)
-			} else if unassignFromProject {
-				err = unassignRepoFromProject(key, m.(utilsdk.ProvderMetadata).Client)
-			}
-
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			return err
 		}
 
 		return read(ctx, d, m)
@@ -314,6 +342,17 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, met
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func VerifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	disableProxy := diff.Get("disable_proxy").(bool)
+	proxy := diff.Get("proxy").(string)
+
+	if disableProxy && len(proxy) > 0 {
+		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil

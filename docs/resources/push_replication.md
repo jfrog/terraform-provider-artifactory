@@ -6,8 +6,10 @@ subcategory: "Replication"
 ~> This resource is deprecated and replaced by `artifactory_local_repository_multi_replication` for clarity. 
 
 Provides an Artifactory push replication resource. This can be used to create and manage Artifactory push replications using [Multi-push Replication API](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplaceLocalMulti-pushReplication).
+
 Push replication is used to synchronize Local Repositories, and is implemented by the Artifactory server on the near
 end invoking a synchronization of artifacts to the far end.
+
 See the [Official Documentation](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-PushReplication).
 
 ~> This resource requires Artifactory Enterprise license.
