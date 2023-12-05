@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.12.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.30.0
-	github.com/hashicorp/terraform-plugin-testing v1.6.0
+	github.com/hashicorp/terraform-plugin-testing v1.5.1
 	github.com/jfrog/terraform-provider-shared v1.21.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.8.4
