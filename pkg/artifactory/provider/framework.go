@@ -18,7 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
@@ -147,11 +147,8 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		if licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseErr != nil {
-			resp.Diagnostics.AddError(
-				"Error getting Artifactory license",
-				fmt.Sprintf("%v", licenseErr),
-			)
+		if licenseDs := utilfw.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseDs != nil {
+			resp.Diagnostics.Append(licenseDs...)
 			return
 		}
 	}
