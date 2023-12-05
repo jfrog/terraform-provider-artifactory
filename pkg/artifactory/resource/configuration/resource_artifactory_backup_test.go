@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccBackup_full(t *testing.T) {
@@ -62,14 +61,14 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 * * ? *"),
@@ -185,7 +184,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 		CheckDestroy:             acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("backup", BackupTemplateFull, fields),
+				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
 				),

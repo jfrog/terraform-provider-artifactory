@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccKeyPair_UpgradeFromSDKv2(t *testing.T) {
@@ -65,7 +64,7 @@ DQIDAQAB
 EOF
 	}`
 
-	keyPairConfig := utilsdk.ExecuteTemplate(
+	keyPairConfig := util.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{
@@ -244,7 +243,7 @@ DQIDAQAB
 EOF
 	}`
 
-	keyBasic := utilsdk.ExecuteTemplate(
+	keyBasic := util.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{
@@ -254,7 +253,7 @@ EOF
 		},
 	)
 
-	keyUpdatedPassphrase := utilsdk.ExecuteTemplate(
+	keyUpdatedPassphrase := util.ExecuteTemplate(
 		fqrn,
 		template,
 		map[string]string{

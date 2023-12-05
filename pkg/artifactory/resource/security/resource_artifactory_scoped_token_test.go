@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
 
 func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -93,7 +93,7 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 
 func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-scope-token", "artifactory_scoped_token")
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -152,7 +152,7 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -226,7 +226,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		description = "{{ .description }}"
 	}`
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		template,
 		map[string]interface{}{
@@ -235,7 +235,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		},
 	)
 
-	accessTokenUpdatedConfig := utilsdk.ExecuteTemplate(
+	accessTokenUpdatedConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		template,
 		map[string]interface{}{
@@ -287,7 +287,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 	projectKey := fmt.Sprintf("test-project-%d", testutil.RandomInt())
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -361,7 +361,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_group" "test-group" {
 			name = "{{ .groupName }}"
@@ -401,7 +401,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			scopes      = ["foo"]
@@ -426,7 +426,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_local_generic_repository" "generic-local-1" {
 			key = "generic-local-1"
@@ -508,7 +508,7 @@ func TestAccScopedToken_WithAudience(t *testing.T) {
 func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["{{ .prefix }}@*"]
@@ -542,7 +542,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["foo@*"]
@@ -572,7 +572,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		audiences = append(audiences, fmt.Sprintf("jfrt@%d", i))
 	}
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences    = [
@@ -600,7 +600,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -637,7 +637,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"

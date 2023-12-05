@@ -9,16 +9,15 @@ import (
 )
 
 func NewUserResource() resource.Resource {
-
-	return &ArtifactoryUserResource{}
+	return &ArtifactoryUserResource{
+		ArtifactoryBaseUserResource: ArtifactoryBaseUserResource{
+			TypeName: "artifactory_user",
+		},
+	}
 }
 
 type ArtifactoryUserResource struct {
 	ArtifactoryBaseUserResource
-}
-
-func (r *ArtifactoryUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_user"
 }
 
 func (r *ArtifactoryUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

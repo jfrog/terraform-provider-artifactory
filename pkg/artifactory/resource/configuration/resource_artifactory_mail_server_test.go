@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccMailServer_full(t *testing.T) {
@@ -57,7 +56,7 @@ func TestAccMailServer_full(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, mailServerTemplate, testData),
+				Config: util.ExecuteTemplate(fqrn, mailServerTemplate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "artifactory_url", testData["artifactory_url"]),
@@ -72,7 +71,7 @@ func TestAccMailServer_full(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, mailServerTemplateUpdate, testData),
+				Config: util.ExecuteTemplate(fqrn, mailServerTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "artifactory_url", testData["artifactory_url"]),
@@ -124,7 +123,7 @@ func TestAccMailServer_invalid_from(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:       utilsdk.ExecuteTemplate(fqrn, template, testData),
+				Config:       util.ExecuteTemplate(fqrn, template, testData),
 				ResourceName: resourceName,
 				ExpectError:  regexp.MustCompile("value must be a valid email address"),
 			},
@@ -158,7 +157,7 @@ func TestAccMailServer_invalid_artifactory_url(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:       utilsdk.ExecuteTemplate(fqrn, template, testData),
+				Config:       util.ExecuteTemplate(fqrn, template, testData),
 				ResourceName: resourceName,
 				ExpectError:  regexp.MustCompile("value must be a valid URL with host.*"),
 			},

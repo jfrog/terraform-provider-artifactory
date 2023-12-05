@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccGlobalEnvironment_full(t *testing.T) {
@@ -22,10 +21,10 @@ func TestAccGlobalEnvironment_full(t *testing.T) {
 			name = "{{ .envName }}"
 		}
 	`
-	config := utilsdk.ExecuteTemplate(envName, temp, map[string]string{"name": envName, "envName": envName})
+	config := util.ExecuteTemplate(envName, temp, map[string]string{"name": envName, "envName": envName})
 
 	newEnvName := fmt.Sprintf("%s-new", envName)
-	updatedConfig := utilsdk.ExecuteTemplate(newEnvName, temp, map[string]string{"name": envName, "envName": newEnvName})
+	updatedConfig := util.ExecuteTemplate(newEnvName, temp, map[string]string{"name": envName, "envName": newEnvName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -71,7 +70,7 @@ func TestAccGlobalEnvironment_invalid_name(t *testing.T) {
 					name = "{{ .envName }}"
 				}
 			`
-			config := utilsdk.ExecuteTemplate(
+			config := util.ExecuteTemplate(
 				testCase.name,
 				temp,
 				map[string]string{

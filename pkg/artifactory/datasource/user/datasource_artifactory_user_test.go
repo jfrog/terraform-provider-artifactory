@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccDataSourceUser_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAccDataSourceUser_basic(t *testing.T) {
 		}
 	`
 
-	config := utilsdk.ExecuteTemplate(name, temp, map[string]string{"name": name})
+	config := util.ExecuteTemplate(name, temp, map[string]string{"name": name})
 	fqrn := fmt.Sprintf("data.artifactory_user.%s", name)
 
 	resource.Test(t, resource.TestCase{

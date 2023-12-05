@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -29,7 +28,7 @@ func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *test
 		"email":    email,
 		"password": password,
 	}
-	userInitial := utilsdk.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_unmanaged_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -38,7 +37,7 @@ func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *test
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := utilsdk.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_unmanaged_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"

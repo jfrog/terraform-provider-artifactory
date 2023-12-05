@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -23,7 +22,7 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 			name = "{{ .groupName }}"
 		}
 	`
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -68,7 +67,7 @@ func TestAccGroup_defaults(t *testing.T) {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -119,7 +118,7 @@ func TestAccGroup_full(t *testing.T) {
 		}
 	`
 
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -175,7 +174,7 @@ func TestAccGroup_bool_conflict(t *testing.T) {
 		}
 	`
 
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -231,7 +230,7 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			utilsdk.ExecuteTemplate(
+			util.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{"groupName": groupName},
@@ -370,7 +369,7 @@ func TestAccGroup_full_update(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			utilsdk.ExecuteTemplate(
+			util.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{

@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccPropertySetCreate(t *testing.T) {
@@ -31,7 +30,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
+				Config: util.ExecuteTemplate(fqrn, PropertySetTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
 			{
@@ -73,11 +72,11 @@ func TestAccPropertySetUpdate(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
+				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testData)),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
+				Config: util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
 			{
@@ -109,7 +108,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config:      utilsdk.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
+				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
 				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
 			},
 			{

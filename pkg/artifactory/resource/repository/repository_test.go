@@ -13,7 +13,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
@@ -24,7 +23,7 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 
 	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
-	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
 		}
@@ -32,7 +31,7 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 		"name": name,
 	})
 
-	localRepositoryWithProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = "{{ .projectKey }}"
@@ -78,7 +77,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 
 	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
-	localRepositoryWithProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = "{{ .projectKey }}"
@@ -89,7 +88,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 		"projectKey": projectKey,
 	})
 
-	localRepositoryNoProjectKey := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryNoProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
 		}
@@ -137,7 +136,7 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -183,7 +182,7 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -225,7 +224,7 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	localRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalGenericRepository", `
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
