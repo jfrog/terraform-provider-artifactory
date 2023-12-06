@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func deletePermissionTarget(t *testing.T, name string) error {
@@ -90,7 +90,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, temp, tempStruct),
+				Config: util.ExecuteTemplate(fqrn, temp, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.users.#", "1"),

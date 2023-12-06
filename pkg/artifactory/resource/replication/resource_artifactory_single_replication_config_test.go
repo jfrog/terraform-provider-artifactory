@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func mkTclForRepConfg(name, cron, url, proxy string) string {
@@ -170,7 +170,7 @@ func TestAccSingleReplicationRemoteRepo(t *testing.T) {
 			depends_on = [artifactory_remote_maven_repository.{{ .remote_name }}]
 		}
 	`
-	tcl = utilsdk.ExecuteTemplate("foo", tcl, map[string]string{
+	tcl = util.ExecuteTemplate("foo", tcl, map[string]string{
 		"repoconfig_name": name,
 		"remote_name":     repoName,
 		"username":        acctest.RtDefaultUser,

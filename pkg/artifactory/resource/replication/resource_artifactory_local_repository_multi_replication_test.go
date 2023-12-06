@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
@@ -16,7 +16,7 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
-	invalidCron := utilsdk.ExecuteTemplate(
+	invalidCron := util.ExecuteTemplate(
 		"TestAccLocalMultiReplicationInvalidPushCronFails",
 		`resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
@@ -52,7 +52,7 @@ func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
-	invalidUrl := utilsdk.ExecuteTemplate(
+	invalidUrl := util.ExecuteTemplate(
 		"TestAccLocalMultiReplicationInvalidUrlFails",
 		`resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
@@ -93,7 +93,7 @@ func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationConfig := utilsdk.ExecuteTemplate("TestAccPushReplication", `
+	replicationConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
@@ -133,7 +133,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationConfig := utilsdk.ExecuteTemplate("TestAccPushReplication", `
+	replicationConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
@@ -159,7 +159,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := utilsdk.ExecuteTemplate("TestAccPushReplication", `
+	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}

@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 
 	"gopkg.in/yaml.v3"
@@ -102,15 +102,18 @@ func (r *BackupResourceModel) FromAPIModel(ctx context.Context, backup *BackupAP
 }
 
 func NewBackupResource() resource.Resource {
-	return &BackupResource{}
+	return &BackupResource{
+		TypeName: "artifactory_backup",
+	}
 }
 
 type BackupResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 func (r *BackupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_backup"
+	resp.TypeName = r.TypeName
 }
 
 func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -192,10 +195,12 @@ func (r *BackupResource) Configure(ctx context.Context, req resource.ConfigureRe
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *BackupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *BackupResourceModel
 
 	// Read Terraform plan data into the model
@@ -246,6 +251,8 @@ func (r *BackupResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state *BackupResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -285,6 +292,8 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *BackupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *BackupResourceModel
 
 	// Read Terraform plan data into the model
@@ -332,6 +341,8 @@ func (r *BackupResource) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *BackupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data BackupResourceModel
 
 	// Read Terraform prior state data into the model

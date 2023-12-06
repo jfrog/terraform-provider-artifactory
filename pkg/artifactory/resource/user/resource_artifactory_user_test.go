@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -23,7 +23,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 		"name":  name,
 		"email": email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserUpgrade", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserUpgrade", `
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
@@ -71,7 +71,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
@@ -114,7 +114,7 @@ func TestAccUser_no_password(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name   = "{{ .name }}"
 			email  = "{{ .email }}"
@@ -156,7 +156,7 @@ func TestAccUser_no_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -198,7 +198,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -351,7 +351,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := utilsdk.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -360,7 +360,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := utilsdk.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -406,7 +406,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 
 func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

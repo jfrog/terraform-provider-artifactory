@@ -17,19 +17,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/ldap.v2"
 )
 
 const LdapGroupEndpoint = "access/api/v1/ldap/groups/"
 
 func NewLdapGroupSettingResource() resource.Resource {
-	return &ArtifactoryLdapGroupSettingResource{}
+	return &ArtifactoryLdapGroupSettingResource{
+		TypeName: "artifactory_ldap_group_setting_v2",
+	}
 }
 
 type ArtifactoryLdapGroupSettingResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryLdapGroupSettingResourceModel describes the Terraform resource data model to match the
@@ -63,7 +66,7 @@ type ArtifactoryLdapGroupSettingResourceAPIModel struct {
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_ldap_group_setting_v2"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -141,10 +144,12 @@ func (r *ArtifactoryLdapGroupSettingResource) Configure(ctx context.Context, req
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapGroupSettingResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -189,6 +194,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapGroupSettingResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -226,6 +233,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	// Read Terraform plan data into the model
@@ -269,6 +278,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	// Read Terraform prior state data into the model

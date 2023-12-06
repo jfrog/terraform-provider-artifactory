@@ -38,13 +38,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/sethvargo/go-password/password"
 )
 
 type ArtifactoryBaseUserResource struct {
-	client utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryUserResourceModel describes the Terraform resource data model to match the
@@ -142,15 +143,21 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 	},
 }
 
+func (r *ArtifactoryBaseUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = r.TypeName
+}
+
 func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan ArtifactoryUserResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -194,7 +201,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Password = randomPassword
 	}
 
-	response, err := r.client.Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	response, err := r.ProviderData.Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
@@ -213,7 +220,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if plan.Groups.IsNull() || len(plan.Groups.Elements()) == 0 {
 		user.Groups = &[]string{}
-		_, errGroupUpdate := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+		_, errGroupUpdate := r.ProviderData.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			utilfw.UnableToCreateResourceError(resp, response.String())
 			return
@@ -234,6 +241,8 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state ArtifactoryUserResourceModel
 
 	// Read Terraform prior state data into the model
@@ -245,7 +254,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	// Convert from Terraform data model into API data model
 	user := ArtifactoryUserResourceAPIModel{}
 
-	response, err := r.client.Client.R().SetResult(&user).Get(UsersEndpointPath + state.Id.ValueString())
+	response, err := r.ProviderData.Client.R().SetResult(&user).Get(UsersEndpointPath + state.Id.ValueString())
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
@@ -270,6 +279,8 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan ArtifactoryUserResourceModel
 
 	// Read Terraform plan data into the model
@@ -293,7 +304,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		InternalPasswordDisabled: plan.InternalPasswordDisabled.ValueBool(),
 	}
 
-	response, err := r.client.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+	response, err := r.ProviderData.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
@@ -313,12 +324,14 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 }
 
 func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state ArtifactoryUserResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	response, err := r.client.Client.R().Delete(UsersEndpointPath + state.Id.ValueString())
+	response, err := r.ProviderData.Client.R().Delete(UsersEndpointPath + state.Id.ValueString())
 
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())

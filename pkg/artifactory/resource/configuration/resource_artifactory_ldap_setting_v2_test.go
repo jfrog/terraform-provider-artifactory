@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -32,7 +32,7 @@ func TestAccLdapSettingV2_full_no_search(t *testing.T) {
 		"user_dn_pattern": "uid={0},ou=People",
 		"search_base":     "ou=users|ou=people",
 	}
-	LdapSettingTemplateFull := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, params)
+	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapSetting, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -83,7 +83,7 @@ func TestAccLdapSettingV2_full_with_search(t *testing.T) {
 		"user_dn_pattern": "uid={0},ou=People",
 		"search_base":     "ou=users|ou=people",
 	}
-	LdapSettingTemplateFull := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, params)
+	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapSetting, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccLdapSettingV2_update(t *testing.T) {
 		"search_base":      "ou=users|ou=people",
 		"manager_password": "testmgrpaswd",
 	}
-	LdapSettingTemplateFull := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, params)
+	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapSetting, params)
 
 	paramsUpdate := map[string]interface{}{
 		"key":              key,
@@ -146,7 +146,7 @@ func TestAccLdapSettingV2_update(t *testing.T) {
 		"search_base":      "ou=users",
 		"manager_password": "testmgrpaswd1",
 	}
-	LdapSettingTemplateUpdate := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, paramsUpdate)
+	LdapSettingTemplateUpdate := util.ExecuteTemplate("TestLdap", ldapSetting, paramsUpdate)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -210,7 +210,7 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 		"search_base":     "ou=users|ou=people",
 		"manager_dn":      "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com",
 	}
-	LdapSettingIncorrectDnPattern := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, paramsUserDnPattern)
+	LdapSettingIncorrectDnPattern := util.ExecuteTemplate("TestLdap", ldapSetting, paramsUserDnPattern)
 
 	paramsSearchFilter := map[string]interface{}{
 		"key":             key,
@@ -219,7 +219,7 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 		"search_base":     "ou=users|ou=people",
 		"manager_dn":      "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com",
 	}
-	LdapSettingIncorrectSearchFilter := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, paramsSearchFilter)
+	LdapSettingIncorrectSearchFilter := util.ExecuteTemplate("TestLdap", ldapSetting, paramsSearchFilter)
 
 	paramsSearchBase := map[string]interface{}{
 		"key":             key,
@@ -228,7 +228,7 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 		"search_base":     "#!@#$%^&*()_+?><|#!@#$%^&*()_+?><|#!@#$%^&*()_+?><|ou=users|ou=people",
 		"manager_dn":      "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com",
 	}
-	LdapSettingIncorrectSearchBase := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, paramsSearchBase)
+	LdapSettingIncorrectSearchBase := util.ExecuteTemplate("TestLdap", ldapSetting, paramsSearchBase)
 
 	paramsManagerDn := map[string]interface{}{
 		"key":             key,
@@ -237,7 +237,7 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 		"search_base":     "#!@#$%^&*()_+?><|#!@#$%^&*()_+?><|#!@#$%^&*()_+?><|ou=users|ou=people",
 		"manager_dn":      "CN=John Smith, OU=San Francisco,DC=am,DC=example,DC=com",
 	}
-	LdapSettingIncorrectanagerDn := utilsdk.ExecuteTemplate("TestLdap", ldapSetting, paramsManagerDn)
+	LdapSettingIncorrectanagerDn := util.ExecuteTemplate("TestLdap", ldapSetting, paramsManagerDn)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -340,28 +340,28 @@ func TestAccLdapSettingV2_emailAttribute(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateNoEmailAttr, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateNoEmailAttr, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrBlank, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrBlank, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", ""),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrUpd1, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrUpd1, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrUpd2, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateEmailAttrUpd2, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail_attr"),
@@ -408,14 +408,14 @@ func TestAccLdapSettingV2_user_dn_or_search_filter(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateUserDnNoSearchFilter, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateUserDnNoSearchFilter, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", "ou=People, uid={0}"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("TestLdap", LdapSettingTemplateNoUserDn, params),
+				Config: util.ExecuteTemplate("TestLdap", LdapSettingTemplateNoUserDn, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "ldap_url", "ldap://ldaptestldap"),
@@ -438,7 +438,7 @@ func TestAccLdapSettingV2_user_dn_or_search_filter(t *testing.T) {
 
 func testAccLdapSettingV2Destroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

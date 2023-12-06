@@ -19,18 +19,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const KeypairEndPoint = "artifactory/api/security/keypair/"
 
 func NewKeyPairResource() resource.Resource {
-	return &KeyPairResource{}
+	return &KeyPairResource{
+		TypeName: "artifactory_keypair",
+	}
 }
 
 type KeyPairResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // KeyPairResourceModel describes the Terraform resource data model to match the
@@ -64,7 +67,7 @@ type KeyPairAPIModel struct {
 }
 
 func (r *KeyPairResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_keypair"
+	resp.TypeName = r.TypeName
 }
 
 func (r *KeyPairResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -145,10 +148,12 @@ func (r *KeyPairResource) Configure(ctx context.Context, req resource.ConfigureR
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan *KeyPairResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -184,6 +189,8 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state KeyPairResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -225,6 +232,8 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state KeyPairResourceModel
 
 	// Read Terraform prior state data into the model

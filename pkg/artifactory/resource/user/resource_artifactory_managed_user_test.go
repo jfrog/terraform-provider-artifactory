@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/provider"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -24,7 +24,7 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 		"name":  name,
 		"email": email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserUpgrade", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserUpgrade", `
 		resource "artifactory_managed_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"

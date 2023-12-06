@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
@@ -331,7 +332,7 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	if _, err := m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
+	if _, err := m.(util.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -341,7 +342,7 @@ func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := new(PermissionTargetParams)
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -356,7 +357,7 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	if _, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
+	if _, err := m.(util.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -365,13 +366,13 @@ func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
 
 	return diag.FromErr(err)
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
+	resp, err := m.(util.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
 	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream permission has been manually removed
 		return false, nil
