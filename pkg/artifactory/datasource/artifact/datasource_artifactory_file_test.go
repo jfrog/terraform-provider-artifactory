@@ -1,4 +1,4 @@
-package datasource_test
+package artifact_test
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 }
 
 func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) {
-	const localFilePath = "../../../samples/crash.zip"
+	const localFilePath = "../../../../samples/crash.zip"
 	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localFilePath, "example-repo-local/test/crash.zip", "application/zip")
 	if err != nil {
@@ -50,8 +50,8 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 }
 
 func uploadTwoArtifacts(t *testing.T, repoKey string) {
-	const localOlderFilePath = "../../../samples/multi1-3.7-20220310.233748-1.jar"
-	const localNewerFilePath = "../../../samples/multi1-3.7-20220310.233859-2.jar"
+	const localOlderFilePath = "../../../../samples/multi1-3.7-20220310.233748-1.jar"
+	const localNewerFilePath = "../../../../samples/multi1-3.7-20220310.233859-2.jar"
 	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localOlderFilePath, repoKey+"/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
