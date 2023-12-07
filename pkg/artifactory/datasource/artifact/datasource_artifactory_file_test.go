@@ -3,7 +3,6 @@ package artifact_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,7 +19,7 @@ import (
 )
 
 func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
-	body, err := ioutil.ReadFile(localPath)
+	body, err := os.ReadFile(localPath)
 	if err != nil {
 		return err
 	}
@@ -338,7 +337,7 @@ func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 }
 
 func createTempFile(content string) (f *os.File, err error) {
-	file, err := ioutil.TempFile(os.TempDir(), "terraform-provider-artifactory-")
+	file, err := os.CreateTemp(os.TempDir(), "terraform-provider-artifactory-")
 
 	if err != nil {
 		return nil, err
