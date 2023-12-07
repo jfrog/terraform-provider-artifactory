@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccDataSourceRepositories(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccDataSourceRepositories(t *testing.T) {
 		"alpineRepoName":  alpineRepoName,
 		"name":            name,
 	}
-	config := utilsdk.ExecuteTemplate("TestAccLocalRepositories", `
+	config := util.ExecuteTemplate("TestAccLocalRepositories", `
 		resource "artifactory_local_generic_repository" "{{ .genericRepoName }}" {
 		  key         = "{{ .genericRepoName }}"
 		  description = "Test repo for {{ .genericRepoName }}"

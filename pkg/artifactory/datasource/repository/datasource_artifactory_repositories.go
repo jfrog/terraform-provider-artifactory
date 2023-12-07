@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const EndPoint = "artifactory/api/repositories/"
@@ -25,7 +25,7 @@ func NewRepositoriesDataSource() datasource.DataSource {
 }
 
 type RepositoriesDataSource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
 }
 
 type RepositoriesDataSourceModel struct {
@@ -134,7 +134,7 @@ func (d *RepositoriesDataSource) Configure(ctx context.Context, req datasource.C
 	if req.ProviderData == nil {
 		return
 	}
-	d.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	d.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (d *RepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
