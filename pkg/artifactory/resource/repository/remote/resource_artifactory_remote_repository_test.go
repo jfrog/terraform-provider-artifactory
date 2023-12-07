@@ -18,6 +18,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -29,7 +30,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 		"name": name,
 	}
 
-	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+	config := util.ExecuteTemplate("TestAccRemoteGoRepository", `
 		resource "artifactory_remote_go_repository" "{{ .name }}" {
 			key             = "{{ .name }}"
 			repo_layout_ref = "go-default"
@@ -254,11 +255,11 @@ func TestAccRemoteDockerRepo_full(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, repoTemplate, testData),
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testData),
 				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testData)),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
 				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
 			},
 			{
@@ -724,7 +725,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("one", step1, map[string]interface{}{
+				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -734,7 +735,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("two", step2, map[string]interface{}{
+				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -1406,7 +1407,7 @@ func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
 	// Default proxy will be assigned to the repository no matter what, and it's impossible to remove it by submitting an empty string or
 	// removing the attribute. If `disable_proxy` is set to true, then both repo and default proxies are removed and not returned in the
 	// GET body.
-	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+	config := util.ExecuteTemplate("TestAccRemoteGoRepository", `
 		resource "artifactory_proxy" "my-proxy" {
 		  	key               = "my-proxy"
 		  	host              = "my-proxy.mycompany.com"
@@ -1458,7 +1459,7 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 	params := map[string]string{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+	config := util.ExecuteTemplate("TestAccRemoteGoRepository", `
 		resource "artifactory_proxy" "my-proxy" {
 		  	key               = "my-proxy"
 		  	host              = "my-proxy.mycompany.com"
@@ -1481,7 +1482,7 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 
 	`, params)
 
-	configUpdate := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+	configUpdate := util.ExecuteTemplate("TestAccRemoteGoRepository", `
 		resource "artifactory_remote_go_repository" "{{ .name }}" {
 			key             = "{{ .name }}"
 			repo_layout_ref = "go-default"
@@ -1528,7 +1529,7 @@ func TestAccRemoteDisableDefaultProxyConflictAttrGH739(t *testing.T) {
 	params := map[string]string{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate("TestAccRemoteGoRepository", `
+	config := util.ExecuteTemplate("TestAccRemoteGoRepository", `
 		resource "artifactory_remote_go_repository" "{{ .name }}" {
 			key             = "{{ .name }}"
 			repo_layout_ref = "go-default"
@@ -1566,7 +1567,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	remoteRepositoryBasic := utilsdk.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -1617,7 +1618,7 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	remoteRepositoryBasic := utilsdk.ExecuteTemplate("TestAccRemotePyPiRepository", `
+	remoteRepositoryBasic := util.ExecuteTemplate("TestAccRemotePyPiRepository", `
 		resource "artifactory_remote_pypi_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -1669,7 +1670,7 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("one", step1, map[string]interface{}{
+				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -1680,7 +1681,7 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate("two", step2, map[string]interface{}{
+				Config: util.ExecuteTemplate("two", step2, map[string]interface{}{
 					"name": name,
 				}),
 				Check: resource.ComposeTestCheckFunc(

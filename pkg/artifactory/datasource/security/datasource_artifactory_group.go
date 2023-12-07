@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 	"golang.org/x/net/context"
@@ -17,7 +18,7 @@ func DataSourceArtifactoryGroup() *schema.Resource {
 		group := Group{}
 		name := d.Get("name").(string)
 		includeUsers := d.Get("include_users").(string)
-		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&group).SetQueryParam("includeUsers", includeUsers).Get(security.GroupsEndpoint + name)
 
 		if err != nil {
 			return diag.FromErr(err)

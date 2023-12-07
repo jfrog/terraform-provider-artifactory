@@ -14,6 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -314,7 +315,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 		"name":          name,
 		"useNamespaces": useNamespaces,
 	}
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualHelmRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            				 = "{{ .name }}"
 	 	  use_namespaces 				 = {{ .useNamespaces }}
@@ -352,7 +353,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
+	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
@@ -656,7 +657,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -706,7 +707,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	virualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -870,7 +871,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualBowerRepository = utilsdk.ExecuteTemplate("TestAccVirtualBower", `
+	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualBower", `
 		resource "artifactory_remote_bower_repository" "bower-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -926,7 +927,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualNpmRepository = utilsdk.ExecuteTemplate("TestAccVirtualNpm", `
+	var virtualNpmRepository = util.ExecuteTemplate("TestAccVirtualNpm", `
 		resource "artifactory_remote_npm_repository" "npm-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"

@@ -1,3 +1,9 @@
+## 9.9.2 (Dec 5, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
+
+IMPROVEMENTS:
+
+* Add telemetry to resources that were migrated to Plugin Framework PR: [#852](https://github.com/jfrog/terraform-provider-artifactory/pull/852)
+
 ## 9.9.1 (Dec 4, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
 
 BUG FIX:

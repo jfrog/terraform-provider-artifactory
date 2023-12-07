@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -38,7 +38,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_member_attribute": "uniqueMember",
 		"strategy":               "STATIC",
 	}
-	LdapSettingTemplateFull := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
+	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
 	paramsUpdate := map[string]interface{}{
 		"name":                   name,
@@ -47,7 +47,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_member_attribute": "uniqueMember1",
 		"strategy":               "DYNAMIC",
 	}
-	LdapSettingTemplateFullUpdate := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
+	LdapSettingTemplateFullUpdate := util.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -142,7 +142,7 @@ func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage
 		strategy = "{{ .strategy }}"
 	}
 	`
-	LdapSettingIncorrectDnPattern := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
+	LdapSettingIncorrectDnPattern := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -159,7 +159,7 @@ func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage
 
 func testAccLdapGroupSettingV2Destroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

@@ -2,7 +2,7 @@ package configuration
 
 import (
 	"github.com/jfrog/terraform-provider-shared/client"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 /*
@@ -11,7 +11,7 @@ import (
 See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration
 */
 func SendConfigurationPatch(content []byte, m interface{}) error {
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(content).
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
 		AddRetryCondition(client.RetryOnMergeError).
 		Patch("artifactory/api/system/configuration")

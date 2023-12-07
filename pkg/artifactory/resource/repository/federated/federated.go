@@ -16,6 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -157,7 +158,7 @@ func configSync(ctx context.Context, repoKey string, m interface{}) diag.Diagnos
 			"repoKey": repoKey,
 		},
 	)
-	_, restErr := m.(utilsdk.ProvderMetadata).Client.R().
+	_, restErr := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("repositoryKey", repoKey).
 		Post("artifactory/api/federation/configSync/{repositoryKey}")
 	if restErr != nil {
@@ -211,7 +212,7 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 	initialRepoName := s.GetString("key", false)
 	if v, ok := d.GetOk("member"); ok && s.GetBool("cleanup_on_delete", false) {
 		// Save base URL from the Client to be able to revert it back after the change below
-		baseURL := m.(utilsdk.ProvderMetadata).Client.BaseURL
+		baseURL := m.(util.ProvderMetadata).Client.BaseURL
 		federatedMembers := v.(*schema.Set).List()
 		for _, federatedMember := range federatedMembers {
 			id := federatedMember.(map[string]interface{})
@@ -220,21 +221,21 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 			memberHost := memberUrl[:strings.Index(memberUrl, parsedMemberUrl.Path)]
 			memberRepoName := strings.ReplaceAll(memberUrl, memberUrl[:strings.LastIndex(memberUrl, "/")+1], "")
 			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, baseURL) {
-				resp, err := m.(utilsdk.ProvderMetadata).Client.SetBaseURL(memberHost).R().
+				resp, err := m.(util.ProvderMetadata).Client.SetBaseURL(memberHost).R().
 					AddRetryCondition(client.RetryOnMergeError).
 					SetPathParam("key", memberRepoName).
 					Delete(RepositoriesEndpoint)
 				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
 					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-					m.(utilsdk.ProvderMetadata).Client.SetBaseURL(baseURL)
+					m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
 					return diag.FromErr(err)
 				}
 			}
 		}
-		m.(utilsdk.ProvderMetadata).Client.SetBaseURL(baseURL)
+		m.(util.ProvderMetadata).Client.SetBaseURL(baseURL)
 	}
 
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)

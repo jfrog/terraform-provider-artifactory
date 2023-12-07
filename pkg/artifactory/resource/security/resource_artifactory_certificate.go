@@ -20,18 +20,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 const CertificateEndpoint = "artifactory/api/system/security/certificates/"
 
 func NewCertificateResource() resource.Resource {
-	return &CertificateResource{}
+	return &CertificateResource{
+		TypeName: "artifactory_certificate",
+	}
 }
 
 type CertificateResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // CertificateResourceModel describes the Terraform resource data model to match the
@@ -69,7 +72,7 @@ type CertificateAPIModel struct {
 }
 
 func (r *CertificateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_certificate"
+	resp.TypeName = r.TypeName
 }
 
 func (r *CertificateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -155,7 +158,7 @@ func (r *CertificateResource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func updateCertificate(content, file, alias basetypes.StringValue, restyRequest *resty.Request) (*resty.Response, error) {
@@ -186,6 +189,8 @@ func updateCertificate(content, file, alias basetypes.StringValue, restyRequest 
 }
 
 func (r *CertificateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan *CertificateResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -239,6 +244,8 @@ func FindCertificate(alias string, restyRequest *resty.Request) (*CertificateAPI
 }
 
 func (r *CertificateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state *CertificateResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -272,6 +279,8 @@ func (r *CertificateResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *CertificateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var plan *CertificateResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -296,6 +305,8 @@ func (r *CertificateResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *CertificateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var state CertificateResourceModel
 
 	// Read Terraform prior state data into the model

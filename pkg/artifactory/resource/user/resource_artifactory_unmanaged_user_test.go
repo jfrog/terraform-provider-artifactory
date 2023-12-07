@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -28,7 +28,7 @@ func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *test
 		"email":    email,
 		"password": password,
 	}
-	userInitial := utilsdk.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_unmanaged_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -37,7 +37,7 @@ func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *test
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := utilsdk.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_unmanaged_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -322,7 +322,7 @@ func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

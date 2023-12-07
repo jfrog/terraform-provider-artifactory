@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccReplicationConfigInvalidCronFails(t *testing.T) {
@@ -79,7 +79,7 @@ func TestAccReplicationConfig_full(t *testing.T) {
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationUpdateConfig := utilsdk.ExecuteTemplate("ReplicationConfigTemplate", `
+	replicationUpdateConfig := util.ExecuteTemplate("ReplicationConfigTemplate", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}

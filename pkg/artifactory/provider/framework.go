@@ -18,7 +18,8 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
@@ -76,7 +77,7 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// check if Terraform version is >=1.0.0, i.e. support protocol v6
-	supportProtocolV6, err := utilsdk.CheckVersion(req.TerraformVersion, "1.0.0")
+	supportProtocolV6, err := util.CheckVersion(req.TerraformVersion, "1.0.0")
 	if err != nil {
 		resp.Diagnostics.Append(diag.NewWarningDiagnostic("failed to check Terraform version", err.Error()))
 	}
@@ -147,16 +148,13 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		if licenseErr := utilsdk.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseErr != nil {
-			resp.Diagnostics.AddError(
-				"Error getting Artifactory license",
-				fmt.Sprintf("%v", licenseErr),
-			)
+		if licenseDs := utilfw.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseDs != nil {
+			resp.Diagnostics.Append(licenseDs...)
 			return
 		}
 	}
 
-	version, err := utilsdk.GetArtifactoryVersion(restyBase)
+	version, err := util.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error getting Artifactory version",
@@ -166,15 +164,17 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	utilsdk.SendUsage(ctx, restyBase, productId, featureUsage)
+	go util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	resp.DataSourceData = utilsdk.ProvderMetadata{
+	resp.DataSourceData = util.ProvderMetadata{
 		Client:             restyBase,
+		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
 
-	resp.ResourceData = utilsdk.ProvderMetadata{
+	resp.ResourceData = util.ProvderMetadata{
 		Client:             restyBase,
+		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
 }

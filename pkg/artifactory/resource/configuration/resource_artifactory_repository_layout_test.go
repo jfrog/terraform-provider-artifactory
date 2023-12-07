@@ -10,13 +10,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccLayout_full(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
-	layoutConfig := utilsdk.ExecuteTemplate("layout", `
+	layoutConfig := util.ExecuteTemplate("layout", `
 		resource "artifactory_repository_layout" "{{ .name }}" {
 			name                                = "{{ .name }}"
 			artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"
@@ -28,7 +28,7 @@ func TestAccLayout_full(t *testing.T) {
 		"name": name,
 	})
 
-	layoutUpdatedConfig := utilsdk.ExecuteTemplate("layout", `
+	layoutUpdatedConfig := util.ExecuteTemplate("layout", `
 		resource "artifactory_repository_layout" "{{ .name }}" {
 			name                                = "{{ .name }}"
 			artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"
@@ -105,7 +105,7 @@ func TestAccLayout_importNotFound(t *testing.T) {
 
 func testAccLayoutDestroy(name string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_repository_layout."+name]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccLayoutDestroy(name string) func(*terraform.State) error {
 func TestAccLayout_validate_distinctive_descriptor_path_pattern(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
-	layoutConfig := utilsdk.ExecuteTemplate("layout", `
+	layoutConfig := util.ExecuteTemplate("layout", `
 		resource "artifactory_repository_layout" "{{ .name }}" {
 			name                                = "{{ .name }}"
 			artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"

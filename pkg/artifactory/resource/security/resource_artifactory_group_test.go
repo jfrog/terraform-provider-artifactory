@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -22,7 +22,7 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 			name = "{{ .groupName }}"
 		}
 	`
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccGroup_defaults(t *testing.T) {
 			name  = "{{ .groupName }}"
 		}
 	`
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -118,7 +118,7 @@ func TestAccGroup_full(t *testing.T) {
 		}
 	`
 
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -174,7 +174,7 @@ func TestAccGroup_bool_conflict(t *testing.T) {
 		}
 	`
 
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -230,7 +230,7 @@ func TestAccGroup_unmanaged_members_update(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			utilsdk.ExecuteTemplate(
+			util.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{"groupName": groupName},
@@ -369,7 +369,7 @@ func TestAccGroup_full_update(t *testing.T) {
 	for step, template := range templates {
 		configs = append(
 			configs,
-			utilsdk.ExecuteTemplate(
+			util.ExecuteTemplate(
 				fmt.Sprint(step),
 				template,
 				map[string]string{
@@ -464,7 +464,7 @@ func TestAccGroup_full_update(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -485,7 +485,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
