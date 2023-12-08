@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
-	provider "github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/provider"
+	provider "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/provider"
 )
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs
