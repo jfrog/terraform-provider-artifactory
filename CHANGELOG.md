@@ -1,3 +1,13 @@
+## 10.0.0 (Dec 9, 2023)
+
+BREAKING CHANGES:
+
+* Terraform protocol version 5 is no longer supported. This provider will only work with Terraform protocol version 6 to take advantage of new functionality. This means only Terraform CLI 1.0 and above is supported.
+
+FEATURES:
+
+* data source/artifactory_repositories: add a new data source for retrieving list of repository, optionally filtered by repository type, package type, and project key. PR: [#839](https://github.com/jfrog/terraform-provider-artifactory/pull/839) Issue: [#716](https://github.com/jfrog/terraform-provider-artifactory/issues/716)
+
 ## 9.9.2 (Dec 5, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
 
 IMPROVEMENTS:
