@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -240,7 +240,7 @@ EOF
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),

@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 

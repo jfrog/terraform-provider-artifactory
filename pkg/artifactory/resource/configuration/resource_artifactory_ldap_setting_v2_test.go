@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -36,7 +36,7 @@ func TestAccLdapSettingV2_full_no_search(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccLdapSettingV2_full_with_search(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -150,7 +150,7 @@ func TestAccLdapSettingV2_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -241,7 +241,7 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func TestAccLdapSettingV2_importNotFound(t *testing.T) {
 	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        config,
@@ -335,7 +335,7 @@ func TestAccLdapSettingV2_emailAttribute(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -403,7 +403,7 @@ func TestAccLdapSettingV2_user_dn_or_search_filter(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{

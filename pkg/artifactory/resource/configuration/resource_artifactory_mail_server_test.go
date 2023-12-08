@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -51,7 +51,7 @@ func TestAccMailServer_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccMailServerDestroy(resourceName),
 
 		Steps: []resource.TestStep{
@@ -120,7 +120,7 @@ func TestAccMailServer_invalid_from(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:       util.ExecuteTemplate(fqrn, template, testData),
@@ -154,7 +154,7 @@ func TestAccMailServer_invalid_artifactory_url(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:       util.ExecuteTemplate(fqrn, template, testData),

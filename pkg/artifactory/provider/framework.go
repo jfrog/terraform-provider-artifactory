@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/user"
+	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -198,9 +199,9 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 }
 
 // DataSources satisfies the provider.Provider interface for ArtifactoryProvider.
-func (p *ArtifactoryProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		// Provider specific implementation
+		datasource_repository.NewRepositoriesDataSource,
 	}
 }
 

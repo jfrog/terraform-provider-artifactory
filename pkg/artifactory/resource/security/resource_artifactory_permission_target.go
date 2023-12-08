@@ -11,7 +11,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 )
 
 const PermissionsEndPoint = "artifactory/api/v2/security/permissions/"

@@ -5,11 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v9/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -53,7 +50,7 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -73,11 +70,9 @@ func TestAccManagedUser_no_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userNoGroups, name, username, id),
@@ -109,11 +104,9 @@ func TestAccManagedUser_empty_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, username, id),
@@ -161,7 +154,7 @@ func testAccManagedUserInvalidName(t *testing.T, username, errorRegex string) fu
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:                 func() { acctest.PreCheck(t) },
-			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 			CheckDestroy:             testAccCheckUserDestroy(fqrn),
 			Steps: []resource.TestStep{
 				{
@@ -199,11 +192,9 @@ func TestAccManagedUser_basic(t *testing.T) {
 	username := fmt.Sprintf("dummy_user-@%d.", id)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
-		},
-		CheckDestroy: testAccCheckManagedUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userFull, name, username, id),
