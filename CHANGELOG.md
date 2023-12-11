@@ -1,3 +1,9 @@
+## 10.1.0 (Dec 12, 2023)
+
+FEATURES:
+
+* data source/artifactory_file_list: add new data source to retrieve a list of artifacts from a repository. PR: [#855](https://github.com/jfrog/terraform-provider-artifactory/pull/855)
+
 ## 10.0.0 (Dec 9, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
 
 BREAKING CHANGES:
