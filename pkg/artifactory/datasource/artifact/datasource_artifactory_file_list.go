@@ -158,23 +158,51 @@ func (d *FileListDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Description: "Include root path",
 				Optional:    true,
 			},
-			"uri":     schema.StringAttribute{Computed: true},
-			"created": schema.StringAttribute{Computed: true},
+			"uri": schema.StringAttribute{
+				Description: "URL to file/path",
+				Computed:    true,
+			},
+			"created": schema.StringAttribute{
+				Description: "Creation time",
+				Computed:    true,
+			},
 			"files": schema.ListNestedAttribute{
 				Description: "A list of files.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"uri":           schema.StringAttribute{Computed: true},
-						"size":          schema.Int64Attribute{Computed: true},
-						"last_modified": schema.StringAttribute{Computed: true},
-						"folder":        schema.BoolAttribute{Computed: true},
-						"sha1":          schema.StringAttribute{Computed: true},
-						"sha2":          schema.StringAttribute{Computed: true},
+						"uri": schema.StringAttribute{
+							Description: "URL to file",
+							Computed:    true,
+						},
+						"size": schema.Int64Attribute{
+							Description: "File size in bytes",
+							Computed:    true,
+						},
+						"last_modified": schema.StringAttribute{
+							Description: "Last modified time",
+							Computed:    true,
+						},
+						"folder": schema.BoolAttribute{
+							Description: "Is this a folder",
+							Computed:    true,
+						},
+						"sha1": schema.StringAttribute{
+							Description: "SHA-1 checksum",
+							Computed:    true,
+						},
+						"sha2": schema.StringAttribute{
+							Description: "SHA-256 checksum",
+							Computed:    true,
+						},
 						"metadata_timestamps": schema.SingleNestedAttribute{
-							Computed: true,
+							Description: "File metadata",
+							Computed:    true,
 							Attributes: map[string]schema.Attribute{
-								"properties": schema.StringAttribute{Computed: true},
+								"properties": schema.StringAttribute{
+									Description: "Properties timestamp",
+									Computed:    true,
+								},
 							},
 						},
 					},

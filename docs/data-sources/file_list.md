@@ -37,26 +37,26 @@ data "artifactory_file_list" "my-repo-file-list" {
 
 ### Read-Only
 
-- `created` (String)
+- `created` (String) Creation time
 - `files` (Attributes List) A list of files. (see [below for nested schema](#nestedatt--files))
-- `uri` (String)
+- `uri` (String) URL to file/path
 
 <a id="nestedatt--files"></a>
 ### Nested Schema for `files`
 
 Read-Only:
 
-- `folder` (Boolean)
-- `last_modified` (String)
-- `metadata_timestamps` (Attributes) (see [below for nested schema](#nestedatt--files--metadata_timestamps))
-- `sha1` (String)
-- `sha2` (String)
-- `size` (Number)
-- `uri` (String)
+- `folder` (Boolean) Is this a folder
+- `last_modified` (String) Last modified time
+- `metadata_timestamps` (Attributes) File metadata (see [below for nested schema](#nestedatt--files--metadata_timestamps))
+- `sha1` (String) SHA-1 checksum
+- `sha2` (String) SHA-256 checksum
+- `size` (Number) File size in bytes
+- `uri` (String) URL to file
 
 <a id="nestedatt--files--metadata_timestamps"></a>
 ### Nested Schema for `files.metadata_timestamps`
 
 Read-Only:
 
-- `properties` (String)
+- `properties` (String) Properties timestamp
