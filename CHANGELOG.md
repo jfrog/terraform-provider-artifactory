@@ -1,4 +1,4 @@
-## 10.0.0 (Dec 9, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
+## 10.0.0 (Dec 12, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
 
 BREAKING CHANGES:
 
@@ -7,6 +7,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * data source/artifactory_repositories: add a new data source for retrieving list of repository, optionally filtered by repository type, package type, and project key. PR: [#839](https://github.com/jfrog/terraform-provider-artifactory/pull/839) Issue: [#716](https://github.com/jfrog/terraform-provider-artifactory/issues/716)
+* data source/artifactory_file_list: add new data source to retrieve a list of artifacts from a repository. PR: [#855](https://github.com/jfrog/terraform-provider-artifactory/pull/855)
 
 ## 9.9.2 (Dec 5, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
 

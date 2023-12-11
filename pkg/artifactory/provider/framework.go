@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/artifact"
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
@@ -38,7 +39,7 @@ type ArtifactoryProviderModel struct {
 
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
 func (p *ArtifactoryProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "terraform-provider-artifactory"
+	resp.TypeName = "artifactory"
 	resp.Version = Version
 }
 
@@ -202,6 +203,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		datasource_repository.NewRepositoriesDataSource,
+		datasource_artifact.NewFileListDataSource,
 	}
 }
 

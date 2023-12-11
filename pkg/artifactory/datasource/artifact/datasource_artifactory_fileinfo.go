@@ -1,4 +1,4 @@
-package datasource
+package artifact
 
 import (
 	"context"
@@ -116,7 +116,7 @@ func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) diag.Diagnostics {
 		errors = setValue("sha256", fileInfo.Checksums.Sha256)
 	}
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack fileInfo %q", errors)
 	}
 
