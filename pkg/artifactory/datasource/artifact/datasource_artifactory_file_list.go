@@ -181,7 +181,7 @@ func (d *FileListDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				},
 			},
 		},
-		Description: "Get a flat (the default) or deep listing of the files and folders (not included by default) within a folder. For deep listing you can specify an optional depth to limit the results. Optionally include a map of metadata timestamp values as part of the result ",
+		Description: "Get a flat (the default) or deep listing of the files and folders (not included by default) within a folder. For deep listing you can specify an optional depth to limit the results. Optionally include a map of metadata timestamp values as part of the result.",
 	}
 }
 
