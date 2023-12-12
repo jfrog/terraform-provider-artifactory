@@ -16,7 +16,6 @@ pipelines:
     steps:
       - name: pre_build_approval
         type: PreMatrix
-        stepMode: Bash
         configuration:
           integrations:
             - name: partnership_slack
