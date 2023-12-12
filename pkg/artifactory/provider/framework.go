@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -77,19 +76,6 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 }
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	// check if Terraform version is >=1.0.0, i.e. support protocol v6
-	supportProtocolV6, err := util.CheckVersion(req.TerraformVersion, "1.0.0")
-	if err != nil {
-		resp.Diagnostics.Append(diag.NewWarningDiagnostic("failed to check Terraform version", err.Error()))
-	}
-
-	if !supportProtocolV6 {
-		resp.Diagnostics.Append(diag.NewWarningDiagnostic(
-			"Terraform CLI version deprecation",
-			"Terraform version older than 1.0 will no longer be supported in Q1 2024. Please upgrade to latest Terraform CLI.",
-		))
-	}
-
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
