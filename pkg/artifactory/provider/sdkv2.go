@@ -52,27 +52,8 @@ func SdkV2() *schema.Provider {
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		terraformVersion := p.TerraformVersion
-		if terraformVersion == "" {
-			terraformVersion = "0.11+compatible"
-		}
-
 		var ds diag.Diagnostics
-		// check if Terraform version is >=1.0.0, i.e. support protocol v6
-		supportProtocolV6, err := util.CheckVersion(terraformVersion, "1.0.0")
-		if err != nil {
-			ds = append(ds, diag.FromErr(err)...)
-		}
-
-		if !supportProtocolV6 {
-			ds = append(ds, diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "Terraform CLI version deprecation",
-				Detail:   "Terraform version older than 1.0 will no longer be supported in Q1 2024. Please upgrade to latest Terraform CLI.",
-			}}...)
-		}
-
-		meta, d := providerConfigure(ctx, data, terraformVersion)
+		meta, d := providerConfigure(ctx, data, p.TerraformVersion)
 		if d != nil {
 			ds = append(ds, d...)
 		}

@@ -1,3 +1,9 @@
+## 10.0.1 (Dec 13, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
+
+IMPROVEMENTS:
+
+* provider: remove Terraform protocol checks. PR: [#857](https://github.com/jfrog/terraform-provider-artifactory/pull/857)
+
 ## 10.0.0 (Dec 12, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
 
 BREAKING CHANGES:
