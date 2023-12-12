@@ -14,11 +14,34 @@ resources:
 pipelines:
   - name: tf_provider_artifactory
     steps:
+      - name: pre_build_approval
+        type: PreMatrix
+        stepMode: Bash
+        configuration:
+          integrations:
+            - name: partnership_slack
+            - name: partnership_github
+          inputResources:
+            - name: GitHubTFProviderRepoJFrog
+          requiresApproval:
+            approvers:
+              - alexh
+              - danielmi
+            notifications:
+              - integrationName: partnership_slack
+            timeoutSeconds: 172800 # 2 days
+        execution:
+          onExecute:
+            - echo "Sending status to GitHub."
+            - export STATE="pending"
+            - export DESCRIPTION="Pipeline run is in progress."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+
       - name: build_and_run_tf_provider_matrix
         type: Matrix
         stepMode: Bash
         configuration:
-          #nodePool: default
           multiNode: true
           priority: 1
           timeoutSeconds: 3600 # 60 minutes
@@ -29,13 +52,6 @@ pipelines:
                 language: go
                 versions:
                   - "1.21"
-          requiresApproval:
-            approvers:
-              - alexh
-              - danielmi
-            notifications:
-              - integrationName: partnership_slack
-            timeoutSeconds: 172800 # 2 days
           integrations:
             - name: partnership_slack
             - name: partnership_github
@@ -43,6 +59,8 @@ pipelines:
             - name: partnership_rt_cluster_license
           inputResources:
             - name: GitHubTFProviderRepoJFrog
+          inputSteps:
+            - name: pre_build_approval
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.49.8
@@ -70,11 +88,6 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
-            - echo "Sending status to GitHub."
-            - export STATE="pending"
-            - export DESCRIPTION="Pipeline run is in progress."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - echo "Preparing for work. Install Helm, Terraform, GoReleaser, and SonarQube"
             - ls -al && pwd
             - echo "Helm 3 install"
