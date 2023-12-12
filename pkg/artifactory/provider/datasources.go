@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource"
+	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/artifact"
 	datasource_federated "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository/federated"
 	datasource_local "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository/local"
 	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository/remote"
@@ -21,8 +21,8 @@ import (
 
 func datasourcesMap() map[string]*schema.Resource {
 	dataSourcesMap := map[string]*schema.Resource{
-		"artifactory_file":                                    datasource.ArtifactoryFile(),
-		"artifactory_fileinfo":                                datasource.ArtifactoryFileInfo(),
+		"artifactory_file":                                    datasource_artifact.ArtifactoryFile(),
+		"artifactory_fileinfo":                                datasource_artifact.ArtifactoryFileInfo(),
 		"artifactory_group":                                   datasource_security.DataSourceArtifactoryGroup(),
 		"artifactory_permission_target":                       datasource_security.DataSourceArtifactoryPermissionTarget(),
 		"artifactory_user":                                    datasource_user.DataSourceArtifactoryUser(),

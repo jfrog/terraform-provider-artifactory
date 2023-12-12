@@ -7,12 +7,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/artifact"
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
@@ -38,7 +38,7 @@ type ArtifactoryProviderModel struct {
 
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
 func (p *ArtifactoryProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "terraform-provider-artifactory"
+	resp.TypeName = "artifactory"
 	resp.Version = Version
 }
 
@@ -76,19 +76,6 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 }
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	// check if Terraform version is >=1.0.0, i.e. support protocol v6
-	supportProtocolV6, err := util.CheckVersion(req.TerraformVersion, "1.0.0")
-	if err != nil {
-		resp.Diagnostics.Append(diag.NewWarningDiagnostic("failed to check Terraform version", err.Error()))
-	}
-
-	if !supportProtocolV6 {
-		resp.Diagnostics.Append(diag.NewWarningDiagnostic(
-			"Terraform CLI version deprecation",
-			"Terraform version older than 1.0 will no longer be supported in Q1 2024. Please upgrade to latest Terraform CLI.",
-		))
-	}
-
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
@@ -202,6 +189,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		datasource_repository.NewRepositoriesDataSource,
+		datasource_artifact.NewFileListDataSource,
 	}
 }
 

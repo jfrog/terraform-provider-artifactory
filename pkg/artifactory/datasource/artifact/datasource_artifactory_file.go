@@ -1,4 +1,4 @@
-package datasource
+package artifact
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
@@ -208,9 +209,9 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 	})
 
 	checksumMatches := false
-	fileExists := FileExists(outputPath)
+	fileExists := datasource.FileExists(outputPath)
 	if fileExists {
-		checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		checksumMatches, err = datasource.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to verify checksum for %s", outputPath))
 			return fileInfo, err
@@ -248,7 +249,7 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 	}
 
 	tflog.Debug(ctx, "Verify checksum with downloaded file")
-	checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	checksumMatches, err = datasource.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -270,7 +271,7 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 		Path: path,
 	}
 
-	fileExists := FileExists(outputPath)
+	fileExists := datasource.FileExists(outputPath)
 
 	tflog.Debug(ctx, "File info", map[string]interface{}{
 		"fileInfo":   fileInfo,
