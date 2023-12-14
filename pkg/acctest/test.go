@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-version"
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -29,6 +30,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -425,7 +427,10 @@ func (p PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest
 	})
 
 	if len(req.Plan.ResourceDrift) > 0 {
-		resp.Error = fmt.Errorf("expected empty plan, but has resouce drifts(s): %v", req.Plan.ResourceDrift)
+		drifts := lo.Map(req.Plan.ResourceDrift, func(c *tfjson.ResourceChange, index int) string {
+			return fmt.Sprintf("Name: %s, Before: %v, After: %v", c.Name, c.Change.Before, c.Change.After)
+		})
+		resp.Error = fmt.Errorf("expected empty plan, but has resouce drifts(s): %v", strings.Join(drifts, ", "))
 		return
 	}
 
