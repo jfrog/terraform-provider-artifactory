@@ -1,3 +1,9 @@
+## 10.0.2 (Dec 18, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.6
+
+IMPROVEMENTS:
+* provider: downgrade Resty to 2.9.1 due to CVE in 2.10.0. PR: [#859](https://github.com/jfrog/terraform-provider-artifactory/pull/859)
+* testing: improve resource drift error reporting.
+
 ## 10.0.1 (Dec 13, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
 
 IMPROVEMENTS:
