@@ -43,8 +43,7 @@ resource "artifactory_local_repository_single_replication" "foo-rep" {
   username                            = "$var.artifactory_username"
   password                            = "$var.artifactory_password"
   enabled                             = true
-  socket_timeout_millis 			  = 16000
-  enabled                             = true
+  socket_timeout_millis               = 16000
   sync_deletes                        = false
   sync_properties                     = true
   sync_statistics                     = true
