@@ -54,7 +54,6 @@ pipelines:
           integrations:
             - name: partnership_slack
             - name: partnership_github
-            - name: terraform_artifactory_sonarqube
             - name: partnership_rt_cluster_license
           inputResources:
             - name: GitHubTFProviderRepoJFrog
@@ -63,31 +62,79 @@ pipelines:
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.49.8
-            SONAR_SCANNER_VERSION: 4.7.0.2747
-            SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
-            SONAR_SCANNER_OPTS: "-server"
         stepletMultipliers:
           environmentVariables:
-            - directory: ./pkg/artifactory/datasource
-            - directory: ./pkg/artifactory/datasource/repository/federated
-            - directory: ./pkg/artifactory/datasource/repository/local
-            - directory: ./pkg/artifactory/datasource/repository/remote
-            - directory: ./pkg/artifactory/datasource/repository/virtual
-            - directory: ./pkg/artifactory/datasource/security
-            - directory: ./pkg/artifactory/datasource/user
-            - directory: ./pkg/artifactory/provider
-            - directory: ./pkg/artifactory/resource/configuration
-            - directory: ./pkg/artifactory/resource/replication
-            - directory: ./pkg/artifactory/resource/repository/federated
-            - directory: ./pkg/artifactory/resource/repository/local
-            - directory: ./pkg/artifactory/resource/repository/remote
-            - directory: ./pkg/artifactory/resource/repository/virtual
-            - directory: ./pkg/artifactory/resource/security
-            - directory: ./pkg/artifactory/resource/user
-            - directory: ./pkg/artifactory/resource/webhook
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/repository/federated
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/repository/local
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/repository/remote
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/repository/virtual
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/security
+            - cli: terraform
+              directory: ./pkg/artifactory/datasource/user
+            - cli: terraform
+              directory: ./pkg/artifactory/provider
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/configuration
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/replication
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/repository/federated
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/repository/local
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/repository/remote
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/repository/virtual
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/security
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/user
+            - cli: terraform
+              directory: ./pkg/artifactory/resource/webhook
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/repository/federated
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/repository/local
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/repository/remote
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/repository/virtual
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/security
+            - cli: opentofu
+              directory: ./pkg/artifactory/datasource/user
+            - cli: opentofu
+              directory: ./pkg/artifactory/provider
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/configuration
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/replication
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/repository/federated
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/repository/local
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/repository/remote
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/repository/virtual
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/security
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/user
+            - cli: opentofu
+              directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
-            - echo "Preparing for work. Install Helm, Terraform, GoReleaser, and SonarQube"
+            - echo "Preparing for work. Install Helm, Terraform/OpenTofu, and GoReleaser"
             - ls -al && pwd
             - echo "Helm 3 install"
             - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh
@@ -95,12 +142,29 @@ pipelines:
             - helm version
             - sudo apt update
             - go version
-            - echo "Install latest Terraform version"
-            - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-            - gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
-            - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-            - sudo apt update && apt-get install terraform && terraform -version
-            - add_run_variables TERRAFORM_VERSION=$(terraform -version | grep "Terraform v" | awk '{print $2}')
+            - >-
+              if [[ ${cli} == "terraform" ]]; then
+               echo "Install latest Terraform version"
+               wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+               gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
+               echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+               sudo apt update && apt-get install terraform && terraform -version
+               add_run_variables TERRAFORM_VERSION=$(terraform -version | grep "Terraform v" | awk '{print $2}')
+              else
+               echo "Install latest OpenTofu version"
+               sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+               echo "Get copy of the OpenTofu GPG key"
+               sudo install -m 0755 -d /etc/apt/keyrings
+               curl -fsSL https://get.opentofu.org/opentofu.gpg | sudo tee /etc/apt/keyrings/opentofu.gpg >/dev/null
+               curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | sudo gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null
+               sudo chmod a+r /etc/apt/keyrings/opentofu.gpg
+               echo "Create the OpenTofu source list"
+               echo \
+                 "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+                 sudo tee /etc/apt/sources.list.d/opentofu.list > /dev/null
+               echo "Install OpenTofu"
+               sudo apt-get update && sudo apt-get install -y tofu
+              fi
             - echo "Install GoReleaser"
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
@@ -173,18 +237,24 @@ pipelines:
             - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
+            - >-
+              if [[ ${cli} == "opentofu" ]]; then
+                export TF_ACC_TERRAFORM_PATH="$(which tofu)"
+                export TF_ACC_PROVIDER_NAMESPACE="hashicorp"
+                export TF_ACC_PROVIDER_HOST="registry.opentofu.org"
+              fi
             - TF_ACC=true make acceptance TEST=${directory}
             - make install
           onSuccess:
             - echo "Success"
-            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
+            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory} with ${cli}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
             - export STATE="failure"
             - export DESCRIPTION="Pipeline has failed."
             - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
             - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
+            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory} with ${cli}> step"
           onComplete:
             - echo "Complete"
 
