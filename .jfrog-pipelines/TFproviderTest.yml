@@ -32,11 +32,7 @@ pipelines:
             timeoutSeconds: 172800 # 2 days
         execution:
           onExecute:
-            - echo "Sending status to GitHub."
-            - export STATE="pending"
-            - export DESCRIPTION="Pipeline run is in progress."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+            - update_commit_status GitHubTFProviderRepoJFrog --message "waiting for approval..."
 
       - name: build_and_run_tf_provider_matrix
         type: Matrix
@@ -84,6 +80,7 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
+            - update_commit_status GitHubTFProviderRepoJFrog --message "starting..."
             - echo "Preparing for work. Install Helm, Terraform, and GoReleaser"
             - ls -al && pwd
             - echo "Helm 3 install"
@@ -103,6 +100,7 @@ pipelines:
             - sudo apt update
             - sudo apt install goreleaser
           onExecute:
+            - update_commit_status GitHubTFProviderRepoJFrog --message "running..."
             - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
@@ -177,10 +175,7 @@ pipelines:
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - export STATE="failure"
-            - export DESCRIPTION="Pipeline has failed."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
@@ -231,6 +226,7 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
+            - update_commit_status GitHubTFProviderRepoJFrog --message "starting..."
             - echo "Preparing for work. Install Helm, OpenTofu, and GoReleaser"
             - ls -al && pwd
             - echo "Helm 3 install"
@@ -250,11 +246,15 @@ pipelines:
             - echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | sudo tee /etc/apt/sources.list.d/opentofu.list > /dev/null
             - echo "Install OpenTofu"
             - sudo apt-get update && sudo apt-get install -y tofu
+            - export TF_ACC_TERRAFORM_PATH="$(which tofu)"
+            - export TF_ACC_PROVIDER_NAMESPACE="hashicorp"
+            - export TF_ACC_PROVIDER_HOST="registry.opentofu.org"
             - echo "Install GoReleaser"
             - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
             - sudo apt update
             - sudo apt install goreleaser
           onExecute:
+            - update_commit_status GitHubTFProviderRepoJFrog --message "running..."
             - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
@@ -322,9 +322,6 @@ pipelines:
             - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
             - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
             - unset ARTIFACTORY_PASSWORD
-            - export TF_ACC_TERRAFORM_PATH="$(which tofu)"
-            - export TF_ACC_PROVIDER_NAMESPACE="hashicorp"
-            - export TF_ACC_PROVIDER_HOST="registry.opentofu.org"
             - TF_ACC=true make acceptance TEST=${directory}
             - make install
           onSuccess:
@@ -332,10 +329,7 @@ pipelines:
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - export STATE="failure"
-            - export DESCRIPTION="Pipeline has failed."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
@@ -397,18 +391,12 @@ pipelines:
             - echo "Success"
             - >-
               if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
-                export STATE="success"
-                export DESCRIPTION="All tests passed successfully."
-                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+                update_commit_status GitHubTFProviderRepoJFrog --message "All tests passed successfully."
                 send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
               fi
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - export STATE="failure"
-            - export DESCRIPTION="Pipeline has failed."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
