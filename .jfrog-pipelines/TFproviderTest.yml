@@ -201,7 +201,7 @@ pipelines:
           inputResources:
             - name: GitHubTFProviderRepoJFrog
           inputSteps:
-            - name: pre_build_approval
+            - name: build_and_run_tf_provider_matrix
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.49.8
