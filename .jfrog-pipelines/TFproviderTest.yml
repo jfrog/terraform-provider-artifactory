@@ -193,8 +193,6 @@ pipelines:
             - name: partnership_github
           inputSteps:
             - name: build_and_run_tf_provider_matrix
-              status:
-                - success
           inputResources:
             - name: GitHubTFProviderRepoJFrog
         execution:
@@ -447,8 +445,6 @@ pipelines:
             - name: partnership_github
           inputSteps:
             - name: build_and_run_opentofu_provider_matrix
-              status:
-                - success
           inputResources:
             - name: GitHubTFProviderRepoJFrog
         execution:
