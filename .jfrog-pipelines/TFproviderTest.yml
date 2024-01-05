@@ -11,7 +11,6 @@ resources:
         pullRequestCreate: true
       cancelPendingRunsOn:
         pullRequestUpdate: false
-
 pipelines:
   - name: tf_provider_artifactory
     steps:
@@ -34,7 +33,7 @@ pipelines:
           onExecute:
             - echo "Sending status to GitHub."
             - export STATE="pending"
-            - export DESCRIPTION="Pipeline run is running."
+            - export DESCRIPTION="Pipeline run is in progress."
             - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
             - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
 
@@ -55,6 +54,7 @@ pipelines:
           integrations:
             - name: partnership_slack
             - name: partnership_github
+            - name: terraform_artifactory_sonarqube
             - name: partnership_rt_cluster_license
           inputResources:
             - name: GitHubTFProviderRepoJFrog
@@ -63,6 +63,9 @@ pipelines:
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
             ARTIFACTORY_TEST_VERSION: 7.49.8
+            SONAR_SCANNER_VERSION: 4.7.0.2747
+            SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
+            SONAR_SCANNER_OPTS: "-server"
         stepletMultipliers:
           environmentVariables:
             - directory: ./pkg/artifactory/datasource
@@ -84,7 +87,7 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
-            - echo "Preparing for work. Install Helm, Terraform, and GoReleaser"
+            - echo "Preparing for work. Install Helm, Terraform, GoReleaser, and SonarQube"
             - ls -al && pwd
             - echo "Helm 3 install"
             - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh
@@ -180,257 +183,6 @@ pipelines:
             - export STATE="failure"
             - export DESCRIPTION="Pipeline has failed."
             - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
-          onComplete:
-            - echo "Complete"
-
-      - name: pr_info_add_rt_version
-        type: Bash
-        configuration:
-          priority: 1
-          integrations:
-            - name: partnership_slack
-            - name: partnership_github
-          inputSteps:
-            - name: build_and_run_tf_provider_matrix
-          inputResources:
-            - name: GitHubTFProviderRepoJFrog
-        execution:
-          onStart:
-            - echo "Preparing for work..."
-          onExecute:
-            - printenv
-            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
-            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
-            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
-            - >-
-              if [[ -z "${res_GitHubTFProviderRepoJFrog_headCommitRef}" ]]; then
-                echo "No headCommitRef (PR branch), exit without adding changes to CHANGELOG.md"
-                exit 0
-              fi
-            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
-            - >-
-              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
-                echo "The pipeline was triggered by the PR, add Artifactory version to CHANGELOG.md and send the PR data to slack channel."
-                cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
-                echo "Checking out the branch ${res_GitHubTFProviderRepoJFrog_headCommitRef} where the PR was created from."
-                git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
-                sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION} with Terraform CLI ${TERRAFORM_VERSION}/" CHANGELOG.md
-                head -10 CHANGELOG.md
-                git add CHANGELOG.md
-                export REGEX="Changes to be committed*"
-                export GIT_STATUS=$(git status)
-                if [[ ${GIT_STATUS} =~ ${REGEX} ]]; then
-                  echo "Adding Artifactory version to CHANGELOG.md"
-                  git config --global user.name 'JFrog CI'
-                  git config --global user.email 'jfrog-solutions-ci+1@jfrog.com'
-                  git config --get user.name
-                  git config --get user.email
-                  git commit --author="JFrog CI <jfrog-solutions-ci+1@jfrog.com>" -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
-                  git push https://${res_GitHubTFProviderRepoJFrog_gitProvider_token}${TFProviderRepo}
-                else
-                  echo "There is nothing to commit: Artifactory version hadn't changed."
-                fi
-              fi
-          onSuccess:
-            - echo "Success"
-            - >-
-              if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
-                export STATE="success"
-                export DESCRIPTION="All tests passed successfully."
-                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-                send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
-              fi
-          onFailure:
-            - echo "Failure, sending status to GitHub and Slack."
-            - export STATE="failure"
-            - export DESCRIPTION="Pipeline has failed."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-             - >-
-              if [[ "${PR_URL}" == null ]]; then
-                send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
-              else
-                send_notification partnership_slack --text "${pipeline_name} failed on <${step_url}|${step_name}> step."
-              fi
-          onComplete:
-            - echo "Cleaning up"
-
-  - name: opentofu_provider_artifactory
-    steps:
-      - name: pre_build_approval
-        type: PreMatrix
-        configuration:
-          integrations:
-            - name: partnership_slack
-            - name: partnership_github
-          inputResources:
-            - name: GitHubTFProviderRepoJFrog
-          requiresApproval:
-            approvers:
-              - alexh
-              - danielmi
-            notifications:
-              - integrationName: partnership_slack
-            timeoutSeconds: 172800 # 2 days
-        execution:
-          onExecute:
-            - export STATE="pending"
-            - export DESCRIPTION="Pipeline run is in progress."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
-            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
-
-      - name: build_and_run_opentofu_provider_matrix
-        type: Matrix
-        stepMode: Bash
-        configuration:
-          multiNode: true
-          priority: 2
-          timeoutSeconds: 3600 # 60 minutes
-          runtime:
-            type: image
-            image:
-              auto:
-                language: go
-                versions:
-                  - "1.21"
-          integrations:
-            - name: partnership_slack
-            - name: partnership_github
-            - name: partnership_rt_cluster_license
-          inputResources:
-            - name: GitHubTFProviderRepoJFrog
-          inputSteps:
-            - name: pre_build_approval
-          environmentVariables:
-            USE_LATEST_RT_VERSION: "true"
-            ARTIFACTORY_TEST_VERSION: 7.49.8
-        stepletMultipliers:
-          environmentVariables:
-            - directory: ./pkg/artifactory/datasource
-            - directory: ./pkg/artifactory/datasource/repository/federated
-            - directory: ./pkg/artifactory/datasource/repository/local
-            - directory: ./pkg/artifactory/datasource/repository/remote
-            - directory: ./pkg/artifactory/datasource/repository/virtual
-            - directory: ./pkg/artifactory/datasource/security
-            - directory: ./pkg/artifactory/datasource/user
-            - directory: ./pkg/artifactory/provider
-            - directory: ./pkg/artifactory/resource/configuration
-            - directory: ./pkg/artifactory/resource/replication
-            - directory: ./pkg/artifactory/resource/repository/federated
-            - directory: ./pkg/artifactory/resource/repository/local
-            - directory: ./pkg/artifactory/resource/repository/remote
-            - directory: ./pkg/artifactory/resource/repository/virtual
-            - directory: ./pkg/artifactory/resource/security
-            - directory: ./pkg/artifactory/resource/user
-            - directory: ./pkg/artifactory/resource/webhook
-        execution:
-          onStart:
-            - echo "Preparing for work. Install Helm, OpenTofu, and GoReleaser"
-            - ls -al && pwd
-            - echo "Helm 3 install"
-            - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh
-            - echo "Run Helm installation script" && ./get_helm.sh && rm get_helm.sh
-            - helm version
-            - sudo apt update
-            - go version
-            - echo "Install latest OpenTofu version"
-            - sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-            - echo "Get copy of the OpenTofu GPG key"
-            - sudo install -m 0755 -d /etc/apt/keyrings
-            - curl -fsSL https://get.opentofu.org/opentofu.gpg | sudo tee /etc/apt/keyrings/opentofu.gpg >/dev/null
-            - curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | sudo gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null
-            - sudo chmod a+r /etc/apt/keyrings/opentofu.gpg
-            - echo "Create the OpenTofu source list"
-            - echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | sudo tee /etc/apt/sources.list.d/opentofu.list > /dev/null
-            - echo "Install OpenTofu"
-            - sudo apt-get update && sudo apt-get install -y tofu
-            - export TF_ACC_TERRAFORM_PATH="$(which tofu)"
-            - export TF_ACC_PROVIDER_NAMESPACE="hashicorp"
-            - export TF_ACC_PROVIDER_HOST="registry.opentofu.org"
-            - echo "Install GoReleaser"
-            - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-            - sudo apt update
-            - sudo apt install goreleaser
-          onExecute:
-            - echo "Executing matrix step on ${steplet_id}"
-            - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
-            - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
-            - echo "Verify the code contents merged feature branch with master branch (detached mode)"
-            - git branch && ls -al
-            - add_run_variables PROVIDER_VERSION=$(git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
-            - echo "Provider version is ${PROVIDER_VERSION}"
-            - echo "Rename the build to make it work on Ubuntu"
-            - cat GNUmakefile | sed -e "s/darwin_amd64/linux_amd64/g" > GNUmakefile.tmp
-            - cp GNUmakefile.tmp GNUmakefile && rm GNUmakefile.tmp
-            - cat GNUmakefile
-            - cat sample.tf | sed -e "s/version =.*/version = \"${PROVIDER_VERSION}\"/g" > sample.tf.tmp
-            - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
-            - cat sample.tf
-            - echo "Save RT licenses from the variable to the license file"
-            - echo ${int_partnership_rt_cluster_license_5licenses} > scripts/artifactory.lic
-            - echo "Set Artifactory version, run RT in a container"
-            - >-
-              if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
-               helm repo add artifactory https://charts.jfrog.io
-               helm repo update
-               add_run_variables ARTIFACTORY_VERSION=$(helm search repo | grep "artifactory " | awk '{$1=$1};1' |  cut -f3 -d " ")
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              else
-               add_run_variables ARTIFACTORY_VERSION=${ARTIFACTORY_TEST_VERSION}
-               echo "Artifactory version: "${ARTIFACTORY_VERSION}
-              fi
-            - export ARTIFACTORY_CONTAINER_NAME=artifactory
-            - >-
-              docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-                -p 8082:8082 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
-            - echo "Set localhost to a container IP address, since we run docker inside of docker"
-            - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
-            - echo "Using ${LOCALHOST} as 'localhost' ip address"
-            - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
-            - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
-            - >-
-              until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
-                  printf '.'
-                  sleep 4
-              done
-            - echo "Add variables needed to run Terraform Provider"
-            - export ARTIFACTORY_USERNAME=admin
-            - export ARTIFACTORY_PASSWORD=password
-            - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
-            - >-
-              until curl -sf -u admin:password ${ARTIFACTORY_URL}/ui/login/; do
-                  printf '.'
-                  sleep 4
-              done
-            - sudo curl ${ARTIFACTORY_URL}/router/api/v1/system/health
-            - >-
-              export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
-                            --header "accept: application/json, text/plain, */*" \
-                            --header "content-type: application/json;charset=UTF-8" \
-                            --header "x-requested-with: XMLHttpRequest" \
-                            -d '{"user":"admin","password":"'"${ARTIFACTORY_PASSWORD}"'","type":"login"}' | grep FALSE)
-            - export REFRESHTOKEN=$(echo $COOKIES | grep REFRESHTOKEN | awk '{print $7}')
-            - export ACCESSTOKEN=$(echo $COOKIES | grep ACCESSTOKEN | awk '{print $14}') # awk returns null on Mac, and the actual key on Ubuntu
-            - >-
-              export ACCESS_KEY=$(curl -g --request GET "${ARTIFACTORY_URL}/ui/api/v1/system/security/token?services[]=all" \
-                                  --header "accept: application/json, text/plain, */*" \
-                                  --header "x-requested-with: XMLHttpRequest" \
-                                  --header "cookie: ACCESSTOKEN=${ACCESSTOKEN}; REFRESHTOKEN=${REFRESHTOKEN}")
-            - add_run_variables ARTIFACTORY_ACCESS_TOKEN=${ACCESS_KEY}
-            - echo "Unset ARTIFACTORY_PASSWORD, acceptance test will use ARTIFACTORY_ACCESS_TOKEN instead"
-            - unset ARTIFACTORY_PASSWORD
-            - TF_ACC=true make acceptance TEST=${directory}
-            - make install
-          onSuccess:
-            - echo "Success"
-            - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
-          onFailure:
-            - echo "Failure, sending status to GitHub and Slack."
-            - export STATE="failure"
-            - export DESCRIPTION="Pipeline has failed."
-            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
             - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
@@ -439,12 +191,13 @@ pipelines:
       - name: pr_info_add_rt_version
         type: Bash
         configuration:
+          #nodePool: default
           priority: 1
           integrations:
             - name: partnership_slack
             - name: partnership_github
           inputSteps:
-            - name: build_and_run_opentofu_provider_matrix
+            - name: build_and_run_tf_provider_matrix
           inputResources:
             - name: GitHubTFProviderRepoJFrog
         execution:
