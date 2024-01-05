@@ -84,7 +84,6 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
-            - update_commit_status GitHubTFProviderRepoJFrog --message "starting..."
             - echo "Preparing for work. Install Helm, Terraform, and GoReleaser"
             - ls -al && pwd
             - echo "Helm 3 install"
@@ -104,7 +103,6 @@ pipelines:
             - sudo apt update
             - sudo apt install goreleaser
           onExecute:
-            - update_commit_status GitHubTFProviderRepoJFrog --message "running..."
             - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
@@ -331,7 +329,6 @@ pipelines:
             - directory: ./pkg/artifactory/resource/webhook
         execution:
           onStart:
-            - update_commit_status GitHubTFProviderRepoJFrog --message "starting..."
             - echo "Preparing for work. Install Helm, OpenTofu, and GoReleaser"
             - ls -al && pwd
             - echo "Helm 3 install"
@@ -359,7 +356,6 @@ pipelines:
             - sudo apt update
             - sudo apt install goreleaser
           onExecute:
-            - update_commit_status GitHubTFProviderRepoJFrog --message "running..."
             - echo "Executing matrix step on ${steplet_id}"
             - add_run_variables TFProviderRepo=$(echo ${res_GitHubTFProviderRepoJFrog_gitRepoRepositorySshUrl} | sed -e 's/git@/@/g' -e 's/:/\//g')
             - cd ${res_GitHubTFProviderRepoJFrog_resourcePath} # we need to manually move into the resource path
