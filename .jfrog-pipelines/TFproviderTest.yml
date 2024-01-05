@@ -32,7 +32,11 @@ pipelines:
             timeoutSeconds: 172800 # 2 days
         execution:
           onExecute:
-            - update_commit_status GitHubTFProviderRepoJFrog --message "waiting for approval..."
+            - echo "Sending status to GitHub."
+            - export STATE="pending"
+            - export DESCRIPTION="Pipeline run is running."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
 
       - name: build_and_run_tf_provider_matrix
         type: Matrix
@@ -175,10 +179,111 @@ pipelines:
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
-            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}            - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
+
+      - name: pr_info_add_rt_version
+        type: Bash
+        configuration:
+          priority: 1
+          integrations:
+            - name: partnership_slack
+            - name: partnership_github
+          inputSteps:
+            - name: build_and_run_tf_provider_matrix
+              status:
+                - success
+          inputResources:
+            - name: GitHubTFProviderRepoJFrog
+        execution:
+          onStart:
+            - echo "Preparing for work..."
+          onExecute:
+            - printenv
+            - export PR_URL=${res_GitHubTFProviderRepoJFrog_commitUrl}
+            - export PR_COMMITTER=${res_GitHubTFProviderRepoJFrog_committerLogin}
+            - export PR_BRANCH=${res_GitHubTFProviderRepoJFrog_headCommitRef}
+            - >-
+              if [[ -z "${res_GitHubTFProviderRepoJFrog_headCommitRef}" ]]; then
+                echo "No headCommitRef (PR branch), exit without adding changes to CHANGELOG.md"
+                exit 0
+              fi
+            - export PR_TITLE=$(echo ${res_GitHubTFProviderRepoJFrog_commitMessage:0:100}... | sed 's/[^[:print:]\t]//g')
+            - >-
+              if [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != master ]] && [[ "${res_GitHubTFProviderRepoJFrog_headCommitRef}" != main ]]; then
+                echo "The pipeline was triggered by the PR, add Artifactory version to CHANGELOG.md and send the PR data to slack channel."
+                cd ${res_GitHubTFProviderRepoJFrog_resourcePath}
+                echo "Checking out the branch ${res_GitHubTFProviderRepoJFrog_headCommitRef} where the PR was created from."
+                git checkout -b ${res_GitHubTFProviderRepoJFrog_headCommitRef}
+                sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory ${ARTIFACTORY_VERSION} with Terraform CLI ${TERRAFORM_VERSION}/" CHANGELOG.md
+                head -10 CHANGELOG.md
+                git add CHANGELOG.md
+                export REGEX="Changes to be committed*"
+                export GIT_STATUS=$(git status)
+                if [[ ${GIT_STATUS} =~ ${REGEX} ]]; then
+                  echo "Adding Artifactory version to CHANGELOG.md"
+                  git config --global user.name 'JFrog CI'
+                  git config --global user.email 'jfrog-solutions-ci+1@jfrog.com'
+                  git config --get user.name
+                  git config --get user.email
+                  git commit --author="JFrog CI <jfrog-solutions-ci+1@jfrog.com>" -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
+                  git push https://${res_GitHubTFProviderRepoJFrog_gitProvider_token}${TFProviderRepo}
+                else
+                  echo "There is nothing to commit: Artifactory version hadn't changed."
+                fi
+              fi
+          onSuccess:
+            - echo "Success"
+            - >-
+              if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
+                export STATE="success"
+                export DESCRIPTION="All tests passed successfully."
+                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+                send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
+              fi
+          onFailure:
+            - echo "Failure, sending status to GitHub and Slack."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
+             - >-
+              if [[ "${PR_URL}" == null ]]; then
+                send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
+              else
+                send_notification partnership_slack --text "${pipeline_name} failed on <${step_url}|${step_name}> step."
+              fi
+          onComplete:
+            - echo "Cleaning up"
+
+  - name: opentofu_provider_artifactory
+    steps:
+      - name: pre_build_approval
+        type: PreMatrix
+        configuration:
+          integrations:
+            - name: partnership_slack
+            - name: partnership_github
+          inputResources:
+            - name: GitHubTFProviderRepoJFrog
+          requiresApproval:
+            approvers:
+              - alexh
+              - danielmi
+            notifications:
+              - integrationName: partnership_slack
+            timeoutSeconds: 172800 # 2 days
+        execution:
+          onExecute:
+            - export STATE="pending"
+            - export DESCRIPTION="Pipeline run is in progress."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
 
       - name: build_and_run_opentofu_provider_matrix
         type: Matrix
@@ -329,7 +434,10 @@ pipelines:
             - send_notification partnership_slack --text "${pipeline_name} step <${step_url}|${step_name} - ${directory}> is completed. Version ${PROVIDER_VERSION:-" wasn't set"}."
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - send_notification partnership_slack --text "${pipeline_name} pipeline failed on <${step_url}|${step_name} - ${directory}> step"
           onComplete:
             - echo "Complete"
@@ -342,9 +450,6 @@ pipelines:
             - name: partnership_slack
             - name: partnership_github
           inputSteps:
-            - name: build_and_run_tf_provider_matrix
-              status:
-                - success
             - name: build_and_run_opentofu_provider_matrix
               status:
                 - success
@@ -391,12 +496,18 @@ pipelines:
             - echo "Success"
             - >-
               if [[ ! -z ${res_GitHubTFProviderRepoJFrog_headCommitRef} ]]; then
-                update_commit_status GitHubTFProviderRepoJFrog --message "All tests passed successfully."
+                export STATE="success"
+                export DESCRIPTION="All tests passed successfully."
+                git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+                ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
                 send_notification partnership_slack --text "<${res_GitHubTFProviderRepoJFrog_gitRepoRepositoryHttpsUrl}|Terraform Provider>. A new PR was submitted by *${PR_COMMITTER}* - <${PR_URL}|${PR_TITLE}>, branch *${PR_BRANCH}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
               fi
           onFailure:
             - echo "Failure, sending status to GitHub and Slack."
-            - update_commit_status GitHubTFProviderRepoJFrog --message "Pipeline has failed."
+            - export STATE="failure"
+            - export DESCRIPTION="Pipeline has failed."
+            - git clone https://${int_partnership_github_token}@github.com/jfrog/terraform-provider-shared.git
+            - ./terraform-provider-shared/scripts/github-status.sh ${res_GitHubTFProviderRepoJFrog_gitProvider_token} ${res_GitHubTFProviderRepoJFrog_gitRepoFullName} ${res_GitHubTFProviderRepoJFrog_commitSha}
             - >-
               if [[ "${PR_URL}" == null ]]; then
                 send_notification partnership_slack --text "${pipeline_name} step ${step_name} is failed. PR was not created (already exists from this head branch?)"
