@@ -128,7 +128,7 @@ See the [contribution guide](CONTRIBUTIONS.md).
 
 ## License
 
-Copyright (c) 2023 JFrog.
+Copyright (c) 2024 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 
