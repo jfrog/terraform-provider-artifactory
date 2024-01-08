@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Slack Notification PR
-        uses: rtCamp/action-slack-notify@master
+        uses: rtCamp/action-slack-notify@v2.2.1
         env:
           SLACK_CHANNEL: partnereng-pullrequest
           SLACK_COLOR: '#00A86B'
