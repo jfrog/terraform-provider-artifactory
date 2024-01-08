@@ -1,5 +1,5 @@
 <a href="https://jfrog.com">
-    <img src=".github/jfrog-logo-2022.svg" alt="JFrog logo" title="JFrog" align="right" height="50" />
+  <img src=".github/jfrog-logo-2022.svg" alt="JFrog logo" title="JFrog" align="right" height="50" />
 </a>
 
 # Terraform Provider Artifactory
