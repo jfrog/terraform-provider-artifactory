@@ -9,7 +9,7 @@ jobs:
     name: Slack Notification PR
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Slack Notification PR
         uses: rtCamp/action-slack-notify@master
         env:
