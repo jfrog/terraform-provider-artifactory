@@ -1,11 +1,17 @@
-## 10.0.3 (Jan 12, 2024)
+## 10.1.0 (Jan 12, 2024)
+
+FEATURES:
+
+* resource/artifactory_remote_docker_repository: add new attribute `project_id`. PR: [#869](https://github.com/jfrog/terraform-provider-artifactory/pull/869)
 
 IMPROVEMENTS:
+
 * data source/artifactory_file: improve description for `path_is_aliased` attribute. PR: [#868](https://github.com/jfrog/terraform-provider-artifactory/pull/868)
 
 ## 10.0.2 (Dec 18, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.6
 
 IMPROVEMENTS:
+
 * provider: downgrade Resty to 2.9.1 due to CVE in 2.10.0. PR: [#859](https://github.com/jfrog/terraform-provider-artifactory/pull/859)
 * testing: improve resource drift error reporting.
 
