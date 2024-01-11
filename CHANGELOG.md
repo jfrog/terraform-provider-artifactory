@@ -1,3 +1,8 @@
+## 10.0.3 (Jan 12, 2024)
+
+IMPROVEMENTS:
+* data source/artifactory_file: improve description for `path_is_aliased` attribute. PR: [#868](https://github.com/jfrog/terraform-provider-artifactory/pull/868)
+
 ## 10.0.2 (Dec 18, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.6
 
 IMPROVEMENTS:
