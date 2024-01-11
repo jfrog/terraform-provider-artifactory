@@ -19,18 +19,16 @@ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
 
 ## Terraform CLI version support
 
-Current version support [Terraform Protocol v5](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-5) which mean Terraform CLI version 0.12 and later. 
-
-~>We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
+Current version support [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) which mean Terraform CLI version 1.0 and later. 
 
 ## Example Usage
 ```tf
-# Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
+# Required for Terraform 1.0 and up (https://www.terraform.io/upgrade-guides)
 terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "9.7.0"
+      version = "10.0.2"
     }
   }
 }
@@ -50,11 +48,13 @@ resource "artifactory_local_pypi_repository" "pypi-libs" {
 ```
 
 ## Authentication
+
 The Artifactory provider supports two ways of authentication. The following methods are supported:
 * Access Token
-* API Key
+* API Key (deprecated)
 
 ### Access Token
+
 Artifactory access tokens may be used via the Authorization header by providing the `access_token` attribute to the provider block. Getting this value from the environment is supported with `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` variables.
 
 Usage:
@@ -66,7 +66,7 @@ provider "artifactory" {
 }
 ```
 
-### API Key
+### API Key (deprecated)
 
 !>An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API Key Deprecation Process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process).
 

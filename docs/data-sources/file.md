@@ -5,7 +5,6 @@ Provides an Artifactory file datasource. This can be used to download a file fro
 ## Example Usage
 
 ```hcl
-# 
 data "artifactory_file" "my-file" {
    repository   = "repo-key"
    path         = "/path/to/the/artifact.zip"
@@ -21,8 +20,7 @@ The following arguments are supported:
 * `path` - (Required) The path to the file within the repository.
 * `output_path` - (Required) The local path the file should be downloaded to.
 * `force_overwrite` - (Optional) If set to true, an existing file in the output_path will be overwritten. Default: `false`
-* `path_is_aliased` - (Optional) If set to `true`, the provider will get the artifact directly from Artifactory without attempting to resolve it or verify it and will delegate this to artifactory
-  if the file exists. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)
+* `path_is_aliased` - (Optional) If set to `true`, the provider will get the artifact directly from Artifactory without attempting to resolve it or verify it and will delegate this to artifactory if the file exists. When using a smart remote repository, it is recommended to set this attribute to `true`. This is necessary to ensure that the provider fetches the artifact directly from Artifactory. If this attribute is not set or is set to `false`, there is a risk of fetching the `-cache` directory in Artifactory, potentially resulting in resource expiration and a 404 error.
 
 ## Attribute Reference
 
