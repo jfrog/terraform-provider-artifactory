@@ -48,6 +48,11 @@ var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 					"This value must be assigned to the attribute manually, if user don't specify any other non-default values." +
 					"This attribute must be set together with `external_dependencies_enabled = true`",
 			},
+			"project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.",
+			},
 		},
 		repository.RepoLayoutRefSchema(rclass, DockerPackageType),
 	)
@@ -60,6 +65,7 @@ type DockerRemoteRepo struct {
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	BlockPushingSchema1          bool     `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
+	ProjectId                    string   `json:"dockerProjectId"`
 }
 
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
@@ -74,6 +80,7 @@ func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
+			ProjectId:                    d.GetString("project_id", false),
 		}
 		return repo, repo.Id(), nil
 	}

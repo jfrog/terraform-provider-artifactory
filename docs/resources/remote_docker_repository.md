@@ -43,6 +43,7 @@ The following arguments are supported, along with the [common list of arguments 
   We don't want to make this attribute required, but it must be set to avoid the state drift on update. Note: Artifactory assigns
   `[**]` on update if HCL doesn't have the attribute set or the list is empty.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `project_id` (Optional) Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.
 
 ## Import
 
