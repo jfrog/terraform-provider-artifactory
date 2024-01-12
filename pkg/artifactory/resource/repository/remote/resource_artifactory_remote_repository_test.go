@@ -226,6 +226,7 @@ func TestAccRemoteDockerRepo_full(t *testing.T) {
 		"missed_cache_period_seconds":    "7200",
 		"excludes_pattern":               "nopat3,nopat2,nopat1",
 		"includes_pattern":               "pat3,pat2,pat1",
+		"project_id":                     "",
 		"notes":                          "internal description",
 		"proxy":                          "",
 		"username":                       "admin",
@@ -241,6 +242,7 @@ func TestAccRemoteDockerRepo_full(t *testing.T) {
 		"missed_cache_period_seconds":    "7201",
 		"excludes_pattern":               "nopat3,nopat2,nopat1",
 		"includes_pattern":               "pat3,pat2,pat1",
+		"project_id":                     "fake-project-id",
 		"notes":                          "internal description",
 		"proxy":                          "",
 		"username":                       "admin1",
@@ -283,6 +285,7 @@ resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
   missed_cache_period_seconds    = {{ .missed_cache_period_seconds }}
   excludes_pattern               = "{{ .excludes_pattern }}"
   includes_pattern               = "{{ .includes_pattern }}"
+  project_id                     = "{{ .project_id }}"
   notes                          = "{{ .notes }}"
   proxy                          = "{{ .proxy }}"
   property_sets                  = [
@@ -303,6 +306,7 @@ func verifyRepository(fqrn string, testData map[string]string) resource.TestChec
 		resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", testData["missed_cache_period_seconds"]),
 		resource.TestCheckResourceAttr(fqrn, "excludes_pattern", testData["excludes_pattern"]),
 		resource.TestCheckResourceAttr(fqrn, "includes_pattern", testData["includes_pattern"]),
+		resource.TestCheckResourceAttr(fqrn, "project_id", testData["project_id"]),
 		resource.TestCheckResourceAttr(fqrn, "notes", testData["notes"]),
 		resource.TestCheckResourceAttr(fqrn, "proxy", testData["proxy"]),
 		resource.TestCheckResourceAttr(fqrn, "username", testData["username"]),
