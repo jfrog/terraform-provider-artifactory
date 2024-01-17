@@ -40,7 +40,7 @@ resource "artifactory_proxy" "{{ .resource_name }}" {
   services          = ["{{ .services_1 }}", "{{ .services_2 }}"]
 }`
 
-func TestAccProxyCreateUpdate(t *testing.T) {
+func TestAccProxy_createUpdate(t *testing.T) {
 	_, fqrn, resourceName := testutil.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
@@ -69,9 +69,9 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccProxyDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccProxyDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
@@ -83,10 +83,12 @@ func TestAccProxyCreateUpdate(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(verifyProxy(fqrn, testDataUpdated)),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+				ImportStateVerifyIgnore:              []string{"password"},
 			},
 		},
 	})
@@ -108,8 +110,8 @@ func TestAccProxy_importNotFound(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        config,
@@ -122,7 +124,7 @@ func TestAccProxy_importNotFound(t *testing.T) {
 	})
 }
 
-func TestAccProxyCustomizeDiff(t *testing.T) {
+func TestAccProxy_configValidation(t *testing.T) {
 	_, fqrn, resourceName := testutil.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
@@ -140,9 +142,9 @@ func TestAccProxyCustomizeDiff(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccProxyDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccProxyDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +207,7 @@ func testAccProxyDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
-		proxies := &configuration.Proxies{}
+		proxies := &configuration.ProxiesAPIModel{}
 
 		response, err := client.R().SetResult(&proxies).Get("artifactory/api/system/configuration")
 		if err != nil {
@@ -215,11 +217,11 @@ func testAccProxyDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
 		}
 
-		for _, proxy := range proxies.Proxies {
-			if proxy.Key == id {
-				return fmt.Errorf("error: Proxy with key: " + id + " still exists.")
-			}
+		matchedProxyConfig := configuration.FindConfigurationById[configuration.ProxyAPIModel](proxies.Proxies, id)
+		if matchedProxyConfig != nil {
+			return fmt.Errorf("error: Proxy with key: " + id + " still exists.")
 		}
+
 		return nil
 	}
 }
