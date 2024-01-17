@@ -5,20 +5,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 
-	"github.com/jfrog/terraform-provider-shared/validator"
 	"gopkg.in/yaml.v3"
 )
 
-type Proxy struct {
+type ProxyAPIModel struct {
 	Key               string `xml:"key" yaml:"-"`
 	Host              string `xml:"host" yaml:"host"`
-	Port              int    `xml:"port" yaml:"port"`
+	Port              int64  `xml:"port" yaml:"port"`
 	Username          string `xml:"username" yaml:"username"`
 	Password          string `xml:"password" yaml:"password"`
 	NtHost            string `xml:"ntHost" yaml:"ntHost"`
@@ -28,247 +36,375 @@ type Proxy struct {
 	Services          string `xml:"services" yaml:"services"`
 }
 
-func (p Proxy) Id() string {
+func (p ProxyAPIModel) Id() string {
 	return p.Key
 }
 
-type Proxies struct {
-	Proxies []Proxy `xml:"proxies>proxy" yaml:"proxy"`
+type ProxiesAPIModel struct {
+	Proxies []ProxyAPIModel `xml:"proxies>proxy" yaml:"proxy"`
 }
 
-func ResourceArtifactoryProxy() *schema.Resource {
-	var proxySchema = map[string]*schema.Schema{
-		"key": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The unique ID of the proxy.",
-		},
-		"host": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The name of the proxy host.",
-		},
-		"port": {
-			Type:             schema.TypeInt,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-			Description:      "The proxy port number.",
-		},
-		"username": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy username when authentication credentials are required.",
-		},
-		"password": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Sensitive:        true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy password when authentication credentials are required.",
-		},
-		"nt_host": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The computer name of the machine (the machine connecting to the NTLM proxy).",
-		},
-		"nt_domain": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validator.StringIsNotEmpty,
-			Description:      "The proxy domain/realm name.",
-		},
-		"platform_default": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set, this proxy will be the default proxy for new remote repositories and for internal HTTP requests issued by Artifactory. Will also be used as proxy for all other services in the platform (for example: Xray, Distribution, etc).",
-		},
-		"redirect_to_hosts": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "An optional list of host names to which this proxy may redirect requests. The credentials defined for the proxy are reused by requests redirected to all of these hosts.",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+type ProxyResourceModel struct {
+	Key               types.String `tfsdk:"key"`
+	Host              types.String `tfsdk:"host"`
+	Port              types.Int64  `tfsdk:"port"`
+	Username          types.String `tfsdk:"username"`
+	Password          types.String `tfsdk:"password"`
+	NtHost            types.String `tfsdk:"nt_host"`
+	NtDomain          types.String `tfsdk:"nt_domain"`
+	PlatformDefault   types.Bool   `tfsdk:"platform_default"`
+	RedirectedToHosts types.Set    `tfsdk:"redirect_to_hosts"`
+	Services          types.Set    `tfsdk:"services"`
+}
+
+func (r *ProxyResourceModel) toAPIModel(ctx context.Context, proxy *ProxyAPIModel) diag.Diagnostics {
+	var redirectedToHosts []string
+	diags := r.RedirectedToHosts.ElementsAs(ctx, &redirectedToHosts, true)
+	if diags != nil {
+		return diags
+	}
+
+	var services []string
+	diags = r.Services.ElementsAs(ctx, &services, true)
+	if diags != nil {
+		return diags
+	}
+
+	*proxy = ProxyAPIModel{
+		Key:               r.Key.ValueString(),
+		Host:              r.Host.ValueString(),
+		Port:              r.Port.ValueInt64(),
+		Username:          r.Username.ValueString(),
+		Password:          r.Password.ValueString(),
+		NtHost:            r.NtHost.ValueString(),
+		NtDomain:          r.NtDomain.ValueString(),
+		PlatformDefault:   r.PlatformDefault.ValueBool(),
+		RedirectedToHosts: strings.Join(redirectedToHosts, ","),
+		Services:          strings.Join(services, ","),
+	}
+
+	return nil
+}
+
+func (r *ProxyResourceModel) FromAPIModel(ctx context.Context, proxy *ProxyAPIModel) diag.Diagnostics {
+	r.Key = types.StringValue(proxy.Key)
+	r.Host = types.StringValue(proxy.Host)
+	r.Port = types.Int64Value(proxy.Port)
+	r.Username = types.StringValue(proxy.Username)
+	r.NtHost = types.StringValue(proxy.NtHost)
+	r.NtDomain = types.StringValue(proxy.NtDomain)
+	r.PlatformDefault = types.BoolValue(proxy.PlatformDefault)
+
+	if proxy.RedirectedToHosts != "" {
+		redirectedToHosts, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(proxy.RedirectedToHosts, ","))
+		if diags != nil {
+			return diags
+		}
+		r.RedirectedToHosts = redirectedToHosts
+	}
+
+	if proxy.Services != "" {
+		services, diags := types.SetValueFrom(ctx, types.StringType, strings.Split(proxy.Services, ","))
+		if diags != nil {
+			return diags
+		}
+		r.Services = services
+	}
+
+	return nil
+}
+
+func NewProxyResource() resource.Resource {
+	return &ProxyResource{
+		TypeName: "artifactory_proxy",
+	}
+}
+
+type ProxyResource struct {
+	ProviderData util.ProvderMetadata
+	TypeName     string
+}
+
+func (r *ProxyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = r.TypeName
+}
+
+func (r *ProxyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Provides an Artifactory Proxy resource. This resource configuration is only available for self-hosted instance. It corresponds to 'proxies' config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
+		Attributes: map[string]schema.Attribute{
+			"key": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The unique ID of the proxy.",
+			},
+			"host": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "The name of the proxy host.",
+			},
+			"port": schema.Int64Attribute{
+				Required: true,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 65535),
+				},
+				MarkdownDescription: "The proxy port number.",
+			},
+			"username": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "The proxy username when authentication credentials are required.",
+			},
+			"password": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "The proxy password when authentication credentials are required.",
+			},
+			"nt_host": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "The computer name of the machine (the machine connecting to the NTLM proxy).",
+			},
+			"nt_domain": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "The proxy domain/realm name.",
+			},
+			"platform_default": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				Description: "When set, this proxy will be the default proxy for new remote repositories and for internal HTTP requests issued by Artifactory. Will also be used as proxy for all other services in the platform (for example: Xray, Distribution, etc).",
+			},
+			"redirect_to_hosts": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "An optional list of host names to which this proxy may redirect requests. The credentials defined for the proxy are reused by requests redirected to all of these hosts.",
+			},
+			"services": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(stringvalidator.OneOf([]string{"jfrt", "jfmc", "jfxr", "jfds"}...)),
+				},
+				Description: "An optional list of services names to which this proxy be the default of. The options are jfrt, jfmc, jfxr, jfds",
 			},
 		},
-		"services": {
-			Type:        schema.TypeSet,
-			Optional:    true,
-			Description: "An optional list of services names to which this proxy be the default of. The options are jfrt, jfmc, jfxr, jfds",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-				Set:  schema.HashString,
-				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.StringInSlice(
-						[]string{
-							"jfrt",
-							"jfmc",
-							"jfxr",
-							"jfds",
-						},
-						false,
-					),
-				),
-			},
+	}
+}
+
+func (r *ProxyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+}
+
+func (r ProxyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data ProxyResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If platform_default is not configured, return without warning.
+	if data.PlatformDefault.IsNull() || data.PlatformDefault.IsUnknown() {
+		return
+	}
+
+	// If services is not configured, return without warning.
+	if data.Services.IsNull() || data.Services.IsUnknown() {
+		return
+	}
+
+	if data.PlatformDefault.ValueBool() && len(data.Services.Elements()) > 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("services"),
+			"Invalid Attribute Configuration",
+			"services cannot be set when platform_default is true",
+		)
+	}
+}
+
+func (r *ProxyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var plan *ProxyResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var proxy ProxyAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(ctx, &proxy)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	///* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	//There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	//GET call structure has "propertySets -> propertySet -> Array of property sets".
+	//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
+	//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
+	//*/
+	var body = map[string]map[string]ProxyAPIModel{
+		"proxies": {
+			proxy.Key: proxy,
 		},
 	}
 
-	var unpackProxy = func(s *schema.ResourceData) Proxy {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		return Proxy{
-			Key:               d.GetString("key", false),
-			Host:              d.GetString("host", false),
-			Port:              d.GetInt("port", false),
-			Username:          d.GetString("username", false),
-			Password:          d.GetString("password", false),
-			NtHost:            d.GetString("nt_host", false),
-			NtDomain:          d.GetString("nt_domain", false),
-			PlatformDefault:   d.GetBool("platform_default", false),
-			RedirectedToHosts: strings.Join(d.GetSet("redirect_to_hosts"), ","),
-			Services:          strings.Join(d.GetSet("services"), ","),
-		}
+	content, err := yaml.Marshal(&body)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
 	}
 
-	var packProxy = func(p *Proxy, d *schema.ResourceData) diag.Diagnostics {
-		setValue := utilsdk.MkLens(d)
-
-		setValue("key", p.Key)
-		setValue("host", p.Host)
-		setValue("port", p.Port)
-		setValue("username", p.Username)
-		setValue("nt_host", p.NtHost)
-		setValue("nt_domain", p.NtDomain)
-		errors := setValue("platform_default", p.PlatformDefault)
-		if p.RedirectedToHosts != "" {
-			errors = setValue("redirect_to_hosts", strings.Split(p.RedirectedToHosts, ","))
-		}
-		if p.Services != "" {
-			errors = setValue("services", strings.Split(p.Services, ","))
-		}
-
-		if errors != nil && len(errors) > 0 {
-			return diag.Errorf("failed to pack proxy %q", errors)
-		}
-
-		return nil
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
 	}
 
-	var resourceProxyRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &utilsdk.ResourceData{ResourceData: d}
-		key := data.GetString("key", false)
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
 
-		proxiesConfig := Proxies{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
-		if err != nil {
-			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
-		}
+func (r *ProxyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
 
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, key)
-		if matchedProxyConfig == nil {
-			d.SetId("")
-			return nil
-		}
-
-		return packProxy(matchedProxyConfig, d)
+	var state *ProxyResourceModel
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var resourceProxyUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		unpackedProxy := unpackProxy(d)
-
-		///* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
-		//There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
-		//GET call structure has "propertySets -> propertySet -> Array of property sets".
-		//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
-		//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
-		//*/
-		var body = map[string]map[string]Proxy{
-			"proxies": {
-				unpackedProxy.Key: unpackedProxy,
-			},
-		}
-
-		content, err := yaml.Marshal(&body)
-		if err != nil {
-			return diag.Errorf("failed to marshal proxy during Update")
-		}
-
-		err = SendConfigurationPatch(content, m)
-		if err != nil {
-			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
-		}
-
-		d.SetId(unpackedProxy.Key)
-		return resourceProxyRead(ctx, d, m)
+	var proxies ProxiesAPIModel
+	_, err := r.ProviderData.Client.R().
+		SetResult(&proxies).
+		Get("artifactory/api/system/configuration")
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		return
 	}
 
-	var resourceProxyDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		proxiesConfig := &Proxies{}
-
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&proxiesConfig).Get("artifactory/api/system/configuration")
-		if err != nil {
-			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
-		}
-		if response.IsError() {
-			return diag.Errorf("got error response for API: /artifactory/api/system/configuration request during Read")
-		}
-
-		matchedProxyConfig := FindConfigurationById[Proxy](proxiesConfig.Proxies, d.Id())
-		if matchedProxyConfig == nil {
-			return diag.Errorf("No proxy found for '%s'", d.Id())
-		}
-
-		var body = map[string]map[string]string{
-			"proxies": {
-				matchedProxyConfig.Key: "~",
-			},
-		}
-
-		content, err := yaml.Marshal(&body)
-		if err != nil {
-			return diag.Errorf("failed to marshal proxy during Delete")
-		}
-
-		err = SendConfigurationPatch(content, m)
-		if err != nil {
-			return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
-		}
-
-		d.SetId("")
-
-		return nil
+	matchedProxyConfig := FindConfigurationById[ProxyAPIModel](proxies.Proxies, state.Key.ValueString())
+	if matchedProxyConfig == nil {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("key"),
+			"no matching proxy found",
+			state.Key.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
-	var verifyCrossDependentValues = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		platformDefault := diff.Get("platform_default").(bool)
-		services := diff.Get("services").(*schema.Set).List()
-
-		if platformDefault && len(services) > 0 {
-			return fmt.Errorf("services cannot be set when platform_default is true")
-		}
-
-		return nil
+	// Convert from the API data model to the Terraform data model
+	// and refresh any attribute values.
+	resp.Diagnostics.Append(state.FromAPIModel(ctx, matchedProxyConfig)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	return &schema.Resource{
-		UpdateContext: resourceProxyUpdate,
-		CreateContext: resourceProxyUpdate,
-		DeleteContext: resourceProxyDelete,
-		ReadContext:   resourceProxyRead,
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
 
-		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("key", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+func (r *ProxyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var plan *ProxyResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var proxy ProxyAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(ctx, &proxy)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	///* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	//There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	//GET call structure has "propertySets -> propertySet -> Array of property sets".
+	//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
+	//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
+	//*/
+	var body = map[string]map[string]ProxyAPIModel{
+		"proxies": {
+			proxy.Key: proxy,
 		},
-
-		Schema:        proxySchema,
-		CustomizeDiff: verifyCrossDependentValues,
-		Description:   "Provides an Artifactory Proxy resource. This resource configuration is only available for self-hosted instance. It corresponds to 'proxies' config block in system configuration XML (REST endpoint: artifactory/api/system/configuration).",
 	}
+
+	content, err := yaml.Marshal(&body)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *ProxyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var data ProxyResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	deleteBackupConfig := fmt.Sprintf(`
+proxies:
+  %s: ~
+`, data.Key.ValueString())
+
+	err := SendConfigurationPatch([]byte(deleteBackupConfig), r.ProviderData)
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
+		return
+	}
+
+	// If the logic reaches here, it implicitly succeeded and will remove
+	// the resource from state if there are no other errors.
+}
+
+// ImportState imports the resource into the Terraform state.
+func (r *ProxyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }

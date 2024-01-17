@@ -1,3 +1,9 @@
+## 10.1.1 (Jan 12, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_proxy is migrated to Plugin Framework. PR: [#871](https://github.com/jfrog/terraform-provider-artifactory/pull/871)
+
 ## 10.1.0 (Jan 12, 2024)
 
 FEATURES:

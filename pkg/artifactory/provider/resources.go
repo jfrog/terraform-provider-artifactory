@@ -87,7 +87,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
 		"artifactory_repository_layout":                       configuration.ResourceArtifactoryRepositoryLayout(),
 		"artifactory_property_set":                            configuration.ResourceArtifactoryPropertySet(),
-		"artifactory_proxy":                                   configuration.ResourceArtifactoryProxy(),
 	}
 
 	for _, repoType := range local.PackageTypesLikeGeneric {
