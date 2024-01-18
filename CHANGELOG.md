@@ -1,4 +1,10 @@
-## 10.1.1 (Jan 12, 2024)
+## 10.1.2 (Jan 18, 2024)
+
+BUG FIX:
+
+* resource/artifactory_scoped_token: Fix `scopes` attribute validation for `actions` to include `x` and `s` values. PR: [#875](https://github.com/jfrog/terraform-provider-artifactory/pull/875)
+
+## 10.1.1 (Jan 17, 2024)
 
 IMPROVEMENTS:
 

@@ -398,6 +398,95 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	})
 }
 
+func TestAccScopedToken_WithResourceScopes(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+			email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_user.test-user.name
+			scopes   = [
+				"artifact:generic-local:r",
+				"artifact:generic-local:w",
+				"artifact:generic-local:d",
+				"artifact:generic-local:a",
+				"artifact:generic-local:m",
+				"artifact:generic-local:x",
+				"artifact:generic-local:s",
+			]
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "7"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:r"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:w"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:d"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:a"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:m"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:x"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:s"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
+	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+			email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_user.test-user.name
+			scopes   = [
+				"artifact:generic-local:q",
+			]
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      accessTokenConfig,
+				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
+			},
+		},
+	})
+}
+
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
