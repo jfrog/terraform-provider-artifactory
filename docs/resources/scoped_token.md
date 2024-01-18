@@ -90,7 +90,7 @@ resource "artifactory_scoped_token" "audience" {
       - `<resource-type>` - one of the permission resource types, from a predefined closed list. Currently, the only resource type that is supported is the artifact resource type.
       - `<target>` - the target resource, can be exact name or a pattern
       - `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern
-      - `<actions>` - comma-separated list of action acronyms.The actions allowed are <r, w, d, a, m> or any combination of these actions. To allow all actions - use `*`
+      - `<actions>` - comma-separated list of action acronyms. The actions allowed are <r, w, d, a, m, x, s> or any combination of these actions. To allow all actions - use `*`
     - Examples:
       - `["applied-permissions/user", "artifact:generic-local:r"]`
       - `["applied-permissions/group", "artifact:generic-local/path:*"]`

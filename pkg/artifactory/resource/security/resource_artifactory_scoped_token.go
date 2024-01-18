@@ -169,7 +169,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					" `<target>` - the target resource, can be exact name or a pattern" +
 					" `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
 					" `<actions>` - comma-separated list of action acronyms." +
-					"The actions allowed are <r, w, d, a, m> or any combination of these actions\n." +
+					"The actions allowed are <r, w, d, a, m, x, s> or any combination of these actions.\n" +
 					"To allow all actions - use `*`\n" +
 					"Examples: " +
 					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
@@ -191,7 +191,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 							"system:livelogs:r",
 						),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdam*]|([rwdam]+(,[rwdam]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
 					),
 					),
 				},
