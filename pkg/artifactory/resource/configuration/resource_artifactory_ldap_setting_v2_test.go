@@ -189,16 +189,36 @@ func TestAccLdapSettingV2_validators(t *testing.T) {
 	_, _, key := testutil.MkNames("ldap-", "artifactory_ldap_setting_v2")
 
 	const ldapSetting = `
+	variable "search_filter" {
+		type    = string
+		default = "{{ .search_filter }}"
+	}
+
+	variable "user_dn_pattern" {
+		type    = string
+		default = "{{ .user_dn_pattern }}"
+	}
+
+	variable "search_base" {
+		type    = string
+		default = "{{ .search_base }}"
+	}
+
+	variable "manager_dn" {
+		type    = string
+		default = "{{ .manager_dn }}"
+	}
+
 	resource "artifactory_ldap_setting_v2" "{{ .key }}" {
 		key = "{{ .key }}"
 		enabled = true
 		ldap_url = "ldap://ldaptestldap"
-		user_dn_pattern = "{{ .user_dn_pattern }}"
+		user_dn_pattern = var.user_dn_pattern
 		email_attribute = "mail_attr"
 		search_sub_tree = true
-		search_filter = "{{ .search_filter }}"
-		search_base = "{{ .search_base }}"
-		manager_dn = "{{ .manager_dn }}"
+		search_filter = var.search_filter
+		search_base = var.search_base
+		manager_dn = var.manager_dn
 		manager_password = "testmgrpaswd"
 	}
 	`
