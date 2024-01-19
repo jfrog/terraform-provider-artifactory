@@ -82,15 +82,15 @@ resource "artifactory_scoped_token" "audience" {
 - `scopes` (Set of String) The scope of access that the token provides. Access to the REST API is always provided by default. Administrators can set any scope, while non-admin users can only set the scope to a subset of the groups to which they belong. The supported scopes include:
   - `applied-permissions/user` - provides user access. If left at the default setting, the token will be created with the user-identity scope, which allows users to identify themselves in the Platform but does not grant any specific access permissions.
   - `applied-permissions/admin` - the scope assigned to admin users.
-  - `applied-permissions/groups` - the group to which permissions are assigned by group name (use username to inicate the group name)
+  - `applied-permissions/groups` - the group to which permissions are assigned by group name (use username to indicate the group name)
   - `system:metrics:r` - for getting the service metrics
-  - `system:livelogs:r` - for getting the service livelogsrThe scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.
+  - `system:livelogs:r` - for getting the service livelogs. The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.
   - Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. A permission can be represented as a scope token string in the following format: `<resource-type>:<target>[/<sub-resource>]:<actions>`
     - Where:
       - `<resource-type>` - one of the permission resource types, from a predefined closed list. Currently, the only resource type that is supported is the artifact resource type.
       - `<target>` - the target resource, can be exact name or a pattern
       - `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern
-      - `<actions>` - comma-separated list of action acronyms. The actions allowed are <r, w, d, a, m, x, s> or any combination of these actions. To allow all actions - use `*`
+      - `<actions>` - comma-separated list of action acronyms. The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions. To allow all actions - use `*`
     - Examples:
       - `["applied-permissions/user", "artifact:generic-local:r"]`
       - `["applied-permissions/group", "artifact:generic-local/path:*"]`

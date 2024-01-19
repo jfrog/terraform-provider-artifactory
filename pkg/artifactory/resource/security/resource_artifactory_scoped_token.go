@@ -155,9 +155,9 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					"in the Platform but does not grant any specific access permissions." +
 					"* `applied-permissions/admin` - the scope assigned to admin users." +
 					"* `applied-permissions/groups` - the group to which permissions are assigned by group name " +
-					"(use username to inicate the group name)" +
+					"(use username to indicate the group name)" +
 					"* `system:metrics:r` - for getting the service metrics" +
-					"* `system:livelogs:r` - for getting the service livelogsr" +
+					"* `system:livelogs:r` - for getting the service livelogsr. " +
 					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
 					"Resource Permissions\n" +
 					"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
@@ -169,7 +169,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					" `<target>` - the target resource, can be exact name or a pattern" +
 					" `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
 					" `<actions>` - comma-separated list of action acronyms." +
-					"The actions allowed are <r, w, d, a, m, x, s> or any combination of these actions.\n" +
+					"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions.\n" +
 					"To allow all actions - use `*`\n" +
 					"Examples: " +
 					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
