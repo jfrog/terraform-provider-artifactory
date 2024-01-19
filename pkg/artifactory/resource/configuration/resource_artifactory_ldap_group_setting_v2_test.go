@@ -99,17 +99,45 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 
 func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 	_, _, name := testutil.MkNames("ldap-", "artifactory_ldap_group_setting_v2")
+
 	errorMessageConfiguration := "Incorrect Attribute Configuration"
 	paramsConflict := map[string]interface{}{
 		"name":                   name,
 		"enabled_ldap":           "ldap2",
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
 		"sub_tree":               "true",
 		"strategy":               "HIERARCHICAL",
 	}
-	t.Run(fmt.Sprintf("TestLdapGroup_ConflictStrategySubTree"), func(t *testing.T) {
+	t.Run("ConflictStrategySubTree", func(t *testing.T) {
 		resource.Test(makeLdapGroupValidatorsTestCase(paramsConflict, errorMessageConfiguration, t))
+	})
+
+	paramsFilter := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
+		"group_member_attribute": "uniqueMember",
+		"filter":                 "#$(objectClass=groupOfNames)",
+		"sub_tree":               "true",
+		"strategy":               "HIERARCHICAL",
+	}
+	t.Run("InvalidFilter", func(t *testing.T) {
+		resource.Test(makeLdapGroupValidatorsTestCase(paramsFilter, errorMessageConfiguration, t))
+	})
+
+	paramsGroupBaseDN := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "Boom",
+		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
+		"sub_tree":               "true",
+		"strategy":               "HIERARCHICAL",
+	}
+	t.Run("InvalidGroupBaseDN", func(t *testing.T) {
+		resource.Test(makeLdapGroupValidatorsTestCase(paramsGroupBaseDN, errorMessageConfiguration, t))
 	})
 
 	errorMessageMatch := "Invalid Attribute Value Match"
@@ -118,10 +146,11 @@ func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 		"enabled_ldap":           "ldap2",
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
 		"sub_tree":               "true",
 		"strategy":               "static",
 	}
-	t.Run(fmt.Sprintf("TestLdapGroup_StrategyCaseSensitive"), func(t *testing.T) {
+	t.Run("StrategyCaseSensitive", func(t *testing.T) {
 		resource.Test(makeLdapGroupValidatorsTestCase(paramsStrategy, errorMessageMatch, t))
 	})
 }
@@ -129,15 +158,25 @@ func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage string, t *testing.T) (*testing.T, resource.TestCase) {
 
 	const ldapGroupSetting = `
+	variable "group_base_dn" {
+		type    = string
+		default = "{{ .group_base_dn }}"
+	}
+
+	variable "filter" {
+		type    = string
+		default = "{{ .filter }}"
+	}
+
 	resource "artifactory_ldap_group_setting_v2" "{{ .name }}" {
 		name = "{{ .name }}"
 		enabled_ldap = "{{ .enabled_ldap }}"
-		group_base_dn = "{{ .group_base_dn }}"
+		group_base_dn = var.group_base_dn
 		group_name_attribute = "cn"
 		group_member_attribute = "{{ .group_member_attribute }}"
 		sub_tree = {{ .sub_tree }}
 		force_attribute_search = false
-		filter = "(objectClass=groupOfNames)"
+		filter = var.filter
 		description_attribute = "description"
 		strategy = "{{ .strategy }}"
 	}

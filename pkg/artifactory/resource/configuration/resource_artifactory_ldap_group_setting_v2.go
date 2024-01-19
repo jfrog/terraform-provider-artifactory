@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	"gopkg.in/ldap.v2"
 )
 
 const LdapGroupEndpoint = "access/api/v1/ldap/groups/"
@@ -95,6 +93,10 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 				Computed:            true,
 				Optional:            true,
 				Default:             stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					ldapDomainNameValidator{},
+				},
 			},
 			"group_name_attribute": schema.StringAttribute{
 				MarkdownDescription: "Attribute on the group entry denoting the group name. Used when importing groups.",
@@ -121,7 +123,10 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The LDAP filter used to search for group entries. Used for importing groups.",
 				Required:            true,
-				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					ldapSearchFilterValidator{},
+				},
 			},
 			"description_attribute": schema.StringAttribute{
 				MarkdownDescription: "An attribute on the group entry which denoting the group description. Used when importing groups.",
@@ -328,38 +333,16 @@ func (r *ArtifactoryLdapGroupSettingResource) ValidateConfig(ctx context.Context
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Validate group_base_dn
-	if !data.GroupBaseDn.IsNull() {
-		_, err := ldap.ParseDN(data.GroupBaseDn.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("group_base_dn"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected group_base_dn to be a valid LDAP Domain Name, %v", err),
-			)
-		}
-	}
-	// Validate filter
-	if !data.Filter.IsNull() {
-		_, err := ldap.CompileFilter(data.Filter.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("filter"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected filter to be a valid LDAP search filter, %v", err),
-			)
-		}
-	}
+
 	// Validate strategy and sub_tree
 	if !data.Strategy.IsNull() && strings.ToUpper(data.Strategy.ValueString()) == "HIERARCHICAL" && data.SubTree.ValueBool() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("strategy"),
+			path.Root("sub_tree"),
 			"Incorrect Attribute Configuration",
-			fmt.Sprintf("sub_tree can be set to true only with `STATIC` or `DYNAMIC` strategy"),
+			"sub_tree can be set to true only with `STATIC` or `DYNAMIC` strategy",
 		)
 	}
 }
