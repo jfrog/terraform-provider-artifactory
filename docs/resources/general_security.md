@@ -22,7 +22,7 @@ resource "artifactory_general_security" "security" {
 
 The following arguments are supported:
 
-* `enable_anonoymous_access` - (Optional) Enable anonymous access.  Default value is `false`.
+* `enable_anonymous_access` - (Optional) Enable anonymous access.  Default value is `false`.
 
 ## Import
 
