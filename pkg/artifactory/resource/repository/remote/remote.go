@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -60,6 +60,7 @@ type RepositoryRemoteBaseParams struct {
 	ListRemoteFolderItems             bool                               `json:"listRemoteFolderItems"`
 	DownloadRedirect                  bool                               `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 	CdnRedirect                       bool                               `json:"cdnRedirect"`
+	DisableURLNormalization           bool                               `hcl:"disable_url_normalization" json:"disableUrlNormalization"`
 }
 
 func (r RepositoryRemoteBaseParams) GetRclass() string {
@@ -94,7 +95,6 @@ var PackageTypesLikeBasic = []string{
 	"debian",
 	"gems",
 	"gitlfs",
-	"npm",
 	"opkg",
 	"p2",
 	"pub",
@@ -106,6 +106,7 @@ var PackageTypesLikeBasic = []string{
 var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		repository.BaseRepoSchema,
+		repository.ProxySchema,
 		map[string]*schema.Schema{
 			"url": {
 				Type:         schema.TypeString,
@@ -122,17 +123,6 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
-			},
-			"proxy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
-			},
-			"disable_proxy": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -369,6 +359,12 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Default:     false,
 				Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
 			},
+			"disable_url_normalization": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether to disable URL normalization, default is `false`.",
+			},
 		},
 	)
 }
@@ -506,6 +502,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		PriorityResolution:                d.GetBool("priority_resolution", false),
 		ListRemoteFolderItems:             d.GetBool("list_remote_folder_items", false),
 		MismatchingMimeTypeOverrideList:   d.GetString("mismatching_mime_types_override_list", false),
+		DisableURLNormalization:           d.GetBool("disable_url_normalization", false),
 	}
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
@@ -555,6 +552,10 @@ var resourceV1 = &schema.Resource{
 	Schema: baseRemoteRepoSchemaV1,
 }
 
+var resourceV2 = &schema.Resource{
+	Schema: baseRemoteRepoSchemaV2,
+}
+
 func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
 	return &schema.Resource{
@@ -572,14 +573,21 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 				Upgrade: ResourceStateUpgradeV1,
 				Version: 1,
 			},
+			{
+				// this only works because the schema hasn't changed, except the removal of default value
+				// from `project_key` attribute.
+				Type:    resourceV2.CoreConfigSchema().ImpliedType(),
+				Upgrade: repository.ResourceUpgradeProjectKey,
+				Version: 2,
+			},
 		},
 
 		Schema:        skeema,
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		CustomizeDiff: customdiff.All(
 			repository.ProjectEnvironmentsDiff,
 			verifyExternalDependenciesDockerAndHelm,
-			verifyDisableProxy,
+			repository.VerifyDisableProxy,
 			verifyRemoteRepoLayoutRef,
 		),
 	}
@@ -600,17 +608,6 @@ func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.Res
 		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
 			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
 		}
-	}
-
-	return nil
-}
-
-func verifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-	disableProxy := diff.Get("disable_proxy").(bool)
-	proxy := diff.Get("proxy").(string)
-
-	if disableProxy && len(proxy) > 0 {
-		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil

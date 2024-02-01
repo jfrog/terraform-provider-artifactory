@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -38,7 +38,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_member_attribute": "uniqueMember",
 		"strategy":               "STATIC",
 	}
-	LdapSettingTemplateFull := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
+	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
 	paramsUpdate := map[string]interface{}{
 		"name":                   name,
@@ -47,11 +47,11 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_member_attribute": "uniqueMember1",
 		"strategy":               "DYNAMIC",
 	}
-	LdapSettingTemplateFullUpdate := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
+	LdapSettingTemplateFullUpdate := util.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccLdapGroupSettingV2Destroy(fqrn),
 
 		Steps: []resource.TestStep{
@@ -99,17 +99,45 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 
 func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 	_, _, name := testutil.MkNames("ldap-", "artifactory_ldap_group_setting_v2")
+
 	errorMessageConfiguration := "Incorrect Attribute Configuration"
 	paramsConflict := map[string]interface{}{
 		"name":                   name,
 		"enabled_ldap":           "ldap2",
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
 		"sub_tree":               "true",
 		"strategy":               "HIERARCHICAL",
 	}
-	t.Run(fmt.Sprintf("TestLdapGroup_ConflictStrategySubTree"), func(t *testing.T) {
+	t.Run("ConflictStrategySubTree", func(t *testing.T) {
 		resource.Test(makeLdapGroupValidatorsTestCase(paramsConflict, errorMessageConfiguration, t))
+	})
+
+	paramsFilter := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
+		"group_member_attribute": "uniqueMember",
+		"filter":                 "#$(objectClass=groupOfNames)",
+		"sub_tree":               "true",
+		"strategy":               "HIERARCHICAL",
+	}
+	t.Run("InvalidFilter", func(t *testing.T) {
+		resource.Test(makeLdapGroupValidatorsTestCase(paramsFilter, errorMessageConfiguration, t))
+	})
+
+	paramsGroupBaseDN := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "Boom",
+		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
+		"sub_tree":               "true",
+		"strategy":               "HIERARCHICAL",
+	}
+	t.Run("InvalidGroupBaseDN", func(t *testing.T) {
+		resource.Test(makeLdapGroupValidatorsTestCase(paramsGroupBaseDN, errorMessageConfiguration, t))
 	})
 
 	errorMessageMatch := "Invalid Attribute Value Match"
@@ -118,10 +146,11 @@ func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 		"enabled_ldap":           "ldap2",
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
 		"sub_tree":               "true",
 		"strategy":               "static",
 	}
-	t.Run(fmt.Sprintf("TestLdapGroup_StrategyCaseSensitive"), func(t *testing.T) {
+	t.Run("StrategyCaseSensitive", func(t *testing.T) {
 		resource.Test(makeLdapGroupValidatorsTestCase(paramsStrategy, errorMessageMatch, t))
 	})
 }
@@ -129,24 +158,34 @@ func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage string, t *testing.T) (*testing.T, resource.TestCase) {
 
 	const ldapGroupSetting = `
+	variable "group_base_dn" {
+		type    = string
+		default = "{{ .group_base_dn }}"
+	}
+
+	variable "filter" {
+		type    = string
+		default = "{{ .filter }}"
+	}
+
 	resource "artifactory_ldap_group_setting_v2" "{{ .name }}" {
 		name = "{{ .name }}"
 		enabled_ldap = "{{ .enabled_ldap }}"
-		group_base_dn = "{{ .group_base_dn }}"
+		group_base_dn = var.group_base_dn
 		group_name_attribute = "cn"
 		group_member_attribute = "{{ .group_member_attribute }}"
 		sub_tree = {{ .sub_tree }}
 		force_attribute_search = false
-		filter = "(objectClass=groupOfNames)"
+		filter = var.filter
 		description_attribute = "description"
 		strategy = "{{ .strategy }}"
 	}
 	`
-	LdapSettingIncorrectDnPattern := utilsdk.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
+	LdapSettingIncorrectDnPattern := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +198,7 @@ func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage
 
 func testAccLdapGroupSettingV2Destroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

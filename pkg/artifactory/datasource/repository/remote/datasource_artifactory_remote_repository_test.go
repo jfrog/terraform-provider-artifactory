@@ -5,31 +5,30 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccDataSourceRemoteAllBasicPackageTypes(t *testing.T) {
 	for _, packageType := range remote.PackageTypesLikeBasic {
-		title := fmt.Sprintf("%s", packageType)
-		t.Run(title, func(t *testing.T) {
+		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkTestCase(packageType, t))
 		})
 	}
 }
 
 func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-remote-%s-%d", packageType, testutil.RandomInt())
+	name := fmt.Sprintf("remote-%s-%d", packageType, testutil.RandomInt())
 	resourceName := fmt.Sprintf("data.artifactory_remote_%s_repository.%s", packageType, name)
 
 	params := map[string]interface{}{
 		"packageType": packageType,
 		"name":        name,
 	}
-	config := utilsdk.ExecuteTemplate("TestAccRemoteRepository", `
+	config := util.ExecuteTemplate("TestAccRemoteRepository", `
 		resource "artifactory_remote_{{ .packageType }}_repository" "{{ .name }}" {
 		    key         = "{{ .name }}"
 		    description = "Test repo for {{ .name }}"
@@ -67,7 +66,7 @@ func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteBowerRepository",
 		`resource "artifactory_remote_bower_repository" "{{ .name }}" {
 		    key = "{{ .name }}"
@@ -104,7 +103,7 @@ func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteCargoRepository",
 		`resource "artifactory_remote_cargo_repository" "{{ .name }}" {
 		    key                 = "{{ .name }}"
@@ -146,7 +145,7 @@ func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteCocoaPodsRepository",
 		`resource "artifactory_remote_cocoapods_repository" "{{ .name }}" {
 		    key                 = "{{ .name }}"
@@ -184,7 +183,7 @@ func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteComposerRepository",
 		`resource "artifactory_remote_composer_repository" "{{ .name }}" {
 		    key                   = "{{ .name }}"
@@ -222,7 +221,7 @@ func TestAccDataSourceRemoteConanRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteConanRepository",
 		`resource "artifactory_remote_conan_repository" "{{ .name }}" {
 		    key                        = "{{ .name }}"
@@ -260,7 +259,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteConanRepository",
 		`resource "artifactory_remote_docker_repository" "{{ .name }}" {
 		    key                            = "{{ .name }}"
@@ -269,6 +268,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		    enable_token_authentication    = true
 		    block_pushing_schema1          = true
 		    external_dependencies_patterns = ["*foo"]
+			curated                        = false
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
@@ -294,6 +294,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "*foo"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},
@@ -305,7 +306,7 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteGenericRepository",
 		`resource "artifactory_remote_generic_repository" "{{ .name }}" {
 		    key = "{{ .name }}"
@@ -341,7 +342,7 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteGoRepository",
 		`resource "artifactory_remote_go_repository" "{{ .name }}" {
 		    key              = "{{ .name }}"
@@ -379,7 +380,7 @@ func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteHelmRepository",
 		`resource "artifactory_remote_helm_repository" "{{ .name }}" {
 		    key                            = "{{ .name }}"
@@ -466,7 +467,7 @@ func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
+				Config: util.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", params["url"].(string)),
@@ -498,13 +499,14 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 	params["name"] = name
 	params["resource_name"] = "artifactory_remote_maven_repository"
 	params["suppress_pom_consistency_checks"] = false
+	params["curated"] = false
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
+				Config: util.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", params["url"].(string)),
@@ -515,6 +517,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%t", params["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%t", params["suppress_pom_consistency_checks"])),
 					resource.TestCheckResourceAttr(fqrn, "reject_invalid_jars", fmt.Sprintf("%t", params["reject_invalid_jars"])),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},
@@ -526,7 +529,7 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteNugetRepository",
 		`resource "artifactory_remote_nuget_repository" "{{ .name }}" {
 		    key                        = "{{ .name }}"
@@ -569,11 +572,12 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemotePypiRepository",
 		`resource "artifactory_remote_pypi_repository" "{{ .name }}" {
-		    key = "{{ .name }}"
-		    url = "http://tempurl.org"
+		    key     = "{{ .name }}"
+		    url     = "http://tempurl.org"
+			curated = false
 		}
 
 		data "artifactory_remote_pypi_repository" "{{ .name }}" {
@@ -596,6 +600,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
 					resource.TestCheckResourceAttr(fqrn, "pypi_registry_url", "https://pypi.org"),
 					resource.TestCheckResourceAttr(fqrn, "pypi_repository_suffix", "simple"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 		},
@@ -607,7 +612,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteTerraformRepository",
 		`resource "artifactory_remote_terraform_repository" "{{ .name }}" {
 		    key                  = "{{ .name }}"
@@ -647,7 +652,7 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccDataSourceRemoteTerraformRepository",
 		`resource "artifactory_remote_vcs_repository" "{{ .name }}" {
 		    key                  = "{{ .name }}"

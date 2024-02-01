@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -15,7 +15,6 @@ var PackageTypesLikeGeneric = []string{
 	"chef",
 	"cocoapods",
 	"composer",
-	"conan",
 	"conda",
 	"cran",
 	"gems",
@@ -23,6 +22,7 @@ var PackageTypesLikeGeneric = []string{
 	"gitlfs",
 	"go",
 	"helm",
+	"huggingfaceml",
 	"npm",
 	"opkg",
 	"pub",
@@ -39,8 +39,8 @@ type RepositoryBaseParams struct {
 	ProjectEnvironments    []string `json:"environments"`
 	Rclass                 string   `json:"rclass"`
 	PackageType            string   `hcl:"package_type" json:"packageType,omitempty"`
-	Description            string   `hcl:"description" json:"description,omitempty"`
-	Notes                  string   `hcl:"notes" json:"notes,omitempty"`
+	Description            string   `json:"description"`
+	Notes                  string   `json:"notes"`
 	IncludesPattern        string   `hcl:"includes_pattern" json:"includesPattern,omitempty"`
 	ExcludesPattern        string   `hcl:"excludes_pattern" json:"excludesPattern,omitempty"`
 	RepoLayoutRef          string   `hcl:"repo_layout_ref" json:"repoLayoutRef,omitempty"`
@@ -61,18 +61,6 @@ func (bp RepositoryBaseParams) Id() string {
 var BaseLocalRepoSchema = utilsdk.MergeMaps(
 	repository.BaseRepoSchema,
 	map[string]*schema.Schema{
-		"includes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
-		},
-		"excludes_pattern": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default no artifacts are excluded.",
-		},
 		"blacked_out": {
 			Type:        schema.TypeBool,
 			Optional:    true,

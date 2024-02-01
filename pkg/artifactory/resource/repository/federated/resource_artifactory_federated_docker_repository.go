@@ -2,8 +2,8 @@ package federated
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -12,6 +12,7 @@ import (
 type DockerFederatedRepositoryParams struct {
 	local.DockerLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
@@ -19,7 +20,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 
 	dockerV2FederatedSchema := utilsdk.MergeMaps(
 		local.DockerV2LocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -27,6 +28,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 		repo := DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.UnpackLocalDockerV2Repository(data, rclass),
 			Members:                     unpackMembers(data),
+			RepoParams:                  unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -65,7 +67,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 
 	dockerFederatedSchema := utilsdk.MergeMaps(
 		local.DockerV1LocalSchema,
-		memberSchema,
+		federatedSchema,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
@@ -73,6 +75,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 		repo := DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.UnpackLocalDockerV1Repository(data, rclass),
 			Members:                     unpackMembers(data),
+			RepoParams:                  unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}

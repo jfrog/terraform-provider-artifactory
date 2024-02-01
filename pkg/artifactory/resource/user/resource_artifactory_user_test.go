@@ -3,13 +3,14 @@ package user_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -22,7 +23,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 		"name":  name,
 		"email": email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserUpgrade", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserUpgrade", `
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
@@ -51,7 +52,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -70,7 +71,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
@@ -81,7 +82,7 @@ func TestAccUser_basic_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccUser_no_password(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name   = "{{ .name }}"
 			email  = "{{ .email }}"
@@ -123,7 +124,7 @@ func TestAccUser_no_password(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -155,7 +156,7 @@ func TestAccUser_no_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -165,7 +166,7 @@ func TestAccUser_no_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -197,7 +198,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userEmptyGroups := utilsdk.ExecuteTemplate("TestAccUserBasic", `
+	userEmptyGroups := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
@@ -208,7 +209,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
@@ -230,10 +231,50 @@ func TestAccUser_empty_groups(t *testing.T) {
 	})
 }
 
+func TestAccUser_invalidName(t *testing.T) {
+	testCase := []struct {
+		name       string
+		username   string
+		errorRegex string
+	}{
+		{"Empty", "", `.*Invalid Attribute Value Length.*`},
+		{"Uppercase", "test_user_Uppercase", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+		{"Symbols", "test_user_!", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccUserInvalidName(t, tc.username, tc.errorRegex))
+	}
+}
+
+func testAccUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		const userNoGroups = `
+			resource "artifactory_user" "%s" {
+				name  = "%s"
+				email = "dummy%d@a.com"
+			}
+		`
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_user")
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(userNoGroups, name, username, id),
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
 func TestAccUser_all_attributes(t *testing.T) {
 	const userFull = `
 		resource "artifactory_user" "%s" {
-			name        				= "dummy_user%d"
+			name        				= "%s"
 			email       				= "dummy%d@a.com"
 			password					= "Passw0rd!"
 			admin    					= true
@@ -245,7 +286,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 	`
 	const userUpdated = `
 		resource "artifactory_user" "%s" {
-			name        				= "dummy_user%d"
+			name        				= "%s"
 			email       				= "dummy%d@a.com"
 			password					= "Passw0rd!"
 			admin    					= false
@@ -255,14 +296,15 @@ func TestAccUser_all_attributes(t *testing.T) {
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
-	username := fmt.Sprintf("dummy_user%d", id)
+	username := fmt.Sprintf("dummy_user-@%d.", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, id, id),
+				Config: fmt.Sprintf(userFull, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
@@ -274,7 +316,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(userUpdated, name, id, id),
+				Config: fmt.Sprintf(userUpdated, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
@@ -309,7 +351,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 		"email":    email,
 		"password": password,
 	}
-	userInitial := utilsdk.ExecuteTemplate("TestUser", `
+	userInitial := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -318,7 +360,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 			disable_ui_access = false
 		}
 	`, params)
-	userUpdated := utilsdk.ExecuteTemplate("TestUser", `
+	userUpdated := util.ExecuteTemplate("TestUser", `
 		resource "artifactory_user" "{{ .name }}" {
 			name              = "{{ .username }}"
 			email             = "{{ .email }}"
@@ -330,7 +372,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -364,7 +406,7 @@ func TestAccUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 
 func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

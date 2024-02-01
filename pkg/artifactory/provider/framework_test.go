@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/provider"
 )
 
 func TestMuxServer(t *testing.T) {
@@ -25,15 +26,26 @@ func TestMuxServer(t *testing.T) {
 	token := os.Getenv("JFROG_ACCESS_TOKEN")
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: map[string]func() (tfprotov5.ProviderServer, error){
-			"artifactory": func() (tfprotov5.ProviderServer, error) {
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"artifactory": func() (tfprotov6.ProviderServer, error) {
 				ctx := context.Background()
-				providers := []func() tfprotov5.ProviderServer{
-					providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
-					provider.SdkV2().GRPCProvider,                       // terraform-plugin-sdk provider
+
+				upgradedSdkServer, err := tf5to6server.UpgradeServer(
+					ctx,
+					provider.SdkV2().GRPCProvider, // terraform-plugin-sdk provider
+				)
+				if err != nil {
+					return nil, err
 				}
 
-				muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+				providers := []func() tfprotov6.ProviderServer{
+					providerserver.NewProtocol6(provider.Framework()()), // terraform-plugin-framework provider
+					func() tfprotov6.ProviderServer {
+						return upgradedSdkServer
+					},
+				}
+
+				muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
 
 				if err != nil {
 					return nil, err

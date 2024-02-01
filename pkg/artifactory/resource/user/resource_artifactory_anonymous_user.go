@@ -7,17 +7,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"golang.org/x/net/context"
 )
 
 func NewAnonymousUserResource() resource.Resource {
-
-	return &ArtifactoryAnonymousUserResource{}
+	return &ArtifactoryAnonymousUserResource{
+		TypeName: "artifactory_anonymous_user",
+	}
 }
 
 type ArtifactoryAnonymousUserResource struct {
-	client utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryAnonymousUserResourceModel describes the Terraform resource data model to match the
@@ -33,7 +36,7 @@ type ArtifactoryAnonymousUserResourceAPIModel struct {
 }
 
 func (r *ArtifactoryAnonymousUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_anonymous_user"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryAnonymousUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -57,7 +60,7 @@ func (r *ArtifactoryAnonymousUserResource) Configure(ctx context.Context, req re
 	if req.ProviderData == nil {
 		return
 	}
-	r.client = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -65,10 +68,11 @@ func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resou
 		"Unable to Create Resource",
 		"Anonymous Artifactory user cannot be created. Use `terraform import` instead.",
 	)
-	return
 }
 
 func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryAnonymousUserResourceModel
 
 	// Read Terraform prior state data into the model
@@ -80,24 +84,16 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 	// Convert from Terraform data model into API data model
 	user := &ArtifactoryAnonymousUserResourceAPIModel{}
 
-	response, err := r.client.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Refresh Resource",
-			"An unexpected error occurred while attempting to refresh resource state. "+
-				"Please retry the operation or report this issue to the provider developers.\n\n"+
-				"HTTP Error: "+err.Error(),
-		)
-
-		return
-	}
+	response, err := r.ProviderData.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-
+	if err != nil {
+		if response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -119,7 +115,6 @@ func (r *ArtifactoryAnonymousUserResource) Update(ctx context.Context, req resou
 		"Unable to Update Resource",
 		"Anonymous Artifactory user cannot be updated. Use `terraform import` instead.",
 	)
-	return
 }
 
 func (r *ArtifactoryAnonymousUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -127,11 +122,9 @@ func (r *ArtifactoryAnonymousUserResource) Delete(ctx context.Context, req resou
 		"Unable to Delete Resource",
 		"Anonymous Artifactory user cannot be deleted. Use `terraform state rm` instead.",
 	)
-	return
 }
 
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryAnonymousUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-
 }

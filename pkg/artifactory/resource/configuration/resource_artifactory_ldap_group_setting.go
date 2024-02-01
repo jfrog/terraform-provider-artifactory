@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"gopkg.in/yaml.v3"
@@ -112,7 +113,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 		name := data.GetString("name", false)
 
 		ldapGroupConfigs := XmlLdapGroupConfig{}
-		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -162,7 +163,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 
 		rsrcLdapGroupSetting := unpackLdapGroupSetting(d)
 
-		response, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

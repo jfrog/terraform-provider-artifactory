@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestAccVirtualRepository_basic(t *testing.T) {
@@ -317,7 +315,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 		"name":          name,
 		"useNamespaces": useNamespaces,
 	}
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualHelmRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualHelmRepository", `
 		resource "artifactory_virtual_helm_repository" "{{ .name }}" {
 		  key            				 = "{{ .name }}"
 	 	  use_namespaces 				 = {{ .useNamespaces }}
@@ -355,46 +353,44 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1-", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2-", "artifactory_keypair")
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
+	virtualRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -402,45 +398,44 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_keypair" "{{ .kp_name2 }}" {
 			pair_name  = "{{ .kp_name2 }}"
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id2 }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -448,6 +443,7 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_virtual_rpm_repository" "{{ .repo_name }}" {
 			key 	              = "{{ .repo_name }}"
 			primary_keypair_ref   = artifactory_keypair.{{ .kp_name }}.pair_name
@@ -467,8 +463,8 @@ func TestAccVirtualRpmRepository(t *testing.T) {
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
@@ -661,7 +657,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"projectEnv": projectEnv,
 	}
-	virtualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virtualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "{{ .projectKey }}"
@@ -711,7 +707,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"name":       name,
 		"projectKey": projectKey,
 	}
-	virualRepositoryBasic := utilsdk.ExecuteTemplate("TestAccVirtualGenericRepository", `
+	virualRepositoryBasic := util.ExecuteTemplate("TestAccVirtualGenericRepository", `
 		resource "artifactory_virtual_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
 	 	  project_key          = "invalid-project-key-too-long-really-long"
@@ -741,11 +737,7 @@ func TestAccVirtualRepository(t *testing.T) {
 	for _, repoType := range virtual.PackageTypesLikeGeneric {
 		// TODO: workaround due to bug in Artifactory 7.55.2, 'bypass_head_requests' inconsistency for terraform repo type.
 		if repoType != "terraform" {
-			title := fmt.Sprintf(
-				"TestVirtual%sRepo",
-				cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-			)
-			t.Run(title, func(t *testing.T) {
+			t.Run(repoType, func(t *testing.T) {
 				resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 					"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				}))
@@ -753,11 +745,7 @@ func TestAccVirtualRepository(t *testing.T) {
 		}
 	}
 	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
-		title := fmt.Sprintf(
-			"TestVirtual%sRepo",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
 				"description":                    fmt.Sprintf("%s virtual repository public description testing.", repoType),
 				"retrieval_cache_period_seconds": 650,
@@ -767,11 +755,10 @@ func TestAccVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
-		title := fmt.Sprintf("TestVirtual%sRepo", cases.Title(language.AmericanEnglish).String(strings.ToLower(repoType)))
-		t.Run(title, func(t *testing.T) {
-			resource.Test(mkNewVirtualTestCase(repoType, t, map[string]interface{}{
-				"description": fmt.Sprintf("%s virtual repository public description testing.", repoType),
+	for _, packageType := range repository.GradleLikePackageTypes {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
+				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
 			}))
 		})
@@ -807,6 +794,14 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 	checks := append(defaultChecks, extraChecks...)
 	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
 
+	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
+		"description": "",
+		"notes":       "",
+	})
+	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
+	updatedConfig := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, updatedFieldsHcl)
+	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
+
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -815,6 +810,10 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 			{
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(checks...),
+			},
+			{
+				Config: updatedConfig,
+				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
 			},
 			{
 				ResourceName:      fqrn,
@@ -837,6 +836,14 @@ func TestAccVirtualAlpineRepositoryZeroRetrievalPeriod(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
 		"description":                    "alpine virtual repository public description testing.",
 		"retrieval_cache_period_seconds": 0,
+	}))
+}
+
+func TestAccVirtualConanRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("conan", t, map[string]interface{}{
+		"description":                    "conan virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 650,
+		"force_conan_authentication":     true,
 	}))
 }
 
@@ -864,7 +871,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualBowerRepository = utilsdk.ExecuteTemplate("TestAccVirtualBower", `
+	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualBower", `
 		resource "artifactory_remote_bower_repository" "bower-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -920,7 +927,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualNpmRepository = utilsdk.ExecuteTemplate("TestAccVirtualNpm", `
+	var virtualNpmRepository = util.ExecuteTemplate("TestAccVirtualNpm", `
 		resource "artifactory_remote_npm_repository" "npm-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"

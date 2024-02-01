@@ -2,7 +2,7 @@ package remote
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -13,6 +13,7 @@ const DockerPackageType = "docker"
 var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
+		CurationRemoteRepoSchema,
 		map[string]*schema.Schema{
 			"external_dependencies_enabled": {
 				Type:        schema.TypeBool,
@@ -47,6 +48,11 @@ var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 					"This value must be assigned to the attribute manually, if user don't specify any other non-default values." +
 					"This attribute must be set together with `external_dependencies_enabled = true`",
 			},
+			"project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.",
+			},
 		},
 		repository.RepoLayoutRefSchema(rclass, DockerPackageType),
 	)
@@ -54,21 +60,27 @@ var DockerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 
 type DockerRemoteRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
 	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	BlockPushingSchema1          bool     `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
+	ProjectId                    string   `json:"dockerProjectId"`
 }
 
 func ResourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	var unpackDockerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := DockerRemoteRepo{
-			RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, DockerPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, DockerPackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
 			EnableTokenAuthentication:    d.GetBool("enable_token_authentication", false),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 			BlockPushingSchema1:          d.GetBool("block_pushing_schema1", false),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
+			ProjectId:                    d.GetString("project_id", false),
 		}
 		return repo, repo.Id(), nil
 	}

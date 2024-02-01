@@ -18,19 +18,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	validatorfw "github.com/jfrog/terraform-provider-shared/validator/fw"
 )
 
 const GroupsEndpoint = "artifactory/api/security/groups/"
 
 func NewGroupResource() resource.Resource {
-	return &ArtifactoryGroupResource{}
+	return &ArtifactoryGroupResource{
+		TypeName: "artifactory_group",
+	}
 }
 
 type ArtifactoryGroupResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryGroupResourceModel describes the Terraform resource data model to match the
@@ -67,7 +70,7 @@ type ArtifactoryGroupResourceAPIModel struct {
 }
 
 func (r *ArtifactoryGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_group"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -182,10 +185,12 @@ func (r *ArtifactoryGroupResource) Configure(ctx context.Context, req resource.C
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryGroupResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -243,6 +248,8 @@ func getDetachUsersValue(resource *ArtifactoryGroupResourceModel) bool {
 }
 
 func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryGroupResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -260,15 +267,14 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 		SetResult(&group).
 		Get(GroupsEndpoint + data.Id.ValueString())
 
-	if err != nil {
-		unableToRefreshResourceError(resp, err)
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -284,6 +290,8 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryGroupResourceModel
 
 	// Read Terraform plan data into the model
@@ -352,6 +360,8 @@ func (r *ArtifactoryGroupResource) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryGroupResourceModel
 
 	// Read Terraform prior state data into the model
@@ -361,13 +371,13 @@ func (r *ArtifactoryGroupResource) Delete(ctx context.Context, req resource.Dele
 		Delete(GroupsEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		unableToDeleteResourceError(resp, err)
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		unableToDeleteResourceError(resp, err)
+		utilfw.UnableToDeleteResourceError(resp, response.String())
 		return
 	}
 

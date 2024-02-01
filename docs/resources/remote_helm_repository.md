@@ -31,7 +31,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
-* `helm_charts_base_url` - (Optional) No documentation is available. Hopefully you know what this means.
+* `helm_charts_base_url` - (Optional) Base URL for the translation of chart source URLs in the index.yaml of virtual repos. Artifactory will only translate URLs matching the index.yamls hostname or URLs starting with this base url. Support http/https/oci protocol scheme.
 * `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten. `External Dependency Rewrite` in the UI.
 * `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will
   follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.

@@ -1,7 +1,7 @@
 package federated
 
-import "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/federated"
+import "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/federated"
 
 const rclass = "federated"
 
-var memberSchema = federated.MemberSchemaGenerator(false)
+var federatedSchema = federated.SchemaGenerator(false)

@@ -11,16 +11,15 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // To make tests work add `ARTIFACTORY_URL_2=http://artifactory-2:8081` or `ARTIFACTORY_URL_2=http://host.docker.internal:9081`
@@ -53,7 +52,19 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		"member1Url":   federatedMember1Url,
 		"member2Url":   federatedMember2Url,
 	}
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+	config := util.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key         = "{{ .name }}"
+			description = "Test federated repo for {{ .name }}"
+			notes       = "Test federated repo for {{ .name }}"
+
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+		}
+	`, params)
+	updatedConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfigWithMembers", `
 		resource "{{ .resourceType }}" "{{ .name }}" {
 			key         = "{{ .name }}"
 			description = "Test federated repo for {{ .name }}"
@@ -77,7 +88,15 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: federatedRepositoryConfig,
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember1Url),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+				),
+			},
+			{
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember2Url),
@@ -97,7 +116,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	})
 }
 
-func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
+func genericTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	if skip, reason := skipFederatedRepo(); skip {
 		t.Skipf(reason)
 	}
@@ -106,6 +125,7 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	resourceType := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
 	xrayIndex := testutil.RandBool()
+	proxyKey := fmt.Sprintf("test-proxy-%d", testutil.RandomInt())
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
 	params := map[string]interface{}{
@@ -113,16 +133,29 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		"name":         name,
 		"xrayIndex":    xrayIndex,
 		"memberUrl":    federatedMemberUrl,
+		"proxyKey":     proxyKey,
+		"disableProxy": false,
 	}
 
 	repoTypeAdjusted := local.GetPackageType(repoType)
 
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+	// Default proxy will be assigned to the repository no matter what, and it's impossible to remove it by submitting an empty string or
+	// removing the attribute. If `disable_proxy` is set to true, then both repo and default proxies are removed and not returned in the
+	// GET body.
+	config := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_proxy" "{{ .proxyKey }}" {
+			key  = "{{ .proxyKey }}"
+			host = "http://tempurl.org"
+			port = 8000
+		}
+
 		resource "{{ .resourceType }}" "{{ .name }}" {
-			key         = "{{ .name }}"
-			description = "Test federated repo for {{ .name }}"
-			notes       = "Test federated repo for {{ .name }}"
-			xray_index  = {{ .xrayIndex }}
+			key           = "{{ .name }}"
+			description   = "Test federated repo for {{ .name }}"
+			notes         = "Test federated repo for {{ .name }}"
+			xray_index    = {{ .xrayIndex }}
+			proxy         = artifactory_proxy.{{ .proxyKey }}.key
+			disable_proxy = {{ .disableProxy }}
 
 			member {
 				url     = "{{ .memberUrl }}"
@@ -131,19 +164,68 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 		}
 	`, params)
 
+	updatedParams := map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"xrayIndex":    !xrayIndex,
+		"memberUrl":    federatedMemberUrl,
+		"proxyKey":     proxyKey,
+		"disableProxy": true,
+	}
+
+	updatedConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+		resource "artifactory_proxy" "{{ .proxyKey }}" {
+			key  = "{{ .proxyKey }}"
+			host = "http://tempurl.org"
+			port = 8000
+		}
+
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key           = "{{ .name }}"
+			description   = "Test federated repo for {{ .name }}"
+			notes         = "Test federated repo for {{ .name }}"
+			xray_index    = {{ .xrayIndex }}
+			disable_proxy = {{ .disableProxy }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`, updatedParams)
+
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: federatedRepositoryConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", repoTypeAdjusted),
 					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated repo for %s", name)),
 					resource.TestCheckResourceAttr(fqrn, "xray_index", fmt.Sprintf("%t", xrayIndex)),
+					resource.TestCheckResourceAttr(fqrn, "proxy", proxyKey),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", fmt.Sprintf("%t", params["disableProxy"].(bool))),
+
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", repoType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repoTypeAdjusted),
+					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated repo for %s", name)),
+					resource.TestCheckResourceAttr(fqrn, "xray_index", fmt.Sprintf("%t", !xrayIndex)),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", fmt.Sprintf("%t", updatedParams["disableProxy"].(bool))),
 
 					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMemberUrl),
@@ -163,12 +245,47 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 }
 
 func TestAccFederatedRepoGenericTypes(t *testing.T) {
-	for _, repo := range federated.PackageTypesLikeGeneric {
-		title := cases.Title(language.AmericanEnglish).String(repo)
-		t.Run(title, func(t *testing.T) {
-			resource.Test(federatedTestCase(repo, t))
+	for _, packageType := range federated.PackageTypesLikeGeneric {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(genericTestCase(packageType, t))
 		})
 	}
+}
+
+func TestAccFederatedRepo_DisableDefaultProxyConflictAttr(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-go-remote-", "artifactory_federated_go_repository")
+	memberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	params := map[string]string{
+		"name":      name,
+		"memberUrl": memberUrl,
+	}
+	config := util.ExecuteTemplate("TestAccFederatedGoRepository", `
+		resource "artifactory_federated_go_repository" "{{ .name }}" {
+			key             = "{{ .name }}"
+			repo_layout_ref = "go-default"
+			proxy 			= "my-proxy"
+			disable_proxy 	= true
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*if `disable_proxy` is set to `true`, `proxy` can't be set"),
+			},
+		},
+	})
 }
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
@@ -186,7 +303,7 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 		"projectEnv": projectEnv,
 		"memberUrl":  federatedMemberUrl,
 	}
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
 			key                  = "{{ .name }}"
 			project_key          = "{{ .projectKey }}"
@@ -245,7 +362,7 @@ func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 		"projectKey": projectKey,
 		"memberUrl":  federatedMemberUrl,
 	}
-	federatedRepositoryConfig := utilsdk.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
+	federatedRepositoryConfig := util.ExecuteTemplate("TestAccFederatedRepositoryConfig", `
 		resource "artifactory_federated_generic_repository" "{{ .name }}" {
 			key         = "{{ .name }}"
 		 	project_key = "invalid-project-key-too-long-really-long"
@@ -282,51 +399,51 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", `
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
 			pair_type = "RSA"
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
-		-----BEGIN RSA PRIVATE KEY-----
-		MIIEpAIBAAKCAQEA2ymVc24BoaZb0ElXoI3X4zUKJGZEetR6F4yT1tJhkPDg7UTm
-		iNoFB5TZJvP6LBrrSwszkpZbxaVOkBrwrGbqFUaXPgud8VabfHl0imXvN746zmpj
-		YEMGqJzm+Gh6aBWOlnPdLuHhds/kcanFAEppj5yN0tVWDnqjOJjR7EpxMSdP3TSd
-		6tNAY73LGNLNJQc6tSxh8nMIb4HhSWQSgfof+FwcLGvs+mmyBq8Jz5Zy4BSCk1fQ
-		FmCnSGyzpyBD0vMd6eLHk2l0tm56DrlonbDMX8KGs7e9ZgjANkT5PnipLOaeLJU4
-		H+OWyBZUAT4hl/iRVvLwV81x7g0/O38kmPYJDQIDAQABAoIBAFb7wyhEIfuhhlE9
-		uryrb2LrGzJlMIq7qBWOouKhLz4SjIM/VGw+c76VkjZGoSU+LeLj+D0W1ie0u2Cw
-		gJM8aW22TbK/c5lksWOO5PVFDdPG+ZoRWY3MLGlhlL5E4UhMPgJyy/eeiRjZ3CZM
-		pja+UfVAwn1KVNR8UinVZYPt680AvEd1FGxoNLxemIPNug46nNqp6Al86Bn+BnkN
-		GXpwyooXVSfo4k+pnFBFIXUdA1dUEXQSVb1AxlTo6g/Ok/+8Gfq8idCdu+5fcZI2
-		1eLeC+FAa92rr1SFX/UWeB4cMyuAqwuxbFFIplT22SaUSsNuOUSH4E00nbP/AuCb
-		1BqrLmECgYEA7tQKfyF9aiXTsOMdOnSAa5OyEaCfsFtcmLd4ykVrwN8O36NoX005
-		VbGuqo87fwIXQIKHU+kOEs/TmaQ8bNcbCD/SfWGTtOnHG4qfIsepJuoMwbQHRhGF
-		JeoXh5yEUKg5pcDBY8PENEtEVKmFuL4bPOdn+9FNLGsjftvXpmGWbGUCgYEA6uuQ
-		7kzO6WD88OsxdJzlJM11hg2SaSBCh3+5tnOhF1ULOUt4tdYXzh3QI6BPX7tkArYf
-		XteVfWoWqn6T7LtCjFm350BqVpPhqfLKnt6fYf1yotsj/cyZXlXquRbxbgakB0n0
-		4PrsZaube0TPPVeirzNyOVHyFc+iW+F+IUYD+4kCgYEApDEjBkP/9PoMj4+UiJuP
-		rmXcBkJnhtdI0bVRVb5kVjUEBLxTBTISONfvPVM7lBXb5n3Wi9mt00EOOJKw+CLq
-		csFt9MUgxz/xov2qaj7aC+bc3k7msUVaRLardpAkZ09AUrQyQGRWf50/XPUu+dO4
-		5iYxVu6OH/uIa664k6qDwAECgYEAslS8oomgEL3VhbWkx1dLA5MMggTPfgpFNsMY
-		4Y4JXcLrUEUgjzjEvW0YUdMiLhP8qapDSiXxj1D3f9myxWSp8g0xc9UMZEjCZ9at
-		RcjNyP8zBLnCKqokSt6B3puyDsnvvrC/ugIBbnTFBOCJSZG7J7CwJx8z3KbQI1ub
-		+fpCj7ECgYAd69soLEybUGMjsdI+OijIGoUTUoZGXJm+0VpBt4QJCe7AMnYPfYzA
-		JnEmN4D7HLTKUBklQnb/FhP/RuiT2bSAd1l+PNeuU7gYROCBBonzxXQ1wEbNrSYA
-		iyoc9g/kvV8HTW8361xEhu7wmuSEEx1gQ/7sdhTkgrTncc8hxVRxuA==
-		-----END RSA PRIVATE KEY-----
-		EOF
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA2ymVc24BoaZb0ElXoI3X4zUKJGZEetR6F4yT1tJhkPDg7UTm
+iNoFB5TZJvP6LBrrSwszkpZbxaVOkBrwrGbqFUaXPgud8VabfHl0imXvN746zmpj
+YEMGqJzm+Gh6aBWOlnPdLuHhds/kcanFAEppj5yN0tVWDnqjOJjR7EpxMSdP3TSd
+6tNAY73LGNLNJQc6tSxh8nMIb4HhSWQSgfof+FwcLGvs+mmyBq8Jz5Zy4BSCk1fQ
+FmCnSGyzpyBD0vMd6eLHk2l0tm56DrlonbDMX8KGs7e9ZgjANkT5PnipLOaeLJU4
+H+OWyBZUAT4hl/iRVvLwV81x7g0/O38kmPYJDQIDAQABAoIBAFb7wyhEIfuhhlE9
+uryrb2LrGzJlMIq7qBWOouKhLz4SjIM/VGw+c76VkjZGoSU+LeLj+D0W1ie0u2Cw
+gJM8aW22TbK/c5lksWOO5PVFDdPG+ZoRWY3MLGlhlL5E4UhMPgJyy/eeiRjZ3CZM
+pja+UfVAwn1KVNR8UinVZYPt680AvEd1FGxoNLxemIPNug46nNqp6Al86Bn+BnkN
+GXpwyooXVSfo4k+pnFBFIXUdA1dUEXQSVb1AxlTo6g/Ok/+8Gfq8idCdu+5fcZI2
+1eLeC+FAa92rr1SFX/UWeB4cMyuAqwuxbFFIplT22SaUSsNuOUSH4E00nbP/AuCb
+1BqrLmECgYEA7tQKfyF9aiXTsOMdOnSAa5OyEaCfsFtcmLd4ykVrwN8O36NoX005
+VbGuqo87fwIXQIKHU+kOEs/TmaQ8bNcbCD/SfWGTtOnHG4qfIsepJuoMwbQHRhGF
+JeoXh5yEUKg5pcDBY8PENEtEVKmFuL4bPOdn+9FNLGsjftvXpmGWbGUCgYEA6uuQ
+7kzO6WD88OsxdJzlJM11hg2SaSBCh3+5tnOhF1ULOUt4tdYXzh3QI6BPX7tkArYf
+XteVfWoWqn6T7LtCjFm350BqVpPhqfLKnt6fYf1yotsj/cyZXlXquRbxbgakB0n0
+4PrsZaube0TPPVeirzNyOVHyFc+iW+F+IUYD+4kCgYEApDEjBkP/9PoMj4+UiJuP
+rmXcBkJnhtdI0bVRVb5kVjUEBLxTBTISONfvPVM7lBXb5n3Wi9mt00EOOJKw+CLq
+csFt9MUgxz/xov2qaj7aC+bc3k7msUVaRLardpAkZ09AUrQyQGRWf50/XPUu+dO4
+5iYxVu6OH/uIa664k6qDwAECgYEAslS8oomgEL3VhbWkx1dLA5MMggTPfgpFNsMY
+4Y4JXcLrUEUgjzjEvW0YUdMiLhP8qapDSiXxj1D3f9myxWSp8g0xc9UMZEjCZ9at
+RcjNyP8zBLnCKqokSt6B3puyDsnvvrC/ugIBbnTFBOCJSZG7J7CwJx8z3KbQI1ub
++fpCj7ECgYAd69soLEybUGMjsdI+OijIGoUTUoZGXJm+0VpBt4QJCe7AMnYPfYzA
+JnEmN4D7HLTKUBklQnb/FhP/RuiT2bSAd1l+PNeuU7gYROCBBonzxXQ1wEbNrSYA
+iyoc9g/kvV8HTW8361xEhu7wmuSEEx1gQ/7sdhTkgrTncc8hxVRxuA==
+-----END RSA PRIVATE KEY-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PUBLIC KEY-----
-		MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2ymVc24BoaZb0ElXoI3X
-		4zUKJGZEetR6F4yT1tJhkPDg7UTmiNoFB5TZJvP6LBrrSwszkpZbxaVOkBrwrGbq
-		FUaXPgud8VabfHl0imXvN746zmpjYEMGqJzm+Gh6aBWOlnPdLuHhds/kcanFAEpp
-		j5yN0tVWDnqjOJjR7EpxMSdP3TSd6tNAY73LGNLNJQc6tSxh8nMIb4HhSWQSgfof
-		+FwcLGvs+mmyBq8Jz5Zy4BSCk1fQFmCnSGyzpyBD0vMd6eLHk2l0tm56DrlonbDM
-		X8KGs7e9ZgjANkT5PnipLOaeLJU4H+OWyBZUAT4hl/iRVvLwV81x7g0/O38kmPYJ
-		DQIDAQAB
-		-----END PUBLIC KEY-----
-		EOF
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2ymVc24BoaZb0ElXoI3X
+4zUKJGZEetR6F4yT1tJhkPDg7UTmiNoFB5TZJvP6LBrrSwszkpZbxaVOkBrwrGbq
+FUaXPgud8VabfHl0imXvN746zmpjYEMGqJzm+Gh6aBWOlnPdLuHhds/kcanFAEpp
+j5yN0tVWDnqjOJjR7EpxMSdP3TSd6tNAY73LGNLNJQc6tSxh8nMIb4HhSWQSgfof
++FwcLGvs+mmyBq8Jz5Zy4BSCk1fQFmCnSGyzpyBD0vMd6eLHk2l0tm56DrlonbDM
+X8KGs7e9ZgjANkT5PnipLOaeLJU4H+OWyBZUAT4hl/iRVvLwV81x7g0/O38kmPYJ
+DQIDAQAB
+-----END PUBLIC KEY-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -334,6 +451,7 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_federated_alpine_repository" "{{ .repo_name }}" {
 			key 	            = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
@@ -353,8 +471,8 @@ func TestAccFederatedAlpineRepository(t *testing.T) {
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
@@ -404,8 +522,8 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 			}
 		}
 	`
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate(
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedCargoRepository", template, params)
+	federatedRepositoryUpdated := util.ExecuteTemplate(
 		"TestAccFederatedCargoRepository",
 		template,
 		map[string]interface{}{
@@ -450,6 +568,72 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 	})
 }
 
+func TestAccFederatedConanRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-federated", "artifactory_federated_conan_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	forceConanAuthentication := testutil.RandBool()
+
+	params := map[string]interface{}{
+		"force_conan_authentication": forceConanAuthentication,
+		"name":                       name,
+		"memberUrl":                  federatedMemberUrl,
+	}
+
+	template := `
+		resource "artifactory_federated_conan_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			force_conan_authentication = {{ .force_conan_authentication }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedConanRepository", template, params)
+
+	federatedRepositoryUpdated := util.ExecuteTemplate(
+		"TestAccFederatedCargoRepository",
+		template,
+		map[string]interface{}{
+			"force_conan_authentication": !forceConanAuthentication,
+			"name":                       name,
+			"memberUrl":                  federatedMemberUrl,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", !forceConanAuthentication)),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
+}
+
 func TestAccFederatedDebianRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("debian-federated", "artifactory_federated_debian_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
@@ -463,40 +647,38 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -504,45 +686,44 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_keypair" "{{ .kp_name2 }}" {
 			pair_name  = "{{ .kp_name2 }}"
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id2 }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -550,6 +731,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_federated_debian_repository" "{{ .repo_name }}" {
 			key 	                  = "{{ .repo_name }}"
 			primary_keypair_ref       = artifactory_keypair.{{ .kp_name }}.pair_name
@@ -569,7 +751,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 		}
 	`
 
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":         kpId,
 		"kp_name":       kpName,
 		"kp_id2":        kpId2,
@@ -579,7 +761,7 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 		"memberUrl":     federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":         kpId,
 		"kp_name":       kpName,
 		"kp_id2":        kpId2,
@@ -590,8 +772,8 @@ func TestAccFederatedDebianRepository(t *testing.T) {
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
@@ -662,7 +844,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
 		"block":     testutil.RandBool(),
@@ -671,7 +853,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -735,7 +917,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	updated := map[string]interface{}{
 		"block":     testutil.RandBool(),
@@ -744,7 +926,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, updated)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -801,7 +983,7 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 		"name":      name,
 		"memberUrl": federatedMemberUrl,
 	}
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedDockerRepository", template, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -851,7 +1033,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", template, params)
 
 	updates := map[string]interface{}{
 		"force_nuget_authentication": testutil.RandBool(),
@@ -859,7 +1041,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 		"name":                       name,
 		"memberUrl":                  federatedMemberUrl,
 	}
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccLocalNugetRepository", template, updates)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -943,7 +1125,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -956,7 +1138,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
@@ -1002,7 +1184,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", tempStruct["checksum_policy_type"])),
@@ -1014,7 +1196,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
+				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, updatedStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "checksum_policy_type", fmt.Sprintf("%s", updatedStruct["checksum_policy_type"])),
@@ -1037,10 +1219,9 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 }
 
 func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
-		title := cases.Title(language.AmericanEnglish).String(repoType)
-		t.Run(title, func(t *testing.T) {
-			resource.Test(makeFederatedGradleLikeRepoTestCase(repoType, t))
+	for _, packageType := range repository.GradleLikePackageTypes {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(makeFederatedGradleLikeRepoTestCase(packageType, t))
 		})
 	}
 }
@@ -1058,40 +1239,38 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -1099,45 +1278,44 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 				]
 			}
 		}
+
 		resource "artifactory_keypair" "{{ .kp_name2 }}" {
 			pair_name  = "{{ .kp_name2 }}"
 			pair_type = "GPG"
 			alias = "foo-alias{{ .kp_id2 }}"
 			private_key = <<EOF
-		-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-		lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
-		1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
-		aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
-		w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
-		CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
-		AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
-		nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
-		EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
-		MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
-		GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
-		JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
-		x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
-		=qCzy
-		-----END PGP PRIVATE KEY BLOCK-----
-		EOF
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+lIYEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib/+BwMCFjb4odY28+n0NWj7KZ53BkA0qzzqT9IpIfsW/tLNPTxYEFrDVbcF
+1CuiAgAhyUfBEr9HQaMJBLfIIvo/B3nlWvwWHkiQFuWpsnJ2pj8F8LQqQ2hyaXN0
+aWFuIEJvbmdpb3JubyA8Y2hyaXN0aWFuYkBqZnJvZy5jb20+iJoEExYKAEIWIQSS
+w8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbAwUJA8JnAAULCQgHAgMiAgEGFQoJ
+CAsCBBYCAwECHgcCF4AACgkQwL80hJIR2yRQDgD/X1t/hW9+uXdSY59FOClhQw/t
+AzTYjDW+KLKadYJ3RAIBALD53rj7EnrXsSqv9Vqj3mJ7O38eXu50P57tD8ErpHMD
+nIsEYYU7tRIKKwYBBAGXVQEFAQEHQCfT+jXHVkslGAJqVafoeWO8Nwz/oPPzNDJb
+EOASsMRcAwEIB/4HAwK+Wi8OaidLuvQ6yknLUspoRL8KJlQu0JkfLxj6Wl6GrRtf
+MdUBxaGUQX5UzMIqyYstgHKz2kBYvrJijWdOkkRuL82FySSh4yi/97FBikOBiHgE
+GBYKACAWIQSSw8jt+9pdVC3Gts7AvzSEkhHbJAUCYYU7tQIbDAAKCRDAvzSEkhHb
+JNR/AQCQjGWljmP8pYj6ohP8bOwVB4VE5qxjdfWQvBCUA0LFwgEAxLGVeT88pw3+
+x7Cwd7SsuxlIOOCIJssFnUhA9Qsq2wE=
+=qCzy
+-----END PGP PRIVATE KEY BLOCK-----
+EOF
 			public_key = <<EOF
-		-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-		mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
-		jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
-		PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
-		CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
-		frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
-		Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
-		6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
-		NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
-		hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
-		AQ==
-		=2kMe
-		-----END PGP PUBLIC KEY BLOCK-----
-		EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+mDMEYYU7tRYJKwYBBAHaRw8BAQdAZ8vVdEyrWGssb7cdreG5GDGv6taHX/vWQdDG
+jn7zib+0KkNocmlzdGlhbiBCb25naW9ybm8gPGNocmlzdGlhbmJAamZyb2cuY29t
+PoiaBBMWCgBCFiEEksPI7fvaXVQtxrbOwL80hJIR2yQFAmGFO7UCGwMFCQPCZwAF
+CwkIBwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMC/NISSEdskUA4A/19bf4Vv
+frl3UmOfRTgpYUMP7QM02Iw1viiymnWCd0QCAQCw+d64+xJ617Eqr/Vao95iezt/
+Hl7udD+e7Q/BK6RzA7g4BGGFO7USCisGAQQBl1UBBQEBB0An0/o1x1ZLJRgCalWn
+6HljvDcM/6Dz8zQyWxDgErDEXAMBCAeIeAQYFgoAIBYhBJLDyO372l1ULca2zsC/
+NISSEdskBQJhhTu1AhsMAAoJEMC/NISSEdsk1H8BAJCMZaWOY/yliPqiE/xs7BUH
+hUTmrGN19ZC8EJQDQsXCAQDEsZV5PzynDf7HsLB3tKy7GUg44IgmywWdSED1Cyrb
+AQ==
+=2kMe
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
 			lifecycle {
 				ignore_changes = [
 					private_key,
@@ -1166,7 +1344,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 		}
 	`
 
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":                      kpId,
 		"kp_name":                    kpName,
 		"kp_id2":                     kpId2,
@@ -1177,7 +1355,7 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 		"memberUrl":                  federatedMemberUrl,
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
-	federatedRepositoryUpdated := utilsdk.ExecuteTemplate("keypair", template, map[string]interface{}{
+	federatedRepositoryUpdated := util.ExecuteTemplate("keypair", template, map[string]interface{}{
 		"kp_id":                      kpId,
 		"kp_name":                    kpName,
 		"kp_id2":                     kpId2,
@@ -1189,8 +1367,8 @@ func TestAccFederatedRpmRepository(t *testing.T) {
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
@@ -1256,7 +1434,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 			}
 		}
 	`
-	federatedRepositoryBasic := utilsdk.ExecuteTemplate("TestAccFederatedTerraformRepository", template, params)
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedTerraformRepository", template, params)
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1287,8 +1465,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 
 func TestAccFederatedTerraformRepositories(t *testing.T) {
 	for _, registryType := range []string{"module", "provider"} {
-		title := cases.Title(language.AmericanEnglish).String(registryType)
-		t.Run(title, func(t *testing.T) {
+		t.Run(registryType, func(t *testing.T) {
 			resource.Test(makeFederatedTerraformRepoTestCase(registryType, t))
 		})
 	}

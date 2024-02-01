@@ -3,25 +3,20 @@ package security_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 	// Version 7.11.1 is the last version before we migrated the resource from SDKv2 to Plugin Framework
 	version := "7.11.1"
-	title := fmt.Sprintf(
-		"TestScopedToken_upgrade_from_v%s",
-		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
-	)
+	title := fmt.Sprintf("from_v%s", version)
 	t.Run(title, func(t *testing.T) {
 		resource.Test(scopedTokenUpgradeTestCase(version, t))
 	})
@@ -31,19 +26,133 @@ func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
 	// Version 7.2.0 doesn't have `include_reference_token` attribute
 	// This test verifies that there is no state drift on update
 	version := "7.2.0"
-	title := fmt.Sprintf(
-		"TestScopedToken_upgrade_from_v%s",
-		cases.Title(language.AmericanEnglish).String(strings.ToLower(version)),
-	)
+	title := fmt.Sprintf("from_v%s", version)
 	t.Run(title, func(t *testing.T) {
 		resource.Test(scopedTokenUpgradeTestCase(version, t))
+	})
+}
+
+func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+	config := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_user.test-user.name
+		    expires_in  = 31536000
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.11.2",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckNoResourceAttr(fqrn, "description"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
+					resource.TestCheckResourceAttrSet(fqrn, "subject"),
+					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
+					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
+					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-scope-token", "artifactory_scoped_token")
+	config := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+		    email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			scopes   = ["applied-permissions/user"]
+			username = artifactory_user.test-user.name
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "7.2.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
+					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
+					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+					resource.TestCheckResourceAttr(fqrn, "token_type", "Bearer"),
+					resource.TestCheckResourceAttrSet(fqrn, "subject"),
+					resource.TestCheckResourceAttrSet(fqrn, "expiry"),
+					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
+					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
 	})
 }
 
 func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	config := utilsdk.ExecuteTemplate(
+	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -91,7 +200,7 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -103,29 +212,41 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
-		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
-			admin             = true
-			disable_ui_access = false
-			groups            = ["readers"]
-			password          = "Passw0rd!"
-		}
+	template := `resource "artifactory_user" "test-user" {
+		name              = "testuser"
+		email             = "testuser@tempurl.org"
+		admin             = true
+		disable_ui_access = false
+		groups            = ["readers"]
+		password          = "Passw0rd!"
+	}
 
-		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
-			description = "test description"
-		}`,
+	resource "artifactory_scoped_token" "{{ .name }}" {
+		username    = artifactory_user.test-user.name
+		description = "{{ .description }}"
+	}`
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		template,
 		map[string]interface{}{
-			"name": name,
+			"name":        name,
+			"description": "",
+		},
+	)
+
+	accessTokenUpdatedConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		template,
+		map[string]interface{}{
+			"name":        name,
+			"description": "test updated description",
 		},
 	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +256,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/user"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
-					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
+					resource.TestCheckResourceAttr(fqrn, "description", ""),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
@@ -145,6 +266,12 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 					resource.TestCheckNoResourceAttr(fqrn, "reference_token"),
+				),
+			},
+			{
+				Config: accessTokenUpdatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "description", "test updated description"),
 				),
 			},
 			{
@@ -158,8 +285,9 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+	projectKey := fmt.Sprintf("test-project-%d", testutil.RandomInt())
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -172,30 +300,40 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.test-user.name
+			project_key = "{{ .projectKey }}"
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
-			expires_in  = 31536000
+			expires_in  = 0
 			audiences   = ["jfrt@1", "jfxr@*"]
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":       name,
+			"projectKey": projectKey,
 		},
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.CreateProject(t, projectKey)
+		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
+			acctest.DeleteProject(t, projectKey)
+			return security.CheckAccessToken(id, request)
+		}),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
 					resource.TestCheckResourceAttr(fqrn, "audiences.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "audiences.*", "jfrt@1"),
@@ -223,7 +361,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_group" "test-group" {
 			name = "{{ .groupName }}"
@@ -241,7 +379,7 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -260,10 +398,99 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 	})
 }
 
+func TestAccScopedToken_WithResourceScopes(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+			email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_user.test-user.name
+			scopes   = [
+				"artifact:generic-local:r",
+				"artifact:generic-local:w",
+				"artifact:generic-local:d",
+				"artifact:generic-local:a",
+				"artifact:generic-local:m",
+				"artifact:generic-local:x",
+				"artifact:generic-local:s",
+			]
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "7"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:r"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:w"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:d"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:a"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:m"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:x"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "artifact:generic-local:s"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
+	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "test-user" {
+			name              = "testuser"
+			email             = "testuser@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_user.test-user.name
+			scopes   = [
+				"artifact:generic-local:q",
+			]
+		}`,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      accessTokenConfig,
+				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
+			},
+		},
+	})
+}
+
 func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			scopes      = ["foo"]
@@ -275,7 +502,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -288,7 +515,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_local_generic_repository" "generic-local-1" {
 			key = "generic-local-1"
@@ -348,7 +575,7 @@ func TestAccScopedToken_WithTooLongScopes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -370,7 +597,7 @@ func TestAccScopedToken_WithAudience(t *testing.T) {
 func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["{{ .prefix }}@*"]
@@ -383,7 +610,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -404,7 +631,7 @@ func mkAudienceTestCase(prefix string, t *testing.T) (*testing.T, resource.TestC
 func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 	_, _, name := testutil.MkNames("test-scoped-token", "artifactory_scoped_token")
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences = ["foo@*"]
@@ -416,7 +643,7 @@ func TestAccScopedToken_WithInvalidAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -434,7 +661,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 		audiences = append(audiences, fmt.Sprintf("jfrt@%d", i))
 	}
 
-	scopedTokenConfig := utilsdk.ExecuteTemplate(
+	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
 			audiences    = [
@@ -449,7 +676,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
@@ -462,7 +689,7 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -486,7 +713,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
@@ -499,7 +726,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	accessTokenConfig := utilsdk.ExecuteTemplate(
+	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_user" "test-user" {
 			name              = "testuser"
@@ -522,7 +749,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,

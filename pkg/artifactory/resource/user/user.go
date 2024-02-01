@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -29,11 +31,19 @@ type User struct {
 
 var baseUserSchema = map[string]*schema.Schema{
 	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "Username for user.",
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		ValidateDiagFunc: validation.ToDiagFunc(
+			validation.All(
+				validation.StringIsNotEmpty,
+				validation.StringMatch(
+					regexp.MustCompile(`^[a-z0-9.\-_\@]+$`),
+					"may contain lowercase letters, numbers and symbols: '.-_@'",
+				),
+			),
+		),
+		Description: "Username for user. May contain lowercase letters, numbers and symbols: '.-_@'",
 	},
 	"email": {
 		Type:             schema.TypeString,
@@ -108,7 +118,7 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 		errors = setValue("groups", schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(user.Groups)))
 	}
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack user %q", errors)
 	}
 
@@ -122,7 +132,7 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 
 	userName := d.Id()
 	user := User{}
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
 
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -143,7 +153,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -154,7 +164,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
 	if user.Groups == nil {
 		user.Groups = []string{}
-		_, errGroupUpdate := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+		_, errGroupUpdate := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 		if errGroupUpdate != nil {
 			return diag.FromErr(errGroupUpdate)
 		}
@@ -164,7 +174,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		result := &User{}
-		resp, e := m.(utilsdk.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
+		resp, e := m.(util.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
 
 		if e != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {
@@ -187,7 +197,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,7 +211,7 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	d := &utilsdk.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
+	_, err := m.(util.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

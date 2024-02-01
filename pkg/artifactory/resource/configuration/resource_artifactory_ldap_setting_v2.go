@@ -18,19 +18,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"gopkg.in/ldap.v2"
 )
 
 const LdapEndpoint = "access/api/v1/ldap/settings/"
 
 func NewLdapSettingResource() resource.Resource {
-	return &ArtifactoryLdapSettingResource{}
+	return &ArtifactoryLdapSettingResource{
+		TypeName: "artifactory_ldap_setting_v2",
+	}
 }
 
 type ArtifactoryLdapSettingResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryLdapSettingResourceModel describes the Terraform resource data model to match the
@@ -76,7 +79,7 @@ type LdapSearchAPIModel struct {
 }
 
 func (r *ArtifactoryLdapSettingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_ldap_setting_v2"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryLdapSettingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -112,7 +115,10 @@ func (r *ArtifactoryLdapSettingResource) Schema(ctx context.Context, req resourc
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
-				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					ldapDomainNameValidator{},
+				},
 			},
 			"auto_create_user": schema.BoolAttribute{
 				MarkdownDescription: "When set, users are automatically created when using LDAP. Otherwise, users are transient and associated with auto-join groups defined in Artifactory. Default value is `true`.",
@@ -159,6 +165,7 @@ func (r *ArtifactoryLdapSettingResource) Schema(ctx context.Context, req resourc
 						path.MatchRoot("manager_dn"),
 						path.MatchRoot("manager_password"),
 					}...),
+					ldapSearchFilterValidator{},
 				},
 			},
 			"search_base": schema.StringAttribute{
@@ -173,6 +180,7 @@ func (r *ArtifactoryLdapSettingResource) Schema(ctx context.Context, req resourc
 						path.MatchRoot("manager_dn"),
 						path.MatchRoot("manager_password"),
 					}...),
+					ldapDomainNameValidator{},
 				},
 			},
 			"search_sub_tree": schema.BoolAttribute{
@@ -201,6 +209,7 @@ func (r *ArtifactoryLdapSettingResource) Schema(ctx context.Context, req resourc
 						path.MatchRoot("search_sub_tree"),
 						path.MatchRoot("manager_password"),
 					}...),
+					ldapDomainNameValidator{},
 				},
 			},
 			"manager_password": schema.StringAttribute{
@@ -227,10 +236,12 @@ func (r *ArtifactoryLdapSettingResource) Configure(ctx context.Context, req reso
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryLdapSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapSettingResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -284,6 +295,8 @@ func (r *ArtifactoryLdapSettingResource) Create(ctx context.Context, req resourc
 }
 
 func (r *ArtifactoryLdapSettingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapSettingResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -298,15 +311,14 @@ func (r *ArtifactoryLdapSettingResource) Read(ctx context.Context, req resource.
 		SetResult(&ldap).
 		Get(LdapEndpoint + data.Id.ValueString())
 
-	if err != nil {
-		utilfw.UnableToRefreshResourceError(resp, response.String())
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 
@@ -322,6 +334,8 @@ func (r *ArtifactoryLdapSettingResource) Read(ctx context.Context, req resource.
 }
 
 func (r *ArtifactoryLdapSettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapSettingResourceModel
 
 	// Read Terraform plan data into the model
@@ -374,6 +388,8 @@ func (r *ArtifactoryLdapSettingResource) Update(ctx context.Context, req resourc
 }
 
 func (r *ArtifactoryLdapSettingResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapSettingResourceModel
 
 	// Read Terraform prior state data into the model
@@ -383,7 +399,7 @@ func (r *ArtifactoryLdapSettingResource) Delete(ctx context.Context, req resourc
 		Delete(LdapEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
@@ -449,56 +465,54 @@ func (r *ArtifactoryLdapSettingResourceModel) ToState(ctx context.Context, ldap 
 	return nil
 }
 
-func (r *ArtifactoryLdapSettingResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data ArtifactoryLdapSettingResourceModel
+var _ validator.String = ldapSearchFilterValidator{}
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+type ldapSearchFilterValidator struct{}
 
-	if resp.Diagnostics.HasError() {
+func (v ldapSearchFilterValidator) Description(ctx context.Context) string {
+	return "string must be a valid LDAP search filter"
+}
+
+func (v ldapSearchFilterValidator) MarkdownDescription(ctx context.Context) string {
+	return "string must be a valid LDAP search filter"
+}
+
+func (v ldapSearchFilterValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
 	}
-	// Validate search_filter
-	if !data.SearchFilter.IsNull() {
-		_, err := ldap.CompileFilter(data.SearchFilter.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("search_filter"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected search_filter to be a valid LDAP search filter, %v", err),
-			)
-		}
+	_, err := ldap.CompileFilter(req.ConfigValue.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Incorrect Attribute Configuration",
+			fmt.Sprintf("string must be a valid LDAP search filter, got: %s, error: %v", req.ConfigValue.ValueString(), err),
+		)
 	}
-	// Validate user_dn_pattern
-	if !data.UserDnPattern.IsNull() {
-		_, err := ldap.ParseDN(data.UserDnPattern.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("user_dn_pattern"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected user_dn_pattern to be a valid LDAP Domain Name, %v", err),
-			)
-		}
+}
+
+var _ validator.String = ldapDomainNameValidator{}
+
+type ldapDomainNameValidator struct{}
+
+func (v ldapDomainNameValidator) Description(ctx context.Context) string {
+	return "string must be a valid LDAP domain name"
+}
+
+func (v ldapDomainNameValidator) MarkdownDescription(ctx context.Context) string {
+	return "string must be a valid LDAP domain name"
+}
+
+func (v ldapDomainNameValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
 	}
-	// Validate search_base
-	if !data.SearchBase.IsNull() {
-		_, err := ldap.ParseDN(data.SearchBase.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("search_base"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected search_base to be a valid LDAP Domain Name, %v", err),
-			)
-		}
-	}
-	// Validate managed_dn
-	if !data.ManagerDn.IsNull() {
-		_, err := ldap.ParseDN(data.ManagerDn.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("manager_dn"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected manager_dn to be a valid LDAP Domain Name, %v", err),
-			)
-		}
+	_, err := ldap.ParseDN(req.ConfigValue.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Incorrect Attribute Configuration",
+			fmt.Sprintf("string must be a valid LDAP domain name, got: %s, error: %v", req.ConfigValue.ValueString(), err),
+		)
 	}
 }

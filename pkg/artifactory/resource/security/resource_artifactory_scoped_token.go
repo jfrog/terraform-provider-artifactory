@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -24,16 +23,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func NewScopedTokenResource() resource.Resource {
-	return &ScopedTokenResource{}
+	return &ScopedTokenResource{
+		TypeName: "artifactory_scoped_token",
+	}
 }
 
 type ScopedTokenResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
@@ -42,6 +44,7 @@ type ScopedTokenResourceModel struct {
 	Id                    types.String `tfsdk:"id"`
 	GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
+	ProjectKey            types.String `tfsdk:"project_key"`
 	Scopes                types.Set    `tfsdk:"scopes"`
 	ExpiresIn             types.Int64  `tfsdk:"expires_in"`
 	Refreshable           types.Bool   `tfsdk:"refreshable"`
@@ -77,6 +80,7 @@ type AccessTokenErrorResponseAPIModel struct {
 type AccessTokenPostRequestAPIModel struct {
 	GrantType             string `json:"grant_type"`
 	Username              string `json:"username,omitempty"`
+	ProjectKey            string `json:"project_key"`
 	Scope                 string `json:"scope,omitempty"`
 	ExpiresIn             int64  `json:"expires_in"`
 	Refreshable           bool   `json:"refreshable"`
@@ -91,12 +95,12 @@ type AccessTokenGetAPIModel struct {
 	Expiry      int64  `json:"expiry"`
 	IssuedAt    int64  `json:"issued_at"`
 	Issuer      string `json:"issuer"`
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	Refreshable bool   `json:"refreshable"`
 }
 
 func (r *ScopedTokenResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_scoped_token"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -131,6 +135,16 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
 				Validators:    []validator.String{stringvalidator.LengthBetween(1, 255)},
 			},
+			"project_key": schema.StringAttribute{
+				MarkdownDescription: "The project for which this token is created. Enter the project name on which you want to apply this token.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
+						"must be 2 - 32 lowercase alphanumeric and hyphen characters",
+					),
+				},
+			},
 			"scopes": schema.SetAttribute{
 				MarkdownDescription: "The scope of access that the token provides. Access to the REST API is always " +
 					"provided by default. Administrators can set any scope, while non-admin users can only set " +
@@ -141,9 +155,9 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					"in the Platform but does not grant any specific access permissions." +
 					"* `applied-permissions/admin` - the scope assigned to admin users." +
 					"* `applied-permissions/groups` - the group to which permissions are assigned by group name " +
-					"(use username to inicate the group name)" +
+					"(use username to indicate the group name)" +
 					"* `system:metrics:r` - for getting the service metrics" +
-					"* `system:livelogs:r` - for getting the service livelogsr" +
+					"* `system:livelogs:r` - for getting the service livelogsr. " +
 					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
 					"Resource Permissions\n" +
 					"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
@@ -155,7 +169,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					" `<target>` - the target resource, can be exact name or a pattern" +
 					" `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
 					" `<actions>` - comma-separated list of action acronyms." +
-					"The actions allowed are <r, w, d, a, m> or any combination of these actions\n." +
+					"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions.\n" +
 					"To allow all actions - use `*`\n" +
 					"Examples: " +
 					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
@@ -177,7 +191,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 							"system:livelogs:r",
 						),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdam*]|([rwdam]+(,[rwdam]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
 					),
 					),
 				},
@@ -186,7 +200,6 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/using-the-revocable-and-persistency-thresholds) for details.",
 				Optional:            true,
 				Computed:            true,
-				Default:             int64default.StaticInt64(0),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplaceIfConfigured(),
 					int64planmodifier.UseStateForUnknown(),
@@ -301,10 +314,12 @@ func (r *ScopedTokenResource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ScopedTokenResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -342,6 +357,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 	accessTokenPostBody := AccessTokenPostRequestAPIModel{
 		GrantType:             data.GrantType.ValueString(),
 		Username:              data.Username.ValueString(),
+		ProjectKey:            data.ProjectKey.ValueString(),
 		Scope:                 scopesString,
 		ExpiresIn:             data.ExpiresIn.ValueInt64(),
 		Refreshable:           data.Refreshable.ValueBool(),
@@ -358,13 +374,13 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Post("access/api/v1/tokens")
 
 	if err != nil {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusOK {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
 	}
 
@@ -377,7 +393,7 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		Get("access/api/v1/tokens/{id}")
 
 	if err != nil {
-		unableToCreateResourceError(resp, err)
+		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
@@ -392,6 +408,8 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ScopedTokenResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -407,20 +425,18 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 		SetResult(&accessToken).
 		Get("access/api/v1/tokens/{id}")
 
-	if err != nil {
-		unableToRefreshResourceError(resp, err)
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
-			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
-		)
-		resp.State.RemoveResource(ctx)
-
+	if err != nil {
+		if response.StatusCode() == http.StatusNotFound {
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
+				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
+			)
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
 	}
 
@@ -437,6 +453,8 @@ func (r *ScopedTokenResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ScopedTokenResourceModel
 	respError := AccessTokenErrorResponseAPIModel{}
 
@@ -520,19 +538,21 @@ func (r *ScopedTokenResourceModel) GetResponseToState(ctx context.Context, acces
 	r.Expiry = types.Int64Value(accessToken.Expiry)
 	r.IssuedAt = types.Int64Value(accessToken.IssuedAt)
 	r.Issuer = types.StringValue(accessToken.Issuer)
+
+	if r.Description.IsNull() {
+		r.Description = types.StringValue("")
+	}
 	if len(accessToken.Description) > 0 {
 		r.Description = types.StringValue(accessToken.Description)
 	}
+
 	r.Refreshable = types.BoolValue(accessToken.Refreshable)
 
 	// Need to set empty string for null state value to avoid state drift.
-	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
+	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2
 	if r.RefreshToken.IsNull() {
 		r.RefreshToken = types.StringValue("")
 	}
-
-	// Need to set empty string for null state value to avoid state drift.
-	// See https://discuss.hashicorp.com/t/diffsuppressfunc-alternative-in-terraform-framework/52578/2?u=alexhung
 	if r.ReferenceToken.IsNull() {
 		r.ReferenceToken = types.StringValue("")
 	}

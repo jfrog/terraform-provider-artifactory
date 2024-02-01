@@ -9,10 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -147,7 +147,56 @@ const permissionFull = `
 	}
 `
 
-func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
+const testLength = `
+	// we can't auto create the repo because of race conditions'
+	resource "artifactory_local_docker_v2_repository" "{{ .repo_name }}" {
+		key = "{{ .repo_name }}"
+	}
+
+	resource "artifactory_permission_target" "{{ .permission_name }}" {
+	  name = "{{ .permission_name }}"
+
+	  repo {
+		includes_pattern = ["foo/**"]
+		repositories     = ["{{ .repo_name }}"]
+	  }
+	  depends_on = [artifactory_local_docker_v2_repository.{{ .repo_name }}]
+	}
+`
+
+func TestAccPermissionTarget_noActions(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
+	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
+
+	tempStruct := map[string]string{
+		"repo_name":       repoName,
+		"permission_name": permName,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(permFqrn, testLength, tempStruct),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(permFqrn, "name", permName),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.#", "0"),
+				),
+			},
+			{
+				ResourceName:      permFqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(permName, "name"),
+			},
+		},
+	})
+}
+
+func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
 	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
@@ -157,14 +206,14 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 		"permission_name": name,
 	}
 
-	config := utilsdk.ExecuteTemplate(fqrn, permissionFull, data)
+	config := util.ExecuteTemplate(fqrn, permissionFull, data)
 
 	resource.Test(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "7.7.0", // need to use 7.7.0 instead of 7.11.2 due to artifactory_managed_user changes after 7.7.0
+						VersionConstraint: "9.7.3",
 						Source:            "registry.terraform.io/jfrog/artifactory",
 					},
 				},
@@ -178,7 +227,7 @@ func TestAccPermissionTarget_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
 				ConfigPlanChecks:         acctest.ConfigPlanChecks,
@@ -229,11 +278,11 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, testConfig, variables),
+				Config: util.ExecuteTemplate(permFqrn, testConfig, variables),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -263,11 +312,11 @@ func TestAccPermissionTarget_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -309,11 +358,11 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 
@@ -375,23 +424,22 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionNoIncludes, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.groups.#", "0"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.repositories.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "1"),
-					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.0", "**"),
+					resource.TestCheckResourceAttr(permFqrn, "repo.0.includes_pattern.#", "0"),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.excludes_pattern.#", "0"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionJustBuild, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionJustBuild, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
@@ -403,7 +451,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionJustReleaseBundle, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionJustReleaseBundle, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.#", "0"),
@@ -416,7 +464,7 @@ func TestAccPermissionTarget_addBuild(t *testing.T) {
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
+				Config: util.ExecuteTemplate(permFqrn, permissionFull, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(permFqrn, "name", permName),
 					resource.TestCheckResourceAttr(permFqrn, "repo.0.actions.0.users.#", "1"),
@@ -482,11 +530,11 @@ func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             testPermissionTargetCheckDestroy(permFqrn),
 		Steps: []resource.TestStep{
 			{
-				Config:      utilsdk.ExecuteTemplate(permFqrn, testConfig, variables),
+				Config:      util.ExecuteTemplate(permFqrn, testConfig, variables),
 				ExpectError: regexp.MustCompile(".*Missing required argument.*"),
 			},
 		},

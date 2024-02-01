@@ -3,7 +3,7 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/provider"
 )
 
 func TestProvider(t *testing.T) {

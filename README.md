@@ -9,14 +9,21 @@
 
 ## Releases
 
-Current provider major release: **7.x**
+Current provider major release: **10.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
 ## Versions
 
-We maintain two major versions of Terraform Provider - 6.x and 7.x. Version 6.x is compatible with the Artifactory versions 7.49.x and below,
-version 7.x is only compatible with Artifactory 7.50.x and above due to changes in the projects functionality.
+Version 6.x is compatible with the Artifactory versions 7.49.x and below.
+
+Version 7.x and 8.x is only compatible with Artifactory between 7.50.x and 7.67.x due to changes in the projects functionality.
+
+Version 10.x is the latest major version and is compatible with latest Artifactory versions (>=7.68.7 (self-hosted) and >=7.67.0 (cloud)).
+
+## Terraform CLI version support
+
+Current version support [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) which mean Terraform CLI version 1.0 and later. 
 
 ## Quick Start
 
@@ -25,18 +32,18 @@ Create a new Terraform file with `artifactory` resources. Also see [sample.tf](.
 <details><summary>HCL Example</summary>
 
 ```terraform
-# Required for Terraform 0.13 and up (https://www.terraform.io/upgrade-guides/0-13.html)
+# Required for Terraform 1.0 and up (https://www.terraform.io/upgrade-guides)
 terraform {
   required_providers {
     artifactory = {
       source  = "registry.terraform.io/jfrog/artifactory"
-      version = "6.6.1"
+      version = "10.0.2"
     }
   }
 }
 
 provider "artifactory" {
-  // supply ARTIFACTORY_USERNAME, ARTIFACTORY_ACCESS_TOKEN, and ARTIFACTORY_URL as env vars
+  // supply JFROG_ACCESS_TOKEN, and JFROG_URL as env vars
 }
 
 resource "artifactory_local_pypi_repository" "pypi-local" {
@@ -100,11 +107,6 @@ $ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
 }
 ```
 
-The following 3 license types (`jq .type`) do **NOT** support APIs:
-- Community Edition for C/C++
-- JCR Edition
-- OSS
-
 ## Versioning
 
 In general, this project follows [Terraform Versioning Specification](https://www.terraform.io/plugin/sdkv2/best-practices/versioning#versioning-specification) as closely as we can for tagging releases of the package.
@@ -118,7 +120,7 @@ See the [contribution guide](CONTRIBUTIONS.md).
 
 ## License
 
-Copyright (c) 2023 JFrog.
+Copyright (c) 2024 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 

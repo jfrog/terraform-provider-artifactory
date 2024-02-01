@@ -10,8 +10,7 @@ repository-specific arguments, listed in separate repository-specific documents.
 Passwords can only be used when encryption is turned off, according to [Key Encryption instruction](https://www.jfrog.com/confluence/display/RTF/Artifactory+Key+Encryption).
 Since only the artifactory server can decrypt them it is impossible for terraform to diff changes correctly.
 
-To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible,
-the password diff can be disabled per resource with-- noting that this will require resources to be tainted for an update:
+To get full management, passwords can be decrypted globally using `POST /api/system/decrypt`. If this is not possible, the password diff can be disabled per resource with `lifecycle.ignore_changes` -- noting that this will require resources to be tainted for an update:
 
 ```hcl
 lifecycle {
@@ -37,15 +36,10 @@ All generic repo arguments are supported, in addition to:
 * `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or contain spaces or special characters.
 * `description` - (Optional) Public description.
 * `notes` - (Optional) Internal description.
-* `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters.
-  When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.
-  We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider
-  to manage the list of repositories. Default value - `default`.
-* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV` or `PROD`.
+* `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash. We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider to manage the list of repositories.
+* `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV`, `PROD`, or one of custom environment.
   Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 onward, only one value is allowed.
-  The attribute should only be used if the repository is already assigned to the existing project.
-  If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state
-  drift during the update.
+  The attribute should only be used if the repository is already assigned to the existing project. If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during the update.
 * `url` - (Required) The remote repo URL.
 * `username` - (Optional)
 * `password` - (Optional)
@@ -59,7 +53,7 @@ All generic repo arguments are supported, in addition to:
 * `offline` - (Optional, Default: `false`) If set, Artifactory does not try to fetch remote artifacts. Only locally-cached artifacts are retrieved.
 * `blacked_out` - (Optional) (A.K.A 'Ignore Repository' on the UI) When set, the repository or its local cache do not participate in artifact resolution. Default is `false`.
 * `xray_index` - (Optional, Default: `false`) Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.  Default is `false`.
-* `store_artifacts_locally` - (Optional, Default: `false`) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
+* `store_artifacts_locally` - (Optional, Default: `true`) When set, the repository should store cached artifacts locally. When not set, artifacts are not stored locally, and direct repository-to-client streaming is used. This can be useful for multi-server setups over a high-speed LAN, with one Artifactory caching certain data on central storage, and streaming it directly to satellite pass-though Artifactory servers.
 * `socket_timeout_millis` - (Optional, Default: `15000`) Network timeout (in ms) to use when establishing a connection and for unanswered requests. Timing out on a network operation is considered a retrieval failure.
 * `local_address` - (Optional) The local address to be used when creating connections. Useful for specifying the interface to use on systems with multiple network interfaces.
 * `retrieval_cache_period_seconds` - (Optional, Default: `7200`) The metadataRetrievalTimeoutSecs field not allowed to be bigger then retrievalCachePeriodSecs field.
@@ -68,7 +62,7 @@ All generic repo arguments are supported, in addition to:
 * `assumed_offline_period_secs` - (Optional, Default: `300`) The number of seconds the repository stays in assumed offline state after a connection error. At the end of this time, an online check is attempted in order to reset the offline status. A value of 0 means the repository is never assumed offline.
 * `share_configuration` - (Optional) The attribute is 'Computed', so it's not managed by the Provider. There is no corresponding field in the UI, but the attribute is returned by Get.
 * `synchronize_properties` - (Optional, Default: `false`) When set, remote artifacts are fetched along with their properties.
-* `block_mismatching_mime_types` - (Optional, Default: `true`) Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request. Note: dafault value in the UI is `true`, but it is `false` if the repo was created using the API call. We are copying the UI behavior.
+* `block_mismatching_mime_types` - (Optional, Default: `true`) If set, artifacts will fail to download if a mismatch is detected between requested and received mimetype, according to the list specified in the system properties file under blockedMismatchingMimeTypes. You can override by adding mimetypes to the override list `mismatching_mime_types_override_list`.
 * `mismatching_mime_types_override_list` - (Optional) The set of mime types that should override the block_mismatching_mime_types setting. Eg: "application/json,application/xml". Default value is empty.
 * `property_sets` - (Optional) List of property set names.
 * `allow_any_host_auth` - (Optional, Default: `false`) Also known as 'Lenient Host Authentication', Allow credentials of this repository to be used on requests redirected to any other host.
@@ -87,3 +81,4 @@ All generic repo arguments are supported, in addition to:
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
 * `cdn_redirect` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
+* `disable_url_normalization` - (Optional) Whether to disable URL normalization, default is `false`.

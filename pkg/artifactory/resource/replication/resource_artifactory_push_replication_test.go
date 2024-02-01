@@ -6,9 +6,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccPushReplicationInvalidPushCronFails(t *testing.T) {
@@ -80,7 +80,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationConfig := utilsdk.ExecuteTemplate("TestAccPushReplication", `
+	replicationConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
@@ -99,7 +99,7 @@ func TestAccPushReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := utilsdk.ExecuteTemplate("TestAccPushReplication", `
+	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}

@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,19 +16,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"gopkg.in/ldap.v2"
 )
 
 const LdapGroupEndpoint = "access/api/v1/ldap/groups/"
 
 func NewLdapGroupSettingResource() resource.Resource {
-	return &ArtifactoryLdapGroupSettingResource{}
+	return &ArtifactoryLdapGroupSettingResource{
+		TypeName: "artifactory_ldap_group_setting_v2",
+	}
 }
 
 type ArtifactoryLdapGroupSettingResource struct {
-	ProviderData utilsdk.ProvderMetadata
+	ProviderData util.ProvderMetadata
+	TypeName     string
 }
 
 // ArtifactoryLdapGroupSettingResourceModel describes the Terraform resource data model to match the
@@ -63,7 +64,7 @@ type ArtifactoryLdapGroupSettingResourceAPIModel struct {
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "artifactory_ldap_group_setting_v2"
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -92,6 +93,10 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 				Computed:            true,
 				Optional:            true,
 				Default:             stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					ldapDomainNameValidator{},
+				},
 			},
 			"group_name_attribute": schema.StringAttribute{
 				MarkdownDescription: "Attribute on the group entry denoting the group name. Used when importing groups.",
@@ -118,7 +123,10 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The LDAP filter used to search for group entries. Used for importing groups.",
 				Required:            true,
-				Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					ldapSearchFilterValidator{},
+				},
 			},
 			"description_attribute": schema.StringAttribute{
 				MarkdownDescription: "An attribute on the group entry which denoting the group description. Used when importing groups.",
@@ -141,10 +149,12 @@ func (r *ArtifactoryLdapGroupSettingResource) Configure(ctx context.Context, req
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(utilsdk.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapGroupSettingResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -189,6 +199,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data *ArtifactoryLdapGroupSettingResourceModel
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -203,15 +215,14 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 		SetResult(&ldapGroup).
 		Get(LdapGroupEndpoint + data.Id.ValueString())
 
-	if err != nil {
-		utilfw.UnableToRefreshResourceError(resp, response.String())
-		return
-	}
-
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 
@@ -227,6 +238,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	// Read Terraform plan data into the model
@@ -270,6 +283,8 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	// Read Terraform prior state data into the model
@@ -279,7 +294,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Delete(ctx context.Context, req re
 		Delete(LdapGroupEndpoint + data.Id.ValueString())
 
 	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
@@ -318,38 +333,16 @@ func (r *ArtifactoryLdapGroupSettingResource) ValidateConfig(ctx context.Context
 	var data ArtifactoryLdapGroupSettingResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Validate group_base_dn
-	if !data.GroupBaseDn.IsNull() {
-		_, err := ldap.ParseDN(data.GroupBaseDn.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("group_base_dn"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected group_base_dn to be a valid LDAP Domain Name, %v", err),
-			)
-		}
-	}
-	// Validate filter
-	if !data.Filter.IsNull() {
-		_, err := ldap.CompileFilter(data.Filter.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("filter"),
-				"Incorrect Attribute Configuration",
-				fmt.Sprintf("Expected filter to be a valid LDAP search filter, %v", err),
-			)
-		}
-	}
+
 	// Validate strategy and sub_tree
 	if !data.Strategy.IsNull() && strings.ToUpper(data.Strategy.ValueString()) == "HIERARCHICAL" && data.SubTree.ValueBool() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("strategy"),
+			path.Root("sub_tree"),
 			"Incorrect Attribute Configuration",
-			fmt.Sprintf("sub_tree can be set to true only with `STATIC` or `DYNAMIC` strategy"),
+			"sub_tree can be set to true only with `STATIC` or `DYNAMIC` strategy",
 		)
 	}
 }

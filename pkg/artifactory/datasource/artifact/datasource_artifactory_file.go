@@ -1,4 +1,4 @@
-package datasource
+package artifact
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 type FileInfo struct {
@@ -127,7 +128,11 @@ func ArtifactoryFile() *schema.Resource {
 				Optional: true,
 				Default:  false,
 				Description: "If set to `true`, the provider will get the artifact path directly from Artifactory without attempting to resolve " +
-					"it or verify it and will delegate this to artifactory if the file exists. More details in the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-RetrieveLatestArtifact)",
+					"it or verify it and will delegate this to artifactory if the file exists. " +
+					"When using a smart remote repository, it is recommended to set this attribute to `true`. " +
+					"This is necessary to ensure that the provider fetches the artifact directly from Artifactory. " +
+					"If this attribute is not set or is set to `false`, there is a risk of fetching the `-cache` directory in Artifactory, " +
+					"potentially resulting in resource expiration and a 404 error.",
 			},
 		},
 	}
@@ -191,7 +196,7 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 		"path":       path,
 	})
 
-	client := m.(utilsdk.ProvderMetadata).Client
+	client := m.(util.ProvderMetadata).Client
 	// switch to using Sprintf because Resty's SetPathParams() escape the path
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20
@@ -208,9 +213,9 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 	})
 
 	checksumMatches := false
-	fileExists := FileExists(outputPath)
+	fileExists := datasource.FileExists(outputPath)
 	if fileExists {
-		checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+		checksumMatches, err = datasource.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 		if err != nil {
 			tflog.Error(ctx, fmt.Sprintf("Failed to verify checksum for %s", outputPath))
 			return fileInfo, err
@@ -242,13 +247,13 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 		"fileInfo.DownloadUri": fileInfo.DownloadUri,
 		"outputPath":           outputPath,
 	})
-	_, err = m.(utilsdk.ProvderMetadata).Client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+	_, err = m.(util.ProvderMetadata).Client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 	if err != nil {
 		return fileInfo, err
 	}
 
 	tflog.Debug(ctx, "Verify checksum with downloaded file")
-	checksumMatches, err = VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
+	checksumMatches, err = datasource.VerifySha256Checksum(outputPath, fileInfo.Checksums.Sha256)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -270,7 +275,7 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 		Path: path,
 	}
 
-	fileExists := FileExists(outputPath)
+	fileExists := datasource.FileExists(outputPath)
 
 	tflog.Debug(ctx, "File info", map[string]interface{}{
 		"fileInfo":   fileInfo,
@@ -294,7 +299,7 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 		"outputPath": outputPath,
 	})
 
-	client := m.(utilsdk.ProvderMetadata).Client
+	client := m.(util.ProvderMetadata).Client
 	// switch to using Sprintf because Resty's SetPathParams() escape the path
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20

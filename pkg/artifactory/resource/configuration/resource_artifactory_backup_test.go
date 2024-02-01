@@ -7,13 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func TestAccBackup_full(t *testing.T) {
@@ -58,20 +55,20 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBackupDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccBackupDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateFull, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
 				),
 			},
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
+				Config: util.ExecuteTemplate(fqrn, BackupTemplateUpdate, testData),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 12 * * ? *"),
@@ -85,9 +82,11 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportStateId:                        resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -106,8 +105,8 @@ func TestAccBackup_importNotFound(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        config,
@@ -120,7 +119,33 @@ func TestAccBackup_importNotFound(t *testing.T) {
 	})
 }
 
-func TestAccCronExpressions(t *testing.T) {
+func TestAccBackup_invalid_cron(t *testing.T) {
+	config := `
+		resource "artifactory_backup" "invalid-cron-test" {
+		  key                    = "invalid-cron-test"
+		  enabled                = false
+		  cron_exp               = "foo"
+		  retention_period_hours = 1000
+		  excluded_repositories  = []
+		  create_archive         = true
+		  verify_disk_space      = true
+		  export_mission_control = true
+		}
+	`
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:       config,
+				ResourceName: "artifactory_backup.invalid-cron-test",
+				ExpectError:  regexp.MustCompile("value must be a valid cron expression"),
+			},
+		},
+	})
+}
+
+func TestAccBackup_CronExpressions(t *testing.T) {
 	cronExpressions := [...]string{
 		"10/20 15 14 5-10 * ? *",
 		"* 5,7,9 14-16 * * ? *",
@@ -133,8 +158,7 @@ func TestAccCronExpressions(t *testing.T) {
 		"0/5 14,18,3-39,52 * ? JAN,MAR,SEP MON-FRI 2002-2010",
 	}
 	for _, cron := range cronExpressions {
-		title := fmt.Sprintf("TestBackupCronExpression_%s", cases.Title(language.AmericanEnglish).String(cron))
-		t.Run(title, func(t *testing.T) {
+		t.Run(cron, func(t *testing.T) {
 			resource.Test(cronTestCase(cron, t))
 		})
 	}
@@ -155,21 +179,22 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 	}`
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate("backup", BackupTemplateFull, fields),
+				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", cronExpression),
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState("backuptest", "key"),
+				ResourceName:                         fqrn,
+				ImportStateId:                        "backuptest",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	}
@@ -177,7 +202,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 
 func testAccBackupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(utilsdk.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_backup."+id]
 		if !ok {

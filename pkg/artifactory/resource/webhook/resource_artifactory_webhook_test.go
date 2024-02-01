@@ -5,19 +5,16 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 var domainRepoTypeLookup = map[string]string{
@@ -84,11 +81,7 @@ var releaseBundleTemplate = `
 
 func TestAccWebhookCriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
-		title := fmt.Sprintf(
-			"TestWebhook%sCriteriaValidation",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 		})
 	}
@@ -114,7 +107,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		"webhookName": name,
 		"eventTypes":  webhook.DomainEventTypesSupported[webhookType],
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
+	webhookConfig := util.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -141,7 +134,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 		"webhookName": name,
 		"eventType":   wrongEventType,
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -179,7 +172,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 	params := map[string]interface{}{
 		"webhookName": name,
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -218,7 +211,7 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 	params := map[string]interface{}{
 		"webhookName": name,
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
+	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
 			description = "test description"
@@ -253,11 +246,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
-		title := fmt.Sprintf(
-			"TestWebhook%s",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(webhookTestCase(webhookType, t))
 		})
 	}
@@ -267,11 +256,7 @@ func TestAccCustomWebhookAllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
-		title := fmt.Sprintf(
-			"TestWebhook%s",
-			cases.Title(language.AmericanEnglish).String(strings.ToLower(webhookType)),
-		)
-		t.Run(title, func(t *testing.T) {
+		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(customWebhookTestCase(webhookType, t))
 		})
 	}
@@ -295,7 +280,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"anyLocal":    testutil.RandBool(),
 		"anyRemote":   testutil.RandBool(),
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
+	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
 			key = "{{ .repoName }}"
 		}
@@ -400,7 +385,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 		"anyLocal":    testutil.RandBool(),
 		"anyRemote":   testutil.RandBool(),
 	}
-	webhookConfig := utilsdk.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
+	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
 			key = "{{ .repoName }}"
 		}
@@ -553,7 +538,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		}
 	`
 	firstToken := testutil.RandomInt()
-	config1 := utilsdk.ExecuteTemplate(
+	config1 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{
@@ -562,7 +547,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		},
 	)
 	secondToken := testutil.RandomInt()
-	config2 := utilsdk.ExecuteTemplate(
+	config2 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{
@@ -571,7 +556,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		},
 	)
 	thirdToken := testutil.RandomInt()
-	config3 := utilsdk.ExecuteTemplate(
+	config3 := util.ExecuteTemplate(
 		"TestAccWebhook{{ .webhookName }}",
 		format,
 		map[string]interface{}{

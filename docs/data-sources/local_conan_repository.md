@@ -21,3 +21,5 @@ The following attributes are supported along with the [common list of attributes
 * `key` - the identity key of the repo.
 * `description`
 * `notes`
+* `force_conan_authentication` - Force basic authentication credentials in order to use this repository.
+  Default is `false`.

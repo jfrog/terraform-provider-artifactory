@@ -1,9 +1,8 @@
-package datasource_test
+package artifact_test
 
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,14 +12,14 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func uploadTestFile(client *resty.Client, localPath, remotePath, contentType string) error {
-	body, err := ioutil.ReadFile(localPath)
+	body, err := os.ReadFile(localPath)
 	if err != nil {
 		return err
 	}
@@ -34,7 +33,7 @@ func uploadTestFile(client *resty.Client, localPath, remotePath, contentType str
 }
 
 func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.Time) {
-	const localFilePath = "../../../samples/crash.zip"
+	const localFilePath = "../../../../samples/crash.zip"
 	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localFilePath, "example-repo-local/test/crash.zip", "application/zip")
 	if err != nil {
@@ -50,8 +49,8 @@ func downloadPreCheck(t *testing.T, downloadPath string, localFileModTime *time.
 }
 
 func uploadTwoArtifacts(t *testing.T, repoKey string) {
-	const localOlderFilePath = "../../../samples/multi1-3.7-20220310.233748-1.jar"
-	const localNewerFilePath = "../../../samples/multi1-3.7-20220310.233859-2.jar"
+	const localOlderFilePath = "../../../../samples/multi1-3.7-20220310.233748-1.jar"
+	const localNewerFilePath = "../../../../samples/multi1-3.7-20220310.233859-2.jar"
 	client := acctest.GetTestResty(t)
 	err := uploadTestFile(client, localOlderFilePath, repoKey+"/org/jfrog/test/multi1/3.7-SNAPSHOT/multi1-3.7-20220310.233748-1.jar", "application/java-archive")
 	if err != nil {
@@ -338,7 +337,7 @@ func TestDownloadFileVerifySha256Checksum(t *testing.T) {
 }
 
 func createTempFile(content string) (f *os.File, err error) {
-	file, err := ioutil.TempFile(os.TempDir(), "terraform-provider-artifactory-")
+	file, err := os.CreateTemp(os.TempDir(), "terraform-provider-artifactory-")
 
 	if err != nil {
 		return nil, err

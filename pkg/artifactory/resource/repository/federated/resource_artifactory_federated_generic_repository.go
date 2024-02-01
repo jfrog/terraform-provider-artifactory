@@ -2,33 +2,37 @@ package federated
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-type FederatedRepositoryParams struct {
+type GenericRepositoryParams struct {
 	local.RepositoryBaseParams
 	Members []Member `hcl:"member" json:"members"`
+	RepoParams
 }
 
 func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Resource {
-	localRepoSchema := local.GetGenericRepoSchema(repoType)
-
-	var federatedSchema = utilsdk.MergeMaps(localRepoSchema, memberSchema, repository.RepoLayoutRefSchema(rclass, repoType))
+	var genericSchema = utilsdk.MergeMaps(
+		local.GetGenericRepoSchema(repoType),
+		federatedSchema,
+		repository.RepoLayoutRefSchema(rclass, repoType),
+	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := FederatedRepositoryParams{
+		repo := GenericRepositoryParams{
 			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, repoType),
 			Members:              unpackMembers(data),
+			RepoParams:           unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*FederatedRepositoryParams).Members
+		members := repo.(*GenericRepositoryParams).Members
 		return PackMembers(members, d)
 	}
 
@@ -43,7 +47,7 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 	)
 
 	constructor := func() (interface{}, error) {
-		return &FederatedRepositoryParams{
+		return &GenericRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(repoType),
 				Rclass:      rclass,
@@ -51,5 +55,5 @@ func ResourceArtifactoryFederatedGenericRepository(repoType string) *schema.Reso
 		}, nil
 	}
 
-	return mkResourceSchema(federatedSchema, pkr, unpackFederatedRepository, constructor)
+	return mkResourceSchema(genericSchema, pkr, unpackFederatedRepository, constructor)
 }

@@ -6,12 +6,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	datasource "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	datasource "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func deletePermissionTarget(t *testing.T, name string) error {
@@ -82,7 +82,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 			acctest.PreCheck(t)
 			createPermissionTarget(name, userName, t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			err := deletePermissionTarget(t, name)
 			_ = acctest.DeleteUser(t, userName)
@@ -90,7 +90,7 @@ func TestAccDataSourcePermissionTarget_full(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: utilsdk.ExecuteTemplate(fqrn, temp, tempStruct),
+				Config: util.ExecuteTemplate(fqrn, temp, tempStruct),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "repo.0.actions.0.users.#", "1"),

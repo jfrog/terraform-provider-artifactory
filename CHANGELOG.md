@@ -1,3 +1,256 @@
+## 10.1.2 (Jan 19, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_scoped_token: Fix `scopes` attribute validation for `actions` to include `x` and `s` values. PR: [#875](https://github.com/jfrog/terraform-provider-artifactory/pull/875)
+* resource/artifactory_ldap_settings_v2: Fix validations for `search_filter`, `search_base`, `user_dn_pattern`, and `manager_dn` attributes when used with variables. PR: [#876](https://github.com/jfrog/terraform-provider-artifactory/pull/876) Issue: [#870](https://github.com/jfrog/terraform-provider-artifactory/issues/870)
+* resource/artifactory_group_settings_v2: Fix validations for `group_base_dn` and `filter` attributes when used with variables. PR: [#876](https://github.com/jfrog/terraform-provider-artifactory/pull/876)
+
+## 10.1.1 (Jan 17, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_proxy is migrated to Plugin Framework. PR: [#871](https://github.com/jfrog/terraform-provider-artifactory/pull/871)
+
+## 10.1.0 (Jan 12, 2024)
+
+FEATURES:
+
+* resource/artifactory_remote_docker_repository: add new attribute `project_id`. PR: [#869](https://github.com/jfrog/terraform-provider-artifactory/pull/869)
+
+IMPROVEMENTS:
+
+* data source/artifactory_file: improve description for `path_is_aliased` attribute. PR: [#868](https://github.com/jfrog/terraform-provider-artifactory/pull/868)
+
+## 10.0.2 (Dec 18, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.6
+
+IMPROVEMENTS:
+
+* provider: downgrade Resty to 2.9.1 due to CVE in 2.10.0. PR: [#859](https://github.com/jfrog/terraform-provider-artifactory/pull/859)
+* testing: improve resource drift error reporting.
+
+## 10.0.1 (Dec 13, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
+
+IMPROVEMENTS:
+
+* provider: remove Terraform protocol checks. PR: [#857](https://github.com/jfrog/terraform-provider-artifactory/pull/857)
+
+## 10.0.0 (Dec 12, 2023). Tested on Artifactory 7.71.8 with Terraform CLI v1.6.5
+
+BREAKING CHANGES:
+
+* Terraform protocol version 5 is no longer supported. This provider will only work with Terraform protocol version 6 to take advantage of new functionality. This means only Terraform CLI 1.0 and above is supported.
+
+FEATURES:
+
+* data source/artifactory_repositories: add a new data source for retrieving list of repository, optionally filtered by repository type, package type, and project key. PR: [#839](https://github.com/jfrog/terraform-provider-artifactory/pull/839) Issue: [#716](https://github.com/jfrog/terraform-provider-artifactory/issues/716)
+* data source/artifactory_file_list: add new data source to retrieve a list of artifacts from a repository. PR: [#855](https://github.com/jfrog/terraform-provider-artifactory/pull/855)
+
+## 9.9.2 (Dec 5, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
+
+IMPROVEMENTS:
+
+* Add telemetry to resources that were migrated to Plugin Framework PR: [#852](https://github.com/jfrog/terraform-provider-artifactory/pull/852)
+
+## 9.9.1 (Dec 4, 2023). Tested on Artifactory 7.71.5 with Terraform CLI v1.6.5
+
+BUG FIXES:
+
+* Fix incorrect use of empty error message when API fails PR: [#850](https://github.com/jfrog/terraform-provider-artifactory/pull/850) Issue: [#849](https://github.com/jfrog/terraform-provider-artifactory/issues/849)
+* resource/artifactory_global_environment: Fix incorrect environment from Artifactroy being matched and triggers a state drift. PR: [#851](https://github.com/jfrog/terraform-provider-artifactory/pull/851)
+
+## 9.9.0 (Nov 17, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.4
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add `proxy` and `disable_proxy` attributes. PR: [#848](https://github.com/jfrog/terraform-provider-artifactory/pull/848) Issue: [#838](https://github.com/jfrog/terraform-provider-artifactory/issues/838)
+
+## 9.8.0 (Nov 8, 2023). Tested on Artifactory 7.71.4 with Terraform CLI v1.6.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_docker_repository, resource/artifactory_remote_maven_repository, resource/artifactory_npm_docker_repository,resource/artifactory_remote_pypi_repository: Add `curated` attribute to support enabling the repository resource for Curation Service. Issue: [#831](https://github.com/jfrog/terraform-provider-artifactory/issues/831) PR: [#844](https://github.com/jfrog/terraform-provider-artifactory/pull/844)
+* resource/artifactory_pull_replication: Add missing deprecation message to documentation. PR: [#843](https://github.com/jfrog/terraform-provider-artifactory/pull/843)
+
+## 9.7.4 (Nov 6, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_permission_target: Revert back to using Terraform SDKv2 due to unresolved performance issue from Terraform Framework. Issue: [#757](https://github.com/jfrog/terraform-provider-artifactory/issues/757) and [#805](https://github.com/jfrog/terraform-provider-artifactory/issues/805) PR: [#842](https://github.com/jfrog/terraform-provider-artifactory/pull/842)
+
+## 9.7.3 (Nov 2, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.3
+
+SECURITY:
+
+* provider: Bump google.golang.org/grpc from 1.56.1 to 1.56.3 PR: [#836](https://github.com/jfrog/terraform-provider-artifactory/pull/836)
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_*_repository: Add configuration synchronization when creating or updating resource. Issue: [#825](https://github.com/jfrog/terraform-provider-artifactory/issues/825)
+* provider: Add warning message for Terraform CLI version <1.0.0 deprecation
+
+PR: [#840](https://github.com/jfrog/terraform-provider-artifactory/pull/840)
+
+NOTES:
+
+We will be moving to [Terraform Protocol v6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) in **Q1 2024**. This means only Terraform CLI version 1.0 and later will be supported.
+
+## 9.7.2 (Oct 19, 2023). Tested on Artifactory 7.71.3 with Terraform CLI v1.6.2
+
+BUG FIXES:
+
+* provider: Fix schema differences between SDKv2 and Framework providers. PR: [#834](https://github.com/jfrog/terraform-provider-artifactory/pull/834) Issue: [#833](https://github.com/jfrog/terraform-provider-artifactory/issues/833)
+
+## 9.7.1 (Oct 19, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.2
+
+IMPROVEMENTS:
+
+* provider:
+  * Remove conflict validation between `access_token` and `api_key` attributes. If set, `access_token` will take precedent over `api_key`.
+  * Update documentation to align with actual provider behavior.
+
+PR: [#832](https://github.com/jfrog/terraform-provider-artifactory/pull/832)
+Issue: [#663](https://github.com/jfrog/terraform-provider-artifactory/issues/663)
+
+## 9.7.0 (Oct 18, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+IMPROVEMENTS:
+
+* resource/artifactory_keypair is migrated to Plugin Framework. PR: [#829](https://github.com/jfrog/terraform-provider-artifactory/pull/829)
+* resource/artifactory_mail_server: remove length validation for optional attribute `subject_prefix`. PR: [#830](https://github.com/jfrog/terraform-provider-artifactory/pull/830) Issue: [#828](https://github.com/jfrog/terraform-provider-artifactory/issues/828)
+
+## 9.6.0 (Oct 13, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+IMPROVEMENTS:
+
+* resource/artifactory_certificate is migrated to Plugin Framework. PR: [#826](https://github.com/jfrog/terraform-provider-artifactory/pull/826)
+
+## 9.5.1 (Oct 12, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+SECURITY:
+
+* provider: Bump golang.org/x/net from 0.11.0 to 0.17.0 PR: [#824](https://github.com/jfrog/terraform-provider-artifactory/pull/824)
+
+## 9.5.0 (Oct 11, 2023). Tested on Artifactory 7.68.14 with Terraform CLI v1.6.1
+
+FEATURES:
+
+* resource/artifactory_local_huggingfaceml_repository, resource/artifactory_remote_huggingfaceml_repository: add new local and remote resources for managing Hugging Face repository. PR: [#823](https://github.com/jfrog/terraform-provider-artifactory/pull/823)
+
+## 9.4.0 (Oct 5, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.6.0
+
+FEATURES:
+
+* resource/artifactory_mail_server: add a new resource for managing mail server configuration. PR: [#819](https://github.com/jfrog/terraform-provider-artifactory/pull/819) Issue: [#735](https://github.com/jfrog/terraform-provider-artifactory/issues/735)
+
+## 9.3.1 (Oct 6, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.6.0
+
+BUG FIX:
+* resource/artifactory_scoped_token: Remove default value for `expires_in` attribute which should fix state drift when upgrading from 7.11.2 or earlier. Issue: [#818](https://github.com/jfrog/terraform-provider-artifactory/issues/818) PR: [#820](https://github.com/jfrog/terraform-provider-artifactory/pull/820)
+
+## 9.3.0 (Oct 3, 2023). Tested on Artifactory 7.68.13 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+
+* resource/artifactory_distribution_public_key is migrated to Plugin Framework. PR: [#817](https://github.com/jfrog/terraform-provider-artifactory/pull/817)
+* resource/artifactory_remote_\*\_repository: Fix incorrect default value for `store_artifacts_locally` attribute in documentation. PR: [#816](https://github.com/jfrog/terraform-provider-artifactory/pull/816)
+
+## 9.2.1 (Sep 29, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+
+* Update module path to `/v9` PR: [#814](https://github.com/jfrog/terraform-provider-artifactory/pull/814)
+
+## 9.2.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+
+* resource/artifactory_backup is migrated to Plugin Framework. PR: [#812](https://github.com/jfrog/terraform-provider-artifactory/pull/812)
+
+## 9.1.0 (Sep 28, 2023). Tested on Artifactory 7.68.11 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+* data/artifactory_local_conan_repository, data/artifactory_virtual_conan_repository, data/artifactory_federated_conan_repository, resource/artifactory_local_conan_repository, resource/artifactory_virtual_conan_repository, resource/artifactory_federated_conan_repository: add `force_conan_authentication` attribute PR: [#810](https://github.com/jfrog/terraform-provider-artifactory/pull/810) Issue: [#808](https://github.com/jfrog/terraform-provider-artifactory/issues/808)
+* resource/artifactory_\*\_repository: update validation for `project_environments` attribute to allow empty list. PR: [#811](https://github.com/jfrog/terraform-provider-artifactory/pull/811)
+
+## 9.0.0 (Sep 15, 2023). Tested on Artifactory 7.68.7 with Terraform CLI v1.5.7
+
+IMPROVEMENTS:
+* resource/artifactory_\*\_repository: remove default value of "default" from `project_key` attribute. This is a REST API bug fix that is part of Artifactory v7.68.7 (self-hosted) and v7.67.0 (cloud). Existing Terraform state with "default" value should be automatically migrated to "" on `terraform apply`. No state drift should occurs on `terraform plan`. Issue: [#779](https://github.com/jfrog/terraform-provider-artifactory/issues/779) 
+* Fix incorrect description for remote repository attribute `block_mismatching_mime_types`. Issue: [#799](https://github.com/jfrog/terraform-provider-artifactory/pull/799)
+* Add multiple users and groups HCL example for `artifactory_permission_target` resource. Issue: [#800](https://github.com/jfrog/terraform-provider-artifactory/pull/800)
+
+PR: [#804](https://github.com/jfrog/terraform-provider-artifactory/pull/804)
+
+## 8.9.1 (Sep 11, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
+
+BUG FIXES:
+* resource/artifactory_local_\*\_repository, resource/artifactory_remote_\*\_repository, resource/artifactory_virtual_\*\_repository, resource/artifactory_federated_\*\_repository: fix unable to set `description` and `notes` attributes with empty text.
+
+PR: [#798](https://github.com/jfrog/terraform-provider-artifactory/pull/798)
+Issue: [#786](https://github.com/jfrog/terraform-provider-artifactory/issues/786)
+
+## 8.9.0 (Sep 8, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.7
+
+FEATURES:
+* resource/artifactory_global_environment: add a new resource for managing global environment. PR: [#797](https://github.com/jfrog/terraform-provider-artifactory/pull/797) Issue: [#773](https://github.com/jfrog/terraform-provider-artifactory/issues/773)
+
+## 8.8.1 (Sep 7, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
+
+BUG FIXES:
+* resource/artifactory_scoped_token: Fix state drift with `description` attribute when upgrading from 7.11.2.
+
+PR: [#796](https://github.com/jfrog/terraform-provider-artifactory/pull/796) Issue: [#792](https://github.com/jfrog/terraform-provider-artifactory/issues/792)
+
+## 8.8.0 (Sep 5, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
+
+IMPROVEMENTS:
+* resource/artifactory_user, resource/artifactory_unmanaged_user, resource/artifactory_managed_user: Add validation to `name` attribute to match JFrog platform behavior. PR: [#794](https://github.com/jfrog/terraform-provider-artifactory/pull/794) Issue: [#790](https://github.com/jfrog/terraform-provider-artifactory/issues/790)
+
+## 8.7.0 (August 30, 2023). Tested on Artifactory 7.63.14 with Terraform CLI v1.5.6
+
+IMPROVEMENTS:
+* resource/artifactory_remote_helm_repository: Add support of `oci` scheme to `helm_charts_base_url` attribute. PR: [#793](https://github.com/jfrog/terraform-provider-artifactory/pull/793)
+
+## 8.6.0 (August 25, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.6
+
+IMPROVEMENTS:
+* resource/artifactory_remote_docker_repository: Add `disable_url_normalization` attribute to support disabling URL normalization.
+
+PR: [#788](https://github.com/jfrog/terraform-provider-artifactory/pull/788)
+Issue: [#784](https://github.com/jfrog/terraform-provider-artifactory/issues/784)
+
+## 8.5.0 (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+IMPROVEMENTS:
+* resource/artifactory_scoped_token: Add `project_key` attribute to support creating token for a project.
+
+PR: [#787](https://github.com/jfrog/terraform-provider-artifactory/pull/787)
+
+## 8.4.3. (August 23, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+IMPROVEMENTS: 
+* resource/artifactory_permission_target: added 0 length check for `actions` block. 
+* Upgraded Terraform Plugin Framework to 1.3.5. 
+
+PR: [#785](https://github.com/jfrog/terraform-provider-artifactory/pull/785)
+Issues: [#782](https://github.com/jfrog/terraform-provider-artifactory/issues/782)
+
+## 8.4.2 (August 22, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+IMPROVEMENTS:
+* resource/artifactory_access_token: Add missing deprecation message to documentation. The message has been part of the provider since [6.8.0](https://github.com/jfrog/terraform-provider-artifactory/releases/tag/v6.8.0) but was missing from the documentation on Terraform registry.
+
+PR: [#783](https://github.com/jfrog/terraform-provider-artifactory/pull/783)
+
+## 8.4.1 (July 17, 2023). Tested on Artifactory 7.63.12 with Terraform CLI v1.5.5
+
+BUG FIXES:
+* resource/artifactory_group, resource/artifactory_permission_target, resource/artifactory_scoped_token, resource/artifactory_ldap_setting_v2, resource/artifactory_ldap_group_setting_v2, resource/artifactory_*_user: fixed handling of HTTP response 404. When the resource was removed outside of Terraform configuration, it will be recreated without error out on 404. 
+
+PR: [#781](https://github.com/jfrog/terraform-provider-artifactory/pull/781)
+Issues: [#776](https://github.com/jfrog/terraform-provider-artifactory/issues/776), [#775](https://github.com/jfrog/terraform-provider-artifactory/issues/775), [#772](https://github.com/jfrog/terraform-provider-artifactory/issues/772)
+
 ## 8.4.0 (July 21, 2023). Tested on Artifactory 7.63.5 with Terraform CLI v1.5.3
 
 IMPROVEMENTS:
@@ -11,7 +264,7 @@ Issues:[#768](https://github.com/jfrog/terraform-provider-artifactory/issues/768
 
 ## 8.3.1 (July 5, 2023). Tested on Artifactory 7.59.12 with Terraform CLI v1.5.2
 
-BUG FIX:
+BUG FIXES:
 * resource/artifactory_scoped_token: default value `false` is removed from `include_reference_token` attribute to avoid state drift, when the provider updating from version below 7.7.0 to the latest. 
 
 PR: [#763](https://github.com/jfrog/terraform-provider-artifactory/pull/763)
@@ -29,7 +282,7 @@ Issue:[#738](https://github.com/jfrog/terraform-provider-artifactory/issues/738)
 
 ## 8.2.3 (June 28, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.2
 
-BUG FIX:
+BUG FIXES:
 * provider: fixed "Error: Plugin did not respond" issue. Traced to a [Terraform framework library bug](https://github.com/hashicorp/terraform-plugin-framework/pull/772). Updated `terraform-plugin-framework` from v1.3.0 to [v1.3.1](https://github.com/hashicorp/terraform-plugin-framework/releases/tag/v1.3.1)
 
   PR: [#759](https://github.com/jfrog/terraform-provider-artifactory/pull/759)
@@ -37,7 +290,7 @@ BUG FIX:
 
 ## 8.2.2 (June 22, 2023). Tested on Artifactory 7.59.11 with Terraform CLI v1.5.1
 
-BUG FIX:
+BUG FIXES:
 * resource/artifactory_remote_vcs_repository: IsURLWithHTTPorHTTPS check was removed from the `vcs_git_download_url` attribute to allow use formatted string with placeholders, like `{0}/{1}/+archive/{2}.{3}` with `CUSTOM` Git provider.
 
   PR: [#756](https://github.com/jfrog/terraform-provider-artifactory/pull/756)
@@ -85,7 +338,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_permission_target is migrated to Plugin Framework, improved attribute validation.
 
-  PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/42)
+PR: [#742](https://github.com/jfrog/terraform-provider-artifactory/pull/742)
 
 ## 7.11.2 (May 30, 2023). Tested on Artifactory 7.59.9
 
@@ -127,7 +380,7 @@ BUG FIXES:
 
 ## 7.10.1 (May 10, 2023).
 
-BUG FIX: 
+BUG FIXES: 
 * Fixed bug where `check_license` attribute was always `true` in the SDK v2 provider configuration.
 
   PR:     [#733](https://github.com/jfrog/terraform-provider-artifactory/pull/733)
@@ -580,7 +833,7 @@ BUG FIXES:
 
 IMPROVEMENTS:
 
-* resources/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handled correctly.
+* resource/artifactory_scoped_token: Add `Sensitive: true` to `access_token` and `refresh_token` attributes to ensure the values are handled correctly.
 
 ## 6.19.0 (October 25, 2022). Tested on Artifactory 7.46.10
 

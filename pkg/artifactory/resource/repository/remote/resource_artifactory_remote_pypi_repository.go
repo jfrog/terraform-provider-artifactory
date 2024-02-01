@@ -3,7 +3,7 @@ package remote
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -12,6 +12,7 @@ const PypiPackageType = "pypi"
 
 type PypiRemoteRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	PypiRegistryUrl      string `json:"pyPIRegistryUrl"`
 	PypiRepositorySuffix string `json:"pyPIRepositorySuffix"`
 }
@@ -19,6 +20,7 @@ type PypiRemoteRepo struct {
 var PypiRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		BaseRemoteRepoSchema(isResource),
+		CurationRemoteRepoSchema,
 		map[string]*schema.Schema{
 			"pypi_registry_url": {
 				Type:             schema.TypeString,
@@ -45,8 +47,11 @@ func ResourceArtifactoryRemotePypiRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := PypiRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, PypiPackageType),
-			PypiRegistryUrl:            d.GetString("pypi_registry_url", false),
-			PypiRepositorySuffix:       d.GetString("pypi_repository_suffix", false),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
+			PypiRegistryUrl:      d.GetString("pypi_registry_url", false),
+			PypiRepositorySuffix: d.GetString("pypi_repository_suffix", false),
 		}
 		return repo, repo.Id(), nil
 	}

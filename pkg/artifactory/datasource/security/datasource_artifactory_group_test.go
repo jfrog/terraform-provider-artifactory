@@ -7,11 +7,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	datasourcesec "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/security"
-	resourcesec "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	datasourcesec "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/security"
+	resourcesec "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func createGroup(groupName string, description string, id string, t *testing.T) {
@@ -53,7 +53,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 		}
 	`
 	fqrn := "data." + tempFqrn
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	description := "test-group full body"
 
@@ -62,7 +62,7 @@ func TestAccGroup_basic_datasource(t *testing.T) {
 			acctest.PreCheck(t)
 			createGroup(groupName, description, strconv.Itoa(id), t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -96,7 +96,7 @@ func TestAccGroup_basic_datasource_includeusers_true(t *testing.T) {
     }
 	`
 	fqrn := "data." + tempFqrn
-	config := utilsdk.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
 
 	description := "test-group full body. Include users false"
 

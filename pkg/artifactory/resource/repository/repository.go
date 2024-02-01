@@ -8,10 +8,10 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/exp/slices"
 
@@ -21,8 +21,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
-
-const defaultProjectKey = "default"
 
 var BaseRepoSchema = map[string]*schema.Schema{
 	"key": {
@@ -35,14 +33,13 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Default:          "default",
 		ValidateDiagFunc: validator.ProjectKey,
 		Description:      "Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
-		MinItems: 1,
+		MinItems: 0,
 		MaxItems: 2,
 		Set:      schema.HashString,
 		Optional: true,
@@ -91,6 +88,20 @@ var BaseRepoSchema = map[string]*schema.Schema{
 	},
 }
 
+var ProxySchema = map[string]*schema.Schema{
+	"proxy": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Proxy key from Artifactory Proxies settings. Can't be set if `disable_proxy = true`.",
+	},
+	"disable_proxy": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.",
+	},
+}
+
 var CompressionFormats = map[string]*schema.Schema{
 	"index_compression_formats": {
 		Type: schema.TypeSet,
@@ -126,24 +137,33 @@ type ReadFunc func(d *schema.ResourceData, m interface{}) error
 // Constructor Must return a pointer to a struct. When just returning a struct, resty gets confused and thinks it's a map
 type Constructor func() (interface{}, error)
 
+func Create(ctx context.Context, d *schema.ResourceData, m interface{}, unpack unpacker.UnpackFunc) diag.Diagnostics {
+	repo, key, err := unpack(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	// repo must be a pointer
+	_, err = m.(util.ProvderMetadata).Client.R().
+		AddRetryCondition(client.RetryOnMergeError).
+		SetBody(repo).
+		SetPathParam("key", key).
+		Put(RepositoriesEndpoint)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(key)
+
+	return nil
+}
+
 func MkRepoCreate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.CreateContextFunc {
-
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		repo, key, err := unpack(d)
+		err := Create(ctx, d, m, unpack)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
-		// repo must be a pointer
-		_, err = m.(utilsdk.ProvderMetadata).Client.R().
-			AddRetryCondition(client.RetryOnMergeError).
-			SetBody(repo).
-			SetPathParam("key", key).
-			Put(RepositoriesEndpoint)
 
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		d.SetId(key)
 		return read(ctx, d, m)
 	}
 }
@@ -156,7 +176,7 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 		}
 
 		// repo must be a pointer
-		resp, err := m.(utilsdk.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetResult(repo).
 			SetPathParam("key", d.Id()).
 			Get(RepositoriesEndpoint)
@@ -172,46 +192,52 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 	}
 }
 
+func Update(ctx context.Context, d *schema.ResourceData, m interface{}, unpack unpacker.UnpackFunc) diag.Diagnostics {
+	repo, key, err := unpack(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = m.(util.ProvderMetadata).Client.R().
+		AddRetryCondition(client.RetryOnMergeError).
+		SetBody(repo).
+		SetPathParam("key", d.Id()).
+		Post(RepositoriesEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(key)
+
+	projectKeyChanged := d.HasChange("project_key")
+	if projectKeyChanged {
+		old, newProject := d.GetChange("project_key")
+		oldProjectKey := old.(string)
+		newProjectKey := newProject.(string)
+
+		assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
+		unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
+
+		var err error
+		if assignToProject {
+			err = assignRepoToProject(key, newProjectKey, m.(util.ProvderMetadata).Client)
+		} else if unassignFromProject {
+			err = unassignRepoFromProject(key, m.(util.ProvderMetadata).Client)
+		}
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
 func MkRepoUpdate(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		repo, key, err := unpack(d)
+		err := Update(ctx, d, m, unpack)
 		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		_, err = m.(utilsdk.ProvderMetadata).Client.R().
-			AddRetryCondition(client.RetryOnMergeError).
-			SetBody(repo).
-			SetPathParam("key", d.Id()).
-			Post(RepositoriesEndpoint)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		d.SetId(key)
-
-		projectKeyChanged := d.HasChange("project_key")
-		tflog.Debug(ctx, fmt.Sprintf("projectKeyChanged: %v", projectKeyChanged))
-		if projectKeyChanged {
-			old, newProject := d.GetChange("project_key")
-			oldProjectKey := old.(string)
-			newProjectKey := newProject.(string)
-			tflog.Debug(ctx, fmt.Sprintf("oldProjectKey: %v, newProjectKey: %v", oldProjectKey, newProjectKey))
-
-			assignToProject := oldProjectKey == defaultProjectKey && len(newProjectKey) > 0
-			unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == defaultProjectKey
-			tflog.Debug(ctx, fmt.Sprintf("assignToProject: %v, unassignFromProject: %v", assignToProject, unassignFromProject))
-
-			var err error
-			if assignToProject {
-				err = assignRepoToProject(key, newProjectKey, m.(utilsdk.ProvderMetadata).Client)
-			} else if unassignFromProject {
-				err = unassignRepoFromProject(key, m.(utilsdk.ProvderMetadata).Client)
-			}
-
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			return err
 		}
 
 		return read(ctx, d, m)
@@ -236,7 +262,7 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 }
 
 func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(utilsdk.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
@@ -252,49 +278,10 @@ func Retry400(response *resty.Response, _ error) bool {
 	return response.StatusCode() == http.StatusBadRequest
 }
 
-func repoExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	_, err := CheckRepo(d.Id(), m.(utilsdk.ProvderMetadata).Client.R().AddRetryCondition(Retry400))
-	return err == nil, err
-}
-
-var repoTypeValidator = validation.StringInSlice(RepoTypesSupported, false)
-
 var RepoKeyValidator = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
 	validation.StringDoesNotContainAny(" !@#$%^&*()+={}[]:;<>,/?~`|\\"),
 )
-
-var RepoTypesSupported = []string{
-	"alpine",
-	"bower",
-	"cargo",
-	"chef",
-	"cocoapods",
-	"composer",
-	"conan",
-	"conda",
-	"cran",
-	"debian",
-	"docker",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"gradle",
-	"helm",
-	"ivy",
-	"maven",
-	"npm",
-	"nuget",
-	"opkg",
-	"p2",
-	"puppet",
-	"pypi",
-	"rpm",
-	"sbt",
-	"vagrant",
-	"vcs",
-}
 
 var GradleLikePackageTypes = []string{
 	"gradle",
@@ -310,7 +297,7 @@ func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: GetDefaultRepoLayoutRef(repositoryType, packageType),
-			Description: "Repository layout key for the local repository",
+			Description: fmt.Sprintf("Repository layout key for the %s repository", repositoryType),
 		},
 	}
 }
@@ -337,16 +324,16 @@ const CustomProjectEnvironmentSupportedVersion = "7.53.1"
 func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
 		projectEnvironments := data.(*schema.Set).List()
-		providerMetadata := meta.(utilsdk.ProvderMetadata)
+		providerMetadata := meta.(util.ProvderMetadata)
 
-		isSupported, err := utilsdk.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
+		isSupported, err := util.CheckVersion(providerMetadata.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
 		if err != nil {
-			return fmt.Errorf("Failed to check version %s", err)
+			return fmt.Errorf("failed to check version %s", err)
 		}
 
 		if isSupported {
 			if len(projectEnvironments) == 2 {
-				return fmt.Errorf("For Artifactory %s or later, only one environment can be assigned to a repository.", CustomProjectEnvironmentSupportedVersion)
+				return fmt.Errorf("for Artifactory %s or later, only one environment can be assigned to a repository", CustomProjectEnvironmentSupportedVersion)
 			}
 		} else { // Before 7.53.1
 			projectEnvironments := data.(*schema.Set).List()
@@ -356,6 +343,17 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *schema.ResourceDiff, met
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func VerifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	disableProxy := diff.Get("disable_proxy").(bool)
+	proxy := diff.Get("proxy").(string)
+
+	if disableProxy && len(proxy) > 0 {
+		return fmt.Errorf("if `disable_proxy` is set to `true`, `proxy` can't be set")
 	}
 
 	return nil
@@ -373,8 +371,33 @@ func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		},
 
 		Schema:        skeema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				// this only works because the schema hasn't changed, except the removal of default value
+				// from `project_key` attribute. Future common schema changes that involve attributes should
+				// figure out a way to create a previous and new version.
+				Type:    resourceV0(skeema).CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceUpgradeProjectKey,
+				Version: 0,
+			},
+		},
 		CustomizeDiff: ProjectEnvironmentsDiff,
 	}
+}
+
+func resourceV0(skeema map[string]*schema.Schema) *schema.Resource {
+	return &schema.Resource{
+		Schema: skeema,
+	}
+}
+
+func ResourceUpgradeProjectKey(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if rawState["project_key"] == "default" {
+		rawState["project_key"] = ""
+	}
+
+	return rawState, nil
 }
 
 const RepositoriesEndpoint = "artifactory/api/repositories/{key}"
@@ -400,11 +423,11 @@ type SupportedRepoClasses struct {
 }
 
 // GetDefaultRepoLayoutRef return the default repo layout by Repository Type & Package Type
-func GetDefaultRepoLayoutRef(repositoryType string, packageType string) func() (interface{}, error) {
+func GetDefaultRepoLayoutRef(repositoryType, packageType string) func() (interface{}, error) {
 	return func() (interface{}, error) {
 		if v, ok := defaultRepoLayoutMap[packageType].SupportedRepoTypes[repositoryType]; ok && v {
 			return defaultRepoLayoutMap[packageType].RepoLayoutRef, nil
 		}
-		return "", fmt.Errorf("default repo layout not found for repository type %v & package type %v", repositoryType, packageType)
+		return nil, fmt.Errorf("default repo layout not found for repository type %s & package type %s", repositoryType, packageType)
 	}
 }

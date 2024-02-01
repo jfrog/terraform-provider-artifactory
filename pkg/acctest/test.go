@@ -12,22 +12,25 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-version"
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/provider"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -45,12 +48,12 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
 
-// ProtoV5MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
+// ProtoV6MuxProviderFactories is used to instantiate both SDK v2 and Framework providers
 // during acceptance tests. Use it only if you need to combine resources from SDK v2 and the Framework in the same test.
-var ProtoV5MuxProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+var ProtoV6MuxProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 
-var ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"artifactory": providerserver.NewProtocol5WithError(provider.Framework()()),
+var ProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"artifactory": providerserver.NewProtocol6WithError(provider.Framework()()),
 }
 
 func init() {
@@ -60,15 +63,26 @@ func init() {
 		"artifactory": func() (*schema.Provider, error) { return Provider, nil },
 	}
 
-	ProtoV5MuxProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		"artifactory": func() (tfprotov5.ProviderServer, error) {
+	ProtoV6MuxProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+		"artifactory": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
-			providers := []func() tfprotov5.ProviderServer{
-				providerserver.NewProtocol5(provider.Framework()()), // terraform-plugin-framework provider
-				Provider.GRPCProvider,                               // terraform-plugin-sdk provider
+
+			upgradedSdkServer, err := tf5to6server.UpgradeServer(
+				ctx,
+				provider.SdkV2().GRPCProvider, // terraform-plugin-sdk provider
+			)
+			if err != nil {
+				return nil, err
 			}
 
-			muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+			providers := []func() tfprotov6.ProviderServer{
+				providerserver.NewProtocol6(provider.Framework()()), // terraform-plugin-framework provider
+				func() tfprotov6.ProviderServer {
+					return upgradedSdkServer
+				},
+			}
+
+			muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
 
 			if err != nil {
 				return nil, err
@@ -94,12 +108,12 @@ func PreCheck(t *testing.T) {
 			SetHeader("Content-Type", "text/plain").
 			Put("/artifactory/api/system/configuration/baseUrl")
 		if err != nil {
-			t.Fatalf("Failed to set custom base URL: %v", err)
+			t.Fatalf("failed to set custom base URL: %v", err)
 		}
 
-		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform.NewResourceConfigRaw(nil)))
-		if configErr != nil {
-			t.Fatalf("Failed to configure provider %v", configErr)
+		configErr := Provider.Configure(context.Background(), (*terraform2.ResourceConfig)(terraform2.NewResourceConfigRaw(nil)))
+		if configErr != nil && configErr.HasError() {
+			t.Fatalf("failed to configure provider %v", configErr)
 		}
 	})
 }
@@ -121,7 +135,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		providerMeta := Provider.Meta().(utilsdk.ProvderMetadata)
+		providerMeta := Provider.Meta().(util.ProvderMetadata)
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
@@ -236,7 +250,7 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
 	restyClient := GetTestResty(t)
-	metadata := utilsdk.ProvderMetadata{Client: restyClient}
+	metadata := util.ProvderMetadata{Client: restyClient}
 	err := configuration.SendConfigurationPatch(body, metadata)
 	if err != nil {
 		t.Fatal(err)
@@ -349,7 +363,7 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 		return false, err
 	}
 
-	meta := Provider.Meta().(utilsdk.ProvderMetadata)
+	meta := Provider.Meta().(util.ProvderMetadata)
 	runtimeVersion, err := version.NewVersion(meta.ArtifactoryVersion)
 	if err != nil {
 		return false, err
@@ -413,7 +427,10 @@ func (p PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest
 	})
 
 	if len(req.Plan.ResourceDrift) > 0 {
-		resp.Error = fmt.Errorf("expected empty plan, but has resouce drifts(s): %v", req.Plan.ResourceDrift)
+		drifts := lo.Map(req.Plan.ResourceDrift, func(c *tfjson.ResourceChange, index int) string {
+			return fmt.Sprintf("Name: %s, Before: %v, After: %v", c.Name, c.Change.Before, c.Change.After)
+		})
+		resp.Error = fmt.Errorf("expected empty plan, but has resouce drifts(s): %v", strings.Join(drifts, ", "))
 		return
 	}
 

@@ -2,25 +2,25 @@ package local
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func GetGenericRepoSchema(repoType string) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(BaseLocalRepoSchema, repository.RepoLayoutRefSchema("local", repoType))
+	return utilsdk.MergeMaps(BaseLocalRepoSchema, repository.RepoLayoutRefSchema(rclass, repoType))
 }
 
 func ResourceArtifactoryLocalGenericRepository(repoType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParams{
 			PackageType: repoType,
-			Rclass:      "local",
+			Rclass:      rclass,
 		}, nil
 	}
 
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackBaseRepo("local", data, repoType)
+		repo := UnpackBaseRepo(rclass, data, repoType)
 		return repo, repo.Id(), nil
 	}
 

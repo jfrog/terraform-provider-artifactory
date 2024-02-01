@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -134,7 +135,7 @@ func DataSourceArtifactoryPermissionTarget() *schema.Resource {
 	dataSourcePermissionTargetRead := func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		permissionTarget := new(PermissionTargetParams)
 		targetName := d.Get("name").(string)
-		_, err := m.(utilsdk.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
+		_, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
 
 		if err != nil {
 			return diag.FromErr(err)

@@ -1,5 +1,5 @@
 # Fetch the dependencies
-FROM golang:1.15-alpine AS builder
+FROM golang:1.21.4-alpine AS builder
 
 RUN apk add --update ca-certificates git gcc g++ libc-dev
 WORKDIR /src/
@@ -18,6 +18,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build
 
 
 # Build the final image
-FROM hashicorp/terraform:0.13
+FROM hashicorp/terraform:1.6.5
 
 COPY --from=builder /src/terraform-provider-artifactory /root/.terraform.d/plugins/

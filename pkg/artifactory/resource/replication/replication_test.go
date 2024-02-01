@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/replication"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 func repConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().Head(replication.EndpointPath + id)
+	_, err := m.(util.ProvderMetadata).Client.R().Head(replication.EndpointPath + id)
 	return err == nil, err
 }
 

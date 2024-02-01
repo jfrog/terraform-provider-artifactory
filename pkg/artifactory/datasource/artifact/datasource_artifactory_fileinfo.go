@@ -1,13 +1,14 @@
-package datasource
+package artifact
 
 import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 )
 
 func ArtifactoryFileInfo() *schema.Resource {
@@ -77,7 +78,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetResult(&fileInfo).
 		SetPathParams(map[string]string{
 			"repoKey": repo,
@@ -115,7 +116,7 @@ func packFileInfo(fileInfo FileInfo, d *schema.ResourceData) diag.Diagnostics {
 		errors = setValue("sha256", fileInfo.Checksums.Sha256)
 	}
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack fileInfo %q", errors)
 	}
 

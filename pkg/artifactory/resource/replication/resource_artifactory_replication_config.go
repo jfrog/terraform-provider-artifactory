@@ -7,9 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
@@ -237,7 +238,7 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().
+	_, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
@@ -249,7 +250,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(utilsdk.ProvderMetadata).Client
+	c := m.(util.ProvderMetadata).Client
 	var replications []getReplicationBody
 	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -271,7 +272,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	_, err := m.(utilsdk.ProvderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
+	_, err := m.(util.ProvderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

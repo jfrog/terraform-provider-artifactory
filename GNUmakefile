@@ -1,4 +1,4 @@
-TEST?=./...
+TEST?=./pkg/...
 PRODUCT=artifactory
 GO_ARCH=$(shell go env GOARCH)
 TARGET_ARCH=$(shell go env GOOS)_${GO_ARCH}
@@ -9,9 +9,10 @@ GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
 endif
 PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
-PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/${PKG_NAME}
 PROVIDER_VERSION?=$(shell git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
+PROVIDER_MAJOR_VERSION?=$(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1}' )
 NEXT_PROVIDER_VERSION := $(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
+PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/v${PROVIDER_MAJOR_VERSION}/${PKG_NAME}
 BUILD_PATH=terraform.d/plugins/registry.terraform.io/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
 SONAR_SCANNER_VERSION?=4.7.0.2747
 SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
@@ -52,11 +53,11 @@ attach:
 
 smoke: fmt
 	export TF_ACC=true && \
-		go test -run '${SMOKE_TESTS}' -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -timeout 5m ./pkg/... -count=1
+		go test -run '${SMOKE_TESTS}' -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -timeout 5m $(TEST). -count=1
 
 acceptance: fmt
 	export TF_ACC=true && \
-		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 1h ./pkg/...
+		go test -cover -coverprofile=coverage.txt -ldflags="-X '${PKG_VERSION_PATH}.Version=${NEXT_PROVIDER_VERSION}-test'" -v -p 1 -parallel 20 -timeout 1h $(TEST)
 
 coverage:
 	go tool cover -html=coverage.txt

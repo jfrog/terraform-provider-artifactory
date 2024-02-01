@@ -34,7 +34,7 @@ resource "artifactory_user" "test-user" {
 ### Required
 
 - `email` (String) Email for user.
-- `name` (String) Username for user.
+- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: '.-_@'
 
 ### Optional
 
@@ -59,4 +59,4 @@ terraform import artifactory_user.test-user myusername
 
 ## Managing groups relationship
 
-See [our recommendation](guides/user_group.md) on how to manage user-group relationship.
+See [our recommendation](../guides/user_group.md) on how to manage user-group relationship.

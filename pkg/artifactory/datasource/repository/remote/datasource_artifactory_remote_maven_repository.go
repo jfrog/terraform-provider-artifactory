@@ -2,9 +2,9 @@ package remote
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/datasource/repository"
-	resource_repository "github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v8/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
@@ -15,17 +15,19 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.JavaRemoteRepo{
-			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.MavenPackageType,
-				RepoLayoutRef: repoLayout.(string),
+		return &remote.MavenRemoteRepo{
+			JavaRemoteRepo: remote.JavaRemoteRepo{
+				RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
+					Rclass:        rclass,
+					PackageType:   remote.MavenPackageType,
+					RepoLayoutRef: repoLayout.(string),
+				},
+				SuppressPomConsistencyChecks: false,
 			},
-			SuppressPomConsistencyChecks: false,
 		}, nil
 	}
 
-	mavenSchema := remote.JavaRemoteSchema(false, remote.MavenPackageType, false)
+	mavenSchema := remote.MavenRemoteSchema(false)
 
 	return &schema.Resource{
 		Schema:      mavenSchema,
