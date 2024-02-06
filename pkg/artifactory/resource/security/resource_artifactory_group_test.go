@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -184,6 +185,42 @@ func TestAccGroup_bool_conflict(t *testing.T) {
 			{
 				Config:      config,
 				ExpectError: regexp.MustCompile(".*can not be set to.*"),
+			},
+		},
+	})
+}
+
+func TestAccGroup_name_too_long(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-full", "artifactory_group")
+
+	groupName = fmt.Sprintf("%s%s", groupName, strings.Repeat("X", 60))
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name             = "{{ .groupName }}"
+			description 	 = "Test group"
+			external_id      = "externalID"
+			auto_join        = true
+			admin_privileges = false
+			realm            = "test"
+			realm_attributes = "Some attribute"
+			detach_all_users = true
+			watch_manager    = true
+			policy_manager   = true
+			reports_manager  = true
+			users_names 	 = ["anonymous", "admin"]
+		}
+	`
+
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*Attribute name string length must be between 1 and 64.*"),
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -86,6 +87,9 @@ func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.Sche
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the group.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+				},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description for the group.",
