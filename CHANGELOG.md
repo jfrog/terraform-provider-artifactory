@@ -1,3 +1,9 @@
+## 10.1.3 (Feb 7, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_group: Add length validation to `name` attribute to match Artifactory web UI. PR: [#884](https://github.com/jfrog/terraform-provider-artifactory/pull/884) Issue: [#883](https://github.com/jfrog/terraform-provider-artifactory/issues/883)
+
 ## 10.1.2 (Jan 19, 2024)
 
 BUG FIXES:
