@@ -289,6 +289,8 @@ var GradleLikePackageTypes = []string{
 	"ivy",
 }
 
+const MavenPackageType = "maven"
+
 var ProjectEnvironmentsSupported = []string{"DEV", "PROD"}
 
 func RepoLayoutRefSchema(repositoryType string, packageType string) map[string]*schema.Schema {
