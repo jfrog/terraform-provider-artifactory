@@ -82,5 +82,4 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 		unpackMavenVirtualRepository,
 		constructor,
 	)
-
 }

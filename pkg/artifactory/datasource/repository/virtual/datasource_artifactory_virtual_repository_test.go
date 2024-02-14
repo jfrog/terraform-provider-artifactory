@@ -39,8 +39,7 @@ func TestAccDataSourceVirtualAllGradleLikePackageTypes(t *testing.T) {
 	for _, packageType := range repository.GradleLikePackageTypes {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
-				"description":                              fmt.Sprintf("%s virtual repository public description testing.", packageType),
-				"force_maven_authentication":               true,
+				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),
 				"pom_repository_references_cleanup_policy": "discard_active_reference",
 			}))
 		})
@@ -99,6 +98,13 @@ func TestAccDataSourceVirtualHelmRepository(t *testing.T) {
 		"description":                    "helm virtual repository public description testing.",
 		"use_namespaces":                 true,
 		"retrieval_cache_period_seconds": 650,
+	}))
+}
+
+func TestAccDataSourceVirtualMavenRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase(repository.MavenPackageType, t, map[string]interface{}{
+		"description":                "maven virtual repository public description testing.",
+		"force_maven_authentication": true,
 	}))
 }
 
