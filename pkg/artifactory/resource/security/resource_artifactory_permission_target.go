@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -323,26 +324,37 @@ func PackPermissionTarget(permissionTarget *PermissionTargetParams, d *schema.Re
 		errors = setValue("release_bundle", packPermission(permissionTarget.ReleaseBundle))
 	}
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to marshal permission target %q", errors)
 	}
 	return nil
 }
 
+var conflictRegex = regexp.MustCompile(`.*Can't create permission target '.+' for type .+\. It already exists.*`)
+
 func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	if _, err := m.(util.ProvderMetadata).Client.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(PermissionsEndPoint + permissionTarget.Name); err != nil {
-		return diag.FromErr(err)
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		AddRetryCondition(repository.Retry400).
+		SetBody(permissionTarget).
+		Post(PermissionsEndPoint + permissionTarget.Name)
+	if err != nil {
+		if !(resp.StatusCode() == http.StatusConflict && conflictRegex.Match(resp.Body())) {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(permissionTarget.Name)
-	return nil
+	return resourcePermissionTargetRead(ctx, d, m)
 }
 
 func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	permissionTarget := new(PermissionTargetParams)
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + d.Id())
+	var permissionTarget PermissionTargetParams
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		SetResult(&permissionTarget).
+		Get(PermissionsEndPoint + d.Id())
 	if err != nil {
 		if resp != nil && resp.StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -351,13 +363,16 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 
-	return PackPermissionTarget(permissionTarget, d)
+	return PackPermissionTarget(&permissionTarget, d)
 }
 
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	if _, err := m.(util.ProvderMetadata).Client.R().SetBody(permissionTarget).Put(PermissionsEndPoint + d.Id()); err != nil {
+	_, err := m.(util.ProvderMetadata).Client.R().
+		SetBody(permissionTarget).
+		Put(PermissionsEndPoint + d.Id())
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
