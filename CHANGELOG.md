@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* data/artifactory_virtual_maven_repository: Restore data source after being removed from provide by mistake. PR: [#887](https://github.com/jfrog/terraform-provider-artifactory/pull/887) Issue: [#873](https://github.com/jfrog/terraform-provider-artifactory/issues/873)
+* data/artifactory_virtual_maven_repository: Restore data source after being removed from the provider by mistake. PR: [#887](https://github.com/jfrog/terraform-provider-artifactory/pull/887) Issue: [#873](https://github.com/jfrog/terraform-provider-artifactory/issues/873)
 
 ## 10.1.3 (Feb 7, 2024)
 
