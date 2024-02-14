@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * data/artifactory_virtual_maven_repository: Restore data source after being removed from the provider by mistake. PR: [#887](https://github.com/jfrog/terraform-provider-artifactory/pull/887) Issue: [#873](https://github.com/jfrog/terraform-provider-artifactory/issues/873)
+* resource/artifactory_permission_target: Add check for '409 Conflict' error during resource creation and ignores it. PR: [#888](https://github.com/jfrog/terraform-provider-artifactory/pull/888) Issue: [#853](https://github.com/jfrog/terraform-provider-artifactory/issues/853)
 
 ## 10.1.3 (Feb 7, 2024)
 
