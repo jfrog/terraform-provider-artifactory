@@ -154,8 +154,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					"token will be created with the user-identity scope, which allows users to identify themselves " +
 					"in the Platform but does not grant any specific access permissions." +
 					"* `applied-permissions/admin` - the scope assigned to admin users." +
-					"* `applied-permissions/groups` - the group to which permissions are assigned by group name " +
-					"(use username to indicate the group name)" +
+					"* `applied-permissions/groups` - this scope assigns permissions to groups using the following format: applied-permissions/groups:<group-name>[,<group-name>...]" +
 					"* `system:metrics:r` - for getting the service metrics" +
 					"* `system:livelogs:r` - for getting the service livelogsr. " +
 					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
@@ -190,7 +189,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 							"system:metrics:r",
 							"system:livelogs:r",
 						),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
 					),
 					),
