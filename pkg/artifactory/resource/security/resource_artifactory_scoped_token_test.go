@@ -481,7 +481,7 @@ func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      accessTokenConfig,
-				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
+				ExpectError: regexp.MustCompile(`.*'<resource-type>:<target>\[\/<sub-resource>]:<actions>'.*`),
 			},
 		},
 	})
@@ -493,7 +493,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 	scopedTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
 		`resource "artifactory_scoped_token" "{{ .name }}" {
-			scopes      = ["foo"]
+			scopes      = ["invalid-scope"]
 		}`,
 		map[string]interface{}{
 			"name": name,
@@ -506,7 +506,7 @@ func TestAccScopedToken_WithInvalidScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      scopedTokenConfig,
-				ExpectError: regexp.MustCompile(`.*Invalid Attribute Value Match.*`),
+				ExpectError: regexp.MustCompile(`.*'applied-permissions\/groups:<group-name>\[,<group-name>\.\.\.]'.*`),
 			},
 		},
 	})
