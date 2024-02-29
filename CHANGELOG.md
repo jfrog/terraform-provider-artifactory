@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* resource/artifactory_scoped_token: Fix validation regex for `scopes` attribute. PR: [#895](https://github.com/jfrog/terraform-provider-artifactory/pull/895) Issue: [#889](https://github.com/jfrog/terraform-provider-artifactory/issues/889)
+* resource/artifactory_scoped_token: Fix validation regex for `scopes` attribute. Also fix documentation with invalid Markdown. PR: [#895](https://github.com/jfrog/terraform-provider-artifactory/pull/895) Issue: [#889](https://github.com/jfrog/terraform-provider-artifactory/issues/889)
 
 ## 10.1.4 (Feb 14, 2024)
 
