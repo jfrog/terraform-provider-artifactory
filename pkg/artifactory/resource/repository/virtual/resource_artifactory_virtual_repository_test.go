@@ -975,6 +975,13 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 	})
 }
 
+func TestAccVirtualOciRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("oci", t, map[string]interface{}{
+		"description":                   "oci virtual repository public description testing.",
+		"resolve_oci_tags_by_timestamp": true,
+	}))
+}
+
 func TestAccVirtualDebianRepository_full(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
