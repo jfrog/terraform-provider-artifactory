@@ -99,7 +99,7 @@ func unpackMembers(data *schema.ResourceData) []Member {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	var members []Member
 
-	if v, ok := d.GetOkExists("member"); ok {
+	if v, ok := d.GetOk("member"); ok {
 		federatedMembers := v.(*schema.Set).List()
 		if len(federatedMembers) == 0 {
 			return members

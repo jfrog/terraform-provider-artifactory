@@ -8,7 +8,7 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const ociPackageType = "oci"
+const OciPackageType = "oci"
 
 type OciLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -36,13 +36,13 @@ var OciLocalSchema = utilsdk.MergeMaps(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, ociPackageType),
+	repository.RepoLayoutRefSchema(rclass, OciPackageType),
 )
 
 func UnpackLocalOciRepository(data *schema.ResourceData, rclass string) OciLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return OciLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, ociPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, OciPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		DockerApiVersion:     "V2",
 		TagRetention:         d.GetInt("tag_retention", false),
@@ -60,7 +60,7 @@ func ResourceArtifactoryLocalOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &OciLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: ociPackageType,
+				PackageType: OciPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion: "V2",

@@ -28,6 +28,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_docker_v2_repository":          federated.ResourceArtifactoryFederatedDockerV2Repository(),
 		"artifactory_federated_maven_repository":              federated.ResourceArtifactoryFederatedJavaRepository(repository.MavenPackageType, false),
 		"artifactory_federated_nuget_repository":              federated.ResourceArtifactoryFederatedNugetRepository(),
+		"artifactory_federated_oci_repository":                federated.ResourceArtifactoryFederatedOciRepository(),
 		"artifactory_federated_rpm_repository":                federated.ResourceArtifactoryFederatedRpmRepository(),
 		"artifactory_federated_terraform_module_repository":   federated.ResourceArtifactoryFederatedTerraformRepository("module"),
 		"artifactory_federated_terraform_provider_repository": federated.ResourceArtifactoryFederatedTerraformRepository("provider"),

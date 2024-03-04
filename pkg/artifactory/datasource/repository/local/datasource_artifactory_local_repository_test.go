@@ -561,6 +561,42 @@ func TestAccDataSourceLocalNugetRepository(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceLocalOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("oci-local", "data.artifactory_local_oci_repository")
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalOciRepository", `
+    resource "artifactory_local_oci_repository" "{{ .name }}" {
+      key 	          = "{{ .name }}"
+      tag_retention   = {{ .retention }}
+      max_unique_tags = {{ .max_tags }}
+    }
+
+    data "artifactory_local_oci_repository" "{{ .name }}" {
+      key = artifactory_local_oci_repository.{{ .name }}.id
+    }
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceLocalRpmRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("local-rpm-repo", "data.artifactory_local_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")

@@ -8,15 +8,13 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const packageType = "docker"
-
 func DataSourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	pkr := packer.Default(local.DockerV2LocalSchema)
 
 	constructor := func() (interface{}, error) {
 		return &local.DockerLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: local.DockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V2",
@@ -39,7 +37,7 @@ func DataSourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &local.DockerLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: packageType,
+				PackageType: local.DockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V1",
