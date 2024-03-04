@@ -1,3 +1,12 @@
+## 10.2.0 (Mar 5, 2024)
+
+FEATURES:
+
+* data/artifactory_*_oci_repository: add OCI package support for all repository type.
+* resource/artifactory_*_oci_repository: add OCI package support for all repository type.
+
+PR: [#897](https://github.com/jfrog/terraform-provider-artifactory/pull/897) Issue: [#885](https://github.com/jfrog/terraform-provider-artifactory/issues/885)
+
 ## 10.1.5 (Feb 29, 2024)
 
 BUG FIXES:
