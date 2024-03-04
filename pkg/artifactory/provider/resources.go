@@ -39,6 +39,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_local_debian_repository":                 local.ResourceArtifactoryLocalDebianRepository(),
 		"artifactory_local_docker_v2_repository":              local.ResourceArtifactoryLocalDockerV2Repository(),
 		"artifactory_local_docker_v1_repository":              local.ResourceArtifactoryLocalDockerV1Repository(),
+		"artifactory_local_oci_repository":                    local.ResourceArtifactoryLocalOciRepository(),
 		"artifactory_local_rpm_repository":                    local.ResourceArtifactoryLocalRpmRepository(),
 		"artifactory_local_terraform_module_repository":       local.ResourceArtifactoryLocalTerraformRepository("module"),
 		"artifactory_local_terraform_provider_repository":     local.ResourceArtifactoryLocalTerraformRepository("provider"),

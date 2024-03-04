@@ -198,6 +198,15 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	"oci": {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
 	"opkg": {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

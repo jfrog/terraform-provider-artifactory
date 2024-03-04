@@ -609,6 +609,68 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	})
 }
 
+func TestAccLocalOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("oci-local", "artifactory_local_oci_repository")
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+
+	config := util.ExecuteTemplate("TestAccLocalOciRepository", `
+		resource "artifactory_local_oci_repository" "{{ .name }}" {
+			key 	        = "{{ .name }}"
+			tag_retention   = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+		}
+	`, params)
+
+	updatedParams := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+	updatedConfig := util.ExecuteTemplate("TestAccLocalOciRepository", `
+		resource "artifactory_local_oci_repository" "{{ .name }}" {
+			key 	        = "{{ .name }}"
+			tag_retention   = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+		}
+	`, updatedParams)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updatedParams["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updatedParams["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
 func TestAccLocalTerraformModuleRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("terraform-local", "artifactory_local_terraform_module_repository")
 	params := map[string]interface{}{
