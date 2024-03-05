@@ -8,7 +8,7 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const helmOciPackageType = "helmoci"
+const HelmOciPackageType = "helmoci"
 
 type HelmOciLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -36,13 +36,13 @@ var HelmOciLocalSchema = utilsdk.MergeMaps(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, helmOciPackageType),
+	repository.RepoLayoutRefSchema(rclass, HelmOciPackageType),
 )
 
 func UnpackLocalHelmOciRepository(data *schema.ResourceData, rclass string) HelmOciLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return HelmOciLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, helmOciPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, HelmOciPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		TagRetention:         d.GetInt("tag_retention", false),
 	}
@@ -59,7 +59,7 @@ func ResourceArtifactoryLocalHelmOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &HelmOciLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: helmOciPackageType,
+				PackageType: HelmOciPackageType,
 				Rclass:      rclass,
 			},
 			TagRetention:  1,
