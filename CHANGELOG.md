@@ -1,4 +1,4 @@
-## 10.2.0 (Mar 5, 2024)
+## 10.2.0 (Mar 6, 2024)
 
 FEATURES:
 
@@ -6,6 +6,11 @@ FEATURES:
 * resource/artifactory_*_oci_repository: add OCI package support for all repository type.
 
 PR: [#897](https://github.com/jfrog/terraform-provider-artifactory/pull/897) Issue: [#885](https://github.com/jfrog/terraform-provider-artifactory/issues/885)
+
+* data/artifactory_*_helmoci_repository: add Helm OCI package support for all repository type.
+* resource/artifactory_*_helmoci_repository: add Helm OCI package support for all repository type.
+
+PR: [#898](https://github.com/jfrog/terraform-provider-artifactory/pull/898) Issue: [#880](https://github.com/jfrog/terraform-provider-artifactory/issues/880)
 
 ## 10.1.5 (Feb 29, 2024)
 
