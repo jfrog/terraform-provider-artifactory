@@ -70,6 +70,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_docker_repository":               virtual.ResourceArtifactoryVirtualDockerRepository(),
 		"artifactory_virtual_go_repository":                   virtual.ResourceArtifactoryVirtualGoRepository(),
 		"artifactory_virtual_helm_repository":                 virtual.ResourceArtifactoryVirtualHelmRepository(),
+		"artifactory_virtual_helmoci_repository":              virtual.ResourceArtifactoryVirtualHelmOciRepository(),
 		"artifactory_virtual_maven_repository":                virtual.ResourceArtifactoryVirtualJavaRepository(repository.MavenPackageType),
 		"artifactory_virtual_npm_repository":                  virtual.ResourceArtifactoryVirtualNpmRepository(),
 		"artifactory_virtual_nuget_repository":                virtual.ResourceArtifactoryVirtualNugetRepository(),
