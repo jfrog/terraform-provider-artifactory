@@ -25,7 +25,7 @@ var OciVirtualSchema = utilsdk.MergeMaps(
 func ResourceArtifactoryVirtualOciRepository() *schema.Resource {
 	type OciVirtualRepositoryParams struct {
 		RepositoryBaseParams
-		ResolveOciTagsByTimestamp bool `json:"resolveDockerTagsByTimestamp"`
+		ResolveOciTagsByTimestamp bool `hcl:"resolve_oci_tags_by_timestamp" json:"resolveDockerTagsByTimestamp"`
 	}
 
 	unpackOciVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
