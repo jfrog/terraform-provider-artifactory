@@ -113,7 +113,7 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Required:     isResource,
 				Optional:     !isResource,
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-				Description:  "The remote repo URL.",
+				Description:  "This is a URL to the remote registry. Consider using HTTPS to ensure a secure connection.",
 			},
 			"username": {
 				Type:     schema.TypeString,

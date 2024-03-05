@@ -4,6 +4,7 @@ subcategory: "Remote Repositories"
 # Artifactory Remote Repository Resource
 
 Creates remote Docker repository resource. 
+
 Official documentation can be found [here](https://www.jfrog.com/confluence/display/JFROG/Docker+Registry)
 
 
