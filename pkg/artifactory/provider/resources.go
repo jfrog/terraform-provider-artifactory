@@ -26,6 +26,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_docker_repository":             federated.ResourceArtifactoryFederatedDockerV2Repository(), // Alias for backward compatibility
 		"artifactory_federated_docker_v1_repository":          federated.ResourceArtifactoryFederatedDockerV1Repository(),
 		"artifactory_federated_docker_v2_repository":          federated.ResourceArtifactoryFederatedDockerV2Repository(),
+		"artifactory_federated_helmoci_repository":            federated.ResourceArtifactoryFederatedHelmOciRepository(),
 		"artifactory_federated_maven_repository":              federated.ResourceArtifactoryFederatedJavaRepository(repository.MavenPackageType, false),
 		"artifactory_federated_nuget_repository":              federated.ResourceArtifactoryFederatedNugetRepository(),
 		"artifactory_federated_oci_repository":                federated.ResourceArtifactoryFederatedOciRepository(),
