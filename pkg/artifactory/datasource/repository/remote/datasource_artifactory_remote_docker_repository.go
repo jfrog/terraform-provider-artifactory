@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryRemotecoDockerRepository() *schema.Resource {
+func DataSourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.DockerPackageType)()
 		if err != nil {

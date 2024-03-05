@@ -8,7 +8,7 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const dockerPackageType = "docker"
+const DockerPackageType = "docker"
 
 type DockerLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -49,13 +49,13 @@ var DockerV2LocalSchema = utilsdk.MergeMaps(
 			Description: "The Docker API version to use. This cannot be set",
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, dockerPackageType),
+	repository.RepoLayoutRefSchema(rclass, DockerPackageType),
 )
 
 func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, dockerPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, DockerPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		DockerApiVersion:     "V2",
 		TagRetention:         d.GetInt("tag_retention", false),
@@ -74,7 +74,7 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: dockerPackageType,
+				PackageType: DockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V2",
@@ -108,12 +108,12 @@ var DockerV1LocalSchema = utilsdk.MergeMaps(
 			Computed: true,
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, dockerPackageType),
+	repository.RepoLayoutRefSchema(rclass, DockerPackageType),
 )
 
 func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, dockerPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, DockerPackageType),
 		DockerApiVersion:     "V1",
 		MaxUniqueTags:        0,
 		TagRetention:         1,
@@ -133,7 +133,7 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: dockerPackageType,
+				PackageType: DockerPackageType,
 				Rclass:      rclass,
 			},
 			DockerApiVersion:    "V1",

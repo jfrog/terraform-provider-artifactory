@@ -8,27 +8,27 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryRemoteComposerRepository() *schema.Resource {
+func DataSourceArtifactoryRemoteOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.ComposerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.OciPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
-		return &remote.ComposerRemoteRepo{
+		return &remote.OciRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        rclass,
-				PackageType:   remote.ComposerPackageType,
+				PackageType:   remote.OciPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	composerSchema := remote.ComposerRemoteSchema(false)
+	ociSchema := remote.OciRemoteSchema(false)
 
 	return &schema.Resource{
-		Schema:      composerSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(composerSchema), constructor),
-		Description: "Provides a data source for a remote Composer repository",
+		Schema:      ociSchema,
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(ociSchema), constructor),
+		Description: "Provides a data source for a remote OCI repository",
 	}
 }

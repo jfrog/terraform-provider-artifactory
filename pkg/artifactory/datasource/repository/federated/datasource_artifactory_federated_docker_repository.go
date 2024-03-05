@@ -1,8 +1,6 @@
 package federated
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
@@ -51,7 +49,7 @@ func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	return &schema.Resource{
 		Schema:      dockerV2FederatedSchema,
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
-		Description: fmt.Sprintf("Provides a data source for a federated docker V2 repository"),
+		Description: "Provides a data source for a federated docker V2 repository",
 	}
 }
 

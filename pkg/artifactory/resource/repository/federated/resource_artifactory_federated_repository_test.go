@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -289,7 +288,6 @@ func TestAccFederatedRepo_DisableDefaultProxyConflictAttr(t *testing.T) {
 }
 
 func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
@@ -350,7 +348,6 @@ func TestAccFederatedRepoWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccFederatedRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-federated", projectKey)
 
@@ -1224,6 +1221,72 @@ func TestAccFederatedAllGradleLikePackageTypes(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(packageType, t))
 		})
 	}
+}
+
+func TestAccFederatedOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("oci-federated", "artifactory_federated_oci_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+	resource "artifactory_federated_oci_repository" "{{ .name }}" {
+		key 	        = "{{ .name }}"
+		tag_retention   = {{ .retention }}
+		max_unique_tags = {{ .max_tags }}
+
+		member {
+			url     = "{{ .memberUrl }}"
+			enabled = true
+		}
+	}`
+
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	config := util.ExecuteTemplate("TestAccFederatedOciRepository", template, params)
+
+	updated := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	updatedConfig := util.ExecuteTemplate("TestAccFederatedOciRepository", template, updated)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updated["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updated["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
 }
 
 func TestAccFederatedRpmRepository(t *testing.T) {

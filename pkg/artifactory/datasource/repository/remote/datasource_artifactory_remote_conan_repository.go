@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryRemotecoConanRepository() *schema.Resource {
+func DataSourceArtifactoryRemoteConanRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, resource_repository.ConanPackageType)()
 		if err != nil {

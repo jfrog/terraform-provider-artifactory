@@ -8,7 +8,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryRemotecoCoapodsRepository() *schema.Resource {
+func DataSourceArtifactoryRemoteCoapodsRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.CocoapodsPackageType)()
 		if err != nil {

@@ -511,6 +511,7 @@ EOF
 		},
 	})
 }
+
 func TestAccDataSourceFederatedDockerV2Repository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("docker-federated", "data.artifactory_federated_docker_v2_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
@@ -890,6 +891,69 @@ func TestAccDataSourceFederatedNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", updates["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", updates["force_nuget_authentication"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceFederatedOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("oci-federated", "data.artifactory_federated_oci_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_oci_repository" "{{ .name }}" {
+			key 	        = "{{ .name }}"
+			tag_retention   = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+		data "artifactory_federated_oci_repository" "{{ .name }}" {
+			key = artifactory_federated_oci_repository.{{ .name }}.id
+		}
+	`
+
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedOciRepository", template, params)
+
+	updated := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	}
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedOciRepository", template, updated)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updated["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updated["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 		},

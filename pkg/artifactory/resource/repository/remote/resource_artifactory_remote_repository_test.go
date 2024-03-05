@@ -377,11 +377,11 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 	testCase := []string{"http", "https", "oci"}
 
 	for _, tc := range testCase {
-		t.Run(tc, testAccRemoteHelmRepository(t, tc))
+		t.Run(tc, testAccRemoteHelmRepository(tc))
 	}
 }
 
-func testAccRemoteHelmRepository(t *testing.T, scheme string) func(t *testing.T) {
+func testAccRemoteHelmRepository(scheme string) func(t *testing.T) {
 	return func(t *testing.T) {
 		const packageType = "helm"
 		resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
@@ -498,6 +498,16 @@ func TestAccRemoteNpmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 		},
 		"curated": false,
 	}))
+}
+
+func TestAccRemoteOciRepository(t *testing.T) {
+	const packageType = "oci"
+	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
+		"external_dependencies_enabled":  true,
+		"enable_token_authentication":    true,
+		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+	})
+	resource.Test(t, testCase)
 }
 
 func TestAccRemotePypiRepository(t *testing.T) {

@@ -71,7 +71,7 @@ func TestAccDataSourceVirtualConanRepository(t *testing.T) {
 
 func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(virtual.DebianPackageType, t, map[string]interface{}{
-		"description":                        "bower virtual repository public description testing.",
+		"description":                        "debian virtual repository public description testing.",
 		"debian_default_architectures":       "i386,amd64",
 		"retrieval_cache_period_seconds":     650,
 		"optional_index_compression_formats": utilsdk.CastToInterfaceArr([]string{"bz2", "xz"}),
@@ -80,7 +80,7 @@ func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
 
 func TestAccDataSourceVirtualDockerRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(virtual.DockerPackageType, t, map[string]interface{}{
-		"description":                      "bower virtual repository public description testing.",
+		"description":                      "docker virtual repository public description testing.",
 		"resolve_docker_tags_by_timestamp": true,
 	}))
 }
@@ -122,6 +122,13 @@ func TestAccDataSourceVirtualNugetRepository(t *testing.T) {
 		"description":                "nuget virtual repository public description testing.",
 		"force_nuget_authentication": true,
 		"artifactory_requests_can_retrieve_remote_artifacts": true,
+	}))
+}
+
+func TestAccDataSourceVirtualOciRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase(virtual.OciPackageType, t, map[string]interface{}{
+		"description":                   "OCI virtual repository public description testing.",
+		"resolve_oci_tags_by_timestamp": true,
 	}))
 }
 
