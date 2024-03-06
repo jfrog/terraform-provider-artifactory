@@ -435,6 +435,16 @@ func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteHelmOciRepository(t *testing.T) {
+	const packageType = "helmoci"
+	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
+		"external_dependencies_enabled":  true,
+		"enable_token_authentication":    true,
+		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
+	})
+	resource.Test(t, testCase)
+}
+
 func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("local-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
 

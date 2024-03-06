@@ -101,6 +101,13 @@ func TestAccDataSourceVirtualHelmRepository(t *testing.T) {
 	}))
 }
 
+func TestAccDataSourceVirtualHelmOciRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase(virtual.HelmOciPackageType, t, map[string]interface{}{
+		"description":                   "Helm OCI virtual repository public description testing.",
+		"resolve_oci_tags_by_timestamp": true,
+	}))
+}
+
 func TestAccDataSourceVirtualMavenRepository(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase(repository.MavenPackageType, t, map[string]interface{}{
 		"description":                "maven virtual repository public description testing.",

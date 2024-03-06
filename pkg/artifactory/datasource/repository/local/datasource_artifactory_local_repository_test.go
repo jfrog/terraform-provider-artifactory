@@ -517,6 +517,42 @@ func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*
 	}
 }
 
+func TestAccDataSourceLocalHelmOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("helmoci-local", "data.artifactory_local_helmoci_repository")
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalHelmOciRepository", `
+    resource "artifactory_local_helmoci_repository" "{{ .name }}" {
+      key 	          = "{{ .name }}"
+      tag_retention   = {{ .retention }}
+      max_unique_tags = {{ .max_tags }}
+    }
+
+    data "artifactory_local_helmoci_repository" "{{ .name }}" {
+      key = artifactory_local_helmoci_repository.{{ .name }}.id
+    }
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "helmoci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceLocalAllGradleLikePackageTypes(t *testing.T) {
 	for _, packageType := range repository.GradleLikePackageTypes {
 		t.Run(packageType, func(t *testing.T) {

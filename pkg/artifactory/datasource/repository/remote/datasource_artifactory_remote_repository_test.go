@@ -492,6 +492,49 @@ func TestAccDataSourceRemoteAllGradleLikePackageTypes(t *testing.T) {
 	}
 }
 
+func TestAccDataSourceRemoteHelmOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("helmoci-remote", "data.artifactory_remote_helmoci_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	config := util.ExecuteTemplate(
+		"TestAccDataSourceRemoteHelmOciRepository",
+		`resource "artifactory_remote_helmoci_repository" "{{ .name }}" {
+		    key                            = "{{ .name }}"
+		    url                            = "http://tempurl.org"
+		    external_dependencies_enabled  = true
+		    enable_token_authentication    = true
+		    external_dependencies_patterns = ["*foo"]
+		}
+
+		data "artifactory_remote_helmoci_repository" "{{ .name }}" {
+		    key = artifactory_remote_helmoci_repository.{{ .name }}.id
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "helmoci"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "simple-default"),
+					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enable_token_authentication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "*foo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("maven-remote", "data.artifactory_remote_maven_repository")
 
@@ -561,6 +604,49 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", "https://api.nuget.org/v3/index.json"),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "symbol_server_url", "https://symbols.nuget.org/download/symbols"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceRemoteOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("oci-remote", "data.artifactory_remote_oci_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	config := util.ExecuteTemplate(
+		"TestAccDataSourceRemoteOciRepository",
+		`resource "artifactory_remote_oci_repository" "{{ .name }}" {
+		    key                            = "{{ .name }}"
+		    url                            = "http://tempurl.org"
+		    external_dependencies_enabled  = true
+		    enable_token_authentication    = true
+		    external_dependencies_patterns = ["*foo"]
+		}
+
+		data "artifactory_remote_oci_repository" "{{ .name }}" {
+		    key = artifactory_remote_oci_repository.{{ .name }}.id
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "oci"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "simple-default"),
+					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enable_token_authentication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "*foo"),
 				),
 			},
 		},

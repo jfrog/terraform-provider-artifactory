@@ -153,6 +153,15 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	"helmoci": {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
 	"huggingfaceml": {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

@@ -2,10 +2,8 @@ package virtual_test
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -348,6 +346,13 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccVirtualHelmOciRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("helmoci", t, map[string]interface{}{
+		"description":                   "helmoci virtual repository public description testing.",
+		"resolve_oci_tags_by_timestamp": true,
+	}))
+}
+
 func TestAccVirtualRpmRepository(t *testing.T) {
 	const packageType = "rpm"
 	_, fqrn, name := testutil.MkNames("virtual-rpm-repo", "artifactory_virtual_rpm_repository")
@@ -644,8 +649,6 @@ func TestAccVirtualRepository_full(t *testing.T) {
 }
 
 func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
@@ -696,8 +699,6 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-virtual", projectKey)
 

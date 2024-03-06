@@ -520,6 +520,45 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 	})
 }
 
+func TestAccLocalHelmOciRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("helmoci-local", "artifactory_local_helmoci_repository")
+	params := map[string]interface{}{
+		"retention": testutil.RandSelect(1, 5, 10),
+		"max_tags":  testutil.RandSelect(0, 5, 10),
+		"name":      name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalHelmOciRepository", `
+		resource "artifactory_local_helmoci_repository" "{{ .name }}" {
+			key 	     = "{{ .name }}"
+			tag_retention = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "helmoci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
 func TestAccLocalHuggingFaceMLRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("huggingfaceml-local", "artifactory_local_huggingfaceml_repository")
 
