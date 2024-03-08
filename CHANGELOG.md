@@ -1,3 +1,9 @@
+## 10.3.0 (Mar 11, 2024)
+
+FEATURES:
+
+* resource/artifactory_*_webhook: add `use_secret_for_signing` attribute for all non-custom webhook types. PR: [#902](https://github.com/jfrog/terraform-provider-artifactory/pull/902)
+
 ## 10.2.0 (Mar 6, 2024)
 
 FEATURES:
