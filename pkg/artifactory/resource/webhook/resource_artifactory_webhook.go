@@ -56,12 +56,14 @@ type EventFilter struct {
 }
 
 type Handler struct {
-	HandlerType       string         `json:"handler_type"`
-	Url               string         `json:"url"`
-	Secret            string         `json:"secret"`
-	Proxy             string         `json:"proxy"`
-	CustomHttpHeaders []KeyValuePair `json:"custom_http_headers"`
+	HandlerType         string         `json:"handler_type"`
+	Url                 string         `json:"url"`
+	Secret              string         `json:"secret"`
+	UseSecretForSigning bool           `json:"use_secret_for_signing"`
+	Proxy               string         `json:"proxy"`
+	CustomHttpHeaders   []KeyValuePair `json:"custom_http_headers"`
 }
+
 type KeyValuePair struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
@@ -212,11 +214,12 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
 						webhookHandler := Handler{
-							HandlerType:       "webhook",
-							Url:               h["url"].(string),
-							Secret:            h["secret"].(string),
-							Proxy:             h["proxy"].(string),
-							CustomHttpHeaders: unpackKeyValuePair(h["custom_http_headers"].(map[string]interface{})),
+							HandlerType:         "webhook",
+							Url:                 h["url"].(string),
+							Secret:              h["secret"].(string),
+							UseSecretForSigning: h["use_secret_for_signing"].(bool),
+							Proxy:               h["proxy"].(string),
+							CustomHttpHeaders:   unpackKeyValuePair(h["custom_http_headers"].(map[string]interface{})),
 						}
 						webhookHandlers = append(webhookHandlers, webhookHandler)
 					}
@@ -247,10 +250,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		var packedHandlers []interface{}
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
-				"url":                 handler.Url,
-				"secret":              packSecret(d, handler.Url),
-				"proxy":               handler.Proxy,
-				"custom_http_headers": packKeyValuePair(handler.CustomHttpHeaders),
+				"url":                    handler.Url,
+				"secret":                 packSecret(d, handler.Url),
+				"use_secret_for_signing": handler.UseSecretForSigning,
+				"proxy":                  handler.Proxy,
+				"custom_http_headers":    packKeyValuePair(handler.CustomHttpHeaders),
 			}
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
@@ -261,12 +265,10 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var packWebhook = func(d *schema.ResourceData, webhook BaseParams) diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
-		var errors []error
-
-		errors = append(errors, setValue("key", webhook.Key)...)
-		errors = append(errors, setValue("description", webhook.Description)...)
-		errors = append(errors, setValue("enabled", webhook.Enabled)...)
-		errors = append(errors, setValue("event_types", webhook.EventFilter.EventTypes)...)
+		setValue("key", webhook.Key)
+		setValue("description", webhook.Description)
+		setValue("enabled", webhook.Enabled)
+		errors := setValue("event_types", webhook.EventFilter.EventTypes)
 		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 

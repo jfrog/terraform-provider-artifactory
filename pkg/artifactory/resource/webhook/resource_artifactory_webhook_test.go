@@ -272,13 +272,14 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	eventTypes := webhook.DomainEventTypesSupported[webhookType]
 
 	params := map[string]interface{}{
-		"repoName":    repoName,
-		"repoType":    repoType,
-		"webhookType": webhookType,
-		"webhookName": name,
-		"eventTypes":  eventTypes,
-		"anyLocal":    testutil.RandBool(),
-		"anyRemote":   testutil.RandBool(),
+		"repoName":            repoName,
+		"repoType":            repoType,
+		"webhookType":         webhookType,
+		"webhookName":         name,
+		"eventTypes":          eventTypes,
+		"anyLocal":            testutil.RandBool(),
+		"anyRemote":           testutil.RandBool(),
+		"useSecretForSigning": testutil.RandBool(),
 	}
 	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
@@ -297,8 +298,9 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				exclude_patterns = ["bar/**"]
 			}
 			handler {
-				url                 = "https://tempurl.org"
-				secret              = "fake-secret"
+				url                    = "https://tempurl.org"
+				secret                 = "fake-secret"
+				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
 					header-1 = "value-1"
 					header-2 = "value-2"
@@ -331,6 +333,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),

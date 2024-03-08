@@ -62,7 +62,7 @@ var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[str
 	anyReleaseBundle := criteria["any_release_bundle"].(bool)
 	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*schema.Set).List()
 
-	if anyReleaseBundle == false && len(registeredReleaseBundlesNames) == 0 {
+	if !anyReleaseBundle && len(registeredReleaseBundlesNames) == 0 {
 		return fmt.Errorf("registered_release_bundle_names cannot be empty when any_release_bundle is false")
 	}
 

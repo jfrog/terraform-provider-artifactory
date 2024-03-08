@@ -160,6 +160,12 @@ func baseWebhookBaseSchemaV2(webhookType string) map[string]*schema.Schema {
 						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 						Description:      "Secret authentication token that will be sent to the configured URL. The value will be sent as `x-jfrog-event-auth` header.",
 					},
+					"use_secret_for_signing": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     false,
+						Description: "When selected, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unselected, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
+					},
 					"proxy": {
 						Type:     schema.TypeString,
 						Optional: true,
