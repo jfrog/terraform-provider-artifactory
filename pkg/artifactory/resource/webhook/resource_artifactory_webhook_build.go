@@ -62,7 +62,7 @@ var buildCriteriaValidation = func(ctx context.Context, criteria map[string]inte
 	anyBuild := criteria["any_build"].(bool)
 	selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
 
-	if anyBuild == false && len(selectedBuilds) == 0 {
+	if !anyBuild && len(selectedBuilds) == 0 {
 		return fmt.Errorf("selected_builds cannot be empty when any_build is false")
 	}
 

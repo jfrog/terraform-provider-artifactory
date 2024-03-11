@@ -71,7 +71,7 @@ var repoCriteriaValidation = func(ctx context.Context, criteria map[string]inter
 	anyRemote := criteria["any_remote"].(bool)
 	repoKeys := criteria["repo_keys"].(*schema.Set).List()
 
-	if (anyLocal == false && anyRemote == false) && len(repoKeys) == 0 {
+	if (!anyLocal && !anyRemote) && len(repoKeys) == 0 {
 		return fmt.Errorf("repo_keys cannot be empty when both any_local and any_remote are false")
 	}
 

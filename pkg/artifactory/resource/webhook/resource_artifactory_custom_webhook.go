@@ -222,14 +222,12 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	var packWebhook = func(d *schema.ResourceData, webhook CustomBaseParams) diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
-		var errors []error
-
 		setValue("key", webhook.Key)
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
-		setValue("event_types", webhook.EventFilter.EventTypes)
-		errors = packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))
-		errors = packHandlers(d, webhook.Handlers)
+		errors := setValue("event_types", webhook.EventFilter.EventTypes)
+		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
 			return diag.Errorf("failed to pack webhook %q", errors)
