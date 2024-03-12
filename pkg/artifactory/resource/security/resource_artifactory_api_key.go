@@ -48,7 +48,7 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 
 	errors := setValue("api_key", apiKey)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack api key %q", errors)
 	}
 
