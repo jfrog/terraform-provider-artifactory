@@ -156,7 +156,8 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: BuildPermissionTargetSchema(),
+		Schema:             BuildPermissionTargetSchema(),
+		DeprecationMessage: `This resource has been deprecated in favour of "platform_permission" (https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/permission) resource.`,
 	}
 }
 
@@ -168,7 +169,7 @@ func hashPrincipal(o interface{}) int {
 	return part1 * part3
 }
 
-func unpackPermissionTarget(ctx context.Context, s *schema.ResourceData) *PermissionTargetParams {
+func unpackPermissionTarget(_ context.Context, s *schema.ResourceData) *PermissionTargetParams {
 	d := &utilsdk.ResourceData{ResourceData: s}
 
 	unpackPermission := func(rawPermissionData interface{}) *PermissionTargetSection {

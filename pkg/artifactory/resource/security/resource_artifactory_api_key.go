@@ -34,9 +34,10 @@ func ResourceArtifactoryApiKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"api_key": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Sensitive:  true,
+				Deprecated: "Deprecated in favor of \"artifactory_scoped_token\".",
 			},
 		},
 	}
@@ -48,7 +49,7 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 
 	errors := setValue("api_key", apiKey)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack api key %q", errors)
 	}
 

@@ -358,22 +358,24 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	})
 }
 
-func TestAccScopedToken_WithGroupScope(t *testing.T) {
+func TestAccScopedToken_WithSingleGroupScope(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_group" "test-group" {
-			name = "{{ .groupName }}"
+		`resource "artifactory_group" "test-group-1" {
+			name = "{{ .groupName1 }}"
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_group.test-group.name
-			scopes      = ["applied-permissions/groups:{{ .groupName }}"]
+			username    = artifactory_group.test-group-1.name
+			scopes      = [
+				"applied-permissions/groups:{{ .groupName1 }}",
+			]
 		}`,
 		map[string]interface{}{
-			"name":      name,
-			"groupName": "test-group",
+			"name":       name,
+			"groupName1": "test-group-1",
 		},
 	)
 
@@ -384,9 +386,65 @@ func TestAccScopedToken_WithGroupScope(t *testing.T) {
 			{
 				Config: accessTokenConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "username", "test-group"),
+					resource.TestCheckResourceAttr(fqrn, "username", "test-group-1"),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group-1"),
+				),
+			},
+			{
+				ResourceName: fqrn,
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("resource artifactory_scoped_token doesn't support import"),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithMultipleGroupScopes(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_group" "test-group-1" {
+			name = "{{ .groupName1 }}"
+		}
+
+		resource "artifactory_group" "test-group-2" {
+			name = "{{ .groupName2 }}"
+		}
+
+		resource "artifactory_group" "test-group-3" {
+			name = "{{ .groupName3 }}"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username    = artifactory_group.test-group-1.name
+			scopes      = [
+				"applied-permissions/groups:\"{{ .groupName1 }}\"",
+				"applied-permissions/groups:${artifactory_group.test-group-2.name}",
+				"applied-permissions/groups:${artifactory_group.test-group-3.name}",
+			]
+		}`,
+		map[string]interface{}{
+			"name":       name,
+			"groupName1": "test group 1",
+			"groupName2": "test-group-2",
+			"groupName3": "test-group-3",
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", "test group 1"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "3"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:\"test group 1\""),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group-2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/groups:test-group-3"),
 				),
 			},
 			{

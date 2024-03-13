@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	regex2 "github.com/dlclark/regexp2"
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -23,8 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	"golang.org/x/exp/slices"
 )
 
 func NewScopedTokenResource() resource.Resource {
@@ -488,17 +491,82 @@ func (r *ScopedTokenResource) ImportState(ctx context.Context, req resource.Impo
 	)
 }
 
+// splitScopes use positive lookahead regex to find the space character between scopes
+// but ignore group name with space wraps in double quotes
+func (r *ScopedTokenResourceModel) splitScopes(ctx context.Context, scopes string) []string {
+	if scopes == "" {
+		return []string{}
+	}
+
+	// regexp doesn't support lookahead so we have to import regex2 lib which does
+	re := regex2.MustCompile(`\s(?=(?:[^"]*"[^"]*")*[^"]*$)`, 0)
+	match, err := re.FindStringMatch(scopes)
+	if err != nil {
+		tflog.Warn(ctx, "fail to find scopes match", map[string]any{
+			"err": err,
+		})
+	}
+
+	// return the entire 'scopes' string if there's no space separator, i.e. only one item in the list
+	if match == nil {
+		return []string{scopes}
+	}
+
+	separatorIndices := []int{}
+	// collect all the indices for the space delimited scope string
+	for ok := true; ok; ok = (match != nil) { // mimic do...while loop
+		for _, g := range match.Groups() {
+			for _, c := range g.Captures {
+				separatorIndices = append(separatorIndices, c.Index)
+			}
+		}
+
+		match, err = re.FindNextMatch(match)
+		if err != nil {
+			tflog.Warn(ctx, "fail to find next scopes match", map[string]any{
+				"err": err,
+			})
+		}
+	}
+	tflog.Debug(ctx, "ScopedTokenResourceModel.splitScopes", map[string]any{
+		"separatorIndices": separatorIndices,
+	})
+
+	// insert a zero to the begining of the slice to represent the first index
+	separatorIndices = append([]int{0}, separatorIndices...)
+	// reverse the slice so the string splitting starts from the end
+	slices.Reverse(separatorIndices)
+
+	scopesCopy := scopes
+	scopesList := []string{}
+	for _, idx := range separatorIndices {
+		// pad the start index by 1 to take care of the space prefix character
+		startIdx := idx + 1
+		if idx == 0 {
+			startIdx = 0
+		}
+		scopesList = append(scopesList, scopesCopy[startIdx:])
+		// trim the end of string off for next iteration
+		scopesCopy = scopesCopy[:idx]
+	}
+	tflog.Debug(ctx, "ScopedTokenResourceModel.splitScopes", map[string]any{
+		"scopesList": scopesList,
+	})
+	return scopesList
+}
+
 func (r *ScopedTokenResourceModel) PostResponseToState(ctx context.Context,
 	accessTokenResp *AccessTokenPostResponseAPIModel, accessTokenPostBody *AccessTokenPostRequestAPIModel, getResult *AccessTokenGetAPIModel) diag.Diagnostics {
 
 	r.Id = types.StringValue(accessTokenResp.TokenId)
 
 	if len(accessTokenResp.Scope) > 0 {
-		scopesList := strings.Split(accessTokenResp.Scope, " ")
+		scopesList := r.splitScopes(ctx, accessTokenResp.Scope)
 		scopes, diags := types.SetValueFrom(ctx, types.StringType, scopesList)
 		if diags != nil {
 			return diags
 		}
+
 		r.Scopes = scopes
 	}
 
