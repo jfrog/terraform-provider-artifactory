@@ -63,41 +63,74 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 
 func TestAccUser_basic_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
+	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")
 
 	params := map[string]interface{}{
-		"name":     fmt.Sprintf("foobar-%d", id),
-		"username": username,
-		"email":    email,
+		"name":      fmt.Sprintf("foobar-%d", id),
+		"username":  username,
+		"email":     email,
+		"groupName": groupName,
 	}
-	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
+	config := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
 			password = "Passsw0rd!"
 			admin 	 = false
-			groups   = [ "readers" ]
+			groups   = [
+				"readers",
+				artifactory_group.{{ .groupName }}.name,
+			]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+
+		resource "artifactory_user" "{{ .name }}" {
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!"
+			admin 	 = false
+			groups   = [artifactory_group.{{ .groupName }}.name]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", "readers"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
+				),
+			},
+			{
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
 				),
 			},
 			{
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "id"),
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
@@ -139,7 +172,7 @@ func TestAccUser_no_password(t *testing.T) {
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "id"),
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
@@ -181,7 +214,7 @@ func TestAccUser_no_groups(t *testing.T) {
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "id"),
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
@@ -224,7 +257,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "id"),
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
@@ -291,7 +324,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 			password					= "Passw0rd!"
 			admin    					= false
 			profile_updatable   		= true
-			internal_password_disabled 	= true
+			internal_password_disabled 	= false
 			groups      				= [ "readers" ]
 		}
 	`
@@ -322,7 +355,7 @@ func TestAccUser_all_attributes(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
-					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
@@ -413,7 +446,7 @@ func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		resp, err := client.R().Head("artifactory/api/security/users/" + rs.Primary.ID)
+		resp, err := client.R().Head("access/api/v2/users/" + rs.Primary.ID)
 
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {

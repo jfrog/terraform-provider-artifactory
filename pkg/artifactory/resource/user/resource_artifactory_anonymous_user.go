@@ -32,7 +32,7 @@ type ArtifactoryAnonymousUserResourceModel struct {
 
 // ArtifactoryAnonymousUserResourceAPIModel describes the API data model.
 type ArtifactoryAnonymousUserResourceAPIModel struct {
-	Name string `json:"name"`
+	Name string `json:"username"`
 }
 
 func (r *ArtifactoryAnonymousUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -84,7 +84,10 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 	// Convert from Terraform data model into API data model
 	user := &ArtifactoryAnonymousUserResourceAPIModel{}
 
-	response, err := r.ProviderData.Client.R().SetResult(user).Get(UsersEndpointPath + data.Id.ValueString())
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("name", data.Id.ValueString()).
+		SetResult(user).
+		Get(UserEndpointPath)
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early

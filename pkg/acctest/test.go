@@ -331,7 +331,9 @@ func CompositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 
 func DeleteUser(t *testing.T, name string) error {
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
+	_, err := restyClient.R().
+		SetPathParam("name", name).
+		Delete(user.UserEndpointPath)
 
 	return err
 }
@@ -349,7 +351,9 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 	}
 
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().SetBody(userObj).Put(user.UsersEndpointPath + name)
+	_, err := restyClient.R().
+		SetBody(userObj).
+		Post(user.UsersEndpointPath)
 
 	if err != nil {
 		t.Fatal(err)

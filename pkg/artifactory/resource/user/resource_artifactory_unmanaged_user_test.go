@@ -87,7 +87,6 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 			name  	= "%s"
 			password = "Passw0rd!"
 			email 	= "dummy_user%d@a.com"
-			groups  = [ "readers" ]
 		}
 	`
 	id := testutil.RandomInt()
@@ -104,7 +103,7 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
 			},
 			{
@@ -123,7 +122,6 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
-			groups  = [ "readers" ]
 		}
 	`
 	id := testutil.RandomInt()
@@ -140,7 +138,7 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
 			},
 			{
@@ -155,53 +153,91 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 }
 
 func TestAccUnmanagedUser_full(t *testing.T) {
-	const userFull = `
-		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
+	id, fqrn, resourceName := testutil.MkNames("test-user-", "artifactory_unmanaged_user")
+	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
+
+	username := fmt.Sprintf("dummy_user-%d", id)
+	email := fmt.Sprintf("dummy%d@a.com", id)
+
+	config := util.ExecuteTemplate(
+		"TestAccUnmanagedUser_full",
+		`resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+
+		resource "artifactory_unmanaged_user" "{{ .resourceName }}" {
+			name        		= "{{ .username }}"
+			email       		= "{{ .email }}"
 			password			= "Passw0rd!"
 			admin    			= true
 			profile_updatable   = true
 			disable_ui_access	= false
-			groups      		= [ "readers" ]
+
+			groups = [
+				"readers",
+				artifactory_group.{{ .groupName }}.name,
+			]
+		}`,
+		map[string]string{
+			"resourceName": resourceName,
+			"username":     username,
+			"email":        email,
+			"groupName":    groupName,
+		},
+	)
+
+	updatedConfig := util.ExecuteTemplate(
+		"TestAccUnmanagedUser_full",
+		`resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
 		}
-	`
-	const userNonAdminNoProfUpd = `
-		resource "artifactory_unmanaged_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
+
+		resource "artifactory_unmanaged_user" "{{ .resourceName }}" {
+			name        		= "{{ .username }}"
+			email       		= "{{ .email }}"
 			password			= "Passw0rd!"
 			admin    			= false
 			profile_updatable   = false
-			groups      		= [ "readers" ]
-		}
-	`
-	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
-	username := fmt.Sprintf("dummy_user-@%d.", id)
+			disable_ui_access	= false
+
+			groups = [artifactory_group.{{ .groupName }}.name]
+		}`,
+		map[string]string{
+			"resourceName": resourceName,
+			"username":     username,
+			"email":        email,
+			"groupName":    groupName,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, username, id),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
-					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "email", email),
 					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", "readers"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
 				),
 			},
 			{
-				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, username, id),
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "groups.0", groupName),
 				),
 			},
 			{
@@ -255,38 +291,6 @@ func testAccUnmanagedUserInvalidName(t *testing.T, username, errorRegex string) 
 	}
 }
 
-func TestAccUnmanagedUser_NoGroups(t *testing.T) {
-	const userNoGroups = `
-		resource "artifactory_unmanaged_user" "%s" {
-			name  = "%s"
-			email = "dummy%d@a.com"
-		}
-	`
-	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
-	username := fmt.Sprintf("dummy_user%d", id)
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(userNoGroups, name, username, id),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("dummy_user%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
-				),
-			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(username, "name"),
-				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
-			},
-		},
-	})
-}
-
 func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 	const userEmptyGroups = `
 		resource "artifactory_unmanaged_user" "%s" {
@@ -329,7 +333,7 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("err: Resource id[%s] not found", id)
 		}
-		resp, err := client.R().Head("artifactory/api/security/users/" + rs.Primary.ID)
+		resp, err := client.R().Head("access/api/v2/users/" + rs.Primary.ID)
 
 		if err != nil {
 			if resp != nil && resp.StatusCode() == http.StatusNotFound {

@@ -165,7 +165,6 @@ const testLength = `
 `
 
 func TestAccPermissionTarget_noActions(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
@@ -198,7 +197,6 @@ func TestAccPermissionTarget_noActions(t *testing.T) {
 
 func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
-	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 
 	data := map[string]string{
@@ -252,7 +250,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 		  groups                     = ["readers"]
 		  admin                      = false
 		  disable_ui_access          = true
-		  internal_password_disabled = true
+		  internal_password_disabled = false
 		  password 					 = "Passw0rd!"
 		}
 
