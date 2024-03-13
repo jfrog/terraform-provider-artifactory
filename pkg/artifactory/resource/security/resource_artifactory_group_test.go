@@ -510,10 +510,10 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 		resp, err := client.R().Head(security.GroupsEndpoint + rs.Primary.ID)
 		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
 			return err
+		}
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			return nil
 		}
 
 		return fmt.Errorf("error: Group %s still exists", rs.Primary.ID)

@@ -139,14 +139,16 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
-			if resp != nil {
-				switch resp.StatusCode() {
-				case http.StatusNotFound, http.StatusBadRequest:
-					return nil
-				}
-			}
 			return err
 		}
+
+		if resp != nil {
+			switch resp.StatusCode() {
+			case http.StatusNotFound, http.StatusBadRequest:
+				return nil
+			}
+		}
+
 		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
 	}
 }

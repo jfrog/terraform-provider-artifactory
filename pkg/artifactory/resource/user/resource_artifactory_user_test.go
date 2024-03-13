@@ -449,10 +449,11 @@ func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 		resp, err := client.R().Head("access/api/v2/users/" + rs.Primary.ID)
 
 		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
 			return err
+		}
+
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			return nil
 		}
 
 		return fmt.Errorf("error: User %s still exists", rs.Primary.ID)
