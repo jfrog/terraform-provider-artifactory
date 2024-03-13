@@ -1,3 +1,12 @@
+## 10.3.1 (Mar 14, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_scoped_token: Fix `scopes` attribute handling for scope with space character wraps in double quote (e.g. group name). Issue: [#903](https://github.com/jfrog/terraform-provider-artifactory/issues/903)
+* resource/artifactory_api_key: Add API key deprecation notice to documentation (deprecation message already displays when uses via Terraform CLI).
+
+PR: [#905](https://github.com/jfrog/terraform-provider-artifactory/pull/905)
+
 ## 10.3.0 (Mar 11, 2024)
 
 FEATURES:
