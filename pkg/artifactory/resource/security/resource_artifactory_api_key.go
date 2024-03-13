@@ -34,9 +34,10 @@ func ResourceArtifactoryApiKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"api_key": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Sensitive:  true,
+				Deprecated: "Deprecated in favor of \"artifactory_scoped_token\".",
 			},
 		},
 	}
