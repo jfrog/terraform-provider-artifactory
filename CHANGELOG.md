@@ -1,3 +1,11 @@
+## 10.3.2 (Mar 15, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `groups` handling so `readers` group from Artifactory no longer cause state drift. Issue: [#900](https://github.com/jfrog/terraform-provider-artifactory/issues/900)
+
+PR: [#908](https://github.com/jfrog/terraform-provider-artifactory/pull/908)
+
 ## 10.3.1 (Mar 14, 2024)
 
 BUG FIXES:
