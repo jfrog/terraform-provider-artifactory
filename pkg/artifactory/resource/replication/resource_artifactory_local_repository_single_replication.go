@@ -188,7 +188,7 @@ func packLocalSingleReplication(singleLocalReplication *getLocalSingleReplicatio
 	setValue("replication_key", singleLocalReplication.ReplicationKey)
 	errors = setValue("check_binary_existence_in_filestore", singleLocalReplication.CheckBinaryExistenceInFilestore)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -201,11 +201,16 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(pushReplication.RepoKey)
@@ -219,11 +224,16 @@ func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceDat
 	resp, err := c.R().SetResult(&replicationInterface).Get(EndpointPath + d.Id())
 
 	if err != nil {
-		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	replicationList, ok := replicationInterface.([]interface{})
@@ -253,12 +263,17 @@ func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.Resourc
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return resourceLocalSingleReplicationRead(ctx, d, m)

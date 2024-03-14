@@ -240,11 +240,20 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
 
-	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+	if err != nil {
+		diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
-	return diag.FromErr(err)
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
+	}
+
+	return nil
 }
 
 func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {

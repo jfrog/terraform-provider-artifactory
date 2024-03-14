@@ -210,13 +210,18 @@ func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	_, err = m.(util.ProvderMetadata).Client.R().
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetResult(&accessToken).
 		SetFormDataFromValues(values).Post("artifactory/api/security/token")
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(strconv.Itoa(schema.HashString(accessToken.AccessToken)))
@@ -271,23 +276,28 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 		revokeOptions := AccessTokenRevokeOptions{}
 		revokeOptions.Token = d.Get("access_token").(string)
 		values, err := query.Values(revokeOptions)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetHeader("Content-Type", "application/x-www-form-urlencoded").
 			SetFormDataFromValues(values).Post("artifactory/api/security/token/revoke")
 		if err != nil {
-			if resp != nil {
-				if resp.StatusCode() == http.StatusNotFound {
-					tflog.Debug(ctx, "Access Token Revoked")
-					return nil
-				}
-				// the original atlassian code considered any error code fine. However, expiring tokens can't be revoked
-				regex := regexp.MustCompile(`.*AccessToken not revocable.*`)
-				if regex.MatchString(string(resp.Body()[:])) {
-					return nil
-				}
-			}
 			return diag.FromErr(err)
 		}
+
+		if resp.StatusCode() == http.StatusNotFound {
+			tflog.Debug(ctx, "Access Token Revoked")
+			d.SetId("")
+			return nil
+		}
+		// the original atlassian code considered any error code fine. However, expiring tokens can't be revoked
+		regex := regexp.MustCompile(`.*AccessToken not revocable.*`)
+		if regex.MatchString(string(resp.Body()[:])) {
+			return nil
+		}
+
 		return nil
 	}
 
@@ -335,20 +345,18 @@ func unpackAdminToken(d *schema.ResourceData, tokenOptions *AccessTokenOptions) 
 func checkUserExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head("artifactory/api/security/users/" + name)
 	if err != nil {
-		// If there is an error, it is possible the user does not exist.
-		if resp != nil {
-			// Check if the user does not exist in artifactory
-			if resp.StatusCode() == http.StatusNotFound {
-				return false, errors.New("user must exist in artifactory")
-			}
-
-			// If we cannot search for Users, the current user is not an admin
-			// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
-			if resp.StatusCode() == http.StatusForbidden {
-				return true, nil
-			}
-		}
 		return false, err
+	}
+	// If there is an error, it is possible the user does not exist.
+	// Check if the user does not exist in artifactory
+	if resp.StatusCode() == http.StatusNotFound {
+		return false, errors.New("user must exist in artifactory")
+	}
+
+	// If we cannot search for Users, the current user is not an admin
+	// So, we'll let this through and let the CreateToken function error if there is a misconfiguration.
+	if resp.StatusCode() == http.StatusForbidden {
+		return true, nil
 	}
 
 	return true, nil
@@ -358,20 +366,18 @@ func checkGroupExists(client *resty.Client, name string) (bool, error) {
 	resp, err := client.R().Head(GroupsEndpoint + name)
 	// If there is an error, it is possible the group does not exist.
 	if err != nil {
-		if resp != nil {
-			// Check if the group does not exist in artifactory
-			if resp.StatusCode() == http.StatusNotFound {
-				return false, errors.New("group must exist in artifactory")
-			}
-
-			// If we cannot search for groups, the current user is not an admin and they can only specify groups they belong to.
-			// Therefore, we return true and rely on Artifactory to error if the user has specified a wrong group.
-			if resp.StatusCode() == http.StatusForbidden {
-				return true, nil
-			}
-		}
-
 		return false, err
+	}
+
+	// Check if the group does not exist in artifactory
+	if resp.StatusCode() == http.StatusNotFound {
+		return false, errors.New("group must exist in artifactory")
+	}
+
+	// If we cannot search for groups, the current user is not an admin and they can only specify groups they belong to.
+	// Therefore, we return true and rely on Artifactory to error if the user has specified a wrong group.
+	if resp.StatusCode() == http.StatusForbidden {
+		return true, nil
 	}
 
 	return true, nil

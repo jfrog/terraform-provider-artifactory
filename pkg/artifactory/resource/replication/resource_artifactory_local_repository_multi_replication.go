@@ -300,7 +300,7 @@ func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *sch
 
 		errors = setValue("replication", replications)
 	}
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -313,11 +313,15 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(pushReplication.RepoKey)
@@ -330,11 +334,16 @@ func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData
 	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
-		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	repConfig := GetLocalMultiReplication{
@@ -354,12 +363,17 @@ func resourceLocalMultiReplicationUpdate(ctx context.Context, d *schema.Resource
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return resourceLocalMultiReplicationRead(ctx, d, m)

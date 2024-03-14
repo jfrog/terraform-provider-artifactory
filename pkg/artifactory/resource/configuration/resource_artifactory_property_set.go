@@ -192,7 +192,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 		propertyResource := propertySetsSchema["property"].Elem.(*schema.Resource)
 		errors := setValue("property", schema.NewSet(schema.HashResource(propertyResource), properties))
 
-		if errors != nil && len(errors) > 0 {
+		if len(errors) > 0 {
 			return diag.Errorf("failed to pack property_set %q", errors)
 		}
 		return nil
@@ -204,9 +204,13 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 		propertySetConfigs := PropertySets{}
 
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		matchedPropertySet := FindConfigurationById[PropertySet](propertySetConfigs.PropertySets, name)
@@ -317,7 +321,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 			for _, set := range sets {
 				id := set.(map[string]interface{})
-				if id["closed_predefined_values"].(bool) == false && id["multiple_choice"].(bool) == true {
+				if !id["closed_predefined_values"].(bool) && id["multiple_choice"].(bool) {
 					return fmt.Errorf("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice")
 				}
 			}

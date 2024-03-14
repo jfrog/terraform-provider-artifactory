@@ -143,7 +143,7 @@ func Create(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 		return diag.FromErr(err)
 	}
 	// repo must be a pointer
-	_, err = m.(util.ProvderMetadata).Client.R().
+	res, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(repo).
 		SetPathParam("key", key).
@@ -152,6 +152,10 @@ func Create(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if res.IsError() {
+		return diag.Errorf("%s", res.String())
+	}
+
 	d.SetId(key)
 
 	return nil
@@ -198,13 +202,17 @@ func Update(ctx context.Context, d *schema.ResourceData, m interface{}, unpack u
 		return diag.FromErr(err)
 	}
 
-	_, err = m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetBody(repo).
 		SetPathParam("key", d.Id()).
 		Post(RepositoriesEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(key)
@@ -267,11 +275,20 @@ func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
 
-	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
-	return diag.FromErr(err)
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
+	}
+
+	return nil
 }
 
 func Retry400(response *resty.Response, _ error) bool {

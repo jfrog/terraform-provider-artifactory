@@ -185,7 +185,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 
 		errors := setValue("oauth_provider", settings)
 
-		if errors != nil && len(errors) > 0 {
+		if len(errors) > 0 {
 			return diag.Errorf("failed to pack oauth settings %q", errors)
 		}
 		return nil
@@ -196,9 +196,13 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 
 		oauthSettings := OauthSettings{}
 
-		_, err := c.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
+		resp, err := c.R().SetResult(&oauthSettings).Get("artifactory/api/oauth")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/oauth during Read")
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		s := OauthSecurity{OauthSettingsWrapper{Settings: oauthSettings}}

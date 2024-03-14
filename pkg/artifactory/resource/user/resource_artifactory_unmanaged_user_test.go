@@ -331,17 +331,19 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
+			return fmt.Errorf("resource id[%s] not found", id)
 		}
-		resp, err := client.R().Head("access/api/v2/users/" + rs.Primary.ID)
+
+		resp, err := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
 
 		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
 			return err
 		}
 
-		return fmt.Errorf("error: User %s still exists", rs.Primary.ID)
+		if resp.StatusCode() == http.StatusNotFound {
+			return nil
+		}
+
+		return fmt.Errorf("user %s still exists", rs.Primary.ID)
 	}
 }

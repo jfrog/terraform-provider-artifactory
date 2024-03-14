@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"golang.org/x/exp/slices"
-
 	"github.com/jfrog/terraform-provider-shared/validator"
+	"golang.org/x/exp/slices"
 )
 
 type User struct {
@@ -138,18 +138,24 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 	d := &utilsdk.ResourceData{ResourceData: rd}
 
 	var user User
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("name", d.Id()).
 		SetResult(&user).
+		SetError(&artifactoryError).
 		Get(UserEndpointPath)
 
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
 	}
+	if resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
+	}
+
 	return PackUser(user, rd)
 }
 
@@ -186,11 +192,16 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(user).
+		SetError(&artifactoryError).
 		Post(UsersEndpointPath)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
 	}
 
 	d.SetId(user.Name)
@@ -208,10 +219,10 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 			Get(UserEndpointPath)
 
 		if e != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return retry.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
-			}
 			return retry.NonRetryableError(fmt.Errorf("error describing user: %s", err))
+		}
+		if resp.StatusCode() == http.StatusNotFound {
+			return retry.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
 		}
 
 		PackUser(result, d)
@@ -229,13 +240,18 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("name", user.Name).
 		SetBody(&user).
+		SetError(&artifactoryError).
 		Patch(UserEndpointPath)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
 	}
 
 	err = removeReadersGroup(m.(util.ProvderMetadata).Client, user)
@@ -251,11 +267,16 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	d := &utilsdk.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("name", userName).
+		SetError(&artifactoryError).
 		Delete(UserEndpointPath)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
 	}
 
 	d.SetId("")

@@ -22,6 +22,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -39,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"github.com/sethvargo/go-password/password"
@@ -162,6 +164,7 @@ func (r *ArtifactoryBaseUserResource) removeReadersGroup(client *resty.Client, u
 		return nil
 	}
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	groupsToAddRemove := GroupsAddRemove{
 		Add:    []string{},
 		Remove: []string{"readers"},
@@ -170,12 +173,16 @@ func (r *ArtifactoryBaseUserResource) removeReadersGroup(client *resty.Client, u
 	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
 	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
 	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
-	_, err := client.R().
+	resp, err := client.R().
 		SetPathParam("name", user.Name).
 		SetBody(groupsToAddRemove).
+		SetError(&artifactoryError).
 		Patch(UserGroupEndpointPath)
 	if err != nil {
 		return err
+	}
+	if resp.IsError() {
+		return fmt.Errorf("%s", artifactoryError.String())
 	}
 
 	return nil
@@ -227,8 +234,10 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Password = randomPassword
 	}
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetBody(user).
+		SetError(&artifactoryError).
 		Post(UsersEndpointPath)
 
 	if err != nil {
@@ -238,7 +247,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusCreated {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -272,19 +281,27 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	// Convert from Terraform data model into API data model
 	user := ArtifactoryUserResourceAPIModel{}
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", state.Name.ValueString()).
 		SetResult(&user).
+		SetError(&artifactoryError).
 		Get(UserEndpointPath)
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -325,13 +342,20 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		InternalPasswordDisabled: plan.InternalPasswordDisabled.ValueBool(),
 	}
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", user.Name).
 		SetBody(&user).
+		SetError(&artifactoryError).
 		Patch(UserEndpointPath)
 
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -361,8 +385,10 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", state.Name.ValueString()).
+		SetError(&artifactoryError).
 		Delete(UserEndpointPath)
 
 	if err != nil {
@@ -372,7 +398,7 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusNoContent {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+		utilfw.UnableToDeleteResourceError(resp, artifactoryError.String())
 		return
 	}
 

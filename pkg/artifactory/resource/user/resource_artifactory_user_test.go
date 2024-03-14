@@ -276,11 +276,11 @@ func TestAccUser_invalidName(t *testing.T) {
 	}
 
 	for _, tc := range testCase {
-		t.Run(tc.name, testAccUserInvalidName(t, tc.username, tc.errorRegex))
+		t.Run(tc.name, testAccUserInvalidName(tc.username, tc.errorRegex))
 	}
 }
 
-func testAccUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+func testAccUserInvalidName(username, errorRegex string) func(t *testing.T) {
 	return func(t *testing.T) {
 		const userNoGroups = `
 			resource "artifactory_user" "%s" {
@@ -444,18 +444,19 @@ func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 
 		if !ok {
-			return fmt.Errorf("err: Resource id[%s] not found", id)
+			return fmt.Errorf("resource id[%s] not found", id)
 		}
-		resp, err := client.R().Head("access/api/v2/users/" + rs.Primary.ID)
+
+		resp, err := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+		if resp.StatusCode() == http.StatusNotFound {
 			return nil
 		}
 
-		return fmt.Errorf("error: User %s still exists", rs.Primary.ID)
+		return fmt.Errorf("user %s still exists", rs.Primary.ID)
 	}
 }

@@ -89,9 +89,13 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		name := data.GetString("name", false)
 
 		layouts := Layouts{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, name)
