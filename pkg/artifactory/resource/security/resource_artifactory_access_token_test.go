@@ -287,16 +287,15 @@ func TestAccAccessTokenRefreshableToken(t *testing.T) {
 	})
 }
 
-const missingUserBad = `
-resource "artifactory_access_token" "foobar" {
-	end_date_relative = "1s"
-	username = "missing-user"
-	groups = [
-	]
-}
-`
-
 func TestAccAccessTokenMissingUserBad(t *testing.T) {
+
+	missingUserBad := `
+	resource "artifactory_access_token" "foobar" {
+		end_date_relative = "1s"
+		username = "missing-user"
+		groups = []
+	}
+	`
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -352,7 +351,7 @@ func TestAccAccessTokenMissingUserGood(t *testing.T) {
 const missingGroup = `
 resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
-    email = "existinguser@a.com"
+	email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
 	password = "Passw0rd!"
@@ -384,7 +383,7 @@ func TestAccAccessTokenMissingGroup(t *testing.T) {
 const wildcardGroupGood = `
 resource "artifactory_managed_user" "existinguser" {
 	name  = "existinguser"
-  email = "existinguser@a.com"
+	email = "existinguser@a.com"
 	admin = false
 	groups = ["readers"]
 	password = "Passw0rd!"
@@ -499,15 +498,16 @@ func testAccCheckAccessTokenDestroy(t *testing.T, id string) func(*terraform.Sta
 		if err != nil {
 			return err
 		}
-		if resp, err := restyClient.R().Get("artifactory/api/system/ping"); err != nil {
-			if resp == nil {
-				return fmt.Errorf("no response returned for testAccCheckAccessTokenDestroy")
-			}
-			if resp.StatusCode() == http.StatusUnauthorized {
-				return nil
-			}
+		resp, err := restyClient.R().Get("artifactory/api/system/ping")
+
+		if err != nil {
 			return fmt.Errorf("failed to ping server. Got %s", err)
 		}
+
+		if resp.StatusCode() == http.StatusUnauthorized {
+			return nil
+		}
+
 		return nil
 	}
 }
@@ -517,7 +517,7 @@ func testAccCheckAccessTokenNotCreated(id string) func(*terraform.State) error {
 		_, ok := s.RootModule().Resources[id]
 
 		if ok {
-			return fmt.Errorf("err: Resource id[%s] found, but should not exist", id)
+			return fmt.Errorf("resource id[%s] found, but should not exist", id)
 		}
 
 		return nil

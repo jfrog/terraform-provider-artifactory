@@ -191,6 +191,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 		return
 	}
 
+	if response.IsError() {
+		utilfw.UnableToCreateResourceError(resp, response.String())
+		return
+	}
+
 	// Assign the resource ID for the resource in the state
 	data.Id = types.StringValue(ldapGroup.Name)
 
@@ -218,10 +223,16 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		utilfw.UnableToRefreshResourceError(resp, response.String())
+		return
+	}
+
+	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
 		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
@@ -273,6 +284,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 		return
 	}
 
+	if response.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, response.String())
+		return
+	}
+
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -300,6 +316,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Delete(ctx context.Context, req re
 
 	// Return error if the HTTP status code is not 404 Not Found or 204 No Content
 	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusNoContent {
+		utilfw.UnableToDeleteResourceError(resp, response.String())
+		return
+	}
+
+	if response.IsError() {
 		utilfw.UnableToDeleteResourceError(resp, response.String())
 		return
 	}

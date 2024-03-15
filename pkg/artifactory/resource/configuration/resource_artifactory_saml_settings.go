@@ -132,9 +132,13 @@ func resourceSamlSettingsRead(ctx context.Context, d *schema.ResourceData, m int
 
 	samlSettings := SamlSettings{}
 
-	_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
+	resp, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 	if err != nil {
 		return diag.Errorf("failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	s := SamlSecurity{SamlSettingsWrapper{Settings: samlSettings}}

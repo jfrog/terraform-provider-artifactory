@@ -131,7 +131,7 @@ func packRemoteReplication(remoteReplication *getRemoteReplicationBody, d *schem
 	setValue("replication_key", remoteReplication.ReplicationKey)
 	errors = setValue("check_binary_existence_in_filestore", remoteReplication.CheckBinaryExistenceInFilestore)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -144,11 +144,15 @@ func resourceRemoteReplicationCreate(ctx context.Context, d *schema.ResourceData
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(pushReplication.RepoKey)
@@ -163,11 +167,16 @@ func resourceRemoteReplicationRead(_ context.Context, d *schema.ResourceData, m 
 	resp, err := c.R().SetResult(&replication).Get(EndpointPath + d.Id())
 
 	if err != nil {
-		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return packRemoteReplication(&replication, d)
@@ -179,12 +188,16 @@ func resourceRemoteReplicationUpdate(ctx context.Context, d *schema.ResourceData
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return resourceRemoteReplicationRead(ctx, d, m)

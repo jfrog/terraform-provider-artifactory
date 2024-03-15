@@ -201,11 +201,15 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20
 	requestUrl := fmt.Sprintf("%s/artifactory/api/storage/%s/%s", client.BaseURL, repository, path)
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&fileInfo).
 		Get(requestUrl)
 	if err != nil {
 		return fileInfo, err
+	}
+
+	if resp.IsError() {
+		return fileInfo, fmt.Errorf("%s", resp.String())
 	}
 
 	tflog.Debug(ctx, "File info fetched", map[string]interface{}{
@@ -304,11 +308,15 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20
 	requestUrl := fmt.Sprintf("%s/artifactory/%s/%s", client.BaseURL, repository, path)
-	_, err := client.R().
+	resp, err := client.R().
 		SetOutput(outputPath).
 		Get(requestUrl)
 	if err != nil {
 		return fileInfo, err
+	}
+
+	if resp.IsError() {
+		return fileInfo, fmt.Errorf("%s", resp.String())
 	}
 
 	return fileInfo, nil

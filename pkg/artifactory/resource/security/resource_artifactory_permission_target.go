@@ -389,10 +389,18 @@ func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
 	resp, err := m.(util.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
-	if err != nil && resp != nil && resp.StatusCode() == http.StatusNotFound {
+	if err != nil {
+		return false, err
+	}
+
+	if resp.StatusCode() == http.StatusNotFound {
 		// Do not error on 404s as this causes errors when the upstream permission has been manually removed
 		return false, nil
 	}
 
-	return err == nil, err
+	if resp.IsSuccess() {
+		return true, nil
+	}
+
+	return false, nil
 }

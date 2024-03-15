@@ -240,10 +240,10 @@ func (r *MailServerResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	var mailServer MailServer
-	_, err := r.ProviderData.Client.R().
+	res, err := r.ProviderData.Client.R().
 		SetResult(&mailServer).
 		Get("artifactory/api/system/configuration")
-	if err != nil {
+	if err != nil || res.IsError() {
 		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		return
 	}

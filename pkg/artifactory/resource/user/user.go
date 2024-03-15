@@ -6,27 +6,32 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-
 	"github.com/jfrog/terraform-provider-shared/validator"
+	"golang.org/x/exp/slices"
 )
 
 type User struct {
-	Name                     string   `json:"name"`
+	Name                     string   `json:"username"`
 	Email                    string   `json:"email"`
 	Password                 string   `json:"password,omitempty"`
 	Admin                    bool     `json:"admin"`
-	ProfileUpdatable         bool     `json:"profileUpdatable"`
-	DisableUIAccess          bool     `json:"disableUIAccess"`
-	InternalPasswordDisabled bool     `json:"internalPasswordDisabled"`
-	LastLoggedIn             string   `json:"lastLoggedIn"`
-	Realm                    string   `json:"realm"`
-	Groups                   []string `json:"groups"`
+	ProfileUpdatable         bool     `json:"profile_updatable"`
+	DisableUIAccess          bool     `json:"disable_ui_access"`
+	InternalPasswordDisabled bool     `json:"internal_password_disabled"`
+	Groups                   []string `json:"groups,omitempty"`
+}
+
+type GroupsAddRemove struct {
+	Add    []string `json:"add"`
+	Remove []string `json:"remove"`
 }
 
 var baseUserSchema = map[string]*schema.Schema{
@@ -85,7 +90,7 @@ var baseUserSchema = map[string]*schema.Schema{
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Set:         schema.HashString,
 		Optional:    true,
-		Description: "List of groups this user is a part of.",
+		Description: "List of groups this user is a part of. **Notes:** If this attribute is not specified then user's group membership is set to empty. User will not be part of default \"readers\" group automatically.",
 	},
 }
 
@@ -125,23 +130,57 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	return nil
 }
 
-const UsersEndpointPath = "artifactory/api/security/users/"
+const UsersEndpointPath = "access/api/v2/users"
+const UserEndpointPath = "access/api/v2/users/{name}"
+const UserGroupEndpointPath = "access/api/v2/users/{name}/groups"
 
 func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d := &utilsdk.ResourceData{ResourceData: rd}
 
-	userName := d.Id()
-	user := User{}
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&user).Get(UsersEndpointPath + userName)
+	var user User
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		SetPathParam("name", d.Id()).
+		SetResult(&user).
+		SetError(&artifactoryError).
+		Get(UserEndpointPath)
 
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
 	}
+	if resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
+	}
+
 	return PackUser(user, rd)
+}
+
+func removeReadersGroup(client *resty.Client, user User) error {
+	if slices.Contains(user.Groups, "readers") {
+		return nil
+	}
+
+	groupsToAddRemove := GroupsAddRemove{
+		Add:    []string{},
+		Remove: []string{"readers"},
+	}
+	// Access PATCH call for updating user will **always** add "readers" to the groups.
+	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
+	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
+	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
+	_, err := client.R().
+		SetPathParam("name", user.Name).
+		SetBody(groupsToAddRemove).
+		Patch(UserGroupEndpointPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}, passwordGenerator func(*User) diag.Diagnostics) diag.Diagnostics {
@@ -153,37 +192,40 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 		diags = passwordGenerator(&user)
 	}
 
-	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		SetBody(user).
+		SetError(&artifactoryError).
+		Post(UsersEndpointPath)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	// Artifactory PUT call for creating user with groups attribute set to empty/null always sets groups to "readers".
-	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
-	// Workaround: We use following POST call to update the user's groups config to empty group.
-	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
-	if user.Groups == nil {
-		user.Groups = []string{}
-		_, errGroupUpdate := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
-		if errGroupUpdate != nil {
-			return diag.FromErr(errGroupUpdate)
-		}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
 	}
 
 	d.SetId(user.Name)
 
+	err = removeReadersGroup(m.(util.ProvderMetadata).Client, user)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		result := &User{}
-		resp, e := m.(util.ProvderMetadata).Client.R().SetResult(result).Get(UsersEndpointPath + user.Name)
+		var result User
+		resp, e := m.(util.ProvderMetadata).Client.R().
+			SetPathParam("name", user.Name).
+			SetResult(&result).
+			Get(UserEndpointPath)
 
 		if e != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return retry.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
-			}
 			return retry.NonRetryableError(fmt.Errorf("error describing user: %s", err))
 		}
+		if resp.StatusCode() == http.StatusNotFound {
+			return retry.RetryableError(fmt.Errorf("expected user to be created, but currently not found"))
+		}
 
-		PackUser(*result, d)
+		PackUser(result, d)
 
 		return nil
 	})
@@ -197,8 +239,22 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
-	_, err := m.(util.ProvderMetadata).Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		SetPathParam("name", user.Name).
+		SetBody(&user).
+		SetError(&artifactoryError).
+		Patch(UserEndpointPath)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
+	}
+
+	err = removeReadersGroup(m.(util.ProvderMetadata).Client, user)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -211,9 +267,16 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	d := &utilsdk.ResourceData{ResourceData: rd}
 	userName := d.GetString("name", false)
 
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(UsersEndpointPath + userName)
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	resp, err := m.(util.ProvderMetadata).Client.R().
+		SetPathParam("name", userName).
+		SetError(&artifactoryError).
+		Delete(UserEndpointPath)
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", artifactoryError.String())
 	}
 
 	d.SetId("")

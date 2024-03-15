@@ -113,9 +113,13 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 		name := data.GetString("name", false)
 
 		ldapGroupConfigs := XmlLdapGroupConfig{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		matchedLdapGroupSetting := FindConfigurationById[LdapGroupSetting](ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr, name)

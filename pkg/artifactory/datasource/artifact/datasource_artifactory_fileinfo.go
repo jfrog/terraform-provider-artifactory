@@ -78,7 +78,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetResult(&fileInfo).
 		SetPathParams(map[string]string{
 			"repoKey": repo,
@@ -87,6 +87,10 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 		Get("artifactory/api/storage/{repoKey}/{path}")
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return packFileInfo(fileInfo, d)

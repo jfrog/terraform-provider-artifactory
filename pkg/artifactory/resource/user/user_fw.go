@@ -22,9 +22,11 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -38,9 +40,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"github.com/sethvargo/go-password/password"
+	"golang.org/x/exp/slices"
 )
 
 type ArtifactoryBaseUserResource struct {
@@ -64,13 +68,13 @@ type ArtifactoryUserResourceModel struct {
 
 // ArtifactoryUserResourceAPIModel describes the API data model.
 type ArtifactoryUserResourceAPIModel struct {
-	Name                     string    `json:"name"`
+	Name                     string    `json:"username"`
 	Email                    string    `json:"email"`
 	Password                 string    `json:"password,omitempty"`
 	Admin                    bool      `json:"admin"`
-	ProfileUpdatable         bool      `json:"profileUpdatable"`
-	DisableUIAccess          bool      `json:"disableUIAccess"`
-	InternalPasswordDisabled bool      `json:"internalPasswordDisabled"`
+	ProfileUpdatable         bool      `json:"profile_updatable"`
+	DisableUIAccess          bool      `json:"disable_ui_access"`
+	InternalPasswordDisabled bool      `json:"internal_password_disabled"`
 	Groups                   *[]string `json:"groups,omitempty"`
 }
 
@@ -132,7 +136,7 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		Default:  booldefault.StaticBool(false),
 	},
 	"groups": schema.SetAttribute{
-		MarkdownDescription: "List of groups this user is a part of. If no groups set, `readers` group will be added by default. If other groups are assigned, `readers` must be added to the list manually to avoid state drift.",
+		MarkdownDescription: "List of groups this user is a part of. **Notes:** If this attribute is not specified then user's group membership is set to empty. User will not be part of default \"readers\" group automatically.",
 		ElementType:         types.StringType,
 		Optional:            true,
 		Computed:            true,
@@ -153,6 +157,35 @@ func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resourc
 		return
 	}
 	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+}
+
+func (r *ArtifactoryBaseUserResource) removeReadersGroup(client *resty.Client, user ArtifactoryUserResourceAPIModel) error {
+	if user.Groups != nil && slices.Contains(*user.Groups, "readers") {
+		return nil
+	}
+
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	groupsToAddRemove := GroupsAddRemove{
+		Add:    []string{},
+		Remove: []string{"readers"},
+	}
+	// Access PATCH call for updating user will **always** add "readers" to the groups.
+	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
+	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
+	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
+	resp, err := client.R().
+		SetPathParam("name", user.Name).
+		SetBody(groupsToAddRemove).
+		SetError(&artifactoryError).
+		Patch(UserGroupEndpointPath)
+	if err != nil {
+		return err
+	}
+	if resp.IsError() {
+		return fmt.Errorf("%s", artifactoryError.String())
+	}
+
+	return nil
 }
 
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -176,7 +209,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		InternalPasswordDisabled: plan.InternalPasswordDisabled.ValueBool(),
 	}
 
-	if !plan.Groups.IsNull() {
+	if !plan.Groups.IsNull() && len(plan.Groups.Elements()) > 0 {
 		groups := utilfw.StringSetToStrings(plan.Groups)
 		user.Groups = &groups
 	}
@@ -201,7 +234,11 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Password = randomPassword
 	}
 
-	response, err := r.ProviderData.Client.R().SetBody(user).Put(UsersEndpointPath + user.Name)
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetBody(user).
+		SetError(&artifactoryError).
+		Post(UsersEndpointPath)
 
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
@@ -210,24 +247,14 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusCreated {
-		utilfw.UnableToCreateResourceError(resp, response.String())
+		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
 		return
 	}
 
-	// Artifactory PUT call for creating user with groups attribute set to empty/null always sets groups to "readers".
-	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
-	// Workaround: We use following POST call to update the user's groups config to empty group.
-	// This action will match the expectation for this resource when "groups" attribute is empty or not specified in hcl.
-	if plan.Groups.IsNull() || len(plan.Groups.Elements()) == 0 {
-		user.Groups = &[]string{}
-		_, errGroupUpdate := r.ProviderData.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
-		if errGroupUpdate != nil {
-			utilfw.UnableToCreateResourceError(resp, response.String())
-			return
-		}
-
-		// reset this back to nil to ensure TF state gets Null
-		user.Groups = nil
+	err = r.removeReadersGroup(r.ProviderData.Client, user)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
 	}
 
 	// Parse user struct into the state
@@ -254,16 +281,27 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	// Convert from Terraform data model into API data model
 	user := ArtifactoryUserResourceAPIModel{}
 
-	response, err := r.ProviderData.Client.R().SetResult(&user).Get(UsersEndpointPath + state.Id.ValueString())
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("name", state.Name.ValueString()).
+		SetResult(&user).
+		SetError(&artifactoryError).
+		Get(UserEndpointPath)
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -287,7 +325,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	var groups *[]string
-	if !plan.Groups.IsNull() {
+	if !plan.Groups.IsNull() && len(plan.Groups.Elements()) > 0 {
 		g := utilfw.StringSetToStrings(plan.Groups)
 		groups = &g
 	}
@@ -304,16 +342,32 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		InternalPasswordDisabled: plan.InternalPasswordDisabled.ValueBool(),
 	}
 
-	response, err := r.ProviderData.Client.R().SetBody(user).Post(UsersEndpointPath + user.Name)
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("name", user.Name).
+		SetBody(&user).
+		SetError(&artifactoryError).
+		Patch(UserEndpointPath)
 
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
 	}
 
+	if response.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
+		return
+	}
+
 	// Return error if the HTTP status code is not 200 OK
 	if response.StatusCode() != http.StatusOK {
 		utilfw.UnableToUpdateResourceError(resp, response.String())
+		return
+	}
+
+	err = r.removeReadersGroup(r.ProviderData.Client, user)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
 	}
 
@@ -331,7 +385,11 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	response, err := r.ProviderData.Client.R().Delete(UsersEndpointPath + state.Id.ValueString())
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("name", state.Name.ValueString()).
+		SetError(&artifactoryError).
+		Delete(UserEndpointPath)
 
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())
@@ -339,8 +397,8 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	}
 
 	// Return error if the HTTP status code is not 200 OK or 404 Not Found
-	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusOK {
-		utilfw.UnableToDeleteResourceError(resp, response.String())
+	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusNoContent {
+		utilfw.UnableToDeleteResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -350,7 +408,7 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryBaseUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 
 }
 func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *ArtifactoryUserResourceModel) diag.Diagnostics {
@@ -367,7 +425,7 @@ func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *Artifac
 		r.Groups = types.SetValueMust(types.StringType, []attr.Value{})
 	}
 
-	if u.Groups != nil {
+	if u.Groups != nil && len(*u.Groups) > 0 {
 		groups, diags := types.SetValueFrom(ctx, types.StringType, u.Groups)
 		if diags.HasError() {
 			return diags

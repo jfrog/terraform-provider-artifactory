@@ -113,7 +113,7 @@ func packGeneralSecurity(s *GeneralSecurity, d *schema.ResourceData) diag.Diagno
 
 	errors := setValue("enable_anonymous_access", s.GeneralSettings.AnonAccessEnabled)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack general security settings %q", errors)
 	}
 

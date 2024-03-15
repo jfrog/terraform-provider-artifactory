@@ -135,10 +135,14 @@ func DataSourceArtifactoryPermissionTarget() *schema.Resource {
 	dataSourcePermissionTargetRead := func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		permissionTarget := new(PermissionTargetParams)
 		targetName := d.Get("name").(string)
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
 
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		d.SetId(permissionTarget.Name)

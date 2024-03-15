@@ -77,7 +77,7 @@ func packPushReplicationBody(config getReplicationBody, d *schema.ResourceData) 
 
 	errors := setValue("proxy", config.ProxyRef)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -96,7 +96,7 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 
 	errors := setValue("path_prefix", config.PathPrefix)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -106,12 +106,16 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Put(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(replicationConfig.RepoKey)
@@ -130,11 +134,16 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
-		if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	switch result.(type) {
@@ -160,12 +169,16 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 
 func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + replicationConfig.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(replicationConfig.RepoKey)

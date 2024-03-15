@@ -139,14 +139,16 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
-			if resp != nil {
-				switch resp.StatusCode() {
-				case http.StatusNotFound, http.StatusBadRequest:
-					return nil
-				}
-			}
 			return err
 		}
+
+		if resp != nil {
+			switch resp.StatusCode() {
+			case http.StatusNotFound, http.StatusBadRequest:
+				return nil
+			}
+		}
+
 		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
 	}
 }
@@ -331,7 +333,9 @@ func CompositeCheckDestroy(funcs ...func(state *terraform.State) error) func(sta
 
 func DeleteUser(t *testing.T, name string) error {
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().Delete(user.UsersEndpointPath + name)
+	_, err := restyClient.R().
+		SetPathParam("name", name).
+		Delete(user.UserEndpointPath)
 
 	return err
 }
@@ -349,7 +353,9 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 	}
 
 	restyClient := GetTestResty(t)
-	_, err := restyClient.R().SetBody(userObj).Put(user.UsersEndpointPath + name)
+	_, err := restyClient.R().
+		SetBody(userObj).
+		Post(user.UsersEndpointPath)
 
 	if err != nil {
 		t.Fatal(err)

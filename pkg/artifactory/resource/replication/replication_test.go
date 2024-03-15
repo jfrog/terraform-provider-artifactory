@@ -10,8 +10,16 @@ import (
 )
 
 func repConfigExists(id string, m interface{}) (bool, error) {
-	_, err := m.(util.ProvderMetadata).Client.R().Head(replication.EndpointPath + id)
-	return err == nil, err
+	resp, err := m.(util.ProvderMetadata).Client.R().Head(replication.EndpointPath + id)
+	if err != nil {
+		return false, err
+	}
+
+	if resp.IsError() {
+		return false, fmt.Errorf("%s", resp.String())
+	}
+
+	return true, nil
 }
 
 func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error {

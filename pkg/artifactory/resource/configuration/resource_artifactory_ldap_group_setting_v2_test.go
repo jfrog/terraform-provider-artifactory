@@ -208,10 +208,10 @@ func testAccLdapGroupSettingV2Destroy(id string) func(*terraform.State) error {
 		resp, err := client.R().Head("access/api/v1/ldap/groups/" + rs.Primary.ID)
 
 		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusNotFound {
-				return nil
-			}
 			return err
+		}
+		if resp != nil && resp.StatusCode() == http.StatusNotFound {
+			return nil
 		}
 
 		return fmt.Errorf("error: LDAP Group Setting %s still exists", rs.Primary.ID)

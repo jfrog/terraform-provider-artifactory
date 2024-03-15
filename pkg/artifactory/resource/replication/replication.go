@@ -27,11 +27,21 @@ func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m inte
 	resp, err := m.(util.ProvderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		Delete(EndpointPath + d.Id())
-	if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound)) {
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	}
-	return diag.FromErr(err)
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
+	}
+
+	return nil
 }
 
 type repoConfiguration struct {

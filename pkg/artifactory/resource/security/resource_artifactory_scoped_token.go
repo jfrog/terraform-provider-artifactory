@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"golang.org/x/exp/slices"
@@ -370,9 +371,11 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	postResult := AccessTokenPostResponseAPIModel{}
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetBody(accessTokenPostBody).
 		SetResult(&postResult).
+		SetError(&artifactoryError).
 		Post("access/api/v1/tokens")
 
 	if err != nil {
@@ -386,16 +389,27 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	if response.IsError() {
+		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
+		return
+	}
+
 	getResult := AccessTokenGetAPIModel{}
 	id := types.StringValue(postResult.TokenId)
 
-	_, err = r.ProviderData.Client.R().
+	response, err = r.ProviderData.Client.R().
 		SetPathParam("id", id.ValueString()).
 		SetResult(&getResult).
+		SetError(&artifactoryError).
 		Get("access/api/v1/tokens/{id}")
 
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -422,23 +436,31 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	// Convert from Terraform data model into API data model
 	var accessToken AccessTokenGetAPIModel
 
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("id", data.Id.ValueString()).
 		SetResult(&accessToken).
+		SetError(&artifactoryError).
 		Get("access/api/v1/tokens/{id}")
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
 	if err != nil {
-		if response.StatusCode() == http.StatusNotFound {
-			resp.Diagnostics.AddWarning(
-				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
-				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
-			)
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
+			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
+		)
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
 		return
 	}
 
@@ -464,7 +486,7 @@ func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteReq
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	id := data.Id.ValueString()
 
-	_, err := r.ProviderData.Client.R().
+	response, err := r.ProviderData.Client.R().
 		SetPathParam("id", id).
 		SetError(&respError).
 		Delete("access/api/v1/tokens/{id}")
@@ -475,6 +497,17 @@ func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteReq
 			"An unexpected error occurred while attempting to delete the resource. "+
 				"Please retry the operation or report this issue to the provider developers.\n\n"+
 				"HTTP Error: "+err.Error(),
+		)
+
+		return
+	}
+
+	if response.IsError() {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to revoke scoped token %s", id),
+			"An unexpected error occurred while attempting to delete the resource. "+
+				"Please retry the operation or report this issue to the provider developers.\n\n"+
+				"HTTP Error: "+respError.Message,
 		)
 
 		return

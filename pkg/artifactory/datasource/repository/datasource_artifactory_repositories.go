@@ -146,7 +146,7 @@ func (d *RepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	var repos []RepositoriesAPIModel
-	_, err := d.ProviderData.Client.R().
+	response, err := d.ProviderData.Client.R().
 		SetQueryParams(map[string]string{
 			"type":        data.RepositoryType.ValueString(),
 			"packageType": data.PackageType.ValueString(),
@@ -163,6 +163,16 @@ func (d *RepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 			"An unexpected error occurred while fetch the data source. "+
 				"Please report this issue to the provider developers.\n\n"+
 				"Error: "+err.Error(),
+		)
+		return
+	}
+
+	if response.IsError() {
+		resp.Diagnostics.AddError(
+			"Unable to Read Data Source",
+			"An unexpected error occurred while fetch the data source. "+
+				"Please report this issue to the provider developers.\n\n"+
+				"Error: "+response.String(),
 		)
 		return
 	}

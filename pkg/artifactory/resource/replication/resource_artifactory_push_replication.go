@@ -268,7 +268,7 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 
 		errors = setValue("replications", replications)
 	}
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack replication config %q", errors)
 	}
 
@@ -278,11 +278,15 @@ func packPushReplication(pushReplication *GetPushReplication, d *schema.Resource
 func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(pushReplication.RepoKey)
@@ -292,10 +296,14 @@ func resourcePushReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(util.ProvderMetadata).Client
 	var replications []getReplicationBody
-	_, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
+	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	repConfig := GetPushReplication{
@@ -312,12 +320,16 @@ func resourcePushReplicationRead(_ context.Context, d *schema.ResourceData, m in
 func resourcePushReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackPushReplication(d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + "multiple/" + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return resourcePushReplicationRead(ctx, d, m)
