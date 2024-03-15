@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -243,13 +244,24 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
-		_, err := m.(util.ProvderMetadata).Client.R().
+		var artifactoryError artifactory.ArtifactoryErrorsResponse
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
+			SetError(&artifactoryError).
 			Get(WhUrl)
 
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.StatusCode() == http.StatusNotFound {
+			data.SetId("")
+			return nil
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", artifactoryError.String())
 		}
 
 		return packWebhook(data, webhook)
@@ -269,12 +281,18 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(util.ProvderMetadata).Client.R().
+		var artifactoryError artifactory.ArtifactoryErrorsResponse
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetBody(webhook).
+			SetError(&artifactoryError).
 			AddRetryCondition(retryOnProxyError).
 			Post(webhooksUrl)
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", artifactoryError.String())
 		}
 
 		data.SetId(webhook.Id())
@@ -290,13 +308,19 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			return diag.FromErr(err)
 		}
 
-		_, err = m.(util.ProvderMetadata).Client.R().
+		var artifactoryError artifactory.ArtifactoryErrorsResponse
+		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
+			SetError(&artifactoryError).
 			AddRetryCondition(retryOnProxyError).
 			Put(WhUrl)
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", artifactoryError.String())
 		}
 
 		data.SetId(webhook.Id())
@@ -307,13 +331,23 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "deleteWebhook")
 
+		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
+			SetError(&artifactoryError).
 			Delete(WhUrl)
 
-		if err != nil && resp.StatusCode() == http.StatusNotFound {
-			data.SetId("")
+		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.StatusCode() == http.StatusNotFound {
+			data.SetId("")
+			return nil
+		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", artifactoryError.String())
 		}
 
 		return nil
