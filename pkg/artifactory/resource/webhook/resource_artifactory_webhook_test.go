@@ -24,9 +24,9 @@ var domainRepoTypeLookup = map[string]string{
 }
 
 var domainValidationErrorMessageLookup = map[string]string{
-	"artifact":                   "repo_keys cannot be empty when both any_local and any_remote are false",
-	"artifact_property":          "repo_keys cannot be empty when both any_local and any_remote are false",
-	"docker":                     "repo_keys cannot be empty when both any_local and any_remote are false",
+	"artifact":                   "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
+	"artifact_property":          "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
+	"docker":                     "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
 	"build":                      "selected_builds cannot be empty when any_build is false",
 	"release_bundle":             "registered_release_bundle_names cannot be empty when any_release_bundle is false",
 	"distribution":               "registered_release_bundle_names cannot be empty when any_release_bundle is false",
@@ -41,6 +41,7 @@ var repoTemplate = `
 		criteria {
 			any_local = false
 			any_remote = false
+			any_federated = false
 			repo_keys = []
 		}
 		handler {
@@ -142,6 +143,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 			criteria {
 				any_local  = true
 				any_remote = true
+				any_federated = true
 				repo_keys  = []
 			}
 			handler {
@@ -180,6 +182,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 			criteria {
 				any_local  = true
 				any_remote = true
+				any_federated = true
 				repo_keys  = []
 			}
 			handler {
@@ -219,6 +222,7 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 			criteria {
 				any_local  = true
 				any_remote = true
+				any_federated = true
 				repo_keys  = []
 			}
 			handler {
@@ -279,6 +283,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		"eventTypes":          eventTypes,
 		"anyLocal":            testutil.RandBool(),
 		"anyRemote":           testutil.RandBool(),
+		"anyFederated":        testutil.RandBool(),
 		"useSecretForSigning": testutil.RandBool(),
 	}
 	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
@@ -293,6 +298,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 			criteria {
 				any_local  = {{ .anyLocal }}
 				any_remote = {{ .anyRemote }}
+				any_federated = {{ .anyFederated }}
 				repo_keys  = ["{{ .repoName }}"]
 				include_patterns = ["foo/**"]
 				exclude_patterns = ["bar/**"]
@@ -325,6 +331,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_local", fmt.Sprintf("%t", params["anyLocal"])),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_remote", fmt.Sprintf("%t", params["anyRemote"])),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_federated", fmt.Sprintf("%t", params["anyFederated"])),
 		resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.repo_keys.*", repoName),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo/**"),
@@ -400,6 +407,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 			criteria {
 				any_local  = {{ .anyLocal }}
 				any_remote = {{ .anyRemote }}
+				any_federated = {{ .anyFederated }}
 				repo_keys  = ["{{ .repoName }}"]
 				include_patterns = ["foo/**"]
 				exclude_patterns = ["bar/**"]
@@ -451,6 +459,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 		resource.TestCheckResourceAttr(fqrn, "criteria.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_local", fmt.Sprintf("%t", params["anyLocal"])),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_remote", fmt.Sprintf("%t", params["anyRemote"])),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_federated", fmt.Sprintf("%t", params["anyFederated"])),
 		resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.repo_keys.*", repoName),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo/**"),
@@ -527,6 +536,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 		  criteria {
 			any_local  = true
 			any_remote = false
+			any_federated = false
 		
 			repo_keys = []
 		  }

@@ -11,9 +11,10 @@ import (
 
 type RepoWebhookCriteria struct {
 	BaseWebhookCriteria
-	AnyLocal  bool     `json:"anyLocal"`
-	AnyRemote bool     `json:"anyRemote"`
-	RepoKeys  []string `json:"repoKeys"`
+	AnyLocal     bool     `json:"anyLocal"`
+	AnyRemote    bool     `json:"anyRemote"`
+	AnyFederated bool     `json:"anyFederated"`
+	RepoKeys     []string `json:"repoKeys"`
 }
 
 var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
@@ -34,6 +35,11 @@ var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map
 						Required:    true,
 						Description: "Trigger on any remote repositories",
 					},
+					"any_federated": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any federated repositories",
+					},
 					"repo_keys": {
 						Type:        schema.TypeSet,
 						Required:    true,
@@ -49,9 +55,10 @@ var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map
 
 var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
-		"any_local":  artifactoryCriteria["anyLocal"].(bool),
-		"any_remote": artifactoryCriteria["anyRemote"].(bool),
-		"repo_keys":  schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
+		"any_local":     artifactoryCriteria["anyLocal"].(bool),
+		"any_remote":    artifactoryCriteria["anyRemote"].(bool),
+		"any_federated": artifactoryCriteria["anyFederated"].(bool),
+		"repo_keys":     schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
 	}
 }
 
@@ -59,6 +66,7 @@ var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCrit
 	return RepoWebhookCriteria{
 		AnyLocal:            terraformCriteria["any_local"].(bool),
 		AnyRemote:           terraformCriteria["any_remote"].(bool),
+		AnyFederated:        terraformCriteria["any_federated"].(bool),
 		RepoKeys:            utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
 		BaseWebhookCriteria: baseCriteria,
 	}
@@ -69,10 +77,11 @@ var repoCriteriaValidation = func(ctx context.Context, criteria map[string]inter
 
 	anyLocal := criteria["any_local"].(bool)
 	anyRemote := criteria["any_remote"].(bool)
+	anyFederated := criteria["any_federated"].(bool)
 	repoKeys := criteria["repo_keys"].(*schema.Set).List()
 
-	if (!anyLocal && !anyRemote) && len(repoKeys) == 0 {
-		return fmt.Errorf("repo_keys cannot be empty when both any_local and any_remote are false")
+	if (!anyLocal && !anyRemote && !anyFederated) && len(repoKeys) == 0 {
+		return fmt.Errorf("repo_keys cannot be empty when any_local, any_remote, and any_federated are false")
 	}
 
 	return nil
