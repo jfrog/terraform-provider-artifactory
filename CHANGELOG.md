@@ -1,3 +1,9 @@
+## 10.4.0 (Mar 18, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_\*\_webhook and resource/artifactory_\*\_custom_webhook: Add `any_federated` attribute for `artifact`, `artifact_property`, and `docker` critera. Issue: [#906](https://github.com/jfrog/terraform-provider-artifactory/issues/906) PR: [#871](https://github.com/jfrog/terraform-provider-artifactory/pull/871)
+
 ## 10.3.3 (Mar 18, 2024)
 
 NOTES:
