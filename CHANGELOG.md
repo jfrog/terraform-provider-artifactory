@@ -1,3 +1,11 @@
+## 10.3.3 (Mar 18, 2024)
+
+NOTES:
+
+* This patch release has no functional changes. This release switches the Terraform registry signing key to the same key pair used by the other JFrog providers. This enable all providers to be signed and installable on OpenTofu registry which allows only one signing key (Terraform allows multiples).
+
+Issue: [#909](https://github.com/jfrog/terraform-provider-artifactory/issues/909) PR: [#908](https://github.com/jfrog/terraform-provider-artifactory/pull/908)
+
 ## 10.3.2 (Mar 15, 2024)
 
 BUG FIXES:
