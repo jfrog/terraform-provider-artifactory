@@ -51,7 +51,7 @@ type Actions struct {
 
 func ResourceArtifactoryPermissionTargets() *schema.Resource {
 	target := ResourceArtifactoryPermissionTarget()
-	target.DeprecationMessage = "This resource has been deprecated in favour of artifactory_permission_target resource."
+	target.DeprecationMessage = "This resource has been deprecated in favor of artifactory_permission_target resource."
 	return target
 }
 
@@ -157,7 +157,7 @@ func ResourceArtifactoryPermissionTarget() *schema.Resource {
 		},
 
 		Schema:             BuildPermissionTargetSchema(),
-		DeprecationMessage: `This resource has been deprecated in favour of "platform_permission" (https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/permission) resource.`,
+		DeprecationMessage: `This resource has been deprecated in favor of "platform_permission" (https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/permission) resource.`,
 	}
 }
 

@@ -5,6 +5,8 @@ subcategory: "Security"
 
 Provides an Artifactory permission target resource. This can be used to create and manage Artifactory permission targets.
 
+~> This resource has been deprecated in favor of [platform_permission](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/permission) resource.
+
 ## Example Usage
 
 ```hcl
