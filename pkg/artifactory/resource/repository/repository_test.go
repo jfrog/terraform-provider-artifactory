@@ -255,3 +255,30 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRepository_invalid_key(t *testing.T) {
+	repoName := fmt.Sprintf("test-generic-local-%d", testutil.RandomInt())
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name": name,
+		"key":  "abcd1234567890123456789123456789012345678901234567890123456789012", // 65 chars, too long
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key = "{{ .key }}"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      localRepositoryBasic,
+				ExpectError: regexp.MustCompile(`.*expected length of key to be in the range \(1 - 64\).*`),
+			},
+		},
+	})
+}
