@@ -18,6 +18,7 @@ resource "artifactory_artifact_webhook" "artifact-webhook" {
   criteria {
     any_local         = true
     any_remote        = false
+    any_federated     = false
     repo_keys         = [artifactory_local_generic_repository.my-generic-local.key]
     include_patterns  = ["foo/**"]
     exclude_patterns  = ["bar/**"]
@@ -51,6 +52,7 @@ The following arguments are supported:
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_local` - (Required) Trigger on any local repo.
   * `any_remote` - (Required) Trigger on any remote repo.
+  * `any_federated` - (Required) Trigger on any federated repo.
   * `repo_keys` - (Required) Trigger on this list of repo keys.
   * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`.
   * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`.
