@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -880,7 +879,6 @@ func TestAccLocalGenericRepository(t *testing.T) {
 }
 
 func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
@@ -931,7 +929,6 @@ func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 

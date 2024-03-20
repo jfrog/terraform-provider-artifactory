@@ -2,10 +2,8 @@ package repository_test
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,8 +14,6 @@ import (
 )
 
 func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -70,8 +66,6 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 }
 
 func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -126,7 +120,6 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 }
 
 func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -172,7 +165,6 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 }
 
 func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -214,7 +206,6 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 }
 
 func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -251,6 +242,33 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 				},
 				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory %s or later, only one environment can be assigned to a repository.*", repository.CustomProjectEnvironmentSupportedVersion)),
+			},
+		},
+	})
+}
+
+func TestAccRepository_invalid_key(t *testing.T) {
+	repoName := fmt.Sprintf("test-generic-local-%d", testutil.RandomInt())
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name": name,
+		"key":  "abcd1234567890123456789123456789012345678901234567890123456789012", // 65 chars, too long
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key = "{{ .key }}"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      localRepositoryBasic,
+				ExpectError: regexp.MustCompile(`.*expected length of key to be in the range \(1 - 64\).*`),
 			},
 		},
 	})

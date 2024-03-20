@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -299,7 +298,6 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 }
 
 func TestAccPermissionTarget_full(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
@@ -345,7 +343,6 @@ func TestAccPermissionTarget_full(t *testing.T) {
 }
 
 func TestAccPermissionTarget_user_permissions(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 
@@ -411,7 +408,6 @@ func TestAccPermissionTarget_user_permissions(t *testing.T) {
 }
 
 func TestAccPermissionTarget_addBuild(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 	_, permFqrn, permName := testutil.MkNames("test-perm", "artifactory_permission_target")
 

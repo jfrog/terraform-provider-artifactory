@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/exp/slices"
@@ -24,17 +22,17 @@ import (
 
 var BaseRepoSchema = map[string]*schema.Schema{
 	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: RepoKeyValidator,
-		Description:  "A mandatory identifier for the repository that must be unique. Must be 3 - 10 lowercase alphanumeric and hyphen characters. It cannot begin with a number or contain spaces or special characters.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: validator.RepoKey,
+		Description:      "A mandatory identifier for the repository that must be unique. Must be 1 - 64 alphanumeric and hyphen characters. It cannot contain spaces or special characters.",
 	},
 	"project_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: validator.ProjectKey,
-		Description:      "Project key for assigning this repository to. Must be 2 - 20 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
+		Description:      "Project key for assigning this repository to. Must be 2 - 32 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash.",
 	},
 	"project_environments": {
 		Type:     schema.TypeSet,
@@ -294,11 +292,6 @@ func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 func Retry400(response *resty.Response, _ error) bool {
 	return response.StatusCode() == http.StatusBadRequest
 }
-
-var RepoKeyValidator = validation.All(
-	validation.StringDoesNotMatch(regexp.MustCompile("^[0-9].*"), "repo key cannot start with a number"),
-	validation.StringDoesNotContainAny(" !@#$%^&*()+={}[]:;<>,/?~`|\\"),
-)
 
 var GradleLikePackageTypes = []string{
 	"gradle",

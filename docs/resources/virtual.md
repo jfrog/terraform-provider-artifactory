@@ -25,8 +25,7 @@ resource "artifactory_virtual_generic_repository" "foo-generic" {
 Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/confluence/display/RTF/Repository+Configuration+JSON).
 The following arguments are supported:
 
-* `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot begin with a number or
-  contain spaces or special characters.
+* `key` - (Required) A mandatory identifier for the repository that must be unique. It cannot contain spaces or special characters.
 * `repositories` - (Optional) The effective list of actual repositories included in this virtual repository.
 * `project_key` - (Optional) Project key for assigning this repository to. Must be 2 - 32 lowercase alphanumeric and hyphen characters. When assigning repository to a project, repository key must be prefixed with project key, separated by a dash. We don't recommend using this attribute to assign the repository to the project. Use the `repos` attribute in Project provider to manage the list of repositories.
 * `project_environments` - (Optional) Project environment for assigning this repository to. Allow values: `DEV`, `PROD`, or one of custom environment.
