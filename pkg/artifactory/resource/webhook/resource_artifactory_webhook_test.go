@@ -387,13 +387,14 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 	eventTypes := webhook.DomainEventTypesSupported[webhookType]
 
 	params := map[string]interface{}{
-		"repoName":    repoName,
-		"repoType":    repoType,
-		"webhookType": webhookType,
-		"webhookName": name,
-		"eventTypes":  eventTypes,
-		"anyLocal":    testutil.RandBool(),
-		"anyRemote":   testutil.RandBool(),
+		"repoName":     repoName,
+		"repoType":     repoType,
+		"webhookType":  webhookType,
+		"webhookName":  name,
+		"eventTypes":   eventTypes,
+		"anyLocal":     testutil.RandBool(),
+		"anyRemote":    testutil.RandBool(),
+		"anyFederated": testutil.RandBool(),
 	}
 	webhookConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
