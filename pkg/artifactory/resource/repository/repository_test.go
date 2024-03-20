@@ -2,10 +2,8 @@ package repository_test
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,8 +14,6 @@ import (
 )
 
 func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -70,8 +66,6 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 }
 
 func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -126,7 +120,6 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 }
 
 func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -172,7 +165,6 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 }
 
 func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -214,7 +206,6 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 }
 
 func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 

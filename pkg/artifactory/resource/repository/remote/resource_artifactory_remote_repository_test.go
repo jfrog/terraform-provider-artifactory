@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1578,8 +1577,6 @@ func TestAccRemoteDisableDefaultProxyConflictAttrGH739(t *testing.T) {
 }
 
 func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
@@ -1631,8 +1628,6 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 }
 
 func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-
-	rand.Seed(time.Now().UnixNano())
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-pypi-remote", projectKey)
 
