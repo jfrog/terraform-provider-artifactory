@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,7 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
-	"golang.org/x/exp/slices"
+	"github.com/samber/lo"
 )
 
 type User struct {
@@ -159,21 +160,27 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 	return PackUser(user, rd)
 }
 
-func removeReadersGroup(client *resty.Client, user User) error {
-	if slices.Contains(user.Groups, "readers") {
+func syncReadersGroup(ctx context.Context, client *resty.Client, plan User, actual User) error {
+	toAdd, toRemove := lo.Difference(plan.Groups, actual.Groups)
+	tflog.Debug(ctx, "syncReadersGroup", map[string]any{
+		"toAdd":    toAdd,
+		"toRemove": toRemove,
+	})
+
+	if len(toAdd) == 0 && len(toRemove) == 0 {
 		return nil
 	}
 
 	groupsToAddRemove := GroupsAddRemove{
-		Add:    []string{},
-		Remove: []string{"readers"},
+		Add:    toAdd,
+		Remove: toRemove,
 	}
 	// Access PATCH call for updating user will **always** add "readers" to the groups.
 	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
 	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
 	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
 	_, err := client.R().
-		SetPathParam("name", user.Name).
+		SetPathParam("name", plan.Name).
 		SetBody(groupsToAddRemove).
 		Patch(UserGroupEndpointPath)
 	if err != nil {
@@ -188,13 +195,15 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	var diags diag.Diagnostics
 
-	if passwordGenerator != nil {
+	if passwordGenerator != nil && !user.InternalPasswordDisabled {
 		diags = passwordGenerator(&user)
 	}
 
+	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(user).
+		SetResult(&result).
 		SetError(&artifactoryError).
 		Post(UsersEndpointPath)
 	if err != nil {
@@ -206,7 +215,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(user.Name)
 
-	err = removeReadersGroup(m.(util.ProvderMetadata).Client, user)
+	err = syncReadersGroup(ctx, m.(util.ProvderMetadata).Client, user, result)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -240,10 +249,12 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	user := unpackUser(d)
 
+	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("name", user.Name).
 		SetBody(&user).
+		SetResult(&result).
 		SetError(&artifactoryError).
 		Patch(UserEndpointPath)
 
@@ -254,7 +265,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf("%s", artifactoryError.String())
 	}
 
-	err = removeReadersGroup(m.(util.ProvderMetadata).Client, user)
+	err = syncReadersGroup(ctx, m.(util.ProvderMetadata).Client, user, result)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -40,11 +40,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	"github.com/samber/lo"
 	"github.com/sethvargo/go-password/password"
-	"golang.org/x/exp/slices"
 )
 
 type ArtifactoryBaseUserResource struct {
@@ -159,22 +160,35 @@ func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resourc
 	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
 }
 
-func (r *ArtifactoryBaseUserResource) removeReadersGroup(client *resty.Client, user ArtifactoryUserResourceAPIModel) error {
-	if user.Groups != nil && slices.Contains(*user.Groups, "readers") {
+func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, client *resty.Client, plan ArtifactoryUserResourceAPIModel, actual ArtifactoryUserResourceAPIModel) error {
+	planGroups := []string{}
+	if plan.Groups != nil {
+		planGroups = *plan.Groups
+	}
+	actualGroups := []string{}
+	if actual.Groups != nil {
+		actualGroups = *actual.Groups
+	}
+	toAdd, toRemove := lo.Difference(planGroups, actualGroups)
+	tflog.Debug(ctx, "syncReadersGroup", map[string]any{
+		"toAdd":    toAdd,
+		"toRemove": toRemove,
+	})
+
+	if len(toAdd) == 0 && len(toRemove) == 0 {
 		return nil
 	}
 
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	groupsToAddRemove := GroupsAddRemove{
-		Add:    []string{},
-		Remove: []string{"readers"},
+		Add:    toAdd,
+		Remove: toRemove,
 	}
-	// Access PATCH call for updating user will **always** add "readers" to the groups.
-	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
-	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
-	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
+	// Access PATCH call for updating user will add any groups with "auto_join = true" to the user's groups.
+	// We use following PATCH call to sync up user's groups from TF to Artifactory.
+	// This action will match the expectation for this resource so "groups" attribute matches what's on Artifactory.
 	resp, err := client.R().
-		SetPathParam("name", user.Name).
+		SetPathParam("name", actual.Name).
 		SetBody(groupsToAddRemove).
 		SetError(&artifactoryError).
 		Patch(UserGroupEndpointPath)
@@ -214,7 +228,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Groups = &groups
 	}
 
-	if user.Password == "" {
+	if user.Password == "" && !user.InternalPasswordDisabled {
 		resp.Diagnostics.AddWarning(
 			"No password supplied",
 			"One will be generated (12 characters with 1 digit, 1 symbol, with upper and lower case letters) and this may fail as your Artifactory password policy can't be determined by the provider.",
@@ -234,9 +248,11 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		user.Password = randomPassword
 	}
 
+	var result ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetBody(user).
+		SetResult(&result).
 		SetError(&artifactoryError).
 		Post(UsersEndpointPath)
 
@@ -251,7 +267,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	err = r.removeReadersGroup(r.ProviderData.Client, user)
+	err = r.syncReadersGroup(ctx, r.ProviderData.Client, user, result)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
@@ -279,8 +295,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	// Convert from Terraform data model into API data model
-	user := ArtifactoryUserResourceAPIModel{}
-
+	var user ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", state.Name.ValueString()).
@@ -342,10 +357,12 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		InternalPasswordDisabled: plan.InternalPasswordDisabled.ValueBool(),
 	}
 
+	var result ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", user.Name).
 		SetBody(&user).
+		SetResult(&result).
 		SetError(&artifactoryError).
 		Patch(UserEndpointPath)
 
@@ -365,7 +382,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	err = r.removeReadersGroup(r.ProviderData.Client, user)
+	err = r.syncReadersGroup(ctx, r.ProviderData.Client, user, result)
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return

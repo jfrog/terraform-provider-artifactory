@@ -61,21 +61,23 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 	})
 }
 
-func TestAccUser_basic_groups(t *testing.T) {
-	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
-	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
+func TestAccUser_full_groups(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_user")
+	_, _, groupName1 := testutil.MkNames("test-group-", "artifactory_group")
+	_, _, groupName2 := testutil.MkNames("test-group-", "artifactory_group")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")
 
 	params := map[string]interface{}{
-		"name":      fmt.Sprintf("foobar-%d", id),
-		"username":  username,
-		"email":     email,
-		"groupName": groupName,
+		"name":       fmt.Sprintf("foobar-%d", id),
+		"username":   username,
+		"email":      email,
+		"groupName1": groupName1,
+		"groupName2": groupName2,
 	}
 	config := util.ExecuteTemplate("TestAccUserBasic", `
-		resource "artifactory_group" "{{ .groupName }}" {
-			name = "{{ .groupName }}"
+		resource "artifactory_group" "{{ .groupName1 }}" {
+			name = "{{ .groupName1 }}"
 		}
 
 		resource "artifactory_user" "{{ .name }}" {
@@ -84,15 +86,18 @@ func TestAccUser_basic_groups(t *testing.T) {
 			password = "Passsw0rd!"
 			admin 	 = false
 			groups   = [
-				"readers",
-				artifactory_group.{{ .groupName }}.name,
+				artifactory_group.{{ .groupName1 }}.name,
 			]
 		}
 	`, params)
 
 	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
-		resource "artifactory_group" "{{ .groupName }}" {
-			name = "{{ .groupName }}"
+		resource "artifactory_group" "{{ .groupName1 }}" {
+			name = "{{ .groupName1 }}"
+		}
+
+		resource "artifactory_group" "{{ .groupName2 }}" {
+			name = "{{ .groupName2 }}"
 		}
 
 		resource "artifactory_user" "{{ .name }}" {
@@ -100,7 +105,10 @@ func TestAccUser_basic_groups(t *testing.T) {
 			email 	 = "{{ .email }}"
 			password = "Passsw0rd!"
 			admin 	 = false
-			groups   = [artifactory_group.{{ .groupName }}.name]
+			groups   = [
+				artifactory_group.{{ .groupName1 }}.name,
+				artifactory_group.{{ .groupName2 }}.name,
+			]
 		}
 	`, params)
 
@@ -113,17 +121,25 @@ func TestAccUser_basic_groups(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", "readers"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName2),
+				),
+			},
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
 				),
 			},
 			{

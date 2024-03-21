@@ -167,29 +167,52 @@ func testAccManagedUserInvalidName(t *testing.T, username, errorRegex string) fu
 }
 
 func TestAccManagedUser_basic(t *testing.T) {
-	const userFull = `
-		resource "artifactory_managed_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
+	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_managed_user")
+	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]string{
+		"name":      name,
+		"username":  username,
+		"email":     email,
+		"groupName": groupName,
+	}
+
+	userFull := util.ExecuteTemplate("TestAccManagedUser", `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+
+		resource "artifactory_managed_user" "{{ .name }}" {
+			name        		= "{{ .username }}"
+			email       		= "{{ .email }}"
 			password			= "Passsw0rd!"
 			admin    			= true
 			profile_updatable   = true
 			disable_ui_access	= false
-			groups      		= [ "readers" ]
+			groups      		= [
+				artifactory_group.{{ .groupName }}.name,
+			]
 		}
-	`
-	const userNonAdminNoProfUpd = `
-		resource "artifactory_managed_user" "%s" {
-			name        		= "%s"
-			email       		= "dummy%d@a.com"
+	`, params)
+
+	userNonAdminNoProfUpd := util.ExecuteTemplate("TestAccManagedUser", `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name = "{{ .groupName }}"
+		}
+
+		resource "artifactory_managed_user" "{{ .name }}" {
+			name        		= "{{ .username }}"
+			email       		= "{{ .email }}"
 			password			= "Passsw0rd!"
 			admin    			= false
 			profile_updatable   = false
-			groups      		= [ "readers" ]
+			groups      		= [
+				artifactory_group.{{ .groupName }}.name,
+			]
 		}
-	`
-	id, fqrn, name := testutil.MkNames("test-", "artifactory_managed_user")
-	username := fmt.Sprintf("dummy_user-@%d.", id)
+	`, params)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -197,31 +220,33 @@ func TestAccManagedUser_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userFull, name, username, id),
+				Config: userFull,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", username),
-					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", params["username"]),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"]),
 					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName"]),
 				),
 			},
 			{
-				Config: fmt.Sprintf(userNonAdminNoProfUpd, name, username, id),
+				Config: userNonAdminNoProfUpd,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", username),
-					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", params["username"]),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"]),
 					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName"]),
 				),
 			},
 			{
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(username, "name"),
+				ImportStateCheck:        validator.CheckImportState(params["username"], "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
 		},
