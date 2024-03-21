@@ -453,7 +453,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	if response.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
-			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+err.Error(),
+			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+response.String(),
 		)
 		resp.State.RemoveResource(ctx)
 		return
