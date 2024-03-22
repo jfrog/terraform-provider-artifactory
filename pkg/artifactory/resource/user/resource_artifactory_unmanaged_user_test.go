@@ -154,15 +154,16 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 
 func TestAccUnmanagedUser_full(t *testing.T) {
 	id, fqrn, resourceName := testutil.MkNames("test-user-", "artifactory_unmanaged_user")
-	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
+	_, _, groupName1 := testutil.MkNames("test-group-", "artifactory_group")
+	_, _, groupName2 := testutil.MkNames("test-group-", "artifactory_group")
 
 	username := fmt.Sprintf("dummy_user-%d", id)
 	email := fmt.Sprintf("dummy%d@a.com", id)
 
 	config := util.ExecuteTemplate(
 		"TestAccUnmanagedUser_full",
-		`resource "artifactory_group" "{{ .groupName }}" {
-			name = "{{ .groupName }}"
+		`resource "artifactory_group" "{{ .groupName1 }}" {
+			name = "{{ .groupName1 }}"
 		}
 
 		resource "artifactory_unmanaged_user" "{{ .resourceName }}" {
@@ -174,22 +175,25 @@ func TestAccUnmanagedUser_full(t *testing.T) {
 			disable_ui_access	= false
 
 			groups = [
-				"readers",
-				artifactory_group.{{ .groupName }}.name,
+				artifactory_group.{{ .groupName1 }}.name,
 			]
 		}`,
 		map[string]string{
 			"resourceName": resourceName,
 			"username":     username,
 			"email":        email,
-			"groupName":    groupName,
+			"groupName1":   groupName1,
 		},
 	)
 
 	updatedConfig := util.ExecuteTemplate(
 		"TestAccUnmanagedUser_full",
-		`resource "artifactory_group" "{{ .groupName }}" {
-			name = "{{ .groupName }}"
+		`resource "artifactory_group" "{{ .groupName1 }}" {
+			name = "{{ .groupName1 }}"
+		}
+
+		resource "artifactory_group" "{{ .groupName2 }}" {
+			name = "{{ .groupName2 }}"
 		}
 
 		resource "artifactory_unmanaged_user" "{{ .resourceName }}" {
@@ -200,13 +204,17 @@ func TestAccUnmanagedUser_full(t *testing.T) {
 			profile_updatable   = false
 			disable_ui_access	= false
 
-			groups = [artifactory_group.{{ .groupName }}.name]
+			groups = [
+				artifactory_group.{{ .groupName1 }}.name,
+				artifactory_group.{{ .groupName2 }}.name,
+			]
 		}`,
 		map[string]string{
 			"resourceName": resourceName,
 			"username":     username,
 			"email":        email,
-			"groupName":    groupName,
+			"groupName1":   groupName1,
+			"groupName2":   groupName2,
 		},
 	)
 
@@ -223,9 +231,8 @@ func TestAccUnmanagedUser_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", "readers"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
 				),
 			},
 			{
@@ -236,8 +243,21 @@ func TestAccUnmanagedUser_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "admin", "false"),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName2),
+				),
+			},
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", email),
+					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "groups.0", groupName),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
 				),
 			},
 			{
