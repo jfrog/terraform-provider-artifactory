@@ -65,13 +65,10 @@ func TestAccUser_full_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_user")
 	_, _, groupName1 := testutil.MkNames("test-group-", "artifactory_group")
 	_, _, groupName2 := testutil.MkNames("test-group-", "artifactory_group")
-	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
 
-	params := map[string]interface{}{
-		"name":       fmt.Sprintf("foobar-%d", id),
-		"username":   username,
-		"email":      email,
+	params := map[string]string{
+		"name":       name,
+		"email":      fmt.Sprintf("dummy_user%d@test.com", id),
 		"groupName1": groupName1,
 		"groupName2": groupName2,
 	}
@@ -120,26 +117,26 @@ func TestAccUser_full_groups(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"]),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName1"]),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"]),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "2"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName2),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName1"]),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName2"]),
 				),
 			},
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"]),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", groupName1),
+					resource.TestCheckTypeSetElemAttr(fqrn, "groups.*", params["groupName1"]),
 				),
 			},
 			{
