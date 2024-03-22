@@ -184,7 +184,7 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 		Add:    toAdd,
 		Remove: toRemove,
 	}
-	// Access PATCH call for updating user will add any groups with "auto_join = true" to the user's groups.
+	// Access API for creating user will add any groups with "auto_join = true" to the user's groups.
 	// We use following PATCH call to sync up user's groups from TF to Artifactory.
 	// This action will match the expectation for this resource so "groups" attribute matches what's on Artifactory.
 	resp, err := client.R().

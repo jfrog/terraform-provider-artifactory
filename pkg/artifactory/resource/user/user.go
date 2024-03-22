@@ -175,10 +175,9 @@ func syncReadersGroup(ctx context.Context, client *resty.Client, plan User, actu
 		Add:    toAdd,
 		Remove: toRemove,
 	}
-	// Access PATCH call for updating user will **always** add "readers" to the groups.
-	// This is a bug on Artifactory. Below workaround will fix the issue and has to be removed after the artifactory bug is resolved.
-	// Workaround: We use following PATCH call to remove "readers" from the user's groups.
-	// This action will match the expectation for this resource so "groups" attribute matches what's specified in hcl.
+	// Access API for creating user will add any groups with "auto_join = true" to the user's groups.
+	// We use following PATCH call to sync up user's groups from TF to Artifactory.
+	// This action will match the expectation for this resource so "groups" attribute matches what's on Artifactory.
 	_, err := client.R().
 		SetPathParam("name", plan.Name).
 		SetBody(groupsToAddRemove).
