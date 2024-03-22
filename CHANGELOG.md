@@ -23,7 +23,7 @@ Issue: [#909](https://github.com/jfrog/terraform-provider-artifactory/issues/909
 
 BUG FIXES:
 
-* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `groups` handling so `readers` group from Artifactory no longer cause state drift. Issue: [#900](https://github.com/jfrog/terraform-provider-artifactory/issues/900)
+* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `groups` handling so `readers` group from Artifactory no longer cause state drift. Also fix inability to create an user without `password` set with `internal_password_disabled` is set to `true`. Issue: [#900](https://github.com/jfrog/terraform-provider-artifactory/issues/900)
 
 PR: [#908](https://github.com/jfrog/terraform-provider-artifactory/pull/908)
 
