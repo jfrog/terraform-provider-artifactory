@@ -50,12 +50,16 @@ type repoConfiguration struct {
 
 func getRepositoryRclass(repoKey string, m interface{}) (string, error) {
 	repoConfig := repoConfiguration{}
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetResult(&repoConfig).
 		Get("artifactory/api/repositories/" + repoKey)
 	if err != nil {
 		return "", err
 	}
+	if resp.IsError() {
+		return "", fmt.Errorf("%s", resp.String())
+	}
+
 	return repoConfig.Rclass, err
 }
 

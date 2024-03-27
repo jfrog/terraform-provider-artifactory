@@ -184,12 +184,16 @@ func MkRepoRead(pack packer.PackFunc, construct Constructor) schema.ReadContextF
 			Get(RepositoriesEndpoint)
 
 		if err != nil {
-			if resp != nil && (resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound) {
-				d.SetId("")
-				return nil
-			}
 			return diag.FromErr(err)
 		}
+		if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
+		}
+
 		return diag.FromErr(pack(repo, d))
 	}
 }

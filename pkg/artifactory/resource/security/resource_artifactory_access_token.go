@@ -292,6 +292,11 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 			d.SetId("")
 			return nil
 		}
+
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
+		}
+
 		// the original atlassian code considered any error code fine. However, expiring tokens can't be revoked
 		regex := regexp.MustCompile(`.*AccessToken not revocable.*`)
 		if regex.MatchString(string(resp.Body()[:])) {

@@ -159,9 +159,12 @@ func ResourceArtifactoryLdapSetting() *schema.Resource {
 		key := data.GetString("key", false)
 
 		ldapConfigs := XmlLdapConfig{}
-		_, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&ldapConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
+		}
+		if resp.IsError() {
+			return diag.Errorf("%s", resp.String())
 		}
 
 		matchedLdapSetting := FindConfigurationById[LdapSetting](ldapConfigs.Security.LdapSettings.LdapSettingArr, key)
