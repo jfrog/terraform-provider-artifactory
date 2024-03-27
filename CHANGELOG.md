@@ -1,3 +1,9 @@
+## 10.4.2 (Mar 27, 2024)
+
+BUG FIXES:
+
+* Provider: Further improvement on API error handling that was missed in previous updates. Issue: [#886](https://github.com/jfrog/terraform-provider-artifactory/issues/885) PR: [#921](https://github.com/jfrog/terraform-provider-artifactory/pull/921)
+
 ## 10.4.1 (Mar 25, 2024)
 
 BUG FIXES:
