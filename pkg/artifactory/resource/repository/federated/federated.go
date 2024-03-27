@@ -158,7 +158,7 @@ func configSync(ctx context.Context, repoKey string, m interface{}) diag.Diagnos
 			"repoKey": repoKey,
 		},
 	)
-	_, restErr := m.(util.ProvderMetadata).Client.R().
+	resp, restErr := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("repositoryKey", repoKey).
 		Post("artifactory/api/federation/configSync/{repositoryKey}")
 	if restErr != nil {
@@ -166,6 +166,13 @@ func configSync(ctx context.Context, repoKey string, m interface{}) diag.Diagnos
 			Severity: diag.Warning,
 			Summary:  "failed to trigger synchronization of the federated member configuration",
 			Detail:   restErr.Error(),
+		})
+	}
+	if resp.IsError() {
+		ds = append(ds, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "failed to trigger synchronization of the federated member configuration",
+			Detail:   resp.String(),
 		})
 	}
 

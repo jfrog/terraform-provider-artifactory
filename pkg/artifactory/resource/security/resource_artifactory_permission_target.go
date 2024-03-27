@@ -341,9 +341,10 @@ func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData,
 		SetBody(permissionTarget).
 		Post(PermissionsEndPoint + permissionTarget.Name)
 	if err != nil {
-		if !(resp.StatusCode() == http.StatusConflict && conflictRegex.Match(resp.Body())) {
-			return diag.FromErr(err)
-		}
+		return diag.FromErr(err)
+	}
+	if resp.IsError() && !(resp.StatusCode() == http.StatusConflict && conflictRegex.Match(resp.Body())) {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(permissionTarget.Name)
@@ -357,11 +358,14 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 		SetResult(&permissionTarget).
 		Get(PermissionsEndPoint + d.Id())
 	if err != nil {
-		if resp != nil && resp.StatusCode() == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
+	}
+	if resp.StatusCode() == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	return PackPermissionTarget(&permissionTarget, d)
@@ -370,11 +374,14 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	_, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetBody(permissionTarget).
 		Put(PermissionsEndPoint + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	d.SetId(permissionTarget.Name)
@@ -382,9 +389,16 @@ func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
+	resp, err := m.(util.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
 
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
+	}
+
+	return nil
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {

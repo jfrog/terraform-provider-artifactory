@@ -59,9 +59,12 @@ func packApiKey(apiKey string, d *schema.ResourceData) diag.Diagnostics {
 func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
 
-	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Post(ApiKeyEndpoint)
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Post(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 
 	if len(data.ApiKey) > 0 {
@@ -73,9 +76,12 @@ func resourceApiKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	data := ApiKey{}
-	_, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Get(ApiKeyEndpoint)
+	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&data).Get(ApiKeyEndpoint)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
 	}
 	if data.ApiKey == "" {
 		d.SetId("")
@@ -85,6 +91,13 @@ func resourceApiKeyRead(_ context.Context, d *schema.ResourceData, m interface{}
 }
 
 func apiKeyRevoke(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
-	_, err := m.(util.ProvderMetadata).Client.R().Delete(ApiKeyEndpoint)
-	return diag.FromErr(err)
+	resp, err := m.(util.ProvderMetadata).Client.R().Delete(ApiKeyEndpoint)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.IsError() {
+		return diag.Errorf("%s", resp.String())
+	}
+
+	return nil
 }
