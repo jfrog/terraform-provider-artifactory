@@ -1,3 +1,9 @@
+## 10.4.3 (Apr 1, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Restore backward compatibility with Artifactory 7.49.2 and earlier. Issue: [#922](https://github.com/jfrog/terraform-provider-artifactory/issues/922) PR: [#923](https://github.com/jfrog/terraform-provider-artifactory/pull/923)
+
 ## 10.4.2 (Mar 27, 2024)
 
 BUG FIXES:
@@ -8,7 +14,7 @@ BUG FIXES:
 
 BUG FIXES:
 
-* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `groups` handling to keep groups membership from Artifactory sychronized and avoid state drift. Also fix inability to create n user without `password` set with `internal_password_disabled` is set to `true`. Issue: [#915](https://github.com/jfrog/terraform-provider-artifactory/issues/915) PR: [#920](https://github.com/jfrog/terraform-provider-artifactory/pull/920)
+* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `groups` handling to keep groups membership from Artifactory sychronized and avoid state drift. Also fix inability to create a user without `password` set with `internal_password_disabled` is set to `true`. Issue: [#915](https://github.com/jfrog/terraform-provider-artifactory/issues/915) PR: [#920](https://github.com/jfrog/terraform-provider-artifactory/pull/920)
 
 ## 10.4.0 (Mar 20, 2024)
 
