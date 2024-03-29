@@ -222,7 +222,7 @@ func createUser(req *resty.Request, artifactoryVersion string, user User, result
 	return res, err
 }
 
-func readUser(req *resty.Request, artifactoryVersion, name string, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+func ReadUser(req *resty.Request, artifactoryVersion, name string, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
 	// 7.49.3 or later, use Access API
@@ -327,7 +327,7 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 
 	var user User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	resp, err := readUser(
+	resp, err := ReadUser(
 		m.(util.ProvderMetadata).Client.R(),
 		m.(util.ProvderMetadata).ArtifactoryVersion,
 		d.Id(),
@@ -412,7 +412,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var result User
-		resp, e := readUser(
+		resp, e := ReadUser(
 			m.(util.ProvderMetadata).Client.R(),
 			m.(util.ProvderMetadata).ArtifactoryVersion,
 			d.Id(),
