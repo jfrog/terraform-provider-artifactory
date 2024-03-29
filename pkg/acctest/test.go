@@ -335,7 +335,7 @@ func DeleteUser(t *testing.T, name string) error {
 	restyClient := GetTestResty(t)
 	_, err := restyClient.R().
 		SetPathParam("name", name).
-		Delete(user.UserEndpointPath)
+		Delete("access/api/v2/users/{name}")
 
 	return err
 }
@@ -355,7 +355,7 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 	restyClient := GetTestResty(t)
 	_, err := restyClient.R().
 		SetBody(userObj).
-		Post(user.UsersEndpointPath)
+		Post("access/api/v2/users")
 
 	if err != nil {
 		t.Fatal(err)
@@ -363,7 +363,6 @@ func CreateUserUpdatable(t *testing.T, name string, email string) {
 }
 
 func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, error) {
-
 	fixedVersion, err := version.NewVersion(instanceVersions)
 	if err != nil {
 		return false, err

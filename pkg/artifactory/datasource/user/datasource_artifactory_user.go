@@ -74,7 +74,7 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		resp, err := m.(util.ProvderMetadata).Client.R().
 			SetPathParam("name", userName).
 			SetResult(&userObj).
-			Get(user.UserEndpointPath)
+			Get(user.GetUsersEndpointPath(m.(util.ProvderMetadata).ArtifactoryVersion))
 
 		if err != nil {
 			return diag.FromErr(err)

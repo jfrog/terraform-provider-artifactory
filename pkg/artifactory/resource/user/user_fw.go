@@ -171,8 +171,10 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 	}
 	toAdd, toRemove := lo.Difference(planGroups, actualGroups)
 	tflog.Debug(ctx, "syncReadersGroup", map[string]any{
-		"toAdd":    toAdd,
-		"toRemove": toRemove,
+		"plan.Groups":   plan.Groups,
+		"actual.Groups": actual.Groups,
+		"toAdd":         toAdd,
+		"toRemove":      toRemove,
 	})
 
 	if len(toAdd) == 0 && len(toRemove) == 0 {
@@ -200,6 +202,151 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 	}
 
 	return nil
+}
+
+func (r *ArtifactoryBaseUserResource) createUser(ctx context.Context, req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetBody(user).
+			SetResult(result).
+			SetError(artifactoryError).
+			Post(GetUsersEndpointPath(artifactoryVersion))
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	artifactoryUser := ArtifactoryUserAPIModel{
+		Name:                     user.Name,
+		Email:                    user.Email,
+		Password:                 user.Password,
+		Admin:                    user.Admin,
+		ProfileUpdatable:         user.ProfileUpdatable,
+		DisableUIAccess:          user.DisableUIAccess,
+		InternalPasswordDisabled: user.InternalPasswordDisabled,
+		Groups:                   user.Groups,
+	}
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+	resp, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetBody(artifactoryUser).
+		SetError(artifactoryError).
+		Put(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if resp.IsError() {
+		return resp, nil
+	}
+
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	*result = ArtifactoryUserResourceAPIModel{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Password:                 user.Password,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   artifactoryResult.Groups,
+	}
+
+	return res, err
+}
+
+func (r *ArtifactoryBaseUserResource) readUser(req *resty.Request, artifactoryVersion, name string, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", name).
+			SetResult(&result).
+			SetError(&artifactoryError).
+			Get(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	*result = ArtifactoryUserResourceAPIModel{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   artifactoryResult.Groups,
+	}
+
+	return res, err
+}
+
+func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", user.Name).
+			SetBody(user).
+			SetResult(result).
+			SetError(artifactoryError).
+			Patch(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	artifactoryUser := ArtifactoryUserAPIModel{
+		Name:                     user.Name,
+		Email:                    user.Email,
+		Password:                 user.Password,
+		Admin:                    user.Admin,
+		ProfileUpdatable:         user.ProfileUpdatable,
+		DisableUIAccess:          user.DisableUIAccess,
+		InternalPasswordDisabled: user.InternalPasswordDisabled,
+		Groups:                   user.Groups,
+	}
+	resp, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetBody(artifactoryUser).
+		SetError(artifactoryError).
+		Post(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if resp.IsError() {
+		return resp, nil
+	}
+
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	*result = ArtifactoryUserResourceAPIModel{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Password:                 user.Password,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   artifactoryResult.Groups,
+	}
+
+	return res, err
 }
 
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -250,19 +397,20 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 
 	var result ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetBody(user).
-		SetResult(&result).
-		SetError(&artifactoryError).
-		Post(UsersEndpointPath)
+	response, err := r.createUser(
+		ctx,
+		r.ProviderData.Client.R(),
+		r.ProviderData.ArtifactoryVersion,
+		user,
+		&result,
+		&artifactoryError)
 
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
 
-	// Return error if the HTTP status code is not 200 OK
-	if response.StatusCode() != http.StatusCreated {
+	if response.IsError() {
 		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
 		return
 	}
@@ -297,11 +445,12 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 	// Convert from Terraform data model into API data model
 	var user ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("name", state.Name.ValueString()).
-		SetResult(&user).
-		SetError(&artifactoryError).
-		Get(UserEndpointPath)
+	response, err := r.readUser(
+		r.ProviderData.Client.R(),
+		r.ProviderData.ArtifactoryVersion,
+		state.Name.ValueString(),
+		&user,
+		&artifactoryError)
 
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
@@ -359,12 +508,12 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 
 	var result ArtifactoryUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("name", user.Name).
-		SetBody(&user).
-		SetResult(&result).
-		SetError(&artifactoryError).
-		Patch(UserEndpointPath)
+	response, err := r.updateUser(
+		r.ProviderData.Client.R(),
+		r.ProviderData.ArtifactoryVersion,
+		user,
+		&result,
+		&artifactoryError)
 
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
@@ -373,12 +522,6 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 
 	if response.IsError() {
 		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
-		return
-	}
-
-	// Return error if the HTTP status code is not 200 OK
-	if response.StatusCode() != http.StatusOK {
-		utilfw.UnableToUpdateResourceError(resp, response.String())
 		return
 	}
 
@@ -406,15 +549,17 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("name", state.Name.ValueString()).
 		SetError(&artifactoryError).
-		Delete(UserEndpointPath)
+		Delete(GetUserEndpointPath(r.ProviderData.ArtifactoryVersion))
 
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return
 	}
 
-	// Return error if the HTTP status code is not 200 OK or 404 Not Found
-	if response.StatusCode() != http.StatusNotFound && response.StatusCode() != http.StatusNoContent {
+	// Return error if the HTTP status code is not 200 OK, 204 No Content, or 404 Not Found
+	if !(response.StatusCode() == http.StatusNotFound ||
+		response.StatusCode() == http.StatusOK ||
+		response.StatusCode() == http.StatusNoContent) {
 		utilfw.UnableToDeleteResourceError(resp, artifactoryError.String())
 		return
 	}
