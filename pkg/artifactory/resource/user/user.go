@@ -19,6 +19,8 @@ import (
 	"github.com/samber/lo"
 )
 
+const AccessAPIArtifactoryVersion = "7.49.3"
+
 type User struct {
 	Name                     string   `json:"username"`
 	Email                    string   `json:"email"`
@@ -131,20 +133,206 @@ func PackUser(user User, d *schema.ResourceData) diag.Diagnostics {
 	return nil
 }
 
-const UsersEndpointPath = "access/api/v2/users"
-const UserEndpointPath = "access/api/v2/users/{name}"
 const UserGroupEndpointPath = "access/api/v2/users/{name}/groups"
+
+func GetUsersEndpointPath(artifactoryVersion string) string {
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return "access/api/v2/users"
+	}
+
+	return "artifactory/api/security/users"
+}
+
+func GetUserEndpointPath(artifactoryVersion string) string {
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return "access/api/v2/users/{name}"
+	}
+
+	return "artifactory/api/security/users/{name}"
+}
+
+// ArtifactoryUserAPIModel corresponds to old Artifactory user API
+type ArtifactoryUserAPIModel struct {
+	Name                     string    `json:"name"`
+	Email                    string    `json:"email"`
+	Password                 string    `json:"password,omitempty"`
+	Admin                    bool      `json:"admin"`
+	ProfileUpdatable         bool      `json:"profileUpdatable"`
+	DisableUIAccess          bool      `json:"disableUIAccess"`
+	InternalPasswordDisabled bool      `json:"internalPasswordDisabled"`
+	Groups                   *[]string `json:"groups,omitempty"`
+}
+
+func createUser(req *resty.Request, artifactoryVersion string, user User, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetBody(user).
+			SetResult(result).
+			SetError(artifactoryError).
+			Post(GetUsersEndpointPath(artifactoryVersion))
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	artifactoryUser := ArtifactoryUserAPIModel{
+		Name:                     user.Name,
+		Email:                    user.Email,
+		Password:                 user.Password,
+		Admin:                    user.Admin,
+		ProfileUpdatable:         user.ProfileUpdatable,
+		DisableUIAccess:          user.DisableUIAccess,
+		InternalPasswordDisabled: user.InternalPasswordDisabled,
+		Groups:                   &user.Groups,
+	}
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+	resp, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetBody(artifactoryUser).
+		SetError(artifactoryError).
+		Put(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if resp.IsError() {
+		return resp, nil
+	}
+
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	var groups []string
+	if artifactoryResult.Groups != nil {
+		groups = *artifactoryResult.Groups
+	}
+
+	*result = User{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Password:                 user.Password,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   groups,
+	}
+
+	return res, err
+}
+
+func ReadUser(req *resty.Request, artifactoryVersion, name string, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", name).
+			SetResult(&result).
+			SetError(&artifactoryError).
+			Get(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	var groups []string
+	if artifactoryResult.Groups != nil {
+		groups = *artifactoryResult.Groups
+	}
+
+	*result = User{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   groups,
+	}
+
+	return res, err
+}
+
+func updateUser(req *resty.Request, artifactoryVersion string, user User, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", user.Name).
+			SetBody(user).
+			SetResult(result).
+			SetError(artifactoryError).
+			Patch(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	artifactoryUser := ArtifactoryUserAPIModel{
+		Name:                     user.Name,
+		Email:                    user.Email,
+		Password:                 user.Password,
+		Admin:                    user.Admin,
+		ProfileUpdatable:         user.ProfileUpdatable,
+		DisableUIAccess:          user.DisableUIAccess,
+		InternalPasswordDisabled: user.InternalPasswordDisabled,
+		Groups:                   &user.Groups,
+	}
+	resp, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetBody(artifactoryUser).
+		SetError(artifactoryError).
+		Post(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if resp.IsError() {
+		return resp, nil
+	}
+
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", artifactoryUser.Name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	var groups []string
+	if artifactoryResult.Groups != nil {
+		groups = *artifactoryResult.Groups
+	}
+
+	*result = User{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Password:                 user.Password,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   groups,
+	}
+
+	return res, err
+}
 
 func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d := &utilsdk.ResourceData{ResourceData: rd}
 
 	var user User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	resp, err := m.(util.ProvderMetadata).Client.R().
-		SetPathParam("name", d.Id()).
-		SetResult(&user).
-		SetError(&artifactoryError).
-		Get(UserEndpointPath)
+	resp, err := ReadUser(
+		m.(util.ProvderMetadata).Client.R(),
+		m.(util.ProvderMetadata).ArtifactoryVersion,
+		d.Id(),
+		&user,
+		&artifactoryError)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -156,6 +344,8 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 	if resp.IsError() {
 		return diag.Errorf("%s", artifactoryError.String())
 	}
+
+	d.SetId(user.Name)
 
 	return PackUser(user, rd)
 }
@@ -200,11 +390,12 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	resp, err := m.(util.ProvderMetadata).Client.R().
-		SetBody(user).
-		SetResult(&result).
-		SetError(&artifactoryError).
-		Post(UsersEndpointPath)
+	resp, err := createUser(
+		m.(util.ProvderMetadata).Client.R(),
+		m.(util.ProvderMetadata).ArtifactoryVersion,
+		user,
+		&result,
+		&artifactoryError)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -221,10 +412,12 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var result User
-		resp, e := m.(util.ProvderMetadata).Client.R().
-			SetPathParam("name", user.Name).
-			SetResult(&result).
-			Get(UserEndpointPath)
+		resp, e := ReadUser(
+			m.(util.ProvderMetadata).Client.R(),
+			m.(util.ProvderMetadata).ArtifactoryVersion,
+			d.Id(),
+			&result,
+			&artifactoryError)
 
 		if e != nil {
 			return retry.NonRetryableError(fmt.Errorf("error describing user: %s", err))
@@ -250,12 +443,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	resp, err := m.(util.ProvderMetadata).Client.R().
-		SetPathParam("name", user.Name).
-		SetBody(&user).
-		SetResult(&result).
-		SetError(&artifactoryError).
-		Patch(UserEndpointPath)
+	resp, err := updateUser(
+		m.(util.ProvderMetadata).Client.R(),
+		m.(util.ProvderMetadata).ArtifactoryVersion,
+		user,
+		&result,
+		&artifactoryError)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -281,7 +474,7 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	resp, err := m.(util.ProvderMetadata).Client.R().
 		SetPathParam("name", userName).
 		SetError(&artifactoryError).
-		Delete(UserEndpointPath)
+		Delete(GetUserEndpointPath(m.(util.ProvderMetadata).ArtifactoryVersion))
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

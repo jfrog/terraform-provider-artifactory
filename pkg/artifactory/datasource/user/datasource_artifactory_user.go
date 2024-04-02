@@ -9,6 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
@@ -70,11 +71,14 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: rd}
 
 		userName := d.Get("name").(string)
-		userObj := user.User{}
-		resp, err := m.(util.ProvderMetadata).Client.R().
-			SetPathParam("name", userName).
-			SetResult(&userObj).
-			Get(user.UserEndpointPath)
+		var userObj user.User
+		var artifactoryError artifactory.ArtifactoryErrorsResponse
+		resp, err := user.ReadUser(
+			m.(util.ProvderMetadata).Client.R(),
+			m.(util.ProvderMetadata).ArtifactoryVersion,
+			userName,
+			&userObj,
+			&artifactoryError)
 
 		if err != nil {
 			return diag.FromErr(err)

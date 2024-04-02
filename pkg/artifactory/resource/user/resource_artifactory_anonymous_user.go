@@ -3,6 +3,7 @@ package user
 import (
 	"net/http"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -71,6 +72,33 @@ func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resou
 	)
 }
 
+func (r *ArtifactoryAnonymousUserResource) readUser(req *resty.Request, artifactoryVersion, name string, result *ArtifactoryAnonymousUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := GetUserEndpointPath(artifactoryVersion)
+
+	// 7.49.3 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", name).
+			SetResult(&result).
+			SetError(&artifactoryError).
+			Get(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	var artifactoryResult ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	*result = ArtifactoryAnonymousUserResourceAPIModel{
+		Name: artifactoryResult.Name,
+	}
+
+	return res, err
+}
+
 func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
 
@@ -83,17 +111,15 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 	}
 
 	// Convert from Terraform data model into API data model
-	user := &ArtifactoryAnonymousUserResourceAPIModel{}
-
+	var user ArtifactoryAnonymousUserResourceAPIModel
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("name", data.Id.ValueString()).
-		SetResult(user).
-		SetError(&artifactoryError).
-		Get(UserEndpointPath)
+	response, err := r.readUser(
+		r.ProviderData.Client.R(),
+		r.ProviderData.ArtifactoryVersion,
+		data.Id.ValueString(),
+		&user,
+		&artifactoryError)
 
-	// Treat HTTP 404 Not Found status as a signal to recreate resource
-	// and return early
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
 		return
@@ -111,7 +137,7 @@ func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resourc
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.toState(user)
+	data.toState(&user)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -38,7 +38,6 @@ func ResourceArtifactoryUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	passwordGenerator := func(user *User) diag.Diagnostics {
 		var diags diag.Diagnostics
 

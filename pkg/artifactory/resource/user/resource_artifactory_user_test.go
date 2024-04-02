@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
@@ -460,7 +461,18 @@ func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("resource id[%s] not found", id)
 		}
 
-		resp, err := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
+		var resp *resty.Response
+		var err error
+		// 7.49.3 or later, use Access API
+		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProvderMetadata).ArtifactoryVersion, "7.49.3"); e == nil && ok {
+			r, er := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
+			resp = r
+			err = er
+		} else {
+			r, er := client.R().Get("artifactory/api/security/users/" + rs.Primary.ID)
+			resp = r
+			err = er
+		}
 
 		if err != nil {
 			return err
