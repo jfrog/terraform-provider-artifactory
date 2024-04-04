@@ -48,6 +48,10 @@ BUG FIXES:
 
 PR: [#905](https://github.com/jfrog/terraform-provider-artifactory/pull/905)
 
+NOTES:
+
+* resource/artifactory_permission_target: Added deprecation notice. The new [`platform_permission` resource](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/permission) in the JFrog Platform provider replace this resource. 
+
 ## 10.3.0 (Mar 11, 2024)
 
 FEATURES:
