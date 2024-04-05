@@ -28,7 +28,7 @@ func ResourceArtifactoryVirtualHelmOciRepository() *schema.Resource {
 	unpackVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := HelmOciVirtualRepositoryParams{
-			RepositoryBaseParams:      UnpackBaseVirtRepo(data, DockerPackageType),
+			RepositoryBaseParams:      UnpackBaseVirtRepo(data, HelmOciPackageType),
 			ResolveOCITagsByTimestamp: d.GetBool("resolve_oci_tags_by_timestamp", false),
 		}
 

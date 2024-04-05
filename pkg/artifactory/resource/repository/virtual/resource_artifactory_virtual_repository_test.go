@@ -767,8 +767,8 @@ func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 }
 
 // if you wish to override any of the default fields, just pass it as "extraFields" as these will overwrite
-func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("terraform-virtual-test-repo-full-", fmt.Sprintf("artifactory_virtual_%s_repository", repoType))
+func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := testutil.MkNames("terraform-virtual-test-repo-full-", fmt.Sprintf("artifactory_virtual_%s_repository", packageType))
 	remoteRepoName := fmt.Sprintf("%s-remote", name)
 	defaultFields := map[string]interface{}{
 		"key":         name,
@@ -791,17 +791,19 @@ func mkNewVirtualTestCase(repoType string, t *testing.T, extraFields map[string]
 	`
 	extraChecks := testutil.MapToTestChecks(fqrn, extraFields)
 	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
+	defaultChecks = append(defaultChecks, resource.TestCheckResourceAttr(fqrn, "package_type", packageType))
 
 	checks := append(defaultChecks, extraChecks...)
-	config := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, allFieldsHcl)
+	config := fmt.Sprintf(virtualRepoFull, packageType, name, remoteRepoName, allFieldsHcl)
 
 	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
 		"description": "",
 		"notes":       "",
 	})
 	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
-	updatedConfig := fmt.Sprintf(virtualRepoFull, repoType, name, remoteRepoName, updatedFieldsHcl)
+	updatedConfig := fmt.Sprintf(virtualRepoFull, packageType, name, remoteRepoName, updatedFieldsHcl)
 	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
+	updatedChecks = append(updatedChecks, resource.TestCheckResourceAttr(fqrn, "package_type", packageType))
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
