@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* resource/artifactory_virtual_helmoci_repository: Fix incorrect package type Issue: [#925](https://github.com/jfrog/terraform-provider-artifactory/issues/925) PR: [#926](https://github.com/jfrog/terraform-provider-artifactory/pull/926)
+* resource/artifactory_virtual_helmoci_repository: Fix incorrect package type. Issue: [#925](https://github.com/jfrog/terraform-provider-artifactory/issues/925) PR: [#926](https://github.com/jfrog/terraform-provider-artifactory/pull/926)
 
 ## 10.4.3 (Apr 1, 2024)
 
