@@ -271,14 +271,20 @@ func (r *ArtifactoryGroupResource) Read(ctx context.Context, req resource.ReadRe
 		SetResult(&group).
 		Get(GroupsEndpoint + data.Id.ValueString())
 
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
 	// Treat HTTP 404 Not Found status as a signal to recreate resource
 	// and return early
-	if err != nil {
-		if response.StatusCode() == http.StatusNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-		utilfw.UnableToRefreshResourceError(resp, err.Error())
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, response.String())
 		return
 	}
 
