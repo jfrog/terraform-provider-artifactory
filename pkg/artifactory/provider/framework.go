@@ -178,6 +178,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		security.NewDistributionPublicKeyResource,
 		security.NewCertificateResource,
 		security.NewKeyPairResource,
+		security.NewPasswordExpirationPolicyResource,
 		configuration.NewLdapSettingResource,
 		configuration.NewLdapGroupSettingResource,
 		configuration.NewBackupResource,
