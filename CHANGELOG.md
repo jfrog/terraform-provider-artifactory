@@ -2,10 +2,10 @@
 
 FEATURES:
 
-* **New Resource:** `artifactory_password_expiration_policy` PR: [#928](https://github.com/jfrog/terraform-provider-artifactory/pull/928)
-* **New Resource:** `artifactory_user_lock_policy` PR: [#929](https://github.com/jfrog/terraform-provider-artifactory/pull/929)
+* **New Resource:** `artifactory_password_expiration_policy`
+* **New Resource:** `artifactory_user_lock_policy`
 
-Issue: [#927](https://github.com/jfrog/terraform-provider-artifactory/issues/927)
+Issue: [#927](https://github.com/jfrog/terraform-provider-artifactory/issues/927) PR: [#928](https://github.com/jfrog/terraform-provider-artifactory/pull/928)
 
 ## 10.4.4 (Apr 8, 2024)
 
