@@ -2,8 +2,7 @@
 
 FEATURES:
 
-* **New Resource:** `artifactory_password_expiration_policy`
-* **New Resource:** `artifactory_user_lock_policy`
+* **New Resource:** `artifactory_password_expiration_policy` and `artifactory_user_lock_policy`
 
 Issue: [#927](https://github.com/jfrog/terraform-provider-artifactory/issues/927) PR: [#928](https://github.com/jfrog/terraform-provider-artifactory/pull/928)
 
