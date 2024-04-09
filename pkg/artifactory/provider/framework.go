@@ -19,7 +19,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
@@ -135,8 +134,11 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		if licenseDs := utilfw.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); licenseDs != nil {
-			resp.Diagnostics.Append(licenseDs...)
+		if err := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); err != nil {
+			resp.Diagnostics.AddError(
+				"Error checking Artifactory license",
+				err.Error(),
+			)
 			return
 		}
 	}
@@ -178,6 +180,8 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		security.NewDistributionPublicKeyResource,
 		security.NewCertificateResource,
 		security.NewKeyPairResource,
+		security.NewPasswordExpirationPolicyResource,
+		security.NewUserLockPolicyResource,
 		configuration.NewLdapSettingResource,
 		configuration.NewLdapGroupSettingResource,
 		configuration.NewBackupResource,
