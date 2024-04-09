@@ -57,7 +57,7 @@ func (r *UserLockPolicyResource) Schema(ctx context.Context, req resource.Schema
 				MarkdownDescription: "Max failed login attempts.",
 			},
 		},
-		MarkdownDescription: "Provides an Artifactory User Lock Policy resource.",
+		MarkdownDescription: "Provides an Artifactory User Lock Policy resource. See [JFrog documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/user-lock-and-login-suspension) for more details.",
 	}
 }
 

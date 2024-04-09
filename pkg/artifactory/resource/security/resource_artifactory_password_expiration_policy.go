@@ -60,9 +60,9 @@ func (r *PasswordExpirationPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"notify_by_email": schema.BoolAttribute{
 				Required:            true,
-				MarkdownDescription: "Send mail notification before password expiration. Users will receive an email notification X days before password will expire. Mail server must be enabled and configured correctly.",
+				MarkdownDescription: "Send mail notification before password expiration. Users will receive an email notification a few days before password will expire. Mail server must be enabled and configured correctly.",
 			}},
-		MarkdownDescription: "Provides an Artifactory Password Expiration Policy resource.",
+		MarkdownDescription: "Provides an Artifactory Password Expiration Policy resource. See [JFrog documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/password-expiration-policy) for more details.",
 	}
 }
 
