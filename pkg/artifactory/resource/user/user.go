@@ -386,6 +386,13 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	if passwordGenerator != nil && !user.InternalPasswordDisabled {
 		diags = passwordGenerator(&user)
+		if diags.HasError() {
+			return diags
+		}
+
+		// explicity set this attribute with password so it gets stored in the state
+		// and allows update to work
+		d.Set("password", user.Password)
 	}
 
 	var result User

@@ -82,7 +82,7 @@ const permissionFull = `
 	resource "artifactory_managed_user" "test-user" {
 		name     = "terraform"
 		email    = "test-user@artifactory-terraform.com"
-		password = "Passsw0rd!"
+		password = "Passsw0rd!12"
 	}
 
 	resource "artifactory_permission_target" "{{ .permission_name }}" {
@@ -250,7 +250,7 @@ func TestAccPermissionTarget_GitHubIssue126(t *testing.T) {
 		  admin                      = false
 		  disable_ui_access          = true
 		  internal_password_disabled = false
-		  password 					 = "Passw0rd!"
+		  password 					 = "Passw0rd!123"
 		}
 
 		resource "artifactory_permission_target" "{{ .perm_name }}" {
@@ -500,7 +500,7 @@ func TestAccPermissionTarget_MissingRepositories(t *testing.T) {
 		  admin                      = false
 		  disable_ui_access          = true
 		  internal_password_disabled = true
-		  password 					 = "Passw0rd!"
+		  password 					 = "Passw0rd!123"
 		}
 
 		resource "artifactory_permission_target" "{{ .perm_name }}" {

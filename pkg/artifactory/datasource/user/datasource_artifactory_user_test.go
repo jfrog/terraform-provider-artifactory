@@ -18,7 +18,7 @@ func TestAccDataSourceUser_basic(t *testing.T) {
 	temp := `
 	resource "artifactory_managed_user" "{{ .name }}" {
 		name              = "{{ .name }}"
-		password          = "Password1!"
+		password          = "Passw0rd!123"
 		email             = "{{ .email }}"
 		groups            = ["readers"]
 		admin             = false

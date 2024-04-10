@@ -28,7 +28,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
-			password = "Passsw0rd!"
+			password = "Passsw0rd!12"
 		}
 	`, params)
 
@@ -81,7 +81,7 @@ func TestAccUser_full_groups(t *testing.T) {
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
-			password = "Passsw0rd!"
+			password = "Passsw0rd!12"
 			admin 	 = false
 			groups   = [
 				artifactory_group.{{ .groupName1 }}.name,
@@ -101,7 +101,7 @@ func TestAccUser_full_groups(t *testing.T) {
 		resource "artifactory_user" "{{ .name }}" {
 			name     = "{{ .name }}"
 			email 	 = "{{ .email }}"
-			password = "Passsw0rd!"
+			password = "Passsw0rd!12"
 			admin 	 = false
 			groups   = [
 				artifactory_group.{{ .groupName1 }}.name,
@@ -161,11 +161,21 @@ func TestAccUser_no_password(t *testing.T) {
 		"username": username,
 		"email":    email,
 	}
-	userNoGroups := util.ExecuteTemplate("TestAccUserBasic", `
+	config := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name   = "{{ .name }}"
 			email  = "{{ .email }}"
 			admin  = false
+			groups = [ "readers" ]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_user" "{{ .name }}" {
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			admin  = false
+			profile_updatable = false
 			groups = [ "readers" ]
 		}
 	`, params)
@@ -176,9 +186,17 @@ func TestAccUser_no_password(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: userNoGroups,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
@@ -207,7 +225,7 @@ func TestAccUser_no_groups(t *testing.T) {
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 			admin 				= false
 		}
 	`, params)
@@ -249,7 +267,7 @@ func TestAccUser_empty_groups(t *testing.T) {
 		resource "artifactory_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 			admin 				= false
 			groups      		= []
 		}

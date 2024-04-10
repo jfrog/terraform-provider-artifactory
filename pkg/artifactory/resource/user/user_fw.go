@@ -101,12 +101,6 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		MarkdownDescription: "Email for user.",
 		Required:            true,
 	},
-	"password": schema.StringAttribute{
-		MarkdownDescription: "(Optional, Sensitive) Password for the user. When omitted, a random password is generated using the following password policy: " +
-			"12 characters with 1 digit, 1 symbol, with upper and lower case letters",
-		Optional:  true,
-		Sensitive: true,
-	},
 	"admin": schema.BoolAttribute{
 		MarkdownDescription: "(Optional, Default: false) When enabled, this user is an administrator with all the ensuing privileges.",
 		Optional:            true,
@@ -204,7 +198,7 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 	return nil
 }
 
-func (r *ArtifactoryBaseUserResource) createUser(ctx context.Context, req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	// 7.49.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
@@ -393,6 +387,10 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 		}
 
 		user.Password = randomPassword
+
+		// explicity set this attribute with password so it gets stored in the state
+		// and allows update to work
+		plan.Password = types.StringValue(randomPassword)
 	}
 
 	var result ArtifactoryUserResourceAPIModel

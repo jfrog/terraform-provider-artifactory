@@ -25,7 +25,7 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 		resource "artifactory_managed_user" "{{ .name }}" {
 			name        		= "{{ .name }}"
 			email 				= "{{ .email }}"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 		}
 	`, params)
 
@@ -64,7 +64,7 @@ func TestAccManagedUser_no_groups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name     = "%s"
 			email    = "dummy%d@a.com"
-			password = "Passsw0rd!"
+			password = "Passsw0rd!12"
 		}
 	`
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_managed_user")
@@ -97,7 +97,7 @@ func TestAccManagedUser_empty_groups(t *testing.T) {
 		resource "artifactory_managed_user" "%s" {
 			name        		= "%s"
 			email       		= "dummy%d@a.com"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 			groups      		= []
 		}
 	`
@@ -138,16 +138,17 @@ func TestAccManagedUser_invalidName(t *testing.T) {
 	}
 
 	for _, tc := range testCase {
-		t.Run(tc.name, testAccManagedUserInvalidName(t, tc.username, tc.errorRegex))
+		t.Run(tc.name, testAccManagedUserInvalidName(tc.username, tc.errorRegex))
 	}
 }
 
-func testAccManagedUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+func testAccManagedUserInvalidName(username, errorRegex string) func(t *testing.T) {
 	return func(t *testing.T) {
 		const userNoGroups = `
 			resource "artifactory_managed_user" "%s" {
 				name  = "%s"
 				email = "dummy%d@a.com"
+				password = "Passsw0rd!12"
 			}
 		`
 		id, fqrn, name := testutil.MkNames("test-", "artifactory_managed_user")
@@ -187,7 +188,7 @@ func TestAccManagedUser_basic(t *testing.T) {
 		resource "artifactory_managed_user" "{{ .name }}" {
 			name        		= "{{ .username }}"
 			email       		= "{{ .email }}"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 			admin    			= true
 			profile_updatable   = true
 			disable_ui_access	= false
@@ -205,7 +206,7 @@ func TestAccManagedUser_basic(t *testing.T) {
 		resource "artifactory_managed_user" "{{ .name }}" {
 			name        		= "{{ .username }}"
 			email       		= "{{ .email }}"
-			password			= "Passsw0rd!"
+			password			= "Passsw0rd!12"
 			admin    			= false
 			profile_updatable   = false
 			groups      		= [
