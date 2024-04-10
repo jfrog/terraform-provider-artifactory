@@ -93,7 +93,7 @@ resource "platform_permission" "my-permission" {
       {
         name = "example-repo-local"
         include_patterns = ["foo/**"]
-        exclude_patterns = ["bar/**]
+        exclude_patterns = ["bar/**"]
       }
     ]
 
