@@ -62,13 +62,14 @@ pipelines:
             - name: pre_build_approval
           environmentVariables:
             USE_LATEST_RT_VERSION: "true"
-            ARTIFACTORY_TEST_VERSION: 7.49.8
+            ARTIFACTORY_TEST_VERSION: 7.77.9
             SONAR_SCANNER_VERSION: 4.7.0.2747
             SONAR_SCANNER_HOME: $HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
             SONAR_SCANNER_OPTS: "-server"
         stepletMultipliers:
           environmentVariables:
-            - directory: ./pkg/artifactory/datasource
+            - directory: ./pkg/artifactory/datasource/artifact
+            - directory: ./pkg/artifactory/datasource/repository
             - directory: ./pkg/artifactory/datasource/repository/federated
             - directory: ./pkg/artifactory/datasource/repository/local
             - directory: ./pkg/artifactory/datasource/repository/remote
@@ -76,8 +77,10 @@ pipelines:
             - directory: ./pkg/artifactory/datasource/security
             - directory: ./pkg/artifactory/datasource/user
             - directory: ./pkg/artifactory/provider
+            - directory: ./pkg/artifactory/resource
             - directory: ./pkg/artifactory/resource/configuration
             - directory: ./pkg/artifactory/resource/replication
+            - directory: ./pkg/artifactory/resource/repository
             - directory: ./pkg/artifactory/resource/repository/federated
             - directory: ./pkg/artifactory/resource/repository/local
             - directory: ./pkg/artifactory/resource/repository/remote
