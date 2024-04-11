@@ -1,3 +1,9 @@
+## 10.5.1 (Apr 10, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_user, resource/artifactory_managed_user: Fix error when updating resource without `password` attribute defined (i.e. relying on auto generated password). Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#932](https://github.com/jfrog/terraform-provider-artifactory/pull/932)
+
 ## 10.5.0 (Apr 9, 2024)
 
 FEATURES:

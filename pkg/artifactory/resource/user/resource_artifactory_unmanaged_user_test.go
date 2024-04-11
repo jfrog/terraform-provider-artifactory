@@ -118,10 +118,17 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 }
 
 func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
-	const userBasic = `
+	const config = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
+		}
+	`
+	const updatedConfig = `
+		resource "artifactory_unmanaged_user" "%s" {
+			name  	= "%s"
+			email 	= "dummy_user%d@a.com"
+			profile_updatable = false
 		}
 	`
 	id := testutil.RandomInt()
@@ -134,11 +141,17 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(userBasic, name, username, id),
+				Config: fmt.Sprintf(config, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(updatedConfig, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 				),
 			},
 			{
@@ -283,11 +296,11 @@ func TestAccUnmanagedUser_invalidName(t *testing.T) {
 	}
 
 	for _, tc := range testCase {
-		t.Run(tc.name, testAccUnmanagedUserInvalidName(t, tc.username, tc.errorRegex))
+		t.Run(tc.name, testAccUnmanagedUserInvalidName(tc.username, tc.errorRegex))
 	}
 }
 
-func testAccUnmanagedUserInvalidName(t *testing.T, username, errorRegex string) func(t *testing.T) {
+func testAccUnmanagedUserInvalidName(username, errorRegex string) func(t *testing.T) {
 	return func(t *testing.T) {
 		const userNoGroups = `
 			resource "artifactory_unmanaged_user" "%s" {

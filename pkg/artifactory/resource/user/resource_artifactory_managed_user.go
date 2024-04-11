@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"golang.org/x/exp/maps"
+	"github.com/samber/lo"
 )
 
 func NewManagedUserResource() resource.Resource {
@@ -32,7 +32,7 @@ func (r *ArtifactoryManagedUserResource) Schema(ctx context.Context, req resourc
 		},
 	}
 
-	maps.Copy(managedUserSchemaFramework, baseUserSchemaFramework)
+	managedUserSchemaFramework = lo.Assign(baseUserSchemaFramework, managedUserSchemaFramework)
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Provides an Artifactory managed user resource. This can be used to create and manage Artifactory users. For example, service account where password is known and managed externally.",

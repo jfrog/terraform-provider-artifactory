@@ -15,6 +15,7 @@ func ResourceArtifactoryUser() *schema.Resource {
 			Type:      schema.TypeString,
 			Sensitive: true,
 			Optional:  true,
+			Computed:  true,
 			Description: "(Optional, Sensitive) Password for the user. When omitted, a random password is generated using the following password policy: " +
 				"12 characters with 1 digit, 1 symbol, with upper and lower case letters",
 		},
