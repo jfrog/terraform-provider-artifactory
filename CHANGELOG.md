@@ -1,3 +1,9 @@
+## 10.6.0 (Apr 12, 2024)
+
+FEATURES:
+
+* **New Resource:** `artifactory_artifact` for uploading artifact to repository. Issue: [#896](https://github.com/jfrog/terraform-provider-artifactory/issues/896) PR: [#933](https://github.com/jfrog/terraform-provider-artifactory/pull/933)
+
 ## 10.5.1 (Apr 10, 2024)
 
 BUG FIXES:
