@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/artifact"
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
+	rs "github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
@@ -171,6 +172,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		rs.NewArtifactResource,
 		user.NewUserResource,
 		user.NewManagedUserResource,
 		user.NewAnonymousUserResource,

@@ -119,7 +119,7 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
 		*/
 		constructBody := map[string]map[string]Layout{
-			"repoLayouts": map[string]Layout{
+			"repoLayouts": {
 				unpackedLayout.Name: unpackedLayout,
 			},
 		}
