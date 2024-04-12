@@ -101,7 +101,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if checkLicense {
 		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
-			return nil, diag.FromErr(err)
+			return nil, diag.FromErr(licenseErr)
 		}
 	}
 
