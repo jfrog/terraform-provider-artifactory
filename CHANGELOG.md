@@ -1,3 +1,9 @@
+## 10.6.1 (Apr 12, 2024)
+
+BUG FIXES:
+
+* provider: Fix `check_license` attribute not process correctly. Issue: [#930](https://github.com/jfrog/terraform-provider-artifactory/issues/930) PR: [#934](https://github.com/jfrog/terraform-provider-artifactory/pull/934)
+
 ## 10.6.0 (Apr 12, 2024)
 
 FEATURES:
