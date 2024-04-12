@@ -32,7 +32,7 @@ func NewKeyPairResource() resource.Resource {
 }
 
 type KeyPairResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -148,7 +148,7 @@ func (r *KeyPairResource) Configure(ctx context.Context, req resource.ConfigureR
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

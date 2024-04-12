@@ -29,7 +29,7 @@ func NewLdapGroupSettingResource() resource.Resource {
 }
 
 type ArtifactoryLdapGroupSettingResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -149,7 +149,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Configure(ctx context.Context, req
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

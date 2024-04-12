@@ -313,7 +313,7 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + "multiple/" + pushReplication.RepoKey)
 	if err != nil {
@@ -329,7 +329,7 @@ func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(util.ProviderMetadata).Client
 	var replications []getLocalMultiReplicationBody
 	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -364,7 +364,7 @@ func resourceLocalMultiReplicationUpdate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + "multiple/" + d.Id())

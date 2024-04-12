@@ -160,7 +160,7 @@ func packPullReplication(config PullReplication, d *schema.ResourceData) diag.Di
 func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
 	// The password is sent clear
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Put(EndpointPath + replicationConfig.RepoKey)
@@ -179,7 +179,7 @@ func resourcePullReplicationCreate(ctx context.Context, d *schema.ResourceData, 
 func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var result interface{}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
+	resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -212,7 +212,7 @@ func resourcePullReplicationRead(_ context.Context, d *schema.ResourceData, m in
 
 func resourcePullReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackPullReplication(d)
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + replicationConfig.RepoKey)

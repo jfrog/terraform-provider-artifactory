@@ -196,7 +196,7 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 		"path":       path,
 	})
 
-	client := m.(util.ProvderMetadata).Client
+	client := m.(util.ProviderMetadata).Client
 	// switch to using Sprintf because Resty's SetPathParams() escape the path
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20
@@ -251,7 +251,7 @@ func downloadUsingFileInfo(ctx context.Context, outputPath string, forceOverwrit
 		"fileInfo.DownloadUri": fileInfo.DownloadUri,
 		"outputPath":           outputPath,
 	})
-	_, err = m.(util.ProvderMetadata).Client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
+	_, err = m.(util.ProviderMetadata).Client.R().SetOutput(outputPath).Get(fileInfo.DownloadUri)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -303,7 +303,7 @@ func downloadWithoutChecks(ctx context.Context, outputPath string, forceOverwrit
 		"outputPath": outputPath,
 	})
 
-	client := m.(util.ProvderMetadata).Client
+	client := m.(util.ProviderMetadata).Client
 	// switch to using Sprintf because Resty's SetPathParams() escape the path
 	// see https://github.com/go-resty/resty/blob/v2.7.0/middleware.go#L33
 	// should use url.JoinPath() eventually in go 1.20

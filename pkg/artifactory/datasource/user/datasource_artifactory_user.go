@@ -74,8 +74,8 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		var userObj user.User
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := user.ReadUser(
-			m.(util.ProvderMetadata).Client.R(),
-			m.(util.ProvderMetadata).ArtifactoryVersion,
+			m.(util.ProviderMetadata).Client.R(),
+			m.(util.ProviderMetadata).ArtifactoryVersion,
 			userName,
 			&userObj,
 			&artifactoryError)

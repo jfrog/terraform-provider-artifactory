@@ -238,7 +238,7 @@ func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.Re
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(replicationConfig).
 		Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
 	if err != nil {
@@ -254,7 +254,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(util.ProviderMetadata).Client
 	var replications []getReplicationBody
 	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
 
@@ -280,7 +280,7 @@ func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackReplicationConfig(d)
 
-	resp, err := m.(util.ProvderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
+	resp, err := m.(util.ProviderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

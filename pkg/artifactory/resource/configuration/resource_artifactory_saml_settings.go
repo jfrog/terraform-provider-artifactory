@@ -128,7 +128,7 @@ func ResourceArtifactorySamlSettings() *schema.Resource {
 }
 
 func resourceSamlSettingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(util.ProviderMetadata).Client
 
 	samlSettings := SamlSettings{}
 

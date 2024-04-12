@@ -288,7 +288,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
 			SetError(&artifactoryError).
@@ -325,7 +325,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		}
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
 			SetError(&artifactoryError).
@@ -352,7 +352,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		}
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetBody(webhook).
 			AddRetryCondition(retryOnProxyError).
@@ -375,7 +375,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		tflog.Debug(ctx, "deleteWebhook")
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetError(&artifactoryError).
 			Delete(WhUrl)

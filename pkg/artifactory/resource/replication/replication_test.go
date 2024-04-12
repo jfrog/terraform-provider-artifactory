@@ -10,7 +10,7 @@ import (
 )
 
 func repConfigExists(id string, m interface{}) (bool, error) {
-	resp, err := m.(util.ProvderMetadata).Client.R().Head(replication.EndpointPath + id)
+	resp, err := m.(util.ProviderMetadata).Client.R().Head(replication.EndpointPath + id)
 	if err != nil {
 		return false, err
 	}

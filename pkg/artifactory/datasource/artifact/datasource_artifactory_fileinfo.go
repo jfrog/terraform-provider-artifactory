@@ -77,7 +77,7 @@ func dataSourceFileInfoRead(_ context.Context, d *schema.ResourceData, m interfa
 	path := d.Get("path").(string)
 
 	fileInfo := FileInfo{}
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetResult(&fileInfo).
 		SetPathParams(map[string]string{
 			"repoKey": repo,

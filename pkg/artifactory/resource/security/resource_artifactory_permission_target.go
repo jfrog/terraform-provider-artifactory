@@ -336,7 +336,7 @@ var conflictRegex = regexp.MustCompile(`.*Can't create permission target '.+' fo
 func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		AddRetryCondition(repository.Retry400).
 		SetBody(permissionTarget).
 		Post(PermissionsEndPoint + permissionTarget.Name)
@@ -354,7 +354,7 @@ func resourcePermissionTargetCreate(ctx context.Context, d *schema.ResourceData,
 func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var permissionTarget PermissionTargetParams
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetResult(&permissionTarget).
 		Get(PermissionsEndPoint + d.Id())
 	if err != nil {
@@ -374,7 +374,7 @@ func resourcePermissionTargetRead(_ context.Context, d *schema.ResourceData, m i
 func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	permissionTarget := unpackPermissionTarget(ctx, d)
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(permissionTarget).
 		Put(PermissionsEndPoint + d.Id())
 	if err != nil {
@@ -389,7 +389,7 @@ func resourcePermissionTargetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(util.ProvderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
+	resp, err := m.(util.ProviderMetadata).Client.R().Delete(PermissionsEndPoint + d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -402,7 +402,7 @@ func resourcePermissionTargetDelete(_ context.Context, d *schema.ResourceData, m
 }
 
 func PermTargetExists(id string, m interface{}) (bool, error) {
-	resp, err := m.(util.ProvderMetadata).Client.R().Head(PermissionsEndPoint + id)
+	resp, err := m.(util.ProviderMetadata).Client.R().Head(PermissionsEndPoint + id)
 	if err != nil {
 		return false, err
 	}

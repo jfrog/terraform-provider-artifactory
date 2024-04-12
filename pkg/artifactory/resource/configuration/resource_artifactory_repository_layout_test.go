@@ -105,7 +105,7 @@ func TestAccLayout_importNotFound(t *testing.T) {
 
 func testAccLayoutDestroy(name string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_repository_layout."+name]
 		if !ok {

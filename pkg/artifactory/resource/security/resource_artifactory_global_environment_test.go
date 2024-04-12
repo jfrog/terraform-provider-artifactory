@@ -95,7 +95,7 @@ func TestAccGlobalEnvironment_invalid_name(t *testing.T) {
 
 func testAccCheckGlobalEnvironmentDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {

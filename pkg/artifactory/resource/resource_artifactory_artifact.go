@@ -25,7 +25,7 @@ func NewArtifactResource() resource.Resource {
 }
 
 type ArtifactResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -171,7 +171,7 @@ func (r *ArtifactResource) Configure(ctx context.Context, req resource.Configure
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *ArtifactResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

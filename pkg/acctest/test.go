@@ -135,7 +135,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		providerMeta := Provider.Meta().(util.ProvderMetadata)
+		providerMeta := Provider.Meta().(util.ProviderMetadata)
 
 		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
 		if err != nil {
@@ -252,7 +252,7 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
 	body := getProxiesBody()
 	restyClient := GetTestResty(t)
-	metadata := util.ProvderMetadata{Client: restyClient}
+	metadata := util.ProviderMetadata{Client: restyClient}
 	err := configuration.SendConfigurationPatch(body, metadata)
 	if err != nil {
 		t.Fatal(err)
@@ -368,7 +368,7 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 		return false, err
 	}
 
-	meta := Provider.Meta().(util.ProvderMetadata)
+	meta := Provider.Meta().(util.ProviderMetadata)
 	runtimeVersion, err := version.NewVersion(meta.ArtifactoryVersion)
 	if err != nil {
 		return false, err

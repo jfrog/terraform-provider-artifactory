@@ -192,7 +192,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 	}
 
 	var resourceOauthSettingsRead = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		c := m.(util.ProvderMetadata).Client
+		c := m.(util.ProviderMetadata).Client
 
 		oauthSettings := OauthSettings{}
 

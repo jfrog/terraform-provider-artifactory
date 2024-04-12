@@ -328,8 +328,8 @@ func resourceUserRead(_ context.Context, rd *schema.ResourceData, m interface{})
 	var user User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := ReadUser(
-		m.(util.ProvderMetadata).Client.R(),
-		m.(util.ProvderMetadata).ArtifactoryVersion,
+		m.(util.ProviderMetadata).Client.R(),
+		m.(util.ProviderMetadata).ArtifactoryVersion,
 		d.Id(),
 		&user,
 		&artifactoryError)
@@ -398,8 +398,8 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := createUser(
-		m.(util.ProvderMetadata).Client.R(),
-		m.(util.ProvderMetadata).ArtifactoryVersion,
+		m.(util.ProviderMetadata).Client.R(),
+		m.(util.ProviderMetadata).ArtifactoryVersion,
 		user,
 		&result,
 		&artifactoryError)
@@ -412,7 +412,7 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(user.Name)
 
-	err = syncReadersGroup(ctx, m.(util.ProvderMetadata).Client, user, result)
+	err = syncReadersGroup(ctx, m.(util.ProviderMetadata).Client, user, result)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -420,8 +420,8 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 	retryError := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var result User
 		resp, e := ReadUser(
-			m.(util.ProvderMetadata).Client.R(),
-			m.(util.ProvderMetadata).ArtifactoryVersion,
+			m.(util.ProviderMetadata).Client.R(),
+			m.(util.ProviderMetadata).ArtifactoryVersion,
 			d.Id(),
 			&result,
 			&artifactoryError)
@@ -451,8 +451,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	var result User
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	resp, err := updateUser(
-		m.(util.ProvderMetadata).Client.R(),
-		m.(util.ProvderMetadata).ArtifactoryVersion,
+		m.(util.ProviderMetadata).Client.R(),
+		m.(util.ProviderMetadata).ArtifactoryVersion,
 		user,
 		&result,
 		&artifactoryError)
@@ -464,7 +464,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf("%s", artifactoryError.String())
 	}
 
-	err = syncReadersGroup(ctx, m.(util.ProvderMetadata).Client, user, result)
+	err = syncReadersGroup(ctx, m.(util.ProviderMetadata).Client, user, result)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -478,10 +478,10 @@ func resourceUserDelete(_ context.Context, rd *schema.ResourceData, m interface{
 	userName := d.GetString("name", false)
 
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetPathParam("name", userName).
 		SetError(&artifactoryError).
-		Delete(GetUserEndpointPath(m.(util.ProvderMetadata).ArtifactoryVersion))
+		Delete(GetUserEndpointPath(m.(util.ProviderMetadata).ArtifactoryVersion))
 	if err != nil {
 		return diag.Errorf("user %s not deleted. %s", userName, err)
 	}

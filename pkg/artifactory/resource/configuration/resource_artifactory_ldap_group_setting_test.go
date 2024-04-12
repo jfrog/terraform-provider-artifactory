@@ -114,7 +114,7 @@ func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
 
 func testAccLdapGroupSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_ldap_group_setting."+id]
 		if !ok {

@@ -13,7 +13,7 @@ import (
 See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration
 */
 func SendConfigurationPatch(content []byte, m interface{}) error {
-	resp, err := m.(util.ProvderMetadata).Client.R().SetBody(content).
+	resp, err := m.(util.ProviderMetadata).Client.R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
 		AddRetryCondition(client.RetryOnMergeError).
 		Patch("artifactory/api/system/configuration")

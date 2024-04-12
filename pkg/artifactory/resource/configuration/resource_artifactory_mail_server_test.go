@@ -167,7 +167,7 @@ func TestAccMailServer_invalid_artifactory_url(t *testing.T) {
 
 func testAccMailServerDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_mail_server."+id]
 		if !ok {

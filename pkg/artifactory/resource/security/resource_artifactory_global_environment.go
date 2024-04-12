@@ -22,7 +22,7 @@ func NewGlobalEnvironmentResource() resource.Resource {
 }
 
 type GlobalEnvironmentResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -76,7 +76,7 @@ func (r *GlobalEnvironmentResource) Configure(ctx context.Context, req resource.
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *GlobalEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -146,7 +146,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 	version, err := util.GetArtifactoryVersion(restyBase)
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"Error getting Artifactory version",
 			fmt.Sprintf("The provider functionality might be affected by the absence of Artifactory version in the context. %v", err),
 		)
@@ -156,17 +156,14 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
 	go util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	resp.DataSourceData = util.ProvderMetadata{
+	meta := util.ProviderMetadata{
 		Client:             restyBase,
 		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
 
-	resp.ResourceData = util.ProvderMetadata{
-		Client:             restyBase,
-		ProductId:          productId,
-		ArtifactoryVersion: version,
-	}
+	resp.DataSourceData = meta
+	resp.ResourceData = meta
 }
 
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.

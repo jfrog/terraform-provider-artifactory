@@ -204,7 +204,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 
 		propertySetConfigs := PropertySets{}
 
-		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -281,7 +281,7 @@ func ResourceArtifactoryPropertySet() *schema.Resource {
 	var resourcePropertySetDelete = func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		propertySetConfigs := &PropertySets{}
 
-		response, err := m.(util.ProvderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProviderMetadata).Client.R().SetResult(&propertySetConfigs).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

@@ -106,7 +106,7 @@ func packPullReplicationBody(config PullReplication, d *schema.ResourceData) dia
 func resourceSingleReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
 	// The password is sent clear
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Put(EndpointPath + replicationConfig.RepoKey)
@@ -131,7 +131,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 	// an entirely different resource because values like "url" are never available after submit.
 	var result interface{}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
+	resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&result).Get(EndpointPath + d.Id())
 	// password comes back scrambled
 	if err != nil {
 		return diag.FromErr(err)
@@ -169,7 +169,7 @@ func resourceSingleReplicationConfigRead(_ context.Context, d *schema.ResourceDa
 
 func resourceSingleReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	replicationConfig := unpackSingleReplicationConfig(d)
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(replicationConfig).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + replicationConfig.RepoKey)
