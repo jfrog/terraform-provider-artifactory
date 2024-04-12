@@ -115,7 +115,7 @@ func TestAccOauthSettings_multipleProviders(t *testing.T) {
 
 func testAccOauthSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

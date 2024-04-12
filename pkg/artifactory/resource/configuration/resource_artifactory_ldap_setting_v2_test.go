@@ -458,7 +458,7 @@ func TestAccLdapSettingV2_user_dn_or_search_filter(t *testing.T) {
 
 func testAccLdapSettingV2Destroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

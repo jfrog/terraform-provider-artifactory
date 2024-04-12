@@ -20,7 +20,7 @@ func NewPasswordExpirationPolicyResource() resource.Resource {
 }
 
 type PasswordExpirationPolicyResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 }
 
 type PasswordExpirationPolicyResourceModel struct {
@@ -71,7 +71,7 @@ func (r *PasswordExpirationPolicyResource) Configure(ctx context.Context, req re
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *PasswordExpirationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

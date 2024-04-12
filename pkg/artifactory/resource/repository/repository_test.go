@@ -150,7 +150,7 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					meta := acctest.Provider.Meta().(util.ProviderMetadata)
 					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config: localRepositoryBasic,
@@ -195,7 +195,7 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					meta := acctest.Provider.Meta().(util.ProviderMetadata)
 					return util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 				},
 				Config:      localRepositoryBasic,
@@ -236,7 +236,7 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
-					meta := acctest.Provider.Meta().(util.ProvderMetadata)
+					meta := acctest.Provider.Meta().(util.ProviderMetadata)
 					isSupported, err := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
 					return !isSupported, err
 				},

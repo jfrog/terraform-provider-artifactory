@@ -20,7 +20,7 @@ func NewUserLockPolicyResource() resource.Resource {
 }
 
 type UserLockPolicyResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 }
 
 type UserLockPolicyResourceModel struct {
@@ -66,7 +66,7 @@ func (r *UserLockPolicyResource) Configure(ctx context.Context, req resource.Con
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *UserLockPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

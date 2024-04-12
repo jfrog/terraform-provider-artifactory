@@ -163,7 +163,7 @@ func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m inte
 		RefreshToken string `json:"refresh_token,omitempty"`
 	}
 
-	client := m.(util.ProvderMetadata).Client
+	client := m.(util.ProviderMetadata).Client
 	grantType := "client_credentials" // client_credentials is the only supported type
 
 	tokenOptions := AccessTokenOptions{}
@@ -211,7 +211,7 @@ func resourceAccessTokenCreate(_ context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetResult(&accessToken).
 		SetFormDataFromValues(values).Post("artifactory/api/security/token")
@@ -280,7 +280,7 @@ func resourceAccessTokenDelete(ctx context.Context, d *schema.ResourceData, m in
 			return diag.FromErr(err)
 		}
 
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetHeader("Content-Type", "application/x-www-form-urlencoded").
 			SetFormDataFromValues(values).Post("artifactory/api/security/token/revoke")
 		if err != nil {

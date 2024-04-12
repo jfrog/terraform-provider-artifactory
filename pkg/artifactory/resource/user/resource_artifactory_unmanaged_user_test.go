@@ -329,6 +329,7 @@ func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 		resource "artifactory_unmanaged_user" "%s" {
 			name   = "%s"
 			email  = "dummy%d@a.com"
+			password = "Passw0rd!"
 			groups = []
 		}
 	`
@@ -359,7 +360,7 @@ func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 
 func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 

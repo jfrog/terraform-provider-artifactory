@@ -20,7 +20,7 @@ func NewFileListDataSource() datasource.DataSource {
 }
 
 type FileListDataSource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 }
 
 type FileListDataSourceModel struct {
@@ -218,7 +218,7 @@ func (d *FileListDataSource) Configure(ctx context.Context, req datasource.Confi
 	if req.ProviderData == nil {
 		return
 	}
-	d.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	d.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func bool2String(v bool) string {

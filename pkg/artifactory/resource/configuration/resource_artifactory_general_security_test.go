@@ -41,7 +41,7 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 
 func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

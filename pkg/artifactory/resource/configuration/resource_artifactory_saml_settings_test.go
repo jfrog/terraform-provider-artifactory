@@ -65,7 +65,7 @@ func TestAccSamlSettings_full(t *testing.T) {
 
 func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		c := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		c := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources[id]
 		if !ok {

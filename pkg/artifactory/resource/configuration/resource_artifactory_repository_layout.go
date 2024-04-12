@@ -89,7 +89,7 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		name := data.GetString("name", false)
 
 		layouts := Layouts{}
-		resp, err := m.(util.ProvderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -119,7 +119,7 @@ func ResourceArtifactoryRepositoryLayout() *schema.Resource {
 		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
 		*/
 		constructBody := map[string]map[string]Layout{
-			"repoLayouts": map[string]Layout{
+			"repoLayouts": {
 				unpackedLayout.Name: unpackedLayout,
 			},
 		}

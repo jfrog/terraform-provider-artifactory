@@ -501,7 +501,7 @@ func TestAccGroup_full_update(t *testing.T) {
 
 func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -522,7 +522,7 @@ func testAccCheckGroupDestroy(id string) func(*terraform.State) error {
 
 func testAccDirectCheckGroupMembership(id string, expectedCount int) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {

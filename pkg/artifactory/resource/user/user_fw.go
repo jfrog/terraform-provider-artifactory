@@ -49,7 +49,7 @@ import (
 )
 
 type ArtifactoryBaseUserResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -151,7 +151,7 @@ func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resourc
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, client *resty.Client, plan ArtifactoryUserResourceAPIModel, actual ArtifactoryUserResourceAPIModel) error {

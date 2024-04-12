@@ -33,7 +33,7 @@ func NewCertificateResource() resource.Resource {
 }
 
 type CertificateResource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 	TypeName     string
 }
 
@@ -158,7 +158,7 @@ func (r *CertificateResource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	r.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func updateCertificate(content, file, alias basetypes.StringValue, restyRequest *resty.Request) (*resty.Response, error) {

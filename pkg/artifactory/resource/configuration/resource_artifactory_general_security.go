@@ -41,7 +41,7 @@ func ResourceArtifactoryGeneralSecurity() *schema.Resource {
 }
 
 func resourceGeneralSecurityRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(util.ProviderMetadata).Client
 
 	generalSettings := GeneralSettings{}
 

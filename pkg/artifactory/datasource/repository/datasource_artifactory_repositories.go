@@ -25,7 +25,7 @@ func NewRepositoriesDataSource() datasource.DataSource {
 }
 
 type RepositoriesDataSource struct {
-	ProviderData util.ProvderMetadata
+	ProviderData util.ProviderMetadata
 }
 
 type RepositoriesDataSourceModel struct {
@@ -134,7 +134,7 @@ func (d *RepositoriesDataSource) Configure(ctx context.Context, req datasource.C
 	if req.ProviderData == nil {
 		return
 	}
-	d.ProviderData = req.ProviderData.(util.ProvderMetadata)
+	d.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (d *RepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

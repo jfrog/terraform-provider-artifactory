@@ -24,7 +24,7 @@ var replicationSchemaEnableEventReplication = map[string]*schema.Schema{
 }
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		Delete(EndpointPath + d.Id())
 
@@ -50,7 +50,7 @@ type repoConfiguration struct {
 
 func getRepositoryRclass(repoKey string, m interface{}) (string, error) {
 	repoConfig := repoConfiguration{}
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetResult(&repoConfig).
 		Get("artifactory/api/repositories/" + repoKey)
 	if err != nil {

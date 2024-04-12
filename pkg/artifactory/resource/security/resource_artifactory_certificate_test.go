@@ -249,7 +249,7 @@ func testAccCheckCertificateDestroy(id string) func(*terraform.State) error {
 		}
 
 		m := acctest.Provider.Meta()
-		cert, err := security.FindCertificate(id, m.(util.ProvderMetadata).Client.R())
+		cert, err := security.FindCertificate(id, m.(util.ProviderMetadata).Client.R())
 		if err != nil {
 			return err
 		}

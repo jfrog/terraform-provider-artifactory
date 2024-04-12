@@ -202,7 +202,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(pushReplication).
 		Put(EndpointPath + pushReplication.RepoKey)
 	if err != nil {
@@ -218,7 +218,7 @@ func resourceLocalSingleReplicationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceLocalSingleReplicationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProvderMetadata).Client
+	c := m.(util.ProviderMetadata).Client
 	var replicationInterface interface{}
 
 	resp, err := c.R().SetResult(&replicationInterface).Get(EndpointPath + d.Id())
@@ -264,7 +264,7 @@ func resourceLocalSingleReplicationUpdate(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
 
-	resp, err := m.(util.ProvderMetadata).Client.R().
+	resp, err := m.(util.ProviderMetadata).Client.R().
 		SetBody(pushReplication).
 		AddRetryCondition(client.RetryOnMergeError).
 		Post(EndpointPath + d.Id())

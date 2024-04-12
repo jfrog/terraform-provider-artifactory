@@ -94,21 +94,20 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	// Due to migration from SDK v2 to plugin framework, we have to remove defaults from the provider configuration.
 	// https://discuss.hashicorp.com/t/muxing-upgraded-tfsdk-and-framework-provider-with-default-provider-configuration/43945
 	checkLicense := true
-	v, checkLicenseBoolSet := d.GetOk("check_license")
-	if checkLicenseBoolSet {
+	if v, ok := d.GetOk("check_license"); ok {
 		checkLicense = v.(bool)
 	}
 	if checkLicense {
 		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
-			return nil, diag.FromErr(err)
+			return nil, diag.FromErr(licenseErr)
 		}
 	}
 
 	version, err := util.GetArtifactoryVersion(restyBase)
 	if err != nil {
 		return nil, diag.Diagnostics{{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "Error getting Artifactory version",
 			Detail:   fmt.Sprintf("The provider functionality might be affected by the absence of Artifactory version in the context. %v", err),
 		}}
@@ -117,7 +116,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
 	util.SendUsage(ctx, restyBase, productId, featureUsage)
 
-	return util.ProvderMetadata{
+	return util.ProviderMetadata{
 		Client:             restyBase,
 		ArtifactoryVersion: version,
 	}, nil

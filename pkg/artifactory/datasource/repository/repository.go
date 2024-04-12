@@ -23,7 +23,7 @@ func MkRepoReadDataSource(pack packer.PackFunc, construct repository.Constructor
 
 		key := d.Get("key").(string)
 		// repo must be a pointer
-		resp, err := m.(util.ProvderMetadata).Client.R().
+		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetResult(repo).
 			SetPathParam("key", key).
 			Get(repository.RepositoriesEndpoint)

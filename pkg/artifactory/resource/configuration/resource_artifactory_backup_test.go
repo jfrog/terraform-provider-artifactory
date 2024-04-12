@@ -202,7 +202,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 
 func testAccBackupDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_backup."+id]
 		if !ok {

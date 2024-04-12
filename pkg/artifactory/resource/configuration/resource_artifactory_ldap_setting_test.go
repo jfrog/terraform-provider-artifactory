@@ -285,7 +285,7 @@ resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 
 func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProvderMetadata).Client
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
 		_, ok := s.RootModule().Resources["artifactory_ldap_setting."+id]
 		if !ok {
