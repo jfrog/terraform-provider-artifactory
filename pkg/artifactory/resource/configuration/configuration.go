@@ -7,6 +7,8 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
+const ConfigurationEndpoint = "artifactory/api/system/configuration"
+
 /*
 	SendConfigurationPatch updates system configuration using YAML data.
 
@@ -16,7 +18,7 @@ func SendConfigurationPatch(content []byte, m interface{}) error {
 	resp, err := m.(util.ProviderMetadata).Client.R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
 		AddRetryCondition(client.RetryOnMergeError).
-		Patch("artifactory/api/system/configuration")
+		Patch(ConfigurationEndpoint)
 
 	if err != nil {
 		return err

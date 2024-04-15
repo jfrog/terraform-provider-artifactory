@@ -305,7 +305,7 @@ func (r *ProxyResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	var proxies ProxiesAPIModel
 	response, err := r.ProviderData.Client.R().
 		SetResult(&proxies).
-		Get("artifactory/api/system/configuration")
+		Get(ConfigurationEndpoint)
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		return

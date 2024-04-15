@@ -114,7 +114,7 @@ func testAccLayoutDestroy(name string) func(*terraform.State) error {
 
 		layouts := &configuration.Layouts{}
 
-		response, err := client.R().SetResult(&layouts).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&layouts).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return err
 		}
