@@ -13,7 +13,42 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccPropertySetCreate(t *testing.T) {
+func TestAccPropertySet_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":     resourceName,
+		"property_set_name": resourceName,
+		"visible":           "true",
+		"property1":         "set1property1",
+		"property2":         "set1property2",
+	}
+
+	config := util.ExecuteTemplate(fqrn, PropertySetTemplate, testData)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.6.0",
+						Source:            "registry.terraform.io/jfrog/artifactory",
+					},
+				},
+				Config:           config,
+				Check:            resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
+func TestAccPropertySet_Create(t *testing.T) {
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
@@ -24,9 +59,9 @@ func TestAccPropertySetCreate(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccPropertySetDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccPropertySetDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
@@ -42,7 +77,7 @@ func TestAccPropertySetCreate(t *testing.T) {
 	})
 }
 
-func TestAccPropertySetUpdate(t *testing.T) {
+func TestAccPropertySet_Update(t *testing.T) {
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
@@ -66,9 +101,9 @@ func TestAccPropertySetUpdate(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccPropertySetDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccPropertySetDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +123,7 @@ func TestAccPropertySetUpdate(t *testing.T) {
 	})
 }
 
-func TestAccPropertySetCustomizeDiff(t *testing.T) {
+func TestAccPropertySet_Validation(t *testing.T) {
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
@@ -102,14 +137,14 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccPropertySetDestroy(resourceName),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccPropertySetDestroy(resourceName),
 
 		Steps: []resource.TestStep{
 			{
 				Config:      util.ExecuteTemplate(fqrn, PropertySetUpdateAndDiffTemplate, testData),
-				ExpectError: regexp.MustCompile("setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice"),
+				ExpectError: regexp.MustCompile(".*Setting closed_predefined_values to 'false' and multiple_choice to 'true'\n.*disables multiple_choice.*"),
 			},
 			{
 				ResourceName:  fqrn,
@@ -121,7 +156,7 @@ func TestAccPropertySetCustomizeDiff(t *testing.T) {
 	})
 }
 
-func TestAccPropertySet_importNotFound(t *testing.T) {
+func TestAccPropertySet_ImportNotFound(t *testing.T) {
 	config := `
 		resource "artifactory_property_set" "not-exist-test" {
 		  name                     = "not-exist-test"
@@ -140,8 +175,8 @@ func TestAccPropertySet_importNotFound(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        config,
@@ -188,9 +223,9 @@ func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
-		propertySets := &configuration.PropertySets{}
+		propertySets := &configuration.PropertySetsAPIModel{}
 
-		response, err := client.R().SetResult(&propertySets).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&propertySets).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
