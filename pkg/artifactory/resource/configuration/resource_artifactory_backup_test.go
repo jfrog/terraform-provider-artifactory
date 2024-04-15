@@ -210,7 +210,7 @@ func testAccBackupDestroy(id string) func(*terraform.State) error {
 		}
 		backups := &configuration.Backups{}
 
-		response, err := client.R().SetResult(&backups).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&backups).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return err
 		}

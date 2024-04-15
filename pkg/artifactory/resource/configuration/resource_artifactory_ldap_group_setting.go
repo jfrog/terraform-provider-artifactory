@@ -113,7 +113,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 		name := data.GetString("name", false)
 
 		ldapGroupConfigs := XmlLdapGroupConfig{}
-		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get(ConfigurationEndpoint)
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}
@@ -167,7 +167,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 
 		rsrcLdapGroupSetting := unpackLdapGroupSetting(d)
 
-		response, err := m.(util.ProviderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		response, err := m.(util.ProviderMetadata).Client.R().SetResult(&ldapGroupConfigs).Get(ConfigurationEndpoint)
 		if err != nil {
 			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

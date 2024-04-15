@@ -242,7 +242,7 @@ func (r *MailServerResource) Read(ctx context.Context, req resource.ReadRequest,
 	var mailServer MailServer
 	res, err := r.ProviderData.Client.R().
 		SetResult(&mailServer).
-		Get("artifactory/api/system/configuration")
+		Get(ConfigurationEndpoint)
 	if err != nil || res.IsError() {
 		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		return

@@ -176,7 +176,7 @@ func testAccMailServerDestroy(id string) func(*terraform.State) error {
 
 		var mailServer configuration.MailServer
 
-		response, err := client.R().SetResult(&mailServer).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&mailServer).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return err
 		}

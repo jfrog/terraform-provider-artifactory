@@ -122,7 +122,7 @@ func testAccLdapGroupSettingDestroy(id string) func(*terraform.State) error {
 		}
 		ldapGroupConfigs := &configuration.XmlLdapGroupConfig{}
 
-		response, err := client.R().SetResult(&ldapGroupConfigs).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&ldapGroupConfigs).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

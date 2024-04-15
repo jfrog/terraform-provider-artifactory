@@ -209,7 +209,7 @@ func testAccProxyDestroy(id string) func(*terraform.State) error {
 
 		proxies := &configuration.ProxiesAPIModel{}
 
-		response, err := client.R().SetResult(&proxies).Get("artifactory/api/system/configuration")
+		response, err := client.R().SetResult(&proxies).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		}

@@ -263,7 +263,7 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 	var backups Backups
 	_, err := r.ProviderData.Client.R().
 		SetResult(&backups).
-		Get("artifactory/api/system/configuration")
+		Get(ConfigurationEndpoint)
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, "failed to retrieve data from API: /artifactory/api/system/configuration during Read")
 		return
