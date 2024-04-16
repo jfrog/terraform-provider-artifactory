@@ -140,11 +140,12 @@ func TestAccRepositoryLayout_importNotFound(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:        config,
-				ResourceName:  "artifactory_repository_layout.not-exist-test",
-				ImportStateId: "not-exist-test",
-				ImportState:   true,
-				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
+				Config:                               config,
+				ResourceName:                         "artifactory_repository_layout.not-exist-test",
+				ImportStateId:                        "not-exist-test",
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ExpectError:                          regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})

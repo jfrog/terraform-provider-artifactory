@@ -32,7 +32,6 @@ type PropertySetResource struct {
 }
 
 type PropertySetResourceModel struct {
-	ID       types.String `tfsdk:"id"`
 	Name     types.String `tfsdk:"name"`
 	Visible  types.Bool   `tfsdk:"visible"`
 	Property types.Set    `tfsdk:"property"`
@@ -98,7 +97,6 @@ var propertySetResourceModelAttributeTypes types.ObjectType = types.ObjectType{
 func (r *PropertySetResourceModel) fromAPIModel(_ context.Context, apiModel PropertySetAPIModel) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	r.ID = types.StringValue(apiModel.Id())
 	r.Name = types.StringValue(apiModel.Name)
 	r.Visible = types.BoolValue(apiModel.Visible)
 
@@ -201,9 +199,6 @@ func (r *PropertySetResource) Metadata(ctx context.Context, req resource.Metadat
 func (r *PropertySetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -357,8 +352,6 @@ func (r *PropertySetResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = types.StringValue(propertySet.Name)
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -451,8 +444,6 @@ func (r *PropertySetResource) Update(ctx context.Context, req resource.UpdateReq
 		utilfw.UnableToUpdateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
 		return
 	}
-
-	plan.ID = types.StringValue(propertySet.Name)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

@@ -69,9 +69,11 @@ func TestAccPropertySet_Create(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -115,9 +117,11 @@ func TestAccPropertySet_Update(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -179,11 +183,12 @@ func TestAccPropertySet_ImportNotFound(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:        config,
-				ResourceName:  "artifactory_property_set.not-exist-test",
-				ImportStateId: "not-exist-test",
-				ImportState:   true,
-				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
+				Config:                               config,
+				ResourceName:                         "artifactory_property_set.not-exist-test",
+				ImportStateId:                        "not-exist-test",
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ExpectError:                          regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})
