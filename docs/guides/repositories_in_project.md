@@ -46,11 +46,11 @@ attribute won't be ignored.
 terraform {
   required_providers {
     artifactory = {
-      source  = "registry.terraform.io/jfrog/artifactory"
+      source  = "jfrog/artifactory"
       version = "6.21.4"
     }
     project = {
-      source  = "registry.terraform.io/jfrog/project"
+      source  = "jfrog/project"
       version = "1.1.1"
     }
   }

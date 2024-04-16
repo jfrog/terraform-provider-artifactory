@@ -60,7 +60,7 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "7.11.2",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: config,
@@ -119,7 +119,7 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "7.2.0",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: config,
@@ -178,7 +178,7 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: version,
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: config,

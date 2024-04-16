@@ -44,7 +44,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "8.1.0",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config:             config,

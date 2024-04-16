@@ -52,7 +52,7 @@ func main() {
 	}
 
 	err = tf6server.Serve(
-		"registry.terraform.io/jfrog/artifactory",
+		"jfrog/artifactory",
 		muxServer.ProviderServer,
 		serveOpts...,
 	)

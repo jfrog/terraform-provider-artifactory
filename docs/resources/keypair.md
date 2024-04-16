@@ -12,7 +12,7 @@ used to sign and validate packages integrity in JFrog Distribution. The JFrog Pl
 terraform {
   required_providers {
     artifactory = {
-      source    = "registry.terraform.io/jfrog/artifactory"
+      source    = "jfrog/artifactory"
       version   = "9.7.0"
     }
   }

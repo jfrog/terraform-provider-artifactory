@@ -27,7 +27,7 @@ Current version support [Terraform Protocol v6](https://developer.hashicorp.com/
 terraform {
   required_providers {
     artifactory = {
-      source  = "registry.terraform.io/jfrog/artifactory"
+      source  = "jfrog/artifactory"
       version = "10.0.2"
     }
   }
