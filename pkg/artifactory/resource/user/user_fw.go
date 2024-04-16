@@ -209,16 +209,7 @@ func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.R
 	}
 
 	// else use old Artifactory API, which has a slightly differect JSON payload!
-	artifactoryUser := ArtifactoryUserAPIModel{
-		Name:                     user.Name,
-		Email:                    user.Email,
-		Password:                 user.Password,
-		Admin:                    user.Admin,
-		ProfileUpdatable:         user.ProfileUpdatable,
-		DisableUIAccess:          user.DisableUIAccess,
-		InternalPasswordDisabled: user.InternalPasswordDisabled,
-		Groups:                   user.Groups,
-	}
+	artifactoryUser := ArtifactoryUserAPIModel(user)
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 	resp, err := req.
 		SetPathParam("name", artifactoryUser.Name).
@@ -300,16 +291,7 @@ func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactory
 	}
 
 	// else use old Artifactory API, which has a slightly differect JSON payload!
-	artifactoryUser := ArtifactoryUserAPIModel{
-		Name:                     user.Name,
-		Email:                    user.Email,
-		Password:                 user.Password,
-		Admin:                    user.Admin,
-		ProfileUpdatable:         user.ProfileUpdatable,
-		DisableUIAccess:          user.DisableUIAccess,
-		InternalPasswordDisabled: user.InternalPasswordDisabled,
-		Groups:                   user.Groups,
-	}
+	artifactoryUser := ArtifactoryUserAPIModel(user)
 	resp, err := req.
 		SetPathParam("name", artifactoryUser.Name).
 		SetBody(artifactoryUser).
