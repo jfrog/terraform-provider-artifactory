@@ -36,7 +36,7 @@ Create a new Terraform file with `artifactory` resources. Also see [sample.tf](.
 terraform {
   required_providers {
     artifactory = {
-      source  = "registry.terraform.io/jfrog/artifactory"
+      source  = "jfrog/artifactory"
       version = "10.0.2"
     }
   }

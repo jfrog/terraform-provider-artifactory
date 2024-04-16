@@ -13,7 +13,52 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccLayout_full(t *testing.T) {
+func TestAccRepositoryLayout_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
+
+	config := util.ExecuteTemplate("layout", `
+		resource "artifactory_repository_layout" "{{ .name }}" {
+			name                                = "{{ .name }}"
+			artifact_path_pattern               = "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"
+			distinctive_descriptor_path_pattern = false
+			folder_integration_revision_regexp  = "SNAPSHOT"
+			file_integration_revision_regexp    = "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"
+		}
+	`, map[string]interface{}{
+		"name": name,
+	})
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.6.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "artifact_path_pattern", "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"),
+					resource.TestCheckResourceAttr(fqrn, "distinctive_descriptor_path_pattern", "false"),
+					resource.TestCheckResourceAttr(fqrn, "descriptor_path_pattern", ""),
+					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "SNAPSHOT"),
+					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
+func TestAccRepositoryLayout_full(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
 	layoutConfig := util.ExecuteTemplate("layout", `
@@ -42,9 +87,9 @@ func TestAccLayout_full(t *testing.T) {
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccLayoutDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccRepositoryLayoutDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: layoutConfig,
@@ -52,7 +97,7 @@ func TestAccLayout_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "artifact_path_pattern", "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"),
 					resource.TestCheckResourceAttr(fqrn, "distinctive_descriptor_path_pattern", "false"),
-					resource.TestCheckResourceAttr(fqrn, "descriptor_path_pattern", ""),
+					resource.TestCheckNoResourceAttr(fqrn, "descriptor_path_pattern"),
 					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "SNAPSHOT"),
 					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
 				),
@@ -69,15 +114,17 @@ func TestAccLayout_full(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
 }
 
-func TestAccLayout_importNotFound(t *testing.T) {
+func TestAccRepositoryLayout_importNotFound(t *testing.T) {
 	config := `
 		resource "artifactory_repository_layout" "not-exist-test" {
 			name                                = "not-exist-test"
@@ -89,21 +136,22 @@ func TestAccLayout_importNotFound(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:        config,
-				ResourceName:  "artifactory_repository_layout.not-exist-test",
-				ImportStateId: "not-exist-test",
-				ImportState:   true,
-				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
+				Config:                               config,
+				ResourceName:                         "artifactory_repository_layout.not-exist-test",
+				ImportStateId:                        "not-exist-test",
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ExpectError:                          regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})
 }
 
-func testAccLayoutDestroy(name string) func(*terraform.State) error {
+func testAccRepositoryLayoutDestroy(name string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 
@@ -112,8 +160,7 @@ func testAccLayoutDestroy(name string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", name)
 		}
 
-		layouts := &configuration.Layouts{}
-
+		var layouts configuration.RepositoryLayoutsAPIModel
 		response, err := client.R().SetResult(&layouts).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return err
@@ -131,7 +178,7 @@ func testAccLayoutDestroy(name string) func(*terraform.State) error {
 	}
 }
 
-func TestAccLayout_validate_distinctive_descriptor_path_pattern(t *testing.T) {
+func TestAccRepositoryLayout_validate_distinctive_descriptor_path_pattern(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
 	layoutConfig := util.ExecuteTemplate("layout", `
@@ -147,14 +194,14 @@ func TestAccLayout_validate_distinctive_descriptor_path_pattern(t *testing.T) {
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
 				Config:      layoutConfig,
-				ExpectError: regexp.MustCompile("descriptor_path_pattern must be set when distinctive_descriptor_path_pattern is true"),
+				ExpectError: regexp.MustCompile(".*descriptor_path_pattern must be set when distinctive_descriptor_path_pattern\n.*is true.*"),
 			},
 		},
 	})

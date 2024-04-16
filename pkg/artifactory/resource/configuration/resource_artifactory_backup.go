@@ -269,7 +269,7 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	matchedBackup := FindConfigurationById[BackupAPIModel](backups.BackupArr, state.Key.ValueString())
+	matchedBackup := FindConfigurationById(backups.BackupArr, state.Key.ValueString())
 	if matchedBackup == nil {
 		resp.Diagnostics.AddAttributeWarning(
 			path.Root("key"),

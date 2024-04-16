@@ -187,6 +187,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		configuration.NewMailServerResource,
 		configuration.NewPropertySetResource,
 		configuration.NewProxyResource,
+		configuration.NewRepositoryLayoutResource,
 	}
 }
 

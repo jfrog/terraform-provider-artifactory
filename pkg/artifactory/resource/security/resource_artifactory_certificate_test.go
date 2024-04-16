@@ -65,7 +65,7 @@ func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "9.5.1",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: config,

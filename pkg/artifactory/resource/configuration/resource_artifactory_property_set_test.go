@@ -31,7 +31,7 @@ func TestAccPropertySet_UpgradeFromSDKv2(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "10.6.0",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config:           config,
@@ -69,9 +69,11 @@ func TestAccPropertySet_Create(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -115,9 +117,11 @@ func TestAccPropertySet_Update(t *testing.T) {
 				Check:  resource.ComposeTestCheckFunc(verifyPropertySetUpdate(fqrn, testDataUpdated)),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -179,11 +183,12 @@ func TestAccPropertySet_ImportNotFound(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:        config,
-				ResourceName:  "artifactory_property_set.not-exist-test",
-				ImportStateId: "not-exist-test",
-				ImportState:   true,
-				ExpectError:   regexp.MustCompile("Cannot import non-existent remote object"),
+				Config:                               config,
+				ResourceName:                         "artifactory_property_set.not-exist-test",
+				ImportStateId:                        "not-exist-test",
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ExpectError:                          regexp.MustCompile("Cannot import non-existent remote object"),
 			},
 		},
 	})
@@ -223,8 +228,7 @@ func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
-		propertySets := &configuration.PropertySetsAPIModel{}
-
+		var propertySets configuration.PropertySetsAPIModel
 		response, err := client.R().SetResult(&propertySets).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")

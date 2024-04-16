@@ -122,7 +122,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 			return diag.Errorf("%s", resp.String())
 		}
 
-		matchedLdapGroupSetting := FindConfigurationById[LdapGroupSetting](ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr, name)
+		matchedLdapGroupSetting := FindConfigurationById(ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr, name)
 		if matchedLdapGroupSetting == nil {
 			d.SetId("")
 			return nil

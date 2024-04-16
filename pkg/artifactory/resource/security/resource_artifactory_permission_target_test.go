@@ -211,7 +211,7 @@ func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "9.7.3",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: config,

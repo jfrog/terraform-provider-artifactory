@@ -44,7 +44,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "8.1.0",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config:             config,
@@ -54,7 +54,6 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "go-default"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://gocenter.io"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,

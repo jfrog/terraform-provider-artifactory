@@ -316,7 +316,7 @@ func (r *ProxyResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	matchedProxyConfig := FindConfigurationById[ProxyAPIModel](proxies.Proxies, state.Key.ValueString())
+	matchedProxyConfig := FindConfigurationById(proxies.Proxies, state.Key.ValueString())
 	if matchedProxyConfig == nil {
 		resp.Diagnostics.AddAttributeWarning(
 			path.Root("key"),

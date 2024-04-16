@@ -32,7 +32,6 @@ type PropertySetResource struct {
 }
 
 type PropertySetResourceModel struct {
-	ID       types.String `tfsdk:"id"`
 	Name     types.String `tfsdk:"name"`
 	Visible  types.Bool   `tfsdk:"visible"`
 	Property types.Set    `tfsdk:"property"`
@@ -98,7 +97,6 @@ var propertySetResourceModelAttributeTypes types.ObjectType = types.ObjectType{
 func (r *PropertySetResourceModel) fromAPIModel(_ context.Context, apiModel PropertySetAPIModel) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	r.ID = types.StringValue(apiModel.Id())
 	r.Name = types.StringValue(apiModel.Name)
 	r.Visible = types.BoolValue(apiModel.Visible)
 
@@ -201,9 +199,6 @@ func (r *PropertySetResource) Metadata(ctx context.Context, req resource.Metadat
 func (r *PropertySetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -357,8 +352,6 @@ func (r *PropertySetResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = types.StringValue(propertySet.Name)
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -374,15 +367,19 @@ func (r *PropertySetResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var propertySets PropertySetsAPIModel
-	_, err := r.ProviderData.Client.R().
+	response, err := r.ProviderData.Client.R().
 		SetResult(&propertySets).
 		Get(ConfigurationEndpoint)
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", err.Error()))
 		return
 	}
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", response.String()))
+		return
+	}
 
-	matchedPropertySet := FindConfigurationById[PropertySetAPIModel](propertySets.PropertySets, state.Name.ValueString())
+	matchedPropertySet := FindConfigurationById(propertySets.PropertySets, state.Name.ValueString())
 	if matchedPropertySet == nil {
 		resp.Diagnostics.AddAttributeWarning(
 			path.Root("name"),
@@ -448,8 +445,6 @@ func (r *PropertySetResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	plan.ID = types.StringValue(propertySet.Name)
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -474,11 +469,11 @@ func (r *PropertySetResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 	if response.IsError() {
-		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("got error response for API: /artifactory/api/system/configuration request during Read: %s", err.Error()))
+		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("got error response for API: /artifactory/api/system/configuration request during Read: %s", response.String()))
 		return
 	}
 
-	matchedPropertySet := FindConfigurationById[PropertySetAPIModel](propertySets.PropertySets, state.Name.ValueString())
+	matchedPropertySet := FindConfigurationById(propertySets.PropertySets, state.Name.ValueString())
 	if matchedPropertySet == nil {
 		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("No property set found for '%s'", state.Name.ValueString()))
 		return

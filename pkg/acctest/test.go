@@ -442,11 +442,11 @@ func (p PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest
 	var errStrings []string
 	for _, rc := range req.Plan.ResourceChanges {
 		if !rc.Change.Actions.NoOp() {
-			errStrings = append(errStrings, fmt.Sprintf("expected empty plan, but %s has planned action(s): %v", rc.Address, rc.Change.Actions))
+			errStrings = append(errStrings, fmt.Sprintf("expected empty plan, but %s has planned action(s): %v\n\nbefore: %v\n\nafter: %v\n\nunknown: %v", rc.Address, rc.Change.Actions, rc.Change.Before, rc.Change.After, rc.Change.AfterUnknown))
 		}
 	}
 
-	if err != nil {
+	if len(errStrings) > 0 {
 		resp.Error = fmt.Errorf(strings.Join(errStrings, "\n"))
 		return
 	}

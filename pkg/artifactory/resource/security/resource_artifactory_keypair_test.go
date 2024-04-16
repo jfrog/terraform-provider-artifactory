@@ -80,7 +80,7 @@ EOF
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						VersionConstraint: "9.6.0",
-						Source:            "registry.terraform.io/jfrog/artifactory",
+						Source:            "jfrog/artifactory",
 					},
 				},
 				Config: keyPairConfig,
