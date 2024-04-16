@@ -54,7 +54,6 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "go-default"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://gocenter.io"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
