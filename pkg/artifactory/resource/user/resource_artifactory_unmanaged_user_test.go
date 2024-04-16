@@ -14,7 +14,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
+func TestAccUnmanagedUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
@@ -117,24 +117,19 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
+func TestAccUnmanagedUser_ShouldCreateWithoutPassword(t *testing.T) {
 	const config = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
 		}
 	`
-	const updatedConfig = `
-		resource "artifactory_unmanaged_user" "%s" {
-			name  	= "%s"
-			email 	= "dummy_user%d@a.com"
-			profile_updatable = false
-		}
-	`
+
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
 	username := fmt.Sprintf("dummy_user%d", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -145,13 +140,8 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
-				),
-			},
-			{
-				Config: fmt.Sprintf(updatedConfig, name, username, id),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 				),
 			},
 			{

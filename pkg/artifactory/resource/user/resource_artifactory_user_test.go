@@ -170,16 +170,6 @@ func TestAccUser_no_password(t *testing.T) {
 		}
 	`, params)
 
-	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
-		resource "artifactory_user" "{{ .name }}" {
-			name   = "{{ .name }}"
-			email  = "{{ .email }}"
-			admin  = false
-			profile_updatable = false
-			groups = [ "readers" ]
-		}
-	`, params)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -189,14 +179,6 @@ func TestAccUser_no_password(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
-				),
-			},
-			{
-				Config: updatedConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
-					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},

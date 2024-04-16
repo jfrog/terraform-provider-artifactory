@@ -388,9 +388,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 
 		user.Password = randomPassword
 
-		// explicity set this attribute with password so it gets stored in the state
-		// and allows update to work
-		plan.Password = types.StringValue(randomPassword)
+		// DO NOT store the generated password in the TF state
 	}
 
 	var result ArtifactoryUserResourceAPIModel
@@ -575,6 +573,11 @@ func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *Artifac
 	r.Id = types.StringValue(u.Name)
 	r.Name = types.StringValue(u.Name)
 	r.Email = types.StringValue(u.Email)
+
+	if r.Password.IsUnknown() {
+		r.Password = types.StringNull()
+	}
+
 	r.Admin = types.BoolValue(u.Admin)
 	r.ProfileUpdatable = types.BoolValue(u.ProfileUpdatable)
 	r.DisableUIAccess = types.BoolValue(u.DisableUIAccess)

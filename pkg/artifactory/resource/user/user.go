@@ -390,9 +390,8 @@ func resourceBaseUserCreate(ctx context.Context, d *schema.ResourceData, m inter
 			return diags
 		}
 
-		// explicity set this attribute with password so it gets stored in the state
-		// and allows update to work
-		d.Set("password", user.Password)
+		// generated password should not be saved to state for unmanaged user
+		// as the password is temporary and will be updated out of band
 	}
 
 	var result User
