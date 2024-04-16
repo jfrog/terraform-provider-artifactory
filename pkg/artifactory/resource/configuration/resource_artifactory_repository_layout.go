@@ -306,7 +306,7 @@ func (r *RepositoryLayoutResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 	if response.IsError() {
-		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("got error response for API: /artifactory/api/system/configuration request during Read: %s", err.Error()))
+		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("got error response for API: /artifactory/api/system/configuration request during Read: %s", response.String()))
 		return
 	}
 
