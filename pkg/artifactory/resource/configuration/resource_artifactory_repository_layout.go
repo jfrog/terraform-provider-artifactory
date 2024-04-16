@@ -4,184 +4,334 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 
-	"github.com/jfrog/terraform-provider-shared/packer"
 	"gopkg.in/yaml.v3"
 )
 
-type Layout struct {
-	Name                             string `hcl:"name" xml:"name" yaml:"name"`
-	ArtifactPathPattern              string `hcl:"artifact_path_pattern" xml:"artifactPathPattern" yaml:"artifactPathPattern"`
-	DistinctiveDescriptorPathPattern bool   `hcl:"distinctive_descriptor_path_pattern" xml:"distinctiveDescriptorPathPattern" yaml:"distinctiveDescriptorPathPattern"`
-	DescriptorPathPattern            string `hcl:"descriptor_path_pattern" xml:"descriptorPathPattern" yaml:"descriptorPathPattern"`
-	FolderIntegrationRevisionRegExp  string `hcl:"folder_integration_revision_regexp" xml:"folderIntegrationRevisionRegExp" yaml:"folderIntegrationRevisionRegExp"`
-	FileIntegrationRevisionRegExp    string `hcl:"file_integration_revision_regexp" xml:"fileIntegrationRevisionRegExp" yaml:"fileIntegrationRevisionRegExp"`
+func NewRepositoryLayoutResource() resource.Resource {
+	return &RepositoryLayoutResource{}
 }
 
-func (l Layout) Id() string {
-	return l.Name
+type RepositoryLayoutResource struct {
+	ProviderData util.ProviderMetadata
+	TypeName     string
 }
 
-type Layouts struct {
-	Layouts []Layout `xml:"repoLayouts>repoLayout" yaml:"repoLayout"`
+type RepositoryLayoutResourceModel struct {
+	Name                             types.String `tfsdk:"name"`
+	ArtifactPathPattern              types.String `tfsdk:"artifact_path_pattern"`
+	DescriptorPathPattern            types.String `tfsdk:"descriptor_path_pattern"`
+	DistinctiveDescriptorPathPattern types.Bool   `tfsdk:"distinctive_descriptor_path_pattern"`
+	FileIntegrationRevisionRegExp    types.String `tfsdk:"file_integration_revision_regexp"`
+	FolderIntegrationRevisionRegExp  types.String `tfsdk:"folder_integration_revision_regexp"`
 }
 
-func ResourceArtifactoryRepositoryLayout() *schema.Resource {
-	var layoutSchema = map[string]*schema.Schema{
-		"name": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Layout name",
-		},
-		"artifact_path_pattern": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Please refer to: [Path Patterns](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts#RepositoryLayouts-ModulesandPathPatternsusedbyRepositoryLayouts) in the Artifactory Wiki documentation.",
-		},
-		"distinctive_descriptor_path_pattern": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "When set, 'descriptor_path_pattern' will be used. Default to 'false'.",
-		},
-		"descriptor_path_pattern": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Please refer to: [Descriptor Path Patterns](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts#RepositoryLayouts-DescriptorPathPatterns) in the Artifactory Wiki documentation.",
-		},
-		"folder_integration_revision_regexp": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "A regular expression matching the integration revision string appearing in a folder name as part of the artifact's path. For example, 'SNAPSHOT', in Maven. Note! Take care not to introduce any regexp capturing groups within this expression. If not applicable use '.*'",
-		},
-		"file_integration_revision_regexp": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "A regular expression matching the integration revision string appearing in a file name as part of the artifact's path. For example, 'SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))', in Maven. Note! Take care not to introduce any regexp capturing groups within this expression. If not applicable use '.*'",
-		},
-	}
+type RepositoryLayoutAPIModel struct {
+	Name                             string `xml:"name" yaml:"name"`
+	ArtifactPathPattern              string `xml:"artifactPathPattern" yaml:"artifactPathPattern"`
+	DescriptorPathPattern            string `xml:"descriptorPathPattern" yaml:"descriptorPathPattern"`
+	DistinctiveDescriptorPathPattern bool   `xml:"distinctiveDescriptorPathPattern" yaml:"distinctiveDescriptorPathPattern"`
+	FileIntegrationRevisionRegExp    string `xml:"fileIntegrationRevisionRegExp" yaml:"fileIntegrationRevisionRegExp"`
+	FolderIntegrationRevisionRegExp  string `xml:"folderIntegrationRevisionRegExp" yaml:"folderIntegrationRevisionRegExp"`
+}
 
-	var unpackLayout = func(s *schema.ResourceData) Layout {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		return Layout{
-			Name:                             d.GetString("name", false),
-			ArtifactPathPattern:              d.GetString("artifact_path_pattern", false),
-			DistinctiveDescriptorPathPattern: d.GetBool("distinctive_descriptor_path_pattern", false),
-			DescriptorPathPattern:            d.GetString("descriptor_path_pattern", false),
-			FolderIntegrationRevisionRegExp:  d.GetString("folder_integration_revision_regexp", false),
-			FileIntegrationRevisionRegExp:    d.GetString("file_integration_revision_regexp", false),
-		}
-	}
+func (m RepositoryLayoutAPIModel) Id() string {
+	return m.Name
+}
 
-	var resourceLayoutRead = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		data := &utilsdk.ResourceData{ResourceData: d}
-		name := data.GetString("name", false)
+type RepositoryLayoutsAPIModel struct {
+	Layouts []RepositoryLayoutAPIModel `xml:"repoLayouts>repoLayout" yaml:"repoLayout"`
+}
 
-		layouts := Layouts{}
-		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(&layouts).Get(ConfigurationEndpoint)
-		if err != nil {
-			return diag.Errorf("failed to retrieve data from API: /artifactory/api/system/configuration during Read")
-		}
+func (r *RepositoryLayoutResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_repository_layout"
+	r.TypeName = resp.TypeName
+}
 
-		if resp.IsError() {
-			return diag.Errorf("%s", resp.String())
-		}
-
-		matchedLayout := FindConfigurationById[Layout](layouts.Layouts, name)
-		if matchedLayout == nil {
-			d.SetId("")
-			return nil
-		}
-
-		pkr := packer.Default(layoutSchema)
-
-		return diag.FromErr(pkr(matchedLayout, d))
-	}
-
-	var resourceLayoutUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		unpackedLayout := unpackLayout(d)
-
-		/* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
-		There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
-		GET call structure has "backups -> backup -> Array of backup config blocks".
-		PATCH call structure has "backups -> Name/Key of backup that is being patched -> config block of the backup being patched".
-		Since the Name/Key is dynamic string, following nested map of string structs are constructed to match the usage of PATCH call.
-		*/
-		constructBody := map[string]map[string]Layout{
-			"repoLayouts": {
-				unpackedLayout.Name: unpackedLayout,
+func (r *RepositoryLayoutResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Layout name",
 			},
-		}
-		content, err := yaml.Marshal(&constructBody)
+			"artifact_path_pattern": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "Please refer to: [Path Patterns](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts#RepositoryLayouts-ModulesandPathPatternsusedbyRepositoryLayouts) in the Artifactory Wiki documentation.",
+			},
+			"distinctive_descriptor_path_pattern": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 
-		if err != nil {
-			return diag.FromErr(err)
-		}
+				MarkdownDescription: "When set, `descriptor_path_pattern` will be used. Default to `false`.",
+			},
+			"descriptor_path_pattern": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				MarkdownDescription: "Please refer to: [Descriptor Path Patterns](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts#RepositoryLayouts-DescriptorPathPatterns) in the Artifactory Wiki documentation",
+			},
+			"folder_integration_revision_regexp": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "A regular expression matching the integration revision string appearing in a folder name as part of the artifact's path. For example, `SNAPSHOT`, in Maven. Note! Take care not to introduce any regexp capturing groups within this expression. If not applicable use `.*`",
+			},
+			"file_integration_revision_regexp": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "A regular expression matching the integration revision string appearing in a file name as part of the artifact's path. For example, `SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))`, in Maven. Note! Take care not to introduce any regexp capturing groups within this expression. If not applicable use `.*`",
+			},
+		},
+		MarkdownDescription: "Provides an Artifactory repository layout resource. See [Repository Layout documentation](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts) for more details.",
+	}
+}
 
-		err = SendConfigurationPatch(content, m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+func (r RepositoryLayoutResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data RepositoryLayoutResourceModel
 
-		d.SetId(unpackedLayout.Name)
-
-		return resourceLayoutRead(ctx, d, m)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var resourceLayoutDelete = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		unpackedLayout := unpackLayout(d)
+	if data.DistinctiveDescriptorPathPattern.ValueBool() && len(data.DescriptorPathPattern.ValueString()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("descriptor_path_pattern"),
+			"Invalid attribute configuration",
+			"descriptor_path_pattern must be set when distinctive_descriptor_path_pattern is true",
+		)
+	}
+}
 
-		deleteLayoutConfig := fmt.Sprintf(`
+func (r *RepositoryLayoutResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
+}
+
+func (r *RepositoryLayoutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var plan RepositoryLayoutResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	repositoryLayout := RepositoryLayoutAPIModel{
+		Name:                             plan.Name.ValueString(),
+		ArtifactPathPattern:              plan.ArtifactPathPattern.ValueString(),
+		DescriptorPathPattern:            plan.DescriptorPathPattern.ValueString(),
+		DistinctiveDescriptorPathPattern: plan.DistinctiveDescriptorPathPattern.ValueBool(),
+		FileIntegrationRevisionRegExp:    plan.FileIntegrationRevisionRegExp.ValueString(),
+		FolderIntegrationRevisionRegExp:  plan.FolderIntegrationRevisionRegExp.ValueString(),
+	}
+
+	///* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	//There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	//GET call structure has "propertySets -> propertySet -> Array of property sets".
+	//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
+	//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
+	//*/
+	var body = map[string]map[string]interface{}{
+		"repoLayouts": {
+			repositoryLayout.Name: repositoryLayout,
+		},
+	}
+
+	content, err := yaml.Marshal(&body)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, fmt.Sprintf("failed to marshal property set during Update: %s", err.Error()))
+		return
+	}
+
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *RepositoryLayoutResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var state RepositoryLayoutResourceModel
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var repositoryLayouts RepositoryLayoutsAPIModel
+	response, err := r.ProviderData.Client.R().
+		SetResult(&repositoryLayouts).
+		Get(ConfigurationEndpoint)
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", err.Error()))
+		return
+	}
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", response.String()))
+		return
+	}
+
+	matchedRepositoryLayout := FindConfigurationById(repositoryLayouts.Layouts, state.Name.ValueString())
+	if matchedRepositoryLayout == nil {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("name"),
+			"no matching repository layout found",
+			state.Name.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	// Convert from the API data model to the Terraform data model
+	// and refresh any attribute values.
+	state.Name = types.StringValue(matchedRepositoryLayout.Name)
+	state.ArtifactPathPattern = types.StringValue(matchedRepositoryLayout.ArtifactPathPattern)
+	state.DescriptorPathPattern = types.StringNull()
+	if matchedRepositoryLayout.DistinctiveDescriptorPathPattern {
+		state.DescriptorPathPattern = types.StringValue(matchedRepositoryLayout.DescriptorPathPattern)
+	}
+	state.DistinctiveDescriptorPathPattern = types.BoolValue(matchedRepositoryLayout.DistinctiveDescriptorPathPattern)
+	state.FileIntegrationRevisionRegExp = types.StringValue(matchedRepositoryLayout.FileIntegrationRevisionRegExp)
+	state.FolderIntegrationRevisionRegExp = types.StringValue(matchedRepositoryLayout.FolderIntegrationRevisionRegExp)
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+func (r *RepositoryLayoutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var plan RepositoryLayoutResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	repositoryLayout := RepositoryLayoutAPIModel{
+		Name:                             plan.Name.ValueString(),
+		ArtifactPathPattern:              plan.ArtifactPathPattern.ValueString(),
+		DescriptorPathPattern:            plan.DescriptorPathPattern.ValueString(),
+		DistinctiveDescriptorPathPattern: plan.DistinctiveDescriptorPathPattern.ValueBool(),
+		FileIntegrationRevisionRegExp:    plan.FileIntegrationRevisionRegExp.ValueString(),
+		FolderIntegrationRevisionRegExp:  plan.FolderIntegrationRevisionRegExp.ValueString(),
+	}
+
+	///* EXPLANATION FOR BELOW CONSTRUCTION USAGE.
+	//There is a difference in xml structure usage between GET and PATCH calls of API: /artifactory/api/system/configuration.
+	//GET call structure has "propertySets -> propertySet -> Array of property sets".
+	//PATCH call structure has "propertySets -> propertySet (dynamic sting). Property name and predefinedValues names are also dynamic strings".
+	//Following nested map of string structs are constructed to match the usage of PATCH call with the consideration of dynamic strings.
+	//*/
+	var body = map[string]map[string]interface{}{
+		"repoLayouts": {
+			repositoryLayout.Name: repositoryLayout,
+		},
+	}
+
+	content, err := yaml.Marshal(&body)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, fmt.Sprintf("failed to marshal property set during Update: %s", err.Error()))
+		return
+	}
+
+	err = SendConfigurationPatch(content, r.ProviderData)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *RepositoryLayoutResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+
+	var state RepositoryLayoutResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var repoLayouts RepositoryLayoutsAPIModel
+	response, err := r.ProviderData.Client.R().
+		SetResult(&repoLayouts).
+		Get(ConfigurationEndpoint)
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", err.Error()))
+		return
+	}
+	if response.IsError() {
+		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("got error response for API: /artifactory/api/system/configuration request during Read: %s", err.Error()))
+		return
+	}
+
+	matchedRepoLayout := FindConfigurationById(repoLayouts.Layouts, state.Name.ValueString())
+	if matchedRepoLayout == nil {
+		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("No property set found for '%s'", state.Name.ValueString()))
+		return
+	}
+
+	deleteConfig := fmt.Sprintf(`
 repoLayouts:
   %s: ~
-`, unpackedLayout.Name)
+`, matchedRepoLayout.Name)
 
-		err := SendConfigurationPatch([]byte(deleteLayoutConfig), m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		d.SetId("")
-		return nil
+	err = SendConfigurationPatch([]byte(deleteConfig), r.ProviderData)
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
+		return
 	}
 
-	var distinctiveDescriptorPathPatternDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		distinctiveDescriptorPathPattern := diff.Get("distinctive_descriptor_path_pattern").(bool)
-		descriptorPathPattern := diff.Get("descriptor_path_pattern").(string)
+	// If the logic reaches here, it implicitly succeeded and will remove
+	// the resource from state if there are no other errors.
+}
 
-		if distinctiveDescriptorPathPattern && len(descriptorPathPattern) == 0 {
-			return fmt.Errorf("descriptor_path_pattern must be set when distinctive_descriptor_path_pattern is true")
-		}
-
-		return nil
-	}
-
-	return &schema.Resource{
-		UpdateContext: resourceLayoutUpdate,
-		CreateContext: resourceLayoutUpdate,
-		DeleteContext: resourceLayoutDelete,
-		ReadContext:   resourceLayoutRead,
-
-		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		Schema:        layoutSchema,
-		CustomizeDiff: distinctiveDescriptorPathPatternDiff,
-		Description:   "Provides an Artifactory repository layout resource. See [Repository Layout documentation](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts) for more details.",
-	}
+// ImportState imports the resource into the Terraform state.
+func (r *RepositoryLayoutResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
