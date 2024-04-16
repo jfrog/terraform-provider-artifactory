@@ -374,15 +374,19 @@ func (r *PropertySetResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var propertySets PropertySetsAPIModel
-	_, err := r.ProviderData.Client.R().
+	response, err := r.ProviderData.Client.R().
 		SetResult(&propertySets).
 		Get(ConfigurationEndpoint)
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", err.Error()))
 		return
 	}
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, fmt.Sprintf("failed to retrieve data from API: /artifactory/api/system/configuration during Read: %s", response.String()))
+		return
+	}
 
-	matchedPropertySet := FindConfigurationById[PropertySetAPIModel](propertySets.PropertySets, state.Name.ValueString())
+	matchedPropertySet := FindConfigurationById(propertySets.PropertySets, state.Name.ValueString())
 	if matchedPropertySet == nil {
 		resp.Diagnostics.AddAttributeWarning(
 			path.Root("name"),
@@ -478,7 +482,7 @@ func (r *PropertySetResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	matchedPropertySet := FindConfigurationById[PropertySetAPIModel](propertySets.PropertySets, state.Name.ValueString())
+	matchedPropertySet := FindConfigurationById(propertySets.PropertySets, state.Name.ValueString())
 	if matchedPropertySet == nil {
 		utilfw.UnableToDeleteResourceError(resp, fmt.Sprintf("No property set found for '%s'", state.Name.ValueString()))
 		return

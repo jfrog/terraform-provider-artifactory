@@ -223,8 +223,7 @@ func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
-		propertySets := &configuration.PropertySetsAPIModel{}
-
+		var propertySets configuration.PropertySetsAPIModel
 		response, err := client.R().SetResult(&propertySets).Get(configuration.ConfigurationEndpoint)
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from API: /artifactory/api/system/configuration during Read")
