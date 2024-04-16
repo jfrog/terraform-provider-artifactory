@@ -1,8 +1,9 @@
-## 10.6.2 (Apr 16, 2024)
+## 10.6.2 (Apr 17, 2024)
 
 IMPROVEMENTS:
 
 * resource/artifactory_property_set is migrated to Plugin Framework. PR: [#935](https://github.com/jfrog/terraform-provider-artifactory/pull/935)
+* resource/artifactory_repository_layout is migrated to Plugin Framework. PR: [#936](https://github.com/jfrog/terraform-provider-artifactory/pull/936)
 
 ## 10.6.1 (Apr 12, 2024)
 
