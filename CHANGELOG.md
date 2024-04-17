@@ -1,3 +1,9 @@
+## 10.7.0 (Apr 18, 2024)
+
+FEATURES:
+
+* provider: Add support for Terraform Cloud Workload Identity Token. PR: [#938](https://github.com/jfrog/terraform-provider-artifactory/pull/938)
+
 ## 10.6.2 (Apr 17, 2024)
 
 BUG FIXES:
