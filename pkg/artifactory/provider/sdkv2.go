@@ -31,13 +31,19 @@ func SdkV2() *schema.Provider {
 				Description:      "API key. If `access_token` attribute, `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variable is set, the provider will ignore this attribute.",
 				Deprecated: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform).\n" +
 					"In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys.\n" +
-					"By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available.",
+					"By end of Q4 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API deprecation process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process) for more details.",
 			},
 			"access_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "This is a access token that can be given to you by your admin under `User Management -> Access Tokens`. If not set, the 'api_key' attribute value will be used.",
+			},
+			"oidc_provider_name": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validator.StringIsNotEmpty,
+				Description:      "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
 			},
 			"check_license": {
 				Type:        schema.TypeBool,
@@ -51,7 +57,7 @@ func SdkV2() *schema.Provider {
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		var ds diag.Diagnostics
+		ds := diag.Diagnostics{}
 		meta, d := providerConfigure(ctx, data, p.TerraformVersion)
 		if d != nil {
 			ds = append(ds, d...)
@@ -75,18 +81,29 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		return nil, diag.Errorf("missing URL Configuration")
 	}
 
+	restyClient, err := client.Build(url, productId)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	if v, ok := d.GetOk("oidc_provider_name"); ok {
+		oidcAccessToken, err := util.OIDCTokenExchange(ctx, restyClient, v.(string))
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		if oidcAccessToken != "" {
+			accessToken = oidcAccessToken
+		}
+	}
+
 	if v, ok := d.GetOk("access_token"); ok && v != "" {
 		accessToken = v.(string)
 	}
 
 	apiKey := d.Get("api_key").(string)
 
-	restyBase, err := client.Build(url, productId)
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
-
-	restyBase, err = client.AddAuth(restyBase, apiKey, accessToken)
+	restyClient, err = client.AddAuth(restyClient, apiKey, accessToken)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
@@ -98,13 +115,13 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		checkLicense = v.(bool)
 	}
 	if checkLicense {
-		licenseErr := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge")
+		licenseErr := util.CheckArtifactoryLicense(restyClient, "Enterprise", "Commercial", "Edge")
 		if licenseErr != nil {
 			return nil, diag.FromErr(licenseErr)
 		}
 	}
 
-	version, err := util.GetArtifactoryVersion(restyBase)
+	version, err := util.GetArtifactoryVersion(restyClient)
 	if err != nil {
 		return nil, diag.Diagnostics{{
 			Severity: diag.Error,
@@ -114,10 +131,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
-	util.SendUsage(ctx, restyBase, productId, featureUsage)
+	util.SendUsage(ctx, restyClient, productId, featureUsage)
 
 	return util.ProviderMetadata{
-		Client:             restyBase,
+		Client:             restyClient,
 		ArtifactoryVersion: version,
 	}, nil
 }

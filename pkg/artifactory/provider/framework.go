@@ -30,10 +30,11 @@ type ArtifactoryProvider struct{}
 
 // ArtifactoryProviderModel describes the provider data model.
 type ArtifactoryProviderModel struct {
-	Url          types.String `tfsdk:"url"`
-	AccessToken  types.String `tfsdk:"access_token"`
-	ApiKey       types.String `tfsdk:"api_key"`
-	CheckLicense types.Bool   `tfsdk:"check_license"`
+	Url              types.String `tfsdk:"url"`
+	AccessToken      types.String `tfsdk:"access_token"`
+	ApiKey           types.String `tfsdk:"api_key"`
+	OIDCProviderName types.String `tfsdk:"oidc_provider_name"`
+	CheckLicense     types.Bool   `tfsdk:"check_license"`
 }
 
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
@@ -63,9 +64,16 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 			},
 			"api_key": schema.StringAttribute{
 				Description:        "API key. If `access_token` attribute, `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variable is set, the provider will ignore this attribute.",
-				DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available.",
+				DeprecationMessage: "An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q4 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API deprecation process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process) for more details.",
 				Optional:           true,
 				Sensitive:          true,
+			},
+			"oidc_provider_name": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
 			},
 			"check_license": schema.BoolAttribute{
 				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
@@ -88,6 +96,44 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	if config.Url.ValueString() != "" {
+		url = config.Url.ValueString()
+	}
+
+	if url == "" {
+		resp.Diagnostics.AddError(
+			"Missing URL Configuration",
+			"While configuring the provider, the url was not found in "+
+				"the JFROG_URL/ARTIFACTORY_URL environment variable or provider "+
+				"configuration block url attribute.",
+		)
+		return
+	}
+
+	restyClient, err := client.Build(url, productId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating Resty client",
+			err.Error(),
+		)
+		return
+	}
+
+	oidcAccessToken, err := util.OIDCTokenExchange(ctx, restyClient, config.OIDCProviderName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed OIDC ID token exchange",
+			err.Error(),
+		)
+		return
+	}
+
+	// use token from OIDC provider, which should take precedence over
+	// environment variable data, if found.
+	if oidcAccessToken != "" {
+		accessToken = oidcAccessToken
+	}
+
 	// Check configuration data, which should take precedence over
 	// environment variable data, if found.
 	if config.AccessToken.ValueString() != "" {
@@ -104,29 +150,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	if config.Url.ValueString() != "" {
-		url = config.Url.ValueString()
-	}
-
-	if url == "" {
-		resp.Diagnostics.AddError(
-			"Missing URL Configuration",
-			"While configuring the provider, the url was not found in "+
-				"the JFROG_URL/ARTIFACTORY_URL environment variable or provider "+
-				"configuration block url attribute.",
-		)
-		return
-	}
-
-	restyBase, err := client.Build(url, productId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating Resty client",
-			err.Error(),
-		)
-	}
-
-	restyBase, err = client.AddAuth(restyBase, config.ApiKey.ValueString(), accessToken)
+	restyClient, err = client.AddAuth(restyClient, config.ApiKey.ValueString(), accessToken)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error adding Auth to Resty client",
@@ -135,7 +159,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		if err := util.CheckArtifactoryLicense(restyBase, "Enterprise", "Commercial", "Edge"); err != nil {
+		if err := util.CheckArtifactoryLicense(restyClient, "Enterprise", "Commercial", "Edge"); err != nil {
 			resp.Diagnostics.AddError(
 				"Error checking Artifactory license",
 				err.Error(),
@@ -144,7 +168,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		}
 	}
 
-	version, err := util.GetArtifactoryVersion(restyBase)
+	version, err := util.GetArtifactoryVersion(restyClient)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error getting Artifactory version",
@@ -154,10 +178,10 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	go util.SendUsage(ctx, restyBase, productId, featureUsage)
+	go util.SendUsage(ctx, restyClient, productId, featureUsage)
 
 	meta := util.ProviderMetadata{
-		Client:             restyBase,
+		Client:             restyClient,
 		ProductId:          productId,
 		ArtifactoryVersion: version,
 	}
