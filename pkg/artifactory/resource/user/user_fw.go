@@ -199,7 +199,7 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 }
 
 func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
-	// 7.49.3 or later, use Access API
+	// 7.83.1 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetBody(user).
@@ -209,16 +209,7 @@ func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.R
 	}
 
 	// else use old Artifactory API, which has a slightly differect JSON payload!
-	artifactoryUser := ArtifactoryUserAPIModel{
-		Name:                     user.Name,
-		Email:                    user.Email,
-		Password:                 user.Password,
-		Admin:                    user.Admin,
-		ProfileUpdatable:         user.ProfileUpdatable,
-		DisableUIAccess:          user.DisableUIAccess,
-		InternalPasswordDisabled: user.InternalPasswordDisabled,
-		Groups:                   user.Groups,
-	}
+	artifactoryUser := ArtifactoryUserAPIModel(user)
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 	resp, err := req.
 		SetPathParam("name", artifactoryUser.Name).
@@ -256,7 +247,7 @@ func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.R
 func (r *ArtifactoryBaseUserResource) readUser(req *resty.Request, artifactoryVersion, name string, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.49.3 or later, use Access API
+	// 7.83.1 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", name).
@@ -289,7 +280,7 @@ func (r *ArtifactoryBaseUserResource) readUser(req *resty.Request, artifactoryVe
 func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.49.3 or later, use Access API
+	// 7.83.1 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", user.Name).
@@ -300,16 +291,7 @@ func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactory
 	}
 
 	// else use old Artifactory API, which has a slightly differect JSON payload!
-	artifactoryUser := ArtifactoryUserAPIModel{
-		Name:                     user.Name,
-		Email:                    user.Email,
-		Password:                 user.Password,
-		Admin:                    user.Admin,
-		ProfileUpdatable:         user.ProfileUpdatable,
-		DisableUIAccess:          user.DisableUIAccess,
-		InternalPasswordDisabled: user.InternalPasswordDisabled,
-		Groups:                   user.Groups,
-	}
+	artifactoryUser := ArtifactoryUserAPIModel(user)
 	resp, err := req.
 		SetPathParam("name", artifactoryUser.Name).
 		SetBody(artifactoryUser).
@@ -388,9 +370,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 
 		user.Password = randomPassword
 
-		// explicity set this attribute with password so it gets stored in the state
-		// and allows update to work
-		plan.Password = types.StringValue(randomPassword)
+		// DO NOT store the generated password in the TF state
 	}
 
 	var result ArtifactoryUserResourceAPIModel
@@ -575,6 +555,11 @@ func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *Artifac
 	r.Id = types.StringValue(u.Name)
 	r.Name = types.StringValue(u.Name)
 	r.Email = types.StringValue(u.Email)
+
+	if r.Password.IsUnknown() {
+		r.Password = types.StringNull()
+	}
+
 	r.Admin = types.BoolValue(u.Admin)
 	r.ProfileUpdatable = types.BoolValue(u.ProfileUpdatable)
 	r.DisableUIAccess = types.BoolValue(u.DisableUIAccess)

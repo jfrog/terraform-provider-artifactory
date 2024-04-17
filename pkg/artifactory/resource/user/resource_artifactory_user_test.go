@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
@@ -170,6 +171,9 @@ func TestAccUser_no_password(t *testing.T) {
 		}
 	`, params)
 
+	// TODO: bug that require 'password' field even when 'internalPasswordDisabled' is set to false is already fixed
+	// in 7.83.1 in Cloud version. When it's released to Self-Hosted, then we can uncomment this update test
+	//
 	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
 		resource "artifactory_user" "{{ .name }}" {
 			name   = "{{ .name }}"
@@ -481,8 +485,8 @@ func testAccCheckManagedUserDestroy(id string) func(*terraform.State) error {
 
 		var resp *resty.Response
 		var err error
-		// 7.49.3 or later, use Access API
-		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProviderMetadata).ArtifactoryVersion, "7.49.3"); e == nil && ok {
+		// 7.83.1 or later, use Access API
+		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProviderMetadata).ArtifactoryVersion, user.AccessAPIArtifactoryVersion); e == nil && ok {
 			r, er := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
 			resp = r
 			err = er

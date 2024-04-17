@@ -6,15 +6,17 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccUnmanagedUserPasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
+func TestAccUnmanagedUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
@@ -117,13 +119,15 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
+func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 	const config = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
+			profile_updatable = true
 		}
 	`
+
 	const updatedConfig = `
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
@@ -131,10 +135,12 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 			profile_updatable = false
 		}
 	`
+
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("foobar-%d", id)
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
 	username := fmt.Sprintf("dummy_user%d", id)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -145,13 +151,19 @@ func TestAccUnmanagedUserShouldCreateWithoutPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(updatedConfig, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
 			},
 			{
@@ -368,7 +380,18 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("resource id[%s] not found", id)
 		}
 
-		resp, err := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
+		var resp *resty.Response
+		var err error
+		// 7.83.1 or later, use Access API
+		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProviderMetadata).ArtifactoryVersion, user.AccessAPIArtifactoryVersion); e == nil && ok {
+			r, er := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
+			resp = r
+			err = er
+		} else {
+			r, er := client.R().Get("artifactory/api/security/users/" + rs.Primary.ID)
+			resp = r
+			err = er
+		}
 
 		if err != nil {
 			return err

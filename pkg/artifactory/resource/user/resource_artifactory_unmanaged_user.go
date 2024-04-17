@@ -57,6 +57,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 			}
 
 			user.Password = randomPassword
+
+			// DO NOT store the generated password in the TF state
 		}
 
 		return diags
