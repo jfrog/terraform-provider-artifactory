@@ -170,6 +170,19 @@ func TestAccUser_no_password(t *testing.T) {
 		}
 	`, params)
 
+	// TODO: bug that require 'password' field even when 'internalPasswordDisabled' is set to false is already fixed
+	// in 7.83.1 in Cloud version. When it's released to Self-Hosted, then we can uncomment this update test
+	//
+	// updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
+	// 	resource "artifactory_user" "{{ .name }}" {
+	// 		name   = "{{ .name }}"
+	// 		email  = "{{ .email }}"
+	// 		admin  = false
+	// 		profile_updatable = false
+	// 		groups = [ "readers" ]
+	// 	}
+	// `, params)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -182,6 +195,14 @@ func TestAccUser_no_password(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
+			// {
+			// 	Config: updatedConfig,
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+			// 		resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
+			// 		resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+			// 	),
+			// },
 			{
 				ResourceName:            fqrn,
 				ImportState:             true,
