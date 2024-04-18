@@ -28,7 +28,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "jfrog/artifactory"
-      version = "10.0.2"
+      version = "10.6.2"
     }
   }
 }
@@ -52,6 +52,7 @@ resource "artifactory_local_pypi_repository" "pypi-libs" {
 The Artifactory provider supports two ways of authentication. The following methods are supported:
 * Access Token
 * API Key (deprecated)
+* Terraform Cloud OIDC provider
 
 ### Access Token
 
@@ -68,7 +69,7 @@ provider "artifactory" {
 
 ### API Key (deprecated)
 
-!>An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q1 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API Key Deprecation Process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process).
+!>An upcoming version will support the option to block the usage/creation of API Keys (for admins to set on their platform). In a future version (scheduled for end of Q3, 2023), the option to disable the usage/creation of API Keys will be available and set to disabled by default. Admins will be able to enable the usage/creation of API Keys. By end of Q4 2024, API Keys will be deprecated all together and the option to use them will no longer be available. See [JFrog API Key Deprecation Process](https://jfrog.com/help/r/jfrog-platform-administration-documentation/jfrog-api-key-deprecation-process).
 
 ~>If `access_token` attribute, `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variable is set, the provider will ignore `api_key` attribute.
 
@@ -82,6 +83,58 @@ provider "artifactory" {
   api_key = "abc...xy"
 }
 ```
+
+### Terraform Cloud OIDC Provider
+
+If you are using this provider on Terraform Cloud and wish to use dynamic credentials instead of static access token for authentication with JFrog platform, you can leverage Terraform as the OIDC provider.
+
+To setup dynamic credentials, follow these steps:
+1. Configure Terraform Cloud as a generic OIDC provider
+2. Set environment variable in your Terraform Workspace
+3. Setup Terraform Cloud in your configuration
+
+During the provider start up, if it finds env var `TFC_WORKLOAD_IDENTITY_TOKEN` it will use this token with your JFrog instance to exchange for a short-live access token. If that is successful, the provider will the access token for all subsequent API requests with the JFrog instance.
+
+#### Configure Terraform Cloud as generic OIDC provider
+
+Follow [confgure an OIDC integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration). Enter a name for the provider, e.g. `terraform-cloud`. Use `https://app.terraform.io` for "Provider URL". Choose your own value for "Audience", e.g. `jfrog-terraform-cloud`.
+
+Then [configure an identity mapping](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-identity-mappings) with an empty "Claims JSON" (`{}`), and select the "Token scope", "User", and "Service" as desired.
+
+#### Set environment variable in your Terraform Workspace
+
+In your workspace, add an environment variable `TFC_WORKLOAD_IDENTITY_AUDIENCE` with audience value (e.g. `jfrog-terraform-cloud`) from JFrog OIDC integration above. See [Manually Generating Workload Identity Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation) for more details.
+
+When a run starts on Terraform Cloud, it will create a workload identity token with the specified audience and assigns it to the environment variable `TFC_WORKLOAD_IDENTITY_TOKEN` for the provider to consume.
+
+#### Setup Terraform Cloud in your configuration
+
+Add `cloud` block to `terraform` block, and add `oidc_provider_name` attribute (from JFrog OIDC integration) to provider block:
+
+```terraform
+terraform {
+  cloud {
+    organization = "my-org"
+    workspaces {
+      name = "my-workspace"
+    }
+  }
+
+  required_providers {
+    artifactory = {
+      source  = "jfrog/artifactory"
+      version = "10.6.2"
+    }
+  }
+}
+
+provider "platform" {
+  url = "https://myinstance.jfrog.io"
+  oidc_provider_name = "terraform-cloud"
+}
+```
+
+**Note:** Ensure `access_token` attribute is not set
 
 ## Argument Reference
 
