@@ -382,7 +382,7 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 
 		var resp *resty.Response
 		var err error
-		// 7.83.1 or later, use Access API
+		// 7.84.3 or later, use Access API
 		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProviderMetadata).ArtifactoryVersion, user.AccessAPIArtifactoryVersion); e == nil && ok {
 			r, er := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
 			resp = r

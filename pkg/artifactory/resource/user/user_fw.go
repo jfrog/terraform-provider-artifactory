@@ -199,7 +199,7 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 }
 
 func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetBody(user).
@@ -247,7 +247,7 @@ func (r *ArtifactoryBaseUserResource) createUser(_ context.Context, req *resty.R
 func (r *ArtifactoryBaseUserResource) readUser(req *resty.Request, artifactoryVersion, name string, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", name).
@@ -280,7 +280,7 @@ func (r *ArtifactoryBaseUserResource) readUser(req *resty.Request, artifactoryVe
 func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactoryVersion string, user ArtifactoryUserResourceAPIModel, result *ArtifactoryUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", user.Name).

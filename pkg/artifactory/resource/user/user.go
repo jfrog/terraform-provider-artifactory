@@ -19,7 +19,7 @@ import (
 	"github.com/samber/lo"
 )
 
-const AccessAPIArtifactoryVersion = "7.83.1"
+const AccessAPIArtifactoryVersion = "7.84.3"
 
 type User struct {
 	Name                     string   `json:"username"`
@@ -225,7 +225,7 @@ func createUser(req *resty.Request, artifactoryVersion string, user User, result
 func ReadUser(req *resty.Request, artifactoryVersion, name string, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", name).
@@ -263,7 +263,7 @@ func ReadUser(req *resty.Request, artifactoryVersion, name string, result *User,
 func updateUser(req *resty.Request, artifactoryVersion string, user User, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", user.Name).

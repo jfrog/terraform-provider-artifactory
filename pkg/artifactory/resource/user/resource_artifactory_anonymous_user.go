@@ -75,7 +75,7 @@ func (r *ArtifactoryAnonymousUserResource) Create(ctx context.Context, req resou
 func (r *ArtifactoryAnonymousUserResource) readUser(req *resty.Request, artifactoryVersion, name string, result *ArtifactoryAnonymousUserResourceAPIModel, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
 	endpoint := GetUserEndpointPath(artifactoryVersion)
 
-	// 7.83.1 or later, use Access API
+	// 7.84.3 or later, use Access API
 	if ok, err := util.CheckVersion(artifactoryVersion, AccessAPIArtifactoryVersion); err == nil && ok {
 		return req.
 			SetPathParam("name", name).
