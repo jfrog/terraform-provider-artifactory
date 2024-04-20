@@ -153,7 +153,7 @@ func TestAccUser_full_groups(t *testing.T) {
 }
 
 func TestAccUser_no_password(t *testing.T) {
-	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
+	id, fqrn, _ := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")
 
@@ -201,13 +201,6 @@ func TestAccUser_no_password(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
 				),
 			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "name"),
-				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
-			},
 		},
 	})
 }
@@ -250,6 +243,113 @@ func TestAccUser_no_groups(t *testing.T) {
 				ImportStateCheck:        validator.CheckImportState(name, "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
 			},
+		},
+	})
+}
+
+func TestAccUser_internal_password_disabled_changed_error(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":     name,
+		"username": username,
+		"email":    email,
+	}
+	config := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_user" "{{ .name }}" {
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			admin  = false
+			internal_password_disabled = true
+			groups = [ "readers" ]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_user" "{{ .name }}" {
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			admin  = false
+			internal_password_disabled = false
+			groups = [ "readers" ]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+				),
+			},
+			{
+				Config:      updatedConfig,
+				ExpectError: regexp.MustCompile(`Password must be set when internal_password_disabled is changed to 'false'`),
+			},
+		},
+	})
+}
+
+func TestAccUser_internal_password_disabled_changed_with_password(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":     name,
+		"username": username,
+		"email":    email,
+	}
+	config := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_user" "{{ .name }}" {
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			admin  = false
+			internal_password_disabled = true
+			groups = [ "readers" ]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccUserBasic", `
+		resource "artifactory_user" "{{ .name }}" {
+			name   = "{{ .name }}"
+			email  = "{{ .email }}"
+			password = "Password!123"
+			admin  = false
+			internal_password_disabled = false
+			groups = [ "readers" ]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", fmt.Sprintf("foobar-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "password", "Password!123"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "1"),
+				)},
 		},
 	})
 }

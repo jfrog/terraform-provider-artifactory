@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/webhook"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -77,7 +76,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_virtual_nuget_repository":                virtual.ResourceArtifactoryVirtualNugetRepository(),
 		"artifactory_virtual_oci_repository":                  virtual.ResourceArtifactoryVirtualOciRepository(),
 		"artifactory_virtual_rpm_repository":                  virtual.ResourceArtifactoryVirtualRpmRepository(),
-		"artifactory_unmanaged_user":                          user.ResourceArtifactoryUser(), // alias of artifactory_user
 		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
