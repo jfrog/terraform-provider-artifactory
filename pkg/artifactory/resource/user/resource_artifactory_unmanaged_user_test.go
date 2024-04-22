@@ -16,6 +16,54 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+func TestAccUnmanagedUser_UpgradeFromSDKv2(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-unmanaged-user-upgrade-", "artifactory_unmanaged_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}
+	config := util.ExecuteTemplate("TestAccUnmanagedUserUpgrade", `
+		resource "artifactory_unmanaged_user" "{{ .name }}" {
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!12"
+			disable_ui_access = false
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.7.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccUnmanagedUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
