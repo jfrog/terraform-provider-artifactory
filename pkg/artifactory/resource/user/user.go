@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -82,6 +81,39 @@ type ArtifactoryUserResourceAPIModel struct {
 	DisableUIAccess          bool      `json:"disable_ui_access"`
 	InternalPasswordDisabled *bool     `json:"internal_password_disabled,omitempty"`
 	Groups                   *[]string `json:"groups,omitempty"`
+}
+
+func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *ArtifactoryUserResourceModel) diag.Diagnostics {
+	r.Id = types.StringValue(u.Name)
+	r.Name = types.StringValue(u.Name)
+	r.Email = types.StringValue(u.Email)
+
+	if r.Password.IsUnknown() {
+		r.Password = types.StringNull()
+	}
+
+	r.Admin = types.BoolValue(u.Admin)
+	r.ProfileUpdatable = types.BoolValue(u.ProfileUpdatable)
+	r.DisableUIAccess = types.BoolValue(u.DisableUIAccess)
+
+	if u.InternalPasswordDisabled != nil {
+		r.InternalPasswordDisabled = types.BoolPointerValue(u.InternalPasswordDisabled)
+	}
+
+	// if Groups attribute is set to [] and GET returns null then make sure state has empty set
+	if !r.Groups.IsNull() && len(r.Groups.Elements()) == 0 && u.Groups == nil {
+		r.Groups = types.SetValueMust(types.StringType, []attr.Value{})
+	}
+
+	if u.Groups != nil {
+		groups, diags := types.SetValueFrom(ctx, types.StringType, u.Groups)
+		if diags.HasError() {
+			return diags
+		}
+		r.Groups = groups
+	}
+
+	return nil
 }
 
 var baseUserSchemaFramework = map[string]schema.Attribute{
@@ -140,7 +172,6 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		ElementType:         types.StringType,
 		Optional:            true,
 		Computed:            true,
-		Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 		PlanModifiers: []planmodifier.Set{
 			setplanmodifier.UseStateForUnknown(),
 		},
@@ -609,37 +640,4 @@ func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.D
 // ImportState imports the resource into the Terraform state.
 func (r *ArtifactoryBaseUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
-
-}
-func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *ArtifactoryUserResourceModel) diag.Diagnostics {
-	r.Id = types.StringValue(u.Name)
-	r.Name = types.StringValue(u.Name)
-	r.Email = types.StringValue(u.Email)
-
-	if r.Password.IsUnknown() {
-		r.Password = types.StringNull()
-	}
-
-	r.Admin = types.BoolValue(u.Admin)
-	r.ProfileUpdatable = types.BoolValue(u.ProfileUpdatable)
-	r.DisableUIAccess = types.BoolValue(u.DisableUIAccess)
-
-	if u.InternalPasswordDisabled != nil {
-		r.InternalPasswordDisabled = types.BoolPointerValue(u.InternalPasswordDisabled)
-	}
-
-	// if Groups attribute is set to [] and GET returns null then make sure state has empty set
-	if !r.Groups.IsNull() && len(r.Groups.Elements()) == 0 && u.Groups == nil {
-		r.Groups = types.SetValueMust(types.StringType, []attr.Value{})
-	}
-
-	if u.Groups != nil && len(*u.Groups) > 0 {
-		groups, diags := types.SetValueFrom(ctx, types.StringType, u.Groups)
-		if diags.HasError() {
-			return diags
-		}
-		r.Groups = groups
-	}
-
-	return nil
 }

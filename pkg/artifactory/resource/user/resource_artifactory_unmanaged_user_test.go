@@ -153,7 +153,7 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "password"),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccUnmanagedUser_internal_password_disabled_changed_error(t *testing.T)
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
 					resource.TestCheckNoResourceAttr(fqrn, "password"),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -310,7 +310,7 @@ func TestAccUnmanagedUser_internal_password_disabled_changed_with_password(t *te
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
 					resource.TestCheckNoResourceAttr(fqrn, "password"),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{

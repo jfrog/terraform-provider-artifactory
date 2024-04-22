@@ -63,6 +63,53 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 	})
 }
 
+func TestAccUser_UpgradeFrom10_7_0(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}
+	userNoGroups := util.ExecuteTemplate("TestAccUserUpgrade", `
+		resource "artifactory_user" "{{ .name }}" {
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!12"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.7.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: userNoGroups,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   userNoGroups,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccUser_full_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_user")
 	_, _, groupName1 := testutil.MkNames("test-group-", "artifactory_group")
