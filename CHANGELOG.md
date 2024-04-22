@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-resource/artifactory_unmanaged_user, resource/artifactory_user: Toggle between using (old) Artifactory Security API and (new) Access API based on Artifactory version 7.84.3 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#940](https://github.com/jfrog/terraform-provider-artifactory/pull/940)
+resource/artifactory_managed_user, resource/artifactory_unmanaged_user, resource/artifactory_user: Toggle between using (old) Artifactory Security API and (new) Access API based on Artifactory version 7.84.3 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#940](https://github.com/jfrog/terraform-provider-artifactory/pull/940)
 
 ## 10.7.0 (Apr 18, 2024)
 
