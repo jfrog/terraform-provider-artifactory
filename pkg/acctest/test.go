@@ -342,7 +342,7 @@ func DeleteUser(t *testing.T, name string) error {
 
 func CreateUserUpdatable(t *testing.T, name string, email string) {
 	internalPasswordDisabled := false
-	userObj := user.ArtifactoryUserAPIModel{
+	userObj := user.ArtifactoryUserResourceAPIModel{
 		Name:                     name,
 		Email:                    email,
 		Password:                 "Lizard123!",

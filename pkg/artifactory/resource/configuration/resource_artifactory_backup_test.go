@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +16,11 @@ import (
 )
 
 func TestAccBackup_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("backup-", "artifactory_backup")
 	_, _, repoResourceName1 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
 	_, _, repoResourceName2 := testutil.MkNames("test-backup-local-", "artifactory_local_generic_repository")
@@ -93,6 +100,11 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 }
 
 func TestAccBackup_importNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	config := `
 		resource "artifactory_backup" "not-exist-test" {
 		  enabled                = false
@@ -146,6 +158,11 @@ func TestAccBackup_invalid_cron(t *testing.T) {
 }
 
 func TestAccBackup_CronExpressions(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	cronExpressions := [...]string{
 		"10/20 15 14 5-10 * ? *",
 		"* 5,7,9 14-16 * * ? *",

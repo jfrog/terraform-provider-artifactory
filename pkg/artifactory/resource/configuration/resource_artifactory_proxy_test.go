@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,6 +43,11 @@ resource "artifactory_proxy" "{{ .resource_name }}" {
 }`
 
 func TestAccProxy_createUpdate(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("proxy-", "artifactory_proxy")
 	var testData = map[string]string{
 		"resource_name":       resourceName,
@@ -95,6 +102,11 @@ func TestAccProxy_createUpdate(t *testing.T) {
 }
 
 func TestAccProxy_importNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	config := `
 		resource "artifactory_proxy" "not-exist-test" {
 		  key               = "not-exist-test"

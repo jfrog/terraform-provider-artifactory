@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +16,11 @@ import (
 )
 
 func TestAccPropertySet_UpgradeFromSDKv2(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
@@ -49,6 +56,11 @@ func TestAccPropertySet_UpgradeFromSDKv2(t *testing.T) {
 }
 
 func TestAccPropertySet_Create(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":     resourceName,
@@ -80,6 +92,11 @@ func TestAccPropertySet_Create(t *testing.T) {
 }
 
 func TestAccPropertySet_Update(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
@@ -128,6 +145,11 @@ func TestAccPropertySet_Update(t *testing.T) {
 }
 
 func TestAccPropertySet_Validation(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
 	var testData = map[string]string{
 		"resource_name":            resourceName,
@@ -161,6 +183,11 @@ func TestAccPropertySet_Validation(t *testing.T) {
 }
 
 func TestAccPropertySet_ImportNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	config := `
 		resource "artifactory_property_set" "not-exist-test" {
 		  name                     = "not-exist-test"
