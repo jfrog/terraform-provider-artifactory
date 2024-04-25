@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +16,11 @@ import (
 )
 
 func TestAccLdapGroupSetting_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	const LdapGroupSettingTemplateFull = `
 resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 	name = "ldapgrouptest"
@@ -84,6 +91,11 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 }
 
 func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	var onOrAfterVersion7571 = func() (bool, error) {
 		return acctest.CompareArtifactoryVersions(t, "7.57.1")
 	}

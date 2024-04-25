@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/configuration"
@@ -15,6 +17,11 @@ import (
 )
 
 func TestAccLdapSetting_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	const LdapSettingTemplateFull = `
 resource "artifactory_ldap_setting" "ldaptest" {
 	key = "ldaptest"
@@ -85,6 +92,11 @@ resource "artifactory_ldap_setting" "ldaptest" {
 }
 
 func TestAccLdapSetting_importNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	config := `
 		resource "artifactory_ldap_setting" "not-exist-test" {
 			key = "not-exist-test"
@@ -121,6 +133,11 @@ func TestAccLdapSetting_importNotFound(t *testing.T) {
 }
 
 func TestAccLdapSetting_emailAttribute(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	const LdapSettingTemplateNoEmailAttr = `
 resource "artifactory_ldap_setting" "ldaptestemailattr" {
 	key = "ldaptestemailattr"
@@ -206,6 +223,11 @@ resource "artifactory_ldap_setting" "ldaptestemailattr" {
 }
 
 func TestAccLdapSetting_user_dn_or_search_filter(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	const LdapSettingTemplateUserDnNoSearchFilter = `
 resource "artifactory_ldap_setting" "ldaptestuserdnsearchfilter" {
 	key = "ldaptestuserdnsearchfilter"
