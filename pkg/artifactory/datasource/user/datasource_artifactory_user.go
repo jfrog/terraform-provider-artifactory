@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -71,9 +72,9 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: rd}
 
 		userName := d.Get("name").(string)
-		var userObj user.User
+		var userObj User
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
-		resp, err := user.ReadUser(
+		resp, err := readUser(
 			m.(util.ProviderMetadata).Client.R(),
 			m.(util.ProviderMetadata).ArtifactoryVersion,
 			userName,
@@ -90,7 +91,7 @@ func DataSourceArtifactoryUser() *schema.Resource {
 
 		d.SetId(userObj.Name)
 
-		return user.PackUser(userObj, rd)
+		return packUser(userObj, rd)
 	}
 
 	return &schema.Resource{
@@ -98,4 +99,75 @@ func DataSourceArtifactoryUser() *schema.Resource {
 		Schema:      userSchema, // note this does not include password of the user, don't think we should return it as a datasource
 		Description: "Provides the Artifactory User data source. ",
 	}
+}
+
+type User struct {
+	Name                     string   `json:"username"`
+	Email                    string   `json:"email"`
+	Password                 string   `json:"password,omitempty"`
+	Admin                    bool     `json:"admin"`
+	ProfileUpdatable         bool     `json:"profile_updatable"`
+	DisableUIAccess          bool     `json:"disable_ui_access"`
+	InternalPasswordDisabled *bool    `json:"internal_password_disabled"`
+	Groups                   []string `json:"groups,omitempty"`
+}
+
+func readUser(req *resty.Request, artifactoryVersion, name string, result *User, artifactoryError *artifactory.ArtifactoryErrorsResponse) (*resty.Response, error) {
+	endpoint := user.GetUserEndpointPath(artifactoryVersion)
+
+	// 7.83.1 or later, use Access API
+	if ok, err := util.CheckVersion(artifactoryVersion, user.AccessAPIArtifactoryVersion); err == nil && ok {
+		return req.
+			SetPathParam("name", name).
+			SetResult(&result).
+			SetError(&artifactoryError).
+			Get(endpoint)
+	}
+
+	// else use old Artifactory API, which has a slightly differect JSON payload!
+	var artifactoryResult user.ArtifactoryUserAPIModel
+	res, err := req.
+		SetPathParam("name", name).
+		SetResult(&artifactoryResult).
+		SetError(artifactoryError).
+		Get(endpoint)
+
+	var groups []string
+	if artifactoryResult.Groups != nil {
+		groups = *artifactoryResult.Groups
+	}
+
+	*result = User{
+		Name:                     artifactoryResult.Name,
+		Email:                    artifactoryResult.Email,
+		Admin:                    artifactoryResult.Admin,
+		ProfileUpdatable:         artifactoryResult.ProfileUpdatable,
+		DisableUIAccess:          artifactoryResult.DisableUIAccess,
+		InternalPasswordDisabled: artifactoryResult.InternalPasswordDisabled,
+		Groups:                   groups,
+	}
+
+	return res, err
+}
+
+func packUser(user User, d *schema.ResourceData) diag.Diagnostics {
+
+	setValue := utilsdk.MkLens(d)
+
+	setValue("name", user.Name)
+	setValue("email", user.Email)
+	setValue("admin", user.Admin)
+	setValue("profile_updatable", user.ProfileUpdatable)
+	setValue("disable_ui_access", user.DisableUIAccess)
+	errors := setValue("internal_password_disabled", user.InternalPasswordDisabled)
+
+	if user.Groups != nil {
+		errors = setValue("groups", schema.NewSet(schema.HashString, utilsdk.CastToInterfaceArr(user.Groups)))
+	}
+
+	if len(errors) > 0 {
+		return diag.Errorf("failed to pack user %q", errors)
+	}
+
+	return nil
 }

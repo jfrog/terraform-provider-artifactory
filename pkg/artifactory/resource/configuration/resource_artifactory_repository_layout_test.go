@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +16,11 @@ import (
 )
 
 func TestAccRepositoryLayout_UpgradeFromSDKv2(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
 	config := util.ExecuteTemplate("layout", `
@@ -59,6 +66,11 @@ func TestAccRepositoryLayout_UpgradeFromSDKv2(t *testing.T) {
 }
 
 func TestAccRepositoryLayout_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, name := testutil.MkNames("test", "artifactory_repository_layout")
 
 	layoutConfig := util.ExecuteTemplate("layout", `
@@ -125,6 +137,11 @@ func TestAccRepositoryLayout_full(t *testing.T) {
 }
 
 func TestAccRepositoryLayout_importNotFound(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	config := `
 		resource "artifactory_repository_layout" "not-exist-test" {
 			name                                = "not-exist-test"

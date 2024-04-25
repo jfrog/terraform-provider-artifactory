@@ -2,6 +2,8 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -30,6 +32,11 @@ resource "artifactory_oauth_settings" "oauth" {
 }`
 
 func TestAccOauthSettings_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	fqrn := "artifactory_oauth_settings.oauth"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -87,6 +94,11 @@ resource "artifactory_oauth_settings" "oauth" {
 `
 
 func TestAccOauthSettings_multipleProviders(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	fqrn := "artifactory_oauth_settings.oauth"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

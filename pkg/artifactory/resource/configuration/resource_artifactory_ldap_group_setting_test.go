@@ -84,6 +84,10 @@ resource "artifactory_ldap_group_setting" "ldapgrouptest" {
 }
 
 func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
+
 	config := `
 		resource "artifactory_ldap_group_setting" "not-exist-test" {
 			name = "not-exist-test"
@@ -102,6 +106,7 @@ func TestAccLdapGroupSetting_importNotFound(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				SkipFunc:      onOrAfterVersion7571,
 				Config:        config,
 				ResourceName:  "artifactory_ldap_group_setting.not-exist-test",
 				ImportStateId: "not-exist-test",

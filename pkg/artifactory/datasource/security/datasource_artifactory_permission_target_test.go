@@ -56,7 +56,10 @@ func createPermissionTarget(targetName string, userName string, t *testing.T) {
 
 	restyClient := acctest.GetTestResty(t)
 	postPermissionTarget := security.PermissionsEndPoint + permissionTarget.Name
-	if _, err := restyClient.R().AddRetryCondition(repository.Retry400).SetBody(permissionTarget).Post(postPermissionTarget); err != nil {
+	if _, err := restyClient.R().
+		AddRetryCondition(repository.Retry400).
+		SetBody(permissionTarget).
+		Post(postPermissionTarget); err != nil {
 		t.Fatal(err)
 	}
 

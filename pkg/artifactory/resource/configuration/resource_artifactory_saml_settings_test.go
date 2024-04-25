@@ -2,6 +2,8 @@ package configuration_test
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -29,6 +31,11 @@ resource "artifactory_saml_settings" "saml" {
 }`
 
 func TestAccSamlSettings_full(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if !strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is not a cloud instance.", jfrogURL)
+	}
+
 	fqrn := "artifactory_saml_settings.saml"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

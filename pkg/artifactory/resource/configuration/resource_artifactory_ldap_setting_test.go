@@ -99,11 +99,17 @@ func TestAccLdapSetting_importNotFound(t *testing.T) {
 			manager_password = "testmgrpaswd"
 		}
 	`
+
+	var onOrAfterVersion7571 = func() (bool, error) {
+		return acctest.CompareArtifactoryVersions(t, "7.57.1")
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				SkipFunc:      onOrAfterVersion7571,
 				Config:        config,
 				ResourceName:  "artifactory_ldap_setting.not-exist-test",
 				ImportStateId: "not-exist-test",

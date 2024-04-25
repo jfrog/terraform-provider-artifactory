@@ -16,6 +16,54 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
+func TestAccUnmanagedUser_UpgradeFromSDKv2(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-unmanaged-user-upgrade-", "artifactory_unmanaged_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}
+	config := util.ExecuteTemplate("TestAccUnmanagedUserUpgrade", `
+		resource "artifactory_unmanaged_user" "{{ .name }}" {
+			name     = "{{ .name }}"
+			email 	 = "{{ .email }}"
+			password = "Passsw0rd!12"
+			disable_ui_access = false
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.7.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["name"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccUnmanagedUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("user-%d", id)
@@ -50,9 +98,9 @@ func TestAccUnmanagedUser_PasswordNotChangeWhenOtherAttributesChangeGH340(t *tes
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: userInitial,
@@ -96,16 +144,16 @@ func TestAccUnmanagedUser_basic(t *testing.T) {
 	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userBasic, name, username, id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -125,6 +173,7 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
 			profile_updatable = true
+			disable_ui_access = false
 		}
 	`
 
@@ -132,7 +181,8 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 		resource "artifactory_unmanaged_user" "%s" {
 			name  	= "%s"
 			email 	= "dummy_user%d@a.com"
-			profile_updatable = false
+			profile_updatable = true
+			disable_ui_access = true
 		}
 	`
 
@@ -142,9 +192,9 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 	username := fmt.Sprintf("dummy_user%d", id)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(config, name, username, id),
@@ -152,8 +202,9 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "password"),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
@@ -161,17 +212,128 @@ func TestAccUnmanagedUser_ShouldCreateUpdateWithoutPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
-					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "false"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "true"),
 					resource.TestCheckNoResourceAttr(fqrn, "password"),
-					resource.TestCheckNoResourceAttr(fqrn, "groups"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccUnmanagedUser_internal_password_disabled_changed_error(t *testing.T) {
+	const config = `
+		resource "artifactory_unmanaged_user" "%s" {
+			name  	= "%s"
+			email 	= "dummy_user%d@a.com"
+			profile_updatable = true
+			disable_ui_access = false
+			internal_password_disabled = true
+		}
+	`
+
+	const updatedConfig = `
+		resource "artifactory_unmanaged_user" "%s" {
+			name  	= "%s"
+			email 	= "dummy_user%d@a.com"
+			disable_ui_access = true
+			internal_password_disabled = false
+		}
+	`
+
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("foobar-%d", id)
+	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
+	username := fmt.Sprintf("dummy_user%d", id)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(username, "name"),
-				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
+				Config:      fmt.Sprintf(updatedConfig, name, username, id),
+				ExpectError: regexp.MustCompile(`Password must be set when internal_password_disabled is changed to 'false'`),
+			},
+		},
+	})
+}
+
+func TestAccUnmanagedUser_internal_password_disabled_changed_with_password(t *testing.T) {
+	const config = `
+		resource "artifactory_unmanaged_user" "%s" {
+			name  	= "%s"
+			email 	= "dummy_user%d@a.com"
+			profile_updatable = true
+			disable_ui_access = false
+			internal_password_disabled = true
+		}
+	`
+
+	const updatedConfig = `
+		resource "artifactory_unmanaged_user" "%s" {
+			name  	= "%s"
+			email 	= "dummy_user%d@a.com"
+			password = "Password!123"
+			disable_ui_access = true
+			internal_password_disabled = false
+		}
+	`
+
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("foobar-%d", id)
+	fqrn := fmt.Sprintf("artifactory_unmanaged_user.%s", name)
+	username := fmt.Sprintf("dummy_user%d", id)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(updatedConfig, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "password", "Password!123"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(config, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
 			},
 		},
 	})
@@ -245,7 +407,7 @@ func TestAccUnmanagedUser_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
@@ -302,7 +464,7 @@ func TestAccUnmanagedUser_invalidName(t *testing.T) {
 		username   string
 		errorRegex string
 	}{
-		{"Empty", "", `.*expected "name" to not be an empty string.*`},
+		{"Empty", "", `.*Attribute name string length must be at least 1, got: 0.*`},
 		{"Uppercase", "test_user_Uppercase", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
 		{"Symbols", "test_user_!", `.*may contain lowercase letters, numbers and symbols: '.-_@'.*`},
 	}
@@ -323,9 +485,9 @@ func testAccUnmanagedUserInvalidName(username, errorRegex string) func(t *testin
 		id, fqrn, name := testutil.MkNames("test-", "artifactory_unmanaged_user")
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { acctest.PreCheck(t) },
-			ProviderFactories: acctest.ProviderFactories,
-			CheckDestroy:      testAccCheckUserDestroy(fqrn),
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
 			Steps: []resource.TestStep{
 				{
 					Config:      fmt.Sprintf(userNoGroups, name, username, id),
@@ -348,9 +510,9 @@ func TestAccUnmanagedUser_EmptyGroups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_unmanaged_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy(fqrn),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(userEmptyGroups, name, username, id),
@@ -382,7 +544,7 @@ func testAccCheckUserDestroy(id string) func(*terraform.State) error {
 
 		var resp *resty.Response
 		var err error
-		// 7.83.1 or later, use Access API
+		// 7.84.3 or later, use Access API
 		if ok, e := util.CheckVersion(acctest.Provider.Meta().(util.ProviderMetadata).ArtifactoryVersion, user.AccessAPIArtifactoryVersion); e == nil && ok {
 			r, er := client.R().Get("access/api/v2/users/" + rs.Primary.ID)
 			resp = r

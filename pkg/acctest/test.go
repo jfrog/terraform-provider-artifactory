@@ -341,15 +341,16 @@ func DeleteUser(t *testing.T, name string) error {
 }
 
 func CreateUserUpdatable(t *testing.T, name string, email string) {
-	userObj := user.User{
+	internalPasswordDisabled := false
+	userObj := user.ArtifactoryUserResourceAPIModel{
 		Name:                     name,
 		Email:                    email,
 		Password:                 "Lizard123!",
 		Admin:                    false,
 		ProfileUpdatable:         true,
 		DisableUIAccess:          false,
-		InternalPasswordDisabled: false,
-		Groups:                   []string{"readers"},
+		InternalPasswordDisabled: &internalPasswordDisabled,
+		Groups:                   &[]string{"readers"},
 	}
 
 	restyClient := GetTestResty(t)
