@@ -42,6 +42,63 @@ resource "artifactory_proxy" "{{ .resource_name }}" {
   services          = ["{{ .services_1 }}", "{{ .services_2 }}"]
 }`
 
+func TestAccProxy_UpgradeFromSDKv2(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
+	_, fqrn, resourceName := testutil.MkNames("test-proxy-", "artifactory_proxy")
+
+	temp := `
+	resource "artifactory_proxy" "{{ .resource_name }}" {
+		key               = "{{ .resource_name }}"
+		host              = "{{ .host }}"
+		port              = {{ .port }}
+	}`
+
+	var testData = map[string]string{
+		"resource_name": resourceName,
+		"host":          "https://fake-proxy.org",
+		"port":          "8080",
+	}
+
+	config := util.ExecuteTemplate(fqrn, temp, testData)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "10.1.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", testData["resource_name"]),
+					resource.TestCheckResourceAttr(fqrn, "host", testData["host"]),
+					resource.TestCheckResourceAttr(fqrn, "port", testData["port"]),
+					resource.TestCheckResourceAttr(fqrn, "username", ""),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
+					resource.TestCheckResourceAttr(fqrn, "nt_host", ""),
+					resource.TestCheckResourceAttr(fqrn, "nt_domain", ""),
+					resource.TestCheckResourceAttr(fqrn, "platform_default", "false"),
+					resource.TestCheckNoResourceAttr(fqrn, "redirect_to_hosts"),
+					resource.TestCheckNoResourceAttr(fqrn, "services"),
+				),
+				ConfigPlanChecks: acctest.ConfigPlanChecks,
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+			},
+		},
+	})
+}
+
 func TestAccProxy_createUpdate(t *testing.T) {
 	jfrogURL := os.Getenv("JFROG_URL")
 	if strings.HasSuffix(jfrogURL, "jfrog.io") {
