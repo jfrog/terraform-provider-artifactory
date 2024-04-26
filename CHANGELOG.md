@@ -1,4 +1,10 @@
-## 10.7.1 (Apr 22, 2024)
+## 10.7.1 (Apr 26, 2024)
+
+BUG FIXES:
+
+resource/artifactory_proxy: Fix hidden state drifts with resource created using SDKv2 (i.e. <= 10.1.0). Issue: [#941](https://github.com/jfrog/terraform-provider-artifactory/issues/941) PR: [#943](https://github.com/jfrog/terraform-provider-artifactory/pull/943)
+
+## 10.7.1 (Apr 25, 2024)
 
 BUG FIXES:
 

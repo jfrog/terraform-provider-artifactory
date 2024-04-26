@@ -32,8 +32,8 @@ resource "artifactory_saml_settings" "saml" {
 
 func TestAccSamlSettings_full(t *testing.T) {
 	jfrogURL := os.Getenv("JFROG_URL")
-	if !strings.HasSuffix(jfrogURL, "jfrog.io") {
-		t.Skipf("env var JFROG_URL '%s' is not a cloud instance.", jfrogURL)
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
 	}
 
 	fqrn := "artifactory_saml_settings.saml"
