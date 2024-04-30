@@ -221,13 +221,13 @@ func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "build.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "release_bundle.#", "1"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})

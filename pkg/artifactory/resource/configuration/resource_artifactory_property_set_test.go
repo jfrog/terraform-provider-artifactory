@@ -43,13 +43,13 @@ func TestAccPropertySet_UpgradeFromSDKv2(t *testing.T) {
 				},
 				Config:           config,
 				Check:            resource.ComposeTestCheckFunc(verifyPropertySet(fqrn, testData)),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})

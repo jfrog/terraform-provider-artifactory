@@ -49,13 +49,13 @@ func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "users_names"),
 					resource.TestCheckResourceAttr(fqrn, "watch_manager", "false"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})

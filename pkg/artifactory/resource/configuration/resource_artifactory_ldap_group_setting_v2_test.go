@@ -69,7 +69,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "STATIC"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				Config: LdapSettingTemplateFullUpdate,
@@ -85,7 +85,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "DYNAMIC"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ResourceName:      fqrn,

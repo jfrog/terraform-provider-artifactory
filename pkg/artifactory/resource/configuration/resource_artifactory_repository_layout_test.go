@@ -53,13 +53,13 @@ func TestAccRepositoryLayout_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "SNAPSHOT"),
 					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})
