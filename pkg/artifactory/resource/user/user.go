@@ -133,6 +133,9 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 				"may contain lowercase letters, numbers and symbols: '.-_@'",
 			),
 		},
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+		},
 	},
 	"email": schema.StringAttribute{
 		MarkdownDescription: "Email for user.",
