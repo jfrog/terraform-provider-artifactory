@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -47,13 +48,13 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})
@@ -249,6 +250,68 @@ func TestAccManagedUser_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(params["username"], "name"),
 				ImportStateVerifyIgnore: []string{"password"}, // password is never returned via the API, so it cannot be "imported"
+			},
+		},
+	})
+}
+
+func TestAccManagedUser_name_change(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_managed_user")
+	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	params := map[string]string{
+		"name":      name,
+		"username":  username,
+		"email":     email,
+		"groupName": groupName,
+	}
+
+	userFull := util.ExecuteTemplate("TestAccManagedUser", `
+		resource "artifactory_managed_user" "{{ .name }}" {
+			name        		= "{{ .username }}"
+			email       		= "{{ .email }}"
+			password			= "Passsw0rd!12"
+			admin    			= true
+			profile_updatable   = true
+			disable_ui_access	= false
+		}
+	`, params)
+
+	usernameChangedConfig := util.ExecuteTemplate("TestAccManagedUser", `
+		resource "artifactory_managed_user" "{{ .name }}" {
+			name        		= "foobar"
+			email       		= "{{ .email }}"
+			password			= "Passsw0rd!12"
+			admin    			= false
+			profile_updatable   = false
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckManagedUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: userFull,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", params["username"]),
+					resource.TestCheckResourceAttr(fqrn, "email", params["email"]),
+					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
+			},
+			{
+				Config: usernameChangedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})

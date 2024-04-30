@@ -1,14 +1,20 @@
+## 10.7.3 (May 1, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_managed_user, resource/artifactory_unmanaged_user, resource/artifactory_user: Make `name` attribute trigger resource replacement if changed. Issue: [#944](https://github.com/jfrog/terraform-provider-artifactory/issues/944) PR: [#946](https://github.com/jfrog/terraform-provider-artifactory/pull/946)
+
 ## 10.7.2 (Apr 26, 2024)
 
 BUG FIXES:
 
-resource/artifactory_proxy: Fix hidden state drifts with resource created using SDKv2 (i.e. <= 10.1.0). Issue: [#941](https://github.com/jfrog/terraform-provider-artifactory/issues/941) PR: [#943](https://github.com/jfrog/terraform-provider-artifactory/pull/943)
+* resource/artifactory_proxy: Fix hidden state drifts with resource created using SDKv2 (i.e. <= 10.1.0). Issue: [#941](https://github.com/jfrog/terraform-provider-artifactory/issues/941) PR: [#943](https://github.com/jfrog/terraform-provider-artifactory/pull/943)
 
 ## 10.7.1 (Apr 25, 2024)
 
 BUG FIXES:
 
-resource/artifactory_managed_user, resource/artifactory_unmanaged_user, resource/artifactory_user: Toggle between using (old) Artifactory Security API and (new) Access API based on Artifactory version 7.84.3 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#940](https://github.com/jfrog/terraform-provider-artifactory/pull/940)
+* resource/artifactory_managed_user, resource/artifactory_unmanaged_user, resource/artifactory_user: Toggle between using (old) Artifactory Security API and (new) Access API based on Artifactory version 7.84.3 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#940](https://github.com/jfrog/terraform-provider-artifactory/pull/940)
 
 ## 10.7.0 (Apr 18, 2024)
 
@@ -20,7 +26,7 @@ FEATURES:
 
 BUG FIXES:
 
-resource/artifactory_unmanaged_user, resource/artifactory_user: Revert storing auto-generated `password` attribute value in Terraform state. Revert back to Artifactory Security API until Artifactory version 7.83.1 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#937](https://github.com/jfrog/terraform-provider-artifactory/pull/937)
+* resource/artifactory_unmanaged_user, resource/artifactory_user: Revert storing auto-generated `password` attribute value in Terraform state. Revert back to Artifactory Security API until Artifactory version 7.83.1 due to Access API bug in updating user without password field. Issue: [#931](https://github.com/jfrog/terraform-provider-artifactory/issues/931) PR: [#937](https://github.com/jfrog/terraform-provider-artifactory/pull/937)
 
 IMPROVEMENTS:
 

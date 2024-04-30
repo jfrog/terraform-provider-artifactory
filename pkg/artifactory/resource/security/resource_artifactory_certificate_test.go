@@ -77,13 +77,13 @@ func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "issued_to", "Unknown"),
 					resource.TestCheckResourceAttr(fqrn, "valid_until", "2029-05-14T10:03:26.000Z"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})

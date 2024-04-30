@@ -48,7 +48,7 @@ func TestAccLdapSettingV2_full_no_search(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "user_dn_pattern", params["user_dn_pattern"].(string)),
 					resource.TestCheckResourceAttr(fqrn, "email_attribute", "mail_attr"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ResourceName:            fqrn,
@@ -102,7 +102,7 @@ func TestAccLdapSettingV2_full_with_search(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_filter", "(uid={0})"),
 					resource.TestCheckResourceAttr(fqrn, "search_base", params["search_base"].(string)),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ResourceName:            fqrn,

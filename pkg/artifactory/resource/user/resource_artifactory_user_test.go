@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/user"
@@ -51,13 +52,13 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})
@@ -98,13 +99,13 @@ func TestAccUser_UpgradeFrom10_7_0(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckNoResourceAttr(fqrn, "groups"),
 				),
-				ConfigPlanChecks: acctest.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks,
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   userNoGroups,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         acctest.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks,
 			},
 		},
 	})
@@ -482,6 +483,61 @@ func testAccUserInvalidName(username, errorRegex string) func(t *testing.T) {
 			},
 		})
 	}
+}
+
+func TestAccUser_name_change(t *testing.T) {
+	const config = `
+		resource "artifactory_user" "%s" {
+			name        				= "%s"
+			email       				= "dummy%d@a.com"
+			password					= "Passw0rd!"
+			admin    					= true
+			profile_updatable   		= true
+			disable_ui_access			= false
+			internal_password_disabled 	= false
+		}
+	`
+	const nameChangedConfig = `
+		resource "artifactory_user" "%s" {
+			name        				= "foobar"
+			email       				= "dummy%d@a.com"
+			password					= "Passw0rd!"
+			admin    					= true
+			profile_updatable   		= true
+			disable_ui_access			= false
+			internal_password_disabled 	= false
+		}
+	`
+	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user-@%d.", id)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(config, name, username, id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", username),
+					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy%d@a.com", id)),
+					resource.TestCheckResourceAttr(fqrn, "admin", "true"),
+					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
+					resource.TestCheckResourceAttr(fqrn, "disable_ui_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(nameChangedConfig, name, id),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
 }
 
 func TestAccUser_all_attributes(t *testing.T) {
