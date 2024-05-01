@@ -177,7 +177,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	go util.SendUsage(ctx, restyClient, productId, featureUsage)
+	go util.SendUsage(ctx, restyClient.R(), productId, featureUsage)
 
 	meta := util.ProviderMetadata{
 		Client:             restyClient,

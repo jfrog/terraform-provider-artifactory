@@ -66,7 +66,7 @@ func (r *GeneralSecurityResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *GeneralSecurityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan GeneralSecurityResourceModel
 
@@ -102,7 +102,7 @@ func (r *GeneralSecurityResource) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *GeneralSecurityResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state GeneralSecurityResourceModel
 	// Read Terraform prior state data into the model
@@ -133,7 +133,7 @@ func (r *GeneralSecurityResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *GeneralSecurityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan GeneralSecurityResourceModel
 
@@ -169,7 +169,7 @@ func (r *GeneralSecurityResource) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *GeneralSecurityResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state GeneralSecurityResourceModel
 

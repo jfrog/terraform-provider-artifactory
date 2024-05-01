@@ -309,7 +309,7 @@ func (r *PropertySetResource) transformProperties(properties []PropertyAPIModel)
 }
 
 func (r *PropertySetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan PropertySetResourceModel
 
@@ -357,7 +357,7 @@ func (r *PropertySetResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *PropertySetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state PropertySetResourceModel
 	// Read Terraform prior state data into the model
@@ -402,7 +402,7 @@ func (r *PropertySetResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *PropertySetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan PropertySetResourceModel
 
@@ -450,7 +450,7 @@ func (r *PropertySetResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *PropertySetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state PropertySetResourceModel
 

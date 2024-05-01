@@ -179,7 +179,7 @@ func (r *MailServerResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *MailServerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *MailServerResourceModel
 
@@ -230,7 +230,7 @@ func (r *MailServerResource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *MailServerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *MailServerResourceModel
 	// Read Terraform prior state data into the model
@@ -270,7 +270,7 @@ func (r *MailServerResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *MailServerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *MailServerResourceModel
 
@@ -318,7 +318,7 @@ func (r *MailServerResource) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *MailServerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state MailServerResourceModel
 

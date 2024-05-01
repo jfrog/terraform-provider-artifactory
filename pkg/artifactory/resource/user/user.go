@@ -398,7 +398,7 @@ func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactory
 }
 
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan ArtifactoryUserResourceModel
 	// Read Terraform plan data into the model
@@ -482,7 +482,7 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state ArtifactoryUserResourceModel
 
@@ -531,7 +531,7 @@ func (r *ArtifactoryBaseUserResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan ArtifactoryUserResourceModel
 
@@ -610,7 +610,7 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 }
 
 func (r *ArtifactoryBaseUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state ArtifactoryUserResourceModel
 
