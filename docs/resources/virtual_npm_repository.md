@@ -30,6 +30,9 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `retrieval_cache_period_seconds` - (Optional, Default: `7200`) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
+* `external_dependencies_enabled` - (Optional) When set, external dependencies are rewritten. Default value is false.
+* `external_dependencies_remote_repo` - (Optional) The remote repository aggregated by this virtual repository in which the external dependency will be cached.
+* `external_dependencies_patterns` - (Optional) An Allow List of Ant-style path expressions that specify where external dependencies may be downloaded from. By default, this is set to ** which means that dependencies may be downloaded from any external source.
 
 ## Import
 
