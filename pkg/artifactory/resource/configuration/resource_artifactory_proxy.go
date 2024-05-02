@@ -271,7 +271,7 @@ func (r ProxyResource) ValidateConfig(ctx context.Context, req resource.Validate
 }
 
 func (r *ProxyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *ProxyResourceModel
 
@@ -316,7 +316,7 @@ func (r *ProxyResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *ProxyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *ProxyResourceModel
 	// Read Terraform prior state data into the model
@@ -362,7 +362,7 @@ func (r *ProxyResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *ProxyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *ProxyResourceModel
 
@@ -407,7 +407,7 @@ func (r *ProxyResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *ProxyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var data ProxyResourceModel
 

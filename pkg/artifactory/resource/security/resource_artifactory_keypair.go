@@ -152,7 +152,7 @@ func (r *KeyPairResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *KeyPairResourceModel
 	// Read Terraform plan data into the model
@@ -189,7 +189,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state KeyPairResourceModel
 	// Read Terraform prior state data into the model
@@ -232,7 +232,7 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state KeyPairResourceModel
 

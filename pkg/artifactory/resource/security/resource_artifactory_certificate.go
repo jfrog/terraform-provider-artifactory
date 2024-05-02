@@ -189,7 +189,7 @@ func updateCertificate(content, file, alias basetypes.StringValue, restyRequest 
 }
 
 func (r *CertificateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *CertificateResourceModel
 	// Read Terraform plan data into the model
@@ -244,7 +244,7 @@ func FindCertificate(alias string, restyRequest *resty.Request) (*CertificateAPI
 }
 
 func (r *CertificateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *CertificateResourceModel
 	// Read Terraform prior state data into the model
@@ -279,7 +279,7 @@ func (r *CertificateResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *CertificateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *CertificateResourceModel
 	// Read Terraform plan data into the model
@@ -305,7 +305,7 @@ func (r *CertificateResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *CertificateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state CertificateResourceModel
 

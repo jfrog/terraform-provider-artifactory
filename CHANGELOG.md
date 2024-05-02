@@ -1,10 +1,16 @@
+## 10.7.5 (May 2, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_general_security is migrated to Plugin Framework. PR: [#948](https://github.com/jfrog/terraform-provider-artifactory/pull/948)
+
 ## 10.7.4 (May 1, 2024)
 
 IMPROVEMENTS:
 
 * resource/artifactory_virtual_npm_repository: Add documentation for missing attributes `external_dependencies_enabled`, `external_dependencies_remote_repo`, and `external_dependencies_patterns` PR: [#947](https://github.com/jfrog/terraform-provider-artifactory/pull/947)
 
-## 10.7.3 (May 1, 2024)
+## 10.7.3 (Apr 31, 2024)
 
 BUG FIXES:
 

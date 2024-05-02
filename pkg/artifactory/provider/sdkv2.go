@@ -71,8 +71,8 @@ func SdkV2() *schema.Provider {
 // Creates the client for artifactory, will prefer token auth over basic auth if both set
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 	// Check environment variables, first available OS variable will be assigned to the var
-	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
-	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
+	url := util.CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
+	accessToken := util.CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
 
 	if v, ok := d.GetOk("url"); ok {
 		url = v.(string)
@@ -131,7 +131,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", terraformVersion)
-	util.SendUsage(ctx, restyClient, productId, featureUsage)
+	go util.SendUsage(ctx, restyClient.R(), productId, featureUsage)
 
 	return util.ProviderMetadata{
 		Client:             restyClient,

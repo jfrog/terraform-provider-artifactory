@@ -230,7 +230,7 @@ func packSamlSecurity(ctx context.Context, s *SamlSecurity, d *schema.ResourceDa
 	setValue("use_encrypted_assertion", s.Saml.Settings.UseEncryptedAssertion)
 	errors := setValue("verify_audience_restriction", s.Saml.Settings.VerifyAudienceRestriction)
 
-	if errors != nil && len(errors) > 0 {
+	if len(errors) > 0 {
 		return diag.Errorf("failed to pack saml settings %q", errors)
 	}
 

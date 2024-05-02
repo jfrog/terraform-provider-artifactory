@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -85,8 +84,8 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 
 func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Check environment variables, first available OS variable will be assigned to the var
-	url := CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
-	accessToken := CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
+	url := util.CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
+	accessToken := util.CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
 
 	var config ArtifactoryProviderModel
 
@@ -178,7 +177,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	featureUsage := fmt.Sprintf("Terraform/%s", req.TerraformVersion)
-	go util.SendUsage(ctx, restyClient, productId, featureUsage)
+	go util.SendUsage(ctx, restyClient.R(), productId, featureUsage)
 
 	meta := util.ProviderMetadata{
 		Client:             restyClient,
@@ -209,6 +208,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		configuration.NewLdapSettingResource,
 		configuration.NewLdapGroupSettingResource,
 		configuration.NewBackupResource,
+		configuration.NewGeneralSecurityResource,
 		configuration.NewMailServerResource,
 		configuration.NewPropertySetResource,
 		configuration.NewProxyResource,
@@ -228,13 +228,4 @@ func Framework() func() provider.Provider {
 	return func() provider.Provider {
 		return &ArtifactoryProvider{}
 	}
-}
-
-func CheckEnvVars(vars []string, dv string) string {
-	for _, k := range vars {
-		if v := os.Getenv(k); v != "" {
-			return v
-		}
-	}
-	return dv
 }

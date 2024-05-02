@@ -100,7 +100,7 @@ func (r *ArtifactoryAnonymousUserResource) readUser(req *resty.Request, artifact
 }
 
 func (r *ArtifactoryAnonymousUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var data *ArtifactoryAnonymousUserResourceModel
 

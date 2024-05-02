@@ -141,7 +141,7 @@ func (r *RepositoryLayoutResource) Configure(ctx context.Context, req resource.C
 }
 
 func (r *RepositoryLayoutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan RepositoryLayoutResourceModel
 
@@ -189,7 +189,7 @@ func (r *RepositoryLayoutResource) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *RepositoryLayoutResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state RepositoryLayoutResourceModel
 	// Read Terraform prior state data into the model
@@ -239,7 +239,7 @@ func (r *RepositoryLayoutResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *RepositoryLayoutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan RepositoryLayoutResourceModel
 
@@ -287,7 +287,7 @@ func (r *RepositoryLayoutResource) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *RepositoryLayoutResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state RepositoryLayoutResourceModel
 

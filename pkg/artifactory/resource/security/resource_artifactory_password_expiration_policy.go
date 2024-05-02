@@ -75,7 +75,7 @@ func (r *PasswordExpirationPolicyResource) Configure(ctx context.Context, req re
 }
 
 func (r *PasswordExpirationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan PasswordExpirationPolicyResourceModel
 	// Read Terraform plan data into the model
@@ -110,7 +110,7 @@ func (r *PasswordExpirationPolicyResource) Create(ctx context.Context, req resou
 }
 
 func (r *PasswordExpirationPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *PasswordExpirationPolicyResourceModel
 	// Read Terraform prior state data into the model
@@ -147,7 +147,7 @@ func (r *PasswordExpirationPolicyResource) Read(ctx context.Context, req resourc
 }
 
 func (r *PasswordExpirationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan PasswordExpirationPolicyResourceModel
 	// Read Terraform plan data into the model
@@ -182,7 +182,7 @@ func (r *PasswordExpirationPolicyResource) Update(ctx context.Context, req resou
 }
 
 func (r *PasswordExpirationPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state PasswordExpirationPolicyResourceModel
 

@@ -145,7 +145,7 @@ func (r *DistributionPublicKeyResource) Configure(ctx context.Context, req resou
 }
 
 func (r *DistributionPublicKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan *DistributionPublicKeyResourceModel
 	// Read Terraform plan data into the model
@@ -187,7 +187,7 @@ func (r *DistributionPublicKeyResource) Create(ctx context.Context, req resource
 }
 
 func (r *DistributionPublicKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *DistributionPublicKeyResourceModel
 	// Read Terraform prior state data into the model
@@ -234,7 +234,7 @@ func (r *DistributionPublicKeyResource) Update(ctx context.Context, req resource
 }
 
 func (r *DistributionPublicKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state DistributionPublicKeyResourceModel
 

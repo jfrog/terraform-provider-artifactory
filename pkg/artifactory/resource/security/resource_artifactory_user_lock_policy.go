@@ -70,7 +70,7 @@ func (r *UserLockPolicyResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (r *UserLockPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan UserLockPolicyResourceModel
 	// Read Terraform plan data into the model
@@ -104,7 +104,7 @@ func (r *UserLockPolicyResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *UserLockPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// go util.SendUsageResourceRead(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state *UserLockPolicyResourceModel
 	// Read Terraform prior state data into the model
@@ -140,7 +140,7 @@ func (r *UserLockPolicyResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *UserLockPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var plan UserLockPolicyResourceModel
 	// Read Terraform plan data into the model
@@ -174,7 +174,7 @@ func (r *UserLockPolicyResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *UserLockPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// go util.SendUsageResourceDelete(ctx, r.ProviderData.Client, r.ProviderData.ProductId, r.TypeName)
+	// go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
 	var state UserLockPolicyResourceModel
 
