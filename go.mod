@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
 	github.com/jfrog/terraform-provider-shared v1.25.1
 	github.com/samber/lo v1.39.0
-	github.com/sethvargo/go-password v0.2.0
+	github.com/sethvargo/go-password v0.3.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	golang.org/x/net v0.24.0
@@ -99,4 +99,6 @@ require (
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 )
 
-go 1.21
+go 1.22
+
+toolchain go1.22.2
