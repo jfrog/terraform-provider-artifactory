@@ -143,4 +143,5 @@ The following arguments are supported:
 * `url` - (Optional) URL of Artifactory. This can also be sourced from the `JFROG_URL` or `ARTIFACTORY_URL` environment variable.
 * `access_token` - (Optional) This can also be sourced from `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variables.
 * `api_key` - (Optional, deprecated) API key for api auth.
+* `oidc_provider_name` - (Optional) OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.
 * `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.
