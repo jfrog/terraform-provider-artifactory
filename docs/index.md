@@ -134,7 +134,7 @@ provider "platform" {
 }
 ```
 
-**Note:** Ensure `access_token` attribute is not set
+**Note:** Ensure `access_token` attribute and `JFROG_ACCESS_TOKEN` env var are not set
 
 ## Argument Reference
 
