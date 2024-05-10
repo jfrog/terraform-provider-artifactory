@@ -1,3 +1,9 @@
+## 10.7.6 (May 10, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_managed_user: Update `password` minimum length validation to 8 characters which matches default length for both cloud and self-hosted versions. Issue: [#959](https://github.com/jfrog/terraform-provider-artifactory/issues/959) PR: [#962](https://github.com/jfrog/terraform-provider-artifactory/pull/962)
+
 ## 10.7.5 (May 2, 2024)
 
 IMPROVEMENTS:

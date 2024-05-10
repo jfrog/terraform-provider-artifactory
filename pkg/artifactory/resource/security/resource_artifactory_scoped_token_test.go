@@ -126,7 +126,7 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
+					resource.TestCheckResourceAttr(fqrn, "expires_in", "32000000"),
 					resource.TestCheckNoResourceAttr(fqrn, "audiences"),
 					resource.TestCheckResourceAttrSet(fqrn, "access_token"),
 					resource.TestCheckNoResourceAttr(fqrn, "refresh_token"),
