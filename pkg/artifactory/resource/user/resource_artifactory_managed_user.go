@@ -28,7 +28,7 @@ func (r *ArtifactoryManagedUserResource) Schema(ctx context.Context, req resourc
 			MarkdownDescription: "Password for the user.",
 			Required:            true,
 			Sensitive:           true,
-			Validators:          []validator.String{stringvalidator.LengthAtLeast(12)},
+			Validators:          []validator.String{stringvalidator.LengthAtLeast(8)},
 		},
 	}
 
