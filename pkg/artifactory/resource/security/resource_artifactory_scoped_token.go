@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	regex2 "github.com/dlclark/regexp2"
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -160,10 +159,8 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					"* `applied-permissions/admin` - the scope assigned to admin users." +
 					"* `applied-permissions/groups` - this scope assigns permissions to groups using the following format: applied-permissions/groups:<group-name>[,<group-name>...]" +
 					"* `system:metrics:r` - for getting the service metrics" +
-					"* `system:livelogs:r` - for getting the service livelogsr. " +
-					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
-					"Resource Permissions\n" +
-					"From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
+					"* `system:livelogs:r` - for getting the service livelogsr." +
+					"Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
 					"A permission can be represented as a scope token string in the following format:\n" +
 					"`<resource-type>:<target>[/<sub-resource>]:<actions>`\n" +
 					"Where:\n" +
@@ -177,7 +174,10 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					"Examples: " +
 					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
 					" `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
-					" `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`",
+					" `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`\n" +
+					"* `applied-permissions/roles:project-key` - provides access to elements associated with the project based on the project role. For example, `applied-permissions/roles:project-type:developer,qa`." +
+					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
+					"From Artifactory 7.84.3, project admins (https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) can create access tokens that are tied to the projects in which they hold administrative privileges.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
@@ -186,16 +186,18 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(stringvalidator.Any(
-						stringvalidator.OneOf(
-							"applied-permissions/user",
-							"applied-permissions/admin",
-							"system:metrics:r",
-							"system:livelogs:r",
+					setvalidator.ValueStringsAre(
+						stringvalidator.Any(
+							stringvalidator.OneOf(
+								"applied-permissions/user",
+								"applied-permissions/admin",
+								"system:metrics:r",
+								"system:livelogs:r",
+							),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
 						),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
-					),
 					),
 				},
 			},
@@ -251,15 +253,16 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(stringvalidator.All(
-						stringvalidator.LengthAtLeast(1),
-						stringvalidator.RegexMatches(regexp.MustCompile(fmt.Sprintf(`^(%s|\*)@.+`, strings.Join(serviceTypesScopedToken, "|"))),
-							fmt.Sprintf(
-								"must either begin with %s, or *",
-								strings.Join(serviceTypesScopedToken, ", "),
+					setvalidator.ValueStringsAre(
+						stringvalidator.All(
+							stringvalidator.LengthAtLeast(1),
+							stringvalidator.RegexMatches(regexp.MustCompile(fmt.Sprintf(`^(%s|\*)@.+`, strings.Join(serviceTypesScopedToken, "|"))),
+								fmt.Sprintf(
+									"must either begin with %s, or *",
+									strings.Join(serviceTypesScopedToken, ", "),
+								),
 							),
 						),
-					),
 					),
 				},
 			},
@@ -656,8 +659,4 @@ func (r *ScopedTokenResourceModel) GetResponseToState(ctx context.Context, acces
 	if r.ReferenceToken.IsNull() {
 		r.ReferenceToken = types.StringValue("")
 	}
-}
-
-func CheckAccessToken(id string, request *resty.Request) (*resty.Response, error) {
-	return request.SetPathParam("id", id).Get("access/api/v1/tokens/{id}")
 }

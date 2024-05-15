@@ -8,7 +8,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -247,7 +246,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, security.CheckAccessToken),
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, checkAccessToken),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -321,7 +320,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
-			return security.CheckAccessToken(id, request)
+			return checkAccessToken(id, request)
 		}),
 		Steps: []resource.TestStep{
 			{
@@ -540,6 +539,77 @@ func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 			{
 				Config:      accessTokenConfig,
 				ExpectError: regexp.MustCompile(`.*'<resource-type>:<target>\[\/<sub-resource>]:<actions>'.*`),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithRoleScope(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+	_, _, projectName := testutil.MkNames("test-project", "project")
+	_, _, projectUserName := testutil.MkNames("test-projecuser", "project_user")
+	_, _, username := testutil.MkNames("test-user", "artifactory_managed_user")
+
+	email := username + "@tempurl.org"
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_managed_user" "{{ .username }}" {
+			name              = "{{ .username }}"
+		    email             = "{{ .email }}"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "project" "{{ .projectName }}" {
+			key = "{{ .projectName }}"
+			display_name = "{{ .projectName }}"
+			admin_privileges {
+				manage_members = true
+				manage_resources = true
+				index_resources = true
+			}
+		}
+
+		resource "project_user" "{{ .projectUserName }}" {
+			name = artifactory_managed_user.{{ .username }}.name
+			project_key = project.{{ .projectName }}.key
+			roles = ["Developer"]
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_managed_user.{{ .username }}.name
+			scopes   = [
+				"applied-permissions/roles:${project.{{ .projectName }}.key}:Developer",
+			]
+		}`,
+		map[string]interface{}{
+			"name":            name,
+			"username":        username,
+			"email":           email,
+			"projectName":     projectName,
+			"projectUserName": projectUserName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: accessTokenConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "username", username),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", fmt.Sprintf("applied-permissions/roles:%s:Developer", projectName)),
+				),
 			},
 		},
 	})
@@ -815,4 +885,8 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 			},
 		},
 	})
+}
+
+func checkAccessToken(id string, request *resty.Request) (*resty.Response, error) {
+	return request.SetPathParam("id", id).Get("access/api/v1/tokens/{id}")
 }
