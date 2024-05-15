@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* resource/artifactory_scoped_token: Add support for project admin token scope. See [Access Token Creation by Project Admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) for more details. PR: [#965](https://github.com/jfrog/terraform-provider-artifactory/pull/965)
+* resource/artifactory_scoped_token: Add support for project admin token scope introduced in Artifactory 7.84.3. See [Access Token Creation by Project Admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) for more details. PR: [#965](https://github.com/jfrog/terraform-provider-artifactory/pull/965)
 
 ## 10.7.6 (May 10, 2024)
 
