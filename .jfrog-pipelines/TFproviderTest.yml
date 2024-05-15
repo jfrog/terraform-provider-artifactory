@@ -146,9 +146,9 @@ pipelines:
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
             - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
             - >-
-              until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
+              until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/ping/; do
                   printf '.'
-                  sleep 4
+                  sleep 5
               done
             - echo "Add variables needed to run Terraform Provider"
             - export ARTIFACTORY_USERNAME=admin
@@ -157,9 +157,9 @@ pipelines:
             - >-
               until curl -sf -u admin:password ${ARTIFACTORY_URL}/ui/login/; do
                   printf '.'
-                  sleep 4
+                  sleep 5
               done
-            - sudo curl ${ARTIFACTORY_URL}/router/api/v1/system/health
+            - curl ${ARTIFACTORY_URL}/router/api/v1/system/health
             - >-
               export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
                             --header "accept: application/json, text/plain, */*" \
