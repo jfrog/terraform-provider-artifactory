@@ -284,7 +284,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
-	projectKey := fmt.Sprintf("test-project-%d", testutil.RandomInt())
+	_, _, projectKey := testutil.MkNames("test-project", "project")
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -297,9 +297,19 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			password          = "Passw0rd!"
 		}
 
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			admin_privileges {
+				manage_members = true
+				manage_resources = true
+				index_resources = true
+			}
+		}
+
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.test-user.name
-			project_key = "{{ .projectKey }}"
+			project_key = project.{{ .projectKey }}.key
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
 			refreshable = true
@@ -313,15 +323,14 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
-		},
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return checkAccessToken(id, request)
-		}),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		CheckDestroy: acctest.VerifyDeleted(fqrn, checkAccessToken),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
