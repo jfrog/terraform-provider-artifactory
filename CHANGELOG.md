@@ -1,4 +1,4 @@
-## 10.8.0 (May 16, 2024)
+## 10.8.0 (May 16, 2024). Tested on Artifactory 7.84.10 with Terraform CLI v1.8.3
 
 BUG FIXES:
 
