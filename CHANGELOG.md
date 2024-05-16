@@ -1,3 +1,9 @@
+## 10.8.0 (May 16, 2024)
+
+BUG FIXES:
+
+* provider: Fix inability to use `api_key` attribute without also setting `access_token` attribute. Issue: [#966](https://github.com/jfrog/terraform-provider-artifactory/issues/966) PR: [#967](https://github.com/jfrog/terraform-provider-artifactory/pull/967)
+
 ## 10.7.6 (May 10, 2024)
 
 BUG FIXES:
