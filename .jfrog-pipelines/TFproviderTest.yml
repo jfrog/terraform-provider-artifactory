@@ -124,8 +124,8 @@ pipelines:
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
             - echo "Save RT licenses from the variable to the license file"
-            - mkdir -p scripts/artifactory/extra_conf
-            - echo ${int_partnership_rt_cluster_license_5licenses} > scripts/artifactory/extra_conf/artifactory.lic
+            - mkdir -p ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/extra_conf
+            - echo ${int_partnership_rt_cluster_license_5licenses} > ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/extra_conf/artifactory.lic
             - echo "Set Artifactory version, run RT in a container"
             - >-
               if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
