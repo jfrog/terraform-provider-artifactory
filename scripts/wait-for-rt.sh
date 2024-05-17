@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 function waitForArtifactory() {
   local url=${1?You must supply the artifactory url}
   local url_ui=${2?You must supply the artifactory UI url}
