@@ -215,6 +215,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		configuration.NewBackupResource,
 		configuration.NewGeneralSecurityResource,
 		configuration.NewMailServerResource,
+		configuration.NewPackageCleanupPolicyResource,
 		configuration.NewPropertySetResource,
 		configuration.NewProxyResource,
 		configuration.NewRepositoryLayoutResource,
