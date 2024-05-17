@@ -64,7 +64,6 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 		Description:       r.Description.String(),
 		CronExpression:    r.CronExpression.ValueString(),
 		DurationInMinutes: r.DurationInMinutes.ValueInt64(),
-		Enabled:           r.Enabled.ValueBool(),
 		SkipTrashcan:      r.SkipTrashcan.ValueBool(),
 		SearchCriteria:    searchCriteria,
 	}
@@ -120,10 +119,10 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 
 type PackageCleanupPolicyAPIModel struct {
 	Key               string                                     `json:"key"`
-	Description       string                                     `json:"description"`
+	Description       string                                     `json:"description,omitempty"`
 	CronExpression    string                                     `json:"cronExp"`
 	DurationInMinutes int64                                      `json:"durationInMinutes"`
-	Enabled           bool                                       `json:"enabled"`
+	Enabled           bool                                       `json:"enabled,omitempty"`
 	SkipTrashcan      bool                                       `json:"skipTrashcan"`
 	SearchCriteria    PackageCleanupPolicySearchCriteriaAPIModel `json:"searchCriteria"`
 }
@@ -132,7 +131,7 @@ type PackageCleanupPolicySearchCriteriaAPIModel struct {
 	PackageTypes                 []string `json:"packageTypes"`
 	Repos                        []string `json:"repos"`
 	IncludePackages              []string `json:"includePackages"`
-	ExcludePackages              []string `json:"excludePackages"`
+	ExcludePackages              []string `json:"excludePackages,omitempty"`
 	CreatedBeforeInMonths        int64    `json:"createdBeforeInMonths,omitempty"`
 	LastDownloadedBeforeInMonths int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
 }
@@ -336,6 +335,8 @@ func (r *PackageCleanupPolicyResource) Update(ctx context.Context, req resource.
 		return
 	}
 
+	enabledChanged := state.Enabled.ValueBool() != plan.Enabled.ValueBool()
+
 	var policy PackageCleanupPolicyAPIModel
 	resp.Diagnostics.Append(plan.toAPIModel(ctx, &policy)...)
 	if resp.Diagnostics.HasError() {
@@ -358,7 +359,7 @@ func (r *PackageCleanupPolicyResource) Update(ctx context.Context, req resource.
 	}
 
 	// if Enabled has changed then call enablement API to toggle the value
-	if state.Enabled.ValueBool() != plan.Enabled.ValueBool() {
+	if enabledChanged {
 		policyEnablement := PackageCleanupPolicyEnablementAPIModel{}
 		if state.Enabled.ValueBool() && !plan.Enabled.ValueBool() { // if Enabled goes from true to false
 			policyEnablement.Enabled = false

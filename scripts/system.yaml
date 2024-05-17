@@ -11,6 +11,7 @@ configVersion: 1
 ## SHARED CONFIGURATIONS
 ## A shared section for keys across all services in this config
 shared:
+    extraJavaOpts: "-Dartifactory.policy.cleanup.package.enabled=true"
     database:
         ## To run Artifactory with any database other than PostgreSQL allowNonPostgresql set to true.
         allowNonPostgresql: true
