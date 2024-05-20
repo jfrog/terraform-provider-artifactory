@@ -56,12 +56,12 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 
 	diags.Append(attrs["package_types"].(types.Set).ElementsAs(ctx, &searchCriteria.PackageTypes, false)...)
 	diags.Append(attrs["repos"].(types.Set).ElementsAs(ctx, &searchCriteria.Repos, false)...)
-	diags.Append(attrs["include_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludePackages, false)...)
-	diags.Append(attrs["exclude_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludePackages, false)...)
+	// diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
+	// diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
 
-	apiModel = &PackageCleanupPolicyAPIModel{
+	*apiModel = PackageCleanupPolicyAPIModel{
 		Key:               r.Key.ValueString(),
-		Description:       r.Description.String(),
+		Description:       r.Description.ValueString(),
 		CronExpression:    r.CronExpression.ValueString(),
 		DurationInMinutes: r.DurationInMinutes.ValueInt64(),
 		SkipTrashcan:      r.SkipTrashcan.ValueBool(),
@@ -74,6 +74,7 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, apiModel PackageCleanupPolicyAPIModel) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
+	r.Key = types.StringValue(apiModel.Key)
 	r.Description = types.StringValue(apiModel.Description)
 	r.CronExpression = types.StringValue(apiModel.CronExpression)
 	r.DurationInMinutes = types.Int64Value(apiModel.DurationInMinutes)
@@ -86,26 +87,26 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 	repos, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.Repos)
 	diags.Append(ds...)
 
-	includedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludePackages)
-	diags.Append(ds...)
-
-	excludePackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludePackages)
-	diags.Append(ds...)
+	// 	includedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedPackages)
+	// 	diags.Append(ds...)
+	//
+	// 	excludePackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackages)
+	// 	diags.Append(ds...)
 
 	searchCriteria, ds := types.ObjectValue(
 		map[string]attr.Type{
-			"package_types":                    types.SetType{ElemType: types.StringType},
-			"repos":                            types.SetType{ElemType: types.StringType},
-			"include_packages":                 types.SetType{ElemType: types.StringType},
-			"exclude_packages":                 types.SetType{ElemType: types.StringType},
+			"package_types": types.SetType{ElemType: types.StringType},
+			"repos":         types.SetType{ElemType: types.StringType},
+			// "included_packages":                types.SetType{ElemType: types.StringType},
+			// "excluded_packages":                types.SetType{ElemType: types.StringType},
 			"created_before_in_months":         types.Int64Type,
 			"last_downloaded_before_in_months": types.Int64Type,
 		},
 		map[string]attr.Value{
-			"package_types":                    packageTypes,
-			"repos":                            repos,
-			"include_packages":                 includedPackages,
-			"exclude_packages":                 excludePackages,
+			"package_types": packageTypes,
+			"repos":         repos,
+			// "included_packages":                includedPackages,
+			// "excluded_packages":                excludePackages,
 			"created_before_in_months":         types.Int64Value(apiModel.SearchCriteria.CreatedBeforeInMonths),
 			"last_downloaded_before_in_months": types.Int64Value(apiModel.SearchCriteria.LastDownloadedBeforeInMonths),
 		},
@@ -128,12 +129,12 @@ type PackageCleanupPolicyAPIModel struct {
 }
 
 type PackageCleanupPolicySearchCriteriaAPIModel struct {
-	PackageTypes                 []string `json:"packageTypes"`
-	Repos                        []string `json:"repos"`
-	IncludePackages              []string `json:"includePackages"`
-	ExcludePackages              []string `json:"excludePackages,omitempty"`
-	CreatedBeforeInMonths        int64    `json:"createdBeforeInMonths,omitempty"`
-	LastDownloadedBeforeInMonths int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
+	PackageTypes []string `json:"packageTypes"`
+	Repos        []string `json:"repos"`
+	// IncludedPackages             []string `json:"includedPackages"`
+	// ExcludedPackages             []string `json:"excludedPackages,omitempty"`
+	CreatedBeforeInMonths        int64 `json:"createdBeforeInMonths,omitempty"`
+	LastDownloadedBeforeInMonths int64 `json:"lastDownloadedBeforeInMonths,omitempty"`
 }
 
 type PackageCleanupPolicyEnablementAPIModel struct {
@@ -201,16 +202,19 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						Required:            true,
 						MarkdownDescription: "List of repositories to clean up.",
 					},
-					"include_packages": schema.SetAttribute{
-						ElementType:         types.StringType,
-						Required:            true,
-						MarkdownDescription: "Pattern for local repository name(s) which to be cleaned up. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example -> \"includedPackages\": [\"**\"]",
-					},
-					"exclude_packages": schema.SetAttribute{
-						ElementType:         types.StringType,
-						Optional:            true,
-						MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific packages.",
-					},
+					// "included_packages": schema.SetAttribute{
+					// 	ElementType: types.StringType,
+					// 	Required:    true,
+					// 	Validators: []validator.Set{
+					// 		setvalidator.SizeBetween(1, 1),
+					// 	},
+					// 	MarkdownDescription: "Pattern for local repository name(s) which to be cleaned up. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example -> \"includedPackages\": [\"**\"]",
+					// },
+					// "excluded_packages": schema.SetAttribute{
+					// 	ElementType:         types.StringType,
+					// 	Optional:            true,
+					// 	MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific packages.",
+					// },
 					"created_before_in_months": schema.Int64Attribute{
 						Optional:            true,
 						MarkdownDescription: "Remove packages based on when they were created.",
@@ -265,6 +269,28 @@ func (r *PackageCleanupPolicyResource) Create(ctx context.Context, req resource.
 	if response.IsError() {
 		utilfw.UnableToCreateResourceError(resp, response.String())
 		return
+	}
+
+	// if Enabled has changed then call enablement API to toggle the value
+	if plan.Enabled.ValueBool() {
+		policyEnablement := PackageCleanupPolicyEnablementAPIModel{
+			Enabled: true,
+		}
+
+		enablementResp, enablementErr := r.ProviderData.Client.R().
+			SetPathParam("policyKey", plan.Key.ValueString()).
+			SetBody(policyEnablement).
+			Post(PackageCleanupPolicyEnablementEndpointPath)
+
+		if enablementErr != nil {
+			utilfw.UnableToCreateResourceError(resp, enablementErr.Error())
+			return
+		}
+
+		if enablementResp.IsError() {
+			utilfw.UnableToCreateResourceError(resp, enablementResp.String())
+			return
+		}
 	}
 
 	// Save data into Terraform state
@@ -342,6 +368,10 @@ func (r *PackageCleanupPolicyResource) Update(ctx context.Context, req resource.
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// policy.Enabled can't be changed using update API so set the field to
+	// the current state's value
+	policy.Enabled = state.Enabled.ValueBool()
 
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("policyKey", plan.Key.ValueString()).

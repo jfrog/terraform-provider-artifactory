@@ -15,7 +15,7 @@ import (
 
 func TestAccPackageCleanupPolicy_full(t *testing.T) {
 	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
-	_, fqrn, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
+	_, _, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
 
 	temp := `
 	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
@@ -35,12 +35,12 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		search_criteria = {
 			package_types = ["docker"]
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			include_packages = ["com/jfrog"]
-			exclude_packages = ["com/jfrog/latest"]
 			created_before_in_months = 1
 			last_downloaded_before_in_months = 6
 		}
 	}`
+	// included_packages = ["**"]
+	// excluded_packages = ["com/jfrog/latest"]
 
 	updatedTemp := `
 	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
@@ -58,14 +58,14 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		skip_trashcan = true
 		
 		search_criteria = {
-			package_types = ["docker"]
+			package_types = ["docker", "maven", "gradle"]
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			include_packages = ["com/jfrog", "foo"]
-			exclude_packages = ["com/jfrog/latest"]
 			created_before_in_months = 12
 			last_downloaded_before_in_months = 24
 		}
 	}`
+	// included_packages = ["com/jfrog", "**"]
+	// excluded_packages = ["com/jfrog/latest"]
 
 	config := util.ExecuteTemplate(
 		policyName,
@@ -73,7 +73,17 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		map[string]string{
 			"policyName": policyName,
 			"repoName":   repoName,
-		})
+		},
+	)
+
+	updatedConfig := util.ExecuteTemplate(
+		policyName,
+		updatedTemp,
+		map[string]string{
+			"policyName": policyName,
+			"repoName":   repoName,
+		},
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -91,18 +101,18 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
-					resource.TestCheckResourceAttr(fqrn, "repos.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "repos.0", repoName),
-					resource.TestCheckResourceAttr(fqrn, "include_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "include_packages.0", "com/jfrog"),
-					resource.TestCheckResourceAttr(fqrn, "exclude_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "exclude_packages.0", "com/jfrog/latest"),
-					resource.TestCheckResourceAttr(fqrn, "created_before_in_months", "1"),
-					resource.TestCheckResourceAttr(fqrn, "last_downloaded_before_in_months", "6"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
 				),
 			},
 			{
-				Config: updatedTemp,
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", policyName),
 					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
@@ -110,23 +120,27 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "120"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
-					resource.TestCheckResourceAttr(fqrn, "repos.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "repos.0", repoName),
-					resource.TestCheckResourceAttr(fqrn, "include_packages.#", "2"),
-					resource.TestCheckResourceAttr(fqrn, "include_packages.0", "com/jfrog"),
-					resource.TestCheckResourceAttr(fqrn, "include_packages.1", "foo"),
-					resource.TestCheckResourceAttr(fqrn, "exclude_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "exclude_packages.0", "com/jfrog/latest"),
-					resource.TestCheckResourceAttr(fqrn, "created_before_in_months", "12"),
-					resource.TestCheckResourceAttr(fqrn, "last_downloaded_before_in_months", "24"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "3"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "docker"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "maven"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gradle"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "2"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.1", "foo"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
+					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "12"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "24"),
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        policyName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -134,13 +148,12 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 
 func testAccPolicyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
-
-		rs, ok := s.RootModule().Resources["artifactory_package_cleanup_policy."+id]
+		rs, ok := s.RootModule().Resources[id]
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
 
+		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 		resp, err := client.R().
 			SetPathParam("policyKey", rs.Primary.Attributes["key"]).
 			Get(configuration.PackageCleanupPolicyEndpointPath)
