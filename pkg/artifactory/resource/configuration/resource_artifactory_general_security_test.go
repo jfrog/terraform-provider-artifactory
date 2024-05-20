@@ -44,13 +44,13 @@ func TestAccGeneralSecurity_UpgradeFromSDKv2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "true"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   generalSecurityTemplateFull,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})

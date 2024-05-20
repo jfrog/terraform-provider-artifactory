@@ -75,13 +75,13 @@ func TestAccDistributionPublicKey_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "fingerprint", "10:16:2c:c5:1c:db:d0:59:ad:86:d3:66:dc:d1:d9:02:65:03:a8:25"),
 					resource.TestCheckResourceAttr(fqrn, "issued_by", "alan <alann@jfrog.com>"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   keyBasic,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})

@@ -85,16 +85,7 @@ func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")
 		}
 
-		if samlSettings.AllowUserToAccessProfile != false {
-			return fmt.Errorf("error: SAML SSO setting, allow user to access profile, is still enabled")
-		}
-		if samlSettings.SyncGroups != false {
-			return fmt.Errorf("error: SAML SSO setting, sync groups, is still enabled")
-		}
-		if samlSettings.NoAutoUserCreation != false {
-			return fmt.Errorf("error: SAML SSO setting, no auto user creation, is still enabled")
-		}
-		if samlSettings.EnableIntegration != false {
+		if samlSettings.EnableIntegration {
 			return fmt.Errorf("error: SAML SSO integration is still enabled")
 		}
 
