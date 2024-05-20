@@ -8,7 +8,19 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
 
-docker-compose --project-directory "${SCRIPT_DIR}" up -d --remove-orphans
+docker run -i --name artifactory-1 -d --rm \
+  -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
+  -v ${SCRIPT_DIR}/artifactory/extra_conf:/artifactory_extra_conf \
+  -v ${SCRIPT_DIR}/artifactory/var:/var/opt/jfrog/artifactory \
+  -p 8081:8081 -p 8082:8082 \
+  releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+
+docker run -i --name artifactory-2 -d --rm \
+  -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
+  -v ${SCRIPT_DIR}/artifactory/extra_conf:/artifactory_extra_conf \
+  -v ${SCRIPT_DIR}/artifactory/var:/var/opt/jfrog/artifactory \
+  -p 9081:8081 -p 9082:8082 \
+  releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
 
 ARTIFACTORY_URL_1=http://localhost:8081
 ARTIFACTORY_UI_URL_1=http://localhost:8082

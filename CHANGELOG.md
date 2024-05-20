@@ -1,8 +1,14 @@
-## 10.8.0 (May 16, 2024)
+## 10.8.0 (May 20, 2024)
 
 IMPROVEMENTS:
 
 * resource/artifactory_scoped_token: Add support for project admin token scope introduced in Artifactory 7.84.3. See [Access Token Creation by Project Admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) for more details. PR: [#965](https://github.com/jfrog/terraform-provider-artifactory/pull/965)
+
+## 10.7.7 (May 17, 2024). Tested on Artifactory 7.84.10 with Terraform CLI v1.8.3
+
+BUG FIXES:
+
+* provider: Fix inability to use `api_key` attribute without also setting `access_token` attribute. Issue: [#966](https://github.com/jfrog/terraform-provider-artifactory/issues/966) PR: [#967](https://github.com/jfrog/terraform-provider-artifactory/pull/967)
 
 ## 10.7.6 (May 10, 2024)
 
