@@ -84,7 +84,7 @@ resource "artifactory_scoped_token" "audience" {
   - `applied-permissions/admin` - the scope assigned to admin users.
   - `applied-permissions/groups` - this scope assigns permissions to groups using the following format: `applied-permissions/groups:<group-name>[,<group-name>...]`
   - `system:metrics:r` - for getting the service metrics
-  - `system:livelogs:r` - for getting the service livelogs. The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.
+  - `system:livelogs:r` - for getting the service livelogs
   - Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. A permission can be represented as a scope token string in the following format: `<resource-type>:<target>[/<sub-resource>]:<actions>`
     - Where:
       - `<resource-type>` - one of the permission resource types, from a predefined closed list. Currently, the only resource type that is supported is the artifact resource type.
@@ -95,6 +95,11 @@ resource "artifactory_scoped_token" "audience" {
       - `["applied-permissions/user", "artifact:generic-local:r"]`
       - `["applied-permissions/group", "artifact:generic-local/path:*"]`
       - `["applied-permissions/admin", "system:metrics:r", "artifact:generic-local:*"]`
+  - `applied-permissions/roles:project-key` - provides access to elements associated with the project based on the project role. For example, `applied-permissions/roles:project-type:developer,qa`.
+
+  ->The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.
+  
+  From Artifactory 7.84.3, [project admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) can create access tokens that are tied to the projects in which they hold administrative privileges.
 - `username` (String) The user name for which this token is created. The username is based on the authenticated user - either from the user of the authenticated token or based on the username (if basic auth was used). The username is then used to set the subject of the token: `<service-id>/users/<username>`. Limited to 255 characters.
 
 ### Read-Only

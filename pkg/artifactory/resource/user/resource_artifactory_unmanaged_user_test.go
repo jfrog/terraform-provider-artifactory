@@ -348,7 +348,7 @@ func TestAccUnmanagedUser_name_change(t *testing.T) {
 			password = "Password!123"
 			profile_updatable = true
 			disable_ui_access = false
-			internal_password_disabled = true
+			internal_password_disabled = false
 		}
 	`
 
@@ -359,7 +359,7 @@ func TestAccUnmanagedUser_name_change(t *testing.T) {
 			password = "Password!123"
 			profile_updatable = true
 			disable_ui_access = false
-			internal_password_disabled = true
+			internal_password_disabled = false
 		}
 	`
 
@@ -379,7 +379,7 @@ func TestAccUnmanagedUser_name_change(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", username),
 					resource.TestCheckResourceAttr(fqrn, "email", fmt.Sprintf("dummy_user%d@a.com", id)),
 					resource.TestCheckResourceAttr(fqrn, "profile_updatable", "true"),
-					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "internal_password_disabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "password", "Password!123"),
 					resource.TestCheckResourceAttr(fqrn, "groups.#", "0"),
 				),
