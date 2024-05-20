@@ -30,7 +30,7 @@ pipelines:
               - integrationName: partnership_slack
             timeoutSeconds: 172800 # 2 days
         execution:
-          onExecute:
+          onStart:
             - echo "Sending status to GitHub."
             - export STATE="pending"
             - export DESCRIPTION="Pipeline run is in progress."
@@ -124,7 +124,8 @@ pipelines:
             - cp sample.tf.tmp sample.tf && rm sample.tf.tmp
             - cat sample.tf
             - echo "Save RT licenses from the variable to the license file"
-            - echo ${int_partnership_rt_cluster_license_5licenses} > scripts/artifactory.lic
+            - mkdir -p ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/extra_conf
+            - echo ${int_partnership_rt_cluster_license_5licenses} > ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/extra_conf/artifactory.lic
             - echo "Set Artifactory version, run RT in a container"
             - >-
               if [[ ${USE_LATEST_RT_VERSION} == "true" ]]; then
@@ -137,29 +138,38 @@ pipelines:
                echo "Artifactory version: "${ARTIFACTORY_VERSION}
               fi
             - export ARTIFACTORY_CONTAINER_NAME=artifactory
+            - mkdir -p ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/var/etc/access
+            - chown -R 1030:1030 ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/var
+            - cp ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/system.yaml ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/var/etc/system.yaml
+            - cp ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/access.config.patch.yml ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/var/etc/access/access.config.patch.yml
             - >-
-              docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm -v "${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-                -p 8082:8082 releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+              docker run -i --name ${ARTIFACTORY_CONTAINER_NAME} -t -d --rm \
+                -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
+                -v ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/extra_conf:/artifactory_extra_conf \
+                -v ${res_GitHubTFProviderRepoJFrog_resourcePath}/scripts/artifactory/var:/var/opt/jfrog/artifactory \
+                -p 8082:8082 \
+                releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
             - echo "Set localhost to a container IP address, since we run docker inside of docker"
             - export LOCALHOST=$(docker inspect -f '{{`{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}`}}' ${ARTIFACTORY_CONTAINER_NAME})
             - echo "Using ${LOCALHOST} as 'localhost' ip address"
             - echo "Waiting for Artifactory to start (doesn't reflect the start of the UI!)"
             - export ARTIFACTORY_URL="http://${LOCALHOST}:8082"
             - >-
-              until curl -sf -u admin:password ${ARTIFACTORY_URL}/artifactory/api/system/licenses/; do
+              until $(curl -sf -m 5 ${ARTIFACTORY_URL}/artifactory/api/system/ping/); do
                   printf '.'
-                  sleep 4
+                  sleep 5
               done
+            - echo "Waiting for Artifactory UI to start"
+            - >-
+              until $(curl -sf -m 5 ${ARTIFACTORY_URL}/ui/login/); do
+                  printf '.'
+                  sleep 5
+              done
+            - curl ${ARTIFACTORY_URL}/router/api/v1/system/health
             - echo "Add variables needed to run Terraform Provider"
             - export ARTIFACTORY_USERNAME=admin
             - export ARTIFACTORY_PASSWORD=password
-            - echo "Get cookie to generate Access token. We need a pause to let UI come up to get cookies"
-            - >-
-              until curl -sf -u admin:password ${ARTIFACTORY_URL}/ui/login/; do
-                  printf '.'
-                  sleep 4
-              done
-            - sudo curl ${ARTIFACTORY_URL}/router/api/v1/system/health
+            - echo "Get cookie to generate Access token"
             - >-
               export COOKIES=$(curl -c - "${ARTIFACTORY_URL}/ui/api/v1/ui/auth/login?_spring_security_remember_me=false" \
                             --header "accept: application/json, text/plain, */*" \

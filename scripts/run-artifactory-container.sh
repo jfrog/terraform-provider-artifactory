@@ -9,8 +9,12 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}" > /dev/stderr
 
 set -euf
 
-docker run -i -t -d --rm -v "${SCRIPT_DIR}/artifactory.lic:/artifactory_extra_conf/artifactory.lic:ro" \
-  -p8081:8081 -p8082:8082 -p8080:8080 "releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}"
+docker run -i --name artifactory-1 -d --rm \
+  -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
+  -v ${SCRIPT_DIR}/artifactory/extra_conf:/artifactory_extra_conf \
+  -v ${SCRIPT_DIR}/artifactory/var:/var/opt/jfrog/artifactory \
+  -p 8081:8081 -p 8082:8082 \
+  releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
 
 export ARTIFACTORY_URL=http://localhost:8081
 export ARTIFACTORY_UI_URL=http://localhost:8082
