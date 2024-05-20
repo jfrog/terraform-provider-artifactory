@@ -87,13 +87,13 @@ func TestAccProxy_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "redirect_to_hosts"),
 					resource.TestCheckNoResourceAttr(fqrn, "services"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})

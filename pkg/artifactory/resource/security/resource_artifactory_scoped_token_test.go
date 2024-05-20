@@ -78,13 +78,13 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})
@@ -136,13 +136,13 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})
@@ -196,13 +196,13 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	}

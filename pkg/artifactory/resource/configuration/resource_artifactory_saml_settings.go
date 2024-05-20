@@ -176,7 +176,8 @@ func resourceSamlSettingsUpdate(ctx context.Context, d *schema.ResourceData, m i
 func resourceSamlSettingsDelete(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var content = `
 security:
-  samlSettings: ~
+  samlSettings: 
+    enableIntegration: false
 `
 
 	err := SendConfigurationPatch([]byte(content), m)

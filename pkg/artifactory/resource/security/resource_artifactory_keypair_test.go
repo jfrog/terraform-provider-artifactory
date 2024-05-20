@@ -93,13 +93,13 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
 					resource.TestCheckResourceAttr(fqrn, "unavailable", "false"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   keyPairConfig,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
 			},
 		},
 	})
