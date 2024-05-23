@@ -77,25 +77,25 @@ const WhUrl = webhooksUrl + "/{webhookKey}"
 const currentSchemaVersion = 2
 
 var unpackKeyValuePair = func(keyValuePairs map[string]interface{}) []KeyValuePair {
-	var KVPairs []KeyValuePair
+	var kvPairs []KeyValuePair
 	for key, value := range keyValuePairs {
 		keyValuePair := KeyValuePair{
 			Name:  key,
 			Value: value.(string),
 		}
-		KVPairs = append(KVPairs, keyValuePair)
+		kvPairs = append(kvPairs, keyValuePair)
 	}
 
-	return KVPairs
+	return kvPairs
 }
 
 var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{} {
-	KVPairs := make(map[string]interface{})
+	kvPairs := make(map[string]interface{})
 	for _, keyValuePair := range keyValuePairs {
-		KVPairs[keyValuePair.Name] = keyValuePair.Value
+		kvPairs[keyValuePair.Name] = keyValuePair.Value
 	}
 
-	return KVPairs
+	return kvPairs
 }
 
 var domainCriteriaLookup = map[string]interface{}{
@@ -166,8 +166,17 @@ var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map
 	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*schema.Resource)
 	packedCriteria := domainPackLookup[webhookType](criteria)
 
-	packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, criteria["includePatterns"].([]interface{}))
-	packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, criteria["excludePatterns"].([]interface{}))
+	includePatterns := []interface{}{}
+	if v, ok := criteria["includePatterns"]; ok && v != nil {
+		includePatterns = v.([]interface{})
+	}
+	packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, includePatterns)
+
+	excludePatterns := []interface{}{}
+	if v, ok := criteria["excludePatterns"]; ok && v != nil {
+		excludePatterns = v.([]interface{})
+	}
+	packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, excludePatterns)
 
 	return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
 }
@@ -190,7 +199,7 @@ var packSecret = func(d *schema.ResourceData, url string) string {
 		for _, handler := range handlers {
 			h := handler.(map[string]interface{})
 			// if urls match, assign the secret value from the state
-			if h["url"] == url {
+			if h["url"].(string) == url {
 				secret = h["secret"].(string)
 			}
 		}
@@ -215,13 +224,26 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
 						webhookHandler := Handler{
-							HandlerType:         "webhook",
-							Url:                 h["url"].(string),
-							Secret:              h["secret"].(string),
-							UseSecretForSigning: h["use_secret_for_signing"].(bool),
-							Proxy:               h["proxy"].(string),
-							CustomHttpHeaders:   unpackKeyValuePair(h["custom_http_headers"].(map[string]interface{})),
+							HandlerType: "webhook",
+							Url:         h["url"].(string),
 						}
+
+						if v, ok := h["secret"]; ok {
+							webhookHandler.Secret = v.(string)
+						}
+
+						if v, ok := h["use_secret_for_signing"]; ok {
+							webhookHandler.UseSecretForSigning = v.(bool)
+						}
+
+						if v, ok := h["proxy"]; ok {
+							webhookHandler.Proxy = v.(string)
+						}
+
+						if v, ok := h["custom_http_headers"]; ok {
+							webhookHandler.CustomHttpHeaders = unpackKeyValuePair(v.(map[string]interface{}))
+						}
+
 						webhookHandlers = append(webhookHandlers, webhookHandler)
 					}
 				}
@@ -255,8 +277,12 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 				"secret":                 packSecret(d, handler.Url),
 				"use_secret_for_signing": handler.UseSecretForSigning,
 				"proxy":                  handler.Proxy,
-				"custom_http_headers":    packKeyValuePair(handler.CustomHttpHeaders),
 			}
+
+			if handler.CustomHttpHeaders != nil {
+				packedHandler["custom_http_headers"] = packKeyValuePair(handler.CustomHttpHeaders)
+			}
+
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
 

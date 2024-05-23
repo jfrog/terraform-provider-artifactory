@@ -1,3 +1,9 @@
+## 10.8.1 (May 24, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_\*\_webhook, resource/artifactory_\*\_custom_webhook: Fix various crashes when importing the resource with optional attributes not set in the configuration. PR: [#973](https://github.com/jfrog/terraform-provider-artifactory/pull/973)
+
 ## 10.8.0 (May 20, 2024)
 
 IMPROVEMENTS:

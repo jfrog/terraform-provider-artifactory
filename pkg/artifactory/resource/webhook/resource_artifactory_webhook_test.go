@@ -80,7 +80,7 @@ var releaseBundleTemplate = `
 	}
 `
 
-func TestAccWebhookCriteriaValidation(t *testing.T) {
+func TestAccWebhook_CriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
 		t.Run(webhookType, func(t *testing.T) {
 			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
@@ -124,7 +124,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	}
 }
 
-func TestAccWebhookEventTypesValidation(t *testing.T) {
+func TestAccWebhook_EventTypesValidation(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -166,7 +166,7 @@ func TestAccWebhookEventTypesValidation(t *testing.T) {
 	})
 }
 
-func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
+func TestAccWebhook_HandlerValidation_EmptyProxy(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -206,7 +206,7 @@ func TestAccWebhookHandlerValidation_EmptyProxy(t *testing.T) {
 	})
 }
 
-func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
+func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
 	fqrn := fmt.Sprintf("artifactory_artifact_webhook.%s", name)
@@ -246,7 +246,7 @@ func TestAccWebhookHandlerValidation_ProxyWithURL(t *testing.T) {
 	})
 }
 
-func TestAccWebhookAllTypes(t *testing.T) {
+func TestAccWebhook_AllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
@@ -256,7 +256,7 @@ func TestAccWebhookAllTypes(t *testing.T) {
 	}
 }
 
-func TestAccCustomWebhookAllTypes(t *testing.T) {
+func TestAccCustomWebhook_AllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating
 	// build, release_bundle, or distribution in test environment is almost impossible
 	for _, webhookType := range []string{"artifact", "artifact_property", "docker"} {
@@ -313,12 +313,39 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				}
 			}
 			handler {
-				url                 = "https://tempurl.com"
-				secret              = "fake-secret-2"
+				url = "https://tempurl.com"
+			}
+
+			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
+		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
+			key = "{{ .repoName }}"
+		}
+
+		resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
+			criteria {
+				any_local  = {{ .anyLocal }}
+				any_remote = {{ .anyRemote }}
+				any_federated = {{ .anyFederated }}
+				repo_keys  = ["{{ .repoName }}"]
+			}
+			handler {
+				url                    = "https://tempurl.org"
+				secret                 = "fake-secret"
+				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
-					header-3 = "value-3"
-					header-4 = "value-4"
+					header-1 = "value-1"
+					header-2 = "value-2"
 				}
+			}
+			handler {
+				url = "https://tempurl.com"
 			}
 
 			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
@@ -345,10 +372,30 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://tempurl.com"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", "fake-secret-2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.%", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-3", "value-3"),
-		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.header-4", "value-4"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", ""),
+		resource.TestCheckNoResourceAttr(fqrn, "handler.1.custom_http_headers"),
+	}
+
+	updatedTestChecks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(fqrn, "key", name),
+		resource.TestCheckResourceAttr(fqrn, "event_types.#", fmt.Sprintf("%d", len(eventTypes))),
+		resource.TestCheckResourceAttr(fqrn, "criteria.#", "1"),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_local", fmt.Sprintf("%t", params["anyLocal"])),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_remote", fmt.Sprintf("%t", params["anyRemote"])),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.any_federated", fmt.Sprintf("%t", params["anyFederated"])),
+		resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.repo_keys.*", repoName),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "0"),
+		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "0"),
+		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-1", "value-1"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.header-2", "value-2"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://tempurl.com"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.secret", ""),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.custom_http_headers.#", "0"),
 	}
 
 	for _, eventType := range eventTypes {
@@ -367,11 +414,15 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				Check:  resource.ComposeTestCheckFunc(testChecks...),
 			},
 			{
+				Config: updatedConfig,
+				Check:  resource.ComposeTestCheckFunc(updatedTestChecks...),
+			},
+			{
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"handler.0.secret", "handler.1.secret"},
+				ImportStateVerifyIgnore: []string{"handler.0.secret"},
 			},
 		},
 	}
@@ -414,8 +465,8 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 				exclude_patterns = ["bar/**"]
 			}
 			handler {
-				url                 = "https://tempurl.org"
-				secrets              = {
+				url     = "https://tempurl.org"
+				secrets = {
 					secret1 = "value1"
 					secret2 = "value2"
 				}
@@ -426,8 +477,8 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
 			}
 			handler {
-				url                 = "https://tempurl.org"
-				secrets              = {
+				url     = "https://tempurl.org"
+				secrets = {
 					secret3 = "value3"
 					secret4 = "value4"
 				}
@@ -438,15 +489,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
 			}
 			handler {
-				url                 = "https://tempurl.com"
-				secrets              = {
-					secret5 = "value5"
-					secret6 = "value6"
-				}
-				http_headers = {
-					header-5 = "value-5"
-					header-6 = "value-6"
-				}
+				url = "https://tempurl.com"
 				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
 			}
 
@@ -484,12 +527,8 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 		resource.TestCheckResourceAttr(fqrn, "handler.1.http_headers.header-4", "value-4"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.payload", "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"),
 		resource.TestCheckResourceAttr(fqrn, "handler.2.url", "https://tempurl.com"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.secrets.%", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.secrets.secret5", "value5"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.secrets.secret6", "value6"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.http_headers.%", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.http_headers.header-5", "value-5"),
-		resource.TestCheckResourceAttr(fqrn, "handler.2.http_headers.header-6", "value-6"),
+		resource.TestCheckNoResourceAttr(fqrn, "handler.2.secrets"),
+		resource.TestCheckNoResourceAttr(fqrn, "handler.2.http_headers"),
 		resource.TestCheckResourceAttr(fqrn, "handler.2.payload", "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"),
 	}
 
@@ -513,7 +552,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"handler.0.secrets", "handler.1.secrets", "handler.2.secrets"},
+				ImportStateVerifyIgnore: []string{"handler.0.secrets", "handler.1.secrets"},
 			},
 		},
 	}
@@ -525,7 +564,8 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 		AddRetryCondition(client.NeverRetry).
 		Get(webhook.WhUrl)
 }
-func TestGH476WebHookChangeBearerSet0(t *testing.T) {
+
+func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("foo", "artifactory_artifact_webhook")
 
 	format := `
@@ -607,7 +647,7 @@ func TestGH476WebHookChangeBearerSet0(t *testing.T) {
 }
 
 // Unit tests for state migration func
-func TestWebhookResourceStateUpgradeV1(t *testing.T) {
+func TestWebhook_ResourceStateUpgradeV1(t *testing.T) {
 	v1Data := map[string]interface{}{
 		"url":    "https://tempurl.org",
 		"secret": "fake-secret",

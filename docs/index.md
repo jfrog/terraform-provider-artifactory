@@ -128,7 +128,7 @@ terraform {
   }
 }
 
-provider "platform" {
+provider "artifactory" {
   url = "https://myinstance.jfrog.io"
   oidc_provider_name = "terraform-cloud"
 }
