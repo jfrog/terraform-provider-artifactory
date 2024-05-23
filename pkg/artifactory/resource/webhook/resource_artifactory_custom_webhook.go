@@ -174,11 +174,24 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 						webhookHandler := CustomHandler{
 							HandlerType: "custom-webhook",
 							Url:         h["url"].(string),
-							Secrets:     unpackKeyValuePair(h["secrets"].(map[string]interface{})),
-							Proxy:       h["proxy"].(string),
-							HttpHeaders: unpackKeyValuePair(h["http_headers"].(map[string]interface{})),
-							Payload:     h["payload"].(string),
 						}
+
+						if v, ok := h["secrets"]; ok {
+							webhookHandler.Secrets = unpackKeyValuePair(v.(map[string]interface{}))
+						}
+
+						if v, ok := h["proxy"]; ok {
+							webhookHandler.Proxy = v.(string)
+						}
+
+						if v, ok := h["http_headers"]; ok {
+							webhookHandler.HttpHeaders = unpackKeyValuePair(v.(map[string]interface{}))
+						}
+
+						if v, ok := h["payload"]; ok {
+							webhookHandler.Payload = v.(string)
+						}
+
 						webhookHandlers = append(webhookHandlers, webhookHandler)
 					}
 				}
@@ -208,12 +221,19 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		packedHandlers := make([]interface{}, len(handlers))
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
-				"url":          handler.Url,
-				"secrets":      packSecretsCustom(handler.Secrets, d, handler.Url),
-				"proxy":        handler.Proxy,
-				"http_headers": packKeyValuePair(handler.HttpHeaders),
-				"payload":      handler.Payload,
+				"url":     handler.Url,
+				"proxy":   handler.Proxy,
+				"payload": handler.Payload,
 			}
+
+			if handler.Secrets != nil {
+				packedHandler["secrets"] = packSecretsCustom(handler.Secrets, d, handler.Url)
+			}
+
+			if handler.HttpHeaders != nil {
+				packedHandler["http_headers"] = packKeyValuePair(handler.HttpHeaders)
+			}
+
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
 

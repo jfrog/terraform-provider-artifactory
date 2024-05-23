@@ -54,12 +54,18 @@ var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map
 }
 
 var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
+	criteria := map[string]interface{}{
 		"any_local":     artifactoryCriteria["anyLocal"].(bool),
 		"any_remote":    artifactoryCriteria["anyRemote"].(bool),
-		"any_federated": artifactoryCriteria["anyFederated"].(bool),
+		"any_federated": false,
 		"repo_keys":     schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
 	}
+
+	if v, ok := artifactoryCriteria["anyFederated"]; ok {
+		criteria["any_federated"] = v.(bool)
+	}
+
+	return criteria
 }
 
 var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
