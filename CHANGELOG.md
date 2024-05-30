@@ -1,8 +1,9 @@
-## 10.8.2 (May 30, 2024)
+## 10.8.2 (May 31, 2024)
 
 BUG FIXES:
 
 * resource/artifactory_keypair: Remove `private_key` value from warning and error messages. Issue: [#977](https://github.com/jfrog/terraform-provider-artifactory/issues/977) PR: [#979](https://github.com/jfrog/terraform-provider-artifactory/pull/979)
+* resource/artifactory_scoped_token: Add check for status code 404 after resource creation and display warning message due to Persistency Threshold. Issue: [#980](https://github.com/jfrog/terraform-provider-artifactory/issues/980) PR: [#981](https://github.com/jfrog/terraform-provider-artifactory/pull/981)
 
 ## 10.8.1 (May 24, 2024)
 

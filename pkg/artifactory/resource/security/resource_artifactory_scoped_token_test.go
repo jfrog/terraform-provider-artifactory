@@ -853,8 +853,8 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      accessTokenConfig,
-				ExpectError: regexp.MustCompile("Unable to Create Resource"),
+				Config:             accessTokenConfig,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

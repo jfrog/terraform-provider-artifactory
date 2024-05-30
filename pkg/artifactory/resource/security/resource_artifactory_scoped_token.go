@@ -202,7 +202,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"expires_in": schema.Int64Attribute{
-				MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/using-the-revocable-and-persistency-thresholds) for details.",
+				MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/persistency-threshold) for details.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.Int64{
@@ -412,8 +412,16 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	if response.IsError() {
-		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
-		return
+		if response.StatusCode() == http.StatusNotFound {
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Scoped token with ID %s is not found", id.ValueString()),
+				"Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. "+
+					"See https://jfrog.com/help/r/jfrog-platform-administration-documentation/persistency-threshold for details.",
+			)
+		} else {
+			utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
+			return
+		}
 	}
 
 	// Assign the attribute values for the resource in the state
