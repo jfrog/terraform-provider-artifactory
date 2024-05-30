@@ -1,3 +1,9 @@
+## 10.8.2 (May 30, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_keypair: Remove `private_key` value from warning and error messages. Issue: [#977](https://github.com/jfrog/terraform-provider-artifactory/issues/977) PR: [#979](https://github.com/jfrog/terraform-provider-artifactory/pull/979)
+
 ## 10.8.1 (May 24, 2024)
 
 BUG FIXES:

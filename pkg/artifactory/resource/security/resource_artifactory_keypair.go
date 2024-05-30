@@ -281,8 +281,7 @@ func (v privateKeyValidator) ValidateString(_ context.Context, req validator.Str
 	stripped := stripTabs(req.ConfigValue.ValueString())
 	// currently can't validate GPG
 	if strings.Contains(stripped, "BEGIN PGP PRIVATE KEY BLOCK") {
-		resp.Diagnostics.AddAttributeWarning(
-			req.Path,
+		resp.Diagnostics.AddWarning(
 			"Usage of GPG can't be validated.",
 			"Due to limitations of go libraries, your GPG key can't be validated client side.",
 		)
@@ -291,8 +290,7 @@ func (v privateKeyValidator) ValidateString(_ context.Context, req validator.Str
 
 	privatePem, _ := pem.Decode([]byte(stripped))
 	if privatePem == nil {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
+		resp.Diagnostics.AddError(
 			"unable to decode private key pem format",
 			"",
 		)
@@ -300,8 +298,7 @@ func (v privateKeyValidator) ValidateString(_ context.Context, req validator.Str
 	}
 
 	if privatePem.Type != "RSA PRIVATE KEY" {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
+		resp.Diagnostics.AddError(
 			"RSA private key is of the wrong type.",
 			fmt.Sprintf("Pem Type: %s", privatePem.Type),
 		)
@@ -313,8 +310,7 @@ func (v privateKeyValidator) ValidateString(_ context.Context, req validator.Str
 	if err != nil {
 		parsedKey, err = x509.ParsePKCS8PrivateKey(privatePem.Bytes)
 		if err != nil {
-			resp.Diagnostics.AddAttributeError(
-				req.Path,
+			resp.Diagnostics.AddError(
 				"Unable to parse RSA private key.",
 				err.Error(),
 			)
@@ -323,8 +319,7 @@ func (v privateKeyValidator) ValidateString(_ context.Context, req validator.Str
 	}
 
 	if _, ok := parsedKey.(*rsa.PrivateKey); !ok {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
+		resp.Diagnostics.AddError(
 			"unable to cast to RSA private key",
 			"",
 		)
