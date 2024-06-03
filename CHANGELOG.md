@@ -1,5 +1,9 @@
 ## 10.8.3 (June 3, 2024)
 
+BUG FIXES:
+
+* resource/artifactory_scoped_token: Fix incorrect validation with actions values for `scopes` attribute. Issue: [#985](https://github.com/jfrog/terraform-provider-artifactory/issues/985) PR: [#986](https://github.com/jfrog/terraform-provider-artifactory/pull/986)
+
 IMPROVEMENTS:
 
 * Documentation: Move `metadata_retrieval_timeout_secs` attribute documentation from `artifactory_remote_maven_repository` to "Artifactory Remote Repository Common Arguments" documentation. Issue: [#983](https://github.com/jfrog/terraform-provider-artifactory/issues/983) PR: [#984](https://github.com/jfrog/terraform-provider-artifactory/pull/984)

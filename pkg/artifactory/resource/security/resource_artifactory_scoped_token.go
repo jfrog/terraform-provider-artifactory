@@ -196,7 +196,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 							),
 							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
 							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
-							stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:.+:([rwdamxs*]|([rwdamxs]+(,[rwdamxs]+)))$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+							stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:(?:.+):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
 						),
 					),
 				},
