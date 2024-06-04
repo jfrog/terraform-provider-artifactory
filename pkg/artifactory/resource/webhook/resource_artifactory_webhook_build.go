@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -57,13 +56,12 @@ var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCri
 }
 
 var buildCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	tflog.Debug(ctx, "buildCriteriaValidation")
-
 	anyBuild := criteria["any_build"].(bool)
 	selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
+	includePatterns := criteria["include_patterns"].(*schema.Set).List()
 
-	if !anyBuild && len(selectedBuilds) == 0 {
-		return fmt.Errorf("selected_builds cannot be empty when any_build is false")
+	if !anyBuild && (len(selectedBuilds) == 0 && len(includePatterns) == 0) {
+		return fmt.Errorf("selected_builds or include_patterns cannot be empty when any_build is false")
 	}
 
 	return nil
