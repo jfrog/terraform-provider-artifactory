@@ -1,3 +1,9 @@
+## 10.8.4 (June 5, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_build_webhook, resource/artifactory_custom_build_webhook: Fix criteria validation to allow `include_patterns` attribute values with `any_build` attribute set to `false`. Issue: [#987](https://github.com/jfrog/terraform-provider-artifactory/issues/987) PR: [#993](https://github.com/jfrog/terraform-provider-artifactory/pull/993)
+
 ## 10.8.3 (June 3, 2024)
 
 BUG FIXES:
