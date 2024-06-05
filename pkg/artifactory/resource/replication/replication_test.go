@@ -36,3 +36,18 @@ func testAccCheckPushReplicationDestroy(id string) func(*terraform.State) error 
 		return nil
 	}
 }
+
+func testAccCheckReplicationDestroy(id string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[id]
+		if !ok {
+			return fmt.Errorf("err: Resource id[%s] not found", id)
+		}
+
+		exists, _ := repConfigExists(rs.Primary.ID, acctest.Provider.Meta())
+		if exists {
+			return fmt.Errorf("error: Replication %s still exists", id)
+		}
+		return nil
+	}
+}
