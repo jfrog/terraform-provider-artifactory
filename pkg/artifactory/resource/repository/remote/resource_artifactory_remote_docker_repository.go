@@ -2,7 +2,7 @@ package remote
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"

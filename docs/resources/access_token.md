@@ -1,5 +1,5 @@
 ---
-subcategory: "Security"
+subcategory: "Deprecated"
 ---
 # Artifactory Access Token Resource
 

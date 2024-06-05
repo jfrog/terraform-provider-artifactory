@@ -1,3 +1,9 @@
+## 11.0.0 (June 6, 2024)
+
+BREAKING CHANGES:
+
+* Resource `artifactory_access_token` has been removed from provider. PR: [#986](https://github.com/jfrog/terraform-provider-artifactory/pull/986)
+
 ## 10.8.3 (June 3, 2024)
 
 BUG FIXES:

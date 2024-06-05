@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/datasource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
