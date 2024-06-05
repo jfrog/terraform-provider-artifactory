@@ -2,31 +2,14 @@ package replication
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
-
-type GetReplicationConfig struct {
-	RepoKey                string               `json:"-"`
-	CronExp                string               `json:"cronExp,omitempty"`
-	EnableEventReplication bool                 `json:"enableEventReplication,omitempty"`
-	Replications           []getReplicationBody `json:"replications,omitempty"`
-}
-
-type UpdateReplicationConfig struct {
-	RepoKey                string                  `json:"-"`
-	CronExp                string                  `json:"cronExp,omitempty"`
-	EnableEventReplication bool                    `json:"enableEventReplication,omitempty"`
-	Replications           []updateReplicationBody `json:"replications,omitempty"`
-}
 
 var replicationSchemaCommon = map[string]*schema.Schema{
 	"repo_key": {
@@ -128,168 +111,14 @@ func ResourceArtifactoryReplicationConfig() *schema.Resource {
 	}
 }
 
-func unpackReplicationConfig(s *schema.ResourceData) UpdateReplicationConfig {
-	d := &utilsdk.ResourceData{ResourceData: s}
-	replicationConfig := new(UpdateReplicationConfig)
-
-	repo := d.GetString("repo_key", false)
-
-	if v, ok := d.GetOk("replications"); ok {
-		arr := v.([]interface{})
-
-		tmp := make([]updateReplicationBody, 0, len(arr))
-		replicationConfig.Replications = tmp
-
-		for i, o := range arr {
-			if i == 0 {
-				replicationConfig.RepoKey = repo
-				replicationConfig.CronExp = d.GetString("cron_exp", false)
-				replicationConfig.EnableEventReplication = d.GetBool("enable_event_replication", false)
-			}
-
-			m := o.(map[string]interface{})
-
-			var replication updateReplicationBody
-
-			replication.RepoKey = repo
-
-			if v, ok = m["url"]; ok {
-				replication.URL = v.(string)
-			}
-
-			if v, ok = m["socket_timeout_millis"]; ok {
-				replication.SocketTimeoutMillis = v.(int)
-			}
-
-			if v, ok = m["username"]; ok {
-				replication.Username = v.(string)
-			}
-
-			if v, ok = m["enabled"]; ok {
-				replication.Enabled = v.(bool)
-			}
-
-			if v, ok = m["sync_deletes"]; ok {
-				replication.SyncDeletes = v.(bool)
-			}
-
-			if v, ok = m["sync_properties"]; ok {
-				replication.SyncProperties = v.(bool)
-			}
-
-			if v, ok = m["sync_statistics"]; ok {
-				replication.SyncStatistics = v.(bool)
-			}
-
-			if prefix, ok := m["path_prefix"]; ok {
-				replication.PathPrefix = prefix.(string)
-			}
-
-			if _, ok := m["proxy"]; ok {
-				replication.Proxy = repository.HandleResetWithNonExistentValue(d, fmt.Sprintf("replications.%d.proxy", i))
-			}
-
-			if pass, ok := m["password"]; ok {
-				replication.Password = pass.(string)
-			}
-
-			replicationConfig.Replications = append(replicationConfig.Replications, replication)
-		}
-	}
-
-	return *replicationConfig
-}
-
-func packReplicationConfig(replicationConfig *GetReplicationConfig, d *schema.ResourceData) diag.Diagnostics {
-	var errors []error
-	setValue := utilsdk.MkLens(d)
-
-	setValue("repo_key", replicationConfig.RepoKey)
-	setValue("cron_exp", replicationConfig.CronExp)
-	errors = setValue("enable_event_replication", replicationConfig.EnableEventReplication)
-
-	if replicationConfig.Replications != nil {
-		var replications []map[string]interface{}
-		for _, repl := range replicationConfig.Replications {
-			replication := make(map[string]interface{})
-
-			replication["url"] = repl.URL
-			replication["socket_timeout_millis"] = repl.SocketTimeoutMillis
-			replication["username"] = repl.Username
-			replication["enabled"] = repl.Enabled
-			replication["sync_deletes"] = repl.SyncDeletes
-			replication["sync_properties"] = repl.SyncProperties
-			replication["sync_statistics"] = repl.SyncStatistics
-			replication["path_prefix"] = repl.PathPrefix
-			replication["proxy"] = repl.ProxyRef
-
-			replications = append(replications, replication)
-		}
-
-		errors = setValue("replications", replications)
-	}
-	if len(errors) > 0 {
-		return diag.Errorf("failed to pack replication config %q", errors)
-	}
-
-	return nil
-}
-
 func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackReplicationConfig(d)
-
-	resp, err := m.(util.ProviderMetadata).Client.R().
-		SetBody(replicationConfig).
-		Put(EndpointPath + "multiple/" + replicationConfig.RepoKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if resp.IsError() {
-		return diag.Errorf("%s", resp.String())
-	}
-
-	d.SetId(replicationConfig.RepoKey)
-	return resourceReplicationConfigRead(ctx, d, m)
+	return diag.Errorf("artifactory_replication_config deprecated. Use artifactory_push_replication instead")
 }
 
 func resourceReplicationConfigRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(util.ProviderMetadata).Client
-	var replications []getReplicationBody
-	resp, err := c.R().SetResult(&replications).Get(EndpointPath + d.Id())
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if resp.IsError() {
-		return diag.Errorf("%s", resp.String())
-	}
-
-	repConfig := GetReplicationConfig{
-		RepoKey:      d.Id(),
-		Replications: replications,
-	}
-	if len(replications) > 0 {
-		repConfig.EnableEventReplication = replications[0].EnableEventReplication
-		repConfig.CronExp = replications[0].CronExp
-	}
-	return packReplicationConfig(&repConfig, d)
+	return diag.Errorf("artifactory_replication_config deprecated. Use artifactory_push_replication instead")
 }
 
 func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	replicationConfig := unpackReplicationConfig(d)
-
-	resp, err := m.(util.ProviderMetadata).Client.R().SetBody(replicationConfig).Post(EndpointPath + d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if resp.IsError() {
-		return diag.Errorf("%s", resp.String())
-	}
-
-	d.SetId(replicationConfig.RepoKey)
-
-	return resourceReplicationConfigRead(ctx, d, m)
+	return diag.Errorf("artifactory_replication_config deprecated. Use artifactory_push_replication instead")
 }
