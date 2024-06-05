@@ -2,7 +2,7 @@
 
 BREAKING CHANGES:
 
-* Resource `artifactory_access_token` has been removed from provider. PR: [#986](https://github.com/jfrog/terraform-provider-artifactory/pull/986)
+* Resources `artifactory_access_token`, `artifactory_replication_config`, and `artifactory_single_replication_config` have been removed from provider. PR: [#995](https://github.com/jfrog/terraform-provider-artifactory/pull/995)
 
 ## 10.8.3 (June 3, 2024)
 
