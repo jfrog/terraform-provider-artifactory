@@ -27,7 +27,7 @@ var domainValidationErrorMessageLookup = map[string]string{
 	"artifact":                   "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
 	"artifact_property":          "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
 	"docker":                     "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
-	"build":                      "selected_builds cannot be empty when any_build is false",
+	"build":                      "selected_builds or include_patterns cannot be empty when any_build is false",
 	"release_bundle":             "registered_release_bundle_names cannot be empty when any_release_bundle is false",
 	"distribution":               "registered_release_bundle_names cannot be empty when any_release_bundle is false",
 	"artifactory_release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
@@ -241,6 +241,47 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 			{
 				Config:      webhookConfig,
 				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got https://tempurl.org`),
+			},
+		},
+	})
+}
+
+func TestAccWebhook_BuildWithIncludePatterns(t *testing.T) {
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_build_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := util.ExecuteTemplate("TestAccWebhookBuildPatterns", `
+		resource "artifactory_build_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["uploaded"]
+			criteria {
+				any_build  = false
+				selected_builds = []
+				include_patterns = ["foo"]
+			}
+			handler {
+				url = "https://tempurl.org"
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: webhookConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo"),
+				),
 			},
 		},
 	})
@@ -556,6 +597,48 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 			},
 		},
 	}
+}
+
+func TestAccCustomWebhook_BuildWithIncludePatterns(t *testing.T) {
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_build_custom_webhook.%s", name)
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+	webhookConfig := util.ExecuteTemplate("TestAccCustomWebhookBuildPatterns", `
+		resource "artifactory_build_custom_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["uploaded"]
+			criteria {
+				any_build  = false
+				selected_builds = []
+				include_patterns = ["foo"]
+			}
+			handler {
+				url = "https://tempurl.org"
+				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: webhookConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "foo"),
+				),
+			},
+		},
+	})
 }
 
 func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error) {
