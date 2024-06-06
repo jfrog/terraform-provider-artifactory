@@ -1,3 +1,9 @@
+## 11.0.0 (June 6, 2024)
+
+BREAKING CHANGES:
+
+* Resources `artifactory_access_token`, `artifactory_replication_config`, and `artifactory_single_replication_config` have been removed from provider. PR: [#995](https://github.com/jfrog/terraform-provider-artifactory/pull/995)
+
 ## 10.8.4 (June 5, 2024)
 
 BUG FIXES:

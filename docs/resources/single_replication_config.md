@@ -1,5 +1,5 @@
 ---
-subcategory: "Replication"
+subcategory: "Deprecated"
 ---
 # Artifactory Single Replication Config Resource
 

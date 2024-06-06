@@ -12,8 +12,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v10/pkg/artifactory/datasource"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/datasource"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/stretchr/testify/assert"
 )
