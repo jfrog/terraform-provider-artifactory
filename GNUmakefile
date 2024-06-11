@@ -13,8 +13,17 @@ PROVIDER_VERSION?=$(shell git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\
 PROVIDER_MAJOR_VERSION?=$(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1}' )
 NEXT_PROVIDER_VERSION := $(shell echo ${PROVIDER_VERSION}| awk -F '.' '{print $$1 "." $$2 "." $$3 +1 }' )
 PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/v${PROVIDER_MAJOR_VERSION}/${PKG_NAME}
-REGISTRY_HOST?=registry.terraform.io
-BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
+
+TERRAFORM_CLI?=terraform
+
+REGISTRY_HOST=registry.terraform.io
+
+ifeq ($(TERRAFORM_CLI), tofu)
+REGISTRY_HOST=registry.opentofu.org
+endif
+
+BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_VERSION}/${TARGET_ARCH}
+
 SONAR_SCANNER_VERSION?=4.7.0.2747
 SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
 
@@ -23,11 +32,10 @@ SMOKE_TESTS=(TestAccDataSourceUser_basic|TestAccLocalGenericRepository|TestAccLo
 default: build
 
 install: clean build
-	rm -fR .terraform.d && \
 	mkdir -p ${BUILD_PATH} && \
 		mv -v dist/terraform-provider-${PRODUCT}_${GORELEASER_ARCH}/terraform-provider-${PRODUCT}_v${NEXT_PROVIDER_VERSION}* ${BUILD_PATH} && \
 		sed -i.bak 's/version = ".*"/version = "${NEXT_PROVIDER_VERSION}"/' sample.tf && rm sample.tf.bak && \
-		terraform init
+		${TERRAFORM_CLI} init
 
 clean:
 	rm -fR dist terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
@@ -67,7 +75,7 @@ scan:
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	@go fmt ./...
+	@go fmt ./pkg/...
 
 doc:
 	go generate

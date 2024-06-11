@@ -4,7 +4,8 @@
 
 # Terraform Provider Artifactory
 
-[![Actions Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/release/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
+[![Terraform & OpenTofu Acceptance Tests](https://github.com/jfrog/terraform-provider-artifactory/actions/workflows/acceptance-tests.yml/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions/workflows/acceptance-tests.yml)
+[![Release Status](https://github.com/jfrog/terraform-provider-artifactory/workflows/release/badge.svg)](https://github.com/jfrog/terraform-provider-artifactory/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jfrog/terraform-provider-artifactory)](https://goreportcard.com/report/github.com/jfrog/terraform-provider-artifactory)
 
 ## Releases

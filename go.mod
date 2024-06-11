@@ -3,6 +3,8 @@ module github.com/jfrog/terraform-provider-artifactory/v11
 // if you need to do local dev, literally just uncomment the line below
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
+go 1.22.2
+
 require (
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
@@ -99,7 +101,3 @@ require (
 	google.golang.org/protobuf v1.34.0 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 )
-
-go 1.22
-
-toolchain go1.22.2
