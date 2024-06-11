@@ -13,7 +13,7 @@ jobs:
   acceptance-tests-matrix:
     name: ${{ matrix.cli }}
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: false
     environment: development
     strategy:
       fail-fast: true
