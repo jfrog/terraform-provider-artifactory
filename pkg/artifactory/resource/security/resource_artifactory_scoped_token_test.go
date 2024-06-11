@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -13,6 +14,11 @@ import (
 )
 
 func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	// Version 7.11.1 is the last version before we migrated the resource from SDKv2 to Plugin Framework
 	version := "7.11.1"
 	title := fmt.Sprintf("from_v%s", version)
@@ -22,6 +28,11 @@ func TestAccScopedToken_UpgradeFromSDKv2(t *testing.T) {
 }
 
 func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	// Version 7.2.0 doesn't have `include_reference_token` attribute
 	// This test verifies that there is no state drift on update
 	version := "7.2.0"
@@ -32,6 +43,11 @@ func TestAccScopedToken_UpgradeGH_758(t *testing.T) {
 }
 
 func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -91,6 +107,11 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 }
 
 func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, name := testutil.MkNames("test-scope-token", "artifactory_scoped_token")
 	config := util.ExecuteTemplate(
 		"TestAccScopedToken",

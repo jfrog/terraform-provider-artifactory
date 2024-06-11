@@ -48,6 +48,11 @@ func TestAccProxy_UpgradeFromSDKv2(t *testing.T) {
 		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
 	}
 
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, resourceName := testutil.MkNames("test-proxy-", "artifactory_proxy")
 
 	temp := `

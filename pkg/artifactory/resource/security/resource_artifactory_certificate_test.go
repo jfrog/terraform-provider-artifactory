@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -15,6 +16,11 @@ import (
 )
 
 func TestAccCertificate_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	const certificateFull = `
 		resource "artifactory_certificate" "%s" {
 			alias   = "%s"

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -41,7 +42,6 @@ func TestAccSamlSettings_full(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccSamlSettingsDestroy("artifactory_saml_settings.saml"),
-
 		Steps: []resource.TestStep{
 			{
 				Config: SamlSettingsTemplateFull,
@@ -78,8 +78,10 @@ func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		samlSettings := configuration.SamlSettings{}
 
+		// wait 5 sec for Artifactory to catch up before checking?
+		time.Sleep(5 * time.Second)
+		var samlSettings configuration.SamlSettings
 		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")

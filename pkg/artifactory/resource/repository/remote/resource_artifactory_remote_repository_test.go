@@ -23,6 +23,11 @@ import (
 )
 
 func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
 
 	params := map[string]string{
