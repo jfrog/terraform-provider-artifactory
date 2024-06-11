@@ -22,7 +22,7 @@ ifeq ($(TERRAFORM_CLI), tofu)
 REGISTRY_HOST=registry.opentofu.org
 endif
 
-BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_VERSION}/${TARGET_ARCH}
+BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/${TARGET_ARCH}
 
 SONAR_SCANNER_VERSION?=4.7.0.2747
 SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
