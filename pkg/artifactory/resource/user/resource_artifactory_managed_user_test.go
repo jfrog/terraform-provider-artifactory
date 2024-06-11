@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -14,6 +15,11 @@ import (
 )
 
 func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
 	email := fmt.Sprintf(username + "@test.com")

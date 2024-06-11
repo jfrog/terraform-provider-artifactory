@@ -3,6 +3,7 @@ package security_test
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"regexp"
 	"testing"
 
@@ -195,6 +196,11 @@ func TestAccPermissionTarget_noActions(t *testing.T) {
 }
 
 func TestAccPermissionTarget_MigrateFromFrameworkBackToSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, name := testutil.MkNames("test-perm", "artifactory_permission_target")
 	repoName := fmt.Sprintf("test-local-docker-%d", rand.Int())
 

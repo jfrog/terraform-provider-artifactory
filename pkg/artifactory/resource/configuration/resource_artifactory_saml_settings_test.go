@@ -78,8 +78,8 @@ func testAccSamlSettingsDestroy(id string) func(*terraform.State) error {
 		if !ok {
 			return fmt.Errorf("error: resource id [%s] not found", id)
 		}
-		samlSettings := configuration.SamlSettings{}
 
+		var samlSettings configuration.SamlSettings
 		_, err := c.R().SetResult(&samlSettings).Get("artifactory/api/saml/config")
 		if err != nil {
 			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/saml/config during Read")

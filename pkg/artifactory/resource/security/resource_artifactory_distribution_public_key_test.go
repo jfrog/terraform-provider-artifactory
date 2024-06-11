@@ -2,6 +2,7 @@ package security_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -55,6 +56,11 @@ EOF
 }`
 
 func TestAccDistributionPublicKey_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, name := testutil.MkNames("mykey", resource_name)
 
 	keyBasic := fmt.Sprintf(template, resource_name, name, name)

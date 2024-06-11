@@ -3,6 +3,7 @@ package security_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
 
@@ -15,6 +16,11 @@ import (
 )
 
 func TestAccKeyPair_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	id, fqrn, name := testutil.MkNames("test", "artifactory_keypair")
 	template := `
 	resource "artifactory_keypair" "{{ .name }}" {

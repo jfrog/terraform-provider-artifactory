@@ -3,6 +3,7 @@ package security_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -17,6 +18,11 @@ import (
 )
 
 func TestAccGroup_UpgradeFromSDKv2(t *testing.T) {
+	providerHost := os.Getenv("TF_ACC_PROVIDER_HOST")
+	if providerHost == "registry.opentofu.org" {
+		t.Skipf("provider host is registry.opentofu.org. Previous version of Artifactory provider is unknown to OpenTofu.")
+	}
+
 	_, fqrn, groupName := testutil.MkNames("test-group-upgrade-", "artifactory_group")
 	temp := `
 		resource "artifactory_group" "{{ .groupName }}" {
