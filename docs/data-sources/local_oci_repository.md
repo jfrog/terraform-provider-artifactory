@@ -9,7 +9,7 @@ Retrieves a local OCI repository resource
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_oci_repository" "my-oci-local" {
+data "artifactory_local_oci_repository" "my-oci-local" {
   key = "my-oci-local"
 }
 ```

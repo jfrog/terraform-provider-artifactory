@@ -9,7 +9,7 @@ Retrieves a local Helm OCI repository resource
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_helmoci_repository" "my-helmoci-local" {
+data "artifactory_local_helmoci_repository" "my-helmoci-local" {
   key = "my-helmoci-local"
 }
 ```
