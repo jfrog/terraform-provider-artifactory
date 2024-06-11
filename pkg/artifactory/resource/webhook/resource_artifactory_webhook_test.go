@@ -340,7 +340,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				any_local  = {{ .anyLocal }}
 				any_remote = {{ .anyRemote }}
 				any_federated = {{ .anyFederated }}
-				repo_keys  = ["{{ .repoName }}"]
+				repo_keys  = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}.key]
 				include_patterns = ["foo/**"]
 				exclude_patterns = ["bar/**"]
 			}
@@ -356,8 +356,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 			handler {
 				url = "https://tempurl.com"
 			}
-
-			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
 		}
 	`, params)
 
@@ -374,7 +372,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				any_local  = {{ .anyLocal }}
 				any_remote = {{ .anyRemote }}
 				any_federated = {{ .anyFederated }}
-				repo_keys  = ["{{ .repoName }}"]
+				repo_keys  = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}.key]
 			}
 			handler {
 				url                    = "https://tempurl.org"
@@ -388,8 +386,6 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 			handler {
 				url = "https://tempurl.com"
 			}
-
-			depends_on = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}]
 		}
 	`, params)
 
