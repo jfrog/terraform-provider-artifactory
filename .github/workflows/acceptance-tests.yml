@@ -20,7 +20,7 @@ jobs:
       matrix:
         cli: [terraform, tofu]
     outputs:
-      tf_version: ${{ steps.debug_tf_version.outputs.version }}
+      tf_version: ${{ steps.install_terraform_cli.outputs.version }}
       tofu_version: ${{ steps.install_opentofu_cli.outputs.version }}
       artifactory_version: ${{ steps.run_artifactory_container.outputs.version }}
     steps:
