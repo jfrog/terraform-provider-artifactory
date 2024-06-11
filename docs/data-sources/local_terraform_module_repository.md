@@ -10,7 +10,7 @@ found [here](https://www.jfrog.com/confluence/display/JFROG/Terraform+Repositori
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_terraform_module_repository" "terraform-local-test-terraform-module-repo" {
+data "artifactory_local_terraform_module_repository" "terraform-local-test-terraform-module-repo" {
   key = "terraform-local-test-terraform-module-repo"
 }
 ```

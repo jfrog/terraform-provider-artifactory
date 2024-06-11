@@ -9,7 +9,7 @@ Retrieves a local Docker (v1) repository resource.
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_docker_v1_repository" "artifactory_local_test_docker_v1_repository" {
+data "artifactory_local_docker_v1_repository" "artifactory_local_test_docker_v1_repository" {
   key = "artifactory_local_test_docker_v1_repository"
 }
 ```

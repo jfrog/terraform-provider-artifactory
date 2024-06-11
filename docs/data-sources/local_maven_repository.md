@@ -9,7 +9,7 @@ Retrieves a local Maven repository.
 ## Example Usage
 
 ```hcl
-resource "artifactory_local_maven_repository" "local-test-maven-repo-basic" {
+data "artifactory_local_maven_repository" "local-test-maven-repo-basic" {
   key = "local-test-maven-repo-basic"
 }
 ```

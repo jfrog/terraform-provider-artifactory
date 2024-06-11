@@ -8,7 +8,7 @@ Retrieves a federated Cargo repository.
 ## Example Usage
 
 ```hcl
-resource "artifactory_federated_cargo_repository" "federated-test-cargo-repo" {
+data "artifactory_federated_cargo_repository" "federated-test-cargo-repo" {
   key = "federated-test-cargo-repo"
 }
 ```
