@@ -3,7 +3,10 @@ package configuration
 import (
 	"context"
 	"net/http"
+	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -42,6 +45,7 @@ type PackageCleanupPolicyResourceModel struct {
 	DurationInMinutes types.Int64  `tfsdk:"duration_in_minutes"`
 	Enabled           types.Bool   `tfsdk:"enabled"`
 	SkipTrashcan      types.Bool   `tfsdk:"skip_trashcan"`
+	ProjectKey        types.String `tfsdk:"project_key"`
 	SearchCriteria    types.Object `tfsdk:"search_criteria"`
 }
 
@@ -50,17 +54,23 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 
 	attrs := r.SearchCriteria.Attributes()
 	searchCriteria := PackageCleanupPolicySearchCriteriaAPIModel{
+		IncludeAllRepos:              attrs["include_all_repos"].(types.Bool).ValueBool(),
+		IncludeAllProjects:           attrs["include_all_projects"].(types.Bool).ValueBool(),
 		CreatedBeforeInMonths:        attrs["created_before_in_months"].(types.Int64).ValueInt64(),
 		LastDownloadedBeforeInMonths: attrs["last_downloaded_before_in_months"].(types.Int64).ValueInt64(),
+		KeepLastNVerions:             attrs["keep_last_n_versions"].(types.Int64).ValueInt64(),
 	}
 
 	diags.Append(attrs["package_types"].(types.Set).ElementsAs(ctx, &searchCriteria.PackageTypes, false)...)
 	diags.Append(attrs["repos"].(types.Set).ElementsAs(ctx, &searchCriteria.Repos, false)...)
-	// diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
-	// diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
+	diags.Append(attrs["excluded_repos"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedRepos, false)...)
+	diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
+	diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
+	diags.Append(attrs["included_projects"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedProjects, false)...)
 
 	*apiModel = PackageCleanupPolicyAPIModel{
 		Key:               r.Key.ValueString(),
+		ProjectKey:        r.ProjectKey.ValueString(),
 		Description:       r.Description.ValueString(),
 		CronExpression:    r.CronExpression.ValueString(),
 		DurationInMinutes: r.DurationInMinutes.ValueInt64(),
@@ -75,6 +85,7 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 	diags := diag.Diagnostics{}
 
 	r.Key = types.StringValue(apiModel.Key)
+	r.ProjectKey = types.StringValue(apiModel.ProjectKey)
 	r.Description = types.StringValue(apiModel.Description)
 	r.CronExpression = types.StringValue(apiModel.CronExpression)
 	r.DurationInMinutes = types.Int64Value(apiModel.DurationInMinutes)
@@ -87,28 +98,44 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 	repos, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.Repos)
 	diags.Append(ds...)
 
-	// 	includedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedPackages)
-	// 	diags.Append(ds...)
-	//
-	// 	excludePackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackages)
-	// 	diags.Append(ds...)
+	excludedRepos, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedRepos)
+	diags.Append(ds...)
+
+	includedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedPackages)
+	diags.Append(ds...)
+
+	excludedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackages)
+	diags.Append(ds...)
+
+	includedProjects, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedProjects)
+	diags.Append(ds...)
 
 	searchCriteria, ds := types.ObjectValue(
 		map[string]attr.Type{
-			"package_types": types.SetType{ElemType: types.StringType},
-			"repos":         types.SetType{ElemType: types.StringType},
-			// "included_packages":                types.SetType{ElemType: types.StringType},
-			// "excluded_packages":                types.SetType{ElemType: types.StringType},
+			"package_types":                    types.SetType{ElemType: types.StringType},
+			"include_all_repos":                types.BoolType,
+			"repos":                            types.SetType{ElemType: types.StringType},
+			"excluded_repos":                   types.SetType{ElemType: types.StringType},
+			"included_packages":                types.SetType{ElemType: types.StringType},
+			"excluded_packages":                types.SetType{ElemType: types.StringType},
+			"include_all_projects":             types.BoolType,
+			"included_projects":                types.SetType{ElemType: types.StringType},
 			"created_before_in_months":         types.Int64Type,
 			"last_downloaded_before_in_months": types.Int64Type,
+			"keep_last_n_versions":             types.Int64Type,
 		},
 		map[string]attr.Value{
-			"package_types": packageTypes,
-			"repos":         repos,
-			// "included_packages":                includedPackages,
-			// "excluded_packages":                excludePackages,
+			"package_types":                    packageTypes,
+			"include_all_repos":                types.BoolValue(apiModel.SearchCriteria.IncludeAllRepos),
+			"repos":                            repos,
+			"excluded_repos":                   excludedRepos,
+			"included_packages":                includedPackages,
+			"excluded_packages":                excludedPackages,
+			"include_all_projects":             types.BoolValue(apiModel.SearchCriteria.IncludeAllProjects),
+			"included_projects":                includedProjects,
 			"created_before_in_months":         types.Int64Value(apiModel.SearchCriteria.CreatedBeforeInMonths),
 			"last_downloaded_before_in_months": types.Int64Value(apiModel.SearchCriteria.LastDownloadedBeforeInMonths),
+			"keep_last_n_versions":             types.Int64Value(apiModel.SearchCriteria.KeepLastNVerions),
 		},
 	)
 	diags.Append(ds...)
@@ -125,16 +152,22 @@ type PackageCleanupPolicyAPIModel struct {
 	DurationInMinutes int64                                      `json:"durationInMinutes"`
 	Enabled           bool                                       `json:"enabled,omitempty"`
 	SkipTrashcan      bool                                       `json:"skipTrashcan"`
+	ProjectKey        string                                     `json:"projectKey"`
 	SearchCriteria    PackageCleanupPolicySearchCriteriaAPIModel `json:"searchCriteria"`
 }
 
 type PackageCleanupPolicySearchCriteriaAPIModel struct {
-	PackageTypes []string `json:"packageTypes"`
-	Repos        []string `json:"repos"`
-	// IncludedPackages             []string `json:"includedPackages"`
-	// ExcludedPackages             []string `json:"excludedPackages,omitempty"`
-	CreatedBeforeInMonths        int64 `json:"createdBeforeInMonths,omitempty"`
-	LastDownloadedBeforeInMonths int64 `json:"lastDownloadedBeforeInMonths,omitempty"`
+	PackageTypes                 []string `json:"packageTypes"`
+	IncludeAllRepos              bool     `json:"includeAllRepos"`
+	Repos                        []string `json:"repos"`
+	ExcludedRepos                []string `json:"excludedRepos"`
+	IncludedPackages             []string `json:"includedPackages"`
+	ExcludedPackages             []string `json:"excludedPackages,omitempty"`
+	IncludeAllProjects           bool     `json:"includeAllProjects"`
+	IncludedProjects             []string `json:"includedProjects"`
+	CreatedBeforeInMonths        int64    `json:"createdBeforeInMonths,omitempty"`
+	LastDownloadedBeforeInMonths int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
+	KeepLastNVerions             int64    `json:"keepLastNVerions"`
 }
 
 type PackageCleanupPolicyEnablementAPIModel struct {
@@ -158,6 +191,16 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc.",
+			},
+			"project_key": schema.StringAttribute{
+				MarkdownDescription: "The project for which this policy is created.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
+						"must be 2 - 32 lowercase alphanumeric and hyphen characters",
+					),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -197,37 +240,87 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						},
 						MarkdownDescription: "Types of packages to be removed. Support: `docker`, `maven`, and `gradle`.",
 					},
+					"include_all_repos": schema.BoolAttribute{
+						Optional: true,
+					},
 					"repos": schema.SetAttribute{
 						ElementType:         types.StringType,
 						Required:            true,
 						MarkdownDescription: "List of repositories to clean up.",
 					},
-					// "included_packages": schema.SetAttribute{
-					// 	ElementType: types.StringType,
-					// 	Required:    true,
-					// 	Validators: []validator.Set{
-					// 		setvalidator.SizeBetween(1, 1),
-					// 	},
-					// 	MarkdownDescription: "Pattern for local repository name(s) which to be cleaned up. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example -> \"includedPackages\": [\"**\"]",
-					// },
-					// "excluded_packages": schema.SetAttribute{
-					// 	ElementType:         types.StringType,
-					// 	Optional:            true,
-					// 	MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific packages.",
-					// },
-					"created_before_in_months": schema.Int64Attribute{
+					"excluded_repos": schema.SetAttribute{
+						ElementType:         types.StringType,
 						Optional:            true,
+						MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific repositories.",
+					},
+					"included_packages": schema.SetAttribute{
+						ElementType: types.StringType,
+						Required:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeBetween(1, 1),
+						},
+						MarkdownDescription: "Pattern for local repository name(s) which to be cleaned up. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example -> \"includedPackages\": [\"**\"]",
+					},
+					"excluded_packages": schema.SetAttribute{
+						ElementType:         types.StringType,
+						Optional:            true,
+						MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific packages.",
+					},
+					"include_all_projects": schema.BoolAttribute{
+						Optional: true,
+					},
+					"included_projects": schema.SetAttribute{
+						ElementType: types.StringType,
+						Optional:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeBetween(1, 1),
+						},
+						MarkdownDescription: "List of projects name(s) inccludes in being cleaned up.",
+					},
+					"created_before_in_months": schema.Int64Attribute{
+						Optional: true,
+						Validators: []validator.Int64{
+							int64validator.ConflictsWith(
+								path.MatchRelative().AtName("keep_last_n_versions"),
+							),
+						},
 						MarkdownDescription: "Remove packages based on when they were created.",
 					},
 					"last_downloaded_before_in_months": schema.Int64Attribute{
-						Optional:            true,
+						Optional: true,
+						Validators: []validator.Int64{
+							int64validator.ConflictsWith(
+								path.MatchRelative().AtName("keep_last_n_versions"),
+							),
+						},
 						MarkdownDescription: "Remove packages based on when they were last downloaded.",
+					},
+					"keep_last_n_versions": schema.Int64Attribute{
+						Optional: true,
+						Validators: []validator.Int64{
+							int64validator.ConflictsWith(
+								path.MatchRelative().AtName("created_before_in_months"),
+							),
+							int64validator.ConflictsWith(
+								path.MatchRelative().AtName("last_downloaded_before_in_months"),
+							),
+						},
+						MarkdownDescription: "Keep the last Nth versions from being cleaned up.",
 					},
 				},
 				Required: true,
 			},
 		},
 		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform.",
+	}
+}
+
+func (r PackageCleanupPolicyResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.Conflicting(
+			path.MatchRoot("attribute_one"),
+			path.MatchRoot("attribute_two"),
+		),
 	}
 }
 
@@ -361,8 +454,6 @@ func (r *PackageCleanupPolicyResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	enabledChanged := state.Enabled.ValueBool() != plan.Enabled.ValueBool()
-
 	var policy PackageCleanupPolicyAPIModel
 	resp.Diagnostics.Append(plan.toAPIModel(ctx, &policy)...)
 	if resp.Diagnostics.HasError() {
@@ -389,6 +480,7 @@ func (r *PackageCleanupPolicyResource) Update(ctx context.Context, req resource.
 	}
 
 	// if Enabled has changed then call enablement API to toggle the value
+	enabledChanged := state.Enabled.ValueBool() != plan.Enabled.ValueBool()
 	if enabledChanged {
 		policyEnablement := PackageCleanupPolicyEnablementAPIModel{}
 		if state.Enabled.ValueBool() && !plan.Enabled.ValueBool() { // if Enabled goes from true to false
