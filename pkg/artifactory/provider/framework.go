@@ -75,8 +75,9 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 				Description: "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
 			},
 			"check_license": schema.BoolAttribute{
-				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
-				Optional:    true,
+				Description:        "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
+				Optional:           true,
+				DeprecationMessage: "Remove this attribute from your provider configuration as it is no longer used and the attribute will be removed in the next major version of the provider.",
 			},
 		},
 	}
@@ -156,16 +157,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 			"Error adding Auth to Resty client",
 			err.Error(),
 		)
-	}
-
-	if config.CheckLicense.IsNull() || config.CheckLicense.ValueBool() {
-		if err := util.CheckArtifactoryLicense(restyClient, "Enterprise", "Commercial", "Edge"); err != nil {
-			resp.Diagnostics.AddError(
-				"Error checking Artifactory license",
-				err.Error(),
-			)
-			return
-		}
+		return
 	}
 
 	version, err := util.GetArtifactoryVersion(restyClient)
