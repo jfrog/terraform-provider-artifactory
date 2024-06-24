@@ -1,3 +1,15 @@
+## 11.1.0 (June 25, 2024)
+
+NOTES:
+
+* provider: `check_license` attribute is deprecated and provider no longer checks Artifactory license during initialization. It will be removed in the next major version release.
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources.
+
+Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
+
 ## 11.0.0 (June 6, 2024). Tested on Artifactory 7.84.14 with Terraform 1.8.5 and OpenTofu 1.7.2
 
 BREAKING CHANGES:
