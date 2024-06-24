@@ -49,6 +49,7 @@ func SdkV2() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
+				Deprecated:  "Remove this attribute from your provider configuration as it is no longer used and the attribute will be removed in the next major version of the provider.",
 			},
 		},
 
@@ -106,19 +107,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	restyClient, err = client.AddAuth(restyClient, apiKey, accessToken)
 	if err != nil {
 		return nil, diag.FromErr(err)
-	}
-
-	// Due to migration from SDK v2 to plugin framework, we have to remove defaults from the provider configuration.
-	// https://discuss.hashicorp.com/t/muxing-upgraded-tfsdk-and-framework-provider-with-default-provider-configuration/43945
-	checkLicense := true
-	if v, ok := d.GetOkExists("check_license"); ok {
-		checkLicense = v.(bool)
-	}
-	if checkLicense {
-		licenseErr := util.CheckArtifactoryLicense(restyClient, "Enterprise", "Commercial", "Edge")
-		if licenseErr != nil {
-			return nil, diag.FromErr(licenseErr)
-		}
 	}
 
 	version, err := util.GetArtifactoryVersion(restyClient)
