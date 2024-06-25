@@ -371,7 +371,7 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 
 	skipTest := runtimeVersion.GreaterThanOrEqual(fixedVersion)
 	if skipTest {
-		t.Skip(fmt.Printf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String()))
+		t.Skipf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String())
 	}
 	return skipTest, nil
 }
