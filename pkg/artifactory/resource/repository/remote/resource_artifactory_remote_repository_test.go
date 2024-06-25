@@ -235,6 +235,7 @@ func TestAccRemoteDockerRepo_full(t *testing.T) {
 		"username":                       "admin",
 		"password":                       "password1",
 		"xray_index":                     "false",
+		"archive_browsing_enabled":       "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -251,6 +252,7 @@ func TestAccRemoteDockerRepo_full(t *testing.T) {
 		"username":                       "admin1",
 		"password":                       "password",
 		"xray_index":                     "true",
+		"archive_browsing_enabled":       "true",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -297,6 +299,7 @@ resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
   username                  = "{{ .username }}"
   password                  = "{{ .password }}"
   xray_index                = {{ .xray_index }}
+  archive_browsing_enabled  = {{ .archive_browsing_enabled }}
 }
 `
 

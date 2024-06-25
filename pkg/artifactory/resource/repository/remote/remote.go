@@ -61,6 +61,7 @@ type RepositoryRemoteBaseParams struct {
 	DownloadRedirect                  bool                               `hcl:"download_direct" json:"downloadRedirect,omitempty"`
 	CdnRedirect                       bool                               `json:"cdnRedirect"`
 	DisableURLNormalization           bool                               `hcl:"disable_url_normalization" json:"disableUrlNormalization"`
+	ArchiveBrowsingEnabled            *bool                              `json:"archiveBrowsingEnabled,omitempty"`
 }
 
 func (r RepositoryRemoteBaseParams) GetRclass() string {
@@ -365,6 +366,12 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 				Default:     false,
 				Description: "Whether to disable URL normalization, default is `false`.",
 			},
+			"archive_browsing_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
+			},
 		},
 	)
 }
@@ -503,7 +510,9 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 		ListRemoteFolderItems:             d.GetBool("list_remote_folder_items", false),
 		MismatchingMimeTypeOverrideList:   d.GetString("mismatching_mime_types_override_list", false),
 		DisableURLNormalization:           d.GetBool("disable_url_normalization", false),
+		ArchiveBrowsingEnabled:            d.GetBoolRef("archive_browsing_enabled", false),
 	}
+
 	if v, ok := d.GetOk("content_synchronisation"); ok {
 		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
 		enabled := contentSynchronisationConfig["enabled"].(bool)
