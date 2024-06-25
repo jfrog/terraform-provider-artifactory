@@ -874,7 +874,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualBowerRepository = util.ExecuteTemplate("TestAccVirtualBower", `
+	config := util.ExecuteTemplate("TestAccVirtualBower", `
 		resource "artifactory_remote_bower_repository" "bower-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -891,6 +891,23 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 		}
 	`, params)
 
+	updatedConfig := util.ExecuteTemplate("TestAccVirtualBower", `
+		resource "artifactory_remote_bower_repository" "bower-remote" {
+			key = "{{ .remoteRepoName }}"
+			url = "https://registry.npmjs.org"
+		}
+
+		resource "artifactory_virtual_bower_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = ["{{ .remoteRepoName }}"]
+			external_dependencies_enabled     = true
+			external_dependencies_patterns    = ["**/go.googlesource.com/**"]
+			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
+
+			depends_on = ["artifactory_remote_bower_repository.bower-remote"]
+		}
+	`, params)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -898,7 +915,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: virtualBowerRepository,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "bower"),
@@ -907,6 +924,18 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "bower"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
 				),
 			},
@@ -930,7 +959,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 		"name":           name,
 		"remoteRepoName": remoteRepoName,
 	}
-	var virtualNpmRepository = util.ExecuteTemplate("TestAccVirtualNpm", `
+	config := util.ExecuteTemplate("TestAccVirtualNpm", `
 		resource "artifactory_remote_npm_repository" "npm-remote" {
 			key = "{{ .remoteRepoName }}"
 			url = "https://registry.npmjs.org"
@@ -948,6 +977,24 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 		}
 	`, params)
 
+	updatedConfig := util.ExecuteTemplate("TestAccVirtualNpm", `
+		resource "artifactory_remote_npm_repository" "npm-remote" {
+			key = "{{ .remoteRepoName }}"
+			url = "https://registry.npmjs.org"
+		}
+
+		resource "artifactory_virtual_npm_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = ["{{ .remoteRepoName }}"]
+			external_dependencies_enabled     = true
+			retrieval_cache_period_seconds    = 650
+			external_dependencies_patterns    = ["**/go.googlesource.com/**"]
+			external_dependencies_remote_repo = "{{ .remoteRepoName }}"
+
+			depends_on = ["artifactory_remote_npm_repository.npm-remote"]
+		}
+	`, params)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -955,7 +1002,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: virtualNpmRepository,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
@@ -965,6 +1012,19 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
 				),
 			},

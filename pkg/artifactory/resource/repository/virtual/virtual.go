@@ -122,7 +122,6 @@ var externalDependenciesSchema = map[string]*schema.Schema{
 	"external_dependencies_patterns": {
 		Type:     schema.TypeList,
 		Optional: true,
-		ForceNew: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
