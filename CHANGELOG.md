@@ -6,13 +6,12 @@ NOTES:
 
 IMPROVEMENTS:
 
-* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources.
-
-Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
+* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources. Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
 
 BUG FIXES:
 
 * resource/artifactory_virtual_bower_repository, resource/artifactory_virtual_npm_repository: Fix `external_dependencies_patterns` attribute set to be force new, which causes the resource to be recreated when attribute value changes. Issue: [#1004](https://github.com/jfrog/terraform-provider-artifactory/issues/1004) PR: [#1005](https://github.com/jfrog/terraform-provider-artifactory/pull/1005)
+* resource/artifactory_/*/_user: Allow `+` character for `name` attribute. This is allowed in SaaS instance but currently not for self-hosted. PR: [#1007](https://github.com/jfrog/terraform-provider-artifactory/pull/1007)
 
 ## 11.0.0 (June 6, 2024). Tested on Artifactory 7.84.14 with Terraform 1.8.5 and OpenTofu 1.7.2
 
