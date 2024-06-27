@@ -32,7 +32,7 @@ resource "artifactory_managed_user" "test-user" {
 ### Required
 
 - `email` (String) Email for user.
-- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: '.-_@'
+- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: `.-_@` for self-hosted. For SaaS, `+` is also allowed.
 
 ### Optional
 

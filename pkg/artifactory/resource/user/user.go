@@ -124,13 +124,13 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 		},
 	},
 	"name": schema.StringAttribute{
-		MarkdownDescription: "Username for user. May contain lowercase letters, numbers and symbols: '.-_@'",
+		MarkdownDescription: "Username for user. May contain lowercase letters, numbers and symbols: '.-_@' for self-hosted. For SaaS, '+' is also allowed.",
 		Required:            true,
 		Validators: []validator.String{
 			stringvalidator.LengthAtLeast(1),
 			stringvalidator.RegexMatches(
-				regexp.MustCompile(`^[a-z0-9.\-_\@]+$`),
-				"may contain lowercase letters, numbers and symbols: '.-_@'",
+				regexp.MustCompile(`^[a-z0-9.\-_\@\+]+$`),
+				"may contain lowercase letters, numbers and symbols: '.-_@' for self-hosted. For SaaS, '+' is also allowed.",
 			),
 		},
 		PlanModifiers: []planmodifier.String{
