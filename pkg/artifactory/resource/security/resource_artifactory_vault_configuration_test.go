@@ -66,7 +66,7 @@ func TestAccVaultConfiguration_full(t *testing.T) {
 					{
 						path = "{{ .path }}"
 						type = "{{ .type }}"
-					},
+					}
 				]
 			}
 		}
@@ -96,7 +96,7 @@ func TestAccVaultConfiguration_full(t *testing.T) {
 					{
 						path = "{{ .path }}"
 						type = "{{ .type }}"
-					},
+					}
 				]
 			}
 		}
@@ -185,7 +185,7 @@ func testInvalidAuthAttrs(authType, errMsg string) func(t *testing.T) {
 					{
 						path = "test-path"
 						type = "KV2"
-					},
+					}
 				]
 			}
 		}`
