@@ -113,7 +113,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +155,7 @@ func TestAccWebhook_EventTypesValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccWebhook_HandlerValidation_EmptyProxy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -273,7 +273,7 @@ func TestAccWebhook_BuildWithIncludePatterns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -443,7 +443,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, testCheckWebhook),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", testCheckWebhook),
 
 		Steps: []resource.TestStep{
 			{
@@ -577,7 +577,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, testCheckWebhook),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", testCheckWebhook),
 
 		Steps: []resource.TestStep{
 			{
@@ -623,7 +623,7 @@ func TestAccCustomWebhook_BuildWithIncludePatterns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -700,7 +700,7 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, testCheckWebhook),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", testCheckWebhook),
 
 		Steps: []resource.TestStep{
 			{

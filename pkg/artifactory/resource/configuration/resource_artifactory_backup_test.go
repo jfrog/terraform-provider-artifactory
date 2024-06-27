@@ -198,7 +198,7 @@ func cronTestCase(cronExpression string, t *testing.T) (*testing.T, resource.Tes
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("backup", BackupTemplateFull, fields),
