@@ -82,7 +82,7 @@ func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -122,7 +122,7 @@ func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -162,7 +162,7 @@ func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -200,7 +200,7 @@ func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -238,7 +238,7 @@ func TestAccDataSourceRemoteConanRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -280,7 +280,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -322,7 +322,7 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -359,7 +359,7 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -399,7 +399,7 @@ func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -464,7 +464,7 @@ func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
@@ -516,7 +516,7 @@ func TestAccDataSourceRemoteHelmOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -590,7 +590,7 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -634,7 +634,7 @@ func TestAccDataSourceRemoteOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -675,7 +675,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -715,7 +715,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -755,7 +755,7 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

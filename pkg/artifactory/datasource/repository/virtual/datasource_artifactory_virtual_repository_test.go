@@ -262,9 +262,9 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, security.VerifyKeyPair),
+			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn2, "", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -321,7 +321,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

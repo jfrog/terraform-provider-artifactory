@@ -2,7 +2,10 @@ package provider
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,6 +110,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	restyClient, err = client.AddAuth(restyClient, apiKey, accessToken)
 	if err != nil {
 		return nil, diag.FromErr(err)
+	}
+
+	bypassJFrogTLSVerification := os.Getenv("JFROG_BYPASS_TLS_VERIFICATION")
+	if strings.ToLower(bypassJFrogTLSVerification) == "true" {
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		restyClient.SetTLSClientConfig(tlsConfig)
 	}
 
 	version, err := util.GetArtifactoryVersion(restyClient)

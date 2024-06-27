@@ -2,9 +2,9 @@ package acctest
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -118,7 +118,7 @@ func GetArtifactoryUrl(t *testing.T) string {
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
+func VerifyDeleted(id, identifierAttribute string, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -131,7 +131,12 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 
 		providerMeta := Provider.Meta().(util.ProviderMetadata)
 
-		resp, err := check(rs.Primary.ID, providerMeta.Client.R())
+		identifier := rs.Primary.ID
+		if identifierAttribute != "" {
+			identifier = rs.Primary.Attributes[identifierAttribute]
+		}
+
+		resp, err := check(identifier, providerMeta.Client.R())
 		if err != nil {
 			return err
 		}
@@ -143,7 +148,7 @@ func VerifyDeleted(id string, check CheckFun) func(*terraform.State) error {
 			}
 		}
 
-		return fmt.Errorf("error: %s still exists", rs.Primary.ID)
+		return fmt.Errorf("error: %s still exists", identifier)
 	}
 }
 
@@ -243,7 +248,7 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 }
 
 // updateProxiesConfig is used by acctest.CreateProxy and acctest.DeleteProxy to interact with a proxy on Artifactory
-var updateProxiesConfig = func(t *testing.T, proxyKey string, getProxiesBody func() []byte) {
+var updateProxiesConfig = func(t *testing.T, getProxiesBody func() []byte) {
 	body := getProxiesBody()
 	restyClient := GetTestResty(t)
 	metadata := util.ProviderMetadata{Client: restyClient}
@@ -262,7 +267,7 @@ func CreateProxy(t *testing.T, proxyKey string) {
 		PlatformDefault bool   `yaml:"platformDefault"`
 	}
 
-	updateProxiesConfig(t, proxyKey, func() []byte {
+	updateProxiesConfig(t, func() []byte {
 		testProxy := proxy{
 			Key:             proxyKey,
 			Host:            "https://fake-proxy.org",
@@ -285,7 +290,7 @@ func CreateProxy(t *testing.T, proxyKey string) {
 
 // DeleteProxy deletes an existing proxy on Artifactory with the given key
 func DeleteProxy(t *testing.T, proxyKey string) {
-	updateProxiesConfig(t, proxyKey, func() []byte {
+	updateProxiesConfig(t, func() []byte {
 		// Return yaml to delete proxy
 		proxiesConfig := fmt.Sprintf(`proxies:
   %s: ~`, proxyKey)
@@ -300,9 +305,13 @@ func GetTestResty(t *testing.T) *resty.Client {
 		t.Fatal(err)
 	}
 
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	restyClient.SetTLSClientConfig(tlsConfig)
+
 	accessToken := testutil.GetEnvVarWithFallback(t, "JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN")
-	api := os.Getenv("ARTIFACTORY_API_KEY")
-	restyClient, err = client.AddAuth(restyClient, api, accessToken)
+	restyClient, err = client.AddAuth(restyClient, "", accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,3 +7,5 @@ integration-templates:
     name: "Slack integration" 
     redirect-uri: "https://<your saas connector hostname>/v1/oauth2/login/redirect"
     scope: "applied-permissions/user"
+security:
+  tls: true

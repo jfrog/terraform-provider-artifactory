@@ -2,7 +2,10 @@ package provider
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -160,6 +163,14 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	bypassJFrogTLSVerification := os.Getenv("JFROG_BYPASS_TLS_VERIFICATION")
+	if strings.ToLower(bypassJFrogTLSVerification) == "true" {
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		restyClient.SetTLSClientConfig(tlsConfig)
+	}
+
 	version, err := util.GetArtifactoryVersion(restyClient)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -198,6 +209,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		security.NewKeyPairResource,
 		security.NewPasswordExpirationPolicyResource,
 		security.NewUserLockPolicyResource,
+		security.NewVaultConfigurationResource,
 		configuration.NewLdapSettingResource,
 		configuration.NewLdapGroupSettingResource,
 		configuration.NewBackupResource,

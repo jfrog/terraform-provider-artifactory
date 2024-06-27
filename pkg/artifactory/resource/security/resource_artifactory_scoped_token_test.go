@@ -267,7 +267,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, checkAccessToken),
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "", checkAccessToken),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
@@ -351,7 +351,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 				Source: "jfrog/project",
 			},
 		},
-		CheckDestroy: acctest.VerifyDeleted(fqrn, checkAccessToken),
+		CheckDestroy: acctest.VerifyDeleted(fqrn, "", checkAccessToken),
 		Steps: []resource.TestStep{
 			{
 				Config: accessTokenConfig,
