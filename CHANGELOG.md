@@ -6,9 +6,8 @@ NOTES:
 
 IMPROVEMENTS:
 
-* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources.
-
-Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
+* **New Resource:** `artifactory_vault_configuration` PR: [#1008](https://github.com/jfrog/terraform-provider-artifactory/pull/1008)
+* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources. Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
 
 BUG FIXES:
 
