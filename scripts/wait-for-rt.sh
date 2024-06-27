@@ -11,7 +11,7 @@ function waitForArtifactory() {
   done
   echo ""
 
-  echo "### Waiting for Artifactory UI to start at ${url} ###"
+  echo "### Waiting for Artifactory UI to start at ${url_ui} ###"
   until $(curl -sf -o /dev/null -m 5 ${url_ui}/ui/login/); do
       printf '.'
       sleep 5

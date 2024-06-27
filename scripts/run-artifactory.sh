@@ -8,6 +8,13 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
 
+mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
+mkdir -p ${SCRIPT_DIR}/artifactory/var
+
+cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf
+cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory/var/etc/
+cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory/var/etc/access
+
 docker run -i --name artifactory-1 -d --rm \
   -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
   -v ${SCRIPT_DIR}/artifactory/extra_conf:/artifactory_extra_conf \
