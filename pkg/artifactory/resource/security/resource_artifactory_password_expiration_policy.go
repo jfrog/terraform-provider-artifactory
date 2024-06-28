@@ -16,11 +16,14 @@ import (
 const PasswordExpirationPolicyEndpoint = "artifactory/api/security/configuration/passwordExpirationPolicy"
 
 func NewPasswordExpirationPolicyResource() resource.Resource {
-	return &PasswordExpirationPolicyResource{}
+	return &PasswordExpirationPolicyResource{
+		TypeName: "artifactory_password_expiration_policy",
+	}
 }
 
 type PasswordExpirationPolicyResource struct {
 	ProviderData util.ProviderMetadata
+	TypeName     string
 }
 
 type PasswordExpirationPolicyResourceModel struct {
@@ -37,7 +40,7 @@ type PasswordExpirationPolicyAPIModel struct {
 }
 
 func (r *PasswordExpirationPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_password_expiration_policy"
+	resp.TypeName = r.TypeName
 }
 
 func (r *PasswordExpirationPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -23,7 +23,9 @@ import (
 )
 
 func NewPropertySetResource() resource.Resource {
-	return &PropertySetResource{}
+	return &PropertySetResource{
+		TypeName: "artifactory_property_set",
+	}
 }
 
 type PropertySetResource struct {
@@ -192,8 +194,7 @@ type PropertySetsAPIModel struct {
 }
 
 func (r *PropertySetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_property_set"
-	r.TypeName = resp.TypeName
+	resp.TypeName = r.TypeName
 }
 
 func (r *PropertySetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
