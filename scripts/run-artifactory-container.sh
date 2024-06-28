@@ -9,19 +9,16 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}" > /dev/stderr
 
 set -euf
 
-rm -rf ${SCRIPT_DIR}/artifactory/
+sudo rm -rf ${SCRIPT_DIR}/artifactory/
 
 mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
-mkdir -p ${SCRIPT_DIR}/artifactory/var
-
 mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
-sudo chown -R 1030:1030 ${SCRIPT_DIR}/artifactory/var
 
 cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf
 cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory/var/etc/
 cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory/var/etc/access
 
-docker run -i --name artifactory-1 -d --rm \
+docker run -i --name artifactory -d --rm \
   -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
   -e VAULT_ADDR \
   -e VAULT_TOKEN \
