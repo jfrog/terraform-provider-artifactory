@@ -16,7 +16,9 @@ import (
 )
 
 func NewGeneralSecurityResource() resource.Resource {
-	return &GeneralSecurityResource{}
+	return &GeneralSecurityResource{
+		TypeName: "artifactory_general_security",
+	}
 }
 
 type GeneralSecurityResource struct {
@@ -38,8 +40,7 @@ type GeneralSettingsAPIModel struct {
 }
 
 func (r *GeneralSecurityResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_general_security"
-	r.TypeName = resp.TypeName
+	resp.TypeName = r.TypeName
 }
 
 func (r *GeneralSecurityResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

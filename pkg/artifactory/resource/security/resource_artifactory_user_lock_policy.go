@@ -16,11 +16,14 @@ import (
 const UserLockPolicyEndpoint = "artifactory/api/security/userLockPolicy"
 
 func NewUserLockPolicyResource() resource.Resource {
-	return &UserLockPolicyResource{}
+	return &UserLockPolicyResource{
+		TypeName: "artifactory_user_lock_policy",
+	}
 }
 
 type UserLockPolicyResource struct {
 	ProviderData util.ProviderMetadata
+	TypeName     string
 }
 
 type UserLockPolicyResourceModel struct {
@@ -35,7 +38,7 @@ type UserLockPolicyAPIModel struct {
 }
 
 func (r *UserLockPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_user_lock_policy"
+	resp.TypeName = r.TypeName
 }
 
 func (r *UserLockPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

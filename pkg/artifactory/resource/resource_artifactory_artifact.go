@@ -21,7 +21,9 @@ import (
 )
 
 func NewArtifactResource() resource.Resource {
-	return &ArtifactResource{}
+	return &ArtifactResource{
+		TypeName: "artifactory_artifact",
+	}
 }
 
 type ArtifactResource struct {
@@ -89,8 +91,7 @@ type ArtifactResourceAPIModel struct {
 }
 
 func (r *ArtifactResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_artifact"
-	r.TypeName = resp.TypeName
+	resp.TypeName = r.TypeName
 }
 
 func (r *ArtifactResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -16,11 +16,14 @@ import (
 )
 
 func NewFileListDataSource() datasource.DataSource {
-	return &FileListDataSource{}
+	return &FileListDataSource{
+		TypeName: "artifactory_file_list",
+	}
 }
 
 type FileListDataSource struct {
 	ProviderData util.ProviderMetadata
+	TypeName     string
 }
 
 type FileListDataSourceModel struct {
@@ -118,7 +121,7 @@ type FileListMetadataTimestamps struct {
 }
 
 func (d *FileListDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_file_list"
+	resp.TypeName = d.TypeName
 }
 
 func (d *FileListDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

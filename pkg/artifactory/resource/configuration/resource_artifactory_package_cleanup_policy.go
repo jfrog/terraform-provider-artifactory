@@ -30,7 +30,9 @@ const (
 )
 
 func NewPackageCleanupPolicyResource() resource.Resource {
-	return &PackageCleanupPolicyResource{}
+	return &PackageCleanupPolicyResource{
+		TypeName: "artifactory_package_cleanup_policy",
+	}
 }
 
 type PackageCleanupPolicyResource struct {
@@ -175,8 +177,7 @@ type PackageCleanupPolicyEnablementAPIModel struct {
 }
 
 func (r *PackageCleanupPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_package_cleanup_policy"
-	r.TypeName = resp.TypeName
+	resp.TypeName = r.TypeName
 }
 
 func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
