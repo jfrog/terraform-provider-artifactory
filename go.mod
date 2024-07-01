@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
 	github.com/jfrog/terraform-provider-shared v1.25.5
-	github.com/samber/lo v1.43.0
+	github.com/samber/lo v1.44.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
