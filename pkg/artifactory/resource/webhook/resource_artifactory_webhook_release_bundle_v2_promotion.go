@@ -1,8 +1,6 @@
 package webhook
 
 import (
-	"context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -42,8 +40,4 @@ var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]i
 	return ReleaseBundleV2PromotionWebhookCriteria{
 		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*schema.Set).List()),
 	}
-}
-
-var releaseBundleV2PromotionCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	return nil
 }

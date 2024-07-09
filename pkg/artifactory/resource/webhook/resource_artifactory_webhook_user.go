@@ -1,8 +1,6 @@
 package webhook
 
 import (
-	"context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,8 +16,4 @@ var packEmptyCriteria = func(artifactoryCriteria map[string]interface{}) map[str
 
 var unpackEmptyCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
 	return EmptyWebhookCriteria{}
-}
-
-var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	return nil
 }

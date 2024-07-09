@@ -29,6 +29,7 @@ var TypesSupported = []string{
 	"user",
 	"release_bundle_v2",
 	"release_bundle_v2_promotion",
+	"artifact_lifecycle",
 }
 
 var DomainEventTypesSupported = map[string][]string{
@@ -42,6 +43,7 @@ var DomainEventTypesSupported = map[string][]string{
 	"user":                        {"locked"},
 	"release_bundle_v2":           {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
 	"release_bundle_v2_promotion": {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
+	"artifact_lifecycle":          {"archive", "restore"},
 }
 
 type BaseParams struct {
@@ -115,6 +117,7 @@ var domainCriteriaLookup = map[string]interface{}{
 	"user":                        EmptyWebhookCriteria{},
 	"release_bundle_v2":           ReleaseBundleV2WebhookCriteria{},
 	"release_bundle_v2_promotion": ReleaseBundleV2PromotionWebhookCriteria{},
+	"artifact_lifecycle":          EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
@@ -128,6 +131,7 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 	"user":                        packEmptyCriteria,
 	"release_bundle_v2":           packReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
@@ -141,6 +145,7 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCrit
 	"user":                        unpackEmptyCriteria,
 	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          unpackEmptyCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
@@ -155,6 +160,7 @@ var domainSchemaLookup = func(version int, isCustom bool, webhookType string) ma
 		"user":                        userWebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
+		"artifact_lifecycle":          artifactLifecycleWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -209,7 +215,12 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
 	"user":                        emptyCriteriaValidation,
 	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
-	"release_bundle_v2_promotion": releaseBundleV2PromotionCriteriaValidation,
+	"release_bundle_v2_promotion": emptyCriteriaValidation,
+	"artifact_lifecycle":          emptyCriteriaValidation,
+}
+
+var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	return nil
 }
 
 var packSecret = func(d *schema.ResourceData, url string) string {
