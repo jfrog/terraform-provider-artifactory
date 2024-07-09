@@ -81,9 +81,24 @@ var releaseBundleTemplate = `
 	}
 `
 
+var releaseBundleV2Template = `
+	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
+		key         = "{{ .webhookName }}"
+		description = "test description"
+		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
+		criteria {
+			any_release_bundle = false
+			selected_release_bundles = []
+		}
+		handler {
+			url = "https://tempurl.org"
+		}
+	}
+`
+
 func TestAccWebhook_CriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
-		if !slices.Contains([]string{"user", "release_bundle_v2_promotion"}, webhookType) {
+		if !slices.Contains([]string{"user", "release_bundle_v2_promotion", "artifact_lifecycle"}, webhookType) {
 			t.Run(webhookType, func(t *testing.T) {
 				resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 			})
@@ -104,6 +119,8 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		template = buildTemplate
 	case "release_bundle", "distribution", "artifactory_release_bundle":
 		template = releaseBundleTemplate
+	case "release_bundle_v2":
+		template = releaseBundleV2Template
 	}
 
 	params := map[string]interface{}{
