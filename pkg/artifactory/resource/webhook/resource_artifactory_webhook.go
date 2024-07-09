@@ -26,6 +26,7 @@ var TypesSupported = []string{
 	"release_bundle",
 	"distribution",
 	"artifactory_release_bundle",
+	"user",
 }
 
 var DomainEventTypesSupported = map[string][]string{
@@ -36,6 +37,7 @@ var DomainEventTypesSupported = map[string][]string{
 	"release_bundle":             {"created", "signed", "deleted"},
 	"distribution":               {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
 	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
+	"user":                       {"locked"},
 }
 
 type BaseParams struct {
@@ -106,6 +108,7 @@ var domainCriteriaLookup = map[string]interface{}{
 	"release_bundle":             ReleaseBundleWebhookCriteria{},
 	"distribution":               ReleaseBundleWebhookCriteria{},
 	"artifactory_release_bundle": ReleaseBundleWebhookCriteria{},
+	"user":                       EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
@@ -116,6 +119,7 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 	"release_bundle":             packReleaseBundleCriteria,
 	"distribution":               packReleaseBundleCriteria,
 	"artifactory_release_bundle": packReleaseBundleCriteria,
+	"user":                       packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
@@ -126,6 +130,7 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCrit
 	"release_bundle":             unpackReleaseBundleCriteria,
 	"distribution":               unpackReleaseBundleCriteria,
 	"artifactory_release_bundle": unpackReleaseBundleCriteria,
+	"user":                       unpackEmptyCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
@@ -137,6 +142,7 @@ var domainSchemaLookup = func(version int, isCustom bool, webhookType string) ma
 		"release_bundle":             releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"distribution":               releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"user":                       userWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -189,6 +195,7 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	"release_bundle":             releaseBundleCriteriaValidation,
 	"distribution":               releaseBundleCriteriaValidation,
 	"artifactory_release_bundle": releaseBundleCriteriaValidation,
+	"user":                       emptyCriteriaValidation,
 }
 
 var packSecret = func(d *schema.ResourceData, url string) string {
@@ -296,7 +303,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
 		errors := setValue("event_types", webhook.EventFilter.EventTypes)
-		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		if webhook.EventFilter.Criteria != nil {
+			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		}
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
@@ -442,12 +451,15 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "criteriaDiff")
 
-		criteria := diff.Get("criteria").(*schema.Set).List()
-		if len(criteria) == 0 {
-			return nil
+		if resource, ok := diff.GetOk("criteria"); ok {
+			criteria := resource.(*schema.Set).List()
+			if len(criteria) == 0 {
+				return nil
+			}
+			return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 		}
 
-		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
+		return nil
 	}
 
 	// Previous version of the schema
