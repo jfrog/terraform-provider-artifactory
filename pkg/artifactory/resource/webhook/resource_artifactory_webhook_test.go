@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -82,7 +83,7 @@ var releaseBundleTemplate = `
 
 func TestAccWebhook_CriteriaValidation(t *testing.T) {
 	for _, webhookType := range webhook.TypesSupported {
-		if webhookType != "user" {
+		if !slices.Contains([]string{"user", "release_bundle_v2_promotion"}, webhookType) {
 			t.Run(webhookType, func(t *testing.T) {
 				resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
 			})

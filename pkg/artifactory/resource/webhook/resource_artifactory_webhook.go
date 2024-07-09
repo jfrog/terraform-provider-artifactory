@@ -27,17 +27,19 @@ var TypesSupported = []string{
 	"distribution",
 	"artifactory_release_bundle",
 	"user",
+	"release_bundle_v2_promotion",
 }
 
 var DomainEventTypesSupported = map[string][]string{
-	"artifact":                   {"deployed", "deleted", "moved", "copied", "cached"},
-	"artifact_property":          {"added", "deleted"},
-	"docker":                     {"pushed", "deleted", "promoted"},
-	"build":                      {"uploaded", "deleted", "promoted"},
-	"release_bundle":             {"created", "signed", "deleted"},
-	"distribution":               {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
-	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
-	"user":                       {"locked"},
+	"artifact":                    {"deployed", "deleted", "moved", "copied", "cached"},
+	"artifact_property":           {"added", "deleted"},
+	"docker":                      {"pushed", "deleted", "promoted"},
+	"build":                       {"uploaded", "deleted", "promoted"},
+	"release_bundle":              {"created", "signed", "deleted"},
+	"distribution":                {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	"artifactory_release_bundle":  {"received", "delete_started", "delete_completed", "delete_failed"},
+	"user":                        {"locked"},
+	"release_bundle_v2_promotion": {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
 }
 
 type BaseParams struct {
@@ -101,48 +103,52 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{}
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	"artifact":                   RepoWebhookCriteria{},
-	"artifact_property":          RepoWebhookCriteria{},
-	"docker":                     RepoWebhookCriteria{},
-	"build":                      BuildWebhookCriteria{},
-	"release_bundle":             ReleaseBundleWebhookCriteria{},
-	"distribution":               ReleaseBundleWebhookCriteria{},
-	"artifactory_release_bundle": ReleaseBundleWebhookCriteria{},
-	"user":                       EmptyWebhookCriteria{},
+	"artifact":                    RepoWebhookCriteria{},
+	"artifact_property":           RepoWebhookCriteria{},
+	"docker":                      RepoWebhookCriteria{},
+	"build":                       BuildWebhookCriteria{},
+	"release_bundle":              ReleaseBundleWebhookCriteria{},
+	"distribution":                ReleaseBundleWebhookCriteria{},
+	"artifactory_release_bundle":  ReleaseBundleWebhookCriteria{},
+	"user":                        EmptyWebhookCriteria{},
+	"release_bundle_v2_promotion": ReleaseBundleV2PromotionWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	"artifact":                   packRepoCriteria,
-	"artifact_property":          packRepoCriteria,
-	"docker":                     packRepoCriteria,
-	"build":                      packBuildCriteria,
-	"release_bundle":             packReleaseBundleCriteria,
-	"distribution":               packReleaseBundleCriteria,
-	"artifactory_release_bundle": packReleaseBundleCriteria,
-	"user":                       packEmptyCriteria,
+	"artifact":                    packRepoCriteria,
+	"artifact_property":           packRepoCriteria,
+	"docker":                      packRepoCriteria,
+	"build":                       packBuildCriteria,
+	"release_bundle":              packReleaseBundleCriteria,
+	"distribution":                packReleaseBundleCriteria,
+	"artifactory_release_bundle":  packReleaseBundleCriteria,
+	"user":                        packEmptyCriteria,
+	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
-	"artifact":                   unpackRepoCriteria,
-	"artifact_property":          unpackRepoCriteria,
-	"docker":                     unpackRepoCriteria,
-	"build":                      unpackBuildCriteria,
-	"release_bundle":             unpackReleaseBundleCriteria,
-	"distribution":               unpackReleaseBundleCriteria,
-	"artifactory_release_bundle": unpackReleaseBundleCriteria,
-	"user":                       unpackEmptyCriteria,
+	"artifact":                    unpackRepoCriteria,
+	"artifact_property":           unpackRepoCriteria,
+	"docker":                      unpackRepoCriteria,
+	"build":                       unpackBuildCriteria,
+	"release_bundle":              unpackReleaseBundleCriteria,
+	"distribution":                unpackReleaseBundleCriteria,
+	"artifactory_release_bundle":  unpackReleaseBundleCriteria,
+	"user":                        unpackEmptyCriteria,
+	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
 	return map[string]map[string]*schema.Schema{
-		"artifact":                   repoWebhookSchema(webhookType, version, isCustom),
-		"artifact_property":          repoWebhookSchema(webhookType, version, isCustom),
-		"docker":                     repoWebhookSchema(webhookType, version, isCustom),
-		"build":                      buildWebhookSchema(webhookType, version, isCustom),
-		"release_bundle":             releaseBundleWebhookSchema(webhookType, version, isCustom),
-		"distribution":               releaseBundleWebhookSchema(webhookType, version, isCustom),
-		"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, isCustom),
-		"user":                       userWebhookSchema(webhookType, version, isCustom),
+		"artifact":                    repoWebhookSchema(webhookType, version, isCustom),
+		"artifact_property":           repoWebhookSchema(webhookType, version, isCustom),
+		"docker":                      repoWebhookSchema(webhookType, version, isCustom),
+		"build":                       buildWebhookSchema(webhookType, version, isCustom),
+		"release_bundle":              releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"distribution":                releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"artifactory_release_bundle":  releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"user":                        userWebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -188,14 +194,15 @@ var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	"artifact":                   repoCriteriaValidation,
-	"artifact_property":          repoCriteriaValidation,
-	"docker":                     repoCriteriaValidation,
-	"build":                      buildCriteriaValidation,
-	"release_bundle":             releaseBundleCriteriaValidation,
-	"distribution":               releaseBundleCriteriaValidation,
-	"artifactory_release_bundle": releaseBundleCriteriaValidation,
-	"user":                       emptyCriteriaValidation,
+	"artifact":                    repoCriteriaValidation,
+	"artifact_property":           repoCriteriaValidation,
+	"docker":                      repoCriteriaValidation,
+	"build":                       buildCriteriaValidation,
+	"release_bundle":              releaseBundleCriteriaValidation,
+	"distribution":                releaseBundleCriteriaValidation,
+	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
+	"user":                        emptyCriteriaValidation,
+	"release_bundle_v2_promotion": releaseBundleV2PromotionCriteriaValidation,
 }
 
 var packSecret = func(d *schema.ResourceData, url string) string {
