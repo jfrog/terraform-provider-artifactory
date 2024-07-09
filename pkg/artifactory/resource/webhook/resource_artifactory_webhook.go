@@ -27,6 +27,7 @@ var TypesSupported = []string{
 	"distribution",
 	"artifactory_release_bundle",
 	"user",
+	"release_bundle_v2",
 	"release_bundle_v2_promotion",
 }
 
@@ -39,6 +40,7 @@ var DomainEventTypesSupported = map[string][]string{
 	"distribution":                {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
 	"artifactory_release_bundle":  {"received", "delete_started", "delete_completed", "delete_failed"},
 	"user":                        {"locked"},
+	"release_bundle_v2":           {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
 	"release_bundle_v2_promotion": {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
 }
 
@@ -111,6 +113,7 @@ var domainCriteriaLookup = map[string]interface{}{
 	"distribution":                ReleaseBundleWebhookCriteria{},
 	"artifactory_release_bundle":  ReleaseBundleWebhookCriteria{},
 	"user":                        EmptyWebhookCriteria{},
+	"release_bundle_v2":           ReleaseBundleV2WebhookCriteria{},
 	"release_bundle_v2_promotion": ReleaseBundleV2PromotionWebhookCriteria{},
 }
 
@@ -123,6 +126,7 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 	"distribution":                packReleaseBundleCriteria,
 	"artifactory_release_bundle":  packReleaseBundleCriteria,
 	"user":                        packEmptyCriteria,
+	"release_bundle_v2":           packReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
 }
 
@@ -135,6 +139,7 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCrit
 	"distribution":                unpackReleaseBundleCriteria,
 	"artifactory_release_bundle":  unpackReleaseBundleCriteria,
 	"user":                        unpackEmptyCriteria,
+	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
 }
 
@@ -148,6 +153,7 @@ var domainSchemaLookup = func(version int, isCustom bool, webhookType string) ma
 		"distribution":                releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"artifactory_release_bundle":  releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"user":                        userWebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
 	}
 }
@@ -202,6 +208,7 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	"distribution":                releaseBundleCriteriaValidation,
 	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
 	"user":                        emptyCriteriaValidation,
+	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
 	"release_bundle_v2_promotion": releaseBundleV2PromotionCriteriaValidation,
 }
 
