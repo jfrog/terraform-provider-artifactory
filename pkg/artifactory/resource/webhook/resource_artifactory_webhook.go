@@ -26,6 +26,7 @@ var TypesSupported = []string{
 	"release_bundle",
 	"distribution",
 	"artifactory_release_bundle",
+	"destination",
 	"user",
 	"release_bundle_v2",
 	"release_bundle_v2_promotion",
@@ -40,6 +41,7 @@ var DomainEventTypesSupported = map[string][]string{
 	"release_bundle":              {"created", "signed", "deleted"},
 	"distribution":                {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
 	"artifactory_release_bundle":  {"received", "delete_started", "delete_completed", "delete_failed"},
+	"destination":                 {"received", "delete_started", "delete_completed", "delete_failed"},
 	"user":                        {"locked"},
 	"release_bundle_v2":           {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
 	"release_bundle_v2_promotion": {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
@@ -114,6 +116,7 @@ var domainCriteriaLookup = map[string]interface{}{
 	"release_bundle":              ReleaseBundleWebhookCriteria{},
 	"distribution":                ReleaseBundleWebhookCriteria{},
 	"artifactory_release_bundle":  ReleaseBundleWebhookCriteria{},
+	"destination":                 ReleaseBundleWebhookCriteria{},
 	"user":                        EmptyWebhookCriteria{},
 	"release_bundle_v2":           ReleaseBundleV2WebhookCriteria{},
 	"release_bundle_v2_promotion": ReleaseBundleV2PromotionWebhookCriteria{},
@@ -128,6 +131,7 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 	"release_bundle":              packReleaseBundleCriteria,
 	"distribution":                packReleaseBundleCriteria,
 	"artifactory_release_bundle":  packReleaseBundleCriteria,
+	"destination":                 packReleaseBundleCriteria,
 	"user":                        packEmptyCriteria,
 	"release_bundle_v2":           packReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
@@ -142,6 +146,7 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCrit
 	"release_bundle":              unpackReleaseBundleCriteria,
 	"distribution":                unpackReleaseBundleCriteria,
 	"artifactory_release_bundle":  unpackReleaseBundleCriteria,
+	"destination":                 unpackReleaseBundleCriteria,
 	"user":                        unpackEmptyCriteria,
 	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
@@ -157,6 +162,7 @@ var domainSchemaLookup = func(version int, isCustom bool, webhookType string) ma
 		"release_bundle":              releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"distribution":                releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"artifactory_release_bundle":  releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"destination":                 releaseBundleWebhookSchema(webhookType, version, isCustom),
 		"user":                        userWebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
@@ -213,6 +219,7 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	"release_bundle":              releaseBundleCriteriaValidation,
 	"distribution":                releaseBundleCriteriaValidation,
 	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
+	"destination":                 releaseBundleCriteriaValidation,
 	"user":                        emptyCriteriaValidation,
 	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
 	"release_bundle_v2_promotion": emptyCriteriaValidation,
@@ -493,7 +500,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		Schema: domainSchemaLookup(1, false, webhookType)[webhookType],
 	}
 
-	return &schema.Resource{
+	rs := schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
@@ -519,6 +526,12 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		),
 		Description: "Provides an Artifactory webhook resource",
 	}
+
+	if webhookType == "artifactory_release_bundle" {
+		rs.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
+	}
+
+	return &rs
 }
 
 // ResourceStateUpgradeV1 see the corresponding unit test TestWebhookResourceStateUpgradeV1

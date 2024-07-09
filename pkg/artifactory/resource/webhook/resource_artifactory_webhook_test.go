@@ -117,7 +117,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		template = repoTemplate
 	case "build":
 		template = buildTemplate
-	case "release_bundle", "distribution", "artifactory_release_bundle":
+	case "release_bundle", "distribution", "artifactory_release_bundle", "destination":
 		template = releaseBundleTemplate
 	case "release_bundle_v2":
 		template = releaseBundleV2Template

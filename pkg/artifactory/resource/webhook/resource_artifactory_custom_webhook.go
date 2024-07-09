@@ -406,7 +406,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	return &schema.Resource{
+	rs := schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
@@ -425,4 +425,10 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		),
 		Description: "Provides an Artifactory webhook resource",
 	}
+
+	if webhookType == "artifactory_release_bundle" {
+		rs.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_custom_webhook resource"
+	}
+
+	return &rs
 }
