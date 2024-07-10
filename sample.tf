@@ -2,7 +2,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "jfrog/artifactory"
-      version = "10.5.1"
+      version = "11.1.1"
     }
   }
 }
