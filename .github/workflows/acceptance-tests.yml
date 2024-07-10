@@ -20,8 +20,8 @@ jobs:
       matrix:
         cli: [terraform, tofu]
     outputs:
-      tf_version: ${{ steps.install_terraform_cli.outputs.version }}
-      tofu_version: ${{ steps.install_opentofu_cli.outputs.version }}
+      tf_version: ${{ steps.get_terraform_cli_version.outputs.version }}
+      tofu_version: ${{ steps.get_opentofu_cli_version.outputs.version }}
       artifactory_version: ${{ steps.run_artifactory_container.outputs.version }}
     steps:
       - name: Checkout
@@ -31,45 +31,28 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
+          go-version: 1.22
       - name: Install Helm
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-          chmod +x get_helm.sh
-          ./get_helm.sh
-          rm get_helm.sh
+        uses: azure/setup-helm@v4.2.0
       - name: Install Terraform CLI
-        id: install_terraform_cli
+        uses: hashicorp/setup-terraform@v3
+        if: ${{ matrix.cli == 'terraform' }}
+      - name: Get Terraform CLI version
+        id: get_terraform_cli_version
         if: ${{ matrix.cli == 'terraform' }}
         run: |
-          wget -q -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
-          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt-get update
-          sudo apt-get install -y terraform
           TF_VERSION=$(terraform -v -json | jq -r .terraform_version)
           echo $TF_VERSION
           echo "version=$TF_VERSION" >> "$GITHUB_OUTPUT"
       - name: Install OpenTofu CLI
-        id: install_opentofu_cli
+        uses: opentofu/setup-opentofu@v1
+        if: ${{ matrix.cli == 'tofu' }}
+        with:
+          tofu_wrapper: false
+      - name: Get OpenTofu CLI version
+        id: get_opentofu_cli_version
         if: ${{ matrix.cli == 'tofu' }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-          echo "Set up the OpenTofu repository"
-          sudo install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL https://get.opentofu.org/opentofu.gpg | sudo tee /etc/apt/keyrings/opentofu.gpg >/dev/null
-          curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | sudo gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null
-          sudo chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg
-          echo "Create the OpenTofu source list"
-          echo \
-            "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main
-          deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
-            sudo tee /etc/apt/sources.list.d/opentofu.list > /dev/null
-          sudo chmod a+r /etc/apt/sources.list.d/opentofu.list
-          echo "Installing OpenTofu"
-          sudo apt-get update
-          sudo apt-get install -y tofu
           echo "TF_ACC_TERRAFORM_PATH=$(which tofu)" >> "$GITHUB_ENV"
           echo "TF_ACC_PROVIDER_NAMESPACE=hashicorp" >> "$GITHUB_ENV"
           echo "TF_ACC_PROVIDER_HOST=registry.opentofu.org" >> "$GITHUB_ENV"
@@ -77,10 +60,9 @@ jobs:
           echo $TOFU_VERSION
           echo "version=$TOFU_VERSION" >> "$GITHUB_OUTPUT"
       - name: Install GoReleaser
-        run: |
-          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-          sudo apt-get update
-          sudo apt-get install -y goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          install-only: true
       - name: Create Artifactory data directories and copy data
         env:
           ARTIFACTORY_LICENSE: ${{ secrets.ARTIFACTORY_LICENSE }}
@@ -139,12 +121,6 @@ jobs:
           cat sample.tf | sed -e "s/version =.*/version = \"${PROVIDER_VERSION}\"/g" > sample.tf.tmp
           cp sample.tf.tmp sample.tf && rm sample.tf.tmp
           TERRAFORM_CLI=${{ matrix.cli }} make install
-      # uncomment to debug Artifactory docker container failure
-      # - name: Dump Artifactory logs
-      #   uses: jwalton/gh-docker-logs@v2
-      #   if: failure()
-      #   with:
-      #     tail: '10000'
       - name: Clean up Docker container
         if: always()
         run: docker stop artifactory

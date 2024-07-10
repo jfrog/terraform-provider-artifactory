@@ -1,17 +1,15 @@
 ---
 subcategory: "Webhook"
 ---
-# Artifactory "Artifactory Release Bundle" Custom Webhook Resource
+# Artifactory "Destination" Custom Webhook Resource
 
 Provides an Artifactory custom webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.
-
-~>This resource is being deprecated. Use `artifactory_destination_custom_webhook` instead.
 
 ## Example Usage
 .
 ```hcl
-resource "artifactory_artifactory_release_bundle_custom_webhook" "artifactory-release-bundle-custom-webhook" {
-  key         = "artifactory-release-bundle-custom-webhook"
+resource "artifactory_destination_custom_webhook" "destination-custom-webhook" {
+  key         = "destination-custom-webhook"
   event_types = ["received", "delete_started", "delete_completed", "delete_failed"]
   criteria {
     any_release_bundle              = false

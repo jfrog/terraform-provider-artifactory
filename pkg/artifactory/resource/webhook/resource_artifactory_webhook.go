@@ -26,16 +26,26 @@ var TypesSupported = []string{
 	"release_bundle",
 	"distribution",
 	"artifactory_release_bundle",
+	"destination",
+	"user",
+	"release_bundle_v2",
+	"release_bundle_v2_promotion",
+	"artifact_lifecycle",
 }
 
 var DomainEventTypesSupported = map[string][]string{
-	"artifact":                   {"deployed", "deleted", "moved", "copied", "cached"},
-	"artifact_property":          {"added", "deleted"},
-	"docker":                     {"pushed", "deleted", "promoted"},
-	"build":                      {"uploaded", "deleted", "promoted"},
-	"release_bundle":             {"created", "signed", "deleted"},
-	"distribution":               {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
-	"artifactory_release_bundle": {"received", "delete_started", "delete_completed", "delete_failed"},
+	"artifact":                    {"deployed", "deleted", "moved", "copied", "cached"},
+	"artifact_property":           {"added", "deleted"},
+	"docker":                      {"pushed", "deleted", "promoted"},
+	"build":                       {"uploaded", "deleted", "promoted"},
+	"release_bundle":              {"created", "signed", "deleted"},
+	"distribution":                {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	"artifactory_release_bundle":  {"received", "delete_started", "delete_completed", "delete_failed"},
+	"destination":                 {"received", "delete_started", "delete_completed", "delete_failed"},
+	"user":                        {"locked"},
+	"release_bundle_v2":           {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
+	"release_bundle_v2_promotion": {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
+	"artifact_lifecycle":          {"archive", "restore"},
 }
 
 type BaseParams struct {
@@ -99,44 +109,64 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{}
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	"artifact":                   RepoWebhookCriteria{},
-	"artifact_property":          RepoWebhookCriteria{},
-	"docker":                     RepoWebhookCriteria{},
-	"build":                      BuildWebhookCriteria{},
-	"release_bundle":             ReleaseBundleWebhookCriteria{},
-	"distribution":               ReleaseBundleWebhookCriteria{},
-	"artifactory_release_bundle": ReleaseBundleWebhookCriteria{},
+	"artifact":                    RepoWebhookCriteria{},
+	"artifact_property":           RepoWebhookCriteria{},
+	"docker":                      RepoWebhookCriteria{},
+	"build":                       BuildWebhookCriteria{},
+	"release_bundle":              ReleaseBundleWebhookCriteria{},
+	"distribution":                ReleaseBundleWebhookCriteria{},
+	"artifactory_release_bundle":  ReleaseBundleWebhookCriteria{},
+	"destination":                 ReleaseBundleWebhookCriteria{},
+	"user":                        EmptyWebhookCriteria{},
+	"release_bundle_v2":           ReleaseBundleV2WebhookCriteria{},
+	"release_bundle_v2_promotion": ReleaseBundleV2PromotionWebhookCriteria{},
+	"artifact_lifecycle":          EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	"artifact":                   packRepoCriteria,
-	"artifact_property":          packRepoCriteria,
-	"docker":                     packRepoCriteria,
-	"build":                      packBuildCriteria,
-	"release_bundle":             packReleaseBundleCriteria,
-	"distribution":               packReleaseBundleCriteria,
-	"artifactory_release_bundle": packReleaseBundleCriteria,
+	"artifact":                    packRepoCriteria,
+	"artifact_property":           packRepoCriteria,
+	"docker":                      packRepoCriteria,
+	"build":                       packBuildCriteria,
+	"release_bundle":              packReleaseBundleCriteria,
+	"distribution":                packReleaseBundleCriteria,
+	"artifactory_release_bundle":  packReleaseBundleCriteria,
+	"destination":                 packReleaseBundleCriteria,
+	"user":                        packEmptyCriteria,
+	"release_bundle_v2":           packReleaseBundleV2Criteria,
+	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
-	"artifact":                   unpackRepoCriteria,
-	"artifact_property":          unpackRepoCriteria,
-	"docker":                     unpackRepoCriteria,
-	"build":                      unpackBuildCriteria,
-	"release_bundle":             unpackReleaseBundleCriteria,
-	"distribution":               unpackReleaseBundleCriteria,
-	"artifactory_release_bundle": unpackReleaseBundleCriteria,
+	"artifact":                    unpackRepoCriteria,
+	"artifact_property":           unpackRepoCriteria,
+	"docker":                      unpackRepoCriteria,
+	"build":                       unpackBuildCriteria,
+	"release_bundle":              unpackReleaseBundleCriteria,
+	"distribution":                unpackReleaseBundleCriteria,
+	"artifactory_release_bundle":  unpackReleaseBundleCriteria,
+	"destination":                 unpackReleaseBundleCriteria,
+	"user":                        unpackEmptyCriteria,
+	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
+	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          unpackEmptyCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
 	return map[string]map[string]*schema.Schema{
-		"artifact":                   repoWebhookSchema(webhookType, version, isCustom),
-		"artifact_property":          repoWebhookSchema(webhookType, version, isCustom),
-		"docker":                     repoWebhookSchema(webhookType, version, isCustom),
-		"build":                      buildWebhookSchema(webhookType, version, isCustom),
-		"release_bundle":             releaseBundleWebhookSchema(webhookType, version, isCustom),
-		"distribution":               releaseBundleWebhookSchema(webhookType, version, isCustom),
-		"artifactory_release_bundle": releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"artifact":                    repoWebhookSchema(webhookType, version, isCustom),
+		"artifact_property":           repoWebhookSchema(webhookType, version, isCustom),
+		"docker":                      repoWebhookSchema(webhookType, version, isCustom),
+		"build":                       buildWebhookSchema(webhookType, version, isCustom),
+		"release_bundle":              releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"distribution":                releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"artifactory_release_bundle":  releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"destination":                 releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"user":                        userWebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
+		"artifact_lifecycle":          artifactLifecycleWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -182,13 +212,22 @@ var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	"artifact":                   repoCriteriaValidation,
-	"artifact_property":          repoCriteriaValidation,
-	"docker":                     repoCriteriaValidation,
-	"build":                      buildCriteriaValidation,
-	"release_bundle":             releaseBundleCriteriaValidation,
-	"distribution":               releaseBundleCriteriaValidation,
-	"artifactory_release_bundle": releaseBundleCriteriaValidation,
+	"artifact":                    repoCriteriaValidation,
+	"artifact_property":           repoCriteriaValidation,
+	"docker":                      repoCriteriaValidation,
+	"build":                       buildCriteriaValidation,
+	"release_bundle":              releaseBundleCriteriaValidation,
+	"distribution":                releaseBundleCriteriaValidation,
+	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
+	"destination":                 releaseBundleCriteriaValidation,
+	"user":                        emptyCriteriaValidation,
+	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
+	"release_bundle_v2_promotion": emptyCriteriaValidation,
+	"artifact_lifecycle":          emptyCriteriaValidation,
+}
+
+var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	return nil
 }
 
 var packSecret = func(d *schema.ResourceData, url string) string {
@@ -296,7 +335,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
 		errors := setValue("event_types", webhook.EventFilter.EventTypes)
-		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		if webhook.EventFilter.Criteria != nil {
+			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		}
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
@@ -442,12 +483,15 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "criteriaDiff")
 
-		criteria := diff.Get("criteria").(*schema.Set).List()
-		if len(criteria) == 0 {
-			return nil
+		if resource, ok := diff.GetOk("criteria"); ok {
+			criteria := resource.(*schema.Set).List()
+			if len(criteria) == 0 {
+				return nil
+			}
+			return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 		}
 
-		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
+		return nil
 	}
 
 	// Previous version of the schema
@@ -456,7 +500,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		Schema: domainSchemaLookup(1, false, webhookType)[webhookType],
 	}
 
-	return &schema.Resource{
+	rs := schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
@@ -482,6 +526,12 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		),
 		Description: "Provides an Artifactory webhook resource",
 	}
+
+	if webhookType == "artifactory_release_bundle" {
+		rs.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
+	}
+
+	return &rs
 }
 
 // ResourceStateUpgradeV1 see the corresponding unit test TestWebhookResourceStateUpgradeV1

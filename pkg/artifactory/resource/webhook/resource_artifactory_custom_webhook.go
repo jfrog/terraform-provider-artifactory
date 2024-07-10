@@ -247,7 +247,9 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
 		errors := setValue("event_types", webhook.EventFilter.EventTypes)
-		errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		if webhook.EventFilter.Criteria != nil {
+			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		}
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
@@ -393,15 +395,18 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "criteriaDiff")
 
-		criteria := diff.Get("criteria").(*schema.Set).List()
-		if len(criteria) == 0 {
-			return nil
+		if resource, ok := diff.GetOk("criteria"); ok {
+			criteria := resource.(*schema.Set).List()
+			if len(criteria) == 0 {
+				return nil
+			}
+			return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
 		}
 
-		return domainCriteriaValidationLookup[webhookType](ctx, criteria[0].(map[string]interface{}))
+		return nil
 	}
 
-	return &schema.Resource{
+	rs := schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
@@ -420,4 +425,10 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		),
 		Description: "Provides an Artifactory webhook resource",
 	}
+
+	if webhookType == "artifactory_release_bundle" {
+		rs.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_custom_webhook resource"
+	}
+
+	return &rs
 }
