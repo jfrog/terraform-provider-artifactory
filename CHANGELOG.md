@@ -13,6 +13,7 @@ IMPROVEMENTS:
   * `artifactory_release_bundle_v2_custom_webhook`
   * `artifactory_release_bundle_v2_promotion_custom_webhook`
   * `artifactory_artifact_lifecycle_custom_webhook`
+* resource/artifactory_oauth_settings, resource/artifactory_saml_settings: Remove warning message about undocumented APIs. Issue: [#291](https://github.com/jfrog/terraform-provider-artifactory/issues/291) PR: [#1020](https://github.com/jfrog/terraform-provider-artifactory/pull/1020)
 
 NOTES:
 
