@@ -222,11 +222,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 			return packDiag
 		}
 
-		return diag.Diagnostics{{
-			Severity: diag.Warning,
-			Summary:  "Usage of Undocumented Artifactory API Endpoints",
-			Detail:   "The artifactory_oauth_settings resource uses endpoints that are undocumented and may not work with SaaS environments, or may change without notice.",
-		}}
+		return nil
 	}
 
 	var resourceOauthSettingsUpdate = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
