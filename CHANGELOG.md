@@ -18,6 +18,10 @@ IMPROVEMENTS:
   PR: [#1019](https://github.com/jfrog/terraform-provider-artifactory/pull/1019)
 * resource/artifactory_oauth_settings, resource/artifactory_saml_settings: Remove warning message about undocumented APIs. Issue: [#291](https://github.com/jfrog/terraform-provider-artifactory/issues/291) PR: [#1020](https://github.com/jfrog/terraform-provider-artifactory/pull/1020)
 
+BUG FIXES:
+
+* data/artifactory_\*\_repository: Fix 400 error if repository does not exist. Issue: [#1018](https://github.com/jfrog/terraform-provider-artifactory/issues/1018) PR: [#1022](https://github.com/jfrog/terraform-provider-artifactory/pull/1022)
+
 NOTES:
 
 * resource/artifactory_artifactory_release_bundle_webhook: This resource is being deprecated and replaced by new `artifactory_destination_webhook` resource

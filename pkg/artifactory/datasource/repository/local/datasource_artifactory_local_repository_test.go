@@ -34,14 +34,14 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 	}
 	config := util.ExecuteTemplate("TestAccLocalRepository", `
 		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
-		  key         = "{{ .name }}"
-		  description = "Test repo for {{ .name }}"
-		  notes       = "Test repo for {{ .name }}"
-		  xray_index  = {{ .xrayIndex }}
+			key         = "{{ .name }}"
+			description = "Test repo for {{ .name }}"
+			notes       = "Test repo for {{ .name }}"
+			xray_index  = {{ .xrayIndex }}
 		}
 
 		data "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
-		  key = artifactory_local_{{ .packageType }}_repository.{{ .name }}.id
+			key = artifactory_local_{{ .packageType }}_repository.{{ .name }}.id
 		}
 	`, params)
 
@@ -193,12 +193,12 @@ func TestAccDataSourceLocalConanRepository(t *testing.T) {
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalConanRepository", `
 		resource "artifactory_local_conan_repository" "{{ .name }}" {
-		  key                        = "{{ .name }}"
-		  force_conan_authentication = {{ .force_conan_authentication }}
+			key                        = "{{ .name }}"
+			force_conan_authentication = {{ .force_conan_authentication }}
 		}
 
 		data "artifactory_local_conan_repository" "{{ .name }}" {
-		  key = artifactory_local_conan_repository.{{ .name }}.id
+			key = artifactory_local_conan_repository.{{ .name }}.id
 		}
 	`, params)
 
@@ -367,16 +367,16 @@ func TestAccDataSourceLocalDockerV2Repository(t *testing.T) {
 		"name":      name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
-    resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
-      key 	     = "{{ .name }}"
-      tag_retention = {{ .retention }}
-      max_unique_tags = {{ .max_tags }}
-      block_pushing_schema1 = {{ .block }}
-    }
+	resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+	  key 	     = "{{ .name }}"
+	  tag_retention = {{ .retention }}
+	  max_unique_tags = {{ .max_tags }}
+	  block_pushing_schema1 = {{ .block }}
+	}
 
-    data "artifactory_local_docker_v2_repository" "{{ .name }}" {
-      key = artifactory_local_docker_v2_repository.{{ .name }}.id
-    }
+	data "artifactory_local_docker_v2_repository" "{{ .name }}" {
+	  key = artifactory_local_docker_v2_repository.{{ .name }}.id
+	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -403,12 +403,12 @@ func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
 		"name": name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerv2Repository", `
-    resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
-      key = "{{ .name }}"
-    }
-    data "artifactory_local_docker_v1_repository" "{{ .name }}" {
-      key = artifactory_local_docker_v1_repository.{{ .name }}.id
-    }
+	resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
+		key = "{{ .name }}"
+	}
+	data "artifactory_local_docker_v1_repository" "{{ .name }}" {
+		key = artifactory_local_docker_v1_repository.{{ .name }}.id
+	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -440,7 +440,7 @@ var commonJavaParams = map[string]interface{}{
 }
 
 const localJavaRepositoryBasic = `
-    resource "{{ .resource_name }}" "{{ .name }}" {
+	resource "{{ .resource_name }}" "{{ .name }}" {
 		key                 			= "{{ .name }}"
 		checksum_policy_type            = "{{ .checksum_policy_type }}"
 		snapshot_version_behavior       = "{{ .snapshot_version_behavior }}"
@@ -448,11 +448,11 @@ const localJavaRepositoryBasic = `
 		handle_releases                 = {{ .handle_releases }}
 		handle_snapshots                = {{ .handle_snapshots }}
 		suppress_pom_consistency_checks = {{ .suppress_pom_consistency_checks }}
-    }
+	}
 
 	data "{{ .resource_name }}" "{{ .name }}" {
-    	key = {{ .resource_name }}.{{ .name }}.id
-    }
+		key = {{ .resource_name }}.{{ .name }}.id
+	}
 `
 
 func TestAccDataSourceLocalMavenRepository(t *testing.T) {
@@ -525,15 +525,15 @@ func TestAccDataSourceLocalHelmOciRepository(t *testing.T) {
 		"name":      name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalHelmOciRepository", `
-    resource "artifactory_local_helmoci_repository" "{{ .name }}" {
-      key 	          = "{{ .name }}"
-      tag_retention   = {{ .retention }}
-      max_unique_tags = {{ .max_tags }}
-    }
+	resource "artifactory_local_helmoci_repository" "{{ .name }}" {
+		key 	          = "{{ .name }}"
+		tag_retention   = {{ .retention }}
+		max_unique_tags = {{ .max_tags }}
+	}
 
-    data "artifactory_local_helmoci_repository" "{{ .name }}" {
-      key = artifactory_local_helmoci_repository.{{ .name }}.id
-    }
+	data "artifactory_local_helmoci_repository" "{{ .name }}" {
+		key = artifactory_local_helmoci_repository.{{ .name }}.id
+	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -569,14 +569,14 @@ func TestAccDataSourceLocalNugetRepository(t *testing.T) {
 		"name":                       name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccDataSourceLocalNugetRepository", `
-    resource "artifactory_local_nuget_repository" "{{ .name }}" {
-      key                 = "{{ .name }}"
-      max_unique_snapshots = {{ .max_unique_snapshots }}
-      force_nuget_authentication = {{ .force_nuget_authentication }}
-    }
-    data "artifactory_local_nuget_repository" "{{ .name }}" {
-      key = artifactory_local_nuget_repository.{{ .name }}.id
-    }
+	resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		key                 = "{{ .name }}"
+		max_unique_snapshots = {{ .max_unique_snapshots }}
+		force_nuget_authentication = {{ .force_nuget_authentication }}
+	}
+	data "artifactory_local_nuget_repository" "{{ .name }}" {
+		key = artifactory_local_nuget_repository.{{ .name }}.id
+	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -605,15 +605,15 @@ func TestAccDataSourceLocalOciRepository(t *testing.T) {
 		"name":      name,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalOciRepository", `
-    resource "artifactory_local_oci_repository" "{{ .name }}" {
-      key 	          = "{{ .name }}"
-      tag_retention   = {{ .retention }}
-      max_unique_tags = {{ .max_tags }}
-    }
+	resource "artifactory_local_oci_repository" "{{ .name }}" {
+		key 	          = "{{ .name }}"
+		tag_retention   = {{ .retention }}
+		max_unique_tags = {{ .max_tags }}
+	}
 
-    data "artifactory_local_oci_repository" "{{ .name }}" {
-      key = artifactory_local_oci_repository.{{ .name }}.id
-    }
+	data "artifactory_local_oci_repository" "{{ .name }}" {
+		key = artifactory_local_oci_repository.{{ .name }}.id
+	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
@@ -786,12 +786,12 @@ func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
 	localRepositoryBasic := util.ExecuteTemplate(
 		"TestAccLocalTerraformModuleRepository",
 		`resource "artifactory_local_terraform_module_repository" "{{ .name }}" {
-		  key            = "{{ .name }}"
+			key            = "{{ .name }}"
 		}
 		data "artifactory_local_terraform_module_repository" "{{ .name }}" {
-		  key = artifactory_local_terraform_module_repository.{{ .name }}.id
+			key = artifactory_local_terraform_module_repository.{{ .name }}.id
 		}
-  `,
+		`,
 		params,
 	)
 
@@ -820,12 +820,12 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 	localRepositoryBasic := util.ExecuteTemplate(
 		"TestAccLocalTerraformProviderRepository",
 		`resource "artifactory_local_terraform_provider_repository" "{{ .name }}" {
-		  key            = "{{ .name }}"
+			key = "{{ .name }}"
 		}
 		data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
-		  key = artifactory_local_terraform_provider_repository.{{ .name }}.id
+			key = artifactory_local_terraform_provider_repository.{{ .name }}.id
 		}
-    `,
+	`,
 		params,
 	)
 
@@ -840,6 +840,33 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "terraform-provider-default"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceLocalMissingRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("terraform-local", "data.artifactory_local_terraform_provider_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccLocalTerraformProviderRepository",
+		`data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
+			key = "non-existent-repo"
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(fqrn, "key"),
 				),
 			},
 		},
