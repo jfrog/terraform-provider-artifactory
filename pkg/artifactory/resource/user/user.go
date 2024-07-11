@@ -59,11 +59,24 @@ type ArtifactoryBaseUserResource struct {
 
 // ArtifactoryUserResourceModel describes the Terraform resource data model to match the
 // resource schema.
+type ArtifactoryUserResourceModelV0 struct {
+	Id                       types.String `tfsdk:"id"`
+	Name                     types.String `tfsdk:"name"`
+	Email                    types.String `tfsdk:"email"`
+	Password                 types.String `tfsdk:"password"`
+	Admin                    types.Bool   `tfsdk:"admin"`
+	ProfileUpdatable         types.Bool   `tfsdk:"profile_updatable"`
+	DisableUIAccess          types.Bool   `tfsdk:"disable_ui_access"`
+	InternalPasswordDisabled types.Bool   `tfsdk:"internal_password_disabled"`
+	Groups                   types.Set    `tfsdk:"groups"`
+}
+
 type ArtifactoryUserResourceModel struct {
 	Id                       types.String `tfsdk:"id"`
 	Name                     types.String `tfsdk:"name"`
 	Email                    types.String `tfsdk:"email"`
 	Password                 types.String `tfsdk:"password"`
+	PasswordPolicy           types.Object `tfsdk:"password_policy"`
 	Admin                    types.Bool   `tfsdk:"admin"`
 	ProfileUpdatable         types.Bool   `tfsdk:"profile_updatable"`
 	DisableUIAccess          types.Bool   `tfsdk:"disable_ui_access"`
@@ -116,7 +129,47 @@ func (u ArtifactoryUserResourceAPIModel) ToState(ctx context.Context, r *Artifac
 	return nil
 }
 
-var baseUserSchemaFramework = map[string]schema.Attribute{
+var passwordPolicyAttributeTypes = map[string]attr.Type{
+	"uppercase":    types.Int64Type,
+	"lowercase":    types.Int64Type,
+	"special_char": types.Int64Type,
+	"digit":        types.Int64Type,
+	"length":       types.Int64Type,
+}
+
+var baseUserSchemaFramework = lo.Assign(
+	baseUserSchemaFrameworkV0,
+	map[string]schema.Attribute{
+		"password_policy": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"uppercase": schema.Int64Attribute{
+					Optional:    true,
+					Description: "Minimum number of uppercase letters that the password must contain",
+				},
+				"lowercase": schema.Int64Attribute{
+					Optional:    true,
+					Description: "Minimum number of lowercase letters that the password must contain",
+				},
+				"special_char": schema.Int64Attribute{
+					Optional:            true,
+					MarkdownDescription: "Minimum number of special char that the password must contain. Special chars list: `!\"#$%&'()*+,-./:;<=>?@[\\]^_``{|}~`",
+				},
+				"digit": schema.Int64Attribute{
+					Optional:    true,
+					Description: "Minimum number of digits that the password must contain",
+				},
+				"length": schema.Int64Attribute{
+					Optional:    true,
+					Description: "Minimum length of the password",
+				},
+			},
+			Optional:            true,
+			MarkdownDescription: "Password policy to match JFrog Access to provide pre-apply validation. Default values: `uppercase=1`, `lowercase=1`, `special_char=0`, `digit=1`, `length=8`. Also see [Supported Access Configurations](https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations) for more details",
+		},
+	},
+)
+
+var baseUserSchemaFrameworkV0 = map[string]schema.Attribute{
 	"id": schema.StringAttribute{
 		Computed: true,
 		PlanModifiers: []planmodifier.String{
@@ -140,6 +193,10 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 	"email": schema.StringAttribute{
 		MarkdownDescription: "Email for user.",
 		Required:            true,
+	},
+	"password": schema.StringAttribute{
+		Optional:  true,
+		Sensitive: true,
 	},
 	"admin": schema.BoolAttribute{
 		MarkdownDescription: "(Optional, Default: false) When enabled, this user is an administrator with all the ensuing privileges.",
@@ -181,6 +238,41 @@ var baseUserSchemaFramework = map[string]schema.Attribute{
 	},
 }
 
+func (r *ArtifactoryBaseUserResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	return map[int64]resource.StateUpgrader{
+		// State upgrade implementation from 0 (prior state version) to 1 (Schema.Version)
+		0: {
+			PriorSchema: &schema.Schema{
+				Attributes: baseUserSchemaFrameworkV0,
+			},
+			// Optionally, the PriorSchema field can be defined.
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var priorStateData ArtifactoryUserResourceModelV0
+
+				resp.Diagnostics.Append(req.State.Get(ctx, &priorStateData)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				upgradedStateData := ArtifactoryUserResourceModel{
+					Id:                       priorStateData.Id,
+					Name:                     priorStateData.Name,
+					Email:                    priorStateData.Email,
+					Password:                 priorStateData.Password,
+					PasswordPolicy:           types.ObjectNull(passwordPolicyAttributeTypes),
+					Admin:                    priorStateData.Admin,
+					ProfileUpdatable:         priorStateData.ProfileUpdatable,
+					DisableUIAccess:          priorStateData.DisableUIAccess,
+					InternalPasswordDisabled: priorStateData.InternalPasswordDisabled,
+					Groups:                   priorStateData.Groups,
+				}
+
+				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
+			},
+		},
+	}
+}
+
 func (r *ArtifactoryBaseUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = r.TypeName
 }
@@ -191,6 +283,122 @@ func (r *ArtifactoryBaseUserResource) Configure(ctx context.Context, req resourc
 		return
 	}
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
+}
+
+func (r ArtifactoryBaseUserResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data ArtifactoryUserResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If password is not configured then no need to validate
+	if data.Password.IsNull() {
+		return
+	}
+
+	// Default password policy should match Access default configuration:
+	// https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations
+	minLength := int64(8)
+	lowercaseLength := int64(1)
+	uppercaseLength := int64(1)
+	specialCharLength := int64(0)
+	digitLength := int64(1)
+
+	// If password_min_length is configured, overwrite default values
+	if !data.PasswordPolicy.IsNull() {
+		attrs := data.PasswordPolicy.Attributes()
+
+		if v, ok := attrs["length"]; ok {
+			minLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["lowercase"]; ok {
+			lowercaseLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["uppercase"]; ok {
+			uppercaseLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["special_char"]; ok {
+			specialCharLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["digit"]; ok {
+			digitLength = v.(types.Int64).ValueInt64()
+		}
+	}
+
+	password := data.Password.ValueString()
+
+	if len(password) < int(minLength) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Invalid Attribute Value Length",
+			fmt.Sprintf(
+				"Attribute password string length must be at least %d, got %d",
+				minLength,
+				len(password),
+			),
+		)
+		return
+	}
+
+	lowercaseRegex := regexp.MustCompile(fmt.Sprintf("[a-z]{%d,}", lowercaseLength))
+	if !lowercaseRegex.MatchString(password) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d lowercase letters",
+				lowercaseLength,
+			),
+		)
+		return
+	}
+
+	uppercaseRegex := regexp.MustCompile(fmt.Sprintf("[A-Z]{%d,}", uppercaseLength))
+
+	if !uppercaseRegex.MatchString(password) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d uppercase letters",
+				uppercaseLength,
+			),
+		)
+		return
+	}
+
+	specialCharRegex := regexp.MustCompile(fmt.Sprintf(`[!"#$%%&'()\*\+,\-\./:;<=>?@\[\\\]^_\x60{|}~]{%d,}`, specialCharLength))
+
+	if !specialCharRegex.MatchString(password) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d special characters",
+				specialCharLength,
+			),
+		)
+		return
+	}
+
+	digitRegex := regexp.MustCompile(fmt.Sprintf(`\d{%d,}`, digitLength))
+	if !digitRegex.MatchString(password) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d digits",
+				digitLength,
+			),
+		)
+		return
+	}
 }
 
 type GroupsAddRemove struct {

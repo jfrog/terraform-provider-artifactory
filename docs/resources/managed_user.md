@@ -8,7 +8,6 @@ subcategory: "User"
 Provides an Artifactory managed user resource. This can be used to create and maintain Artifactory users. For example, service account where password is known and managed externally.
 
 Unlike `artifactory_unmanaged_user` and `artifactory_user`, the `password` attribute is required and cannot be empty.
-
 Consider using a separate provider to generate and manage passwords.
 
 ~> The password is stored in the Terraform state file. Make sure you secure it, please refer to the official [Terraform documentation](https://developer.hashicorp.com/terraform/language/state/sensitive-data).
@@ -19,6 +18,13 @@ Consider using a separate provider to generate and manage passwords.
 resource "artifactory_managed_user" "test-user" {
   name     = "terraform"
   password = "my super secret password"
+  password_policy = {
+    uppercase = 1
+    lowercase = 1
+    special_char = 1
+    digit = 1
+    length = 10
+  }
   email    = "test-user@artifactory-terraform.com"
   groups   = [ "readers", "logged-in-users"]
 }
@@ -32,7 +38,8 @@ resource "artifactory_managed_user" "test-user" {
 ### Required
 
 - `email` (String) Email for user.
-- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: `.-_@` for self-hosted. For SaaS, `+` is also allowed.
+- `name` (String) Username for user. May contain lowercase letters, numbers and symbols: '.-_@' for self-hosted. For SaaS, '+' is also allowed.
+- `password` (String, Sensitive) Password for the user.
 
 ### Optional
 
@@ -40,12 +47,23 @@ resource "artifactory_managed_user" "test-user" {
 - `disable_ui_access` (Boolean) (Optional, Default: true) When enabled, this user can only access the system through the REST API. This option cannot be set if the user has Admin privileges.
 - `groups` (Set of String) List of groups this user is a part of. **Notes:** If this attribute is not specified then user's group membership is set to empty. User will not be part of default "readers" group automatically.
 - `internal_password_disabled` (Boolean) (Optional, Default: false) When enabled, disables the fallback mechanism for using an internal password when external authentication (such as LDAP) is enabled.
-- `password` (String, Sensitive) (Optional, Sensitive) Password for the user.
+- `password_policy` (Attributes) Password policy to match JFrog Access to provide pre-apply validation. Default values: `uppercase=1`, `lowercase=1`, `special_char=0`, `digit=1`, `length=8`. Also see [Supported Access Configurations](https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations) for more details (see [below for nested schema](#nestedatt--password_policy))
 - `profile_updatable` (Boolean) (Optional, Default: true) When enabled, this user can update their profile details (except for the password. Only an administrator can update the password). There may be cases in which you want to leave this unset to prevent users from updating their profile. For example, a departmental user with a single password shared between all department members.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--password_policy"></a>
+### Nested Schema for `password_policy`
+
+Optional:
+
+- `digit` (Number) Minimum number of digits that the password must contain
+- `length` (Number) Minimum length of the password
+- `lowercase` (Number) Minimum number of lowercase letters that the password must contain
+- `special_char` (Number) Minimum number of special char that the password must contain. Special chars list: `!"#$%&'()*+,-./:;<=>?@[\]^_``{|}~`
+- `uppercase` (Number) Minimum number of uppercase letters that the password must contain
 
 ## Import
 

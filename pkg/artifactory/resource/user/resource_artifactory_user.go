@@ -36,5 +36,6 @@ func (r *ArtifactoryUserResource) Schema(ctx context.Context, req resource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Provides an Artifactory user resource. This can be used to create and manage Artifactory users. The password is a required field by the [Artifactory API](https://www.jfrog.com/confluence/display/JFROG/Artifactory+REST+API#ArtifactoryRESTAPI-CreateorReplaceUser), but we made it optional in this resource to accommodate the scenario where the password is not needed and will be reset by the actual user later. When the optional attribute `password` is omitted, a random password is generated according to current Artifactory password policy.",
 		Attributes:          userSchemaFramework,
+		Version:             1,
 	}
 }
