@@ -17,6 +17,7 @@ IMPROVEMENTS:
   Issue: [#1012](https://github.com/jfrog/terraform-provider-artifactory/issues/1012) 
   PR: [#1019](https://github.com/jfrog/terraform-provider-artifactory/pull/1019)
 * resource/artifactory_oauth_settings, resource/artifactory_saml_settings: Remove warning message about undocumented APIs. Issue: [#291](https://github.com/jfrog/terraform-provider-artifactory/issues/291) PR: [#1020](https://github.com/jfrog/terraform-provider-artifactory/pull/1020)
+* resource/artifactory_user, resource/artifactory_managed_user: Add `password_policy` attribute to support configurable password validation. Issue: [#959](https://github.com/jfrog/terraform-provider-artifactory/issues/959) PR: [#1024](https://github.com/jfrog/terraform-provider-artifactory/pull/1024)
 
 BUG FIXES:
 
