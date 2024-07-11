@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/jfrog/terraform-provider-shared/util"
 
@@ -30,6 +31,11 @@ func MkRepoReadDataSource(pack packer.PackFunc, construct repository.Constructor
 
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
 		}
 
 		if resp.IsError() {

@@ -770,3 +770,30 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDataSourceRemoteMissingRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("vcs-remote", "data.artifactory_remote_vcs_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccRemoteVcsRepository",
+		`data "artifactory_remote_vcs_repository" "{{ .name }}" {
+			key = "non-existent-repo"
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(fqrn, "key"),
+				),
+			},
+		},
+	})
+}

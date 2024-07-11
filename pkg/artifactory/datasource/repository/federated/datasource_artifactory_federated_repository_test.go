@@ -1263,3 +1263,30 @@ func TestAccDataSourceFederatedTerraformRepositories(t *testing.T) {
 		})
 	}
 }
+
+func TestAccDataSourceFederatedMissingRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("terraform-local", "data.artifactory_federated_terraform_provider_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccFederatedTerraformProviderRepository",
+		`data "artifactory_federated_terraform_provider_repository" "{{ .name }}" {
+			key = "non-existent-repo"
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(fqrn, "key"),
+				),
+			},
+		},
+	})
+}

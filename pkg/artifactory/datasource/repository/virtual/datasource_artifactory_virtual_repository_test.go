@@ -330,3 +330,30 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 		},
 	}
 }
+
+func TestAccDataSourceVirtualMissingRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("rpm-remote", "data.artifactory_virtual_rpm_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate(
+		"TestAccVirtualRpmRepository",
+		`data "artifactory_virtual_rpm_repository" "{{ .name }}" {
+			key = "non-existent-repo"
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(fqrn, "key"),
+				),
+			},
+		},
+	})
+}
