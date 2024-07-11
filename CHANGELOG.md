@@ -13,15 +13,15 @@ IMPROVEMENTS:
   * `artifactory_release_bundle_v2_custom_webhook`
   * `artifactory_release_bundle_v2_promotion_custom_webhook`
   * `artifactory_artifact_lifecycle_custom_webhook`
+
+  Issue: [#1012](https://github.com/jfrog/terraform-provider-artifactory/issues/1012) 
+  PR: [#1019](https://github.com/jfrog/terraform-provider-artifactory/pull/1019)
 * resource/artifactory_oauth_settings, resource/artifactory_saml_settings: Remove warning message about undocumented APIs. Issue: [#291](https://github.com/jfrog/terraform-provider-artifactory/issues/291) PR: [#1020](https://github.com/jfrog/terraform-provider-artifactory/pull/1020)
 
 NOTES:
 
 * resource/artifactory_artifactory_release_bundle_webhook: This resource is being deprecated and replaced by new `artifactory_destination_webhook` resource
 * resource/artifactory_artifactory_release_bundle_custom_webhook: This resource is being deprecated and replaced by new `artifactory_destination_custom_webhook` resource
-
-Issue: [#1012](https://github.com/jfrog/terraform-provider-artifactory/issues/1012) 
-PR: [#1019](https://github.com/jfrog/terraform-provider-artifactory/pull/1019)
 
 ## 11.1.0 (June 26, 2024). Tested on Artifactory 7.84.15 with Terraform 1.8.5 and OpenTofu 1.7.2
 
