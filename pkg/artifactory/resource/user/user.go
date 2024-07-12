@@ -306,7 +306,7 @@ func (r ArtifactoryBaseUserResource) ValidateConfig(ctx context.Context, req res
 	specialCharLength := int64(0)
 	digitLength := int64(1)
 
-	// If password_min_length is configured, overwrite default values
+	// If password_policy is configured, overwrite default values
 	if !data.PasswordPolicy.IsNull() {
 		attrs := data.PasswordPolicy.Attributes()
 
