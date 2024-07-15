@@ -3,17 +3,24 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 source "${SCRIPT_DIR}/get-access-key.sh"
 source "${SCRIPT_DIR}/wait-for-rt.sh"
-export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.77.7}
+export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.84.17}
 echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
 
 mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
-mkdir -p ${SCRIPT_DIR}/artifactory/var
+mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
 
-cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf
+mkdir -p ${SCRIPT_DIR}/artifactory-2/extra_conf
+mkdir -p ${SCRIPT_DIR}/artifactory-2/var/etc/access
+
+cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf/
 cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory/var/etc/
-cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory/var/etc/access
+cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory/var/etc/access/
+
+cp ${SCRIPT_DIR}/artifactory-2.lic ${SCRIPT_DIR}/artifactory-2/extra_conf/
+cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory-2/var/etc/
+cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory-2/var/etc/access/
 
 docker run -i --name artifactory-1 -d --rm \
   -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
@@ -24,8 +31,8 @@ docker run -i --name artifactory-1 -d --rm \
 
 docker run -i --name artifactory-2 -d --rm \
   -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
-  -v ${SCRIPT_DIR}/artifactory/extra_conf:/artifactory_extra_conf \
-  -v ${SCRIPT_DIR}/artifactory/var:/var/opt/jfrog/artifactory \
+  -v ${SCRIPT_DIR}/artifactory-2/extra_conf:/artifactory_extra_conf \
+  -v ${SCRIPT_DIR}/artifactory-2/var:/var/opt/jfrog/artifactory \
   -p 9081:8081 -p 9082:8082 \
   releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
 
@@ -44,8 +51,8 @@ echo "Setting base URL for Artifactory 2. (Base URL for Artifactory 1 will be se
 curl -X PUT "${ARTIFACTORY_URL_2}/artifactory/api/system/configuration/baseUrl" -d 'http://artifactory-2:8081' -u admin:password -H "Content-type: text/plain"
 
 # docker cp doesn't support copying files between containers so copy to local disk first
-CONTAINER_ID_1=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}" --filter publish=8080)
-CONTAINER_ID_2=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}" --filter publish=9080)
+CONTAINER_ID_1=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}" --filter publish=8082)
+CONTAINER_ID_2=$(docker ps -q --filter "ancestor=releases-docker.jfrog.io/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}" --filter publish=9082)
 
 echo "Fetching root certificates"
 docker cp "${CONTAINER_ID_1}":/opt/jfrog/artifactory/var/etc/access/keys/root.crt "${SCRIPT_DIR}/artifactory-1.crt" \
