@@ -43,7 +43,7 @@ type VaultConfigurationResourceModel struct {
 	Config types.Object `tfsdk:"config"`
 }
 
-func (m VaultConfigurationResourceModel) toAPIModel(ctx context.Context, apiModel *VaultConfigurationAPIModel) (diags diag.Diagnostics) {
+func (m VaultConfigurationResourceModel) toAPIModel(_ context.Context, apiModel *VaultConfigurationAPIModel) (diags diag.Diagnostics) {
 	configAttrs := m.Config.Attributes()
 	authAttrs := configAttrs["auth"].(types.Object).Attributes()
 

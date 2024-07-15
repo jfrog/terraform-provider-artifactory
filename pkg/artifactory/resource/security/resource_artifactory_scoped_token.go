@@ -27,6 +27,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 )
 
@@ -43,7 +44,7 @@ type ScopedTokenResource struct {
 
 // ScopedTokenResourceModel describes the Terraform resource data model to match the
 // resource schema.
-type ScopedTokenResourceModel struct {
+type ScopedTokenResourceModelV0 struct {
 	Id                    types.String `tfsdk:"id"`
 	GrantType             types.String `tfsdk:"grant_type"`
 	Username              types.String `tfsdk:"username"`
@@ -62,6 +63,28 @@ type ScopedTokenResourceModel struct {
 	Expiry                types.Int64  `tfsdk:"expiry"`
 	IssuedAt              types.Int64  `tfsdk:"issued_at"`
 	Issuer                types.String `tfsdk:"issuer"`
+}
+
+type ScopedTokenResourceModel struct {
+	Id                        types.String `tfsdk:"id"`
+	GrantType                 types.String `tfsdk:"grant_type"`
+	Username                  types.String `tfsdk:"username"`
+	ProjectKey                types.String `tfsdk:"project_key"`
+	Scopes                    types.Set    `tfsdk:"scopes"`
+	ExpiresIn                 types.Int64  `tfsdk:"expires_in"`
+	Refreshable               types.Bool   `tfsdk:"refreshable"`
+	IncludeReferenceToken     types.Bool   `tfsdk:"include_reference_token"`
+	Description               types.String `tfsdk:"description"`
+	Audiences                 types.Set    `tfsdk:"audiences"`
+	AccessToken               types.String `tfsdk:"access_token"`
+	RefreshToken              types.String `tfsdk:"refresh_token"`
+	ReferenceToken            types.String `tfsdk:"reference_token"`
+	TokenType                 types.String `tfsdk:"token_type"`
+	Subject                   types.String `tfsdk:"subject"`
+	Expiry                    types.Int64  `tfsdk:"expiry"`
+	IssuedAt                  types.Int64  `tfsdk:"issued_at"`
+	Issuer                    types.String `tfsdk:"issuer"`
+	IgnoreMissingTokenWarning types.Bool   `tfsdk:"ignore_missing_token_warning"`
 }
 
 type AccessTokenPostResponseAPIModel struct {
@@ -106,208 +129,264 @@ func (r *ScopedTokenResource) Metadata(ctx context.Context, req resource.Metadat
 	resp.TypeName = r.TypeName
 }
 
+var attributesV0 = map[string]schema.Attribute{
+	"id": schema.StringAttribute{
+		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	},
+	"grant_type": schema.StringAttribute{
+		MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
+		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString("client_credentials"),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplaceIfConfigured(),
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	},
+	"username": schema.StringAttribute{
+		MarkdownDescription: "The user name for which this token is created. The username is based " +
+			"on the authenticated user - either from the user of the authenticated token or based " +
+			"on the username (if basic auth was used). The username is then used to set the subject " +
+			"of the token: <service-id>/users/<username>. Limited to 255 characters.",
+		Optional:      true,
+		PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
+		Validators:    []validator.String{stringvalidator.LengthBetween(1, 255)},
+	},
+	"project_key": schema.StringAttribute{
+		MarkdownDescription: "The project for which this token is created. Enter the project name on which you want to apply this token.",
+		Optional:            true,
+		Validators: []validator.String{
+			stringvalidator.RegexMatches(
+				regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
+				"must be 2 - 32 lowercase alphanumeric and hyphen characters",
+			),
+		},
+	},
+	"scopes": schema.SetAttribute{
+		MarkdownDescription: "The scope of access that the token provides. Access to the REST API is always " +
+			"provided by default. Administrators can set any scope, while non-admin users can only set " +
+			"the scope to a subset of the groups to which they belong. The supported scopes include:\n" +
+			"  - `applied-permissions/user` - provides user access. If left at the default setting, the " +
+			"token will be created with the user-identity scope, which allows users to identify themselves " +
+			"in the Platform but does not grant any specific access permissions.\n" +
+			"  - `applied-permissions/admin` - the scope assigned to admin users.\n" +
+			"  - `applied-permissions/groups` - this scope assigns permissions to groups using the following format: `applied-permissions/groups:<group-name>[,<group-name>...]`\n" +
+			"  - `system:metrics:r` - for getting the service metrics\n" +
+			"  - `system:livelogs:r` - for getting the service livelogs\n" +
+			"  - Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
+			"A permission can be represented as a scope token string in the following format: `<resource-type>:<target>[/<sub-resource>]:<actions>`\n" +
+			"    - Where:\n" +
+			"      - `<resource-type>` - one of the permission resource types, from a predefined closed list. " +
+			"Currently, the only resource type that is supported is the artifact resource type.\n" +
+			"      - `<target>` - the target resource, can be exact name or a pattern\n" +
+			"      - `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern\n" +
+			"      - `<actions>` - comma-separated list of action acronyms. " +
+			"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions. To allow all actions - use `*`\n" +
+			"    - Examples:\n" +
+			"      - `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
+			"      - `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
+			"      - `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`\n" +
+			"  - `applied-permissions/roles:project-key` - provides access to elements associated with the project based on the project role. For example, `applied-permissions/roles:project-type:developer,qa`.\n\n" +
+			"->The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
+			"From Artifactory 7.84.3, [project admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) can create access tokens that are tied to the projects in which they hold administrative privileges.",
+		Optional:    true,
+		Computed:    true,
+		ElementType: types.StringType,
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.RequiresReplaceIfConfigured(),
+			setplanmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.Set{
+			setvalidator.ValueStringsAre(
+				stringvalidator.Any(
+					stringvalidator.OneOf(
+						"applied-permissions/user",
+						"applied-permissions/admin",
+						"system:metrics:r",
+						"system:livelogs:r",
+					),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:(?:.+):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+				),
+			),
+		},
+	},
+	"expires_in": schema.Int64Attribute{
+		MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/persistency-threshold) for details.",
+		Optional:            true,
+		Computed:            true,
+		PlanModifiers: []planmodifier.Int64{
+			int64planmodifier.RequiresReplaceIfConfigured(),
+			int64planmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.Int64{int64validator.AtLeast(0)},
+	},
+	"refreshable": schema.BoolAttribute{
+		MarkdownDescription: "Is this token refreshable? Default is `false`.",
+		Optional:            true,
+		Computed:            true,
+		Default:             booldefault.StaticBool(false),
+		PlanModifiers: []planmodifier.Bool{
+			boolplanmodifier.RequiresReplaceIfConfigured(),
+			boolplanmodifier.UseStateForUnknown(),
+		},
+	},
+	"include_reference_token": schema.BoolAttribute{
+		MarkdownDescription: "Also create a reference token which can be used like an API key. Default is `false`.",
+		Optional:            true,
+		Computed:            true,
+		PlanModifiers: []planmodifier.Bool{
+			boolplanmodifier.RequiresReplaceIfConfigured(),
+			boolplanmodifier.UseStateForUnknown(),
+		},
+	},
+	"description": schema.StringAttribute{
+		MarkdownDescription: "Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.",
+		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString(""),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplaceIfConfigured(),
+			stringplanmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.String{stringvalidator.LengthBetween(0, 1024)},
+	},
+	"audiences": schema.SetAttribute{
+		MarkdownDescription: "A list of the other instances or services that should accept this " +
+			"token identified by their Service-IDs. Limited to total 255 characters. " +
+			"Default to '*@*' if not set. Service ID must begin with valid JFrog service type. " +
+			"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *. For instructions to retrieve the Artifactory Service ID see this [documentation](https://jfrog.com/help/r/jfrog-rest-apis/get-service-id)",
+		Optional:    true,
+		ElementType: types.StringType,
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.RequiresReplaceIfConfigured(),
+			setplanmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.Set{
+			setvalidator.ValueStringsAre(
+				stringvalidator.All(
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(fmt.Sprintf(`^(%s|\*)@.+`, strings.Join(serviceTypesScopedToken, "|"))),
+						fmt.Sprintf(
+							"must either begin with %s, or *",
+							strings.Join(serviceTypesScopedToken, ", "),
+						),
+					),
+				),
+			),
+		},
+	},
+	"access_token": schema.StringAttribute{
+		MarkdownDescription: "Returns the access token to authenticate to Artifactory.",
+		Sensitive:           true,
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+	"refresh_token": schema.StringAttribute{
+		MarkdownDescription: "Refresh token.",
+		Sensitive:           true,
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+	"reference_token": schema.StringAttribute{
+		MarkdownDescription: "Reference Token (alias to Access Token).",
+		Sensitive:           true,
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+	"token_type": schema.StringAttribute{
+		MarkdownDescription: "Returns the token type.",
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+	"subject": schema.StringAttribute{
+		MarkdownDescription: "Returns the token type.",
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+	"expiry": schema.Int64Attribute{
+		MarkdownDescription: "Returns the token expiry.",
+		Computed:            true,
+		PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
+	},
+	"issued_at": schema.Int64Attribute{
+		MarkdownDescription: "Returns the token issued at date/time.",
+		Computed:            true,
+		PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
+	},
+	"issuer": schema.StringAttribute{
+		MarkdownDescription: "Returns the token issuer.",
+		Computed:            true,
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	},
+}
+
+var attributesV1 = lo.Assign(
+	attributesV0,
+	map[string]schema.Attribute{
+		"ignore_missing_token_warning": schema.BoolAttribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     booldefault.StaticBool(false),
+			Description: "Toggle to ignore warning message when token was missing or not created and stored by Artifactory. Default is `false`.",
+		},
+	},
+)
+
 func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Create scoped tokens for any of the services in your JFrog Platform and to " +
 			"manage user access to these services. If left at the default setting, the token will " +
 			"be created with the user-identity scope, which allows users to identify themselves in " +
 			"the Platform but does not grant any specific access permissions.",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+		Attributes: attributesV1,
+		Version:    1,
+	}
+}
+
+func (r *ScopedTokenResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	return map[int64]resource.StateUpgrader{
+		// State upgrade implementation from 0 (prior state version) to 1 (Schema.Version)
+		0: {
+			PriorSchema: &schema.Schema{
+				Attributes: attributesV0,
 			},
-			"grant_type": schema.StringAttribute{
-				MarkdownDescription: "The grant type used to authenticate the request. In this case, the only value supported is `client_credentials` which is also the default value if this parameter is not specified.",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("client_credentials"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"username": schema.StringAttribute{
-				MarkdownDescription: "The user name for which this token is created. The username is based " +
-					"on the authenticated user - either from the user of the authenticated token or based " +
-					"on the username (if basic auth was used). The username is then used to set the subject " +
-					"of the token: <service-id>/users/<username>. Limited to 255 characters.",
-				Optional:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
-				Validators:    []validator.String{stringvalidator.LengthBetween(1, 255)},
-			},
-			"project_key": schema.StringAttribute{
-				MarkdownDescription: "The project for which this token is created. Enter the project name on which you want to apply this token.",
-				Optional:            true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
-						"must be 2 - 32 lowercase alphanumeric and hyphen characters",
-					),
-				},
-			},
-			"scopes": schema.SetAttribute{
-				MarkdownDescription: "The scope of access that the token provides. Access to the REST API is always " +
-					"provided by default. Administrators can set any scope, while non-admin users can only set " +
-					"the scope to a subset of the groups to which they belong.\n" +
-					"The supported scopes include:\n" +
-					"* `applied-permissions/user` - provides user access. If left at the default setting, the " +
-					"token will be created with the user-identity scope, which allows users to identify themselves " +
-					"in the Platform but does not grant any specific access permissions." +
-					"* `applied-permissions/admin` - the scope assigned to admin users." +
-					"* `applied-permissions/groups` - this scope assigns permissions to groups using the following format: applied-permissions/groups:<group-name>[,<group-name>...]" +
-					"* `system:metrics:r` - for getting the service metrics" +
-					"* `system:livelogs:r` - for getting the service livelogsr." +
-					"Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
-					"A permission can be represented as a scope token string in the following format:\n" +
-					"`<resource-type>:<target>[/<sub-resource>]:<actions>`\n" +
-					"Where:\n" +
-					" `<resource-type>` - one of the permission resource types, from a predefined closed list. " +
-					"Currently, the only resource type that is supported is the artifact resource type.\n" +
-					" `<target>` - the target resource, can be exact name or a pattern" +
-					" `<sub-resource>` - optional, the target sub-resource, can be exact name or a pattern" +
-					" `<actions>` - comma-separated list of action acronyms." +
-					"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions.\n" +
-					"To allow all actions - use `*`\n" +
-					"Examples: " +
-					" `[\"applied-permissions/user\", \"artifact:generic-local:r\"]`\n" +
-					" `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
-					" `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`\n" +
-					"* `applied-permissions/roles:project-key` - provides access to elements associated with the project based on the project role. For example, `applied-permissions/roles:project-type:developer,qa`." +
-					"The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
-					"From Artifactory 7.84.3, project admins (https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) can create access tokens that are tied to the projects in which they hold administrative privileges.",
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplaceIfConfigured(),
-					setplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(
-						stringvalidator.Any(
-							stringvalidator.OneOf(
-								"applied-permissions/user",
-								"applied-permissions/admin",
-								"system:metrics:r",
-								"system:livelogs:r",
-							),
-							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
-							stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
-							stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:(?:.+):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
-						),
-					),
-				},
-			},
-			"expires_in": schema.Int64Attribute{
-				MarkdownDescription: "The amount of time, in seconds, it would take for the token to expire. An admin shall be able to set whether expiry is mandatory, what is the default expiry, and what is the maximum expiry allowed. Must be non-negative. Default value is based on configuration in 'access.config.yaml'. See [API documentation](https://jfrog.com/help/r/jfrog-rest-apis/revoke-token-by-id) for details. Access Token would not be saved by Artifactory if this is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See [official documentation](https://jfrog.com/help/r/jfrog-platform-administration-documentation/persistency-threshold) for details.",
-				Optional:            true,
-				Computed:            true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplaceIfConfigured(),
-					int64planmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.Int64{int64validator.AtLeast(0)},
-			},
-			"refreshable": schema.BoolAttribute{
-				MarkdownDescription: "Is this token refreshable? Default is `false`.",
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplaceIfConfigured(),
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"include_reference_token": schema.BoolAttribute{
-				MarkdownDescription: "Also create a reference token which can be used like an API key. Default is `false`.",
-				Optional:            true,
-				Computed:            true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplaceIfConfigured(),
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"description": schema.StringAttribute{
-				MarkdownDescription: "Free text token description. Useful for filtering and managing tokens. Limited to 1024 characters.",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(""),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{stringvalidator.LengthBetween(0, 1024)},
-			},
-			"audiences": schema.SetAttribute{
-				MarkdownDescription: "A list of the other instances or services that should accept this " +
-					"token identified by their Service-IDs. Limited to total 255 characters. " +
-					"Default to '*@*' if not set. Service ID must begin with valid JFrog service type. " +
-					"Options: jfrt, jfxr, jfpip, jfds, jfmc, jfac, jfevt, jfmd, jfcon, or *. For instructions to retrieve the Artifactory Service ID see this [documentation](https://jfrog.com/help/r/jfrog-rest-apis/get-service-id)",
-				Optional:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplaceIfConfigured(),
-					setplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(
-						stringvalidator.All(
-							stringvalidator.LengthAtLeast(1),
-							stringvalidator.RegexMatches(regexp.MustCompile(fmt.Sprintf(`^(%s|\*)@.+`, strings.Join(serviceTypesScopedToken, "|"))),
-								fmt.Sprintf(
-									"must either begin with %s, or *",
-									strings.Join(serviceTypesScopedToken, ", "),
-								),
-							),
-						),
-					),
-				},
-			},
-			"access_token": schema.StringAttribute{
-				MarkdownDescription: "Returns the access token to authenticate to Artifactory.",
-				Sensitive:           true,
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"refresh_token": schema.StringAttribute{
-				MarkdownDescription: "Refresh token.",
-				Sensitive:           true,
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"reference_token": schema.StringAttribute{
-				MarkdownDescription: "Reference Token (alias to Access Token).",
-				Sensitive:           true,
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"token_type": schema.StringAttribute{
-				MarkdownDescription: "Returns the token type.",
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"subject": schema.StringAttribute{
-				MarkdownDescription: "Returns the token type.",
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"expiry": schema.Int64Attribute{
-				MarkdownDescription: "Returns the token expiry.",
-				Computed:            true,
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-			},
-			"issued_at": schema.Int64Attribute{
-				MarkdownDescription: "Returns the token issued at date/time.",
-				Computed:            true,
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-			},
-			"issuer": schema.StringAttribute{
-				MarkdownDescription: "Returns the token issuer.",
-				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			// Optionally, the PriorSchema field can be defined.
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var priorStateData ScopedTokenResourceModelV0
+
+				resp.Diagnostics.Append(req.State.Get(ctx, &priorStateData)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				upgradedStateData := ScopedTokenResourceModel{
+					Id:                        priorStateData.Id,
+					GrantType:                 priorStateData.GrantType,
+					Username:                  priorStateData.Username,
+					ProjectKey:                priorStateData.ProjectKey,
+					Scopes:                    priorStateData.Scopes,
+					ExpiresIn:                 priorStateData.ExpiresIn,
+					Refreshable:               priorStateData.Refreshable,
+					IncludeReferenceToken:     priorStateData.IncludeReferenceToken,
+					Description:               priorStateData.Description,
+					Audiences:                 priorStateData.Audiences,
+					AccessToken:               priorStateData.AccessToken,
+					RefreshToken:              priorStateData.RefreshToken,
+					ReferenceToken:            priorStateData.ReferenceToken,
+					TokenType:                 priorStateData.TokenType,
+					Subject:                   priorStateData.Subject,
+					Expiry:                    priorStateData.Expiry,
+					IssuedAt:                  priorStateData.IssuedAt,
+					Issuer:                    priorStateData.Issuer,
+					IgnoreMissingTokenWarning: types.BoolValue(false),
+				}
+
+				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
 			},
 		},
 	}
@@ -462,10 +541,12 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	if response.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(
-			fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
-			"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+response.String(),
-		)
+		if !data.IgnoreMissingTokenWarning.ValueBool() {
+			resp.Diagnostics.AddWarning(
+				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
+				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+response.String(),
+			)
+		}
 		resp.State.RemoveResource(ctx)
 		return
 	}
