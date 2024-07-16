@@ -14,3 +14,6 @@ shared:
     database:
         ## To run Artifactory with any database other than PostgreSQL allowNonPostgresql set to true.
         allowNonPostgresql: true
+
+mc:
+    enabled: true
