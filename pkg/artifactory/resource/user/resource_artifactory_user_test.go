@@ -491,6 +491,114 @@ func testAccUserInvalidName(username, errorRegex string) func(t *testing.T) {
 	}
 }
 
+func TestAccUser_default_password_policy(t *testing.T) {
+	testCase := []struct {
+		name       string
+		password   string
+		errorRegex string
+	}{
+		{"Uppercase", "abcd1234", `.*Attribute password string must have at least 1 uppercase letters.*`},
+		{"Lowercase", "ABCD1234", `.*Attribute password string must have at least 1 lowercase letters.*`},
+		{"Digit", "ABCDefgh", `.*Attribute password string must have at least 1 digits.*`},
+		{"Length", "Abc123", `.*Attribute password string length must be at least.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccUserDefaultPasswordPolicy(tc.password, tc.errorRegex))
+	}
+}
+
+func testAccUserDefaultPasswordPolicy(password, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_user")
+
+		temp := `
+			resource "artifactory_user" "{{ .resourceName }}" {
+				name  = "{{ .name }}"
+				password = "{{ .password }}"
+				email = "{{ .email }}"
+			}
+		`
+
+		config := util.ExecuteTemplate("TestAccUser_password_policy", temp, map[string]string{
+			"resourceName": name,
+			"name":         fmt.Sprintf("test-%d", id),
+			"password":     password,
+			"email":        fmt.Sprintf("test-%d@test.com", id),
+		})
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      config,
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
+func TestAccUser_password_policy(t *testing.T) {
+	testCase := []struct {
+		name       string
+		password   string
+		errorRegex string
+	}{
+		{"Uppercase", "Abcde1234--", `.*Attribute password string must have at least 2 uppercase letters.*`},
+		{"Lowercase", "ABCDe1234--", `.*Attribute password string must have at least 2 lowercase letters.*`},
+		{"Special Char", "ABCDefgh12-", `.*Attribute password string must have at least 2 special characters.*`},
+		{"Digit", "ABCDEfghi1--", `.*Attribute password string must have at least 2 digits.*`},
+		{"Length", "ABcd123--", `.*Attribute password string length must be at least.*`},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccUserPasswordPolicy(tc.password, tc.errorRegex))
+	}
+}
+
+func testAccUserPasswordPolicy(password, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		id, fqrn, name := testutil.MkNames("test-", "artifactory_user")
+
+		temp := `
+			resource "artifactory_user" "{{ .resourceName }}" {
+				name  = "{{ .name }}"
+				password = "{{ .password }}"
+				password_policy = {
+					uppercase = 2
+					lowercase = 2
+					special_char = 2
+					digit = 2
+					length = 10
+				}
+				email = "{{ .email }}"
+			}
+		`
+
+		config := util.ExecuteTemplate("TestAccUser_password_policy", temp, map[string]string{
+			"resourceName": name,
+			"name":         fmt.Sprintf("test-%d", id),
+			"password":     password,
+			"email":        fmt.Sprintf("test-%d@test.com", id),
+		})
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      config,
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
 func TestAccUser_name_change(t *testing.T) {
 	const config = `
 		resource "artifactory_user" "%s" {
