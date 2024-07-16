@@ -1,4 +1,4 @@
-## 11.2.0 (July 11, 2024). Tested on Artifactory 7.84.17 with Terraform 1.9.2 and OpenTofu 1.7.3
+## 11.2.0 (July 16, 2024). Tested on Artifactory 7.84.17 with Terraform 1.9.2 and OpenTofu 1.7.3
 
 IMPROVEMENTS:
 
@@ -18,6 +18,7 @@ IMPROVEMENTS:
   PR: [#1019](https://github.com/jfrog/terraform-provider-artifactory/pull/1019)
 * resource/artifactory_oauth_settings, resource/artifactory_saml_settings: Remove warning message about undocumented APIs. Issue: [#291](https://github.com/jfrog/terraform-provider-artifactory/issues/291) PR: [#1020](https://github.com/jfrog/terraform-provider-artifactory/pull/1020)
 * resource/artifactory_user, resource/artifactory_managed_user: Add `password_policy` attribute to support configurable password validation. Issue: [#959](https://github.com/jfrog/terraform-provider-artifactory/issues/959) PR: [#1024](https://github.com/jfrog/terraform-provider-artifactory/pull/1024)
+* resource/artifactory_scoped_token: Add attribute `ignore_missing_token_warning` to hide warning message about missing token when refreshing state from Artifactory. Issue: [#1021](https://github.com/jfrog/terraform-provider-artifactory/issues/1021) PR: [#1026](https://github.com/jfrog/terraform-provider-artifactory/pull/1026)
 
 BUG FIXES:
 
