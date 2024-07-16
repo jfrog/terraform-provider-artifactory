@@ -129,7 +129,7 @@ func (r *ScopedTokenResource) Metadata(ctx context.Context, req resource.Metadat
 	resp.TypeName = r.TypeName
 }
 
-var attributesV0 = map[string]schema.Attribute{
+var schemaAttributesV0 = map[string]schema.Attribute{
 	"id": schema.StringAttribute{
 		Computed: true,
 		PlanModifiers: []planmodifier.String{
@@ -325,8 +325,8 @@ var attributesV0 = map[string]schema.Attribute{
 	},
 }
 
-var attributesV1 = lo.Assign(
-	attributesV0,
+var schemaAttributesV1 = lo.Assign(
+	schemaAttributesV0,
 	map[string]schema.Attribute{
 		"ignore_missing_token_warning": schema.BoolAttribute{
 			Optional:    true,
@@ -343,7 +343,7 @@ func (r *ScopedTokenResource) Schema(ctx context.Context, req resource.SchemaReq
 			"manage user access to these services. If left at the default setting, the token will " +
 			"be created with the user-identity scope, which allows users to identify themselves in " +
 			"the Platform but does not grant any specific access permissions.",
-		Attributes: attributesV1,
+		Attributes: schemaAttributesV1,
 		Version:    1,
 	}
 }
@@ -353,7 +353,7 @@ func (r *ScopedTokenResource) UpgradeState(ctx context.Context) map[int64]resour
 		// State upgrade implementation from 0 (prior state version) to 1 (Schema.Version)
 		0: {
 			PriorSchema: &schema.Schema{
-				Attributes: attributesV0,
+				Attributes: schemaAttributesV0,
 			},
 			// Optionally, the PriorSchema field can be defined.
 			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
