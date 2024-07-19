@@ -1,3 +1,9 @@
+## 11.2.1 (July 22, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix `password` validation for interpolated value. Also improve validation logic. Issue: [#1031](https://github.com/jfrog/terraform-provider-artifactory/issues/1031) PR: [#1032](https://github.com/jfrog/terraform-provider-artifactory/pull/1032)
+
 ## 11.2.0 (July 16, 2024). Tested on Artifactory 7.84.17 with Terraform 1.9.2 and OpenTofu 1.7.3
 
 IMPROVEMENTS:
