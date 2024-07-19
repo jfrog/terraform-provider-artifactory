@@ -39,7 +39,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -152,7 +151,7 @@ var baseUserSchemaFramework = lo.Assign(
 				},
 				"special_char": schema.Int64Attribute{
 					Optional:            true,
-					MarkdownDescription: "Minimum number of special char that the password must contain. Special chars list: `!\"#$%&'()*+,-./:;<=>?@[\\]^_``{|}~`",
+					MarkdownDescription: "Minimum number of special char that the password must contain. Special chars list: ``!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~``",
 				},
 				"digit": schema.Int64Attribute{
 					Optional:    true,
@@ -163,8 +162,10 @@ var baseUserSchemaFramework = lo.Assign(
 					Description: "Minimum length of the password",
 				},
 			},
-			Optional:            true,
-			MarkdownDescription: "Password policy to match JFrog Access to provide pre-apply validation. Default values: `uppercase=1`, `lowercase=1`, `special_char=0`, `digit=1`, `length=8`. Also see [Supported Access Configurations](https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations) for more details",
+			Optional: true,
+			MarkdownDescription: "Password policy to match JFrog Access to provide validation before API request.\n\n" +
+				"->Due to Terraform limitation with interpolated value, we can only validate interpolated value prior to making API requests. This means `terraform validate` or `terraform plan` will not return error if `password` does not meet `password_policy` criteria.\n\n" +
+				"Default values: `uppercase=1`, `lowercase=1`, `special_char=0`, `digit=1`, `length=8`. Also see [Supported Access Configurations](https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations) for more details",
 		},
 	},
 )
@@ -293,110 +294,8 @@ func (r ArtifactoryBaseUserResource) ValidateConfig(ctx context.Context, req res
 		return
 	}
 
-	// If password is not configured then no need to validate
-	if data.Password.IsNull() {
-		return
-	}
-
-	// Default password policy should match Access default configuration:
-	// https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations
-	minLength := int64(8)
-	lowercaseLength := int64(1)
-	uppercaseLength := int64(1)
-	specialCharLength := int64(0)
-	digitLength := int64(1)
-
-	// If password_policy is configured, overwrite default values
-	if !data.PasswordPolicy.IsNull() {
-		attrs := data.PasswordPolicy.Attributes()
-
-		if v, ok := attrs["length"]; ok {
-			minLength = v.(types.Int64).ValueInt64()
-		}
-
-		if v, ok := attrs["lowercase"]; ok {
-			lowercaseLength = v.(types.Int64).ValueInt64()
-		}
-
-		if v, ok := attrs["uppercase"]; ok {
-			uppercaseLength = v.(types.Int64).ValueInt64()
-		}
-
-		if v, ok := attrs["special_char"]; ok {
-			specialCharLength = v.(types.Int64).ValueInt64()
-		}
-
-		if v, ok := attrs["digit"]; ok {
-			digitLength = v.(types.Int64).ValueInt64()
-		}
-	}
-
-	password := data.Password.ValueString()
-
-	if len(password) < int(minLength) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Invalid Attribute Value Length",
-			fmt.Sprintf(
-				"Attribute password string length must be at least %d, got %d",
-				minLength,
-				len(password),
-			),
-		)
-		return
-	}
-
-	lowercaseRegex := regexp.MustCompile(fmt.Sprintf("[a-z]{%d,}", lowercaseLength))
-	if !lowercaseRegex.MatchString(password) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Invalid Attribute Value Match",
-			fmt.Sprintf(
-				"Attribute password string must have at least %d lowercase letters",
-				lowercaseLength,
-			),
-		)
-		return
-	}
-
-	uppercaseRegex := regexp.MustCompile(fmt.Sprintf("[A-Z]{%d,}", uppercaseLength))
-
-	if !uppercaseRegex.MatchString(password) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Invalid Attribute Value Match",
-			fmt.Sprintf(
-				"Attribute password string must have at least %d uppercase letters",
-				uppercaseLength,
-			),
-		)
-		return
-	}
-
-	specialCharRegex := regexp.MustCompile(fmt.Sprintf(`[!"#$%%&'()\*\+,\-\./:;<=>?@\[\\\]^_\x60{|}~]{%d,}`, specialCharLength))
-
-	if !specialCharRegex.MatchString(password) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Invalid Attribute Value Match",
-			fmt.Sprintf(
-				"Attribute password string must have at least %d special characters",
-				specialCharLength,
-			),
-		)
-		return
-	}
-
-	digitRegex := regexp.MustCompile(fmt.Sprintf(`\d{%d,}`, digitLength))
-	if !digitRegex.MatchString(password) {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Invalid Attribute Value Match",
-			fmt.Sprintf(
-				"Attribute password string must have at least %d digits",
-				digitLength,
-			),
-		)
+	resp.Diagnostics.Append(r.validatePasswordByPolicy(data))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 }
@@ -416,12 +315,6 @@ func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, clie
 		actualGroups = *actual.Groups
 	}
 	toAdd, toRemove := lo.Difference(planGroups, actualGroups)
-	tflog.Debug(ctx, "syncReadersGroup", map[string]any{
-		"plan.Groups":   plan.Groups,
-		"actual.Groups": actual.Groups,
-		"toAdd":         toAdd,
-		"toRemove":      toRemove,
-	})
 
 	if len(toAdd) == 0 && len(toRemove) == 0 {
 		return nil
@@ -605,6 +498,114 @@ func (r *ArtifactoryBaseUserResource) updateUser(req *resty.Request, artifactory
 	return res, err
 }
 
+func (r *ArtifactoryBaseUserResource) validatePasswordByPolicy(plan ArtifactoryUserResourceModel) diag.Diagnostic {
+	// If password is not configured then no need to validate
+	if plan.Password.IsNull() || plan.Password.IsUnknown() {
+		return nil
+	}
+
+	// Default password policy should match Access default configuration:
+	// https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations
+	minLength := int64(8)
+	lowercaseLength := int64(1)
+	uppercaseLength := int64(1)
+	specialCharLength := int64(0)
+	digitLength := int64(1)
+
+	// If password_policy is configured, overwrite default values
+	if !plan.PasswordPolicy.IsNull() {
+		attrs := plan.PasswordPolicy.Attributes()
+
+		if v, ok := attrs["length"]; ok {
+			minLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["lowercase"]; ok {
+			lowercaseLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["uppercase"]; ok {
+			uppercaseLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["special_char"]; ok {
+			specialCharLength = v.(types.Int64).ValueInt64()
+		}
+
+		if v, ok := attrs["digit"]; ok {
+			digitLength = v.(types.Int64).ValueInt64()
+		}
+	}
+
+	password := plan.Password.ValueString()
+
+	if len(password) < int(minLength) {
+		return diag.NewAttributeErrorDiagnostic(
+			path.Root("password"),
+			"Invalid Attribute Value Length",
+			fmt.Sprintf(
+				"Attribute password string length must be at least %d, got %d",
+				minLength,
+				len(password),
+			),
+		)
+	}
+
+	lowercaseRegex := regexp.MustCompile("[a-z]")
+	matched := lowercaseRegex.FindAllString(password, -1)
+	if len(matched) < int(lowercaseLength) {
+		return diag.NewAttributeErrorDiagnostic(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d lowercase letters",
+				lowercaseLength,
+			),
+		)
+	}
+
+	uppercaseRegex := regexp.MustCompile("[A-Z]")
+	matched = uppercaseRegex.FindAllString(password, -1)
+	if len(matched) < int(uppercaseLength) {
+		return diag.NewAttributeErrorDiagnostic(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d uppercase letters",
+				uppercaseLength,
+			),
+		)
+	}
+
+	specialCharRegex := regexp.MustCompile(`[!"#$%%&'()\*\+,\-\./:;<=>?@\[\\\]^_\x60{|}~]`)
+	matched = specialCharRegex.FindAllString(password, -1)
+	if len(matched) < int(specialCharLength) {
+		return diag.NewAttributeErrorDiagnostic(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d special characters",
+				specialCharLength,
+			),
+		)
+	}
+
+	digitRegex := regexp.MustCompile(`\d`)
+	matched = digitRegex.FindAllString(password, -1)
+	if len(matched) < int(digitLength) {
+		return diag.NewAttributeErrorDiagnostic(
+			path.Root("password"),
+			"Invalid Attribute Value Match",
+			fmt.Sprintf(
+				"Attribute password string must have at least %d digits",
+				digitLength,
+			),
+		)
+	}
+
+	return nil
+}
+
 func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -613,6 +614,13 @@ func (r *ArtifactoryBaseUserResource) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !plan.InternalPasswordDisabled.ValueBool() {
+		resp.Diagnostics.Append(r.validatePasswordByPolicy(plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Convert from Terraform data model into API data model
@@ -766,6 +774,13 @@ func (r *ArtifactoryBaseUserResource) Update(ctx context.Context, req resource.U
 			"Password must be set when internal_password_disabled is changed to 'false'",
 		)
 		return
+	}
+
+	if !plan.InternalPasswordDisabled.ValueBool() {
+		resp.Diagnostics.Append(r.validatePasswordByPolicy(plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	var groups *[]string

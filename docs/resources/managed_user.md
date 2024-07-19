@@ -7,10 +7,11 @@ subcategory: "User"
 
 Provides an Artifactory managed user resource. This can be used to create and maintain Artifactory users. For example, service account where password is known and managed externally.
 
-Unlike `artifactory_unmanaged_user` and `artifactory_user`, the `password` attribute is required and cannot be empty.
-Consider using a separate provider to generate and manage passwords.
+Unlike `artifactory_unmanaged_user` and `artifactory_user`, the `password` attribute is required and cannot be empty. Consider using a separate provider to generate and manage passwords.
 
-~> The password is stored in the Terraform state file. Make sure you secure it, please refer to the official [Terraform documentation](https://developer.hashicorp.com/terraform/language/state/sensitive-data).
+~>The password is stored in the Terraform state file. Make sure you secure it, please refer to the official [Terraform documentation](https://developer.hashicorp.com/terraform/language/state/sensitive-data).
+
+->Due to Terraform limitation with interpolated value, we can only validate interpolated value prior to making API requests. This means `terraform validate` or `terraform plan` will not return error if `password` does not meet `password_policy` criteria.
 
 ## Example Usage
 
@@ -62,7 +63,7 @@ Optional:
 - `digit` (Number) Minimum number of digits that the password must contain
 - `length` (Number) Minimum length of the password
 - `lowercase` (Number) Minimum number of lowercase letters that the password must contain
-- `special_char` (Number) Minimum number of special char that the password must contain. Special chars list: `!"#$%&'()*+,-./:;<=>?@[\]^_``{|}~`
+- `special_char` (Number) Minimum number of special char that the password must contain. Special chars list: ``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``
 - `uppercase` (Number) Minimum number of uppercase letters that the password must contain
 
 ## Import
