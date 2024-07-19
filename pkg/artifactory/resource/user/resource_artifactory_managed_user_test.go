@@ -230,11 +230,11 @@ func TestAccManagedUser_password_policy(t *testing.T) {
 		password   string
 		errorRegex string
 	}{
-		{"Uppercase", "Abcde1234--", `.*Attribute password string must have at least 2 uppercase letters.*`},
-		{"Lowercase", "ABCDe1234--", `.*Attribute password string must have at least 2 lowercase letters.*`},
-		{"Special Char", "ABCDefgh12-", `.*Attribute password string must have at least 2 special characters.*`},
-		{"Digit", "ABCDEfghi1--", `.*Attribute password string must have at least 2 digits.*`},
-		{"Length", "ABcd123--", `.*Attribute password string length must be at least.*`},
+		{"Uppercase", "-A1b2c3d4e-", `.*Attribute password string must have at least 2 uppercase letters.*`},
+		{"Lowercase", "-A1B2C3D4e-", `.*Attribute password string must have at least 2 lowercase letters.*`},
+		{"Special Char", "A1B2CDefgh-", `.*Attribute password string must have at least 2 special characters.*`},
+		{"Digit", "-AfBgChDiE1-", `.*Attribute password string must have at least 2 digits.*`},
+		{"Length", "-A1B2c3d-", `.*Attribute password string length must be at least.*`},
 	}
 
 	for _, tc := range testCase {
