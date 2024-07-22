@@ -230,11 +230,11 @@ func TestAccManagedUser_password_policy(t *testing.T) {
 		password   string
 		errorRegex string
 	}{
-		{"Uppercase", "Abcde1234--", `.*Attribute password string must have at least 2 uppercase letters.*`},
-		{"Lowercase", "ABCDe1234--", `.*Attribute password string must have at least 2 lowercase letters.*`},
-		{"Special Char", "ABCDefgh12-", `.*Attribute password string must have at least 2 special characters.*`},
-		{"Digit", "ABCDEfghi1--", `.*Attribute password string must have at least 2 digits.*`},
-		{"Length", "ABcd123--", `.*Attribute password string length must be at least.*`},
+		{"Uppercase", "-A1b2c3d4e-", `.*Attribute password string must have at least 2 uppercase letters.*`},
+		{"Lowercase", "-A1B2C3D4e-", `.*Attribute password string must have at least 2 lowercase letters.*`},
+		{"Special Char", "A1B2CDefgh-", `.*Attribute password string must have at least 2 special characters.*`},
+		{"Digit", "-AfBgChDiE1-", `.*Attribute password string must have at least 2 digits.*`},
+		{"Length", "-A1B2c3d-", `.*Attribute password string length must be at least.*`},
 	}
 
 	for _, tc := range testCase {
@@ -272,6 +272,116 @@ func testAccManagedUserPasswordPolicy(password, errorRegex string) func(t *testi
 			PreCheck:                 func() { acctest.PreCheck(t) },
 			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 			CheckDestroy:             testAccCheckUserDestroy(fqrn),
+			Steps: []resource.TestStep{
+				{
+					Config:      config,
+					ExpectError: regexp.MustCompile(errorRegex),
+				},
+			},
+		})
+	}
+}
+
+func TestAccManagedUser_password_policy_interpolated(t *testing.T) {
+	testCase := []struct {
+		name             string
+		passwordCriteria string
+		errorRegex       string
+	}{
+		{
+			"Uppercase",
+			`length = 10
+			min_lower = 2
+			upper = false
+			min_numeric = 2
+			min_special = 2
+			override_special = "!"#$%%&'()*+,-./:;<=>?@[\]^_\x60{|}~"`,
+			`.*Attribute password string must have at least 2 uppercase letters.*`,
+		},
+		{
+			"Lowercase",
+			`length = 10
+			lower = false
+			min_upper = 2
+			min_numeric = 2
+			min_special = 2
+			override_special = "!"#$%%&'()*+,-./:;<=>?@[\]^_\x60{|}~"`,
+			`.*Attribute password string must have at least 2 lowercase letters.*`,
+		},
+		{
+			"Special Char",
+			`length = 10
+			min_lower = 2
+			min_upper = 2
+			min_numeric = 2
+			special = false
+			override_special = "!"#$%%&'()*+,-./:;<=>?@[\]^_\x60{|}~"`,
+			`.*Attribute password string must have at least 2 special characters.*`,
+		},
+		{
+			"Digit",
+			`length = 10
+			min_lower = 2
+			min_upper = 2
+			numeric = false
+			min_special = 2
+			override_special = "!"#$%%&'()*+,-./:;<=>?@[\]^_\x60{|}~"`,
+			`.*Attribute password string must have at least 2 digits.*`,
+		},
+		{
+			"Length",
+			`length = 9
+			min_lower = 2
+			min_upper = 2
+			min_numeric = 2
+			min_special = 2
+			override_special = "!"#$%%&'()*+,-./:;<=>?@[\]^_\x60{|}~"`,
+			`.*Attribute password string length must be at least.*`,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, testAccManagedUserPasswordPolicyInterpolated(tc.passwordCriteria, tc.errorRegex))
+	}
+}
+
+func testAccManagedUserPasswordPolicyInterpolated(passwordCriteria, errorRegex string) func(t *testing.T) {
+	return func(t *testing.T) {
+		id, _, name := testutil.MkNames("test-", "artifactory_user")
+
+		temp := `
+		resource "random_password" "test" {
+			{{ .passwordCriteria }}
+		}
+
+		resource "artifactory_managed_user" "{{ .resourceName }}" {
+			name  = "{{ .name }}"
+			password = random_password.test.result
+			password_policy = {
+				uppercase = 2
+				lowercase = 2
+				special_char = 2
+				digit = 2
+				length = 10
+			}
+			email = "{{ .email }}"
+		}`
+
+		config := util.ExecuteTemplate("TestAccUser_password_policy", temp, map[string]string{
+			"resourceName":     name,
+			"name":             fmt.Sprintf("test-%d", id),
+			"email":            fmt.Sprintf("test-%d@test.com", id),
+			"passwordCriteria": passwordCriteria,
+		})
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() { acctest.PreCheck(t) },
+			ExternalProviders: map[string]resource.ExternalProvider{
+				"random": {
+					Source: "hashicorp/random",
+				},
+			},
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config:      config,
