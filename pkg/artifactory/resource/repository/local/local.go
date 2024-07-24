@@ -107,11 +107,11 @@ var BaseLocalRepoSchema = utilsdk.MergeMaps(
 
 // GetPackageType `packageType` in the API call payload for Terraform repositories must be "terraform", but we use
 // `terraform_module` and `terraform_provider` as a package types in the Provider. GetPackageType function corrects this discrepancy.
-func GetPackageType(repoType string) string {
-	if strings.Contains(repoType, "terraform_") {
+func GetPackageType(packageType string) string {
+	if strings.Contains(packageType, "terraform_") {
 		return "terraform"
 	}
-	return repoType
+	return packageType
 }
 
 func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) RepositoryBaseParams {

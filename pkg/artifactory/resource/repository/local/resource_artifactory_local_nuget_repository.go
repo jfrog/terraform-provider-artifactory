@@ -19,7 +19,6 @@ var NugetLocalSchema = utilsdk.MergeMaps(
 			Description: "The maximum number of unique snapshots of a single artifact to store.\nOnce the number of " +
 				"snapshots exceeds this setting, older versions are removed.\nA value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.",
 		},
-
 		"force_nuget_authentication": {
 			Type:        schema.TypeBool,
 			Optional:    true,

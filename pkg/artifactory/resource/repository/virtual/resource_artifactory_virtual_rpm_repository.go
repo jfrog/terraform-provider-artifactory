@@ -2,7 +2,6 @@ package virtual
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -10,25 +9,17 @@ import (
 
 const RpmPackageType = "rpm"
 
-var RpmVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-	"primary_keypair_ref": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "Primary keypair used to sign artifacts.",
-	},
-	"secondary_keypair_ref": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-		Description:      "Secondary keypair used to sign artifacts.",
-	},
-}, repository.RepoLayoutRefSchema(Rclass, RpmPackageType))
+var RpmVirtualSchema = utilsdk.MergeMaps(
+	BaseVirtualRepoSchema,
+	repository.PrimaryKeyPairRef,
+	repository.SecondaryKeyPairRef,
+	repository.RepoLayoutRefSchema(Rclass, RpmPackageType),
+)
 
 func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 	type CommonRpmDebianVirtualRepositoryParams struct {
-		PrimaryKeyPairRef   string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
-		SecondaryKeyPairRef string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
+		repository.PrimaryKeyPairRefParam
+		repository.SecondaryKeyPairRefParam
 	}
 
 	type RpmVirtualRepositoryParams struct {
@@ -42,8 +33,12 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		repo := RpmVirtualRepositoryParams{
 			RepositoryBaseParams: UnpackBaseVirtRepo(s, "rpm"),
 			CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
-				PrimaryKeyPairRef:   d.GetString("primary_keypair_ref", false),
-				SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+				PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+					PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+				},
+				SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+					SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+				},
 			},
 		}
 		repo.PackageType = "rpm"

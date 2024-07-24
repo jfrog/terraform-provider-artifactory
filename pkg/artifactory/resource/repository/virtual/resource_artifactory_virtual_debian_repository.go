@@ -15,19 +15,9 @@ const DebianPackageType = "debian"
 var DebianVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	RetrievalCachePeriodSecondsSchema,
+	repository.PrimaryKeyPairRef,
+	repository.SecondaryKeyPairRef,
 	map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Primary keypair used to sign artifacts. Default is empty.",
-		},
-		"secondary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Secondary keypair used to sign artifacts. Default is empty.",
-		},
 		"optional_index_compression_formats": {
 			Type:     schema.TypeSet,
 			Optional: true,
@@ -53,9 +43,9 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 	type DebianVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
+		repository.PrimaryKeyPairRefParam
+		repository.SecondaryKeyPairRefParam
 		OptionalIndexCompressionFormats []string `json:"optionalIndexCompressionFormats"`
-		PrimaryKeyPairRef               string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
-		SecondaryKeyPairRef             string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 		DebianDefaultArchitectures      string   `json:"debianDefaultArchitectures"`
 	}
 
@@ -64,10 +54,14 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
 		repo := DebianVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, DebianPackageType),
-			OptionalIndexCompressionFormats:                  d.GetSet("optional_index_compression_formats"),
-			PrimaryKeyPairRef:                                d.GetString("primary_keypair_ref", false),
-			SecondaryKeyPairRef:                              d.GetString("secondary_keypair_ref", false),
-			DebianDefaultArchitectures:                       d.GetString("debian_default_architectures", false),
+			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			},
+			SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+				SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+			},
+			OptionalIndexCompressionFormats: d.GetSet("optional_index_compression_formats"),
+			DebianDefaultArchitectures:      d.GetString("debian_default_architectures", false),
 		}
 		repo.PackageType = DebianPackageType
 		return &repo, repo.Key, nil

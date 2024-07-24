@@ -10,7 +10,6 @@ import (
 const GoPackageType = "go"
 
 var GoVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-
 	"external_dependencies_enabled": {
 		Type:        schema.TypeBool,
 		Default:     true,

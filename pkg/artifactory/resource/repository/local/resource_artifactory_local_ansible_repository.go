@@ -7,38 +7,37 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const alpinePackageType = "alpine"
+const ansiblePackageType = "ansible"
 
-var AlpineLocalSchema = utilsdk.MergeMaps(
+var AnsibleLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
-	repository.RepoLayoutRefSchema(rclass, alpinePackageType),
+	repository.RepoLayoutRefSchema(rclass, ansiblePackageType),
 	repository.AlpinePrimaryKeyPairRef,
-	repository.CompressionFormats,
 )
 
-type AlpineLocalRepoParams struct {
+type AnsibleLocalRepoParams struct {
 	RepositoryBaseParams
 	repository.PrimaryKeyPairRefParam
 }
 
-func UnpackLocalAlpineRepository(data *schema.ResourceData, rclass string) AlpineLocalRepoParams {
+func UnpackLocalAnsibleRepository(data *schema.ResourceData, rclass string) AnsibleLocalRepoParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
-	return AlpineLocalRepoParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, alpinePackageType),
+	return AnsibleLocalRepoParams{
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, ansiblePackageType),
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		},
 	}
 }
 
-func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
-	var unpackLocalAlpineRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalAlpineRepository(data, rclass)
+func ResourceArtifactoryLocalAnsibleRepository() *schema.Resource {
+	var unpackLocalAnsibleRepo = func(data *schema.ResourceData) (interface{}, string, error) {
+		repo := UnpackLocalAnsibleRepository(data, rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		return &AlpineLocalRepoParams{
+		return &AnsibleLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: alpinePackageType,
 				Rclass:      rclass,
@@ -46,5 +45,5 @@ func ResourceArtifactoryLocalAlpineRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(AlpineLocalSchema, packer.Default(AlpineLocalSchema), unpackLocalAlpineRepo, constructor)
+	return repository.MkResourceSchema(AnsibleLocalSchema, packer.Default(AnsibleLocalSchema), unpackLocalAnsibleRepo, constructor)
 }

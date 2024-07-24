@@ -48,6 +48,7 @@ var PackageTypesLikeGeneric = []string{
 }
 
 var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
+	"ansible",
 	"chef",
 	"conda",
 	"cran",

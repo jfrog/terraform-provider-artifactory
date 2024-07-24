@@ -11,6 +11,15 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	"ansible": {
+		RepoLayoutRef: "ansible-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
 	"bower": {
 		RepoLayoutRef: "bower-default",
 		SupportedRepoTypes: map[string]bool{

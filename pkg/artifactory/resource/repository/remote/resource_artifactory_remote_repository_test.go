@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -71,7 +72,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 }
 
 func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("local-test-repo-basic", "artifactory_remote_debian_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-repo-basic", "artifactory_remote_debian_repository")
 
 	key := fmt.Sprintf("debian-remote.teleport_%d", testutil.RandomInt())
 	remoteRepositoryBasic := fmt.Sprintf(`
@@ -124,6 +125,37 @@ func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 			{
 				Config:      failKey,
 				ExpectError: regexp.MustCompile(".*expected value of key to not contain any of.*"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteAnsibleRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("remote-test-repo-ansible", "artifactory_remote_ansible_repository")
+
+	remoteRepositoryBasic := fmt.Sprintf(`
+		resource "artifactory_remote_ansible_repository" "%s" {
+			key = "%s"
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: remoteRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://galaxy.ansible.com"),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
 			},
 		},
 	})
@@ -452,7 +484,7 @@ func TestAccRemoteHelmOciRepository(t *testing.T) {
 }
 
 func TestAccRemoteHuggingFaceRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("local-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
+	_, fqrn, name := testutil.MkNames("remote-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
 
 	remoteRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_huggingfaceml_repository" "%s" {
@@ -1429,6 +1461,11 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 }
 
 func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
 
 	params := map[string]string{
@@ -1484,6 +1521,11 @@ func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
 }
 
 func TestAccRemoteDisableProxyGH739(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
 	_, fqrn, name := testutil.MkNames("tf-go-remote-", "artifactory_remote_go_repository")
 
 	params := map[string]string{
