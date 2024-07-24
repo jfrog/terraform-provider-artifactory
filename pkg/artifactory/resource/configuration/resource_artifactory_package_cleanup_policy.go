@@ -3,10 +3,8 @@ package configuration
 import (
 	"context"
 	"net/http"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -154,7 +152,7 @@ type PackageCleanupPolicyAPIModel struct {
 	DurationInMinutes int64                                      `json:"durationInMinutes"`
 	Enabled           bool                                       `json:"enabled,omitempty"`
 	SkipTrashcan      bool                                       `json:"skipTrashcan"`
-	ProjectKey        string                                     `json:"projectKey"`
+	ProjectKey        string                                     `json:"projectKey,omitempty"`
 	SearchCriteria    PackageCleanupPolicySearchCriteriaAPIModel `json:"searchCriteria"`
 }
 
@@ -194,14 +192,11 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 				Description: "Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc.",
 			},
 			"project_key": schema.StringAttribute{
-				MarkdownDescription: "The project for which this policy is created.",
-				Optional:            true,
+				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^^[a-z][a-z0-9\-]{1,31}$`),
-						"must be 2 - 32 lowercase alphanumeric and hyphen characters",
-					),
+					validatorfw_string.ProjectKey(),
 				},
+				MarkdownDescription: "The project for which this policy is created.",
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -281,18 +276,22 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 					"created_before_in_months": schema.Int64Attribute{
 						Optional: true,
 						Validators: []validator.Int64{
+							int64validator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("last_downloaded_before_in_months")),
 							int64validator.ConflictsWith(
-								path.MatchRelative().AtName("keep_last_n_versions"),
+								path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
 							),
+							int64validator.AtLeast(1),
 						},
 						MarkdownDescription: "Remove packages based on when they were created.",
 					},
 					"last_downloaded_before_in_months": schema.Int64Attribute{
 						Optional: true,
 						Validators: []validator.Int64{
+							int64validator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("created_before_in_months")),
 							int64validator.ConflictsWith(
-								path.MatchRelative().AtName("keep_last_n_versions"),
+								path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
 							),
+							int64validator.AtLeast(1),
 						},
 						MarkdownDescription: "Remove packages based on when they were last downloaded.",
 					},
@@ -300,11 +299,10 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						Optional: true,
 						Validators: []validator.Int64{
 							int64validator.ConflictsWith(
-								path.MatchRelative().AtName("created_before_in_months"),
+								path.MatchRelative().AtParent().AtName("created_before_in_months"),
+								path.MatchRelative().AtParent().AtName("last_downloaded_before_in_months"),
 							),
-							int64validator.ConflictsWith(
-								path.MatchRelative().AtName("last_downloaded_before_in_months"),
-							),
+							int64validator.AtLeast(1),
 						},
 						MarkdownDescription: "Keep the last Nth versions from being cleaned up.",
 					},
@@ -312,16 +310,8 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 				Required: true,
 			},
 		},
-		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform.",
-	}
-}
-
-func (r PackageCleanupPolicyResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.Conflicting(
-			path.MatchRoot("attribute_one"),
-			path.MatchRoot("attribute_two"),
-		),
+		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform.\n\n" +
+			"->Only available for Artifactory 7.90.1 or later.",
 	}
 }
 

@@ -14,6 +14,19 @@ import (
 )
 
 func TestAccPackageCleanupPolicy_full(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
 	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
 	_, _, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
 
@@ -37,10 +50,10 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
 			created_before_in_months = 1
 			last_downloaded_before_in_months = 6
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
 		}
 	}`
-	// included_packages = ["**"]
-	// excluded_packages = ["com/jfrog/latest"]
 
 	updatedTemp := `
 	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
@@ -62,10 +75,10 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
 			created_before_in_months = 12
 			last_downloaded_before_in_months = 24
+			included_packages = ["com/jfrog", "**"]
+			excluded_packages = ["com/jfrog/latest"]
 		}
 	}`
-	// included_packages = ["com/jfrog", "**"]
-	// excluded_packages = ["com/jfrog/latest"]
 
 	config := util.ExecuteTemplate(
 		policyName,
@@ -103,10 +116,10 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
 				),
@@ -126,11 +139,11 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gradle"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "2"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.1", "foo"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
-					// resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "com/jfrog"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.1", "foo"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "12"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "24"),
 				),
