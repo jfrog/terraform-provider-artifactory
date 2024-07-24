@@ -37,6 +37,20 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		max_unique_tags = 5
 	}
 
+	resource "project" "myproject" {
+		key = "myproj"
+		display_name = "My Project"
+		description  = "My Project"
+		admin_privileges {
+			manage_members   = true
+			manage_resources = true
+			index_resources  = true
+		}
+		max_storage_in_gibibytes   = 10
+		block_deployments_on_limit = false
+		email_notification         = true
+	}
+
 	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
 		key = "{{ .policyName }}"
 		description = "Test policy"
@@ -48,10 +62,11 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		search_criteria = {
 			package_types = ["docker"]
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			created_before_in_months = 1
-			last_downloaded_before_in_months = 6
+			included_projects = [project.myproject.key]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_months = 1
+			last_downloaded_before_in_months = 6
 		}
 	}`
 
@@ -72,11 +87,12 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		
 		search_criteria = {
 			package_types = ["docker", "maven", "gradle"]
-			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			created_before_in_months = 12
-			last_downloaded_before_in_months = 24
+			include_all_repos = true
 			included_packages = ["com/jfrog", "**"]
 			excluded_packages = ["com/jfrog/latest"]
+			include_all_projects = true
+			created_before_in_months = 12
+			last_downloaded_before_in_months = 24
 		}
 	}`
 
@@ -101,7 +117,12 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             testAccPolicyDestroy(fqrn),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		CheckDestroy: testAccPolicyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
