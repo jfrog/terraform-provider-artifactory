@@ -169,6 +169,79 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 	})
 }
 
+func TestAccScopedToken_UpgradeToV1Schema(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-scope-token", "artifactory_scoped_token")
+
+	_, _, username := testutil.MkNames("test-user", "artifactory_user")
+
+	config := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "{{ .username }}" {
+			name              = "{{ .username }}"
+		    email             = "{{ .username }}@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			scopes   = ["applied-permissions/user"]
+			username = artifactory_user.{{ .username }}.name
+		}`,
+		map[string]interface{}{
+			"name":     name,
+			"username": username,
+		},
+	)
+
+	updatedConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "{{ .username }}" {
+			name              = "{{ .username }}"
+		    email             = "{{ .username }}@tempurl.org"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			scopes   = ["applied-permissions/user"]
+			username = artifactory_user.{{ .username }}.name
+			ignore_missing_token_warning = true
+		}`,
+		map[string]interface{}{
+			"name":     name,
+			"username": username,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						Source:            "jfrog/artifactory",
+						VersionConstraint: "11.1.0",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(fqrn, "ignore_missing_token_warning"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "ignore_missing_token_warning", "true"),
+				),
+			},
+		},
+	})
+}
+
 func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 

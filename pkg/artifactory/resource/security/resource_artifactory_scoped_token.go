@@ -405,16 +405,16 @@ func (r *ScopedTokenResource) Configure(ctx context.Context, req resource.Config
 func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var data *ScopedTokenResourceModel
+	var plan *ScopedTokenResourceModel
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	scopes := []string{}
-	if !data.Scopes.IsNull() {
-		scopes = utilfw.StringSetToStrings(data.Scopes)
+	if !plan.Scopes.IsNull() {
+		scopes = utilfw.StringSetToStrings(plan.Scopes)
 	}
 	scopesString := strings.Join(scopes, " ") // Join slice into space-separated string
 	if len(scopesString) > 500 {
@@ -426,8 +426,8 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	audiences := []string{}
-	if !data.Audiences.IsNull() {
-		audiences = utilfw.StringSetToStrings(data.Audiences)
+	if !plan.Audiences.IsNull() {
+		audiences = utilfw.StringSetToStrings(plan.Audiences)
 	}
 	audiencesString := strings.Join(audiences, " ") // Join slice into space-separated string
 	if len(audiencesString) > 255 {
@@ -440,15 +440,15 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Convert from Terraform data model into API data model
 	accessTokenPostBody := AccessTokenPostRequestAPIModel{
-		GrantType:             data.GrantType.ValueString(),
-		Username:              data.Username.ValueString(),
-		ProjectKey:            data.ProjectKey.ValueString(),
+		GrantType:             plan.GrantType.ValueString(),
+		Username:              plan.Username.ValueString(),
+		ProjectKey:            plan.ProjectKey.ValueString(),
 		Scope:                 scopesString,
-		ExpiresIn:             data.ExpiresIn.ValueInt64(),
-		Refreshable:           data.Refreshable.ValueBool(),
-		Description:           data.Description.ValueString(),
+		ExpiresIn:             plan.ExpiresIn.ValueInt64(),
+		Refreshable:           plan.Refreshable.ValueBool(),
+		Description:           plan.Description.ValueString(),
 		Audience:              audiencesString,
-		IncludeReferenceToken: data.IncludeReferenceToken.ValueBool(),
+		IncludeReferenceToken: plan.IncludeReferenceToken.ValueBool(),
 	}
 
 	postResult := AccessTokenPostResponseAPIModel{}
@@ -504,21 +504,21 @@ func (r *ScopedTokenResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Assign the attribute values for the resource in the state
-	resp.Diagnostics.Append(data.PostResponseToState(ctx, &postResult, &accessTokenPostBody, &getResult)...)
+	resp.Diagnostics.Append(plan.PostResponseToState(ctx, &postResult, &accessTokenPostBody, &getResult)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // All attributes are assigned in data
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...) // All attributes are assigned in data
 }
 
 func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var data *ScopedTokenResourceModel
+	var state *ScopedTokenResourceModel
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -528,7 +528,7 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
-		SetPathParam("id", data.Id.ValueString()).
+		SetPathParam("id", state.Id.ValueString()).
 		SetResult(&accessToken).
 		SetError(&artifactoryError).
 		Get("access/api/v1/tokens/{id}")
@@ -541,9 +541,9 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	if response.StatusCode() == http.StatusNotFound {
-		if !data.IgnoreMissingTokenWarning.ValueBool() {
+		if !state.IgnoreMissingTokenWarning.ValueBool() {
 			resp.Diagnostics.AddWarning(
-				fmt.Sprintf("Scoped token %s not found or not created", data.Id.ValueString()),
+				fmt.Sprintf("Scoped token %s not found or not created", state.Id.ValueString()),
 				"Access Token would not be saved by Artifactory if 'expires_in' is less than the persistence threshold value (default to 10800 seconds) set in Access configuration. See https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-PersistencyThreshold for details."+response.String(),
 			)
 		}
@@ -558,25 +558,38 @@ func (r *ScopedTokenResource) Read(ctx context.Context, req resource.ReadRequest
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	data.GetResponseToState(ctx, &accessToken)
+	state.GetResponseToState(ctx, &accessToken)
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ScopedTokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Scoped tokens are not updatable
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var plan *ScopedTokenResourceModel
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save data into Terraform state
+	//
+	// We only care about updating state for 'ignore_missing_token_warning' attribute
+	// All other attributes should trigger a recreation instead
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *ScopedTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var data ScopedTokenResourceModel
+	var state ScopedTokenResourceModel
 	respError := AccessTokenErrorResponseAPIModel{}
 
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	id := data.Id.ValueString()
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	id := state.Id.ValueString()
 
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("id", id).
