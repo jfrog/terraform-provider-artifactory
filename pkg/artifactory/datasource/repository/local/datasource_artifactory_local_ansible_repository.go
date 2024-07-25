@@ -7,19 +7,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryLocalAnsibleRepository() *schema.Resource {
+func DataSourceArtifactoryLocalAlpineRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		return &local.AnsibleLocalRepoParams{
+		return &local.AlpineLocalRepoParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: "ansible",
+				PackageType: "alpine",
 				Rclass:      rclass,
 			},
 		}, nil
 	}
 
 	return &schema.Resource{
-		Schema:      local.AnsibleLocalSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.AnsibleLocalSchema), constructor),
-		Description: "Data source for a local Ansible repository",
+		Schema:      local.AlpineLocalSchema,
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.AlpineLocalSchema), constructor),
+		Description: "Data source for a local alpine repository",
 	}
 }

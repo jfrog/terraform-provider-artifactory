@@ -66,7 +66,7 @@ func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocal
 			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		},
 		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
-			SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
+			SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
 		},
 		RootDepth:               d.GetInt("yum_root_depth", false),
 		CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
