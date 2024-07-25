@@ -1,3 +1,9 @@
+## 11.2.2 (July 25, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.7.3
+
+BUG FIXES:
+
+* resource/artifactory_group: Fix updating `name` attribute results in API error. Updating this attribute now will trigger a deletion and recreation of the resource. Issue: [#1035](https://github.com/jfrog/terraform-provider-artifactory/issues/1035) PR: [#1037](https://github.com/jfrog/terraform-provider-artifactory/pull/1037)
+
 ## 11.2.1 (July 22, 2024). Tested on Artifactory 7.84.17 with Terraform 1.9.2 and OpenTofu 1.7.3
 
 BUG FIXES:

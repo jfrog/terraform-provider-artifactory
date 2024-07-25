@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/security"
@@ -500,6 +501,47 @@ func TestAccGroup_full_update(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(groupName, "name"),
 				ImportStateVerifyIgnore: []string{"detach_all_users"}, // this attribute is not being sent via API, can't be imported
+			},
+		},
+	})
+}
+
+func TestAccGroup_update_name(t *testing.T) {
+	_, fqrn, groupName := testutil.MkNames("test-group-name-", "artifactory_group")
+
+	temp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name  = "{{ .groupName }}"
+		}
+	`
+	config := util.ExecuteTemplate(groupName, temp, map[string]string{"groupName": groupName})
+
+	updatedTemp := `
+		resource "artifactory_group" "{{ .groupName }}" {
+			name  = "{{ .groupName }}-updated"
+		}
+	`
+
+	updatedConfig := util.ExecuteTemplate(groupName, updatedTemp, map[string]string{"groupName": groupName})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", groupName),
+				),
+			},
+			{
+				Config: updatedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
