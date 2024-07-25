@@ -2,7 +2,9 @@ package configuration
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -27,6 +29,8 @@ const (
 	PackageCleanupPolicyEnablementEndpointPath = "artifactory/api/cleanup/packages/policies/{policyKey}/enablement"
 )
 
+var cleanupPolicySupportedPackageType = []string{"conan", "docker", "generic", "gradle", "maven", "npm", "nuget", "rpm"}
+
 func NewPackageCleanupPolicyResource() resource.Resource {
 	return &PackageCleanupPolicyResource{
 		TypeName: "artifactory_package_cleanup_policy",
@@ -45,7 +49,6 @@ type PackageCleanupPolicyResourceModel struct {
 	DurationInMinutes types.Int64  `tfsdk:"duration_in_minutes"`
 	Enabled           types.Bool   `tfsdk:"enabled"`
 	SkipTrashcan      types.Bool   `tfsdk:"skip_trashcan"`
-	ProjectKey        types.String `tfsdk:"project_key"`
 	SearchCriteria    types.Object `tfsdk:"search_criteria"`
 }
 
@@ -54,11 +57,10 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 
 	attrs := r.SearchCriteria.Attributes()
 	searchCriteria := PackageCleanupPolicySearchCriteriaAPIModel{
-		IncludeAllRepos:              attrs["include_all_repos"].(types.Bool).ValueBool(),
-		IncludeAllProjects:           attrs["include_all_projects"].(types.Bool).ValueBool(),
-		CreatedBeforeInMonths:        attrs["created_before_in_months"].(types.Int64).ValueInt64(),
-		LastDownloadedBeforeInMonths: attrs["last_downloaded_before_in_months"].(types.Int64).ValueInt64(),
-		KeepLastNVerions:             attrs["keep_last_n_versions"].(types.Int64).ValueInt64(),
+		IncludeAllProjects:           attrs["include_all_projects"].(types.Bool).ValueBoolPointer(),
+		CreatedBeforeInMonths:        attrs["created_before_in_months"].(types.Int64).ValueInt64Pointer(),
+		LastDownloadedBeforeInMonths: attrs["last_downloaded_before_in_months"].(types.Int64).ValueInt64Pointer(),
+		KeepLastNVerions:             attrs["keep_last_n_versions"].(types.Int64).ValueInt64Pointer(),
 	}
 
 	diags.Append(attrs["package_types"].(types.Set).ElementsAs(ctx, &searchCriteria.PackageTypes, false)...)
@@ -70,7 +72,6 @@ func (r PackageCleanupPolicyResourceModel) toAPIModel(ctx context.Context, apiMo
 
 	*apiModel = PackageCleanupPolicyAPIModel{
 		Key:               r.Key.ValueString(),
-		ProjectKey:        r.ProjectKey.ValueString(),
 		Description:       r.Description.ValueString(),
 		CronExpression:    r.CronExpression.ValueString(),
 		DurationInMinutes: r.DurationInMinutes.ValueInt64(),
@@ -85,7 +86,6 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 	diags := diag.Diagnostics{}
 
 	r.Key = types.StringValue(apiModel.Key)
-	r.ProjectKey = types.StringValue(apiModel.ProjectKey)
 	r.Description = types.StringValue(apiModel.Description)
 	r.CronExpression = types.StringValue(apiModel.CronExpression)
 	r.DurationInMinutes = types.Int64Value(apiModel.DurationInMinutes)
@@ -93,27 +93,66 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 	r.SkipTrashcan = types.BoolValue(apiModel.SkipTrashcan)
 
 	packageTypes, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.PackageTypes)
-	diags.Append(ds...)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
 
 	repos, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.Repos)
-	diags.Append(ds...)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
 
-	excludedRepos, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedRepos)
-	diags.Append(ds...)
+	excludedRepos := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.ExcludedRepos != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedRepos)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		excludedRepos = set
+	}
 
 	includedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedPackages)
-	diags.Append(ds...)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
 
-	excludedPackages, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackages)
-	diags.Append(ds...)
+	excludedPackages := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.ExcludedPackages != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackages)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		excludedPackages = set
+	}
 
 	includedProjects, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedProjects)
-	diags.Append(ds...)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
+
+	includeAllProjects := types.BoolNull()
+	if apiModel.SearchCriteria.IncludeAllProjects != nil {
+		includeAllProjects = types.BoolPointerValue(apiModel.SearchCriteria.IncludeAllProjects)
+	}
+
+	createdBeforeInMonths := types.Int64Null()
+	if apiModel.SearchCriteria.CreatedBeforeInMonths != nil {
+		createdBeforeInMonths = types.Int64PointerValue(apiModel.SearchCriteria.CreatedBeforeInMonths)
+	}
+
+	lastDownloadedBeforeInMonths := types.Int64Null()
+	if apiModel.SearchCriteria.LastDownloadedBeforeInMonths != nil {
+		lastDownloadedBeforeInMonths = types.Int64PointerValue(apiModel.SearchCriteria.LastDownloadedBeforeInMonths)
+	}
+
+	keepLastNVerions := types.Int64Null()
+	if apiModel.SearchCriteria.KeepLastNVerions != nil {
+		keepLastNVerions = types.Int64PointerValue(apiModel.SearchCriteria.KeepLastNVerions)
+	}
 
 	searchCriteria, ds := types.ObjectValue(
 		map[string]attr.Type{
 			"package_types":                    types.SetType{ElemType: types.StringType},
-			"include_all_repos":                types.BoolType,
 			"repos":                            types.SetType{ElemType: types.StringType},
 			"excluded_repos":                   types.SetType{ElemType: types.StringType},
 			"included_packages":                types.SetType{ElemType: types.StringType},
@@ -126,19 +165,20 @@ func (r *PackageCleanupPolicyResourceModel) fromAPIModel(ctx context.Context, ap
 		},
 		map[string]attr.Value{
 			"package_types":                    packageTypes,
-			"include_all_repos":                types.BoolValue(apiModel.SearchCriteria.IncludeAllRepos),
 			"repos":                            repos,
 			"excluded_repos":                   excludedRepos,
 			"included_packages":                includedPackages,
 			"excluded_packages":                excludedPackages,
-			"include_all_projects":             types.BoolValue(apiModel.SearchCriteria.IncludeAllProjects),
+			"include_all_projects":             includeAllProjects,
 			"included_projects":                includedProjects,
-			"created_before_in_months":         types.Int64Value(apiModel.SearchCriteria.CreatedBeforeInMonths),
-			"last_downloaded_before_in_months": types.Int64Value(apiModel.SearchCriteria.LastDownloadedBeforeInMonths),
-			"keep_last_n_versions":             types.Int64Value(apiModel.SearchCriteria.KeepLastNVerions),
+			"created_before_in_months":         createdBeforeInMonths,
+			"last_downloaded_before_in_months": lastDownloadedBeforeInMonths,
+			"keep_last_n_versions":             keepLastNVerions,
 		},
 	)
-	diags.Append(ds...)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
 
 	r.SearchCriteria = searchCriteria
 
@@ -152,22 +192,20 @@ type PackageCleanupPolicyAPIModel struct {
 	DurationInMinutes int64                                      `json:"durationInMinutes"`
 	Enabled           bool                                       `json:"enabled,omitempty"`
 	SkipTrashcan      bool                                       `json:"skipTrashcan"`
-	ProjectKey        string                                     `json:"projectKey,omitempty"`
 	SearchCriteria    PackageCleanupPolicySearchCriteriaAPIModel `json:"searchCriteria"`
 }
 
 type PackageCleanupPolicySearchCriteriaAPIModel struct {
-	PackageTypes                 []string `json:"packageTypes"`
-	IncludeAllRepos              bool     `json:"includeAllRepos"`
-	Repos                        []string `json:"repos"`
-	ExcludedRepos                []string `json:"excludedRepos"`
-	IncludedPackages             []string `json:"includedPackages"`
-	ExcludedPackages             []string `json:"excludedPackages,omitempty"`
-	IncludeAllProjects           bool     `json:"includeAllProjects"`
-	IncludedProjects             []string `json:"includedProjects"`
-	CreatedBeforeInMonths        int64    `json:"createdBeforeInMonths,omitempty"`
-	LastDownloadedBeforeInMonths int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
-	KeepLastNVerions             int64    `json:"keepLastNVerions"`
+	PackageTypes                 []string  `json:"packageTypes"`
+	Repos                        []string  `json:"repos"`
+	ExcludedRepos                *[]string `json:"excludedRepos,omitempty"`
+	IncludedPackages             []string  `json:"includedPackages"`
+	ExcludedPackages             *[]string `json:"excludedPackages,omitempty"`
+	IncludeAllProjects           *bool     `json:"includeAllProjects,omitempty"`
+	IncludedProjects             *[]string `json:"includedProjects,omitempty"`
+	CreatedBeforeInMonths        *int64    `json:"createdBeforeInMonths,omitempty"`
+	LastDownloadedBeforeInMonths *int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
+	KeepLastNVerions             *int64    `json:"keepLastNVerions,omitempty"`
 }
 
 type PackageCleanupPolicyEnablementAPIModel struct {
@@ -191,13 +229,6 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 				},
 				Description: "Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc.",
 			},
-			"project_key": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					validatorfw_string.ProjectKey(),
-				},
-				MarkdownDescription: "The project for which this policy is created.",
-			},
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
@@ -206,23 +237,23 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 				Validators: []validator.String{
 					validatorfw_string.IsCron(),
 				},
-				MarkdownDescription: "Cron expression to set a schedule for policy execution. If unset, the policy can only be triggered manually.",
+				MarkdownDescription: "The Cron expression that sets the schedule of policy execution. For example, `0 0 2 * * ?` executes the policy every day at 02:00 AM. The minimum recurrent time for policy execution is 6 hours.",
 			},
 			"duration_in_minutes": schema.Int64Attribute{
 				Optional:            true,
-				MarkdownDescription: "Maximum execution duration that the policy has to run.",
+				MarkdownDescription: "Enable and select the maximum duration for policy execution. Note: using this setting can cause the policy to stop before completion.",
 			},
 			"enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
-				MarkdownDescription: "Enables or disabled the package cleanup policy. This allows the user to run the policy manually. If a policy has a valid cron expression, then it will be scheduled for execution based on it. If a policy is disabled, its future executions will be unscheduled.",
+				MarkdownDescription: "Enables or disabled the package cleanup policy. This allows the user to run the policy manually. If a policy has a valid cron expression, then it will be scheduled for execution based on it. If a policy is disabled, its future executions will be unscheduled. Defaults to `true`",
 			},
 			"skip_trashcan": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
-				MarkdownDescription: "Skips the step of transferring packages to the Trash Can repository when packages are deleted. Enabling this setting results in packages being permanently deleted from Artifactory after the cleanup policy is executed.",
+				MarkdownDescription: "When enabled, deleted packages are permanently removed from Artifactory without an option to restore them. Defaults to `false`",
 			},
 			"search_criteria": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -231,23 +262,26 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						Required:    true,
 						Validators: []validator.Set{
 							setvalidator.ValueStringsAre(
-								stringvalidator.OneOf("docker", "maven", "gradle"),
+								stringvalidator.OneOf(cleanupPolicySupportedPackageType...),
 							),
 						},
-						MarkdownDescription: "Types of packages to be removed. Support: `docker`, `maven`, and `gradle`.",
-					},
-					"include_all_repos": schema.BoolAttribute{
-						Optional: true,
+						MarkdownDescription: fmt.Sprintf("Types of packages to be removed. Support: %s.", strings.Join(cleanupPolicySupportedPackageType, ", ")),
 					},
 					"repos": schema.SetAttribute{
-						ElementType:         types.StringType,
-						Required:            true,
-						MarkdownDescription: "List of repositories to clean up.",
+						ElementType: types.StringType,
+						Required:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
+						},
+						MarkdownDescription: "Specify patterns for repository names or explicit repository names. For including all repos use `**`. Example: `repos = [\"**\"]`",
 					},
 					"excluded_repos": schema.SetAttribute{
-						ElementType:         types.StringType,
-						Optional:            true,
-						MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific repositories.",
+						ElementType: types.StringType,
+						Optional:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
+						},
+						MarkdownDescription: "Specify patterns for repository names or explicit repository names that you want excluded from the policy. It can not accept any pattern only list of specific repositories.",
 					},
 					"included_packages": schema.SetAttribute{
 						ElementType: types.StringType,
@@ -255,12 +289,15 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						Validators: []validator.Set{
 							setvalidator.SizeBetween(1, 1),
 						},
-						MarkdownDescription: "Pattern for local repository name(s) which to be cleaned up. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example -> \"includedPackages\": [\"**\"]",
+						MarkdownDescription: "Specify a pattern for a package name or an explicit package name. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example: `included_packages = [\"**\"]`",
 					},
 					"excluded_packages": schema.SetAttribute{
-						ElementType:         types.StringType,
-						Optional:            true,
-						MarkdownDescription: "List of local repository name(s) excludes from being cleaned up. It can not accept any pattern only list of specific packages.",
+						ElementType: types.StringType,
+						Optional:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
+						},
+						MarkdownDescription: "Specify explicit package names that you want excluded from the policy.",
 					},
 					"include_all_projects": schema.BoolAttribute{
 						Optional: true,
@@ -269,9 +306,9 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 						ElementType: types.StringType,
 						Optional:    true,
 						Validators: []validator.Set{
-							setvalidator.SizeBetween(1, 1),
+							setvalidator.SizeAtLeast(1),
 						},
-						MarkdownDescription: "List of projects name(s) inccludes in being cleaned up.",
+						MarkdownDescription: "List of projects name(s) to apply the policy to.",
 					},
 					"created_before_in_months": schema.Int64Attribute{
 						Optional: true,
@@ -304,13 +341,14 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 							),
 							int64validator.AtLeast(1),
 						},
-						MarkdownDescription: "Keep the last Nth versions from being cleaned up.",
+						MarkdownDescription: "Select the number of latest version to keep. The policy will remove all versions (based on creation date) prior to the selected number. Some package types may not be supported. [Learn more](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies/package-types-coverage)",
 					},
 				},
 				Required: true,
 			},
 		},
-		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform.\n\n" +
+		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. " +
+			"See [Rentation Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
 			"->Only available for Artifactory 7.90.1 or later.",
 	}
 }
