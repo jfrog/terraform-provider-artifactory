@@ -144,6 +144,9 @@ func (m *VaultConfigurationResourceModel) fromAPIModel(ctx context.Context, apiM
 			"secret_id":       secretID, // use resource value as API returns hashed value
 		},
 	)
+	if ds.HasError() {
+		diags.Append(ds...)
+	}
 
 	mounts := lo.Map(
 		apiModel.Config.Mounts,
