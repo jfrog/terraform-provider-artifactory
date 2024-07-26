@@ -2,7 +2,6 @@ package virtual
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -13,20 +12,13 @@ const AlpinePackageType = "alpine"
 var AlpineVirtualSchema = utilsdk.MergeMaps(
 	BaseVirtualRepoSchema,
 	RetrievalCachePeriodSecondsSchema,
-	map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Primary keypair used to sign artifacts. Default value is empty.",
-		},
-	},
+	repository.PrimaryKeyPairRef,
 	repository.RepoLayoutRefSchema(Rclass, AlpinePackageType))
 
 func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	type AlpineVirtualRepositoryParams struct {
 		RepositoryBaseParamsWithRetrievalCachePeriodSecs
-		PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+		repository.PrimaryKeyPairRefParam
 	}
 
 	var unpackAlpineVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -34,7 +26,9 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 
 		repo := AlpineVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, AlpinePackageType),
-			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			},
 		}
 		repo.PackageType = AlpinePackageType
 		return &repo, repo.Key, nil

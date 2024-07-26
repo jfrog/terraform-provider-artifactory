@@ -11,17 +11,9 @@ const debianPackageType = "debian"
 
 var DebianLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
+	repository.PrimaryKeyPairRef,
+	repository.SecondaryKeyPairRef,
 	map[string]*schema.Schema{
-		"primary_keypair_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Used to sign index files in Debian artifacts. ",
-		},
-		"secondary_keypair_ref": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Used to sign index files in Debian artifacts. ",
-		},
 		"trivial_layout": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -36,18 +28,22 @@ var DebianLocalSchema = utilsdk.MergeMaps(
 
 type DebianLocalRepositoryParams struct {
 	RepositoryBaseParams
+	repository.PrimaryKeyPairRefParam
+	repository.SecondaryKeyPairRefParam
 	TrivialLayout           bool     `hcl:"trivial_layout" json:"debianTrivialLayout"`
 	IndexCompressionFormats []string `hcl:"index_compression_formats" json:"optionalIndexCompressionFormats,omitempty"`
-	PrimaryKeyPairRef       string   `hcl:"primary_keypair_ref" json:"primaryKeyPairRef,omitempty"`
-	SecondaryKeyPairRef     string   `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef,omitempty"`
 }
 
 func UnpackLocalDebianRepository(data *schema.ResourceData, rclass string) DebianLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return DebianLocalRepositoryParams{
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+		},
+		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+			SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+		},
 		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, debianPackageType),
-		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
-		SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
 		TrivialLayout:           d.GetBool("trivial_layout", false),
 		IndexCompressionFormats: d.GetSet("index_compression_formats"),
 	}

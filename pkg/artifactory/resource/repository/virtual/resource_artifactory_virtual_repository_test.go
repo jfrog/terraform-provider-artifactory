@@ -835,6 +835,13 @@ func TestAccVirtualAlpineRepository(t *testing.T) {
 	}))
 }
 
+func TestAccVirtualAnsibleRepository(t *testing.T) {
+	resource.Test(mkNewVirtualTestCase("ansible", t, map[string]interface{}{
+		"description":                    "ansible virtual repository public description testing.",
+		"retrieval_cache_period_seconds": 650,
+	}))
+}
+
 func TestAccVirtualAlpineRepositoryZeroRetrievalPeriod(t *testing.T) {
 	resource.Test(mkNewVirtualTestCase("alpine", t, map[string]interface{}{
 		"description":                    "alpine virtual repository public description testing.",

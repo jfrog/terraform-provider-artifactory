@@ -13,6 +13,8 @@ const rpmPackageType = "rpm"
 
 var RpmLocalSchema = utilsdk.MergeMaps(
 	BaseLocalRepoSchema,
+	repository.PrimaryKeyPairRef,
+	repository.SecondaryKeyPairRef,
 	map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
@@ -42,42 +44,34 @@ var RpmLocalSchema = utilsdk.MergeMaps(
 				"the group definitions as part of the calculated RPM metadata, as well as automatically generating a " +
 				"gzipped version of the group files, if required.",
 		},
-		"primary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Primary keypair used to sign artifacts.",
-		},
-		"secondary_keypair_ref": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      "Secondary keypair used to sign artifacts.",
-		},
 	},
 	repository.RepoLayoutRefSchema(rclass, rpmPackageType),
 )
 
 type RpmLocalRepositoryParams struct {
 	RepositoryBaseParams
+	repository.PrimaryKeyPairRefParam
+	repository.SecondaryKeyPairRefParam
 	RootDepth               int    `hcl:"yum_root_depth" json:"yumRootDepth"`
 	CalculateYumMetadata    bool   `hcl:"calculate_yum_metadata" json:"calculateYumMetadata"`
 	EnableFileListsIndexing bool   `hcl:"enable_file_lists_indexing" json:"enableFileListsIndexing"`
 	GroupFileNames          string `hcl:"yum_group_file_names" json:"yumGroupFileNames"`
-	PrimaryKeyPairRef       string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
-	SecondaryKeyPairRef     string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 }
 
 func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return RpmLocalRepositoryParams{
-		RepositoryBaseParams:    UnpackBaseRepo(rclass, data, rpmPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(rclass, data, rpmPackageType),
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+		},
+		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+			SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+		},
 		RootDepth:               d.GetInt("yum_root_depth", false),
 		CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
 		EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
 		GroupFileNames:          d.GetString("yum_group_file_names", false),
-		PrimaryKeyPairRef:       d.GetString("primary_keypair_ref", false),
-		SecondaryKeyPairRef:     d.GetString("secondary_keypair_ref", false),
 	}
 }
 

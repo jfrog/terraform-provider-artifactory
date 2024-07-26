@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"golang.org/x/exp/slices"
@@ -109,6 +110,41 @@ var CompressionFormats = map[string]*schema.Schema{
 		Set:      schema.HashString,
 		Optional: true,
 	},
+}
+
+var AlpinePrimaryKeyPairRef = map[string]*schema.Schema{
+	"primary_keypair_ref": {
+		Type:     schema.TypeString,
+		Optional: true,
+		Description: "Used to sign index files in Alpine Linux repositories. " +
+			"See: https://www.jfrog.com/confluence/display/JFROG/Alpine+Linux+Repositories#AlpineLinuxRepositories-SigningAlpineLinuxIndex",
+	},
+}
+
+var PrimaryKeyPairRef = map[string]*schema.Schema{
+	"primary_keypair_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "Primary keypair used to sign artifacts. Default value is empty.",
+	},
+}
+
+var SecondaryKeyPairRef = map[string]*schema.Schema{
+	"secondary_keypair_ref": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "Secondary keypair used to sign artifacts.",
+	},
+}
+
+type PrimaryKeyPairRefParam struct {
+	PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+}
+
+type SecondaryKeyPairRefParam struct {
+	SecondaryKeyPairRef string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 }
 
 type ContentSynchronisation struct {

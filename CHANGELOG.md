@@ -1,3 +1,16 @@
+## 11.3.0 (July 26, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.7.3
+
+IMPROVEMENTS:
+
+**New Data Source and Resource:**
+
+* `artifactory_local_ansible_repository`
+* `artifactory_remote_ansible_repository`
+* `artifactory_virtual_ansible_repository`
+* `artifactory_federated_ansible_repository`
+
+`Ansible` package type is supported in Artfactory 7.90.1 and later. 
+
 ## 11.2.2 (July 25, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.7.3
 
 BUG FIXES:

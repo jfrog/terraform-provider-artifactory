@@ -9,30 +9,39 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-type GenericRepositoryParams struct {
+type AnsibleRepositoryParams struct {
 	local.RepositoryBaseParams
-	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+	Members []Member `hcl:"member" json:"members"`
+	repository.PrimaryKeyPairRefParam
 }
 
-func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
-	var genericSchema = utilsdk.MergeMaps(
+func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
+	packageType := "ansible"
+
+	var ansibleSchema = utilsdk.MergeMaps(
 		local.GetGenericRepoSchema(packageType),
 		federatedSchema,
+		repository.AlpinePrimaryKeyPairRef,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := GenericRepositoryParams{
+		d := &utilsdk.ResourceData{ResourceData: data}
+
+		repo := AnsibleRepositoryParams{
 			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, packageType),
-			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
+			Members:              unpackMembers(data),
+			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			},
 		}
 		return repo, repo.Id(), nil
 	}
 
-	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
-		members := repo.(*GenericRepositoryParams).Members
+	var packMembers = func(repo interface{}, d *schema.ResourceData) error {
+		members := repo.(*AnsibleRepositoryParams).Members
 		return PackMembers(members, d)
 	}
 
@@ -43,11 +52,11 @@ func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.R
 				predicate.Ignore("member", "terraform_type"),
 			),
 		),
-		packGenericMembers,
+		packMembers,
 	)
 
 	constructor := func() (interface{}, error) {
-		return &GenericRepositoryParams{
+		return &AnsibleRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(packageType),
 				Rclass:      rclass,
@@ -55,5 +64,5 @@ func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.R
 		}, nil
 	}
 
-	return mkResourceSchema(genericSchema, pkr, unpackFederatedRepository, constructor)
+	return mkResourceSchema(ansibleSchema, pkr, unpackFederatedRepository, constructor)
 }

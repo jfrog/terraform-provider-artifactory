@@ -61,6 +61,42 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 	}
 }
 
+func TestAccDataSourceRemoteAnsibleRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("ansible-remote", "data.artifactory_remote_ansible_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	config := util.ExecuteTemplate(
+		"TestAccDataSourceRemoteAnsibleRepository",
+		`resource "artifactory_remote_ansible_repository" "{{ .name }}" {
+		    key = "{{ .name }}"
+		    url = "http://tempurl.org"
+		}
+
+		data "artifactory_remote_ansible_repository" "{{ .name }}" {
+		    key = artifactory_remote_ansible_repository.{{ .name }}.id
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "ansible"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "ansible-default"),
+					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("bower-remote", "data.artifactory_remote_bower_repository")
 	params := map[string]interface{}{
