@@ -55,7 +55,7 @@ type ReleaseBundleV2ResourceModel struct {
 	ServiceID                    types.String `tfsdk:"service_id"`
 }
 
-func (m ReleaseBundleV2ResourceModel) toAPIModel(ctx context.Context, apiModel *ReleaseBundleV2RequestAPIModel) (diags diag.Diagnostics) {
+func (m ReleaseBundleV2ResourceModel) toAPIModel(_ context.Context, apiModel *ReleaseBundleV2RequestAPIModel) (diags diag.Diagnostics) {
 	sourceType := m.SourceType.ValueString()
 	source := ReleaseBundleV2SourceAPIModel{
 		AQL:            "",
