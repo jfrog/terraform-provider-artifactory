@@ -205,17 +205,19 @@ func CreateRepo(t *testing.T, repo string, rclass string, packageType string,
 	restyClient := GetTestResty(t)
 
 	type Repository struct {
-		Rclass                  string `json:"rclass"`
-		PackageType             string `json:"packageType"`
-		HandleReleases          bool   `json:"handleReleases"`
-		HandleSnapshots         bool   `json:"handleSnapshots"`
-		SnapshotVersionBehavior string `json:"snapshotVersionBehavior"`
-		XrayIndex               bool   `json:"xrayIndex"`
+		Rclass                  string   `json:"rclass"`
+		PackageType             string   `json:"packageType"`
+		Environments            []string `json:"environments"`
+		HandleReleases          bool     `json:"handleReleases"`
+		HandleSnapshots         bool     `json:"handleSnapshots"`
+		SnapshotVersionBehavior string   `json:"snapshotVersionBehavior"`
+		XrayIndex               bool     `json:"xrayIndex"`
 	}
 
 	r := Repository{}
 	r.Rclass = rclass
 	r.PackageType = packageType
+	r.Environments = []string{"DEV"}
 	r.HandleReleases = handleReleases
 	r.HandleSnapshots = handleSnapshots
 	r.SnapshotVersionBehavior = "unique"

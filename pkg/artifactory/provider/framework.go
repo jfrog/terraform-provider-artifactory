@@ -18,6 +18,7 @@ import (
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/datasource/repository"
 	rs "github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/lifecycle"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
@@ -218,6 +219,8 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		configuration.NewPropertySetResource,
 		configuration.NewProxyResource,
 		configuration.NewRepositoryLayoutResource,
+		lifecycle.NewReleaseBundleV2Resource,
+		lifecycle.NewReleaseBundleV2PromotionResource,
 	}
 }
 

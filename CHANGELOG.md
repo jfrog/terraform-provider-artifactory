@@ -1,6 +1,17 @@
+## 11.4.0 (July 31, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.8.0
+
+FEATURES:
+
+**New Resource:**
+
+* `artifactory_release_bundle_v2`
+* `artifactory_release_bundle_v2_promotion`
+
+PR: [#1040](https://github.com/jfrog/terraform-provider-artifactory/pull/1040)
+
 ## 11.3.0 (July 26, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.7.3
 
-IMPROVEMENTS:
+FEATURES:
 
 **New Data Source and Resource:**
 
@@ -26,7 +37,7 @@ BUG FIXES:
 
 ## 11.2.0 (July 16, 2024). Tested on Artifactory 7.84.17 with Terraform 1.9.2 and OpenTofu 1.7.3
 
-IMPROVEMENTS:
+FEATURES:
 
 * **New Resource:**
   * `artifactory_destination_webhook`
@@ -61,15 +72,15 @@ NOTES:
 
 * provider: `check_license` attribute is deprecated and provider no longer checks Artifactory license during initialization. It will be removed in the next major version release.
 
-IMPROVEMENTS:
+FEATURES:
 
 * **New Resource:** `artifactory_vault_configuration` PR: [#1008](https://github.com/jfrog/terraform-provider-artifactory/pull/1008)
-* resource/artifactory_remote_/*/_repository: Add `archive_browsing_enabled` attribute to all remote repository resources. Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
+* resource/artifactory_remote_\*\_repository: Add `archive_browsing_enabled` attribute to all remote repository resources. Issue: [#999](https://github.com/jfrog/terraform-provider-artifactory/issues/999) PR: [#1003](https://github.com/jfrog/terraform-provider-artifactory/pull/1003)
 
 BUG FIXES:
 
 * resource/artifactory_virtual_bower_repository, resource/artifactory_virtual_npm_repository: Fix `external_dependencies_patterns` attribute set to be force new, which causes the resource to be recreated when attribute value changes. Issue: [#1004](https://github.com/jfrog/terraform-provider-artifactory/issues/1004) PR: [#1005](https://github.com/jfrog/terraform-provider-artifactory/pull/1005)
-* resource/artifactory_/*/_user: Allow `+` character for `name` attribute. This is allowed in SaaS instance but currently not for self-hosted. PR: [#1007](https://github.com/jfrog/terraform-provider-artifactory/pull/1007)
+* resource/artifactory_\*\_user: Allow `+` character for `name` attribute. This is allowed in SaaS instance but currently not for self-hosted. PR: [#1007](https://github.com/jfrog/terraform-provider-artifactory/pull/1007)
 
 ## 11.0.0 (June 6, 2024). Tested on Artifactory 7.84.14 with Terraform 1.8.5 and OpenTofu 1.7.2
 
