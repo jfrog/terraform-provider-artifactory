@@ -77,6 +77,7 @@ type JavaRemoteRepo struct {
 	HandleSnapshots              bool   `json:"handleSnapshots"`
 	SuppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks"`
 	RejectInvalidJars            bool   `json:"rejectInvalidJars"`
+	MaxUniqueSnapshots           int    `json:"maxUniqueSnapshots"`
 }
 
 type RepositoryVcsParams struct {
@@ -458,6 +459,15 @@ func JavaRemoteSchema(isResource bool, packageType string, suppressPom bool) map
 				Default:     false,
 				Description: `Reject the caching of jar files that are found to be invalid. For example, pseudo jars retrieved behind a "captive portal". Default value is 'false'.`,
 			},
+			"max_unique_snapshots": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          0,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+				Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
+					"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
+					"no limit, and unique snapshots are not cleaned up.",
+			},
 		},
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
@@ -554,6 +564,7 @@ func UnpackJavaRemoteRepo(s *schema.ResourceData, repoType string) JavaRemoteRep
 		HandleSnapshots:              d.GetBool("handle_snapshots", false),
 		SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
 		RejectInvalidJars:            d.GetBool("reject_invalid_jars", false),
+		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
 	}
 }
 
