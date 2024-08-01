@@ -17,7 +17,7 @@ PKG_VERSION_PATH=github.com/jfrog/terraform-provider-${PRODUCT}/v${PROVIDER_MAJO
 TERRAFORM_CLI?=terraform
 
 REGISTRY_HOST=registry.terraform.io
-TF_ACC_PROVIDER_NAMESPACE="hashicorp"
+TF_ACC_PROVIDER_NAMESPACE=hashicorp
 
 ifeq ($(TERRAFORM_CLI), tofu)
 REGISTRY_HOST=registry.opentofu.org
