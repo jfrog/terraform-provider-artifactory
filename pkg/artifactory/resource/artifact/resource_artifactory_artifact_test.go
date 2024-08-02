@@ -1,4 +1,4 @@
-package resource_test
+package artifact_test
 
 import (
 	"fmt"
