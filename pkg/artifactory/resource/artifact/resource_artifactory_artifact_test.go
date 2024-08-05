@@ -33,7 +33,7 @@ func TestAccArtifact_full(t *testing.T) {
 		"name":     name,
 		"repoName": repoName,
 		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
-		"filePath": "../../../samples/multi1-3.7-20220310.233748-1.jar",
+		"filePath": "../../../../samples/multi1-3.7-20220310.233748-1.jar",
 	}
 	config := util.ExecuteTemplate(name, temp, testData)
 
@@ -74,7 +74,7 @@ func TestAccArtifact_invalid_path(t *testing.T) {
 	testData := map[string]string{
 		"name":     name,
 		"path":     "foo/bar/multi1-3.7-20220310.233748-1.jar",
-		"filePath": "../../../samples/multi1-3.7-20220310.233748-1.jar",
+		"filePath": "../../../../samples/multi1-3.7-20220310.233748-1.jar",
 	}
 
 	config := util.ExecuteTemplate(name, temp, testData)
