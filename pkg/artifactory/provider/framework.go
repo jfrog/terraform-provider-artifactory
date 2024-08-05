@@ -198,6 +198,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		artifact.NewArtifactResource,
+		artifact.NewItemPropertiesResource,
 		user.NewAnonymousUserResource,
 		user.NewManagedUserResource,
 		user.NewUnmanagedUserResource,
