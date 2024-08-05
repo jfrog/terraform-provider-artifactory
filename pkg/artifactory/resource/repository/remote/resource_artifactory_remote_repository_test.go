@@ -591,21 +591,6 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	}))
 }
 
-func TestAccRemoteMavenRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
-		"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
-		"list_remote_folder_items":        true,
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	}))
-}
-
 func TestAccRemoteAllRepository(t *testing.T) {
 	for _, repoType := range remote.PackageTypesLikeBasic {
 		t.Run(repoType, func(t *testing.T) {
@@ -707,17 +692,35 @@ func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
 	for _, repoType := range repository.GradleLikePackageTypes {
 		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
-				"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-				"list_remote_folder_items":    true,
+				"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+				"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
+				"list_remote_folder_items":        true,
 				"content_synchronisation": map[string]interface{}{
 					"enabled":                         false, // even when set to true, it seems to come back as false on the wire
 					"statistics_enabled":              true,
 					"properties_enabled":              true,
 					"source_origin_absence_detection": true,
 				},
+				"max_unique_snapshots": 6,
 			}))
 		})
 	}
+}
+
+func TestAccRemoteMavenRepository(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
+		"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
+		"list_remote_folder_items":        true,
+		"content_synchronisation": map[string]interface{}{
+			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
+			"statistics_enabled":              true,
+			"properties_enabled":              true,
+			"source_origin_absence_detection": true,
+		},
+		"max_unique_snapshots": 6,
+		"curated":              false,
+	}))
 }
 
 func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {

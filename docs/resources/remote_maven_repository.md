@@ -10,13 +10,14 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 
 ```hcl
 resource "artifactory_remote_maven_repository" "maven-remote" {
-  key                                = "maven-remote-foo"
-  url                                = "https://repo1.maven.org/maven2/"
-  fetch_jars_eagerly                 = true
-  fetch_sources_eagerly              = false
-  suppress_pom_consistency_checks    = false
-  reject_invalid_jars                = true
-  metadata_retrieval_timeout_secs    = 120
+  key                             = "maven-remote-foo"
+  url                             = "https://repo1.maven.org/maven2/"
+  fetch_jars_eagerly              = true
+  fetch_sources_eagerly           = false
+  suppress_pom_consistency_checks = false
+  reject_invalid_jars             = true
+  metadata_retrieval_timeout_secs = 120
+  max_unique_snapshots            = 10
 }
 ```
 
@@ -39,6 +40,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `remote_repo_checksum_policy_type` - (Optional, Default: `generate-if-absent`) Checking the Checksum effectively verifies the integrity of a deployed resource. The Checksum Policy determines how the system behaves when a client checksum for a remote resource is missing or conflicts with the locally calculated checksum. Available policies are `generate-if-absent`, `fail`, `ignore-and-generate`, and `pass-thru`.
 `retrieval_cache_period_seconds` attribute.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `max_unique_snapshots` - (Optional) The maximum number of unique snapshots of a single artifact to store. Once the number of snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.
 
 ## Import
 

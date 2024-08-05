@@ -1,3 +1,9 @@
+## 11.5.0 (August 2, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.8.0
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_gradle_repository, resource/artifactory_remote_ivy_repository, resource/artifactory_remote_maven_repository, resource/artifactory_remote_sbt_repository: Add `max_unique_snapshots` attribute support. Issue: [#1039](https://github.com/jfrog/terraform-provider-artifactory/issues/1039) PR: [#1043](https://github.com/jfrog/terraform-provider-artifactory/pull/1043)
+
 ## 11.4.0 (July 31, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.8.0
 
 FEATURES:
