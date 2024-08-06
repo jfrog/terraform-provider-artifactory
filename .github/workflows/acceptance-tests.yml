@@ -148,7 +148,9 @@ jobs:
   update-changelog:
     runs-on: ubuntu-latest
     needs: acceptance-tests-matrix
-    if: ${{ github.event_name == 'pull_request' }} && ${{ needs.acceptance-tests-matrix.result == 'success' }}
+    if: |
+      always() &&
+      (github.event_name == 'pull_request' && needs.acceptance-tests-matrix.result == 'success')
     permissions:
       contents: write
     steps:

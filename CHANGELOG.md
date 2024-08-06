@@ -1,4 +1,8 @@
-## 11.5.0 (August 2, 2024). Tested on Artifactory 7.90.5 with Terraform 1.9.3 and OpenTofu 1.8.0
+## 11.5.0 (August 6, 2024). Tested on Artifactory 7.90.6 with Terraform 1.9.3 and OpenTofu 1.8.0
+
+FEATURES:
+
+**New Resource:** `artifactory_item_properties` Issue: [#1041](https://github.com/jfrog/terraform-provider-artifactory/issues/1041) PR: [#1046](https://github.com/jfrog/terraform-provider-artifactory/pull/1046)
 
 IMPROVEMENTS:
 
