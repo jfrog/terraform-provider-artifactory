@@ -154,6 +154,7 @@ func (r *ItemPropertiesResource) Schema(ctx context.Context, req resource.Schema
 				ElementType: types.SetType{ElemType: types.StringType},
 				Required:    true,
 				Validators: []validator.Map{
+					mapvalidator.SizeAtLeast(1),
 					mapvalidator.KeysAre(
 						stringvalidator.LengthBetween(1, 255),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z].*`), "must begin with a letter"),
@@ -362,8 +363,8 @@ func (r *ItemPropertiesResource) Delete(ctx context.Context, req resource.Delete
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	var propertiesString string
-	resp.Diagnostics.Append(state.toPropertiesQueryParamsString(ctx, &propertiesString)...)
+	var properties map[string][]string
+	resp.Diagnostics.Append(state.Properties.ElementsAs(ctx, &properties, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -377,7 +378,7 @@ func (r *ItemPropertiesResource) Delete(ctx context.Context, req resource.Delete
 
 	response, err := request.
 		SetQueryParams(map[string]string{
-			"properties": propertiesString,
+			"properties": strings.Join(lo.Keys(properties), ","),
 			"recursive":  fmt.Sprintf("%d", isRecursive),
 		}).
 		Delete(url)
