@@ -1,3 +1,9 @@
+## 11.5.1 (August 8, 2024). Tested on Artifactory 7.90.6 with Terraform 1.9.3 and OpenTofu 1.8.0
+
+BUG FIXES:
+
+* resource/artifactory_item_properties: Fix destroying resource did not remove properties in Artfiactory. Issue: [#1049](https://github.com/jfrog/terraform-provider-artifactory/issues/1049) PR: [#1050](https://github.com/jfrog/terraform-provider-artifactory/pull/1050)
+
 ## 11.5.0 (August 6, 2024). Tested on Artifactory 7.90.6 with Terraform 1.9.3 and OpenTofu 1.8.0
 
 FEATURES:
