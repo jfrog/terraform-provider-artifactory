@@ -124,8 +124,6 @@ func ResourceArtifactorySamlSettings() *schema.Resource {
 				Description: `When set, an X.509 public certificate will be created by Artifactory. Download this certificate and upload it to your IDP and choose your own encryption algorithm. This process will let you encrypt the assertion section in your SAML response. Default value is "false".`,
 			},
 		},
-
-		DeprecationMessage: `This resource is deprecated in favor of "platform_saml_settings" (https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/saml_settings) resource. in the Platform provider`,
 	}
 }
 
