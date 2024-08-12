@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/virtual"
@@ -945,6 +946,107 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/go.googlesource.com/**"),
 				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccVirtualGoExternalDependenciesRepository(t *testing.T) {
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("go-virtual-%d", id)
+	remoteRepoName := fmt.Sprintf("go-remote-%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_go_repository.%s", name)
+
+	params := map[string]interface{}{
+		"name":           name,
+		"remoteRepoName": remoteRepoName,
+	}
+	config := util.ExecuteTemplate("TestAccVirtualGo", `
+	resource "artifactory_remote_go_repository" "go-remote" {
+		key = "{{ .remoteRepoName }}"
+		url = "https://proxy.golang.org/"
+	}
+
+	resource "artifactory_virtual_go_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = [artifactory_remote_go_repository.go-remote.key]
+			external_dependencies_enabled     = true
+			external_dependencies_patterns    = [
+				"**/github.com/**",
+				"**/bitbucket.org/**",
+				"**/gopkg.in/**",
+				"**/golang.org/**",
+				"**/k8s.io/**",
+			]
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccVirtualGo", `
+		resource "artifactory_remote_go_repository" "go-remote" {
+			key = "{{ .remoteRepoName }}"
+			url = "https://proxy.golang.org/"
+		}
+
+		resource "artifactory_virtual_go_repository" "{{ .name }}" {
+			key                               = "{{ .name }}"
+			repositories                      = [artifactory_remote_go_repository.go-remote.key]
+			external_dependencies_enabled     = true
+			external_dependencies_patterns    = [
+				"**/github.com/**",
+				"**/gopkg.in/**",
+				"**/golang.org/**",
+				"**/k8s.io/**",
+			]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "go"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "5"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/bitbucket.org/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/gopkg.in/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/golang.org/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/k8s.io/**"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "go"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "repositories.0", remoteRepoName),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "4"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/github.com/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/gopkg.in/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/golang.org/**"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**/k8s.io/**"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      fqrn,
