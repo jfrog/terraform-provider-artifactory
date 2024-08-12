@@ -1,3 +1,9 @@
+## 11.5.1 (August 12, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_virtual_go_repository: Fix updating `external_dependencies_patterns` attribute triggers a resource replacement that wasn't fixed in PR [#1005](https://github.com/jfrog/terraform-provider-artifactory/pull/1005). Issue: [#1004](https://github.com/jfrog/terraform-provider-artifactory/issues/1004) PR: [#1051](https://github.com/jfrog/terraform-provider-artifactory/pull/1051)
+
 ## 11.5.0 (August 6, 2024). Tested on Artifactory 7.90.6 with Terraform 1.9.3 and OpenTofu 1.8.0
 
 FEATURES:
