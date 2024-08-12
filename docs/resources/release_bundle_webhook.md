@@ -1,9 +1,11 @@
 ---
-subcategory: "Webhook"
+subcategory: "Deprecated"
 ---
 # Artifactory Release Bundle Webhook Resource
 
 Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.
+
+!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.
 
 ## Example Usage
 .

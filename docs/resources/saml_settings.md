@@ -1,5 +1,5 @@
 ---
-subcategory: "Configuration"
+subcategory: "Deprecated"
 ---
 # Artifactory SAML SSO Settings Resource
 
@@ -8,6 +8,8 @@ This resource can be used to manage Artifactory's SAML SSO settings.
 Only a single `artifactory_saml_settings` resource is meant to be defined.
 
 ~>The `artifactory_saml_settings` resource utilizes endpoints which are blocked/removed in SaaS environments (i.e. in Artifactory online), rendering this resource incompatible with Artifactory SaaS environments.
+
+!>This resource is deprecated in favor of [platform_saml_settings](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/saml_settings) resource in the Platform provider.
 
 ## Example Usage
 
