@@ -10,7 +10,7 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}" > /dev/stderr
 set -euf
 
 mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
-mkdir -p ${SCRIPT_DIR}/artifactory/var
+mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
 
 cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf
 cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory/var/etc/

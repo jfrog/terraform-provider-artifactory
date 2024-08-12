@@ -9,25 +9,28 @@ import (
 
 const GoPackageType = "go"
 
-var GoVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-	"external_dependencies_enabled": {
-		Type:        schema.TypeBool,
-		Default:     true,
-		Optional:    true,
-		Description: "When set (default), Artifactory will automatically follow remote VCS roots in 'go-import' meta tags to download remote modules.",
-	},
-	"external_dependencies_patterns": {
-		Type:     schema.TypeList,
-		Optional: true,
-		ForceNew: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
+var GoVirtualSchema = utilsdk.MergeMaps(
+	BaseVirtualRepoSchema,
+	map[string]*schema.Schema{
+		"external_dependencies_enabled": {
+			Type:        schema.TypeBool,
+			Default:     true,
+			Optional:    true,
+			Description: "When set (default), Artifactory will automatically follow remote VCS roots in 'go-import' meta tags to download remote modules.",
 		},
-		RequiredWith: []string{"external_dependencies_enabled"},
-		Description: "An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will " +
-			"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.",
+		"external_dependencies_patterns": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			RequiredWith: []string{"external_dependencies_enabled"},
+			Description: "An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will " +
+				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.",
+		},
 	},
-}, repository.RepoLayoutRefSchema(Rclass, GoPackageType))
+	repository.RepoLayoutRefSchema(Rclass, GoPackageType),
+)
 
 func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 	type GoVirtualRepositoryParams struct {
@@ -44,7 +47,6 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 		}
-		repo.PackageType = "go"
 		return &repo, repo.Key, nil
 	}
 
