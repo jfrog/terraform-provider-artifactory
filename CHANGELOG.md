@@ -1,4 +1,8 @@
-## 11.5.2 (August 12, 2024). Tested on Artifactory 7.90.7 with Terraform 1.9.4 and OpenTofu 1.8.1
+## 11.6.0 (August 12, 2024)
+
+NOTES:
+
+* resource/artifactory_saml_settings: This resource is being deprecated and replaced by new [platform_saml_settings](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/saml_settings) resource in the Platform provider. PR: [#1052](https://github.com/jfrog/terraform-provider-artifactory/pull/1052)
 
 BUG FIXES:
 
