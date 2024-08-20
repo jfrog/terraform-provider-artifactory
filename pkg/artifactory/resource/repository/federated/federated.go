@@ -3,8 +3,8 @@ package federated
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -214,12 +214,13 @@ func updateRepo(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.
 }
 
 func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	restyClient := m.(util.ProviderMetadata).Client
+
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &utilsdk.ResourceData{ResourceData: d}
 	initialRepoName := s.GetString("key", false)
+
 	if v, ok := d.GetOk("member"); ok && s.GetBool("cleanup_on_delete", false) {
-		// Save base URL from the Client to be able to revert it back after the change below
-		baseURL := m.(util.ProviderMetadata).Client.BaseURL
 		federatedMembers := v.(*schema.Set).List()
 		for _, federatedMember := range federatedMembers {
 			id := federatedMember.(map[string]interface{})
@@ -227,22 +228,26 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 			parsedMemberUrl, _ := url.Parse(memberUrl)
 			memberHost := memberUrl[:strings.Index(memberUrl, parsedMemberUrl.Path)]
 			memberRepoName := strings.ReplaceAll(memberUrl, memberUrl[:strings.LastIndex(memberUrl, "/")+1], "")
-			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, baseURL) {
-				resp, err := m.(util.ProviderMetadata).Client.SetBaseURL(memberHost).R().
+
+			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, restyClient.BaseURL) {
+				memberAPIURL := path.Join(memberHost, RepositoriesEndpoint)
+				resp, err := restyClient.R().
 					AddRetryCondition(client.RetryOnMergeError).
 					SetPathParam("key", memberRepoName).
-					Delete(RepositoriesEndpoint)
-				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
-					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-					m.(util.ProviderMetadata).Client.SetBaseURL(baseURL)
+					Delete(memberAPIURL)
+
+				if err != nil {
 					return diag.FromErr(err)
+				}
+
+				if resp.IsError() {
+					return diag.Errorf("%s", resp.String())
 				}
 			}
 		}
-		m.(util.ProviderMetadata).Client.SetBaseURL(baseURL)
 	}
 
-	resp, err := m.(util.ProviderMetadata).Client.R().
+	resp, err := restyClient.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
@@ -251,14 +256,11 @@ func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.D
 		diag.FromErr(err)
 	}
 
-	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
-		d.SetId("")
-		return nil
-	}
-
 	if resp.IsError() {
 		return diag.Errorf("%s", resp.String())
 	}
+
+	d.SetId("")
 
 	return nil
 }
