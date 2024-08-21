@@ -99,7 +99,7 @@ During the provider start up, if it finds env var `TFC_WORKLOAD_IDENTITY_TOKEN` 
 
 Follow [confgure an OIDC integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration). Enter a name for the provider, e.g. `terraform-cloud`. Use `https://app.terraform.io` for "Provider URL". Choose your own value for "Audience", e.g. `jfrog-terraform-cloud`.
 
-Then [configure an identity mapping](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-identity-mappings) with appropriate "Claims JSON" (e.g. `aud`, `sub`, `terraform_organization_id`, `terraform_workspace_id`, `terraform_run_phase`. See [Terraform Workload Identity Token Specification](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/workload-identity-tokens#token-specification)), and select the "Token scope", "User", and "Service" as desired.
+Then [configure an identity mapping](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-identity-mappings) with appropriate "Claims JSON" (e.g. `aud`, `sub` at minimum. See [Terraform Workload Identity - Configuring Trust with your Cloud Platform](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/workload-identity-tokens#configuring-trust-with-your-cloud-platform)), and select the "Token scope", "User", and "Service" as desired.
 
 #### Set environment variable in your Terraform Workspace
 
