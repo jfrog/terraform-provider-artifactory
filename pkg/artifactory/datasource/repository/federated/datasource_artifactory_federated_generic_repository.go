@@ -16,7 +16,7 @@ import (
 func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
 	var genericSchema = utilsdk.MergeMaps(
 		local.GetGenericRepoSchema(packageType),
-		federatedSchemaV3,
+		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

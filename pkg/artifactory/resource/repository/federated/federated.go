@@ -53,7 +53,7 @@ type Member struct {
 	Enabled bool   `json:"enabled"`
 }
 
-var SchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
+var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		repository.ProxySchema,
 		map[string]*schema.Schema{
@@ -93,51 +93,56 @@ var SchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
 	)
 }
 
-var federatedSchemaV3 = SchemaGenerator(true)
+var federatedSchemaV3 = SchemaGeneratorV3(true)
 
-var federatedSchemaV4 = utilsdk.MergeMaps(
-	federatedSchemaV3,
-	map[string]*schema.Schema{
-		"cleanup_on_delete": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances. Set `access_token` attribute if Access Federation for access tokens is not enabled.",
-		},
-		"member": {
-			Type:     schema.TypeSet,
-			Required: true,
-			Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
-				"automatically be added with the combination of the configured base URL and `key` field value. " +
-				"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
-				" to set up Federated repositories correctly.",
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"url": {
-						Type:             schema.TypeString,
-						Required:         true,
-						Description:      "Full URL to ending with the repositoryName",
-						ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
-					},
-					"enabled": {
-						Type:     schema.TypeBool,
-						Required: true,
-						Description: "Represents the active state of the federated member. It is supported to " +
-							"change the enabled status of my own member. The config will be updated on the other " +
-							"federated members automatically.",
-					},
-					"access_token": {
-						Type:             schema.TypeString,
-						Optional:         true,
-						Sensitive:        true,
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-						Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
+var SchemaGeneratorV4 = func(isRequired bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(
+		federatedSchemaV3,
+		map[string]*schema.Schema{
+			"cleanup_on_delete": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances. Set `access_token` attribute if Access Federation for access tokens is not enabled.",
+			},
+			"member": {
+				Type:     schema.TypeSet,
+				Required: isRequired,
+				Optional: !isRequired,
+				Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
+					"automatically be added with the combination of the configured base URL and `key` field value. " +
+					"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
+					" to set up Federated repositories correctly.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Full URL to ending with the repositoryName",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							Description: "Represents the active state of the federated member. It is supported to " +
+								"change the enabled status of my own member. The config will be updated on the other " +
+								"federated members automatically.",
+						},
+						"access_token": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Sensitive:        true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+							Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
+						},
 					},
 				},
 			},
 		},
-	},
-)
+	)
+}
+
+var federatedSchemaV4 = SchemaGeneratorV4(true)
 
 func unpackMembers(data *schema.ResourceData) []Member {
 	d := &utilsdk.ResourceData{ResourceData: data}

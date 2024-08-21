@@ -67,7 +67,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 
 	dockerFederatedSchema := utilsdk.MergeMaps(
 		local.DockerV1LocalSchema,
-		federatedSchemaV3,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

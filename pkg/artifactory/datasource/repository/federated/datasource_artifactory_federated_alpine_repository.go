@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 
 	alpineFederatedSchema := utilsdk.MergeMaps(
 		local.AlpineLocalSchema,
-		federatedSchemaV3,
+		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

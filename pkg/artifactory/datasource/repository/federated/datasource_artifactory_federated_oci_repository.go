@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedOciRepository() *schema.Resource {
 
 	ociFederatedSchema := utilsdk.MergeMaps(
 		local.OciLocalSchema,
-		federatedSchemaV3,
+		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
