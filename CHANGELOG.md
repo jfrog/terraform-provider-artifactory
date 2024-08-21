@@ -1,4 +1,10 @@
-## 11.7.0 (August 22, 2024). Tested on Artifactory 7.90.8 with Terraform 1.9.5 and OpenTofu 1.8.1
+## 11.8.0 (August 23, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_\*\_repository: Add `access_token` attribute to `member` to support `cleanup_on_delete` for JPD setup without Access Federation for access token. Also improve error handling when deleting member federated repository. PR: [#1057](https://github.com/jfrog/terraform-provider-artifactory/pull/1057)
+
+## 11.7.0 (August 21, 2024). Tested on Artifactory 7.90.8 with Terraform 1.9.5 and OpenTofu 1.8.1
 
 FEATURES:
 
