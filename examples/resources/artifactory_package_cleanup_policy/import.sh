@@ -1,0 +1,1 @@
+terraform import artifactory_package_cleanup_policy.my-cleanup-policy my-policy

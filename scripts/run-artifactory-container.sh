@@ -4,19 +4,24 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 source "${SCRIPT_DIR}/get-access-key.sh"
 source "${SCRIPT_DIR}/wait-for-rt.sh"
 
-export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.84.15}
+export ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION:-7.90.8}
 echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}" > /dev/stderr
 
 set -euf
 
+sudo rm -rf ${SCRIPT_DIR}/artifactory/
+
 mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
 mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
+
+mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
+sudo chown -R 1030:1030 ${SCRIPT_DIR}/artifactory/var
 
 cp ${SCRIPT_DIR}/artifactory.lic ${SCRIPT_DIR}/artifactory/extra_conf
 cp ${SCRIPT_DIR}/system.yaml ${SCRIPT_DIR}/artifactory/var/etc/
 cp ${SCRIPT_DIR}/access.config.patch.yml ${SCRIPT_DIR}/artifactory/var/etc/access
 
-docker run -i --name artifactory-1 -d --rm \
+docker run -i --name artifactory -d --rm \
   -e JF_FRONTEND_FEATURETOGGLER_ACCESSINTEGRATION=true \
   -e VAULT_ADDR \
   -e VAULT_TOKEN \

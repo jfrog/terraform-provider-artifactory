@@ -1,3 +1,9 @@
+## 11.7.0 (August 22, 2024). Tested on Artifactory 7.90.8 with Terraform 1.9.5 and OpenTofu 1.8.1
+
+FEATURES:
+
+**New Resource:** `artifactory_package_cleanup_policy` to support [Retention Policy](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) PR: [#1056](https://github.com/jfrog/terraform-provider-artifactory/pull/1056)
+
 ## 11.6.0 (August 12, 2024). Tested on Artifactory 7.90.7 with Terraform 1.9.4 and OpenTofu 1.8.1
 
 NOTES:

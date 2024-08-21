@@ -122,7 +122,7 @@ jobs:
           cp sample.tf.tmp sample.tf && rm sample.tf.tmp
           TERRAFORM_CLI=${{ matrix.cli }} make install
       - name: Clean up Docker container
-        if: always()
+        if: always() && steps.run_artifactory_container.conclusion == 'success'
         run: docker stop artifactory
       - name: Send workflow status to Slack
         uses: slackapi/slack-github-action@v1.26.0

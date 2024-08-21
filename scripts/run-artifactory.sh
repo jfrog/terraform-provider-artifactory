@@ -8,6 +8,8 @@ echo "ARTIFACTORY_VERSION=${ARTIFACTORY_VERSION}"
 
 set -euf
 
+rm -rf ${SCRIPT_DIR}/artifactory/
+
 mkdir -p ${SCRIPT_DIR}/artifactory/extra_conf
 mkdir -p ${SCRIPT_DIR}/artifactory/var/etc/access
 
