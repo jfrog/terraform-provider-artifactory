@@ -17,7 +17,7 @@ func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPo
 
 	javaFederatedSchema := utilsdk.MergeMaps(
 		local.GetJavaRepoSchema(packageType, suppressPom),
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema("federated", packageType),
 	)
 

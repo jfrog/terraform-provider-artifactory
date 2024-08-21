@@ -20,7 +20,7 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 
 	alpineFederatedSchema := utilsdk.MergeMaps(
 		local.AlpineLocalSchema,
-		federatedSchema,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

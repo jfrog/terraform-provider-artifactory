@@ -4,4 +4,4 @@ import "github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/reso
 
 const rclass = "federated"
 
-var federatedSchema = federated.SchemaGenerator(false)
+var federatedSchemaV3 = federated.SchemaGenerator(false)

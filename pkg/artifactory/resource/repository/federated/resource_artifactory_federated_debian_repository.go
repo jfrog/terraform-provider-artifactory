@@ -20,7 +20,7 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 
 	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianLocalSchema,
-		federatedSchema,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

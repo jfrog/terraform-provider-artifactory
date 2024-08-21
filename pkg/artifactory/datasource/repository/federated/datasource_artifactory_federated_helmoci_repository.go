@@ -14,7 +14,7 @@ import (
 func DataSourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 	ociFederatedSchema := utilsdk.MergeMaps(
 		local.HelmOciLocalSchema,
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema(rclass, local.HelmOciPackageType),
 	)
 

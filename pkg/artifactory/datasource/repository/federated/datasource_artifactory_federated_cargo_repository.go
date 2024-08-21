@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 
 	cargoFederatedSchema := utilsdk.MergeMaps(
 		local.CargoLocalSchema,
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

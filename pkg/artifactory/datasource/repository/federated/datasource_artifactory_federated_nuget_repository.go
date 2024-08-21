@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 
 	nugetFederatedSchema := utilsdk.MergeMaps(
 		local.NugetLocalSchema,
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

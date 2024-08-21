@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedRpmRepository() *schema.Resource {
 
 	rpmFederatedSchema := utilsdk.MergeMaps(
 		local.RpmLocalSchema,
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

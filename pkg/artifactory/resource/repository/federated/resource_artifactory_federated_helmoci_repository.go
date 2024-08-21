@@ -20,7 +20,7 @@ func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 
 	helmociSchema := utilsdk.MergeMaps(
 		local.HelmOciLocalSchema,
-		federatedSchema,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

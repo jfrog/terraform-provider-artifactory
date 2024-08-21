@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 
 	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianLocalSchema,
-		federatedSchema,
+		federatedSchemaV3,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 
