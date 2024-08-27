@@ -141,7 +141,7 @@ func packRemoteReplication(remoteReplication *getRemoteReplicationBody, d *schem
 func resourceRemoteReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackRemoteReplication(d)
 
-	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m.(util.ProviderMetadata).Client.R()); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
 	resp, err := m.(util.ProviderMetadata).Client.R().
@@ -185,7 +185,7 @@ func resourceRemoteReplicationRead(_ context.Context, d *schema.ResourceData, m 
 func resourceRemoteReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackRemoteReplication(d)
 
-	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m); !verified {
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "remote", m.(util.ProviderMetadata).Client.R()); !verified {
 		return diag.Errorf("source repository rclass is not remote or can't be verified, only remote repositories are supported by this resource: %v", err)
 	}
 	resp, err := m.(util.ProviderMetadata).Client.R().
