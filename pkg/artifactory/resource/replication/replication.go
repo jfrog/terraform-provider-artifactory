@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -12,16 +13,10 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-const EndpointPath = "artifactory/api/replications/"
-
-var replicationSchemaEnableEventReplication = map[string]*schema.Schema{
-	"enable_event_replication": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "When set, each event will trigger replication of the artifacts changed in this event. This can be any type of event on artifact, e.g. add, deleted or property change. Default value is `false`.",
-	},
-}
+const (
+	EndpointPath        = "artifactory/api/replications/"
+	ReplicationEndpoint = "artifactory/api/replications/{repo_key}"
+)
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(util.ProviderMetadata).Client.R().
@@ -48,28 +43,19 @@ type repoConfiguration struct {
 	Rclass string `json:"rclass"`
 }
 
-func getRepositoryRclass(repoKey string, m interface{}) (string, error) {
-	repoConfig := repoConfiguration{}
-	resp, err := m.(util.ProviderMetadata).Client.R().
+func verifyRepoRclass(repoKey, expectedRclass string, req *resty.Request) (bool, error) {
+	var repoConfig repoConfiguration
+	resp, err := req.
 		SetResult(&repoConfig).
 		Get("artifactory/api/repositories/" + repoKey)
-	if err != nil {
-		return "", err
-	}
-	if resp.IsError() {
-		return "", fmt.Errorf("%s", resp.String())
-	}
 
-	return repoConfig.Rclass, err
-}
-
-func verifyRepoRclass(repoKey string, expectedRclass string, m interface{}) (bool, error) {
-	rclass, err := getRepositoryRclass(repoKey, m)
 	if err != nil {
 		return false, fmt.Errorf("error getting repository configuration: %v", err)
 	}
-	if rclass == expectedRclass {
-		return true, nil
+
+	if resp.IsError() {
+		return false, fmt.Errorf("%s", resp.String())
 	}
-	return false, nil
+
+	return repoConfig.Rclass == expectedRclass, nil
 }

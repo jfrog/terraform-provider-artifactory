@@ -310,7 +310,7 @@ func packLocalMultiReplication(pushReplication *GetLocalMultiReplication, d *sch
 func resourceLocalMultiReplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackLocalMultiReplication(d)
 
-	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m.(util.ProviderMetadata).Client.R()); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
 	resp, err := m.(util.ProviderMetadata).Client.R().
@@ -360,7 +360,7 @@ func resourceLocalMultiReplicationRead(_ context.Context, d *schema.ResourceData
 func resourceLocalMultiReplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	pushReplication := unpackLocalMultiReplication(d)
 
-	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m); !verified {
+	if verified, err := verifyRepoRclass(pushReplication.RepoKey, "local", m.(util.ProviderMetadata).Client.R()); !verified {
 		return diag.Errorf("source repository rclass is not local, only remote repositories are supported by this resource %v", err)
 	}
 

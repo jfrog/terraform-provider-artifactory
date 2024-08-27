@@ -9,8 +9,71 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
+
+func TestAccLocalSingleReplication_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-local-single-replication", "artifactory_local_repository_single_replication")
+
+	params := map[string]string{
+		"url":       acctest.GetArtifactoryUrl(t),
+		"username":  acctest.RtDefaultUser,
+		"proxy":     "test-proxy",
+		"repo_name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccLocalSingleReplication_UpgradeFromSDKv2", `
+		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
+		}
+
+		resource "artifactory_local_repository_single_replication" "{{ .repo_name }}" {
+			repo_key 							= artifactory_local_maven_repository.{{ .repo_name }}.key
+			cron_exp 							= "0 0 * * * ?"
+			enable_event_replication 			= true
+			url 								= "{{ .url }}"
+ 			username 							= "{{ .username }}"
+			socket_timeout_millis 				= 16000
+			enabled 							= true
+			sync_deletes 						= true
+			sync_properties 					= true
+			sync_statistics 					= true
+			check_binary_existence_in_filestore = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						Source:            "jfrog/artifactory",
+						VersionConstraint: "11.7.0",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", params["url"]),
+					resource.TestCheckResourceAttr(fqrn, "username", params["username"]),
+					resource.TestCheckResourceAttr(fqrn, "socket_timeout_millis", "16000"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_properties", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_statistics", "true"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+			},
+		},
+	})
+}
 
 func TestAccLocalSingleReplicationInvalidPushCron_fails(t *testing.T) {
 	const invalidCron = `
@@ -19,7 +82,7 @@ func TestAccLocalSingleReplicationInvalidPushCron_fails(t *testing.T) {
 		}
 
 		resource "artifactory_local_repository_single_replication" "lib-local" {
-			repo_key 							= "${artifactory_local_maven_repository.lib-local.key}"
+			repo_key 							= artifactory_local_maven_repository.lib-local.key
 			cron_exp 							= "0 0 xoxo xoxoxo * ?"
 			enable_event_replication 			= true
 			url 								= "http://localhost:8080"
@@ -36,8 +99,8 @@ func TestAccLocalSingleReplicationInvalidPushCron_fails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -54,7 +117,7 @@ func TestAccLocalSingleReplicationInvalidUrl_fails(t *testing.T) {
 		}
 
 		resource "artifactory_local_repository_single_replication" "lib-local" {
-			repo_key 							= "${artifactory_local_maven_repository.lib-local.key}"
+			repo_key 							= artifactory_local_maven_repository.lib-local.key
 			cron_exp 							= "0 0 xoxo xoxoxo * ?"
 			enable_event_replication 			= true
 			url 								= "not a URL"
@@ -71,12 +134,12 @@ func TestAccLocalSingleReplicationInvalidUrl_fails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
-				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got not a URL.*`),
+				ExpectError: regexp.MustCompile(`.*must be a valid URL with host and http or https scheme.*`),
 			},
 		},
 	})
@@ -90,7 +153,7 @@ func TestAccLocalSingleReplicationInvalidRclass_fails(t *testing.T) {
 		}
 
 		resource "artifactory_local_repository_single_replication" "lib-remote" {
-			repo_key 							= "${artifactory_remote_maven_repository.lib-remote.key}"
+			repo_key 							= artifactory_remote_maven_repository.lib-remote.key
 			cron_exp 							= "0 0 * * * ?"
 			enable_event_replication 			= true
 			url 								= "http://localhost:8080"
@@ -107,8 +170,8 @@ func TestAccLocalSingleReplicationInvalidRclass_fails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
@@ -119,27 +182,34 @@ func TestAccLocalSingleReplicationInvalidRclass_fails(t *testing.T) {
 }
 
 func TestAccLocalSingleReplication_full(t *testing.T) {
-	const testProxy = "test-proxy"
-	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_local_repository_single_replication")
+	_, fqrn, name := testutil.MkNames("test-local-single-replication", "artifactory_local_repository_single_replication")
+
 	params := map[string]string{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,
-		"proxy":     testProxy,
+		"proxy":     "test-proxy",
 		"repo_name": name,
 	}
-	replicationConfig := util.ExecuteTemplate("TestAccPushReplication", `
+
+	config := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
 
+		resource "artifactory_proxy" "{{ .proxy }}" {
+			key  = "{{ .proxy }}"
+			host = "https://fake-proxy.org"
+			port = 8080
+		}
+
 		resource "artifactory_local_repository_single_replication" "{{ .repo_name }}" {
-			repo_key 							= "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
+			repo_key 							= artifactory_local_maven_repository.{{ .repo_name }}.key
 			cron_exp 							= "0 0 * * * ?"
 			enable_event_replication 			= true
 			url 								= "{{ .url }}"
  			username 							= "{{ .username }}"
 			password 							= "Passw0rd!"
-			proxy 								= "{{ .proxy }}"
+			proxy 								= artifactory_proxy.{{ .proxy }}.key
 			socket_timeout_millis 				= 16000
 			enabled 							= true
 			sync_deletes 						= true
@@ -151,19 +221,25 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushReplication", `
+	updateConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
 
+		resource "artifactory_proxy" "{{ .proxy }}" {
+			key  = "{{ .proxy }}"
+			host = "https://fake-proxy.org"
+			port = 8080
+		}
+
 		resource "artifactory_local_repository_single_replication" "{{ .repo_name }}" {
-			repo_key 							= "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
+			repo_key 							= artifactory_local_maven_repository.{{ .repo_name }}.key
 			cron_exp 							= "0 0 0 * * ?"
 			enable_event_replication 			= false
 			url 								= "{{ .url }}"
  			username 							= "{{ .username }}"
 			password 							= "Passw0rd!"
-			proxy 								= "{{ .proxy }}"
+			proxy 								= artifactory_proxy.{{ .proxy }}.key
 			socket_timeout_millis 				= 17000
 			enabled 							= false
 			sync_deletes 						= false
@@ -176,18 +252,14 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProxy(t, testProxy)
-		},
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: func() func(*terraform.State) error {
-			acctest.DeleteProxy(t, testProxy)
 			return testAccCheckPushReplicationDestroy(fqrn)
 		}(),
 		Steps: []resource.TestStep{
 			{
-				Config: replicationConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
@@ -206,7 +278,7 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 				),
 			},
 			{
-				Config: replicationUpdateConfig,
+				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 0 * * ?"),
@@ -228,7 +300,6 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 				ResourceName:            fqrn,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "repo_key"),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
