@@ -3,7 +3,6 @@ package federated
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 const rclass = "federated"
@@ -53,7 +53,7 @@ type Member struct {
 	Enabled bool   `json:"enabled"`
 }
 
-var SchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
+var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 	return utilsdk.MergeMaps(
 		repository.ProxySchema,
 		map[string]*schema.Schema{
@@ -93,7 +93,56 @@ var SchemaGenerator = func(isRequired bool) map[string]*schema.Schema {
 	)
 }
 
-var federatedSchema = SchemaGenerator(true)
+var federatedSchemaV3 = SchemaGeneratorV3(true)
+
+var SchemaGeneratorV4 = func(isRequired bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(
+		federatedSchemaV3,
+		map[string]*schema.Schema{
+			"cleanup_on_delete": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances. Set `access_token` attribute if Access Federation for access tokens is not enabled.",
+			},
+			"member": {
+				Type:     schema.TypeSet,
+				Required: isRequired,
+				Optional: !isRequired,
+				Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
+					"automatically be added with the combination of the configured base URL and `key` field value. " +
+					"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
+					" to set up Federated repositories correctly.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Full URL to ending with the repositoryName",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							Description: "Represents the active state of the federated member. It is supported to " +
+								"change the enabled status of my own member. The config will be updated on the other " +
+								"federated members automatically.",
+						},
+						"access_token": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Sensitive:        true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+							Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
+						},
+					},
+				},
+			},
+		},
+	)
+}
+
+var federatedSchemaV4 = SchemaGeneratorV4(true)
 
 func unpackMembers(data *schema.ResourceData) []Member {
 	d := &utilsdk.ResourceData{ResourceData: data}
@@ -134,8 +183,27 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 
 	for _, member := range members {
 		federatedMember := map[string]interface{}{
-			"url":     member.Url,
-			"enabled": member.Enabled,
+			"url":          member.Url,
+			"enabled":      member.Enabled,
+			"access_token": nil,
+		}
+
+		// find matching member to restore the 'access_token' value
+		if v, ok := d.GetOk("member"); ok {
+			matchedMember, found := lo.Find(
+				v.(*schema.Set).List(),
+				func(m interface{}) bool {
+					id := m.(map[string]interface{})
+					return id["url"] == member.Url
+				},
+			)
+
+			if found {
+				id := matchedMember.(map[string]interface{})
+				if v, ok := id["access_token"]; ok && v != "" {
+					federatedMember["access_token"] = v.(string)
+				}
+			}
 		}
 
 		federatedMembers = append(federatedMembers, federatedMember)
@@ -213,54 +281,96 @@ func updateRepo(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.
 	}
 }
 
-func deleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func deleteRepo(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	ds := diag.Diagnostics{}
+
+	restyClient := m.(util.ProviderMetadata).Client
+
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &utilsdk.ResourceData{ResourceData: d}
 	initialRepoName := s.GetString("key", false)
+
 	if v, ok := d.GetOk("member"); ok && s.GetBool("cleanup_on_delete", false) {
-		// Save base URL from the Client to be able to revert it back after the change below
-		baseURL := m.(util.ProviderMetadata).Client.BaseURL
 		federatedMembers := v.(*schema.Set).List()
+
 		for _, federatedMember := range federatedMembers {
 			id := federatedMember.(map[string]interface{})
+
 			memberUrl := id["url"].(string) // example "https://artifactory-instance.com/artifactory/federated-generic-repository-example"
-			parsedMemberUrl, _ := url.Parse(memberUrl)
+			parsedMemberUrl, err := url.Parse(memberUrl)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
 			memberHost := memberUrl[:strings.Index(memberUrl, parsedMemberUrl.Path)]
 			memberRepoName := strings.ReplaceAll(memberUrl, memberUrl[:strings.LastIndex(memberUrl, "/")+1], "")
-			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, baseURL) {
-				resp, err := m.(util.ProviderMetadata).Client.SetBaseURL(memberHost).R().
+
+			if initialRepoName != memberRepoName || !strings.HasPrefix(memberUrl, restyClient.BaseURL) {
+				request := restyClient.R().
 					AddRetryCondition(client.RetryOnMergeError).
-					SetPathParam("key", memberRepoName).
-					Delete(RepositoriesEndpoint)
-				if err != nil && (resp != nil && (resp.StatusCode() == http.StatusBadRequest ||
-					resp.StatusCode() == http.StatusNotFound || resp.StatusCode() == http.StatusUnauthorized)) {
-					m.(util.ProviderMetadata).Client.SetBaseURL(baseURL)
-					return diag.FromErr(err)
+					SetPathParam("key", memberRepoName)
+
+				accessToken := ""
+				if v, ok := id["access_token"]; ok {
+					accessToken = v.(string)
+				}
+
+				if accessToken != "" {
+					request.SetAuthToken(accessToken)
+				}
+
+				memberAPIURL := fmt.Sprintf("%s/%s", memberHost, RepositoriesEndpoint)
+				resp, err := request.Delete(memberAPIURL)
+
+				if err != nil {
+					ds = append(
+						ds,
+						diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  "Failed to delete federated repository member",
+							Detail:   fmt.Sprintf("Error deleting member repository %s: %s", memberRepoName, err.Error()),
+						},
+					)
+				}
+
+				if resp.IsError() {
+					ds = append(
+						ds,
+						diag.Diagnostic{
+							Severity: diag.Warning,
+							Summary:  "Failed to delete federated repository member",
+							Detail:   fmt.Sprintf("Error deleting member repository %s: %s", memberRepoName, resp.String()),
+						},
+					)
 				}
 			}
 		}
-		m.(util.ProviderMetadata).Client.SetBaseURL(baseURL)
 	}
 
-	resp, err := m.(util.ProviderMetadata).Client.R().
+	resp, err := restyClient.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
 		Delete(RepositoriesEndpoint)
 
 	if err != nil {
-		diag.FromErr(err)
-	}
-
-	if resp.StatusCode() == http.StatusBadRequest || resp.StatusCode() == http.StatusNotFound {
-		d.SetId("")
-		return nil
+		ds = append(
+			ds,
+			diag.FromErr(err)...,
+		)
+		return ds
 	}
 
 	if resp.IsError() {
-		return diag.Errorf("%s", resp.String())
+		ds = append(
+			ds,
+			diag.Errorf("%s", resp.String())...,
+		)
+		return ds
 	}
 
-	return nil
+	d.SetId("")
+
+	return ds
 }
 
 func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
@@ -275,14 +385,19 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		},
 
 		Schema:        skeema,
-		SchemaVersion: 3,
+		SchemaVersion: 4,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				// this only works because the schema hasn't changed, except the removal of default value
 				// from `project_key` attribute.
-				Type:    resourceV2(skeema).CoreConfigSchema().ImpliedType(),
+				Type:    resourceV2(federatedSchemaV3).CoreConfigSchema().ImpliedType(),
 				Upgrade: repository.ResourceUpgradeProjectKey,
 				Version: 2,
+			},
+			{
+				Type:    resourceV3().CoreConfigSchema().ImpliedType(),
+				Upgrade: upgradeMemberAccessToken,
+				Version: 3,
 			},
 		},
 		CustomizeDiff: customdiff.All(
@@ -296,4 +411,21 @@ func resourceV2(skeema map[string]*schema.Schema) *schema.Resource {
 	return &schema.Resource{
 		Schema: skeema,
 	}
+}
+
+func resourceV3() *schema.Resource {
+	return &schema.Resource{
+		Schema: federatedSchemaV3,
+	}
+}
+
+func upgradeMemberAccessToken(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if v, ok := rawState["member"]; ok {
+		for _, m := range v.([]interface{}) {
+			id := m.(map[string]interface{})
+			id["access_token"] = nil
+		}
+	}
+
+	return rawState, nil
 }

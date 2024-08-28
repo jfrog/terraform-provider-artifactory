@@ -18,7 +18,7 @@ type ConanRepositoryParams struct {
 func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
 	conanSchema := utilsdk.MergeMaps(
 		local.ConanSchema,
-		federatedSchema,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, repository.ConanPackageType),
 	)
 
