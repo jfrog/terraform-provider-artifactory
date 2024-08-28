@@ -205,7 +205,7 @@ func (r *LocalRepositorySingleReplicationResource) Schema(ctx context.Context, r
 			"sync_deletes": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "When set, items that were deleted locally should also be deleted remotely (also applies to properties metadata). Note that enabling this option, will delete artifacts on the target that do not exist in the source repository. Default value is `false`.",
 			},
 			"sync_properties": schema.BoolAttribute{
@@ -254,7 +254,6 @@ func (r *LocalRepositorySingleReplicationResource) Schema(ctx context.Context, r
 				Description: "A proxy configuration to use when communicating with the remote instance.",
 			},
 			"replication_key": schema.StringAttribute{
-				Optional:    true,
 				Computed:    true,
 				Description: "Replication ID. The ID is known only after the replication is created, for this reason it's `Computed` and can not be set by the user in HCL.",
 			},
