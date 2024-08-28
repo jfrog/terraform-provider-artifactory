@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+* resource/artifactory_federated_\*\_repository: Add `access_token` attribute to `member` to support `cleanup_on_delete` for JPD setup without Access Federation for access token. Also improve error handling when deleting member federated repository. PR: [#1057](https://github.com/jfrog/terraform-provider-artifactory/pull/1057)
 * resource/artifactory_local_repository_single_replication is migrated to Plugin Framework. PR: [#1059](https://github.com/jfrog/terraform-provider-artifactory/pull/1059)
 * resource/artifactory_remote_repository_single_replication is migrated to Plugin Framework. PR: [#1060](https://github.com/jfrog/terraform-provider-artifactory/pull/1060)
 

@@ -18,7 +18,7 @@ type GenericRepositoryParams struct {
 func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
 	var genericSchema = utilsdk.MergeMaps(
 		local.GetGenericRepoSchema(packageType),
-		federatedSchema,
+		federatedSchemaV4,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

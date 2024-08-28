@@ -21,7 +21,7 @@ func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 
 	var ansibleSchema = utilsdk.MergeMaps(
 		local.GetGenericRepoSchema(packageType),
-		federatedSchema,
+		federatedSchemaV4,
 		repository.AlpinePrimaryKeyPairRef,
 		repository.RepoLayoutRefSchema(rclass, packageType),
 	)
