@@ -1,8 +1,9 @@
-## 11.7.1 (August 28, 2024). Tested on Artifactory 7.90.8 with Terraform 1.9.5 and OpenTofu 1.8.1
+## 11.8.0 (August 29, 2024)
 
 IMPROVEMENTS:
 
 * resource/artifactory_local_repository_single_replication is migrated to Plugin Framework. PR: [#1059](https://github.com/jfrog/terraform-provider-artifactory/pull/1059)
+* resource/artifactory_remote_repository_single_replication is migrated to Plugin Framework. PR: [#1060](https://github.com/jfrog/terraform-provider-artifactory/pull/1060)
 
 ## 11.7.0 (August 22, 2024). Tested on Artifactory 7.90.8 with Terraform 1.9.5 and OpenTofu 1.8.1
 
