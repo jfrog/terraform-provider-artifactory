@@ -16,7 +16,7 @@ func DataSourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 
 	ansibleFederatedSchema := utilsdk.MergeMaps(
 		local.AnsibleLocalSchema,
-		federatedSchema,
+		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSchema(rclass, packageType),
 	)
 

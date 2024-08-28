@@ -18,3 +18,7 @@ shared:
 
 mc:
     enabled: true
+
+event:
+    webhooks:
+        tlsInsecure: true
