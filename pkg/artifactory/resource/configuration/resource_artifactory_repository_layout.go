@@ -81,10 +81,9 @@ func (r *RepositoryLayoutResource) Schema(ctx context.Context, req resource.Sche
 				MarkdownDescription: "Please refer to: [Path Patterns](https://www.jfrog.com/confluence/display/JFROG/Repository+Layouts#RepositoryLayouts-ModulesandPathPatternsusedbyRepositoryLayouts) in the Artifactory Wiki documentation.",
 			},
 			"distinctive_descriptor_path_pattern": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
-
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "When set, `descriptor_path_pattern` will be used. Default to `false`.",
 			},
 			"descriptor_path_pattern": schema.StringAttribute{
@@ -227,7 +226,6 @@ func (r *RepositoryLayoutResource) Read(ctx context.Context, req resource.ReadRe
 	// and refresh any attribute values.
 	state.Name = types.StringValue(matchedRepositoryLayout.Name)
 	state.ArtifactPathPattern = types.StringValue(matchedRepositoryLayout.ArtifactPathPattern)
-	state.DescriptorPathPattern = types.StringNull()
 	if matchedRepositoryLayout.DistinctiveDescriptorPathPattern {
 		state.DescriptorPathPattern = types.StringValue(matchedRepositoryLayout.DescriptorPathPattern)
 	}
