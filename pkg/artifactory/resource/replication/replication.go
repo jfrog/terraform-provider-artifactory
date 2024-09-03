@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	EndpointPath        = "artifactory/api/replications/"
-	ReplicationEndpoint = "artifactory/api/replications/{repo_key}"
+	EndpointPath             = "artifactory/api/replications/"
+	ReplicationEndpoint      = "artifactory/api/replications/{repo_key}"
+	MultiReplicationEndpoint = "artifactory/api/replications/multiple/{repo_key}"
 )
 
 func resourceReplicationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

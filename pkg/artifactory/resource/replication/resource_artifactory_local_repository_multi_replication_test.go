@@ -5,13 +5,77 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
+func TestAccLocalMultiReplication_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+
+	params := map[string]interface{}{
+		"url":       acctest.GetArtifactoryUrl(t),
+		"username":  acctest.RtDefaultUser,
+		"repo_name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccLocalMultiReplication_UpgradeFromSDKv2", `
+		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
+		}
+
+		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
+			repo_key = artifactory_local_maven_repository.{{ .repo_name }}.key
+			cron_exp = "0 0 * * * ?"
+			enable_event_replication = true
+
+			replication {
+				url 								= "{{ .url }}"
+				username 							= "{{ .username }}"
+				socket_timeout_millis 				= 16000
+				enabled 							= true
+				sync_deletes 						= true
+				sync_properties 					= true
+				sync_statistics 					= true
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						Source:            "jfrog/artifactory",
+						VersionConstraint: "11.7.0",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "replication.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.url", acctest.GetArtifactoryUrl(t)),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.username", acctest.RtDefaultUser),
+					resource.TestCheckResourceAttr(fqrn, "replication.0.check_binary_existence_in_filestore", "false"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLocalMultiReplication_InvalidPushCronFails(t *testing.T) {
 	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"repo_name": name,
@@ -36,8 +100,8 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 		params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -47,7 +111,7 @@ func TestAccLocalMultiReplicationInvalidPushCronFails(t *testing.T) {
 	})
 }
 
-func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
+func TestAccLocalMultiReplication_InvalidUrlFails(t *testing.T) {
 	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
 		"repo_name": name,
@@ -73,18 +137,18 @@ func TestAccLocalMultiReplicationInvalidUrlFails(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidUrl,
-				ExpectError: regexp.MustCompile(`.*expected "url" to have a host, got not a URL.*`),
+				ExpectError: regexp.MustCompile(`.*value must be a valid URL with host and http or\n.*https scheme.*`),
 			},
 		},
 	})
 }
 
-func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
+func TestAccLocalMultiReplication_InvalidRclass_fails(t *testing.T) {
 	const testProxy = "test-proxy"
 	_, _, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
 	params := map[string]interface{}{
@@ -113,8 +177,8 @@ func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 		}
 	`, params)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      replicationConfig,
@@ -127,19 +191,27 @@ func TestAccLocalMultiReplicationInvalidRclass_fails(t *testing.T) {
 func TestAccLocalMultiReplication_full(t *testing.T) {
 	const testProxy = "test-proxy"
 	_, fqrn, name := testutil.MkNames("lib-local", "artifactory_local_repository_multi_replication")
+
 	params := map[string]interface{}{
 		"url":       acctest.GetArtifactoryUrl(t),
 		"username":  acctest.RtDefaultUser,
 		"proxy":     testProxy,
 		"repo_name": name,
 	}
-	replicationConfig := util.ExecuteTemplate("TestAccPushReplication", `
+
+	config := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
 
+		resource "artifactory_proxy" "{{ .proxy }}" {
+			key  = "{{ .proxy }}"
+			host = "https://fake-proxy.org"
+			port = 8080
+		}
+
 		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
-			repo_key = "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
+			repo_key = artifactory_local_maven_repository.{{ .repo_name }}.key
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
@@ -147,7 +219,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				url 								= "{{ .url }}"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
-				proxy 								= "{{ .proxy }}"
+				proxy 								= artifactory_proxy.{{ .proxy }}.key
 				socket_timeout_millis 				= 16000
 				enabled 							= true
 				sync_deletes 						= true
@@ -159,13 +231,19 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushReplication", `
+	updateConfig := util.ExecuteTemplate("TestAccPushReplication", `
 		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 		}
 
+		resource "artifactory_proxy" "{{ .proxy }}" {
+			key  = "{{ .proxy }}"
+			host = "https://fake-proxy.org"
+			port = 8080
+		}
+
 		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
-			repo_key = "${artifactory_local_maven_repository.{{ .repo_name }}.key}"
+			repo_key = artifactory_local_maven_repository.{{ .repo_name }}.key
 			cron_exp = "0 0 * * * ?"
 			enable_event_replication = true
 
@@ -173,7 +251,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				url 								= "{{ .url }}"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
-				proxy 								= "{{ .proxy }}"
+				proxy 								= artifactory_proxy.{{ .proxy }}.key
 				enabled 							= false
 				socket_timeout_millis 				= 16000
 				sync_deletes 						= true
@@ -188,7 +266,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				url 								= "https://dummyurl.com/"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
-				proxy 								= "{{ .proxy }}"
+				proxy 								= artifactory_proxy.{{ .proxy }}.key
 				enabled 							= false
 				socket_timeout_millis 				= 16000
 				sync_deletes 						= true
@@ -202,19 +280,12 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProxy(t, testProxy)
-		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: func() func(*terraform.State) error {
-			acctest.DeleteProxy(t, testProxy)
-			return testAccCheckPushReplicationDestroy(fqrn)
-		}(),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCheckPushReplicationDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
-				Config: replicationConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
@@ -228,7 +299,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				),
 			},
 			{
-				Config: replicationUpdateConfig,
+				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
