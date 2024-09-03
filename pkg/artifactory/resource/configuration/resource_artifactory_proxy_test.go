@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/configuration"
@@ -57,12 +58,12 @@ func TestAccProxy_UpgradeFromSDKv2(t *testing.T) {
 
 	temp := `
 	resource "artifactory_proxy" "{{ .resource_name }}" {
-		key               = "{{ .resource_name }}"
-		host              = "{{ .host }}"
-		port              = {{ .port }}
+		key  = "{{ .resource_name }}"
+		host = "{{ .host }}"
+		port = {{ .port }}
 	}`
 
-	var testData = map[string]string{
+	testData := map[string]string{
 		"resource_name": resourceName,
 		"host":          "https://fake-proxy.org",
 		"port":          "8080",
@@ -92,13 +93,15 @@ func TestAccProxy_UpgradeFromSDKv2(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "redirect_to_hosts"),
 					resource.TestCheckNoResourceAttr(fqrn, "services"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
