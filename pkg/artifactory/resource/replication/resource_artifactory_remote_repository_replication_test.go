@@ -12,7 +12,61 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccRemoteReplicationInvalidPushCron_fails(t *testing.T) {
+func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-remote-repo-replication", "artifactory_remote_repository_replication")
+
+	params := map[string]interface{}{
+		"repo_name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
+		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
+			url = "https://repo1.maven.org/maven2/"
+		}
+
+		resource "artifactory_remote_repository_replication" "{{ .repo_name }}" {
+			repo_key 							= artifactory_remote_maven_repository.{{ .repo_name }}.key
+			cron_exp 							= "0 0 * * * ?"
+			enable_event_replication 			= true
+			enabled 							= true
+			sync_deletes 						= false
+			sync_properties 					= true
+			check_binary_existence_in_filestore = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						Source:            "jfrog/artifactory",
+						VersionConstraint: "11.7.0",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "false"),
+					resource.TestCheckResourceAttr(fqrn, "sync_properties", "true"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				PlanOnly:                 true,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+			},
+		},
+	})
+}
+
+func TestAccRemoteRepositoryReplication_InvalidPushCron_fails(t *testing.T) {
 	const invalidCron = `
 		resource "artifactory_remote_maven_repository" "lib-remote" {
 			key = "lib-remote"
@@ -32,8 +86,8 @@ func TestAccRemoteReplicationInvalidPushCron_fails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidCron,
@@ -43,7 +97,7 @@ func TestAccRemoteReplicationInvalidPushCron_fails(t *testing.T) {
 	})
 }
 
-func TestAccRemoteReplicationInvalidRclass_fails(t *testing.T) {
+func TestAccRemoteRepositoryReplication_InvalidRclass_fails(t *testing.T) {
 	const invalidRclass = `
 		resource "artifactory_local_maven_repository" "lib-local" {
 			key = "lib-local"
@@ -62,8 +116,8 @@ func TestAccRemoteReplicationInvalidRclass_fails(t *testing.T) {
 		}
 	`
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      invalidRclass,
@@ -73,20 +127,21 @@ func TestAccRemoteReplicationInvalidRclass_fails(t *testing.T) {
 	})
 }
 
-func TestAccRemoteReplicationRepo_full(t *testing.T) {
-	const testProxy = "test-proxy"
-	_, fqrn, name := testutil.MkNames("lib-remote", "artifactory_remote_repository_replication")
+func TestAccRemoteRepositoryReplication_full(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-remote-repo-replication", "artifactory_remote_repository_replication")
+
 	params := map[string]interface{}{
 		"repo_name": name,
 	}
-	replicationConfig := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
+
+	config := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
 		}
 
 		resource "artifactory_remote_repository_replication" "{{ .repo_name }}" {
-			repo_key 							= "${artifactory_remote_maven_repository.{{ .repo_name }}.key}"
+			repo_key 							= artifactory_remote_maven_repository.{{ .repo_name }}.key
 			cron_exp 							= "0 0 * * * ?"
 			enable_event_replication 			= true
 			enabled 							= true
@@ -98,14 +153,14 @@ func TestAccRemoteReplicationRepo_full(t *testing.T) {
 		}
 	`, params)
 
-	replicationUpdateConfig := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
+	updateConfig := util.ExecuteTemplate("TestAccPushSingleRemoteReplication", `
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
 		}
 
 		resource "artifactory_remote_repository_replication" "{{ .repo_name }}" {
-			repo_key 							= "${artifactory_remote_maven_repository.{{ .repo_name }}.key}"
+			repo_key 							= artifactory_remote_maven_repository.{{ .repo_name }}.key
 			cron_exp 							= "0 0 0 * * ?"
 			enable_event_replication 			= false
 			enabled 							= false
@@ -118,18 +173,14 @@ func TestAccRemoteReplicationRepo_full(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProxy(t, testProxy)
-		},
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: func() func(*terraform.State) error {
-			acctest.DeleteProxy(t, testProxy)
 			return testAccCheckPushReplicationDestroy(fqrn)
 		}(),
 		Steps: []resource.TestStep{
 			{
-				Config: replicationConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
@@ -143,7 +194,7 @@ func TestAccRemoteReplicationRepo_full(t *testing.T) {
 				),
 			},
 			{
-				Config: replicationUpdateConfig,
+				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 0 * * ?"),

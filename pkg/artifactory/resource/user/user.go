@@ -305,7 +305,7 @@ type GroupsAddRemove struct {
 	Remove []string `json:"remove"`
 }
 
-func (r *ArtifactoryBaseUserResource) syncReadersGroup(ctx context.Context, client *resty.Client, plan ArtifactoryUserResourceAPIModel, actual ArtifactoryUserResourceAPIModel) error {
+func (r *ArtifactoryBaseUserResource) syncReadersGroup(_ context.Context, client *resty.Client, plan ArtifactoryUserResourceAPIModel, actual ArtifactoryUserResourceAPIModel) error {
 	planGroups := []string{}
 	if plan.Groups != nil {
 		planGroups = *plan.Groups

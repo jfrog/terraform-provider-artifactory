@@ -82,7 +82,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_permission_target":                       security.ResourceArtifactoryPermissionTarget(),
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
-		"artifactory_remote_repository_replication":           replication.ResourceArtifactoryRemoteRepositoryReplication(),
 		"artifactory_api_key":                                 security.ResourceArtifactoryApiKey(),
 		"artifactory_access_token":                            security.ResourceArtifactoryAccessToken(),
 		"artifactory_oauth_settings":                          configuration.ResourceArtifactoryOauthSettings(),

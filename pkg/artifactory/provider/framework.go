@@ -226,6 +226,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		lifecycle.NewReleaseBundleV2PromotionResource,
 		replication.NewLocalRepositorySingleReplicationResource,
 		replication.NewLocalRepositoryMultiReplicationResource,
+		replication.NewRemoteRepositoryReplicationResource,
 	}
 }
 

@@ -594,10 +594,8 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 				Version: 1,
 			},
 			{
-				// this only works because the schema hasn't changed, except the removal of default value
-				// from `project_key` attribute.
 				Type:    resourceV2.CoreConfigSchema().ImpliedType(),
-				Upgrade: repository.ResourceUpgradeProjectKey,
+				Upgrade: ResourceStateUpgradeV2,
 				Version: 2,
 			},
 		},
@@ -636,6 +634,32 @@ func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *schema.Res
 func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	if rawState["package_type"] != "generic" {
 		delete(rawState, "propagate_query_params")
+	}
+
+	return rawState, nil
+}
+
+func ResourceStateUpgradeV2(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	// this only works because the schema hasn't changed, except the removal of default value
+	// from `project_key` attribute.
+	if rawState["project_key"] == "default" {
+		rawState["project_key"] = ""
+	}
+
+	if _, ok := rawState["archive_browsing_enabled"]; !ok {
+		rawState["archive_browsing_enabled"] = false
+	}
+
+	if _, ok := rawState["disable_proxy"]; !ok {
+		rawState["disable_proxy"] = false
+	}
+
+	if _, ok := rawState["disable_url_normalization"]; !ok {
+		rawState["disable_url_normalization"] = false
+	}
+
+	if _, ok := rawState["property_sets"]; !ok {
+		rawState["property_sets"] = []string{}
 	}
 
 	return rawState, nil

@@ -69,7 +69,7 @@ func TestAccLocalSingleReplication_UpgradeFromSDKv2(t *testing.T) {
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
 			},
 		},
 	})

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -94,13 +95,15 @@ func TestAccScopedToken_UpgradeGH_792(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -157,13 +160,15 @@ func TestAccScopedToken_UpgradeGH_818(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -245,11 +250,15 @@ func TestAccScopedToken_UpgradeToV1Schema(t *testing.T) {
 func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resource.TestCase) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -257,11 +266,14 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_user.{{ .user_resource_name }}.name
 		    expires_in  = 31536000
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":               name,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -276,7 +288,7 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "username", username),
 					resource.TestCheckResourceAttr(fqrn, "description", ""),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "expires_in", "31536000"),
@@ -290,13 +302,15 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 					resource.TestCheckResourceAttrSet(fqrn, "issued_at"),
 					resource.TestCheckResourceAttrSet(fqrn, "issuer"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	}
@@ -305,9 +319,13 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 func TestAccScopedToken_WithDefaults(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
-	template := `resource "artifactory_user" "test-user" {
-		name              = "testuser"
-		email             = "testuser@tempurl.org"
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
+	template := `resource "artifactory_user" "{{ .user_resource_name }}" {
+		name              = "{{ .username }}"
+		email             = "{{ .email }}"
 		admin             = true
 		disable_ui_access = false
 		groups            = ["readers"]
@@ -315,7 +333,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 	}
 
 	resource "artifactory_scoped_token" "{{ .name }}" {
-		username    = artifactory_user.test-user.name
+		username    = artifactory_user.{{ .user_resource_name }}.name
 		description = "{{ .description }}"
 	}`
 
@@ -323,8 +341,11 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		"TestAccScopedToken",
 		template,
 		map[string]interface{}{
-			"name":        name,
-			"description": "",
+			"name":               name,
+			"description":        "",
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -332,8 +353,11 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 		"TestAccScopedToken",
 		template,
 		map[string]interface{}{
-			"name":        name,
-			"description": "test updated description",
+			"name":               name,
+			"description":        "test updated description",
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -345,7 +369,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 			{
 				Config: accessTokenConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "username", username),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/user"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "false"),
@@ -380,11 +404,15 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 	_, _, projectKey := testutil.MkNames("test-project", "project")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -402,7 +430,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_user.{{ .user_resource_name }}.name
 			project_key = project.{{ .projectKey }}.key
 			scopes      = ["applied-permissions/admin", "system:metrics:r"]
 			description = "test description"
@@ -411,8 +439,11 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			audiences   = ["jfrt@1", "jfxr@*"]
 		}`,
 		map[string]interface{}{
-			"name":       name,
-			"projectKey": projectKey,
+			"name":               name,
+			"projectKey":         projectKey,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -429,7 +460,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 			{
 				Config: accessTokenConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "username", "testuser"),
+					resource.TestCheckResourceAttr(fqrn, "username", username),
 					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "scopes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
@@ -561,11 +592,15 @@ func TestAccScopedToken_WithMultipleGroupScopes(t *testing.T) {
 func TestAccScopedToken_WithResourceScopes(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-			email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -573,7 +608,7 @@ func TestAccScopedToken_WithResourceScopes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username = artifactory_user.test-user.name
+			username = artifactory_user.{{ .user_resource_name }}.name
 			scopes   = [
 				"artifact:generic-local:r",
 				"artifact:generic-local:w",
@@ -585,7 +620,10 @@ func TestAccScopedToken_WithResourceScopes(t *testing.T) {
 			]
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":               name,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -613,11 +651,15 @@ func TestAccScopedToken_WithResourceScopes(t *testing.T) {
 func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-			email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -625,13 +667,16 @@ func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username = artifactory_user.test-user.name
+			username = artifactory_user.{{ .user_resource_name }}.name
 			scopes   = [
 				"artifact:generic-local:q",
 			]
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":               name,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -1060,11 +1105,15 @@ func TestAccScopedToken_WithTooLongAudiences(t *testing.T) {
 func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) {
 	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -1072,13 +1121,16 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_user.{{ .user_resource_name }}.name
 			description = "test description"
 			expires_in  = {{ .expires_in }}
 		}`,
 		map[string]interface{}{
-			"name":       name,
-			"expires_in": 600, // any value > 0 and less than default persistency threshold (10800) will result in token not being saved.
+			"name":               name,
+			"expires_in":         600, // any value > 0 and less than default persistency threshold (10800) will result in token not being saved.
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 
@@ -1097,11 +1149,15 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
 
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := fmt.Sprintf(username + "@test.com")
+
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
-		`resource "artifactory_user" "test-user" {
-			name              = "testuser"
-		    email             = "testuser@tempurl.org"
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
 			admin             = true
 			disable_ui_access = false
 			groups            = ["readers"]
@@ -1109,12 +1165,15 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 		}
 
 		resource "artifactory_scoped_token" "{{ .name }}" {
-			username    = artifactory_user.test-user.name
+			username    = artifactory_user.{{ .user_resource_name }}.name
 			description = "test description"
 			expires_in  = 0
 		}`,
 		map[string]interface{}{
-			"name": name,
+			"name":               name,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
 		},
 	)
 

@@ -10,7 +10,7 @@
 
 ## Releases
 
-Current provider major release: **10.x**
+Current provider major release: **11.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
@@ -20,7 +20,7 @@ Version 6.x is compatible with the Artifactory versions 7.49.x and below.
 
 Version 7.x and 8.x is only compatible with Artifactory between 7.50.x and 7.67.x due to changes in the projects functionality.
 
-Version 10.x is the latest major version and is compatible with latest Artifactory versions (>=7.68.7 (self-hosted) and >=7.67.0 (cloud)).
+Version 10.x (and later) is compatible with latest Artifactory versions (>=7.68.7 (self-hosted) and >=7.67.0 (cloud)).
 
 ## Terraform CLI version support
 
@@ -30,7 +30,7 @@ Current version support [Terraform Protocol v6](https://developer.hashicorp.com/
 
 Create a new Terraform file with `artifactory` resources. Also see [sample.tf](./sample.tf):
 
-<details><summary>HCL Example</summary>
+### HCL Example
 
 ```terraform
 # Required for Terraform 1.0 and up (https://www.terraform.io/upgrade-guides)
@@ -38,7 +38,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "jfrog/artifactory"
-      version = "10.0.2"
+      version = "11.8.0"
     }
   }
 }
@@ -74,39 +74,20 @@ resource "artifactory_artifact_webhook" "artifact-webhook" {
   depends_on = [artifactory_local_pypi_repository.pypi-local]
 }
 ```
-</details>
 
 Initialize Terrform:
-```sh
-$ terraform init
+```console
+terraform init
 ```
 
 Plan (or Apply):
-```sh
-$ terraform plan
+```console
+terraform plan
 ```
 
 ## Documentation
 
 To use this provider in your Terraform module, follow the documentation on [Terraform Registry](https://registry.terraform.io/providers/jfrog/artifactory/latest/docs).
-
-## License requirements
-
-This provider requires access to Artifactory APIs, which are only available in the _licensed_ pro and enterprise editions. You can determine which license you have by accessing the following URL `${host}/artifactory/api/system/licenses/`
-
-You can either access it via API, or web browser - it requires admin level credentials, but it's one of the few APIs that will work without a license (side node: you can also install your license here with a `POST`)
-
-```sh
-$ curl -sL ${host}/artifactory/api/system/licenses/ | jq .
-```
-
-```json
-{
-  "type" : "Enterprise Plus Trial",
-  "validThrough" : "Jan 29, 2022",
-  "licensedTo" : "JFrog Ltd"
-}
-```
 
 ## Versioning
 
