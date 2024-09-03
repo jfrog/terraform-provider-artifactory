@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -64,8 +65,11 @@ func TestAccLocalMultiReplication_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
