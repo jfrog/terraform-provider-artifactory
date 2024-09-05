@@ -1,3 +1,9 @@
+## 11.9.0 (September 6, 2024)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Add `project_key` attribute. Update attribute validations and documentation. PR: [#1065](https://github.com/jfrog/terraform-provider-artifactory/pull/1065)
+
 ## 11.8.0 (September 3, 2024). Tested on Artifactory 7.90.9 with Terraform 1.9.5 and OpenTofu 1.8.1
 
 IMPROVEMENTS:
