@@ -1,4 +1,4 @@
-## 11.9.0 (September 6, 2024)
+## 11.9.0 (September 6, 2024). Tested on Artifactory 7.90.9 with Terraform 1.9.5 and OpenTofu 1.8.2
 
 IMPROVEMENTS:
 
