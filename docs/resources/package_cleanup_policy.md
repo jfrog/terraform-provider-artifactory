@@ -23,15 +23,25 @@ resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
   duration_in_minutes = 60
   enabled = true
   skip_trashcan = false
+  project_key = "myprojkey"
   
   search_criteria = {
-    package_types = ["docker"]
-    repos = ["my-docker-local"]
-    included_projects = ["myproj"]
-    included_packages = ["**"]
+    package_types = [
+      "docker",
+      "maven",
+    ]
+    repos = [
+      "my-docker-local",
+      "my-maven-local",
+    ]
+    excluded_repos = ["gradle-global"]
+    include_all_projects = false
+    included_projects = []
+    included_packages = ["com/jfrog"]
     excluded_packages = ["com/jfrog/latest"]
     created_before_in_months = 1
     last_downloaded_before_in_months = 6
+    keep_last_n_versions = 0
   }
 }
 ```
@@ -41,7 +51,7 @@ resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
 
 ### Required
 
-- `key` (String) Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc.
+- `key` (String) Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc. A minimum of three characters is required and can include letters, numbers, underscore and hyphen.
 - `search_criteria` (Attributes) (see [below for nested schema](#nestedatt--search_criteria))
 
 ### Optional
@@ -50,7 +60,10 @@ resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
 - `description` (String)
 - `duration_in_minutes` (Number) Enable and select the maximum duration for policy execution. Note: using this setting can cause the policy to stop before completion.
 - `enabled` (Boolean) Enables or disabled the package cleanup policy. This allows the user to run the policy manually. If a policy has a valid cron expression, then it will be scheduled for execution based on it. If a policy is disabled, its future executions will be unscheduled. Defaults to `true`
-- `skip_trashcan` (Boolean) When enabled, deleted packages are permanently removed from Artifactory without an option to restore them. Defaults to `false`
+- `project_key` (String) This attribute is used only for project-level cleanup policies, it is not used for global-level policies.
+- `skip_trashcan` (Boolean) Enabling this setting results in packages being permanently deleted from Artifactory after the cleanup policy is executed instead of going to the Trash Can repository. Defaults to `false`.
+
+~>The Global Trash Can setting must be enabled if you want deleted items to be transferred to the Trash Can. For information on enabling global Trash Can settings, see [Trash Can Settings](https://jfrog.com/help/r/jfrog-artifactory-documentation/trash-can-settings).
 
 <a id="nestedatt--search_criteria"></a>
 ### Nested Schema for `search_criteria`
@@ -63,13 +76,21 @@ Required:
 
 Optional:
 
-- `created_before_in_months` (Number) Remove packages based on when they were created.
-- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy.
-- `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the policy. It can not accept any pattern only list of specific repositories.
-- `include_all_projects` (Boolean)
-- `included_projects` (Set of String) List of projects name(s) to apply the policy to.
-- `keep_last_n_versions` (Number) Select the number of latest version to keep. The policy will remove all versions (based on creation date) prior to the selected number. Some package types may not be supported. [Learn more](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies/package-types-coverage)
-- `last_downloaded_before_in_months` (Number) Remove packages based on when they were last downloaded.
+- `created_before_in_months` (Number) Remove packages based on when they were created. For example, remove packages that were created more than a year ago. The default value is to remove packages created more than 2 years ago.
+- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only Name explicit names (and not patterns) are accepted.
+- `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the cleanup policy.
+- `include_all_projects` (Boolean) Set this to `true` if you want the policy to run on all projects on the platform.
+- `included_projects` (Set of String) List of projects on which you want this policy to run. To include repositories that are not assigned to any project, enter the project key `default`.
+
+~>This setting is relevant only on the global level, for Platform Admins.
+- `keep_last_n_versions` (Number) Select the number of latest versions to keep. The cleanup policy will remove all versions prior to the number you select here. The latest version is always excluded. Versions are determined by creation date.
+
+~>Not all package types support this condition. For information on which package types support this condition, [learn more](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies/package-types-coverage).
+- `last_downloaded_before_in_months` (Number) Removes packages based on when they were last downloaded. For example, removes packages that were not downloaded in the past year. The default value is to remove packages that were downloaded more than 2 years ago.
+
+~>If a package was never downloaded, the policy will remove it based only on the age-condition (`created_before_in_months`).
+
+~>JFrog recommends using the `last_downloaded_before_in_months` condition to ensure that packages currently in use are not deleted.
 
 ## Import
 
@@ -77,4 +98,6 @@ Import is supported using the following syntax:
 
 ```shell
 terraform import artifactory_package_cleanup_policy.my-cleanup-policy my-policy
+
+terraform import artifactory_package_cleanup_policy.my-cleanup-policy my-policy:myproj
 ```
