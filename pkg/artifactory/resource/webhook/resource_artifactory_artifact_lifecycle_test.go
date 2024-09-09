@@ -27,7 +27,7 @@ func TestAccWebhook_ArtifactLifecycle(t *testing.T) {
 				"restore",
 			]
 			handler {
-				url = "https://tempurl.org"
+				url = "https://google.com"
 				secret                 = "fake-secret"
 				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
@@ -50,7 +50,7 @@ func TestAccWebhook_ArtifactLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "event_types.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "handler.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
+					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
