@@ -1,3 +1,9 @@
+## 11.9.1 (September 9, 2024). Tested on Artifactory 7.90.9 with Terraform 1.9.5 and OpenTofu 1.8.2
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Add beta warning message to documentation. PR: [#1068](https://github.com/jfrog/terraform-provider-artifactory/pull/1068)
+
 ## 11.9.0 (September 6, 2024). Tested on Artifactory 7.90.9 with Terraform 1.9.5 and OpenTofu 1.8.2
 
 IMPROVEMENTS:

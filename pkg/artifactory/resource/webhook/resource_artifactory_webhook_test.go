@@ -46,7 +46,7 @@ var repoTemplate = `
 			repo_keys = []
 		}
 		handler {
-			url = "https://tempurl.org"
+			url = "https://google.com"
 		}
 	}
 `
@@ -61,7 +61,7 @@ var buildTemplate = `
 			selected_builds = []
 		}
 		handler {
-			url = "https://tempurl.org"
+			url = "https://google.com"
 		}
 	}
 `
@@ -76,7 +76,7 @@ var releaseBundleTemplate = `
 			registered_release_bundle_names = []
 		}
 		handler {
-			url = "https://tempurl.org"
+			url = "https://google.com"
 		}
 	}
 `
@@ -91,7 +91,7 @@ var releaseBundleV2Template = `
 			selected_release_bundles = []
 		}
 		handler {
-			url = "https://tempurl.org"
+			url = "https://google.com"
 		}
 	}
 `
@@ -167,7 +167,7 @@ func TestAccWebhook_EventTypesValidation(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url = "https://tempurl.org"
+				url = "https://google.com"
 			}
 		}
 	`, params)
@@ -206,7 +206,7 @@ func TestAccWebhook_HandlerValidation_EmptyProxy(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url   = "https://tempurl.org"
+				url   = "https://google.com"
 				proxy = ""
 			}
 		}
@@ -246,8 +246,8 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 				repo_keys  = []
 			}
 			handler {
-				url   = "https://tempurl.org"
-				proxy = "https://tempurl.org"
+				url   = "https://google.com"
+				proxy = "https://google.com"
 			}
 		}
 	`, params)
@@ -260,7 +260,7 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
-				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got https://tempurl.org`),
+				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got https://google.com`),
 			},
 		},
 	})
@@ -285,7 +285,7 @@ func TestAccWebhook_BuildWithIncludePatterns(t *testing.T) {
 				include_patterns = ["foo"]
 			}
 			handler {
-				url = "https://tempurl.org"
+				url = "https://google.com"
 			}
 		}
 	`, params)
@@ -355,7 +355,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				exclude_patterns = ["bar/**"]
 			}
 			handler {
-				url                    = "https://tempurl.org"
+				url                    = "https://google.com"
 				secret                 = "fake-secret"
 				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
@@ -385,7 +385,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				repo_keys  = [artifactory_local_{{ .repoType }}_repository.{{ .repoName }}.key]
 			}
 			handler {
-				url                    = "https://tempurl.org"
+				url                    = "https://google.com"
 				secret                 = "fake-secret"
 				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
@@ -412,7 +412,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "1"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
 		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
@@ -434,7 +434,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "0"),
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.#", "0"),
 		resource.TestCheckResourceAttr(fqrn, "handler.#", "2"),
-		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
@@ -566,7 +566,7 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 // Unit tests for state migration func
 func TestWebhook_ResourceStateUpgradeV1(t *testing.T) {
 	v1Data := map[string]interface{}{
-		"url":    "https://tempurl.org",
+		"url":    "https://google.com",
 		"secret": "fake-secret",
 		"proxy":  "fake-proxy-key",
 		"custom_http_headers": map[string]interface{}{
@@ -577,7 +577,7 @@ func TestWebhook_ResourceStateUpgradeV1(t *testing.T) {
 	v2Data := map[string]interface{}{
 		"handler": []map[string]interface{}{
 			{
-				"url":    "https://tempurl.org",
+				"url":    "https://google.com",
 				"secret": "fake-secret",
 				"proxy":  "fake-proxy-key",
 				"custom_http_headers": map[string]interface{}{

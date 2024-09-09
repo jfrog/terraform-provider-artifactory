@@ -34,7 +34,7 @@ func TestAccWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 				]
 			}
 			handler {
-				url = "https://tempurl.org"
+				url = "https://google.com"
 				secret                 = "fake-secret"
 				use_secret_for_signing = {{ .useSecretForSigning }}
 				custom_http_headers = {
@@ -61,7 +61,7 @@ func TestAccWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.selected_environments.*", "PROD"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.selected_environments.*", "DEV"),
 					resource.TestCheckResourceAttr(fqrn, "handler.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://tempurl.org"),
+					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.secret", "fake-secret"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.use_secret_for_signing", fmt.Sprintf("%t", params["useSecretForSigning"])),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.%", "2"),
