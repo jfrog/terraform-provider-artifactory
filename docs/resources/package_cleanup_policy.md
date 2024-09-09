@@ -9,7 +9,7 @@ description: |-
 
 # artifactory_package_cleanup_policy (Resource)
 
-Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/create-a-package-retention-policy) for more details.
+Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
 
 ->Only available for Artifactory 7.90.1 or later.
 
