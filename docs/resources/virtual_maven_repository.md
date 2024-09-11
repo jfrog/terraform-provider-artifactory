@@ -24,8 +24,8 @@ resource "artifactory_virtual_maven_repository" "maven-virt-repo" {
   key             = "maven-virt-repo"
   repo_layout_ref = "maven-2-default"
   repositories    = [
-    "${artifactory_local_maven_repository.bar.key}",
-    "${artifactory_remote_maven_repository.baz.key}"
+    artifactory_local_maven_repository.bar.key,
+    artifactory_remote_maven_repository.baz.key
   ]
   description                              = "A test virtual repo"
   notes                                    = "Internal description"
