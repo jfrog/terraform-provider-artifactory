@@ -4,15 +4,12 @@ page_title: "artifactory_package_cleanup_policy Resource - terraform-provider-ar
 subcategory: "Configuration"
 description: |-
   Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See Rentation Policies https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies for more details.
-  ->Only available for Artifactory 7.90.1 or later.
   ~>Currently in beta and not yet globally available. A full rollout is scheduled for early October 2024.
 ---
 
 # artifactory_package_cleanup_policy (Resource)
 
-Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
-
-->Only available for Artifactory 7.90.1 or later.
+Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Rentation Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
 
 ~>Currently in beta and not yet globally available. A full rollout is scheduled for early October 2024.
 
