@@ -1,3 +1,12 @@
+## 11.9.2 (September 12, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.5 and OpenTofu 1.8.2
+
+IMPROVEMENTS:
+
+* provider: Upgrade Golang version to 1.22.7 due to CVE-2024-34156. Security Advisory: [GHSA-wcq6-89h8-g366](https://github.com/jfrog/terraform-provider-artifactory/security/advisories/GHSA-wcq6-89h8-g366)
+* resource/artifactory_package_cleanup_policy: Remove version limitation note from documentation.
+
+PR: [#1071](https://github.com/jfrog/terraform-provider-artifactory/pull/1071)
+
 ## 11.9.1 (September 9, 2024). Tested on Artifactory 7.90.9 with Terraform 1.9.5 and OpenTofu 1.8.2
 
 IMPROVEMENTS:
