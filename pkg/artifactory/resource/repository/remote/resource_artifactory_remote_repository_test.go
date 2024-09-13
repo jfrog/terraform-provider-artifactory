@@ -41,6 +41,7 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 			key             = "{{ .name }}"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
+			list_remote_folder_items = true
 		}
 
 	`, params)

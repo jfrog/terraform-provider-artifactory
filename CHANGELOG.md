@@ -1,3 +1,9 @@
+## 12.0.0 (September 16, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.5 and OpenTofu 1.8.2
+
+BREAKING CHANGES:
+
+* resource/artifactory_remote_\*\_repository: Fix mismatch between documentation and actual default vaule for `list_remote_folder_items` attribute. This will also match the change (default to `false`) introduced to the REST API in Artifactory v7.94.0. **Note:** Due to limitation of the Terraform SDKv2 framework, it is not possible to detect the attribute was not set and the state has the (previous) default value of `true`, then automaticaly upgrades it to `false`. Therefore this update will introduce state drift if this attribute is not set in your configuration. Use `terraform apply -refresh-only` to update your Terraform states to match. PR: [#1072](https://github.com/jfrog/terraform-provider-artifactory/pull/1072)
+
 ## 11.9.2 (September 12, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.5 and OpenTofu 1.8.2
 
 IMPROVEMENTS:

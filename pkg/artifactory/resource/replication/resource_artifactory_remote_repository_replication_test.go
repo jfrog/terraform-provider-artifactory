@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -24,6 +23,7 @@ func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
+			list_remote_folder_items = true
 		}
 
 		resource "artifactory_remote_repository_replication" "{{ .repo_name }}" {
@@ -60,11 +60,8 @@ func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
+				PlanOnly:                 true,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
 			},
 		},
 	})
