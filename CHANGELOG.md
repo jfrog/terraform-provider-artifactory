@@ -1,4 +1,4 @@
-## 11.10.0 (September 16, 2024)
+## 12.0.0 (September 16, 2024)
 
 BUG FIXES:
 
