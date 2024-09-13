@@ -336,9 +336,9 @@ var BaseRemoteRepoSchema = func(isResource bool) map[string]*schema.Schema {
 			"list_remote_folder_items": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 				Description: "Lists the items of remote folders in simple and list browsing. The remote content is cached " +
-					"according to the value of the 'Retrieval Cache Period'. Default value is 'true'.",
+					"according to the value of the 'Retrieval Cache Period'. Default value is 'false'. This field exists in the API but not in the UI.",
 			},
 			"mismatching_mime_types_override_list": {
 				Type:             schema.TypeString,
