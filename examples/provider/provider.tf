@@ -1,4 +1,4 @@
 provider "artifactory" {
-  url          = "${var.artifactory_url}/artifactory"
-  access_token = var.artifactory_access_token
+  url          = "https://myinstance.jfrog.io"
+  access_token = "my-access-token"
 }
