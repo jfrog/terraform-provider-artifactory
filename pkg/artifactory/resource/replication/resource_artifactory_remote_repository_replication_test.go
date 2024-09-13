@@ -23,6 +23,7 @@ func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
 		resource "artifactory_remote_maven_repository" "{{ .repo_name }}" {
 			key = "{{ .repo_name }}"
 			url = "https://repo1.maven.org/maven2/"
+			list_remote_folder_items = true
 		}
 
 		resource "artifactory_remote_repository_replication" "{{ .repo_name }}" {
@@ -60,7 +61,7 @@ func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 				Config:                   config,
 				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks("artifactory_remote_repository_replication"),
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
 			},
 		},
 	})
