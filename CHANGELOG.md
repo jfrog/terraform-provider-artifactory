@@ -1,3 +1,9 @@
+## 11.10.0 (September 16, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_remote_\*\_repository: Fix mismatch between documentation and actual default vaule for `list_remote_folder_items` attribute. PR: [#1072](https://github.com/jfrog/terraform-provider-artifactory/pull/1072)
+
 ## 11.9.2 (September 12, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.5 and OpenTofu 1.8.2
 
 IMPROVEMENTS:
