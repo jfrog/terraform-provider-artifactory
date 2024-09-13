@@ -19,7 +19,6 @@ func TestMuxServer(t *testing.T) {
 		provider "artifactory" {
 			url        		= "%s"
 			access_token    = "%s"
-			check_license   = true
 		}
 	`
 	url := os.Getenv("JFROG_URL")

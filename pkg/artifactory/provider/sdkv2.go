@@ -48,12 +48,6 @@ func SdkV2() *schema.Provider {
 				ValidateDiagFunc: validator.StringIsNotEmpty,
 				Description:      "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
 			},
-			"check_license": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
-				Deprecated:  "Remove this attribute from your provider configuration as it is no longer used and the attribute will be removed in the next major version of the provider.",
-			},
 		},
 
 		ResourcesMap:   resourcesMap(),
