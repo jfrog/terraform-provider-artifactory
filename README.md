@@ -10,7 +10,7 @@
 
 ## Releases
 
-Current provider major release: **11.x**
+Current provider major release: **12.x**
 
 See [CHANGELOG.md](CHANGELOG.md) for full details
 
@@ -38,7 +38,7 @@ terraform {
   required_providers {
     artifactory = {
       source  = "jfrog/artifactory"
-      version = "11.8.0"
+      version = "12.0.0"
     }
   }
 }

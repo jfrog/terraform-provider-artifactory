@@ -1,7 +1,7 @@
 package federated
 
 import (
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/federated"
 )
 
 const rclass = "federated"
