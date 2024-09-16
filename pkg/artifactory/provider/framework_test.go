@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/provider"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/provider"
 )
 
 func TestMuxServer(t *testing.T) {
@@ -19,7 +19,6 @@ func TestMuxServer(t *testing.T) {
 		provider "artifactory" {
 			url        		= "%s"
 			access_token    = "%s"
-			check_license   = true
 		}
 	`
 	url := os.Getenv("JFROG_URL")

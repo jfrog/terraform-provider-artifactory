@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"

@@ -2,7 +2,7 @@ package virtual
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )

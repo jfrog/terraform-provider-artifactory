@@ -14,14 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/datasource/artifact"
-	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/datasource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/artifact"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/lifecycle"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/replication"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/user"
+	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/artifact"
+	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/artifact"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -38,7 +38,6 @@ type ArtifactoryProviderModel struct {
 	AccessToken      types.String `tfsdk:"access_token"`
 	ApiKey           types.String `tfsdk:"api_key"`
 	OIDCProviderName types.String `tfsdk:"oidc_provider_name"`
-	CheckLicense     types.Bool   `tfsdk:"check_license"`
 }
 
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
@@ -78,11 +77,6 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 					stringvalidator.LengthAtLeast(1),
 				},
 				Description: "OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.",
-			},
-			"check_license": schema.BoolAttribute{
-				Description:        "Toggle for pre-flight checking of Artifactory Pro and Enterprise license. Default to `true`.",
-				Optional:           true,
-				DeprecationMessage: "Remove this attribute from your provider configuration as it is no longer used and the attribute will be removed in the next major version of the provider.",
 			},
 		},
 	}

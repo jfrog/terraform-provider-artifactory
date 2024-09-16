@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/configuration"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/replication"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/remote"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/repository/virtual"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/webhook"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/federated"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -83,11 +83,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_pull_replication":                        replication.ResourceArtifactoryPullReplication(),
 		"artifactory_push_replication":                        replication.ResourceArtifactoryPushReplication(),
 		"artifactory_api_key":                                 security.ResourceArtifactoryApiKey(),
-		"artifactory_access_token":                            security.ResourceArtifactoryAccessToken(),
 		"artifactory_oauth_settings":                          configuration.ResourceArtifactoryOauthSettings(),
 		"artifactory_saml_settings":                           configuration.ResourceArtifactorySamlSettings(),
-		"artifactory_replication_config":                      replication.ResourceArtifactoryReplicationConfig(),
-		"artifactory_single_replication_config":               replication.ResourceArtifactorySingleReplicationConfig(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
 	}

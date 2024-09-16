@@ -7,9 +7,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-artifactory/v11/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+)
+
+const PermissionsEndPoint = "artifactory/api/v2/security/permissions/"
+const (
+	PermRead            = "read"
+	PermWrite           = "write"
+	PermAnnotate        = "annotate"
+	PermDelete          = "delete"
+	PermManage          = "manage"
+	PermManagedXrayMeta = "managedXrayMeta"
+	PermDistribute      = "distribute"
 )
 
 type PermissionTargetParams struct {
@@ -55,13 +65,13 @@ func BuildPermissionTargetSchema() map[string]*schema.Schema {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 						ValidateFunc: validation.StringInSlice([]string{
-							security.PermRead,
-							security.PermAnnotate,
-							security.PermWrite,
-							security.PermDelete,
-							security.PermManage,
-							security.PermManagedXrayMeta,
-							security.PermDistribute,
+							PermRead,
+							PermAnnotate,
+							PermWrite,
+							PermDelete,
+							PermManage,
+							PermManagedXrayMeta,
+							PermDistribute,
 						}, false),
 					},
 					Set:      schema.HashString,
@@ -135,7 +145,7 @@ func DataSourceArtifactoryPermissionTarget() *schema.Resource {
 	dataSourcePermissionTargetRead := func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		permissionTarget := new(PermissionTargetParams)
 		targetName := d.Get("name").(string)
-		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(permissionTarget).Get(security.PermissionsEndPoint + targetName)
+		resp, err := m.(util.ProviderMetadata).Client.R().SetResult(permissionTarget).Get(PermissionsEndPoint + targetName)
 
 		if err != nil {
 			return diag.FromErr(err)
