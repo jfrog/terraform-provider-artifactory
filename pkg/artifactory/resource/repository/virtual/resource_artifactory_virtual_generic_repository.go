@@ -4,51 +4,60 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-func ResourceArtifactoryVirtualGenericRepository(pkt string) *schema.Resource {
+func ResourceArtifactoryVirtualGenericRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParams{
-			PackageType: pkt,
+			PackageType: packageType,
 			Rclass:      Rclass,
 		}, nil
 	}
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackBaseVirtRepo(data, pkt)
+		repo := UnpackBaseVirtRepo(data, packageType)
 		return repo, repo.Id(), nil
 	}
 
-	genericSchema := utilsdk.MergeMaps(BaseVirtualRepoSchema,
-		repository.RepoLayoutRefSchema(Rclass, pkt))
+	genericSchemas := GetSchemas(repository.RepoLayoutRefSchema(Rclass, packageType))
 
-	return repository.MkResourceSchema(genericSchema, packer.Default(genericSchema), unpack, constructor)
+	return repository.MkResourceSchema(
+		genericSchemas,
+		packer.Default(genericSchemas[CurrentSchemaVersion]),
+		unpack,
+		constructor,
+	)
 }
 
-func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(pkt string) *schema.Resource {
-	var repoWithRetrivalCachePeriodSecsVirtualSchema = utilsdk.MergeMaps(
-		BaseVirtualRepoSchema,
+var RepoWithRetrivalCachePeriodSecsVirtualSchemas = func(packageType string) map[int16]map[string]*schema.Schema {
+	var repoWithRetrivalCachePeriodSecsVirtualSchema = lo.Assign(
 		RetrievalCachePeriodSecondsSchema,
-		repository.RepoLayoutRefSchema(Rclass, pkt),
+		repository.RepoLayoutRefSchema(Rclass, packageType),
 	)
+
+	return GetSchemas(repoWithRetrivalCachePeriodSecsVirtualSchema)
+}
+
+func ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageType string) *schema.Resource {
+	repoWithRetrivalCachePeriodSecsVirtualSchemas := RepoWithRetrivalCachePeriodSecsVirtualSchemas(packageType)
 
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: pkt,
+				PackageType: packageType,
 			},
 		}, nil
 	}
 
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, pkt)
+		repo := UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(data, packageType)
 		return repo, repo.Id(), nil
 	}
 
 	return repository.MkResourceSchema(
-		repoWithRetrivalCachePeriodSecsVirtualSchema,
-		packer.Default(repoWithRetrivalCachePeriodSecsVirtualSchema),
+		repoWithRetrivalCachePeriodSecsVirtualSchemas,
+		packer.Default(repoWithRetrivalCachePeriodSecsVirtualSchemas[CurrentSchemaVersion]),
 		unpack,
 		constructor,
 	)

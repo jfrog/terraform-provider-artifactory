@@ -33,11 +33,14 @@ The following arguments are supported:
   The attribute should only be used if the repository is already assigned to the existing project. If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during the update.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of x/y/\*\*/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/\*).
-* `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/*\*/z/\*. By default no artifacts are excluded.
+* `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/\*`. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).
+* `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Repository layout key for the virtual repository.
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: `false`) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
 * `default_deployment_repo` - (Optional) Default repository to deploy artifacts.
+* `allow_delete` - (Optional) When unset or set to `true`, provider will delete the repository even if it contains artifacts. Must be set to `false` for the provider to return error when destroying the resource.
+
+~>To maintain backward compatibility with provider version 12.0.0 and earlier, the state value for `allow_delete` is automatically set to `true` for existing resources.
 
 ## Import
 

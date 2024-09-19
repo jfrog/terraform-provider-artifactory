@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type GenericRepositoryParams struct {
@@ -16,15 +16,15 @@ type GenericRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
-	var genericSchema = utilsdk.MergeMaps(
-		local.GetGenericRepoSchema(packageType),
+	var genericSchema = lo.Assign(
+		local.GetGenericSchemas(packageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, packageType),
 	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := GenericRepositoryParams{
-			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, packageType),
+			RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, packageType),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
 		}
@@ -50,7 +50,7 @@ func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.R
 		return &GenericRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(packageType),
-				Rclass:      rclass,
+				Rclass:      Rclass,
 			},
 		}, nil
 	}

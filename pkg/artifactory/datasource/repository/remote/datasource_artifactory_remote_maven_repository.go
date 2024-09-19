@@ -10,7 +10,7 @@ import (
 
 func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.MavenPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.MavenPackageType)()
 		if err != nil {
 			return nil, err
 		}
@@ -18,8 +18,8 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 		return &remote.MavenRemoteRepo{
 			JavaRemoteRepo: remote.JavaRemoteRepo{
 				RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-					Rclass:        rclass,
-					PackageType:   remote.MavenPackageType,
+					Rclass:        remote.Rclass,
+					PackageType:   resource_repository.MavenPackageType,
 					RepoLayoutRef: repoLayout.(string),
 				},
 				SuppressPomConsistencyChecks: false,
@@ -27,7 +27,9 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 		}, nil
 	}
 
-	mavenSchema := remote.MavenRemoteSchema(false)
+	mavenSchema := remote.MavenSchemas[remote.MavenCurrentSchemaVersion]
+	mavenSchema["url"].Required = false
+	mavenSchema["url"].Optional = true
 
 	return &schema.Resource{
 		Schema:      mavenSchema,

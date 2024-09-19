@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualDockerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.DockerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.DockerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.DockerPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.DockerPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	dockerSchema := virtual.DockerVirtualSchema
+	dockerSchema := virtual.DockerSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      dockerSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(dockerSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.DockerPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.DockerPackageType),
 	}
 }

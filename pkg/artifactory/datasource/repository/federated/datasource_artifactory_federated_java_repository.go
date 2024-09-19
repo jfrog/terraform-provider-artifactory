@@ -10,13 +10,13 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 
-	javaFederatedSchema := utilsdk.MergeMaps(
-		local.GetJavaRepoSchema(packageType, suppressPom),
+	javaFederatedSchema := lo.Assign(
+		local.GetJavaSchemas(packageType, suppressPom)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSchema("federated", packageType),
 	)
@@ -41,7 +41,7 @@ func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPo
 			JavaLocalRepositoryParams: local.JavaLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: packageType,
-					Rclass:      rclass,
+					Rclass:      federated.Rclass,
 				},
 				SuppressPomConsistencyChecks: suppressPom,
 			},

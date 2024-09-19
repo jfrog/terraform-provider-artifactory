@@ -2,7 +2,7 @@ package repository
 
 // Consolidated list of Default Repo Layout for all Package Types with active Repo Types
 var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
-	"alpine": {
+	AlpinePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -11,7 +11,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"ansible": {
+	AnsiblePackageType: {
 		RepoLayoutRef: "ansible-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -20,7 +20,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"bower": {
+	BowerPackageType: {
 		RepoLayoutRef: "bower-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -29,7 +29,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"cran": {
+	CranPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -38,7 +38,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"cargo": {
+	CargoPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -46,7 +46,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"chef": {
+	ChefPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -55,7 +55,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"cocoapods": {
+	CocoapodsPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -63,7 +63,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"composer": {
+	ComposerPackageType: {
 		RepoLayoutRef: "composer-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -72,7 +72,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"conan": {
+	ConanPackageType: {
 		RepoLayoutRef: "conan-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -81,7 +81,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"conda": {
+	CondaPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -90,7 +90,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"debian": {
+	DebianPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -99,7 +99,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"docker": {
+	DockerPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -108,7 +108,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"gems": {
+	GemsPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -117,7 +117,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"generic": {
+	GenericPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -126,7 +126,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"gitlfs": {
+	GitLFSPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -135,7 +135,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"go": {
+	GoPackageType: {
 		RepoLayoutRef: "go-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -144,7 +144,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"gradle": {
+	GradlePackageType: {
 		RepoLayoutRef: "maven-2-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -153,7 +153,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"helm": {
+	HelmPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -162,7 +162,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"helmoci": {
+	HelmOCIPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -171,7 +171,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"huggingfaceml": {
+	HuggingFacePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -180,7 +180,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": false,
 		},
 	},
-	"ivy": {
+	IvyPackageType: {
 		RepoLayoutRef: "ivy-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -189,7 +189,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"maven": {
+	MavenPackageType: {
 		RepoLayoutRef: "maven-2-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -198,7 +198,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"npm": {
+	NPMPackageType: {
 		RepoLayoutRef: "npm-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -207,7 +207,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"nuget": {
+	NugetPackageType: {
 		RepoLayoutRef: "nuget-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -216,7 +216,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"oci": {
+	OCIPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -225,7 +225,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"opkg": {
+	OpkgPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -234,14 +234,14 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"p2": {
+	P2PackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"remote":  true,
 			"virtual": true,
 		},
 	},
-	"pub": {
+	PubPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -250,7 +250,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"puppet": {
+	PuppetPackageType: {
 		RepoLayoutRef: "puppet-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -259,7 +259,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"pypi": {
+	PyPiPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -268,7 +268,25 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"sbt": {
+	RPMPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
+	SwiftPackageType: {
+		RepoLayoutRef: "swift-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
+	SBTPackageType: {
 		RepoLayoutRef: "sbt-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -277,7 +295,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"terraform": {
+	TerraformPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     false,
@@ -286,25 +304,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
-	"terraform_module": {
-		RepoLayoutRef: "terraform-module-default",
-		SupportedRepoTypes: map[string]bool{
-			"local":     true,
-			"remote":    true,
-			"virtual":   true,
-			"federated": true,
-		},
-	},
-	"terraform_provider": {
-		RepoLayoutRef: "terraform-provider-default",
-		SupportedRepoTypes: map[string]bool{
-			"local":     true,
-			"remote":    true,
-			"virtual":   true,
-			"federated": true,
-		},
-	},
-	"terraformbackend": {
+	TerraformBackendPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
@@ -313,35 +313,35 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": false,
 		},
 	},
-	"vagrant": {
+	TerraformModulePackageType: {
+		RepoLayoutRef: "terraform-module-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
+	TerraformProviderPackageType: {
+		RepoLayoutRef: "terraform-provider-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    true,
+			"virtual":   true,
+			"federated": true,
+		},
+	},
+	VagrantPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
 			"federated": true,
 		},
 	},
-	"vcs": {
+	VCSPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
 			"remote": true,
-		},
-	},
-	"rpm": {
-		RepoLayoutRef: "simple-default",
-		SupportedRepoTypes: map[string]bool{
-			"local":     true,
-			"remote":    true,
-			"virtual":   true,
-			"federated": true,
-		},
-	},
-	"swift": {
-		RepoLayoutRef: "swift-default",
-		SupportedRepoTypes: map[string]bool{
-			"local":     true,
-			"remote":    true,
-			"virtual":   true,
-			"federated": true,
 		},
 	},
 }

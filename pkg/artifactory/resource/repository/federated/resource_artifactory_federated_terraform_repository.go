@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type TerraformFederatedRepositoryParams struct {
@@ -18,15 +18,15 @@ type TerraformFederatedRepositoryParams struct {
 func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
 
-	terraformFederatedSchema := utilsdk.MergeMaps(
-		local.GetTerraformLocalSchema(registryType),
+	terraformFederatedSchema := lo.Assign(
+		local.GetTerraformSchemas(registryType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, packageType),
 	)
 
 	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: local.UnpackLocalTerraformRepository(data, rclass, registryType),
+			RepositoryBaseParams: local.UnpackLocalTerraformRepository(data, Rclass, registryType),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
 		}
@@ -52,7 +52,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 		return &TerraformFederatedRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: packageType,
-				Rclass:      rclass,
+				Rclass:      Rclass,
 			},
 		}, nil
 	}

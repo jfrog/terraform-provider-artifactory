@@ -45,8 +45,8 @@ All generic repo arguments are supported, in addition to:
 * `password` - (Optional)
 * `proxy` - (Optional) Proxy key from Artifactory Proxies settings. Default is empty field. Can't be set if `disable_proxy = true`.
 * `disable_proxy` - (Optional, Default: `false`) When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.
-* `includes_pattern` - (Optional, Default: `**/*`) List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included.
-* `excludes_pattern` - (Optional) List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*. By default, no artifacts are excluded.
+* `includes_pattern` - (Optional, Default: `**/*`) List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included.
+* `excludes_pattern` - (Optional) List of comma-separated artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. By default, no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Sets the layout that the repository should use for storing and identifying modules. A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.
 * `remote_repo_layout_ref` - (Optional) Repository layout key for the remote layout mapping. Repository can be created without this attribute (or set to an empty string). Once it's set, it can't be removed by passing an empty string or removing the attribute. UI shows an error message, if the user tries to remove the value, the provider mimics this behavior and errors out.
 * `hard_fail` - (Optional, Default: `false`) When set, Artifactory will return an error to the client that causes the build to fail if there is a failure to communicate with this repository.
@@ -84,3 +84,6 @@ the artifact directly from the cloud storage provider. Available in Enterprise+ 
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
 * `disable_url_normalization` - (Optional) Whether to disable URL normalization, default is `false`.
 * `archive_browsing_enabled` - (Optional) When set, you may view content such as HTML or Javadoc files directly from Artifactory. This may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).
+* `allow_delete` - (Optional) When unset or set to `true`, provider will delete the repository even if it contains artifacts. Must be set to `false` for the provider to return error when destroying the resource.
+
+~>To maintain backward compatibility with provider version 12.0.0 and earlier, the state value for `allow_delete` is automatically set to `true` for existing resources.

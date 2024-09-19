@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualNugetRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.NugetPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.NugetPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.NugetPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.NugetPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	nugetSchema := virtual.NugetVirtualSchema
+	nugetSchema := virtual.NugetSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      nugetSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(nugetSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.NugetPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.NugetPackageType),
 	}
 }

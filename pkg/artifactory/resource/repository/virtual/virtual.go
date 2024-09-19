@@ -5,9 +5,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const Rclass = "virtual"
+const (
+	Rclass               = "virtual"
+	CurrentSchemaVersion = 1
+)
 
 type RepositoryBaseParams struct {
 	Key                                           string   `hcl:"key" json:"key,omitempty"`
@@ -35,47 +39,62 @@ func (bp RepositoryBaseParams) Id() string {
 }
 
 var PackageTypesLikeGeneric = []string{
-	"gems",
-	"generic",
-	"gitlfs",
-	"composer",
-	"p2",
-	"pub",
-	"puppet",
-	"pypi",
-	"swift",
-	"terraform",
+	repository.ComposerPackageType,
+	repository.GemsPackageType,
+	repository.GenericPackageType,
+	repository.GitLFSPackageType,
+	repository.P2PackageType,
+	repository.PubPackageType,
+	repository.PuppetPackageType,
+	repository.PyPiPackageType,
+	repository.SwiftPackageType,
+	repository.TerraformPackageType,
 }
 
 var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
-	"ansible",
-	"chef",
-	"conda",
-	"cran",
+	repository.AnsiblePackageType,
+	repository.ChefPackageType,
+	repository.CondaPackageType,
+	repository.CranPackageType,
 }
 
-var BaseVirtualRepoSchema = utilsdk.MergeMaps(
-	repository.BaseRepoSchema,
-	map[string]*schema.Schema{
-		"repositories": {
-			Type:        schema.TypeList,
-			Elem:        &schema.Schema{Type: schema.TypeString},
-			Optional:    true,
-			Description: "The effective list of actual repositories included in this virtual repository.",
-		},
-		"artifactory_requests_can_retrieve_remote_artifacts": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
-		},
-		"default_deployment_repo": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Default repository to deploy artifacts.",
-		},
+var baseSchema = map[string]*schema.Schema{
+	"repositories": {
+		Type:        schema.TypeList,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Optional:    true,
+		Description: "The effective list of actual repositories included in this virtual repository.",
 	},
+	"artifactory_requests_can_retrieve_remote_artifacts": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.",
+	},
+	"default_deployment_repo": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Default repository to deploy artifacts.",
+	},
+}
+
+var BaseSchemaV1 = lo.Assign(
+	repository.BaseSchemaV1,
+	baseSchema,
 )
+
+var GetSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.Schema {
+	return map[int16]map[string]*schema.Schema{
+		0: lo.Assign(
+			BaseSchemaV1,
+			s,
+		),
+		1: lo.Assign(
+			BaseSchemaV1,
+			s,
+		),
+	}
+}
 
 func UnpackBaseVirtRepo(s *schema.ResourceData, packageType string) RepositoryBaseParams {
 	d := &utilsdk.ResourceData{ResourceData: s}

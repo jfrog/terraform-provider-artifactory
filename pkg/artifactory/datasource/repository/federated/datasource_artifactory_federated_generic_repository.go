@@ -10,14 +10,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema.Resource {
-	var genericSchema = utilsdk.MergeMaps(
-		local.GetGenericRepoSchema(packageType),
+	var genericSchema = lo.Assign(
+		local.GetGenericSchemas(packageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, packageType),
 	)
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,7 +39,7 @@ func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema
 		return &federated.GenericRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: local.GetPackageType(packageType),
-				Rclass:      rclass,
+				Rclass:      federated.Rclass,
 			},
 		}, nil
 	}

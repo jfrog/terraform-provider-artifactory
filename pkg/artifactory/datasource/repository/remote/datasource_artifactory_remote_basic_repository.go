@@ -12,23 +12,24 @@ import (
 
 func DataSourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.RepositoryRemoteBaseParams{
 			PackageType:   packageType,
-			Rclass:        rclass,
+			Rclass:        remote.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	basicRepoSchema := remote.BasicRepoSchema(packageType, false)
+	basicSchemas := remote.GetSchemas(remote.BasicSchema(packageType))
+	basicSchema := getSchema(basicSchemas)
 
 	return &schema.Resource{
-		Schema:      basicRepoSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(basicRepoSchema), constructor),
+		Schema:      basicSchema,
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(basicSchema), constructor),
 		Description: fmt.Sprintf("Provides a data source for a remote %s repository", packageType),
 	}
 }

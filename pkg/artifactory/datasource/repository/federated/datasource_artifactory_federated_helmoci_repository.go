@@ -8,14 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
-	ociFederatedSchema := utilsdk.MergeMaps(
-		local.HelmOciLocalSchema,
+	ociFederatedSchema := lo.Assign(
+		local.HelmOCISchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, local.HelmOciPackageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.HelmOCIPackageType),
 	)
 
 	var packOciMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -37,8 +37,8 @@ func DataSourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 		return &federated.HelmOciFederatedRepositoryParams{
 			HelmOciLocalRepositoryParams: local.HelmOciLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: local.HelmOciPackageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.HelmOCIPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

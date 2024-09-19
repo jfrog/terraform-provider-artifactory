@@ -4,18 +4,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-func GetTerraformLocalSchema(registryType string) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseLocalRepoSchema,
-		repository.RepoLayoutRefSchema(rclass, "terraform_"+registryType),
-	)
+func GetTerraformSchemas(registryType string) map[int16]map[string]*schema.Schema {
+	return map[int16]map[string]*schema.Schema{
+		0: lo.Assign(
+			BaseSchemaV1,
+			repository.RepoLayoutRefSchema(Rclass, "terraform_"+registryType),
+		),
+		1: lo.Assign(
+			BaseSchemaV1,
+			repository.RepoLayoutRefSchema(Rclass, "terraform_"+registryType),
+		),
+	}
 }
 
-func UnpackLocalTerraformRepository(data *schema.ResourceData, rclass string, registryType string) RepositoryBaseParams {
-	repo := UnpackBaseRepo(rclass, data, "terraform_"+registryType)
+func UnpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, registryType string) RepositoryBaseParams {
+	repo := UnpackBaseRepo(Rclass, data, "terraform_"+registryType)
 	repo.TerraformType = registryType
 
 	return repo
@@ -24,22 +30,22 @@ func UnpackLocalTerraformRepository(data *schema.ResourceData, rclass string, re
 func ResourceArtifactoryLocalTerraformRepository(registryType string) *schema.Resource {
 
 	var unpackLocalTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalTerraformRepository(data, rclass, registryType)
+		repo := UnpackLocalTerraformRepository(data, Rclass, registryType)
 		return repo, repo.Id(), nil
 	}
 
-	terraformLocalSchema := GetTerraformLocalSchema(registryType)
+	terraformSchemas := GetTerraformSchemas(registryType)
 
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParams{
 			PackageType: "terraform_" + registryType,
-			Rclass:      rclass,
+			Rclass:      Rclass,
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		terraformLocalSchema,
-		packer.Default(terraformLocalSchema),
+		terraformSchemas,
+		packer.Default(terraformSchemas[CurrentSchemaVersion]),
 		unpackLocalTerraformRepository,
 		constructor,
 	)

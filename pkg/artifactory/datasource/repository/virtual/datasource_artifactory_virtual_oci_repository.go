@@ -10,19 +10,19 @@ import (
 
 func DatasourceArtifactoryVirtualOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.OciPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.OCIPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.OciPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.OCIPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	ociSchema := virtual.OciVirtualSchema
+	ociSchema := virtual.OCISchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      ociSchema,

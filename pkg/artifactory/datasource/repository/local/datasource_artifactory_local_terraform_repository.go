@@ -10,19 +10,18 @@ import (
 )
 
 func DataSourceArtifactoryLocalTerraformRepository(registryType string) *schema.Resource {
-
-	terraformLocalSchema := local.GetTerraformLocalSchema(registryType)
+	terraformLocalSchemas := local.GetTerraformSchemas(registryType)
 
 	constructor := func() (interface{}, error) {
 		return &local.RepositoryBaseParams{
 			PackageType: "terraform_" + registryType,
-			Rclass:      rclass,
+			Rclass:      local.Rclass,
 		}, nil
 	}
 
 	return &schema.Resource{
-		Schema:      terraformLocalSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(terraformLocalSchema), constructor),
+		Schema:      terraformLocalSchemas[local.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(terraformLocalSchemas[local.CurrentSchemaVersion]), constructor),
 		Description: fmt.Sprintf("Data Source for a local terraform_%s repository", registryType),
 	}
 }

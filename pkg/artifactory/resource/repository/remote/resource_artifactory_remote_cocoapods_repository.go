@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type CocoapodsRemoteRepo struct {
@@ -14,10 +15,10 @@ type CocoapodsRemoteRepo struct {
 	PodsSpecsRepoUrl string `json:"podsSpecsRepoUrl"`
 }
 
-const CocoapodsPackageType = "cocoapods"
-
-var CocoapodsRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(BaseRemoteRepoSchema(isResource), VcsRemoteRepoSchema, map[string]*schema.Schema{
+var cocoapodsSchema = lo.Assign(
+	baseSchema,
+	VcsRemoteRepoSchema,
+	map[string]*schema.Schema{
 		"pods_specs_repo_url": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -25,14 +26,17 @@ var CocoapodsRemoteSchema = func(isResource bool) map[string]*schema.Schema {
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			Description:  `Proxy remote CocoaPods Specs repositories. Default value is "https://github.com/CocoaPods/Specs".`,
 		},
-	}, repository.RepoLayoutRefSchema(rclass, CocoapodsPackageType))
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.CocoapodsPackageType),
+)
+
+var CocoapodsSchemas = GetSchemas(cocoapodsSchema)
 
 func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	var unpackCocoapodsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := CocoapodsRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, CocoapodsPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.CocoapodsPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			PodsSpecsRepoUrl:           d.GetString("pods_specs_repo_url", false),
 		}
@@ -40,21 +44,24 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, CocoapodsPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.CocoapodsPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &CocoapodsRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   CocoapodsPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.CocoapodsPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	cocoapodsSchema := CocoapodsRemoteSchema(true)
-
-	return mkResourceSchema(cocoapodsSchema, packer.Default(cocoapodsSchema), unpackCocoapodsRemoteRepo, constructor)
+	return mkResourceSchema(
+		CocoapodsSchemas,
+		packer.Default(CocoapodsSchemas[CurrentSchemaVersion]),
+		unpackCocoapodsRemoteRepo,
+		constructor,
+	)
 }

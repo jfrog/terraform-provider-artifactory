@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteTerraformRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.TerraformPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.TerraformPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.TerraformRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.TerraformPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.TerraformPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	terraformSchema := remote.TerraformRemoteSchema(false)
+	terraformSchema := getSchema(remote.TerraformSchemas)
 
 	return &schema.Resource{
 		Schema:      terraformSchema,

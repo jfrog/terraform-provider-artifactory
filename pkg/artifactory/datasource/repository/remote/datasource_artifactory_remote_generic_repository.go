@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.GenericPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.GenericPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.GenericRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.GenericPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.GenericPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	genericSchema := remote.GenericRemoteSchema(false)
+	genericSchema := getSchema(remote.GenericSchemas)
 
 	return &schema.Resource{
 		Schema:      genericSchema,

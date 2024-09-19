@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type AnsibleRepositoryParams struct {
@@ -17,20 +18,18 @@ type AnsibleRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
-	packageType := "ansible"
-
-	var ansibleSchema = utilsdk.MergeMaps(
-		local.GetGenericRepoSchema(packageType),
+	var ansibleSchema = lo.Assign(
+		local.GetGenericSchemas(repository.AnsiblePackageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
 		repository.AlpinePrimaryKeyPairRef,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
 	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 
 		repo := AnsibleRepositoryParams{
-			RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, packageType),
+			RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.AnsiblePackageType),
 			RepoParams:           unpackRepoParams(data),
 			Members:              unpackMembers(data),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
@@ -58,8 +57,8 @@ func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &AnsibleRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: local.GetPackageType(packageType),
-				Rclass:      rclass,
+				PackageType: repository.AnsiblePackageType,
+				Rclass:      Rclass,
 			},
 		}, nil
 	}

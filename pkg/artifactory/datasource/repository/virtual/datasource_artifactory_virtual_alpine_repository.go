@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.AlpinePackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.AlpinePackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.AlpinePackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.AlpinePackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	alpineSchema := virtual.AlpineVirtualSchema
+	alpineSchema := virtual.AlpineSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      alpineSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(alpineSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.AlpinePackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.AlpinePackageType),
 	}
 }

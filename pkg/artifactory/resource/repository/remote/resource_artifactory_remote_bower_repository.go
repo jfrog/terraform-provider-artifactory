@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type BowerRemoteRepo struct {
@@ -14,31 +15,29 @@ type BowerRemoteRepo struct {
 	BowerRegistryUrl string `json:"bowerRegistryUrl"`
 }
 
-const BowerPackageType = "bower"
-
-var BowerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		VcsRemoteRepoSchema,
-		map[string]*schema.Schema{
-			"bower_registry_url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "https://registry.bower.io",
-				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-				Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
-			},
+var bowerSchema = lo.Assign(
+	baseSchema,
+	VcsRemoteRepoSchema,
+	map[string]*schema.Schema{
+		"bower_registry_url": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "https://registry.bower.io",
+			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+			Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
 		},
-		repository.RepoLayoutRefSchema(rclass, BowerPackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.BowerPackageType),
+)
+
+var BowerSchemas = GetSchemas(bowerSchema)
 
 func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 
 	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := BowerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, BowerPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.BowerPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
 		}
@@ -46,21 +45,24 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, BowerPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.BowerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &BowerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   BowerPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.BowerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	bowerSchema := BowerRemoteSchema(true)
-
-	return mkResourceSchema(bowerSchema, packer.Default(bowerSchema), unpackBowerRemoteRepo, constructor)
+	return mkResourceSchema(
+		BowerSchemas,
+		packer.Default(BowerSchemas[CurrentSchemaVersion]),
+		unpackBowerRemoteRepo,
+		constructor,
+	)
 }

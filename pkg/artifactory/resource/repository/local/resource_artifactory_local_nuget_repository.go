@@ -5,12 +5,10 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const nugetPackageType = "nuget"
-
-var NugetLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var nugetSchema = lo.Assign(
 	map[string]*schema.Schema{
 		"max_unique_snapshots": {
 			Type:     schema.TypeInt,
@@ -26,8 +24,10 @@ var NugetLocalSchema = utilsdk.MergeMaps(
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, nugetPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
 )
+
+var NugetSchemas = GetSchemas(nugetSchema)
 
 type NugetLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -35,10 +35,10 @@ type NugetLocalRepositoryParams struct {
 	ForceNugetAuthentication bool `hcl:"force_nuget_authentication" json:"forceNugetAuthentication"`
 }
 
-func UnpackLocalNugetRepository(data *schema.ResourceData, rclass string) NugetLocalRepositoryParams {
+func UnpackLocalNugetRepository(data *schema.ResourceData, Rclass string) NugetLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return NugetLocalRepositoryParams{
-		RepositoryBaseParams:     UnpackBaseRepo(rclass, data, nugetPackageType),
+		RepositoryBaseParams:     UnpackBaseRepo(Rclass, data, repository.NugetPackageType),
 		MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
 		ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
 	}
@@ -47,20 +47,25 @@ func UnpackLocalNugetRepository(data *schema.ResourceData, rclass string) NugetL
 func ResourceArtifactoryLocalNugetRepository() *schema.Resource {
 
 	var unPackLocalNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalNugetRepository(data, rclass)
+		repo := UnpackLocalNugetRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &NugetLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: nugetPackageType,
-				Rclass:      rclass,
+				PackageType: repository.NugetPackageType,
+				Rclass:      Rclass,
 			},
 			MaxUniqueSnapshots:       0,
 			ForceNugetAuthentication: false,
 		}, nil
 	}
 
-	return repository.MkResourceSchema(NugetLocalSchema, packer.Default(NugetLocalSchema), unPackLocalNugetRepository, constructor)
+	return repository.MkResourceSchema(
+		NugetSchemas,
+		packer.Default(NugetSchemas[CurrentSchemaVersion]),
+		unPackLocalNugetRepository,
+		constructor,
+	)
 }

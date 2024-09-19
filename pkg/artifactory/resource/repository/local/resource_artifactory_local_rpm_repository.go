@@ -9,10 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-const rpmPackageType = "rpm"
-
-var RpmLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var rpmSchema = utilsdk.MergeMaps(
 	repository.PrimaryKeyPairRef,
 	repository.SecondaryKeyPairRef,
 	map[string]*schema.Schema{
@@ -45,8 +42,10 @@ var RpmLocalSchema = utilsdk.MergeMaps(
 				"gzipped version of the group files, if required.",
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, rpmPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
 )
+
+var RPMSchemas = GetSchemas(rpmSchema)
 
 type RpmLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -58,10 +57,10 @@ type RpmLocalRepositoryParams struct {
 	GroupFileNames          string `hcl:"yum_group_file_names" json:"yumGroupFileNames"`
 }
 
-func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocalRepositoryParams {
+func UnpackLocalRpmRepository(data *schema.ResourceData, Rclass string) RpmLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return RpmLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, rpmPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.RPMPackageType),
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		},
@@ -76,17 +75,16 @@ func UnpackLocalRpmRepository(data *schema.ResourceData, rclass string) RpmLocal
 }
 
 func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
-
 	unpackLocalRpmRepository := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalRpmRepository(data, rclass)
+		repo := UnpackLocalRpmRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &RpmLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: rpmPackageType,
-				Rclass:      rclass,
+				PackageType: repository.RPMPackageType,
+				Rclass:      Rclass,
 			},
 			RootDepth:               0,
 			CalculateYumMetadata:    false,
@@ -95,5 +93,10 @@ func ResourceArtifactoryLocalRpmRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(RpmLocalSchema, packer.Default(RpmLocalSchema), unpackLocalRpmRepository, constructor)
+	return repository.MkResourceSchema(
+		RPMSchemas,
+		packer.Default(RPMSchemas[CurrentSchemaVersion]),
+		unpackLocalRpmRepository,
+		constructor,
+	)
 }

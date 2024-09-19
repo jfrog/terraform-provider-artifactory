@@ -2,8 +2,6 @@ package repository
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-const ConanPackageType = "conan"
-
 type ConanBaseParams struct {
 	EnableConanSupport       bool `json:"enableConanSupport"`
 	ForceConanAuthentication bool `json:"forceConanAuthentication"`

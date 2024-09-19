@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type CommonJavaVirtualRepositoryParams struct {
@@ -19,7 +20,7 @@ type JavaVirtualRepositoryParams struct {
 	CommonJavaVirtualRepositoryParams
 }
 
-var JavaVirtualSchema = map[string]*schema.Schema{
+var JavaSchema = map[string]*schema.Schema{
 	"force_maven_authentication": {
 		Type:        schema.TypeBool,
 		Computed:    true,
@@ -44,25 +45,26 @@ var JavaVirtualSchema = map[string]*schema.Schema{
 	},
 }
 
-func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource {
-	var mavenVirtualSchema = utilsdk.MergeMaps(
-		BaseVirtualRepoSchema,
-		JavaVirtualSchema,
-		repository.RepoLayoutRefSchema(Rclass, repoType),
+func ResourceArtifactoryVirtualJavaRepository(packageType string) *schema.Resource {
+	var mavenSchema = lo.Assign(
+		JavaSchema,
+		repository.RepoLayoutRefSchema(Rclass, packageType),
 	)
+
+	var mavenSchemas = GetSchemas(mavenSchema)
 
 	var unpackMavenVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := JavaVirtualRepositoryParams{
-			RepositoryBaseParams: UnpackBaseVirtRepo(s, repoType),
+			RepositoryBaseParams: UnpackBaseVirtRepo(s, packageType),
 			CommonJavaVirtualRepositoryParams: CommonJavaVirtualRepositoryParams{
 				KeyPair:                              d.GetString("key_pair", false),
 				ForceMavenAuthentication:             d.GetBool("force_maven_authentication", false),
 				PomRepositoryReferencesCleanupPolicy: d.GetString("pom_repository_references_cleanup_policy", false),
 			},
 		}
-		repo.PackageType = repoType
+		repo.PackageType = packageType
 
 		return &repo, repo.Key, nil
 	}
@@ -71,14 +73,14 @@ func ResourceArtifactoryVirtualJavaRepository(repoType string) *schema.Resource 
 		return &JavaVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: repoType,
+				PackageType: packageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		mavenVirtualSchema,
-		packer.Default(mavenVirtualSchema),
+		mavenSchemas,
+		packer.Default(mavenSchemas[CurrentSchemaVersion]),
 		unpackMavenVirtualRepository,
 		constructor,
 	)

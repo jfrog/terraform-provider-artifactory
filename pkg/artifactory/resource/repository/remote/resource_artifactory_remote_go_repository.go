@@ -6,58 +6,60 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
-
-const GoPackageType = "go"
 
 type GoRemoteRepo struct {
 	RepositoryRemoteBaseParams
 	VcsGitProvider string `json:"vcsGitProvider"`
 }
 
-var GoRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		map[string]*schema.Schema{
-			"vcs_git_provider": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "ARTIFACTORY",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "ARTIFACTORY"}, false)),
-				Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
-			},
+var GoSchema = lo.Assign(
+	baseSchema,
+	map[string]*schema.Schema{
+		"vcs_git_provider": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "ARTIFACTORY",
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "ARTIFACTORY"}, false)),
+			Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
 		},
-		repository.RepoLayoutRefSchema(rclass, GoPackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.GoPackageType),
+)
+
+var GoSchemas = GetSchemas(GoSchema)
 
 func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 
 	var unpackGoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := GoRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, GoPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.GoPackageType),
 			VcsGitProvider:             d.GetString("vcs_git_provider", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, GoPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GoPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &GoRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   GoPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.GoPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	goSchema := GoRemoteSchema(true)
-
-	return mkResourceSchema(goSchema, packer.Default(goSchema), unpackGoRemoteRepo, constructor)
+	return mkResourceSchema(
+		GoSchemas,
+		packer.Default(GoSchemas[CurrentSchemaVersion]),
+		unpackGoRemoteRepo,
+		constructor,
+	)
 }

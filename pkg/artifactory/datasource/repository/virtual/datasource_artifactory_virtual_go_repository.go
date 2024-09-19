@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualGoRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.GoPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.GoPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.GoPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.GoPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	goSchema := virtual.GoVirtualSchema
+	goSchema := virtual.GoSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      goSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(goSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.GoPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.GoPackageType),
 	}
 }

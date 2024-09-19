@@ -5,12 +5,11 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const cargoPackageType = "cargo"
-
-var CargoLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var cargoSchema = lo.Assign(
+	repository.RepoLayoutRefSchema(Rclass, repository.CargoPackageType),
 	map[string]*schema.Schema{
 		"anonymous_access": {
 			Type:        schema.TypeBool,
@@ -25,9 +24,10 @@ var CargoLocalSchema = utilsdk.MergeMaps(
 			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, cargoPackageType),
 	repository.CompressionFormats,
 )
+
+var CargoSchemas = GetSchemas(cargoSchema)
 
 type CargoLocalRepoParams struct {
 	RepositoryBaseParams
@@ -35,10 +35,10 @@ type CargoLocalRepoParams struct {
 	EnableSparseIndex bool `json:"cargoInternalIndex"`
 }
 
-func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoLocalRepoParams {
+func UnpackLocalCargoRepository(data *schema.ResourceData, Rclass string) CargoLocalRepoParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return CargoLocalRepoParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, cargoPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.CargoPackageType),
 		AnonymousAccess:      d.GetBool("anonymous_access", false),
 		EnableSparseIndex:    d.GetBool("enable_sparse_index", false),
 	}
@@ -47,18 +47,23 @@ func UnpackLocalCargoRepository(data *schema.ResourceData, rclass string) CargoL
 func ResourceArtifactoryLocalCargoRepository() *schema.Resource {
 
 	var unpackLocalCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalCargoRepository(data, rclass)
+		repo := UnpackLocalCargoRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &CargoLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: cargoPackageType,
-				Rclass:      rclass,
+				PackageType: repository.CargoPackageType,
+				Rclass:      Rclass,
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(CargoLocalSchema, packer.Default(CargoLocalSchema), unpackLocalCargoRepository, constructor)
+	return repository.MkResourceSchema(
+		CargoSchemas,
+		packer.Default(CargoSchemas[CurrentSchemaVersion]),
+		unpackLocalCargoRepository,
+		constructor,
+	)
 }

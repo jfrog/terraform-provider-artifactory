@@ -4,54 +4,55 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
-
-const AnsiblePackageType = "ansible"
 
 type AnsibleRepo struct {
 	RepositoryRemoteBaseParams
 }
 
-var AnsibleSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		map[string]*schema.Schema{
-			"url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "https://galaxy.ansible.com",
-				Description: "The remote repo URL. Default to 'https://galaxy.ansible.com'",
-			},
+var ansibleSchema = lo.Assign(
+	baseSchema,
+	map[string]*schema.Schema{
+		"url": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "https://galaxy.ansible.com",
+			Description: "The remote repo URL. Default to 'https://galaxy.ansible.com'",
 		},
-		repository.RepoLayoutRefSchema(rclass, AnsiblePackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
+)
+
+var AnsibleSchemas = GetSchemas(ansibleSchema)
 
 func ResourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 	var unpackRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		repo := AnsibleRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, AnsiblePackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.AnsiblePackageType),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, AnsiblePackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.AnsiblePackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &AnsibleRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   AnsiblePackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.AnsiblePackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	ansibleSchema := AnsibleSchema(true)
-
-	return mkResourceSchema(ansibleSchema, packer.Default(ansibleSchema), unpackRepo, constructor)
+	return mkResourceSchema(
+		AnsibleSchemas,
+		packer.Default(AnsibleSchemas[CurrentSchemaVersion]),
+		unpackRepo,
+		constructor,
+	)
 }

@@ -8,16 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedOciRepository() *schema.Resource {
-	packageType := "oci"
-
-	ociFederatedSchema := utilsdk.MergeMaps(
-		local.OciLocalSchema,
+	ociFederatedSchema := lo.Assign(
+		local.OCILocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.OCIPackageType),
 	)
 
 	var packOciMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,8 +37,8 @@ func DataSourceArtifactoryFederatedOciRepository() *schema.Resource {
 		return &federated.OciFederatedRepositoryParams{
 			OciLocalRepositoryParams: local.OciLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.OCIPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

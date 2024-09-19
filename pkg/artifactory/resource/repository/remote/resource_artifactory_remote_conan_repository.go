@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type ConanRepo struct {
@@ -12,13 +13,13 @@ type ConanRepo struct {
 	repository.ConanBaseParams
 }
 
-var ConanSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		repository.ConanBaseSchema,
-		repository.RepoLayoutRefSchema(rclass, repository.ConanPackageType),
-	)
-}
+var conanSchema = lo.Assign(
+	baseSchema,
+	repository.ConanBaseSchema,
+	repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
+)
+
+var ConanSchemas = GetSchemas(conanSchema)
 
 func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	var unpackConanRepo = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -34,14 +35,14 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, repository.ConanPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ConanPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &ConanRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
+				Rclass:        Rclass,
 				PackageType:   repository.ConanPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
@@ -51,11 +52,9 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 		}, nil
 	}
 
-	conanSchema := ConanSchema(true)
-
 	return mkResourceSchema(
-		conanSchema,
-		packer.Default(conanSchema),
+		ConanSchemas,
+		packer.Default(ConanSchemas[CurrentSchemaVersion]),
 		unpackConanRepo,
 		constructor,
 	)

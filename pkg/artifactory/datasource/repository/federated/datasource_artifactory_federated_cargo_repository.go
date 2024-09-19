@@ -8,16 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
-	packageType := "cargo"
-
-	cargoFederatedSchema := utilsdk.MergeMaps(
-		local.CargoLocalSchema,
+	cargoFederatedSchema := lo.Assign(
+		local.CargoSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.CargoPackageType),
 	)
 
 	var packCargoMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,8 +37,8 @@ func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		return &federated.CargoFederatedRepositoryParams{
 			CargoLocalRepoParams: local.CargoLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.CargoPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

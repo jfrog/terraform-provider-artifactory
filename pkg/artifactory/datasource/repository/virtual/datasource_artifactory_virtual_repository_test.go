@@ -47,14 +47,14 @@ func TestAccDataSourceVirtualAllGradleLikePackageTypes(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualAlpineRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.AlpinePackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.AlpinePackageType, t, map[string]interface{}{
 		"description":                    "alpine virtual repository public description testing.",
 		"retrieval_cache_period_seconds": 0,
 	}))
 }
 
 func TestAccDataSourceVirtualBowerRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.BowerPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.BowerPackageType, t, map[string]interface{}{
 		"description":                    "bower virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
 		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
@@ -70,7 +70,7 @@ func TestAccDataSourceVirtualConanRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.DebianPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.DebianPackageType, t, map[string]interface{}{
 		"description":                        "debian virtual repository public description testing.",
 		"debian_default_architectures":       "i386,amd64",
 		"retrieval_cache_period_seconds":     650,
@@ -79,14 +79,14 @@ func TestAccDataSourceVirtualDebianRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualDockerRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.DockerPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.DockerPackageType, t, map[string]interface{}{
 		"description":                      "docker virtual repository public description testing.",
 		"resolve_docker_tags_by_timestamp": true,
 	}))
 }
 
 func TestAccDataSourceVirtualGoRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.GoPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.GoPackageType, t, map[string]interface{}{
 		"description":                    "go virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
 		"external_dependencies_patterns": utilsdk.CastToInterfaceArr([]string{"**/github.com/**", "**/go.googlesource.com/**"}),
@@ -94,7 +94,7 @@ func TestAccDataSourceVirtualGoRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualHelmRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.HelmPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.HelmPackageType, t, map[string]interface{}{
 		"description":                    "helm virtual repository public description testing.",
 		"use_namespaces":                 true,
 		"retrieval_cache_period_seconds": 650,
@@ -102,7 +102,7 @@ func TestAccDataSourceVirtualHelmRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualHelmOciRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.HelmOciPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.HelmOCIPackageType, t, map[string]interface{}{
 		"description":                   "Helm OCI virtual repository public description testing.",
 		"resolve_oci_tags_by_timestamp": true,
 	}))
@@ -116,7 +116,7 @@ func TestAccDataSourceVirtualMavenRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualNpmRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.NpmPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.NPMPackageType, t, map[string]interface{}{
 		"description":                    "npm virtual repository public description testing.",
 		"external_dependencies_enabled":  true,
 		"retrieval_cache_period_seconds": 650,
@@ -125,7 +125,7 @@ func TestAccDataSourceVirtualNpmRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualNugetRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.NugetPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.NugetPackageType, t, map[string]interface{}{
 		"description":                "nuget virtual repository public description testing.",
 		"force_nuget_authentication": true,
 		"artifactory_requests_can_retrieve_remote_artifacts": true,
@@ -133,7 +133,7 @@ func TestAccDataSourceVirtualNugetRepository(t *testing.T) {
 }
 
 func TestAccDataSourceVirtualOciRepository(t *testing.T) {
-	resource.Test(mkNewVirtualTestCase(virtual.OciPackageType, t, map[string]interface{}{
+	resource.Test(mkNewVirtualTestCase(repository.OCIPackageType, t, map[string]interface{}{
 		"description":                   "OCI virtual repository public description testing.",
 		"resolve_oci_tags_by_timestamp": true,
 	}))

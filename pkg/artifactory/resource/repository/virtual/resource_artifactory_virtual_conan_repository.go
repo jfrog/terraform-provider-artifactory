@@ -5,14 +5,16 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-var ConanSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var conanSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	repository.ConanBaseSchema,
 	repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
 )
+
+var ConanSchemas = GetSchemas(conanSchema)
 
 type ConanRepoParams struct {
 	RepositoryBaseParamsWithRetrievalCachePeriodSecs
@@ -47,8 +49,8 @@ func ResourceArtifactoryVirtualConanRepository() *schema.Resource {
 	}
 
 	return repository.MkResourceSchema(
-		ConanSchema,
-		packer.Default(ConanSchema),
+		ConanSchemas,
+		packer.Default(ConanSchemas[CurrentSchemaVersion]),
 		unpackConanRepository,
 		constructor,
 	)

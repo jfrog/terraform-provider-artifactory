@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.ComposerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.ComposerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.ComposerRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.ComposerPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.ComposerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	composerSchema := remote.ComposerRemoteSchema(false)
+	composerSchema := getSchema(remote.ComposerSchemas)
 
 	return &schema.Resource{
 		Schema:      composerSchema,

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -21,7 +22,49 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-var BaseRepoSchema = map[string]*schema.Schema{
+const (
+	AlpinePackageType            = "alpine"
+	AnsiblePackageType           = "ansible"
+	BowerPackageType             = "bower"
+	CargoPackageType             = "cargo"
+	ChefPackageType              = "chef"
+	CocoapodsPackageType         = "cocoapods"
+	ComposerPackageType          = "composer"
+	CondaPackageType             = "conda"
+	ConanPackageType             = "conan"
+	CranPackageType              = "cran"
+	DebianPackageType            = "debian"
+	DockerPackageType            = "docker"
+	GemsPackageType              = "gems"
+	GenericPackageType           = "generic"
+	GitLFSPackageType            = "gitlfs"
+	GoPackageType                = "go"
+	GradlePackageType            = "gradle"
+	HelmPackageType              = "helm"
+	HelmOCIPackageType           = "helmoci"
+	HuggingFacePackageType       = "huggingfaceml"
+	IvyPackageType               = "ivy"
+	MavenPackageType             = "maven"
+	NPMPackageType               = "npm"
+	NugetPackageType             = "nuget"
+	OCIPackageType               = "oci"
+	OpkgPackageType              = "opkg"
+	P2PackageType                = "p2"
+	PubPackageType               = "pub"
+	PuppetPackageType            = "puppet"
+	PyPiPackageType              = "pypi"
+	RPMPackageType               = "rpm"
+	SBTPackageType               = "sbt"
+	SwiftPackageType             = "swift"
+	TerraformBackendPackageType  = "terraformbackend"
+	TerraformModulePackageType   = "terraform_module"
+	TerraformProviderPackageType = "terraform_provider"
+	TerraformPackageType         = "terraform"
+	VagrantPackageType           = "vagrant"
+	VCSPackageType               = "vcs"
+)
+
+var BaseSchemaV1 = map[string]*schema.Schema{
 	"key": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -69,13 +112,13 @@ var BaseRepoSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "**/*",
-		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of x/y/**/z/*. " +
-			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (**/*).",
+		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of x/y/**/z/*." +
+		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
 			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
@@ -307,7 +350,36 @@ func unassignRepoFromProject(repoKey string, client *resty.Client) error {
 	return err
 }
 
-func DeleteRepo(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+type RepositoryFileList struct {
+	URI   string            `json:"uri"`
+	Files []json.RawMessage `json:"files"`
+}
+
+func GetArtifactCount(repoKey string, client *resty.Client) (int, error) {
+	var fileList RepositoryFileList
+
+	resp, err := client.R().
+		SetPathParam("repo_key", repoKey).
+		SetQueryParams(map[string]string{
+			"list":        "",
+			"deep":        "1",
+			"listFolders": "0",
+		}).
+		SetResult(&fileList).
+		Get("artifactory/api/storage/{repo_key}")
+
+	if err != nil {
+		return -1, err
+	}
+
+	if resp.IsError() {
+		return -1, fmt.Errorf("%s", resp.String())
+	}
+
+	return len(fileList.Files), nil
+}
+
+func DeleteRepo(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	resp, err := m.(util.ProviderMetadata).Client.R().
 		AddRetryCondition(client.RetryOnMergeError).
 		SetPathParam("key", d.Id()).
@@ -334,12 +406,10 @@ func Retry400(response *resty.Response, _ error) bool {
 }
 
 var GradleLikePackageTypes = []string{
-	"gradle",
-	"sbt",
-	"ivy",
+	GradlePackageType,
+	SBTPackageType,
+	IvyPackageType,
 }
-
-const MavenPackageType = "maven"
 
 var ProjectEnvironmentsSupported = []string{"DEV", "PROD"}
 
@@ -411,34 +481,36 @@ func VerifyDisableProxy(_ context.Context, diff *schema.ResourceDiff, _ interfac
 	return nil
 }
 
-func MkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
+func MkResourceSchema(skeemas map[int16]map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *schema.Resource {
 	var reader = MkRepoRead(packer, constructor)
 	return &schema.Resource{
 		CreateContext: MkRepoCreate(unpack, reader),
 		ReadContext:   reader,
 		UpdateContext: MkRepoUpdate(unpack, reader),
 		DeleteContext: DeleteRepo,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema:        skeema,
+		Schema:        skeemas[1],
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				// this only works because the schema hasn't changed, except the removal of default value
 				// from `project_key` attribute. Future common schema changes that involve attributes should
 				// figure out a way to create a previous and new version.
-				Type:    resourceV0(skeema).CoreConfigSchema().ImpliedType(),
+				Type:    Resource(skeemas[0]).CoreConfigSchema().ImpliedType(),
 				Upgrade: ResourceUpgradeProjectKey,
 				Version: 0,
 			},
 		},
+
 		CustomizeDiff: ProjectEnvironmentsDiff,
 	}
 }
 
-func resourceV0(skeema map[string]*schema.Schema) *schema.Resource {
+func Resource(skeema map[string]*schema.Schema) *schema.Resource {
 	return &schema.Resource{
 		Schema: skeema,
 	}

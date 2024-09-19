@@ -7,19 +7,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryLocalGenericRepository(repoType string) *schema.Resource {
+func DataSourceArtifactoryLocalGenericRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &local.RepositoryBaseParams{
-			PackageType: repoType,
-			Rclass:      rclass,
+			PackageType: packageType,
+			Rclass:      local.Rclass,
 		}, nil
 	}
 
-	genericRepoSchema := local.GetGenericRepoSchema(repoType)
+	genericRepoSchemas := local.GetGenericSchemas(packageType)
 
 	return &schema.Resource{
-		Schema:      genericRepoSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(genericRepoSchema), constructor),
-		Description: "Provides a data source for a local " + repoType + " repository",
+		Schema:      genericRepoSchemas[local.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(genericRepoSchemas[local.CurrentSchemaVersion]), constructor),
+		Description: "Provides a data source for a local " + packageType + " repository",
 	}
 }

@@ -8,14 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedConanRepository() *schema.Resource {
-	conanSchema := utilsdk.MergeMaps(
-		local.ConanSchema,
+	conanSchema := lo.Assign(
+		local.ConanSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, resource_repository.ConanPackageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.ConanPackageType),
 	)
 
 	var packConanMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -38,7 +38,7 @@ func DataSourceArtifactoryFederatedConanRepository() *schema.Resource {
 			ConanRepoParams: local.ConanRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: resource_repository.ConanPackageType,
-					Rclass:      rclass,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

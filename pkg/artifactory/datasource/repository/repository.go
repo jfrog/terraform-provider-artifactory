@@ -13,7 +13,41 @@ import (
 )
 
 var validRepositoryTypes = []string{"local", "remote", "virtual", "federated", "distribution"}
-var validPackageTypes = []string{"alpine", "bower", "cargo", "chef", "cocoapods", "composer", "conan", "conda", "cran", "debian", "docker", "gems", "generic", "gitlfs", "go", "gradle", "helm", "huggingfaceml", "ivy", "maven", "npm", "nuget", "opkg", "p2", "pub", "puppet", "pypi", "rpm", "sbt", "swift", " terraform", "terraformbackend", "vagrant", "yum"}
+var validPackageTypes = []string{
+	repository.AlpinePackageType,
+	repository.BowerPackageType,
+	repository.CargoPackageType,
+	repository.ChefPackageType,
+	repository.CocoapodsPackageType,
+	repository.ComposerPackageType,
+	repository.ConanPackageType,
+	repository.CondaPackageType,
+	repository.CranPackageType,
+	repository.DebianPackageType,
+	repository.DockerPackageType,
+	repository.GemsPackageType,
+	repository.GenericPackageType,
+	repository.GitLFSPackageType,
+	repository.GoPackageType,
+	repository.GradlePackageType,
+	repository.HelmPackageType,
+	repository.HuggingFacePackageType,
+	repository.IvyPackageType,
+	repository.MavenPackageType,
+	repository.NPMPackageType,
+	repository.NugetPackageType,
+	repository.OpkgPackageType,
+	repository.P2PackageType,
+	repository.PubPackageType,
+	repository.PuppetPackageType,
+	repository.PyPiPackageType,
+	repository.RPMPackageType,
+	repository.SBTPackageType,
+	repository.SwiftPackageType,
+	repository.TerraformPackageType,
+	repository.TerraformBackendPackageType,
+	repository.VagrantPackageType,
+}
 
 func MkRepoReadDataSource(pack packer.PackFunc, construct repository.Constructor) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

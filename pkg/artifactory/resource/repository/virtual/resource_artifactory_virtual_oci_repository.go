@@ -5,12 +5,10 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const OciPackageType = "oci"
-
-var OciVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var ociSchema = lo.Assign(
 	map[string]*schema.Schema{
 		"resolve_oci_tags_by_timestamp": {
 			Type:        schema.TypeBool,
@@ -19,8 +17,10 @@ var OciVirtualSchema = utilsdk.MergeMaps(
 			Description: "When enabled, in cases where the same OCI tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, OciPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
 )
+
+var OCISchemas = GetSchemas(ociSchema)
 
 func ResourceArtifactoryVirtualOciRepository() *schema.Resource {
 	type OciVirtualRepositoryParams struct {
@@ -31,7 +31,7 @@ func ResourceArtifactoryVirtualOciRepository() *schema.Resource {
 	unpackOciVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := OciVirtualRepositoryParams{
-			RepositoryBaseParams:      UnpackBaseVirtRepo(data, OciPackageType),
+			RepositoryBaseParams:      UnpackBaseVirtRepo(data, repository.OCIPackageType),
 			ResolveOciTagsByTimestamp: d.GetBool("resolve_oci_tags_by_timestamp", false),
 		}
 		return repo, repo.Id(), nil
@@ -41,14 +41,14 @@ func ResourceArtifactoryVirtualOciRepository() *schema.Resource {
 		return &OciVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: OciPackageType,
+				PackageType: repository.OCIPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		OciVirtualSchema,
-		packer.Default(OciVirtualSchema),
+		OCISchemas,
+		packer.Default(OCISchemas[CurrentSchemaVersion]),
 		unpackOciVirtualRepository,
 		constructor,
 	)

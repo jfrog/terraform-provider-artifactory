@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type NpmRemoteRepo struct {
@@ -12,21 +13,19 @@ type NpmRemoteRepo struct {
 	RepositoryCurationParams
 }
 
-const NpmPackageType = "npm"
+var NPMSchema = lo.Assign(
+	baseSchema,
+	CurationRemoteRepoSchema,
+	repository.RepoLayoutRefSchema(Rclass, repository.NPMPackageType),
+)
 
-var NpmRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		CurationRemoteRepoSchema,
-		repository.RepoLayoutRefSchema(rclass, NpmPackageType),
-	)
-}
+var NPMSchemas = GetSchemas(NPMSchema)
 
 func ResourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	var unpack = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := NpmRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, NpmPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.NPMPackageType),
 			RepositoryCurationParams: RepositoryCurationParams{
 				Curated: d.GetBool("curated", false),
 			},
@@ -35,21 +34,24 @@ func ResourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, NpmPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NPMPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &NpmRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   NpmPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.NPMPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	npmSchema := NpmRemoteSchema(true)
-
-	return mkResourceSchema(npmSchema, packer.Default(npmSchema), unpack, constructor)
+	return mkResourceSchema(
+		NPMSchemas,
+		packer.Default(NPMSchemas[CurrentSchemaVersion]),
+		unpack,
+		constructor,
+	)
 }

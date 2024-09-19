@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type VcsRemoteRepo struct {
@@ -13,31 +14,29 @@ type VcsRemoteRepo struct {
 	MaxUniqueSnapshots int `json:"maxUniqueSnapshots"`
 }
 
-const VcsPackageType = "vcs"
-
-var VcsRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		VcsRemoteRepoSchema,
-		map[string]*schema.Schema{
-			"max_unique_snapshots": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-				Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
-					"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
-					"no limit, and unique snapshots are not cleaned up.",
-			},
+var VCSSchema = lo.Assign(
+	baseSchema,
+	VcsRemoteRepoSchema,
+	map[string]*schema.Schema{
+		"max_unique_snapshots": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
+			Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
+				"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
+				"no limit, and unique snapshots are not cleaned up.",
 		},
-		repository.RepoLayoutRefSchema(rclass, VcsPackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.VCSPackageType),
+)
+
+var VCSSchemas = GetSchemas(VCSSchema)
 
 func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	var UnpackVcsRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := VcsRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, VcsPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.VCSPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			MaxUniqueSnapshots:         d.GetInt("max_unique_snapshots", false),
 		}
@@ -45,21 +44,24 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, VcsPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.VCSPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &VcsRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   VcsPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.VCSPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	vcsSchema := VcsRemoteSchema(true)
-
-	return mkResourceSchema(vcsSchema, packer.Default(vcsSchema), UnpackVcsRemoteRepo, constructor)
+	return mkResourceSchema(
+		VCSSchemas,
+		packer.Default(VCSSchemas[CurrentSchemaVersion]),
+		UnpackVcsRemoteRepo,
+		constructor,
+	)
 }

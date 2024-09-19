@@ -9,61 +9,19 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const MavenPackageType = "maven"
+const MavenCurrentSchemaVersion = 2
 
 type MavenRemoteRepo struct {
 	JavaRemoteRepo
 	RepositoryCurationParams
 }
 
-var MavenRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		JavaRemoteSchema(isResource, MavenPackageType, false),
-		CurationRemoteRepoSchema,
-	)
-}
-
-func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
-	mavenRemoteSchema := MavenRemoteSchema(true)
-
-	var unpackMavenRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: data}
-		repo := MavenRemoteRepo{
-			JavaRemoteRepo: UnpackJavaRemoteRepo(data, MavenPackageType),
-			RepositoryCurationParams: RepositoryCurationParams{
-				Curated: d.GetBool("curated", false),
-			},
-		}
-		return repo, repo.Id(), nil
-	}
-
-	constructor := func() (interface{}, error) {
-		return &MavenRemoteRepo{
-			JavaRemoteRepo{
-				RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-					Rclass:      rclass,
-					PackageType: MavenPackageType,
-				},
-				SuppressPomConsistencyChecks: false,
-			},
-			RepositoryCurationParams{
-				Curated: false,
-			},
-		}, nil
-	}
-
-	return mkResourceSchemaMaven(mavenRemoteSchema, packer.Default(mavenRemoteSchema), unpackMavenRemoteRepo, constructor)
-}
-
-var resourceMavenV1 = &schema.Resource{
-	Schema: mavenRemoteSchemaV1,
-}
-
 // Old schema, the one needs to be migrated (seconds -> secs)
-var mavenRemoteSchemaV1 = utilsdk.MergeMaps(
-	JavaRemoteSchema(true, MavenPackageType, false),
+var mavenSchemaV1 = lo.Assign(
+	JavaSchema(repository.MavenPackageType, false),
 	map[string]*schema.Schema{
 		"metadata_retrieval_timeout_seconds": {
 			Type:         schema.TypeInt,
@@ -75,27 +33,87 @@ var mavenRemoteSchemaV1 = utilsdk.MergeMaps(
 	},
 )
 
-func mkResourceSchemaMaven(skeema map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
+var mavenSchemaV2 = lo.Assign(
+	JavaSchema(repository.MavenPackageType, false),
+	CurationRemoteRepoSchema,
+)
+
+var MavenSchemas = map[int16]map[string]*schema.Schema{
+	0: lo.Assign(
+		baseSchemaV1,
+		mavenSchemaV1,
+	),
+	1: lo.Assign(
+		baseSchemaV1,
+		mavenSchemaV1,
+	),
+	2: lo.Assign(
+		baseSchemaV2,
+		mavenSchemaV2,
+	),
+}
+
+func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
+	var unpackMavenRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
+		d := &utilsdk.ResourceData{ResourceData: data}
+		repo := MavenRemoteRepo{
+			JavaRemoteRepo: UnpackJavaRemoteRepo(data, repository.MavenPackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
+		}
+		return repo, repo.Id(), nil
+	}
+
+	constructor := func() (interface{}, error) {
+		return &MavenRemoteRepo{
+			JavaRemoteRepo{
+				RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
+					Rclass:      Rclass,
+					PackageType: repository.MavenPackageType,
+				},
+				SuppressPomConsistencyChecks: false,
+			},
+			RepositoryCurationParams{
+				Curated: false,
+			},
+		}, nil
+	}
+
+	return mkResourceSchemaMaven(
+		MavenSchemas,
+		packer.Default(MavenSchemas[MavenCurrentSchemaVersion]),
+		unpackMavenRemoteRepo,
+		constructor,
+	)
+}
+
+var resourceMavenV1 = &schema.Resource{
+	Schema: mavenSchemaV1,
+}
+
+func mkResourceSchemaMaven(skeemas map[int16]map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
 	return &schema.Resource{
 		CreateContext: repository.MkRepoCreate(unpack, reader),
 		ReadContext:   reader,
 		UpdateContext: repository.MkRepoUpdate(unpack, reader),
 		DeleteContext: repository.DeleteRepo,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceMavenV1.CoreConfigSchema().ImpliedType(),
+				Type:    repository.Resource(skeemas[1]).CoreConfigSchema().ImpliedType(),
 				Upgrade: ResourceMavenStateUpgradeV1,
 				Version: 1,
 			},
 		},
 
-		Schema:        skeema,
-		SchemaVersion: 2,
+		Schema:        skeemas[MavenCurrentSchemaVersion],
+		SchemaVersion: MavenCurrentSchemaVersion,
 		CustomizeDiff: repository.ProjectEnvironmentsDiff,
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type ComposerRemoteRepo struct {
@@ -14,30 +15,28 @@ type ComposerRemoteRepo struct {
 	ComposerRegistryUrl string `json:"composerRegistryUrl"`
 }
 
-const ComposerPackageType = "composer"
-
-var ComposerRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		VcsRemoteRepoSchema,
-		map[string]*schema.Schema{
-			"composer_registry_url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "https://packagist.org",
-				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-				Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
-			},
+var composerSchema = lo.Assign(
+	baseSchema,
+	VcsRemoteRepoSchema,
+	map[string]*schema.Schema{
+		"composer_registry_url": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "https://packagist.org",
+			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+			Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
 		},
-		repository.RepoLayoutRefSchema(rclass, ComposerPackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.ComposerPackageType),
+)
+
+var ComposerSchemas = GetSchemas(composerSchema)
 
 func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	var unpackComposerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := ComposerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, ComposerPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.ComposerPackageType),
 			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
 			ComposerRegistryUrl:        d.GetString("composer_registry_url", false),
 		}
@@ -45,21 +44,24 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, ComposerPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ComposerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &ComposerRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   ComposerPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.ComposerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	composerSchema := ComposerRemoteSchema(true)
-
-	return mkResourceSchema(composerSchema, packer.Default(composerSchema), unpackComposerRemoteRepo, constructor)
+	return mkResourceSchema(
+		ComposerSchemas,
+		packer.Default(ComposerSchemas[CurrentSchemaVersion]),
+		unpackComposerRemoteRepo,
+		constructor,
+	)
 }

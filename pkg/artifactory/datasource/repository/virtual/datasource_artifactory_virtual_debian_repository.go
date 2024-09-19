@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualDebianRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.DebianPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.DebianPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.DebianPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.DebianPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	debianSchema := virtual.DebianVirtualSchema
+	debianSchema := virtual.DebianSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      debianSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(debianSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.DebianPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.DebianPackageType),
 	}
 }

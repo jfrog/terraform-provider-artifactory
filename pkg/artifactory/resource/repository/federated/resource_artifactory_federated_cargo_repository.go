@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type CargoFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type CargoFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
-	packageType := "cargo"
-
-	cargoFederatedSchema := utilsdk.MergeMaps(
-		local.CargoLocalSchema,
+	cargoFederatedSchema := lo.Assign(
+		local.CargoSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.CargoPackageType),
 	)
 
 	var unpackFederatedCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := CargoFederatedRepositoryParams{
-			CargoLocalRepoParams: local.UnpackLocalCargoRepository(data, rclass),
+			CargoLocalRepoParams: local.UnpackLocalCargoRepository(data, Rclass),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
 		}
@@ -52,8 +50,8 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 		return &CargoFederatedRepositoryParams{
 			CargoLocalRepoParams: local.CargoLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.CargoPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil

@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualBowerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.BowerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.BowerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.BowerPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.BowerPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	bowerSchema := virtual.BowerVirtualSchema
+	bowerSchema := virtual.BowerSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      bowerSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(bowerSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.BowerPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.BowerPackageType),
 	}
 }

@@ -8,16 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
-	packageType := "alpine"
-
-	alpineFederatedSchema := utilsdk.MergeMaps(
-		local.AlpineLocalSchema,
+	alpineFederatedSchema := lo.Assign(
+		local.AlpineLocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.AlpinePackageType),
 	)
 
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,8 +37,8 @@ func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 		return &federated.AlpineRepositoryParams{
 			AlpineLocalRepoParams: local.AlpineLocalRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.AlpinePackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

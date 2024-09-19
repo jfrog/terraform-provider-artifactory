@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteDockerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.DockerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.DockerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.DockerRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.DockerPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.DockerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	dockerSchema := remote.DockerRemoteSchema(false)
+	dockerSchema := getSchema(remote.DockerSchemas)
 
 	return &schema.Resource{
 		Schema:      dockerSchema,

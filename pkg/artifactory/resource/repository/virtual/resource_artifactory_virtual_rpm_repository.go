@@ -5,16 +5,16 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const RpmPackageType = "rpm"
-
-var RpmVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var rpmSchema = lo.Assign(
 	repository.PrimaryKeyPairRef,
 	repository.SecondaryKeyPairRef,
-	repository.RepoLayoutRefSchema(Rclass, RpmPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
 )
+
+var RPMSchemas = GetSchemas(rpmSchema)
 
 func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 	type CommonRpmDebianVirtualRepositoryParams struct {
@@ -41,7 +41,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 				},
 			},
 		}
-		repo.PackageType = "rpm"
+		repo.PackageType = repository.RPMPackageType
 
 		return &repo, repo.Key, nil
 	}
@@ -50,14 +50,14 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		return &RpmVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: RpmPackageType,
+				PackageType: repository.RPMPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		RpmVirtualSchema,
-		packer.Default(RpmVirtualSchema),
+		RPMSchemas,
+		packer.Default(RPMSchemas[CurrentSchemaVersion]),
 		unpackRpmVirtualRepository,
 		constructor,
 	)

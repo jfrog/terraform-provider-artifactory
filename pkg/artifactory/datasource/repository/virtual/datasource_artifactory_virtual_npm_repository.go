@@ -12,23 +12,23 @@ import (
 
 func DatasourceArtifactoryVirtualNpmRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, virtual.NpmPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.NPMPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
-			PackageType:   virtual.NpmPackageType,
-			Rclass:        rclass,
+			PackageType:   resource_repository.NPMPackageType,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	npmSchema := virtual.NpmVirtualSchema
+	npmSchema := virtual.NPMSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      npmSchema,
 		ReadContext: repository.MkRepoReadDataSource(packer.Default(npmSchema), constructor),
-		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", virtual.NpmPackageType),
+		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", resource_repository.NPMPackageType),
 	}
 }

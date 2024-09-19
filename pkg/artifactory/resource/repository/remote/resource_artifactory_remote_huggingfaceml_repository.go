@@ -4,54 +4,55 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
-
-const HuggingFacePackageType = "huggingfaceml"
 
 type HuggingFaceRepo struct {
 	RepositoryRemoteBaseParams
 }
 
-var HuggingFaceSchema = func(isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		map[string]*schema.Schema{
-			"url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "https://huggingface.co",
-				Description: "The remote repo URL. Default to 'https://huggingface.co'",
-			},
+var HuggingFaceSchema = lo.Assign(
+	baseSchema,
+	map[string]*schema.Schema{
+		"url": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "https://huggingface.co",
+			Description: "The remote repo URL. Default to 'https://huggingface.co'",
 		},
-		repository.RepoLayoutRefSchema(rclass, HuggingFacePackageType),
-	)
-}
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.HuggingFacePackageType),
+)
+
+var HuggingFaceSchemas = GetSchemas(HuggingFaceSchema)
 
 func ResourceArtifactoryRemoteHuggingFaceRepository() *schema.Resource {
 	var unpackRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		repo := HuggingFaceRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, HuggingFacePackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.HuggingFacePackageType),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, HuggingFacePackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.HuggingFacePackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &HuggingFaceRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   HuggingFacePackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.HuggingFacePackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	huggingFaceSchema := HuggingFaceSchema(true)
-
-	return mkResourceSchema(huggingFaceSchema, packer.Default(huggingFaceSchema), unpackRepo, constructor)
+	return mkResourceSchema(
+		HuggingFaceSchemas,
+		packer.Default(HuggingFaceSchemas[CurrentSchemaVersion]),
+		unpackRepo,
+		constructor,
+	)
 }

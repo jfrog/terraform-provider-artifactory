@@ -8,31 +8,32 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryVirtualJavaRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
 			PackageType:   packageType,
-			Rclass:        rclass,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
-
-	var javaSchema = utilsdk.MergeMaps(
-		virtual.BaseVirtualRepoSchema,
-		virtual.JavaVirtualSchema,
+	var mavenSchema = lo.Assign(
+		virtual.JavaSchema,
+		resource_repository.RepoLayoutRefSchema(virtual.Rclass, packageType),
 	)
 
+	var mavenSchemas = virtual.GetSchemas(mavenSchema)
+
 	return &schema.Resource{
-		Schema:      javaSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(javaSchema), constructor),
+		Schema:      mavenSchemas[virtual.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(mavenSchemas[virtual.CurrentSchemaVersion]), constructor),
 		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", packageType),
 	}
 }

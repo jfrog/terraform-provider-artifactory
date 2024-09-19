@@ -6,9 +6,8 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
-
-const DockerPackageType = "docker"
 
 type DockerLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -18,8 +17,7 @@ type DockerLocalRepositoryParams struct {
 	BlockPushingSchema1 bool   `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
 }
 
-var DockerV2LocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var dockerV2Schema = lo.Assign(
 	map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
@@ -49,13 +47,15 @@ var DockerV2LocalSchema = utilsdk.MergeMaps(
 			Description: "The Docker API version to use. This cannot be set",
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, DockerPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
 )
 
-func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
+var DockerV2Schemas = GetSchemas(dockerV2Schema)
+
+func UnpackLocalDockerV2Repository(data *schema.ResourceData, Rclass string) DockerLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, DockerPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.DockerPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		DockerApiVersion:     "V2",
 		TagRetention:         d.GetInt("tag_retention", false),
@@ -64,18 +64,18 @@ func UnpackLocalDockerV2Repository(data *schema.ResourceData, rclass string) Doc
 }
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	pkr := packer.Default(DockerV2LocalSchema)
+	pkr := packer.Default(DockerV2Schemas[2])
 
 	var unpackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalDockerV2Repository(data, rclass)
+		repo := UnpackLocalDockerV2Repository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: DockerPackageType,
-				Rclass:      rclass,
+				PackageType: repository.DockerPackageType,
+				Rclass:      Rclass,
 			},
 			DockerApiVersion:    "V2",
 			TagRetention:        1,
@@ -84,11 +84,15 @@ func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(DockerV2LocalSchema, pkr, unpackLocalDockerV2Repository, constructor)
+	return repository.MkResourceSchema(
+		DockerV2Schemas,
+		pkr,
+		unpackLocalDockerV2Repository,
+		constructor,
+	)
 }
 
-var DockerV1LocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var dockerV1Schema = utilsdk.MergeMaps(
 	map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
@@ -108,12 +112,14 @@ var DockerV1LocalSchema = utilsdk.MergeMaps(
 			Computed: true,
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, DockerPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
 )
 
-func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) DockerLocalRepositoryParams {
+var DockerV1Schemas = GetSchemas(dockerV1Schema)
+
+func UnpackLocalDockerV1Repository(data *schema.ResourceData, Rclass string) DockerLocalRepositoryParams {
 	return DockerLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, DockerPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.DockerPackageType),
 		DockerApiVersion:     "V1",
 		MaxUniqueTags:        0,
 		TagRetention:         1,
@@ -122,19 +128,16 @@ func UnpackLocalDockerV1Repository(data *schema.ResourceData, rclass string) Doc
 }
 
 func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
-	// this is necessary because of the pointers
-	skeema := utilsdk.MergeMaps(DockerV1LocalSchema)
-
 	var unPackLocalDockerV1Repository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalDockerV1Repository(data, rclass)
+		repo := UnpackLocalDockerV1Repository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &DockerLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: DockerPackageType,
-				Rclass:      rclass,
+				PackageType: repository.DockerPackageType,
+				Rclass:      Rclass,
 			},
 			DockerApiVersion:    "V1",
 			TagRetention:        1,
@@ -143,5 +146,10 @@ func ResourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(skeema, packer.Default(DockerV1LocalSchema), unPackLocalDockerV1Repository, constructor)
+	return repository.MkResourceSchema(
+		DockerV1Schemas,
+		packer.Default(DockerV1Schemas[CurrentSchemaVersion]),
+		unPackLocalDockerV1Repository,
+		constructor,
+	)
 }

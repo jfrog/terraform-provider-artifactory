@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.BowerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.BowerPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.BowerRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.BowerPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.BowerPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	bowerSchema := remote.BowerRemoteSchema(false)
+	bowerSchema := getSchema(remote.BowerSchemas)
 
 	return &schema.Resource{
 		Schema:      bowerSchema,
