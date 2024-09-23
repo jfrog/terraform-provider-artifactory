@@ -64,7 +64,7 @@ func UnpackLocalDockerV2Repository(data *schema.ResourceData, Rclass string) Doc
 }
 
 func ResourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	pkr := packer.Default(DockerV2Schemas[2])
+	pkr := packer.Default(DockerV2Schemas[CurrentSchemaVersion])
 
 	var unpackLocalDockerV2Repository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := UnpackLocalDockerV2Repository(data, Rclass)
