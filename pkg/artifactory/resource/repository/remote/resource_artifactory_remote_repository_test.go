@@ -1143,6 +1143,93 @@ func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
 	})
 }
 
+func TestAccRemoteRepository_generic_with_retrieve_sha256_from_server(t *testing.T) {
+
+	const temp = `
+		resource "artifactory_remote_generic_repository" "%s" {
+			key                     		= "%s"
+			description 					= "This is a test"
+			url                     		= "https://registry.npmjs.org/"
+			repo_layout_ref         		= "simple-default"
+			retrieve_sha256_from_server     = true
+			retrieval_cache_period_seconds  = 70
+		}
+	`
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("remote-test-repo-basic%d", id)
+	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(temp, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckResourceAttr(fqrn, "retrieve_sha256_from_server", "true"),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-generic-remote", "artifactory_remote_generic_repository")
+
+	const temp = `
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
+			key                     		= "{{ .name }}"
+			description 					= "This is a test"
+			url                     		= "https://registry.npmjs.org/"
+			repo_layout_ref         		= "simple-default"
+			propagate_query_params  		= true
+			retrieval_cache_period_seconds  = 70
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteRepository_generic_migrate_to_schema_v4", temp, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		CheckDestroy: acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						Source:            "jfrog/artifactory",
+						VersionConstraint: "12.0.0",
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
+					resource.TestCheckNoResourceAttr(fqrn, "retrieve_sha256_from_server"),
+				),
+			},
+			{
+				ProviderFactories: acctest.ProviderFactories,
+				Config:            config,
+				PlanOnly:          true,
+				ConfigPlanChecks:  testutil.ConfigPlanChecks(""),
+			},
+		},
+	})
+}
+
 func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
 	for _, repoType := range remote.PackageTypesLikeBasic {
 		const remoteGemsRepoBasicWithPropagate = `
