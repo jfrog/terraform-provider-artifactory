@@ -39,6 +39,7 @@ func (bp RepositoryBaseParams) Id() string {
 }
 
 var PackageTypesLikeGeneric = []string{
+	repository.CocoapodsPackageType,
 	repository.ComposerPackageType,
 	repository.GemsPackageType,
 	repository.GenericPackageType,
