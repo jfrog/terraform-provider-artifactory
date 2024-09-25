@@ -22,6 +22,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -221,6 +222,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		replication.NewLocalRepositorySingleReplicationResource,
 		replication.NewLocalRepositoryMultiReplicationResource,
 		replication.NewRemoteRepositoryReplicationResource,
+		webhook.NewArtifactWebhookResource,
 	}
 }
 

@@ -271,7 +271,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			SetPathParam("webhookKey", data.Id()).
 			SetResult(&webhook).
 			SetError(&artifactoryError).
-			Get(WhUrl)
+			Get(WebhookURL)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -308,7 +308,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			SetBody(webhook).
 			SetError(&artifactoryError).
 			AddRetryCondition(retryOnProxyError).
-			Post(webhooksUrl)
+			Post(webhooksURL)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -336,7 +336,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			SetBody(webhook).
 			SetError(&artifactoryError).
 			AddRetryCondition(retryOnProxyError).
-			Put(WhUrl)
+			Put(WebhookURL)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -357,7 +357,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
 			SetError(&artifactoryError).
-			Delete(WhUrl)
+			Delete(WebhookURL)
 
 		if err != nil {
 			return diag.FromErr(err)

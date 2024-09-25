@@ -479,7 +479,7 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 	return request.
 		SetPathParam("webhookKey", id).
 		AddRetryCondition(client.NeverRetry).
-		Get(webhook.WhUrl)
+		Get(webhook.WebhookURL)
 }
 
 func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
