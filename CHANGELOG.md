@@ -1,3 +1,9 @@
+## 12.1.0 (September 26, 2024)
+
+IMPROVEMENTS:
+
+* **New Resource:** artifactory_virtual_cocoapods_repository, which was missing from the provider. Issue: [#1079](https://github.com/jfrog/terraform-provider-artifactory/issues/1079) PR: [#1084](https://github.com/jfrog/terraform-provider-artifactory/pull/1084)
+
 ## 12.0.0 (September 16, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.6 and OpenTofu 1.8.2
 
 BREAKING CHANGES:
