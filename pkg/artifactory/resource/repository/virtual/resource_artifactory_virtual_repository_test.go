@@ -557,7 +557,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	})
 }
 
-func TestNugetPackageCreationFull(t *testing.T) {
+func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)
 	fqrn := fmt.Sprintf("artifactory_virtual_nuget_repository.%s", name)
@@ -598,7 +598,6 @@ func TestNugetPackageCreationFull(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVirtualRepository_full(t *testing.T) {
