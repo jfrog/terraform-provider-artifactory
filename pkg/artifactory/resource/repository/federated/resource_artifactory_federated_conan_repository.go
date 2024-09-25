@@ -7,6 +7,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type ConanRepositoryParams struct {
@@ -16,17 +17,17 @@ type ConanRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
-	conanSchema := utilsdk.MergeMaps(
-		local.ConanSchema,
+	conanSchema := lo.Assign(
+		local.ConanSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, repository.ConanPackageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
 	)
 
 	var unpackConanRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := ConanRepositoryParams{
 			ConanRepoParams: local.ConanRepoParams{
-				RepositoryBaseParams: local.UnpackBaseRepo(rclass, data, repository.ConanPackageType),
+				RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.ConanPackageType),
 				ConanBaseParams: repository.ConanBaseParams{
 					EnableConanSupport:       true,
 					ForceConanAuthentication: d.GetBool("force_conan_authentication", false),
@@ -59,7 +60,7 @@ func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
 			ConanRepoParams: local.ConanRepoParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
 					PackageType: repository.ConanPackageType,
-					Rclass:      rclass,
+					Rclass:      Rclass,
 				},
 				ConanBaseParams: repository.ConanBaseParams{
 					EnableConanSupport: true,

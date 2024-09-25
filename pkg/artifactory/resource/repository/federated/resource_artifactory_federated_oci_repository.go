@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type OciFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type OciFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedOciRepository() *schema.Resource {
-	packageType := "oci"
-
-	ociFederatedSchema := utilsdk.MergeMaps(
-		local.OciLocalSchema,
+	ociFederatedSchema := lo.Assign(
+		local.OCILocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
 	)
 
 	var unpackFederatedOciRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := OciFederatedRepositoryParams{
-			OciLocalRepositoryParams: local.UnpackLocalOciRepository(data, rclass),
+			OciLocalRepositoryParams: local.UnpackLocalOciRepository(data, Rclass),
 			Members:                  unpackMembers(data),
 			RepoParams:               unpackRepoParams(data),
 		}
@@ -52,12 +50,12 @@ func ResourceArtifactoryFederatedOciRepository() *schema.Resource {
 		return &OciFederatedRepositoryParams{
 			OciLocalRepositoryParams: local.OciLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.OCIPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(ociFederatedSchema, pkr, unpackFederatedOciRepository, constructor)
+	return mkResourceSchema(ociFederatedSchema, pkr, unpackFederatedOciRepository, constructor)
 }

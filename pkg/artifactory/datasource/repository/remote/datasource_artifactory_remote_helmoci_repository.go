@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteHelmOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.HelmOciPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.HelmOCIPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.HelmOciRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.HelmOciPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.HelmOCIPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	ociSchema := remote.HelmOciRemoteSchema(false)
+	ociSchema := getSchema(remote.HelmOCISchemas)
 
 	return &schema.Resource{
 		Schema:      ociSchema,

@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.VcsPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.VCSPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.VcsRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.VcsPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.VCSPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	vcsSchema := remote.VcsRemoteSchema(false)
+	vcsSchema := getSchema(remote.VCSSchemas)
 
 	return &schema.Resource{
 		Schema:      vcsSchema,

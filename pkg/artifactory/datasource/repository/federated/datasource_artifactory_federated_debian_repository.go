@@ -8,16 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
-	packageType := "debian"
-
-	debianFederatedSchema := utilsdk.MergeMaps(
-		local.DebianLocalSchema,
+	debianFederatedSchema := lo.Assign(
+		local.DebianSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DebianPackageType),
 	)
 
 	var packDebianMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,8 +37,8 @@ func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 		return &federated.DebianFederatedRepositoryParams{
 			DebianLocalRepositoryParams: local.DebianLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.DebianPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

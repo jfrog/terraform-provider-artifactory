@@ -6,7 +6,8 @@ import (
 )
 
 func ResourceArtifactoryRemoteJavaRepository(packageType string, suppressPom bool) *schema.Resource {
-	javaRemoteSchema := JavaRemoteSchema(true, packageType, suppressPom)
+	javaSchema := JavaSchema(packageType, suppressPom)
+	javaSchemas := GetSchemas(javaSchema)
 
 	var unpackJavaRemoteRepo = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := UnpackJavaRemoteRepo(data, packageType)
@@ -16,12 +17,17 @@ func ResourceArtifactoryRemoteJavaRepository(packageType string, suppressPom boo
 	constructor := func() (interface{}, error) {
 		return &JavaRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      rclass,
+				Rclass:      Rclass,
 				PackageType: packageType,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil
 	}
 
-	return mkResourceSchema(javaRemoteSchema, packer.Default(javaRemoteSchema), unpackJavaRemoteRepo, constructor)
+	return mkResourceSchema(
+		javaSchemas,
+		packer.Default(javaSchemas[CurrentSchemaVersion]),
+		unpackJavaRemoteRepo,
+		constructor,
+	)
 }

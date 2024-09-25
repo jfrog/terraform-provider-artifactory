@@ -4,27 +4,41 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-func GetGenericRepoSchema(packageType string) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(BaseLocalRepoSchema, repository.RepoLayoutRefSchema(rclass, packageType))
+func GetGenericSchemas(packageType string) map[int16]map[string]*schema.Schema {
+	return map[int16]map[string]*schema.Schema{
+		0: lo.Assign(
+			BaseSchemaV1,
+			repository.RepoLayoutRefSchema(Rclass, packageType),
+		),
+		1: lo.Assign(
+			BaseSchemaV1,
+			repository.RepoLayoutRefSchema(Rclass, packageType),
+		),
+	}
 }
 
 func ResourceArtifactoryLocalGenericRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
 		return &RepositoryBaseParams{
 			PackageType: packageType,
-			Rclass:      rclass,
+			Rclass:      Rclass,
 		}, nil
 	}
 
 	unpack := func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackBaseRepo(rclass, data, packageType)
+		repo := UnpackBaseRepo(Rclass, data, packageType)
 		return repo, repo.Id(), nil
 	}
 
-	genericRepoSchema := GetGenericRepoSchema(packageType)
+	genericRepoSchemas := GetGenericSchemas(packageType)
 
-	return repository.MkResourceSchema(genericRepoSchema, packer.Default(genericRepoSchema), unpack, constructor)
+	return repository.MkResourceSchema(
+		genericRepoSchemas,
+		packer.Default(genericRepoSchemas[CurrentSchemaVersion]),
+		unpack,
+		constructor,
+	)
 }

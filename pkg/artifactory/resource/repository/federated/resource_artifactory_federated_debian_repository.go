@@ -16,17 +16,15 @@ type DebianFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
-	packageType := "debian"
-
 	debianFederatedSchema := utilsdk.MergeMaps(
-		local.DebianLocalSchema,
+		local.DebianSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.DebianPackageType),
 	)
 
 	var unpackFederatedDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DebianFederatedRepositoryParams{
-			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, rclass),
+			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}
@@ -52,8 +50,8 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 		return &DebianFederatedRepositoryParams{
 			DebianLocalRepositoryParams: local.DebianLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.DebianPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil

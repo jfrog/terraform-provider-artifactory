@@ -7,22 +7,22 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
-func DataSourceArtifactoryLocalJavaRepository(repoType string, suppressPom bool) *schema.Resource {
-	javaLocalSchema := local.GetJavaRepoSchema(repoType, suppressPom)
+func DataSourceArtifactoryLocalJavaRepository(packageType string, suppressPom bool) *schema.Resource {
+	javaLocalSchemas := local.GetJavaSchemas(packageType, suppressPom)
 
 	constructor := func() (interface{}, error) {
 		return &local.JavaLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: repoType,
-				Rclass:      rclass,
+				PackageType: packageType,
+				Rclass:      local.Rclass,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil
 	}
 
 	return &schema.Resource{
-		Schema:      javaLocalSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(javaLocalSchema), constructor),
-		Description: "Data source for a local Java repository of type: " + repoType,
+		Schema:      javaLocalSchemas[local.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(javaLocalSchemas[local.CurrentSchemaVersion]), constructor),
+		Description: "Data source for a local Java repository of type: " + packageType,
 	}
 }

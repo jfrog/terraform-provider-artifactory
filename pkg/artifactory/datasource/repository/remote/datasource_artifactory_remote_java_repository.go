@@ -10,14 +10,14 @@ import (
 
 func DataSourceArtifactoryRemoteJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.JavaRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
+				Rclass:        remote.Rclass,
 				PackageType:   packageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
@@ -25,7 +25,7 @@ func DataSourceArtifactoryRemoteJavaRepository(packageType string, suppressPom b
 		}, nil
 	}
 
-	javaSchema := remote.JavaRemoteSchema(false, packageType, suppressPom)
+	javaSchema := getSchema(remote.GetSchemas(remote.JavaSchema(packageType, suppressPom)))
 
 	return &schema.Resource{
 		Schema:      javaSchema,

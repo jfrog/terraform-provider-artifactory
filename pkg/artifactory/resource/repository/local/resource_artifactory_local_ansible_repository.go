@@ -5,25 +5,25 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const ansiblePackageType = "ansible"
-
-var AnsibleLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
-	repository.RepoLayoutRefSchema(rclass, ansiblePackageType),
+var ansibleSchema = lo.Assign(
+	repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
 	repository.AlpinePrimaryKeyPairRef,
 )
+
+var AnsibleSchemas = GetSchemas(ansibleSchema)
 
 type AnsibleLocalRepoParams struct {
 	RepositoryBaseParams
 	repository.PrimaryKeyPairRefParam
 }
 
-func UnpackLocalAnsibleRepository(data *schema.ResourceData, rclass string) AnsibleLocalRepoParams {
+func UnpackLocalAnsibleRepository(data *schema.ResourceData, Rclass string) AnsibleLocalRepoParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return AnsibleLocalRepoParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, ansiblePackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.AnsiblePackageType),
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 		},
@@ -32,18 +32,23 @@ func UnpackLocalAnsibleRepository(data *schema.ResourceData, rclass string) Ansi
 
 func ResourceArtifactoryLocalAnsibleRepository() *schema.Resource {
 	var unpackLocalAnsibleRepo = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalAnsibleRepository(data, rclass)
+		repo := UnpackLocalAnsibleRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &AnsibleLocalRepoParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: alpinePackageType,
-				Rclass:      rclass,
+				PackageType: repository.AnsiblePackageType,
+				Rclass:      Rclass,
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(AnsibleLocalSchema, packer.Default(AnsibleLocalSchema), unpackLocalAnsibleRepo, constructor)
+	return repository.MkResourceSchema(
+		AnsibleSchemas,
+		packer.Default(AnsibleSchemas[CurrentSchemaVersion]),
+		unpackLocalAnsibleRepo,
+		constructor,
+	)
 }

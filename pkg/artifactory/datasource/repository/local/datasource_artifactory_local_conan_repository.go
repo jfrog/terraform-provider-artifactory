@@ -13,14 +13,14 @@ func DataSourceArtifactoryLocalConanRepository() *schema.Resource {
 		return &local.ConanRepoParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
 				PackageType: resource_repository.ConanPackageType,
-				Rclass:      rclass,
+				Rclass:      local.Rclass,
 			},
 		}, nil
 	}
 
 	return &schema.Resource{
-		Schema:      local.ConanSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.ConanSchema), constructor),
+		Schema:      local.ConanSchemas[local.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.ConanSchemas[local.CurrentSchemaVersion]), constructor),
 		Description: "Data source for local Conan repository",
 	}
 }

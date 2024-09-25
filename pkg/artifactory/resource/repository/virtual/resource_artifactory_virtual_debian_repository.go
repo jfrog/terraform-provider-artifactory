@@ -8,12 +8,10 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const DebianPackageType = "debian"
-
-var DebianVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var debianSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	repository.PrimaryKeyPairRef,
 	repository.SecondaryKeyPairRef,
@@ -37,7 +35,10 @@ var DebianVirtualSchema = utilsdk.MergeMaps(
 			StateFunc:        utilsdk.FormatCommaSeparatedString,
 			Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
-	}, repository.RepoLayoutRefSchema(Rclass, DebianPackageType))
+	}, repository.RepoLayoutRefSchema(Rclass, repository.DebianPackageType),
+)
+
+var DebianSchemas = GetSchemas(debianSchema)
 
 func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 
@@ -53,7 +54,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := DebianVirtualRepositoryParams{
-			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, DebianPackageType),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, repository.DebianPackageType),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 			},
@@ -63,7 +64,7 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			OptionalIndexCompressionFormats: d.GetSet("optional_index_compression_formats"),
 			DebianDefaultArchitectures:      d.GetString("debian_default_architectures", false),
 		}
-		repo.PackageType = DebianPackageType
+		repo.PackageType = repository.DebianPackageType
 		return &repo, repo.Key, nil
 	}
 
@@ -72,15 +73,15 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      Rclass,
-					PackageType: DebianPackageType,
+					PackageType: repository.DebianPackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		DebianVirtualSchema,
-		packer.Default(DebianVirtualSchema),
+		DebianSchemas,
+		packer.Default(DebianSchemas[CurrentSchemaVersion]),
 		unpackDebianVirtualRepository,
 		constructor,
 	)

@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type RpmFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type RpmFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
-	packageType := "rpm"
-
-	rpmFederatedSchema := utilsdk.MergeMaps(
-		local.RpmLocalSchema,
+	rpmFederatedSchema := lo.Assign(
+		local.RPMSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
 	)
 
 	var unpackFederatedRpmRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := RpmFederatedRepositoryParams{
-			RpmLocalRepositoryParams: local.UnpackLocalRpmRepository(data, rclass),
+			RpmLocalRepositoryParams: local.UnpackLocalRpmRepository(data, Rclass),
 			Members:                  unpackMembers(data),
 			RepoParams:               unpackRepoParams(data),
 		}
@@ -52,8 +50,8 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 		return &RpmFederatedRepositoryParams{
 			RpmLocalRepositoryParams: local.RpmLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.RPMPackageType,
+					Rclass:      Rclass,
 				},
 				RootDepth:               0,
 				CalculateYumMetadata:    false,

@@ -93,7 +93,7 @@ EOF
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ EOF
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -327,8 +327,8 @@ EOF
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -475,8 +475,8 @@ EOF
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{

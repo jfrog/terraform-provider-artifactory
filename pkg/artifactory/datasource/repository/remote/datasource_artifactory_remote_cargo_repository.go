@@ -10,21 +10,23 @@ import (
 
 func DataSourceArtifactoryRemoteCargoRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.CargoPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.CargoPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.CargoRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.CargoPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.CargoPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	cargoSchema := remote.CargoRemoteSchema(false)
+	cargoSchema := getSchema(remote.CargoSchemas)
+	cargoSchema["git_registry_url"].Required = false
+	cargoSchema["git_registry_url"].Optional = true
 
 	return &schema.Resource{
 		Schema:      cargoSchema,

@@ -8,16 +8,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
-	packageType := "docker"
-
-	dockerV2FederatedSchema := utilsdk.MergeMaps(
-		local.DockerV2LocalSchema,
+	dockerV2FederatedSchema := lo.Assign(
+		local.DockerV2Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DockerPackageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -39,8 +37,8 @@ func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 		return &federated.DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.DockerPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil
@@ -54,12 +52,10 @@ func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 }
 
 func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
-	packageType := "docker"
-
-	dockerFederatedSchema := utilsdk.MergeMaps(
-		local.DockerV1LocalSchema,
+	dockerFederatedSchema := lo.Assign(
+		local.DockerV1Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(rclass, packageType),
+		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DockerPackageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -78,8 +74,8 @@ func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 		return &federated.DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: resource_repository.DockerPackageType,
+					Rclass:      federated.Rclass,
 				},
 			},
 		}, nil

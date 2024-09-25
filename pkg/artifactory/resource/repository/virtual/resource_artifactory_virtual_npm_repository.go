@@ -5,30 +5,29 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const NpmPackageType = "npm"
-
-var NpmVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var npmSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	externalDependenciesSchema,
-	repository.RepoLayoutRefSchema(Rclass, NpmPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.NPMPackageType),
 )
 
+var NPMSchemas = GetSchemas(npmSchema)
+
+type NpmVirtualRepositoryParams struct {
+	ExternalDependenciesVirtualRepositoryParams
+	VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
+}
+
 func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
-
-	type NpmVirtualRepositoryParams struct {
-		ExternalDependenciesVirtualRepositoryParams
-		VirtualRetrievalCachePeriodSecs int `hcl:"retrieval_cache_period_seconds" json:"virtualRetrievalCachePeriodSecs"`
-	}
-
 	var unpackNpmVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := NpmVirtualRepositoryParams{
 			VirtualRetrievalCachePeriodSecs:             d.GetInt("retrieval_cache_period_seconds", false),
-			ExternalDependenciesVirtualRepositoryParams: unpackExternalDependenciesVirtualRepository(s, NpmPackageType),
+			ExternalDependenciesVirtualRepositoryParams: unpackExternalDependenciesVirtualRepository(s, repository.NPMPackageType),
 		}
 		return &repo, repo.Key, nil
 	}
@@ -38,15 +37,15 @@ func ResourceArtifactoryVirtualNpmRepository() *schema.Resource {
 			ExternalDependenciesVirtualRepositoryParams: ExternalDependenciesVirtualRepositoryParams{
 				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      Rclass,
-					PackageType: NpmPackageType,
+					PackageType: repository.NPMPackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		NpmVirtualSchema,
-		packer.Default(NpmVirtualSchema),
+		NPMSchemas,
+		packer.Default(NPMSchemas[CurrentSchemaVersion]),
 		unpackNpmVirtualRepository,
 		constructor,
 	)

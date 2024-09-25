@@ -8,55 +8,51 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryVirtualGenericRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &virtual.RepositoryBaseParams{
 			PackageType:   packageType,
-			Rclass:        rclass,
+			Rclass:        virtual.Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
 
-	genericSchema := virtual.BaseVirtualRepoSchema
+	genericSchemas := virtual.GetSchemas(resource_repository.RepoLayoutRefSchema(virtual.Rclass, packageType))
 
 	return &schema.Resource{
-		Schema:      genericSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(genericSchema), constructor),
+		Schema:      genericSchemas[virtual.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(genericSchemas[virtual.CurrentSchemaVersion]), constructor),
 		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", packageType),
 	}
 }
 
 func DataSourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 		return &virtual.RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 			RepositoryBaseParams: virtual.RepositoryBaseParams{
-				Rclass:        rclass,
+				Rclass:        virtual.Rclass,
 				PackageType:   packageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	var repoWithRetrievalCachePeriodSecsVirtualSchema = utilsdk.MergeMaps(
-		virtual.BaseVirtualRepoSchema,
-		virtual.RetrievalCachePeriodSecondsSchema,
-	)
+	repoWithRetrivalCachePeriodSecsVirtualSchemas := virtual.RepoWithRetrivalCachePeriodSecsVirtualSchemas(packageType)
 
 	return &schema.Resource{
-		Schema:      repoWithRetrievalCachePeriodSecsVirtualSchema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(repoWithRetrievalCachePeriodSecsVirtualSchema), constructor),
+		Schema:      repoWithRetrivalCachePeriodSecsVirtualSchemas[virtual.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(repoWithRetrivalCachePeriodSecsVirtualSchemas[virtual.CurrentSchemaVersion]), constructor),
 		Description: fmt.Sprintf("Provides a data source for a virtual %s repository", packageType),
 	}
 }

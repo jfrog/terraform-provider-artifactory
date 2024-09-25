@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type HelmOciFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type HelmOciFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
-	packageType := "helmoci"
-
-	helmociSchema := utilsdk.MergeMaps(
-		local.HelmOciLocalSchema,
+	helmociSchema := lo.Assign(
+		local.HelmOCISchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
 	)
 
 	var unpackRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := HelmOciFederatedRepositoryParams{
-			HelmOciLocalRepositoryParams: local.UnpackLocalHelmOciRepository(data, rclass),
+			HelmOciLocalRepositoryParams: local.UnpackLocalHelmOciRepository(data, Rclass),
 			Members:                      unpackMembers(data),
 			RepoParams:                   unpackRepoParams(data),
 		}
@@ -52,12 +50,12 @@ func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 		return &HelmOciFederatedRepositoryParams{
 			HelmOciLocalRepositoryParams: local.HelmOciLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.HelmOCIPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(helmociSchema, pkr, unpackRepository, constructor)
+	return mkResourceSchema(helmociSchema, pkr, unpackRepository, constructor)
 }

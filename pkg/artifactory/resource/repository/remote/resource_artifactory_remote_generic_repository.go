@@ -5,6 +5,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type GenericRemoteRepo struct {
@@ -12,70 +13,72 @@ type GenericRemoteRepo struct {
 	PropagateQueryParams bool `json:"propagateQueryParams"`
 }
 
-const GenericPackageType = "generic"
-
-var GenericRemoteSchema = func(isResource bool) map[string]*schema.Schema {
-	genericSchema := utilsdk.MergeMaps(
-		BaseRemoteRepoSchema(isResource),
-		map[string]*schema.Schema{
-			"propagate_query_params": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
-			},
+var genericSchema = lo.Assign(
+	baseSchema,
+	map[string]*schema.Schema{
+		"propagate_query_params": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 		},
-		repository.RepoLayoutRefSchema(rclass, GenericPackageType),
-	)
+	},
+	repository.RepoLayoutRefSchema(Rclass, repository.GenericPackageType),
+)
 
-	return genericSchema
-}
+var GenericSchemas = GetSchemas(genericSchema)
 
 func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 
 	var unpackGenericRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := GenericRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, GenericPackageType),
+			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.GenericPackageType),
 			PropagateQueryParams:       d.GetBool("propagate_query_params", false),
 		}
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, GenericPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GenericPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &GenericRemoteRepo{
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   GenericPackageType,
+				Rclass:        Rclass,
+				PackageType:   repository.GenericPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	genericSchema := GenericRemoteSchema(true)
-
-	return mkResourceSchema(genericSchema, packer.Default(genericSchema), unpackGenericRemoteRepo, constructor)
+	return mkResourceSchema(
+		GenericSchemas,
+		packer.Default(GenericSchemas[CurrentSchemaVersion]),
+		unpackGenericRemoteRepo,
+		constructor,
+	)
 }
 
-var BasicRepoSchema = func(packageType string, isResource bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(BaseRemoteRepoSchema(isResource), repository.RepoLayoutRefSchema(rclass, packageType))
+var BasicSchema = func(packageType string) map[string]*schema.Schema {
+	return lo.Assign(
+		baseSchema,
+		repository.RepoLayoutRefSchema(Rclass, packageType),
+	)
 }
 
 func ResourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(rclass, packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, packageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &RepositoryRemoteBaseParams{
 			PackageType:   packageType,
-			Rclass:        rclass,
+			Rclass:        Rclass,
 			RepoLayoutRef: repoLayout.(string),
 		}, nil
 	}
@@ -85,7 +88,13 @@ func ResourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resour
 		return repo, repo.Id(), nil
 	}
 
-	mergedRemoteRepoSchema := BasicRepoSchema(packageType, true)
+	basicSchema := BasicSchema(packageType)
+	basicSchemas := GetSchemas(basicSchema)
 
-	return mkResourceSchema(mergedRemoteRepoSchema, packer.Default(mergedRemoteRepoSchema), unpack, constructor)
+	return mkResourceSchema(
+		basicSchemas,
+		packer.Default(basicSchemas[CurrentSchemaVersion]),
+		unpack,
+		constructor,
+	)
 }

@@ -8,16 +8,13 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-const HelmOciPackageType = "helmoci"
-
 type HelmOciLocalRepositoryParams struct {
 	RepositoryBaseParams
 	MaxUniqueTags int `json:"maxUniqueTags"`
 	TagRetention  int `json:"dockerTagRetention"`
 }
 
-var HelmOciLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var helmOCISchema = utilsdk.MergeMaps(
 	map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
@@ -36,36 +33,43 @@ var HelmOciLocalSchema = utilsdk.MergeMaps(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, HelmOciPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
 )
 
-func UnpackLocalHelmOciRepository(data *schema.ResourceData, rclass string) HelmOciLocalRepositoryParams {
+var HelmOCISchemas = GetSchemas(helmOCISchema)
+
+func UnpackLocalHelmOciRepository(data *schema.ResourceData, Rclass string) HelmOciLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return HelmOciLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, HelmOciPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.HelmOCIPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		TagRetention:         d.GetInt("tag_retention", false),
 	}
 }
 
 func ResourceArtifactoryLocalHelmOciRepository() *schema.Resource {
-	pkr := packer.Default(HelmOciLocalSchema)
+	pkr := packer.Default(HelmOCISchemas[CurrentSchemaVersion])
 
 	var unpackLocalHelmOciRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalHelmOciRepository(data, rclass)
+		repo := UnpackLocalHelmOciRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &HelmOciLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: HelmOciPackageType,
-				Rclass:      rclass,
+				PackageType: repository.HelmOCIPackageType,
+				Rclass:      Rclass,
 			},
 			TagRetention:  1,
 			MaxUniqueTags: 0, // no limit
 		}, nil
 	}
 
-	return repository.MkResourceSchema(HelmOciLocalSchema, pkr, unpackLocalHelmOciRepository, constructor)
+	return repository.MkResourceSchema(
+		HelmOCISchemas,
+		pkr,
+		unpackLocalHelmOciRepository,
+		constructor,
+	)
 }

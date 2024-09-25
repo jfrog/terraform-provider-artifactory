@@ -5,30 +5,33 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const HelmOciPackageType = "helmoci"
-
-var HelmOciVirtualSchema = utilsdk.MergeMaps(BaseVirtualRepoSchema, map[string]*schema.Schema{
-	"resolve_oci_tags_by_timestamp": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "When enabled, in cases where the same OCI tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
+var helmOCISchema = lo.Assign(
+	map[string]*schema.Schema{
+		"resolve_oci_tags_by_timestamp": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When enabled, in cases where the same OCI tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
+		},
 	},
-}, repository.RepoLayoutRefSchema(Rclass, DockerPackageType))
+	repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
+)
+
+var HelmOCISchemas = GetSchemas(helmOCISchema)
+
+type HelmOciVirtualRepositoryParams struct {
+	RepositoryBaseParams
+	ResolveOCITagsByTimestamp bool `hcl:"resolve_oci_tags_by_timestamp" json:"resolveDockerTagsByTimestamp"`
+}
 
 func ResourceArtifactoryVirtualHelmOciRepository() *schema.Resource {
-
-	type HelmOciVirtualRepositoryParams struct {
-		RepositoryBaseParams
-		ResolveOCITagsByTimestamp bool `hcl:"resolve_oci_tags_by_timestamp" json:"resolveDockerTagsByTimestamp"`
-	}
-
 	unpackVirtualRepository := func(data *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := HelmOciVirtualRepositoryParams{
-			RepositoryBaseParams:      UnpackBaseVirtRepo(data, HelmOciPackageType),
+			RepositoryBaseParams:      UnpackBaseVirtRepo(data, repository.HelmOCIPackageType),
 			ResolveOCITagsByTimestamp: d.GetBool("resolve_oci_tags_by_timestamp", false),
 		}
 
@@ -39,14 +42,14 @@ func ResourceArtifactoryVirtualHelmOciRepository() *schema.Resource {
 		return &HelmOciVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: HelmOciPackageType,
+				PackageType: repository.HelmOCIPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		HelmOciVirtualSchema,
-		packer.Default(HelmOciVirtualSchema),
+		HelmOCISchemas,
+		packer.Default(HelmOCISchemas[CurrentSchemaVersion]),
 		unpackVirtualRepository,
 		constructor,
 	)

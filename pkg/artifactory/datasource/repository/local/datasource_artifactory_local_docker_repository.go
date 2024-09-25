@@ -3,19 +3,19 @@ package local
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository"
+	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
 func DataSourceArtifactoryLocalDockerV2Repository() *schema.Resource {
-	pkr := packer.Default(local.DockerV2LocalSchema)
+	pkr := packer.Default(local.DockerV2Schemas[local.CurrentSchemaVersion])
 
 	constructor := func() (interface{}, error) {
 		return &local.DockerLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: local.DockerPackageType,
-				Rclass:      rclass,
+				PackageType: resource_repository.DockerPackageType,
+				Rclass:      local.Rclass,
 			},
 			DockerApiVersion:    "V2",
 			TagRetention:        1,
@@ -25,20 +25,17 @@ func DataSourceArtifactoryLocalDockerV2Repository() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Schema:      local.DockerV2LocalSchema,
+		Schema:      local.DockerV2Schemas[local.CurrentSchemaVersion],
 		ReadContext: repository.MkRepoReadDataSource(pkr, constructor),
 	}
 }
 
 func DataSourceArtifactoryLocalDockerV1Repository() *schema.Resource {
-	// this is necessary because of the pointers
-	skeema := utilsdk.MergeMaps(local.DockerV1LocalSchema)
-
 	constructor := func() (interface{}, error) {
 		return &local.DockerLocalRepositoryParams{
 			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: local.DockerPackageType,
-				Rclass:      rclass,
+				PackageType: resource_repository.DockerPackageType,
+				Rclass:      local.Rclass,
 			},
 			DockerApiVersion:    "V1",
 			TagRetention:        1,
@@ -48,8 +45,8 @@ func DataSourceArtifactoryLocalDockerV1Repository() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Schema:      skeema,
-		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.DockerV1LocalSchema), constructor),
+		Schema:      local.DockerV1Schemas[local.CurrentSchemaVersion],
+		ReadContext: repository.MkRepoReadDataSource(packer.Default(local.DockerV1Schemas[local.CurrentSchemaVersion]), constructor),
 		Description: "Provides a data source for a local docker (v1) repository",
 	}
 }

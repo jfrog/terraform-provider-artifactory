@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.AnsiblePackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.AnsiblePackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.AnsibleRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.AnsiblePackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.AnsiblePackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	ansibleSchema := remote.AnsibleSchema(false)
+	ansibleSchema := getSchema(remote.AnsibleSchemas)
 
 	return &schema.Resource{
 		Schema:      ansibleSchema,

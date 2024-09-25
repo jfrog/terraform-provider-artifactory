@@ -28,9 +28,9 @@ The following arguments are supported:
   Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 onward, only one value is allowed.
   The attribute should only be used if the repository is already assigned to the existing project. If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during the update.
 * `includes_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form
-of x/y/**/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (\*\*/*).
+of `x/y/**/z/\*`. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).
 * `excludes_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form
-of x/y/**/z/*. By default no artifacts are excluded.
+of `x/y/**/z/*`. By default no artifacts are excluded.
 * `repo_layout_ref` - (Optional) Sets the layout that the repository should use for storing and identifying modules.
   A recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and calculate metadata accordingly.
 * `blacked_out` - (Optional, Default: `false`) When set, the repository does not participate in artifact resolution and
@@ -47,3 +47,6 @@ uploading content that may compromise security (e.g., cross-site scripting attac
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
 * `cdn_redirect` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
+* `allow_delete` - (Optional) When unset or set to `true`, provider will delete the repository even if it contains artifacts. Must be set to `false` for the provider to return error when destroying the resource.
+
+~>To maintain backward compatibility with provider version 12.0.0 and earlier, the state value for `allow_delete` is automatically set to `true` for existing resources.

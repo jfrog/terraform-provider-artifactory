@@ -5,15 +5,16 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const AlpinePackageType = "alpine"
-
-var AlpineVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var alpineSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	repository.PrimaryKeyPairRef,
-	repository.RepoLayoutRefSchema(Rclass, AlpinePackageType))
+	repository.RepoLayoutRefSchema(Rclass, repository.AlpinePackageType),
+)
+
+var AlpineSchemas = GetSchemas(alpineSchema)
 
 func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 	type AlpineVirtualRepositoryParams struct {
@@ -25,12 +26,12 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := AlpineVirtualRepositoryParams{
-			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, AlpinePackageType),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, repository.AlpinePackageType),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
 			},
 		}
-		repo.PackageType = AlpinePackageType
+		repo.PackageType = repository.AlpinePackageType
 		return &repo, repo.Key, nil
 	}
 
@@ -39,15 +40,15 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: RepositoryBaseParams{
 					Rclass:      Rclass,
-					PackageType: AlpinePackageType,
+					PackageType: repository.AlpinePackageType,
 				},
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		AlpineVirtualSchema,
-		packer.Default(AlpineVirtualSchema),
+		AlpineSchemas,
+		packer.Default(AlpineSchemas[CurrentSchemaVersion]),
 		unpackAlpineVirtualRepository,
 		constructor,
 	)

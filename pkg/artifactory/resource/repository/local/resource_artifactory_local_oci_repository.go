@@ -6,9 +6,8 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
-
-const OciPackageType = "oci"
 
 type OciLocalRepositoryParams struct {
 	RepositoryBaseParams
@@ -17,8 +16,7 @@ type OciLocalRepositoryParams struct {
 	TagRetention     int    `json:"dockerTagRetention"`
 }
 
-var OciLocalSchema = utilsdk.MergeMaps(
-	BaseLocalRepoSchema,
+var ociSchema = lo.Assign(
 	map[string]*schema.Schema{
 		"max_unique_tags": {
 			Type:     schema.TypeInt,
@@ -36,13 +34,15 @@ var OciLocalSchema = utilsdk.MergeMaps(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(rclass, OciPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
 )
 
-func UnpackLocalOciRepository(data *schema.ResourceData, rclass string) OciLocalRepositoryParams {
+var OCILocalSchemas = GetSchemas(ociSchema)
+
+func UnpackLocalOciRepository(data *schema.ResourceData, Rclass string) OciLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return OciLocalRepositoryParams{
-		RepositoryBaseParams: UnpackBaseRepo(rclass, data, OciPackageType),
+		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.OCIPackageType),
 		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
 		DockerApiVersion:     "V2",
 		TagRetention:         d.GetInt("tag_retention", false),
@@ -50,18 +50,16 @@ func UnpackLocalOciRepository(data *schema.ResourceData, rclass string) OciLocal
 }
 
 func ResourceArtifactoryLocalOciRepository() *schema.Resource {
-	pkr := packer.Default(OciLocalSchema)
-
 	var unpackLocalOciRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalOciRepository(data, rclass)
+		repo := UnpackLocalOciRepository(data, Rclass)
 		return repo, repo.Id(), nil
 	}
 
 	constructor := func() (interface{}, error) {
 		return &OciLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
-				PackageType: OciPackageType,
-				Rclass:      rclass,
+				PackageType: repository.OCIPackageType,
+				Rclass:      Rclass,
 			},
 			DockerApiVersion: "V2",
 			TagRetention:     1,
@@ -69,5 +67,10 @@ func ResourceArtifactoryLocalOciRepository() *schema.Resource {
 		}, nil
 	}
 
-	return repository.MkResourceSchema(OciLocalSchema, pkr, unpackLocalOciRepository, constructor)
+	return repository.MkResourceSchema(
+		OCILocalSchemas,
+		packer.Default(OCILocalSchemas[CurrentSchemaVersion]),
+		unpackLocalOciRepository,
+		constructor,
+	)
 }

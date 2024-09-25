@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type NugetFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type NugetFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
-	packageType := "nuget"
-
-	nugetFederatedSchema := utilsdk.MergeMaps(
-		local.NugetLocalSchema,
+	nugetFederatedSchema := lo.Assign(
+		local.NugetSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
 	)
 
 	var unpackFederatedNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := NugetFederatedRepositoryParams{
-			NugetLocalRepositoryParams: local.UnpackLocalNugetRepository(data, rclass),
+			NugetLocalRepositoryParams: local.UnpackLocalNugetRepository(data, Rclass),
 			Members:                    unpackMembers(data),
 			RepoParams:                 unpackRepoParams(data),
 		}
@@ -52,8 +50,8 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 		return &NugetFederatedRepositoryParams{
 			NugetLocalRepositoryParams: local.NugetLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.NugetPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil

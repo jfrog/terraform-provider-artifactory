@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type DockerFederatedRepositoryParams struct {
@@ -16,17 +16,15 @@ type DockerFederatedRepositoryParams struct {
 }
 
 func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
-	packageType := "docker"
-
-	dockerV2FederatedSchema := utilsdk.MergeMaps(
-		local.DockerV2LocalSchema,
+	dockerV2FederatedSchema := lo.Assign(
+		local.DockerV2Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
 	)
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV2Repository(data, rclass),
+			DockerLocalRepositoryParams: local.UnpackLocalDockerV2Repository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}
@@ -52,28 +50,26 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 		return &DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.DockerPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil
 	}
 
-	return repository.MkResourceSchema(dockerV2FederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
+	return mkResourceSchema(dockerV2FederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
 }
 
 func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
-	packageType := "docker"
-
-	dockerFederatedSchema := utilsdk.MergeMaps(
-		local.DockerV1LocalSchema,
+	dockerFederatedSchema := lo.Assign(
+		local.DockerV1Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
 	)
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV1Repository(data, rclass),
+			DockerLocalRepositoryParams: local.UnpackLocalDockerV1Repository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}
@@ -96,8 +92,8 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 		return &DockerFederatedRepositoryParams{
 			DockerLocalRepositoryParams: local.DockerLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: packageType,
-					Rclass:      rclass,
+					PackageType: repository.DockerPackageType,
+					Rclass:      Rclass,
 				},
 			},
 		}, nil

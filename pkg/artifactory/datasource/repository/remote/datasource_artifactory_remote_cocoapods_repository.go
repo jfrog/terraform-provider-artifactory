@@ -10,21 +10,21 @@ import (
 
 func DataSourceArtifactoryRemoteCoapodsRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, remote.CocoapodsPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.CocoapodsPackageType)()
 		if err != nil {
 			return nil, err
 		}
 
 		return &remote.CocoapodsRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
-				Rclass:        rclass,
-				PackageType:   remote.CocoapodsPackageType,
+				Rclass:        remote.Rclass,
+				PackageType:   resource_repository.CocoapodsPackageType,
 				RepoLayoutRef: repoLayout.(string),
 			},
 		}, nil
 	}
 
-	cocoapodsSchema := remote.CocoapodsRemoteSchema(false)
+	cocoapodsSchema := getSchema(remote.CocoapodsSchemas)
 
 	return &schema.Resource{
 		Schema:      cocoapodsSchema,

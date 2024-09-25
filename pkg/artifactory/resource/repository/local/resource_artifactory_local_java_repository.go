@@ -7,11 +7,11 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/jfrog/terraform-provider-shared/validator"
+	"github.com/samber/lo"
 )
 
-func GetJavaRepoSchema(packageType string, suppressPom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
-		BaseLocalRepoSchema,
+func GetJavaSchemas(packageType string, suppressPom bool) map[int16]map[string]*schema.Schema {
+	javaSchema := lo.Assign(
 		map[string]*schema.Schema{
 			"checksum_policy_type": {
 				Type:             schema.TypeString,
@@ -65,8 +65,19 @@ func GetJavaRepoSchema(packageType string, suppressPom bool) map[string]*schema.
 					"behavior by setting the Suppress POM Consistency Checks checkbox.",
 			},
 		},
-		repository.RepoLayoutRefSchema(rclass, packageType),
+		repository.RepoLayoutRefSchema(Rclass, packageType),
 	)
+
+	return map[int16]map[string]*schema.Schema{
+		0: lo.Assign(
+			BaseSchemaV1,
+			javaSchema,
+		),
+		1: lo.Assign(
+			BaseSchemaV1,
+			javaSchema,
+		),
+	}
 }
 
 type JavaLocalRepositoryParams struct {
@@ -79,10 +90,10 @@ type JavaLocalRepositoryParams struct {
 	SuppressPomConsistencyChecks bool   `hcl:"suppress_pom_consistency_checks" json:"suppressPomConsistencyChecks"`
 }
 
-var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, packageType string) JavaLocalRepositoryParams {
+var UnpackLocalJavaRepository = func(data *schema.ResourceData, Rclass string, packageType string) JavaLocalRepositoryParams {
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return JavaLocalRepositoryParams{
-		RepositoryBaseParams:         UnpackBaseRepo(rclass, data, packageType),
+		RepositoryBaseParams:         UnpackBaseRepo(Rclass, data, packageType),
 		ChecksumPolicyType:           d.GetString("checksum_policy_type", false),
 		SnapshotVersionBehavior:      d.GetString("snapshot_version_behavior", false),
 		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
@@ -94,21 +105,26 @@ var UnpackLocalJavaRepository = func(data *schema.ResourceData, rclass string, p
 
 func ResourceArtifactoryLocalJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 	var unPackLocalJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
-		repo := UnpackLocalJavaRepository(data, rclass, packageType)
+		repo := UnpackLocalJavaRepository(data, Rclass, packageType)
 		return repo, repo.Id(), nil
 	}
 
-	javaLocalSchema := GetJavaRepoSchema(packageType, suppressPom)
+	javaSchemas := GetJavaSchemas(packageType, suppressPom)
 
 	constructor := func() (interface{}, error) {
 		return &JavaLocalRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				PackageType: packageType,
-				Rclass:      rclass,
+				Rclass:      Rclass,
 			},
 			SuppressPomConsistencyChecks: suppressPom,
 		}, nil
 	}
 
-	return repository.MkResourceSchema(javaLocalSchema, packer.Default(javaLocalSchema), unPackLocalJavaRepository, constructor)
+	return repository.MkResourceSchema(
+		javaSchemas,
+		packer.Default(javaSchemas[CurrentSchemaVersion]),
+		unPackLocalJavaRepository,
+		constructor,
+	)
 }

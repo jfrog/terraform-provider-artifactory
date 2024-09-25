@@ -5,12 +5,10 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const GoPackageType = "go"
-
-var GoVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var goSchema = lo.Assign(
 	map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,
@@ -29,8 +27,10 @@ var GoVirtualSchema = utilsdk.MergeMaps(
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, GoPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.GoPackageType),
 )
+
+var GoSchemas = GetSchemas(goSchema)
 
 func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 	type GoVirtualRepositoryParams struct {
@@ -43,7 +43,7 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := GoVirtualRepositoryParams{
-			RepositoryBaseParams:         UnpackBaseVirtRepo(s, GoPackageType),
+			RepositoryBaseParams:         UnpackBaseVirtRepo(s, repository.GoPackageType),
 			ExternalDependenciesPatterns: d.GetList("external_dependencies_patterns"),
 			ExternalDependenciesEnabled:  d.GetBool("external_dependencies_enabled", false),
 		}
@@ -54,14 +54,14 @@ func ResourceArtifactoryVirtualGoRepository() *schema.Resource {
 		return &GoVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: GoPackageType,
+				PackageType: repository.GoPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		GoVirtualSchema,
-		packer.Default(GoVirtualSchema),
+		GoSchemas,
+		packer.Default(GoSchemas[CurrentSchemaVersion]),
 		unpackGoVirtualRepository,
 		constructor,
 	)

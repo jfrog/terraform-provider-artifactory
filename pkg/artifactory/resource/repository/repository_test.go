@@ -28,9 +28,23 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 	})
 
 	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
-	 	  project_key = "{{ .projectKey }}"
+	 	  project_key = project.{{ .projectKey }}.key
 		}
 	`, map[string]interface{}{
 		"name":       name,
@@ -38,15 +52,14 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -130,23 +143,36 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 		"projectKey": projectKey,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "{{ .projectKey }}"
+	 	  project_key          = project.{{ .projectKey }}.key
 	 	  project_environments = ["DEV", "PROD"]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
@@ -175,23 +201,36 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 		"projectKey": projectKey,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "{{ .projectKey }}"
+	 	  project_key          = project.{{ .projectKey }}.key
 	 	  project_environments = ["Foo"]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
@@ -216,23 +255,36 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 		"projectKey": projectKey,
 	}
 	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key                  = "{{ .name }}"
-	 	  project_key          = "{{ .projectKey }}"
+	 	  project_key          = project.{{ .projectKey }}.key
 	 	  project_environments = ["DEV", "PROD"]
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {

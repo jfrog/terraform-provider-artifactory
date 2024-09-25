@@ -6,7 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
 type JavaFederatedRepositoryParams struct {
@@ -15,17 +15,17 @@ type JavaFederatedRepositoryParams struct {
 	RepoParams
 }
 
-func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom bool) *schema.Resource {
+func ResourceArtifactoryFederatedJavaRepository(packageType string, suppressPom bool) *schema.Resource {
 
-	javaFederatedSchema := utilsdk.MergeMaps(
-		local.GetJavaRepoSchema(repoType, suppressPom),
+	javaFederatedSchema := lo.Assign(
+		local.GetJavaSchemas(packageType, suppressPom)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema("federated", repoType),
+		repository.RepoLayoutRefSchema("federated", packageType),
 	)
 
 	var unpackFederatedJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := JavaFederatedRepositoryParams{
-			JavaLocalRepositoryParams: local.UnpackLocalJavaRepository(data, rclass, repoType),
+			JavaLocalRepositoryParams: local.UnpackLocalJavaRepository(data, Rclass, packageType),
 			Members:                   unpackMembers(data),
 			RepoParams:                unpackRepoParams(data),
 		}
@@ -52,8 +52,8 @@ func ResourceArtifactoryFederatedJavaRepository(repoType string, suppressPom boo
 		return &JavaFederatedRepositoryParams{
 			JavaLocalRepositoryParams: local.JavaLocalRepositoryParams{
 				RepositoryBaseParams: local.RepositoryBaseParams{
-					PackageType: repoType,
-					Rclass:      rclass,
+					PackageType: packageType,
+					Rclass:      Rclass,
 				},
 				SuppressPomConsistencyChecks: suppressPom,
 			},

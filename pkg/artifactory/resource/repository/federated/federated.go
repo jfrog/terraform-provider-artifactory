@@ -20,27 +20,27 @@ import (
 	"github.com/samber/lo"
 )
 
-const rclass = "federated"
+const Rclass = "federated"
 const RepositoriesEndpoint = "artifactory/api/repositories/{key}"
 
 var PackageTypesLikeGeneric = []string{
-	"bower",
-	"chef",
-	"cocoapods",
-	"composer",
-	"conda",
-	"cran",
-	"gems",
-	"generic",
-	"gitlfs",
-	"go",
-	"helm",
-	"npm",
-	"opkg",
-	"puppet",
-	"pypi",
-	"swift",
-	"vagrant",
+	repository.BowerPackageType,
+	repository.ChefPackageType,
+	repository.CocoapodsPackageType,
+	repository.ComposerPackageType,
+	repository.CondaPackageType,
+	repository.CranPackageType,
+	repository.GemsPackageType,
+	repository.GenericPackageType,
+	repository.GitLFSPackageType,
+	repository.GoPackageType,
+	repository.HelmPackageType,
+	repository.NPMPackageType,
+	repository.OpkgPackageType,
+	repository.PuppetPackageType,
+	repository.PyPiPackageType,
+	repository.SwiftPackageType,
+	repository.VagrantPackageType,
 }
 
 type RepoParams struct {
@@ -54,7 +54,7 @@ type Member struct {
 }
 
 var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
+	return lo.Assign(
 		repository.ProxySchema,
 		map[string]*schema.Schema{
 			"cleanup_on_delete": {
@@ -96,7 +96,7 @@ var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 var federatedSchemaV3 = SchemaGeneratorV3(true)
 
 var SchemaGeneratorV4 = func(isRequired bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(
+	return lo.Assign(
 		federatedSchemaV3,
 		map[string]*schema.Schema{
 			"cleanup_on_delete": {
@@ -286,6 +286,14 @@ func deleteRepo(ctx context.Context, d *schema.ResourceData, m interface{}) diag
 
 	restyClient := m.(util.ProviderMetadata).Client
 
+	allowDelete, ok := d.GetOkExists("allow_delete")
+
+	if ok && !allowDelete.(bool) { // set to 'false'
+		return diag.Errorf("failed to destroy resource. 'allow_delete' is not set to 'true'")
+	}
+
+	tflog.Warn(ctx, fmt.Sprintf("allow_delete is set to 'true'. Deleting repository %s", d.Id()))
+
 	// For federated repositories we delete all the federated members (except the initial repo member), if the flag `cleanup_on_delete` is set to `true`
 	s := &utilsdk.ResourceData{ResourceData: d}
 	initialRepoName := s.GetString("key", false)
@@ -380,12 +388,14 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		ReadContext:   reader,
 		UpdateContext: updateRepo(unpack, reader),
 		DeleteContext: deleteRepo,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema:        skeema,
 		SchemaVersion: 4,
+
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				// this only works because the schema hasn't changed, except the removal of default value

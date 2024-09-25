@@ -12,7 +12,7 @@ import (
 
 func DatasourceArtifactoryVirtualConanRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(rclass, resource_repository.ConanPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.ConanPackageType)()
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DatasourceArtifactoryVirtualConanRepository() *schema.Resource {
 		return &virtual.ConanRepoParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: virtual.RepositoryBaseParamsWithRetrievalCachePeriodSecs{
 				RepositoryBaseParams: virtual.RepositoryBaseParams{
-					Rclass:        rclass,
+					Rclass:        virtual.Rclass,
 					PackageType:   resource_repository.ConanPackageType,
 					RepoLayoutRef: repoLayout.(string),
 				},
@@ -31,7 +31,7 @@ func DatasourceArtifactoryVirtualConanRepository() *schema.Resource {
 		}, nil
 	}
 
-	conanSchema := virtual.ConanSchema
+	conanSchema := virtual.ConanSchemas[virtual.CurrentSchemaVersion]
 
 	return &schema.Resource{
 		Schema:      conanSchema,

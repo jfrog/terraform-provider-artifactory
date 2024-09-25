@@ -4,20 +4,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/samber/lo"
 )
 
-const BowerPackageType = "bower"
-
-var BowerVirtualSchema = utilsdk.MergeMaps(
-	BaseVirtualRepoSchema,
+var bowerSchema = lo.Assign(
 	externalDependenciesSchema,
-	repository.RepoLayoutRefSchema(Rclass, BowerPackageType),
+	repository.RepoLayoutRefSchema(Rclass, repository.BowerPackageType),
 )
+
+var BowerSchemas = GetSchemas(bowerSchema)
 
 func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 	var unpackBowerVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
-		repo := unpackExternalDependenciesVirtualRepository(s, BowerPackageType)
+		repo := unpackExternalDependenciesVirtualRepository(s, repository.BowerPackageType)
 		return repo, repo.Id(), nil
 	}
 
@@ -25,14 +24,14 @@ func ResourceArtifactoryVirtualBowerRepository() *schema.Resource {
 		return &ExternalDependenciesVirtualRepositoryParams{
 			RepositoryBaseParams: RepositoryBaseParams{
 				Rclass:      Rclass,
-				PackageType: BowerPackageType,
+				PackageType: repository.BowerPackageType,
 			},
 		}, nil
 	}
 
 	return repository.MkResourceSchema(
-		BowerVirtualSchema,
-		packer.Default(BowerVirtualSchema),
+		BowerSchemas,
+		packer.Default(BowerSchemas[CurrentSchemaVersion]),
 		unpackBowerVirtualRepository,
 		constructor,
 	)
