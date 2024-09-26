@@ -28,6 +28,7 @@ import (
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 	"github.com/samber/lo"
@@ -58,7 +59,6 @@ const currentSchemaVersion = 2
 var DomainSupported = []string{
 	ArtifactLifecycleDomain,
 	ArtifactoryReleaseBundleDomain,
-	BuildDomain,
 	DestinationDomain,
 	DistributionDomain,
 	ReleaseBundleDomain,
@@ -87,6 +87,21 @@ type WebhookResource struct {
 	TypeName     string
 	Domain       string
 	Description  string
+}
+
+var patternsSchemaAttributes = func(description string) map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"include_patterns": schema.SetAttribute{
+			ElementType:         types.StringType,
+			Optional:            true,
+			MarkdownDescription: description,
+		},
+		"exclude_patterns": schema.SetAttribute{
+			ElementType:         types.StringType,
+			Optional:            true,
+			MarkdownDescription: description,
+		},
+	}
 }
 
 func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBlock) schema.Schema {
@@ -184,12 +199,101 @@ func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBl
 	}
 }
 
+func (r *WebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = r.TypeName
+}
+
 func (r *WebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
 	}
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
+}
+
+func (r *WebhookResource) Create(ctx context.Context, webhook WebhookAPIModel, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetBody(webhook).
+		SetError(&artifactoryError).
+		AddRetryCondition(retryOnProxyError).
+		Post(webhooksURL)
+
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
+		return
+	}
+}
+
+func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("webhookKey", key).
+		SetResult(&webhook).
+		SetError(&artifactoryError).
+		Get(WebhookURL)
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
+		return
+	}
+}
+
+func (r *WebhookResource) Update(ctx context.Context, key string, webhook WebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("webhookKey", key).
+		SetBody(webhook).
+		AddRetryCondition(retryOnProxyError).
+		SetError(&artifactoryError).
+		Put(WebhookURL)
+
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
+		return
+	}
+}
+
+func (r *WebhookResource) Delete(ctx context.Context, key string, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var artifactoryError artifactory.ArtifactoryErrorsResponse
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("webhookKey", key).
+		SetError(&artifactoryError).
+		Delete(WebhookURL)
+
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
+		return
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToDeleteResourceError(resp, artifactoryError.String())
+		return
+	}
 }
 
 // ImportState imports the resource into the Terraform state.
@@ -207,30 +311,9 @@ type WebhookResourceModel struct {
 	Handlers    types.Set    `tfsdk:"handler"`
 }
 
-func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, toCriteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
-
-	var includePatterns []string
-	d := critieriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	var excludePatterns []string
-	d = critieriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	var repoKeys []string
-	d = critieriaAttrs["repo_keys"].(types.Set).ElementsAs(ctx, &repoKeys, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
+func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
 	var eventTypes []string
-	d = m.EventTypes.ElementsAs(ctx, &eventTypes, false)
+	d := m.EventTypes.ElementsAs(ctx, &eventTypes, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -268,12 +351,38 @@ func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, toC
 		EventFilter: EventFilterAPIModel{
 			Domain:     domain,
 			EventTypes: eventTypes,
-			Criteria:   toCriteriaAPIModel,
+			Criteria:   criteriaAPIModel,
 		},
 		Handlers: handlers,
 	}
 
 	return
+}
+
+func (m *WebhookResourceModel) toBaseCriteriaAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (BaseCriteriaAPIModel, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	var includePatterns []string
+	d := criteriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var excludePatterns []string
+	d = criteriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return BaseCriteriaAPIModel{
+		IncludePatterns: includePatterns,
+		ExcludePatterns: excludePatterns,
+	}, diags
+}
+
+var patternsCriteriaSetResourceModelAttributeTypes = map[string]attr.Type{
+	"include_patterns": types.SetType{ElemType: types.StringType},
+	"exclude_patterns": types.SetType{ElemType: types.StringType},
 }
 
 var handlerSetResourceModelAttributeTypes = map[string]attr.Type{
@@ -286,6 +395,35 @@ var handlerSetResourceModelAttributeTypes = map[string]attr.Type{
 
 var handlerSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: handlerSetResourceModelAttributeTypes,
+}
+
+func (m *WebhookResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}) (map[string]attr.Value, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	includePatterns := types.SetNull(types.StringType)
+	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
+		ps, d := types.SetValueFrom(ctx, types.StringType, v)
+		if d.HasError() {
+			diags.Append(d...)
+		}
+
+		includePatterns = ps
+	}
+
+	excludePatterns := types.SetNull(types.StringType)
+	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
+		ps, d := types.SetValueFrom(ctx, types.StringType, v)
+		if d.HasError() {
+			diags.Append(d...)
+		}
+
+		excludePatterns = ps
+	}
+
+	return map[string]attr.Value{
+		"include_patterns": includePatterns,
+		"exclude_patterns": excludePatterns,
+	}, diags
 }
 
 func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet basetypes.SetValue) diag.Diagnostics {
@@ -441,7 +579,6 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	BuildDomain:                    BuildWebhookCriteria{},
 	ReleaseBundleDomain:            ReleaseBundleWebhookCriteria{},
 	DistributionDomain:             ReleaseBundleWebhookCriteria{},
 	ArtifactoryReleaseBundleDomain: ReleaseBundleWebhookCriteria{},
@@ -453,7 +590,6 @@ var domainCriteriaLookup = map[string]interface{}{
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	BuildDomain:                    packBuildCriteria,
 	ReleaseBundleDomain:            packReleaseBundleCriteria,
 	DistributionDomain:             packReleaseBundleCriteria,
 	ArtifactoryReleaseBundleDomain: packReleaseBundleCriteria,
@@ -465,7 +601,6 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
-	BuildDomain:                    unpackBuildCriteria,
 	ReleaseBundleDomain:            unpackReleaseBundleCriteria,
 	DistributionDomain:             unpackReleaseBundleCriteria,
 	ArtifactoryReleaseBundleDomain: unpackReleaseBundleCriteria,
@@ -478,7 +613,6 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPI
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
 	return map[string]map[string]*sdkv2_schema.Schema{
-		BuildDomain:                    buildWebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleDomain:            releaseBundleWebhookSchema(webhookType, version, isCustom),
 		DistributionDomain:             releaseBundleWebhookSchema(webhookType, version, isCustom),
 		ArtifactoryReleaseBundleDomain: releaseBundleWebhookSchema(webhookType, version, isCustom),
@@ -532,7 +666,6 @@ var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criter
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	BuildDomain:                    buildCriteriaValidation,
 	ReleaseBundleDomain:            releaseBundleCriteriaValidation,
 	DistributionDomain:             releaseBundleCriteriaValidation,
 	ArtifactoryReleaseBundleDomain: releaseBundleCriteriaValidation,

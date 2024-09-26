@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -13,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	"github.com/samber/lo"
 )
 
 var _ resource.Resource = &RepoWebhookResource{}
@@ -59,41 +57,34 @@ type RepoWebhookResource struct {
 }
 
 func (r *RepoWebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = r.TypeName
+	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
 func (r *RepoWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	criteriaBlock := schema.SetNestedBlock{
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"include_patterns": schema.SetAttribute{
-					ElementType:         types.StringType,
-					Optional:            true,
-					MarkdownDescription: "Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: `org/apache/**`",
+			Attributes: lo.Assign(
+				patternsSchemaAttributes("Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: `org/apache/**`"),
+				map[string]schema.Attribute{
+					"any_local": schema.BoolAttribute{
+						Required:    true,
+						Description: "Trigger on any local repositories",
+					},
+					"any_remote": schema.BoolAttribute{
+						Required:    true,
+						Description: "Trigger on any remote repositories",
+					},
+					"any_federated": schema.BoolAttribute{
+						Required:    true,
+						Description: "Trigger on any federated repositories",
+					},
+					"repo_keys": schema.SetAttribute{
+						ElementType: types.StringType,
+						Required:    true,
+						Description: "Trigger on this list of repository keys",
+					},
 				},
-				"exclude_patterns": schema.SetAttribute{
-					ElementType:         types.StringType,
-					Optional:            true,
-					MarkdownDescription: "Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: `org/apache/**`",
-				},
-				"any_local": schema.BoolAttribute{
-					Required:    true,
-					Description: "Trigger on any local repositories",
-				},
-				"any_remote": schema.BoolAttribute{
-					Required:    true,
-					Description: "Trigger on any remote repositories",
-				},
-				"any_federated": schema.BoolAttribute{
-					Required:    true,
-					Description: "Trigger on any federated repositories",
-				},
-				"repo_keys": schema.SetAttribute{
-					ElementType: types.StringType,
-					Required:    true,
-					Description: "Trigger on this list of repository keys",
-				},
-			},
+			),
 		},
 		Validators: []validator.Set{
 			setvalidator.SizeBetween(1, 1),
@@ -150,22 +141,7 @@ func (r *RepoWebhookResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetBody(webhook).
-		SetError(&artifactoryError).
-		AddRetryCondition(retryOnProxyError).
-		Post(webhooksURL)
-
-	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, err.Error())
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToCreateResourceError(resp, artifactoryError.String())
-		return
-	}
+	r.WebhookResource.Create(ctx, webhook, req, resp)
 
 	plan.ID = plan.Key
 
@@ -185,27 +161,7 @@ func (r *RepoWebhookResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var webhook WebhookAPIModel
-	var artifactoryError artifactory.ArtifactoryErrorsResponse
-
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("webhookKey", state.Key.ValueString()).
-		SetResult(&webhook).
-		SetError(&artifactoryError).
-		Get(WebhookURL)
-	if err != nil {
-		utilfw.UnableToRefreshResourceError(resp, err.Error())
-		return
-	}
-
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
-		return
-	}
+	r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
 
 	resp.Diagnostics.Append(state.fromAPIModel(ctx, webhook, state.Handlers)...)
 	if resp.Diagnostics.HasError() {
@@ -233,21 +189,7 @@ func (r *RepoWebhookResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("webhookKey", plan.Key.ValueString()).
-		SetBody(webhook).
-		AddRetryCondition(retryOnProxyError).
-		SetError(&artifactoryError).
-		Put(WebhookURL)
-	if err != nil {
-		utilfw.UnableToUpdateResourceError(resp, err.Error())
-		return
-	}
-	if response.IsError() {
-		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
-		return
-	}
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
 
 	plan.ID = plan.Key
 
@@ -263,26 +205,7 @@ func (r *RepoWebhookResource) Delete(ctx context.Context, req resource.DeleteReq
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("webhookKey", state.Key.ValueString()).
-		SetError(&artifactoryError).
-		Delete(WebhookURL)
-
-	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, err.Error())
-		return
-	}
-
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToDeleteResourceError(resp, artifactoryError.String())
-		return
-	}
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
 
 	// If the logic reaches here, it implicitly succeeded and will remove
 	// the resource from state if there are no other errors.
@@ -297,14 +220,7 @@ func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string,
 	critieriaObj := m.Criteria.Elements()[0].(types.Object)
 	critieriaAttrs := critieriaObj.Attributes()
 
-	var includePatterns []string
-	d := critieriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	var excludePatterns []string
-	d = critieriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -316,14 +232,11 @@ func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string,
 	}
 
 	criteriaAPIModel := RepoCriteriaAPIModel{
-		BaseCriteriaAPIModel: BaseCriteriaAPIModel{
-			IncludePatterns: includePatterns,
-			ExcludePatterns: excludePatterns,
-		},
-		AnyLocal:     critieriaAttrs["any_local"].(types.Bool).ValueBool(),
-		AnyRemote:    critieriaAttrs["any_remote"].(types.Bool).ValueBool(),
-		AnyFederated: critieriaAttrs["any_federated"].(types.Bool).ValueBool(),
-		RepoKeys:     repoKeys,
+		BaseCriteriaAPIModel: baseCriteria,
+		AnyLocal:             critieriaAttrs["any_local"].(types.Bool).ValueBool(),
+		AnyRemote:            critieriaAttrs["any_remote"].(types.Bool).ValueBool(),
+		AnyFederated:         critieriaAttrs["any_federated"].(types.Bool).ValueBool(),
+		RepoKeys:             repoKeys,
 	}
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
@@ -334,17 +247,18 @@ func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string,
 	return
 }
 
-var criteriaSetResourceModelAttributeTypes = map[string]attr.Type{
-	"include_patterns": types.SetType{ElemType: types.StringType},
-	"exclude_patterns": types.SetType{ElemType: types.StringType},
-	"any_local":        types.BoolType,
-	"any_remote":       types.BoolType,
-	"any_federated":    types.BoolType,
-	"repo_keys":        types.SetType{ElemType: types.StringType},
-}
+var repoCriteriaSetResourceModelAttributeTypes = lo.Assign(
+	patternsCriteriaSetResourceModelAttributeTypes,
+	map[string]attr.Type{
+		"any_local":     types.BoolType,
+		"any_remote":    types.BoolType,
+		"any_federated": types.BoolType,
+		"repo_keys":     types.SetType{ElemType: types.StringType},
+	},
+)
 
-var criteriaSetResourceModelElementTypes = types.ObjectType{
-	AttrTypes: criteriaSetResourceModelAttributeTypes,
+var repoCriteriaSetResourceModelElementTypes = types.ObjectType{
+	AttrTypes: repoCriteriaSetResourceModelAttributeTypes,
 }
 
 func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
@@ -352,25 +266,7 @@ func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel We
 
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
-	includePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		includePatterns = ps
-	}
-
-	excludePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		excludePatterns = ps
-	}
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
 
 	repoKeys := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["repoKeys"]; ok && v != nil {
@@ -383,21 +279,22 @@ func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel We
 	}
 
 	criteria, d := types.ObjectValue(
-		criteriaSetResourceModelAttributeTypes,
-		map[string]attr.Value{
-			"include_patterns": includePatterns,
-			"exclude_patterns": excludePatterns,
-			"any_local":        types.BoolValue(criteriaAPIModel["anyLocal"].(bool)),
-			"any_remote":       types.BoolValue(criteriaAPIModel["anyRemote"].(bool)),
-			"any_federated":    types.BoolValue(criteriaAPIModel["anyFederated"].(bool)),
-			"repo_keys":        repoKeys,
-		},
+		repoCriteriaSetResourceModelAttributeTypes,
+		lo.Assign(
+			baseCriteriaAttrs,
+			map[string]attr.Value{
+				"any_local":     types.BoolValue(criteriaAPIModel["anyLocal"].(bool)),
+				"any_remote":    types.BoolValue(criteriaAPIModel["anyRemote"].(bool)),
+				"any_federated": types.BoolValue(criteriaAPIModel["anyFederated"].(bool)),
+				"repo_keys":     repoKeys,
+			},
+		),
 	)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 	criteriaSet, d := types.SetValue(
-		criteriaSetResourceModelElementTypes,
+		repoCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
 	if d.HasError() {
@@ -419,80 +316,3 @@ type RepoCriteriaAPIModel struct {
 	AnyFederated bool     `json:"anyFederated"`
 	RepoKeys     []string `json:"repoKeys"`
 }
-
-//
-// var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
-// 	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
-// 		"criteria": {
-// 			Type:     sdkv2_schema.TypeSet,
-// 			Required: true,
-// 			MaxItems: 1,
-// 			Elem: &sdkv2_schema.Resource{
-// 				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
-// 					"any_local": {
-// 						Type:        sdkv2_schema.TypeBool,
-// 						Required:    true,
-// 						Description: "Trigger on any local repositories",
-// 					},
-// 					"any_remote": {
-// 						Type:        sdkv2_schema.TypeBool,
-// 						Required:    true,
-// 						Description: "Trigger on any remote repositories",
-// 					},
-// 					"any_federated": {
-// 						Type:        sdkv2_schema.TypeBool,
-// 						Required:    true,
-// 						Description: "Trigger on any federated repositories",
-// 					},
-// 					"repo_keys": {
-// 						Type:        sdkv2_schema.TypeSet,
-// 						Required:    true,
-// 						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
-// 						Description: "Trigger on this list of repository keys",
-// 					},
-// 				}),
-// 			},
-// 			Description: "Specifies where the webhook will be applied on which repositories.",
-// 		},
-// 	})
-// }
-//
-// var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-// 	criteria := map[string]interface{}{
-// 		"any_local":     artifactoryCriteria["anyLocal"].(bool),
-// 		"any_remote":    artifactoryCriteria["anyRemote"].(bool),
-// 		"any_federated": false,
-// 		"repo_keys":     sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
-// 	}
-//
-// 	if v, ok := artifactoryCriteria["anyFederated"]; ok {
-// 		criteria["any_federated"] = v.(bool)
-// 	}
-//
-// 	return criteria
-// }
-//
-// var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-// 	return RepoCriteriaAPIModel{
-// 		AnyLocal:             terraformCriteria["any_local"].(bool),
-// 		AnyRemote:            terraformCriteria["any_remote"].(bool),
-// 		AnyFederated:         terraformCriteria["any_federated"].(bool),
-// 		RepoKeys:             utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*sdkv2_schema.Set).List()),
-// 		BaseCriteriaAPIModel: baseCriteria,
-// 	}
-// }
-//
-// var repoCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-// 	tflog.Debug(ctx, "repoCriteriaValidation")
-//
-// 	anyLocal := criteria["any_local"].(bool)
-// 	anyRemote := criteria["any_remote"].(bool)
-// 	anyFederated := criteria["any_federated"].(bool)
-// 	repoKeys := criteria["repo_keys"].(*sdkv2_schema.Set).List()
-//
-// 	if (!anyLocal && !anyRemote && !anyFederated) && len(repoKeys) == 0 {
-// 		return fmt.Errorf("repo_keys cannot be empty when any_local, any_remote, and any_federated are false")
-// 	}
-//
-// 	return nil
-// }
