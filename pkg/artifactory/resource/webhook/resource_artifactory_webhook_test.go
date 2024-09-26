@@ -131,10 +131,9 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	webhookConfig := util.ExecuteTemplate("TestAccWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
@@ -173,14 +172,13 @@ func TestAccWebhook_EventTypesValidation(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
-				ExpectError: regexp.MustCompile(fmt.Sprintf("event_type %s not supported for domain artifact", wrongEventType)),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`value must be one of:\s*\["deployed" "deleted" "moved" "copied" "cached"\], got: "%s"`, wrongEventType)),
 			},
 		},
 	})
@@ -213,14 +211,13 @@ func TestAccWebhook_HandlerValidation_EmptyProxy(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
-				ExpectError: regexp.MustCompile(`expected "proxy" to not be an empty string`),
+				ExpectError: regexp.MustCompile(`proxy\s*string length must be at least 1, got: 0`),
 			},
 		},
 	})
@@ -233,7 +230,9 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 
 	params := map[string]interface{}{
 		"webhookName": name,
+		"proxy":       fmt.Sprintf("test-proxy-%d", id),
 	}
+
 	webhookConfig := util.ExecuteTemplate("TestAccWebhookEventTypesValidation", `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
 			key         = "{{ .webhookName }}"
@@ -253,14 +252,13 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
-				ExpectError: regexp.MustCompile(`expected "proxy" not to be a valid url, got https://google.com`),
+				ExpectError: regexp.MustCompile(`.*expected "proxy" not to be a valid url.*`),
 			},
 		},
 	})
@@ -291,10 +289,9 @@ func TestAccWebhook_BuildWithIncludePatterns(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: webhookConfig,
@@ -451,10 +448,9 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	}
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", testCheckWebhook),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: webhookConfig,
@@ -465,11 +461,12 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 				Check:  resource.ComposeTestCheckFunc(updatedTestChecks...),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"handler.0.secret"},
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateCheck:                     validator.CheckImportState(name, "key"),
+				ImportStateVerifyIdentifierAttribute: "key",
+				ImportStateVerifyIgnore:              []string{"handler.0.secret", "handler.1.secret"},
 			},
 		},
 	}
@@ -483,7 +480,7 @@ func testCheckWebhook(id string, request *resty.Request) (*resty.Response, error
 }
 
 func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("foo", "artifactory_artifact_webhook")
+	_, fqrn, name := testutil.MkNames("test-webhook", "artifactory_artifact_webhook")
 
 	format := `
 		resource "artifactory_artifact_webhook" "{{ .webhookName }}" {
@@ -536,14 +533,14 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 		},
 	)
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", testCheckWebhook),
-
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
-				Config: config1,
-				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", firstToken)),
+				Config:           config1,
+				Check:            resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", firstToken)),
+				ConfigPlanChecks: testutil.ConfigPlanChecks(fqrn),
 			},
 			{
 				Config: config2,

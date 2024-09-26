@@ -68,42 +68,42 @@ var DomainEventTypesSupported = map[string][]string{
 	ArtifactLifecycleType:        {"archive", "restore"},
 }
 
-type BaseParams struct {
-	Key         string      `json:"key"`
-	Description string      `json:"description"`
-	Enabled     bool        `json:"enabled"`
-	EventFilter EventFilter `json:"event_filter"`
-	Handlers    []Handler   `json:"handlers"`
+type BaseAPIModel struct {
+	Key         string              `json:"key"`
+	Description string              `json:"description"`
+	Enabled     bool                `json:"enabled"`
+	EventFilter EventFilterAPIModel `json:"event_filter"`
+	Handlers    []HandlerAPIModel   `json:"handlers"`
 }
 
-func (w BaseParams) Id() string {
+func (w BaseAPIModel) Id() string {
 	return w.Key
 }
 
-type EventFilter struct {
+type EventFilterAPIModel struct {
 	Domain     string      `json:"domain"`
 	EventTypes []string    `json:"event_types"`
 	Criteria   interface{} `json:"criteria"`
 }
 
-type Handler struct {
-	HandlerType         string         `json:"handler_type"`
-	Url                 string         `json:"url"`
-	Secret              string         `json:"secret"`
-	UseSecretForSigning bool           `json:"use_secret_for_signing"`
-	Proxy               string         `json:"proxy"`
-	CustomHttpHeaders   []KeyValuePair `json:"custom_http_headers"`
+type HandlerAPIModel struct {
+	HandlerType         string                 `json:"handler_type"`
+	Url                 string                 `json:"url"`
+	Secret              string                 `json:"secret"`
+	UseSecretForSigning bool                   `json:"use_secret_for_signing"`
+	Proxy               string                 `json:"proxy"`
+	CustomHttpHeaders   []KeyValuePairAPIModel `json:"custom_http_headers"`
 }
 
-type KeyValuePair struct {
+type KeyValuePairAPIModel struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
-var unpackKeyValuePair = func(keyValuePairs map[string]interface{}) []KeyValuePair {
-	var kvPairs []KeyValuePair
+var unpackKeyValuePair = func(keyValuePairs map[string]interface{}) []KeyValuePairAPIModel {
+	var kvPairs []KeyValuePairAPIModel
 	for key, value := range keyValuePairs {
-		keyValuePair := KeyValuePair{
+		keyValuePair := KeyValuePairAPIModel{
 			Name:  key,
 			Value: value.(string),
 		}
@@ -113,7 +113,7 @@ var unpackKeyValuePair = func(keyValuePairs map[string]interface{}) []KeyValuePa
 	return kvPairs
 }
 
-var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{} {
+var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]interface{} {
 	kvPairs := make(map[string]interface{})
 	for _, keyValuePair := range keyValuePairs {
 		kvPairs[keyValuePair.Name] = keyValuePair.Value
@@ -123,9 +123,9 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePair) map[string]interface{}
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	ArtifactType:                 RepoWebhookCriteria{},
-	ArtifactPropertyType:         RepoWebhookCriteria{},
-	DockerType:                   RepoWebhookCriteria{},
+	ArtifactType:                 RepoCriteriaAPIModel{},
+	ArtifactPropertyType:         RepoCriteriaAPIModel{},
+	DockerType:                   RepoCriteriaAPIModel{},
 	BuildType:                    BuildWebhookCriteria{},
 	ReleaseBundleType:            ReleaseBundleWebhookCriteria{},
 	DistributionType:             ReleaseBundleWebhookCriteria{},
@@ -152,7 +152,7 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 	ArtifactLifecycleType:        packEmptyCriteria,
 }
 
-var domainUnpackLookup = map[string]func(map[string]interface{}, BaseWebhookCriteria) interface{}{
+var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
 	ArtifactType:                 unpackRepoCriteria,
 	ArtifactPropertyType:         unpackRepoCriteria,
 	DockerType:                   unpackRepoCriteria,
@@ -192,7 +192,7 @@ var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface
 		if len(criteria) == 1 {
 			id := criteria[0].(map[string]interface{})
 
-			baseCriteria := BaseWebhookCriteria{
+			baseCriteria := BaseCriteriaAPIModel{
 				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
 				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
 			}
@@ -261,13 +261,19 @@ var packSecret = func(d *schema.ResourceData, url string) string {
 	return secret
 }
 
+var retryOnProxyError = func(response *resty.Response, _r error) bool {
+	var proxyNotFoundRegex = regexp.MustCompile("proxy with key '.*' not found")
+
+	return proxyNotFoundRegex.MatchString(string(response.Body()[:]))
+}
+
 func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
-	var unpackWebhook = func(data *schema.ResourceData) (BaseParams, error) {
+	var unpackWebhook = func(data *schema.ResourceData) (BaseAPIModel, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 
-		var unpackHandlers = func(d *utilsdk.ResourceData) []Handler {
-			var webhookHandlers []Handler
+		var unpackHandlers = func(d *utilsdk.ResourceData) []HandlerAPIModel {
+			var webhookHandlers []HandlerAPIModel
 
 			if v, ok := d.GetOk("handler"); ok {
 				handlers := v.(*schema.Set).List()
@@ -276,7 +282,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
 					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
-						webhookHandler := Handler{
+						webhookHandler := HandlerAPIModel{
 							HandlerType: "webhook",
 							Url:         h["url"].(string),
 						}
@@ -305,11 +311,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookHandlers
 		}
 
-		webhook := BaseParams{
+		webhook := BaseAPIModel{
 			Key:         d.GetString("key", false),
 			Description: d.GetString("description", false),
 			Enabled:     d.GetBool("enabled", false),
-			EventFilter: EventFilter{
+			EventFilter: EventFilterAPIModel{
 				Domain:     webhookType,
 				EventTypes: d.GetSet("event_types"),
 				Criteria:   unpackCriteria(d, webhookType),
@@ -320,7 +326,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return webhook, nil
 	}
 
-	var packHandlers = func(d *schema.ResourceData, handlers []Handler) []error {
+	var packHandlers = func(d *schema.ResourceData, handlers []HandlerAPIModel) []error {
 		setValue := utilsdk.MkLens(d)
 		resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["handler"].Elem.(*schema.Resource)
 		var packedHandlers []interface{}
@@ -342,7 +348,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return setValue("handler", schema.NewSet(schema.HashResource(resource), packedHandlers))
 	}
 
-	var packWebhook = func(d *schema.ResourceData, webhook BaseParams) diag.Diagnostics {
+	var packWebhook = func(d *schema.ResourceData, webhook BaseAPIModel) diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
 		setValue("key", webhook.Key)
@@ -364,7 +370,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
 
-		webhook := BaseParams{}
+		webhook := BaseAPIModel{}
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
@@ -389,12 +395,6 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		}
 
 		return packWebhook(data, webhook)
-	}
-
-	var retryOnProxyError = func(response *resty.Response, _r error) bool {
-		var proxyNotFoundRegex = regexp.MustCompile("proxy with key '.*' not found")
-
-		return proxyNotFoundRegex.MatchString(string(response.Body()[:]))
 	}
 
 	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {

@@ -14,6 +14,6 @@ var packEmptyCriteria = func(artifactoryCriteria map[string]interface{}) map[str
 	return map[string]interface{}{}
 }
 
-var unpackEmptyCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
+var unpackEmptyCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return EmptyWebhookCriteria{}
 }

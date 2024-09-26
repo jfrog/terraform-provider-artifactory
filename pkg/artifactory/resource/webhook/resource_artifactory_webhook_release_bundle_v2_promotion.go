@@ -36,7 +36,7 @@ var packReleaseBundleV2PromotionCriteria = func(artifactoryCriteria map[string]i
 	}
 }
 
-var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
+var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return ReleaseBundleV2PromotionWebhookCriteria{
 		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*schema.Set).List()),
 	}

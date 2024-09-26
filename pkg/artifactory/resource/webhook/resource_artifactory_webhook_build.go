@@ -9,7 +9,7 @@ import (
 )
 
 type BuildWebhookCriteria struct {
-	BaseWebhookCriteria
+	BaseCriteriaAPIModel
 	AnyBuild       bool     `json:"anyBuild"`
 	SelectedBuilds []string `json:"selectedBuilds"`
 }
@@ -47,11 +47,11 @@ var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[str
 	}
 }
 
-var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
+var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return BuildWebhookCriteria{
-		AnyBuild:            terraformCriteria["any_build"].(bool),
-		SelectedBuilds:      utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
-		BaseWebhookCriteria: baseCriteria,
+		AnyBuild:             terraformCriteria["any_build"].(bool),
+		SelectedBuilds:       utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
+		BaseCriteriaAPIModel: baseCriteria,
 	}
 }
 

@@ -9,8 +9,8 @@ import (
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
-type RepoWebhookCriteria struct {
-	BaseWebhookCriteria
+type RepoCriteriaAPIModel struct {
+	BaseCriteriaAPIModel
 	AnyLocal     bool     `json:"anyLocal"`
 	AnyRemote    bool     `json:"anyRemote"`
 	AnyFederated bool     `json:"anyFederated"`
@@ -68,13 +68,13 @@ var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[stri
 	return criteria
 }
 
-var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
-	return RepoWebhookCriteria{
-		AnyLocal:            terraformCriteria["any_local"].(bool),
-		AnyRemote:           terraformCriteria["any_remote"].(bool),
-		AnyFederated:        terraformCriteria["any_federated"].(bool),
-		RepoKeys:            utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
-		BaseWebhookCriteria: baseCriteria,
+var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return RepoCriteriaAPIModel{
+		AnyLocal:             terraformCriteria["any_local"].(bool),
+		AnyRemote:            terraformCriteria["any_remote"].(bool),
+		AnyFederated:         terraformCriteria["any_federated"].(bool),
+		RepoKeys:             utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
+		BaseCriteriaAPIModel: baseCriteria,
 	}
 }
 

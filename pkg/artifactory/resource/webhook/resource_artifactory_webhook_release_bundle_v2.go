@@ -10,7 +10,7 @@ import (
 )
 
 type ReleaseBundleV2WebhookCriteria struct {
-	BaseWebhookCriteria
+	BaseCriteriaAPIModel
 	AnyReleaseBundle       bool     `json:"anyReleaseBundle"`
 	SelectedReleaseBundles []string `json:"selectedReleaseBundles"`
 }
@@ -48,11 +48,11 @@ var packReleaseBundleV2Criteria = func(artifactoryCriteria map[string]interface{
 	}
 }
 
-var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseWebhookCriteria) interface{} {
+var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return ReleaseBundleV2WebhookCriteria{
 		AnyReleaseBundle:       terraformCriteria["any_release_bundle"].(bool),
 		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*schema.Set).List()),
-		BaseWebhookCriteria:    baseCriteria,
+		BaseCriteriaAPIModel:   baseCriteria,
 	}
 }
 

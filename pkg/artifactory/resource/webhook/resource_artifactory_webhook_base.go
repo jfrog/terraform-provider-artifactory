@@ -9,7 +9,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type BaseWebhookCriteria struct {
+type BaseCriteriaAPIModel struct {
 	IncludePatterns []string `json:"includePatterns"`
 	ExcludePatterns []string `json:"excludePatterns"`
 }

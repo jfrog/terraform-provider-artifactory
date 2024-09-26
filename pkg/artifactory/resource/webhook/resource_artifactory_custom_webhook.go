@@ -108,11 +108,11 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 }
 
 type CustomBaseParams struct {
-	Key         string          `json:"key"`
-	Description string          `json:"description"`
-	Enabled     bool            `json:"enabled"`
-	EventFilter EventFilter     `json:"event_filter"`
-	Handlers    []CustomHandler `json:"handlers"`
+	Key                 string              `json:"key"`
+	Description         string              `json:"description"`
+	Enabled             bool                `json:"enabled"`
+	EventFilterAPIModel EventFilterAPIModel `json:"event_filter"`
+	Handlers            []CustomHandler     `json:"handlers"`
 }
 
 func (w CustomBaseParams) Id() string {
@@ -120,19 +120,19 @@ func (w CustomBaseParams) Id() string {
 }
 
 type CustomHandler struct {
-	HandlerType string         `json:"handler_type"`
-	Url         string         `json:"url"`
-	Secrets     []KeyValuePair `json:"secrets"`
-	Proxy       string         `json:"proxy"`
-	HttpHeaders []KeyValuePair `json:"http_headers"`
-	Payload     string         `json:"payload,omitempty"`
+	HandlerType string                 `json:"handler_type"`
+	Url         string                 `json:"url"`
+	Secrets     []KeyValuePairAPIModel `json:"secrets"`
+	Proxy       string                 `json:"proxy"`
+	HttpHeaders []KeyValuePairAPIModel `json:"http_headers"`
+	Payload     string                 `json:"payload,omitempty"`
 }
 
 type SecretName struct {
 	Name string `json:"name"`
 }
 
-var packSecretsCustom = func(keyValuePairs []KeyValuePair, d *schema.ResourceData, url string) map[string]interface{} {
+var packSecretsCustom = func(keyValuePairs []KeyValuePairAPIModel, d *schema.ResourceData, url string) map[string]interface{} {
 	KVPairs := make(map[string]interface{})
 	// Get secrets from TF state
 	var secrets map[string]interface{}
@@ -204,7 +204,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			Key:         d.GetString("key", false),
 			Description: d.GetString("description", false),
 			Enabled:     d.GetBool("enabled", false),
-			EventFilter: EventFilter{
+			EventFilterAPIModel: EventFilterAPIModel{
 				Domain:     webhookType,
 				EventTypes: d.GetSet("event_types"),
 				Criteria:   unpackCriteria(d, webhookType),
@@ -246,9 +246,9 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		setValue("key", webhook.Key)
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
-		errors := setValue("event_types", webhook.EventFilter.EventTypes)
-		if webhook.EventFilter.Criteria != nil {
-			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
+		errors := setValue("event_types", webhook.EventFilterAPIModel.EventTypes)
+		if webhook.EventFilterAPIModel.Criteria != nil {
+			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilterAPIModel.Criteria.(map[string]interface{}))...)
 		}
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
@@ -264,7 +264,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 
 		webhook := CustomBaseParams{}
 
-		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
+		webhook.EventFilterAPIModel.Criteria = domainCriteriaLookup[webhookType]
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProviderMetadata).Client.R().
