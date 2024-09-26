@@ -1,6 +1,8 @@
 package remote
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
@@ -10,10 +12,11 @@ import (
 
 type GenericRemoteRepo struct {
 	RepositoryRemoteBaseParams
-	PropagateQueryParams bool `json:"propagateQueryParams"`
+	PropagateQueryParams     bool `json:"propagateQueryParams"`
+	RetrieveSha256FromServer bool `hcl:"retrieve_sha256_from_server" json:"retrieveSha256FromServer"`
 }
 
-var genericSchema = lo.Assign(
+var genericSchemaV3 = lo.Assign(
 	baseSchema,
 	map[string]*schema.Schema{
 		"propagate_query_params": {
@@ -26,15 +29,54 @@ var genericSchema = lo.Assign(
 	repository.RepoLayoutRefSchema(Rclass, repository.GenericPackageType),
 )
 
-var GenericSchemas = GetSchemas(genericSchema)
+var genericSchemaV4 = lo.Assign(
+	genericSchemaV3,
+	map[string]*schema.Schema{
+		"retrieve_sha256_from_server": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When set to `true`, Artifactory retrieves the SHA256 from the remote server if it is not cached in the remote repo.",
+		},
+	},
+)
+
+const currentGenericSchemaVersion = 4
+
+var getSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.Schema {
+	return map[int16]map[string]*schema.Schema{
+		0: lo.Assign(
+			baseSchemaV1,
+			s,
+		),
+		1: lo.Assign(
+			baseSchemaV1,
+			s,
+		),
+		2: lo.Assign(
+			baseSchemaV2,
+			s,
+		),
+		3: lo.Assign(
+			baseSchemaV3,
+			s,
+		),
+		4: lo.Assign(
+			baseSchemaV3,
+			genericSchemaV4,
+		),
+	}
+}
+
+var GenericSchemas = getSchemas(genericSchemaV4)
 
 func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
-
 	var unpackGenericRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := GenericRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.GenericPackageType),
 			PropagateQueryParams:       d.GetBool("propagate_query_params", false),
+			RetrieveSha256FromServer:   d.GetBool("retrieve_sha256_from_server", false),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -54,12 +96,34 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 		}, nil
 	}
 
-	return mkResourceSchema(
+	resourceSchema := mkResourceSchema(
 		GenericSchemas,
-		packer.Default(GenericSchemas[CurrentSchemaVersion]),
+		packer.Default(GenericSchemas[currentGenericSchemaVersion]),
 		unpackGenericRemoteRepo,
 		constructor,
 	)
+
+	resourceSchema.Schema = GenericSchemas[currentGenericSchemaVersion]
+	resourceSchema.SchemaVersion = currentGenericSchemaVersion
+	resourceSchema.StateUpgraders = append(
+		resourceSchema.StateUpgraders,
+		schema.StateUpgrader{
+			Type:    repository.Resource(GenericSchemas[3]).CoreConfigSchema().ImpliedType(),
+			Upgrade: genericResourceStateUpgradeV3,
+			Version: 3,
+		},
+	)
+
+	return resourceSchema
+}
+
+func genericResourceStateUpgradeV3(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	rawState["retrieve_sha256_from_server"] = false
+	if v, ok := rawState["property_sets"]; !ok || v == nil {
+		rawState["property_sets"] = []string{}
+	}
+
+	return rawState, nil
 }
 
 var BasicSchema = func(packageType string) map[string]*schema.Schema {

@@ -507,7 +507,7 @@ func UnpackBaseRemoteRepo(s *schema.ResourceData, packageType string) Repository
 	d := &utilsdk.ResourceData{ResourceData: s}
 
 	repo := RepositoryRemoteBaseParams{
-		Rclass:                            "remote",
+		Rclass:                            Rclass,
 		Key:                               d.GetString("key", false),
 		ProjectKey:                        d.GetString("project_key", false),
 		ProjectEnvironments:               d.GetSet("project_environments"),
@@ -600,6 +600,7 @@ func UnpackJavaRemoteRepo(s *schema.ResourceData, repoType string) JavaRemoteRep
 
 func mkResourceSchema(skeemas map[int16]map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
+
 	return &schema.Resource{
 		CreateContext: repository.MkRepoCreate(unpack, reader),
 		ReadContext:   reader,

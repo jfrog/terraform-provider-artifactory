@@ -9,8 +9,8 @@ Creates a remote Generic repository.
 
 ```hcl
 resource "artifactory_remote_generic_repository" "my-remote-generic" {
-  key                         = "my-remote-generic"
-  url                         = "http://testartifactory.io/artifactory/example-generic/"
+  key = "my-remote-generic"
+  url = "http://testartifactory.io/artifactory/example-generic/"
 }
 ```
 
@@ -26,6 +26,7 @@ All generic repo arguments are supported, in addition to:
 * `notes` - (Optional) Internal description.
 * `url` - (Required) The remote repo URL.
 * `propagate_query_params` - (Optional, Default: `false`) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
+* `retrieve_sha256_from_server` - (Optional, Default: `false`) When set to `true`, Artifactory retrieves the SHA256 from the remote server if it is not cached in the remote repo.
 
 
 ## Import
