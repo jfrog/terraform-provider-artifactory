@@ -5,15 +5,32 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
+	"github.com/samber/lo"
 
 	"golang.org/x/exp/slices"
 )
@@ -22,53 +39,349 @@ const (
 	webhooksURL = "/event/api/v1/subscriptions"
 	WebhookURL  = "/event/api/v1/subscriptions/{webhookKey}"
 
-	ArtifactLifecycleType        = "artifact_lifecycle"
-	ArtifactPropertyType         = "artifact_property"
-	ArtifactType                 = "artifact"
-	ArtifactoryReleaseBundleType = "artifactory_release_bundle"
-	BuildType                    = "build"
-	DestinationType              = "destination"
-	DistributionType             = "distribution"
-	DockerType                   = "docker"
-	ReleaseBundleType            = "release_bundle"
-	ReleaseBundleV2Type          = "release_bundle_v2"
-	ReleaseBundleV2PromotionType = "release_bundle_v2_promotion"
-	UserType                     = "user"
+	ArtifactLifecycleDomain        = "artifact_lifecycle"
+	ArtifactPropertyDomain         = "artifact_property"
+	ArtifactDomain                 = "artifact"
+	ArtifactoryReleaseBundleDomain = "artifactory_release_bundle"
+	BuildDomain                    = "build"
+	DestinationDomain              = "destination"
+	DistributionDomain             = "distribution"
+	DockerDomain                   = "docker"
+	ReleaseBundleDomain            = "release_bundle"
+	ReleaseBundleV2Domain          = "release_bundle_v2"
+	ReleaseBundleV2PromotionDomain = "release_bundle_v2_promotion"
+	UserDomain                     = "user"
 )
 
 const currentSchemaVersion = 2
 
-var TypesSupported = []string{
-	ArtifactLifecycleType,
-	ArtifactPropertyType,
-	// ArtifactType,
-	ArtifactoryReleaseBundleType,
-	BuildType,
-	DestinationType,
-	DistributionType,
-	DockerType,
-	ReleaseBundleType,
-	ReleaseBundleV2Type,
-	ReleaseBundleV2PromotionType,
-	UserType,
+var DomainSupported = []string{
+	ArtifactLifecycleDomain,
+	ArtifactoryReleaseBundleDomain,
+	BuildDomain,
+	DestinationDomain,
+	DistributionDomain,
+	ReleaseBundleDomain,
+	ReleaseBundleV2Domain,
+	ReleaseBundleV2PromotionDomain,
+	UserDomain,
 }
 
 var DomainEventTypesSupported = map[string][]string{
-	ArtifactType:                 {"deployed", "deleted", "moved", "copied", "cached"},
-	ArtifactPropertyType:         {"added", "deleted"},
-	DockerType:                   {"pushed", "deleted", "promoted"},
-	BuildType:                    {"uploaded", "deleted", "promoted"},
-	ReleaseBundleType:            {"created", "signed", "deleted"},
-	DistributionType:             {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
-	ArtifactoryReleaseBundleType: {"received", "delete_started", "delete_completed", "delete_failed"},
-	DestinationType:              {"received", "delete_started", "delete_completed", "delete_failed"},
-	UserType:                     {"locked"},
-	ReleaseBundleV2Type:          {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
-	ReleaseBundleV2PromotionType: {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
-	ArtifactLifecycleType:        {"archive", "restore"},
+	ArtifactDomain:                 {"deployed", "deleted", "moved", "copied", "cached"},
+	ArtifactPropertyDomain:         {"added", "deleted"},
+	DockerDomain:                   {"pushed", "deleted", "promoted"},
+	BuildDomain:                    {"uploaded", "deleted", "promoted"},
+	ReleaseBundleDomain:            {"created", "signed", "deleted"},
+	DistributionDomain:             {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
+	ArtifactoryReleaseBundleDomain: {"received", "delete_started", "delete_completed", "delete_failed"},
+	DestinationDomain:              {"received", "delete_started", "delete_completed", "delete_failed"},
+	UserDomain:                     {"locked"},
+	ReleaseBundleV2Domain:          {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
+	ReleaseBundleV2PromotionDomain: {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
+	ArtifactLifecycleDomain:        {"archive", "restore"},
 }
 
-type BaseAPIModel struct {
+type WebhookResource struct {
+	ProviderData util.ProviderMetadata
+	TypeName     string
+	Domain       string
+	Description  string
+}
+
+func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBlock) schema.Schema {
+	return schema.Schema{
+		Version: 2,
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{ // for backward compatability
+				Computed: true,
+			},
+			"key": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(2, 200),
+					stringvalidator.NoneOf(" "),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+				},
+				Description: "Description of webhook. Max length 1000 characters.",
+			},
+			"enabled": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Status of webhook. Default to `true`",
+			},
+			"event_types": schema.SetAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(
+						stringvalidator.OneOf(DomainEventTypesSupported[domain]...),
+					),
+				},
+				Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
+					"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[ArtifactDomain], ", "), "[]")),
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"criteria": criteriaBlock,
+			"handler": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"url": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+								validatorfw_string.IsURLHttpOrHttps(),
+							},
+							Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
+						},
+						"secret": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(""), // for backward compatability
+							// Sensitive: true,
+							Description: "Secret authentication token that will be sent to the configured URL.",
+						},
+						"use_secret_for_signing": schema.BoolAttribute{
+							Optional:            true,
+							Computed:            true,
+							Default:             booldefault.StaticBool(false),
+							MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
+						},
+						"proxy": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+								validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
+							},
+							Description: "Proxy key from Artifactory Proxies setting",
+						},
+						"custom_http_headers": schema.MapAttribute{
+							ElementType:         types.StringType,
+							Optional:            true,
+							MarkdownDescription: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
+						},
+					},
+				},
+				Validators: []validator.Set{
+					setvalidator.IsRequired(),
+					setvalidator.SizeAtLeast(1),
+				},
+			},
+		},
+		MarkdownDescription: r.Description,
+	}
+}
+
+func (r *WebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
+}
+
+// ImportState imports the resource into the Terraform state.
+func (r *WebhookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
+}
+
+type WebhookResourceModel struct {
+	ID          types.String `tfsdk:"id"`
+	Key         types.String `tfsdk:"key"`
+	Description types.String `tfsdk:"description"`
+	Enabled     types.Bool   `tfsdk:"enabled"`
+	EventTypes  types.Set    `tfsdk:"event_types"`
+	Criteria    types.Set    `tfsdk:"criteria"`
+	Handlers    types.Set    `tfsdk:"handler"`
+}
+
+func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, toCriteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	critieriaObj := m.Criteria.Elements()[0].(types.Object)
+	critieriaAttrs := critieriaObj.Attributes()
+
+	var includePatterns []string
+	d := critieriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var excludePatterns []string
+	d = critieriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var repoKeys []string
+	d = critieriaAttrs["repo_keys"].(types.Set).ElementsAs(ctx, &repoKeys, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var eventTypes []string
+	d = m.EventTypes.ElementsAs(ctx, &eventTypes, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	handlers := lo.Map(
+		m.Handlers.Elements(),
+		func(elem attr.Value, _ int) HandlerAPIModel {
+			attrs := elem.(types.Object).Attributes()
+
+			customHttpHeaders := lo.MapToSlice(
+				attrs["custom_http_headers"].(types.Map).Elements(),
+				func(k string, v attr.Value) KeyValuePairAPIModel {
+					return KeyValuePairAPIModel{
+						Name:  k,
+						Value: v.(types.String).ValueString(),
+					}
+				},
+			)
+
+			return HandlerAPIModel{
+				HandlerType:         "webhook",
+				Url:                 attrs["url"].(types.String).ValueString(),
+				Secret:              attrs["secret"].(types.String).ValueString(),
+				UseSecretForSigning: attrs["use_secret_for_signing"].(types.Bool).ValueBool(),
+				Proxy:               attrs["proxy"].(types.String).ValueString(),
+				CustomHttpHeaders:   customHttpHeaders,
+			}
+		},
+	)
+
+	*apiModel = WebhookAPIModel{
+		Key:         m.Key.ValueString(),
+		Description: m.Description.ValueString(),
+		Enabled:     m.Enabled.ValueBool(),
+		EventFilter: EventFilterAPIModel{
+			Domain:     domain,
+			EventTypes: eventTypes,
+			Criteria:   toCriteriaAPIModel,
+		},
+		Handlers: handlers,
+	}
+
+	return
+}
+
+var handlerSetResourceModelAttributeTypes = map[string]attr.Type{
+	"url":                    types.StringType,
+	"secret":                 types.StringType,
+	"use_secret_for_signing": types.BoolType,
+	"proxy":                  types.StringType,
+	"custom_http_headers":    types.MapType{ElemType: types.StringType},
+}
+
+var handlerSetResourceModelElementTypes = types.ObjectType{
+	AttrTypes: handlerSetResourceModelAttributeTypes,
+}
+
+func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	m.ID = types.StringValue(apiModel.Key)
+	m.Key = types.StringValue(apiModel.Key)
+
+	description := types.StringNull()
+	if apiModel.Description != "" {
+		description = types.StringValue(apiModel.Description)
+	}
+	m.Description = description
+
+	m.Enabled = types.BoolValue(apiModel.Enabled)
+
+	eventTypes, d := types.SetValueFrom(ctx, types.StringType, apiModel.EventFilter.EventTypes)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+	m.EventTypes = eventTypes
+	m.Criteria = criteriaSet
+
+	handlers := lo.Map(
+		apiModel.Handlers,
+		func(handler HandlerAPIModel, _ int) attr.Value {
+			customHttpHeaders := types.MapNull(types.StringType)
+			if len(handler.CustomHttpHeaders) > 0 {
+				headerElems := lo.Associate(
+					handler.CustomHttpHeaders,
+					func(kvPair KeyValuePairAPIModel) (string, attr.Value) {
+						return kvPair.Name, types.StringValue(kvPair.Value)
+					},
+				)
+				h, d := types.MapValue(
+					types.StringType,
+					headerElems,
+				)
+				if d.HasError() {
+					diags.Append(d...)
+				}
+
+				customHttpHeaders = h
+			}
+
+			secret := types.StringValue("")
+			matchedHandler, found := lo.Find(
+				stateHandlers.Elements(),
+				func(elem attr.Value) bool {
+					attrs := elem.(types.Object).Attributes()
+					return attrs["url"].(types.String).ValueString() == handler.Url
+				},
+			)
+			if found {
+				attrs := matchedHandler.(types.Object).Attributes()
+				if !attrs["secret"].(types.String).IsNull() {
+					secret = attrs["secret"].(types.String)
+				}
+			}
+
+			proxy := types.StringNull()
+			if handler.Proxy != "" {
+				proxy = types.StringValue(handler.Proxy)
+			}
+
+			h, d := types.ObjectValue(
+				handlerSetResourceModelAttributeTypes,
+				map[string]attr.Value{
+					"url":                    types.StringValue(handler.Url),
+					"secret":                 secret,
+					"use_secret_for_signing": types.BoolValue(handler.UseSecretForSigning),
+					"proxy":                  proxy,
+					"custom_http_headers":    customHttpHeaders,
+				},
+			)
+			if d.HasError() {
+				diags.Append(d...)
+			}
+
+			return h
+		},
+	)
+
+	handlersSet, d := types.SetValue(
+		handlerSetResourceModelElementTypes,
+		handlers,
+	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+	m.Handlers = handlersSet
+
+	return diags
+}
+
+type WebhookAPIModel struct {
 	Key         string              `json:"key"`
 	Description string              `json:"description"`
 	Enabled     bool                `json:"enabled"`
@@ -76,7 +389,7 @@ type BaseAPIModel struct {
 	Handlers    []HandlerAPIModel   `json:"handlers"`
 }
 
-func (w BaseAPIModel) Id() string {
+func (w WebhookAPIModel) Id() string {
 	return w.Key
 }
 
@@ -84,6 +397,11 @@ type EventFilterAPIModel struct {
 	Domain     string      `json:"domain"`
 	EventTypes []string    `json:"event_types"`
 	Criteria   interface{} `json:"criteria"`
+}
+
+type BaseCriteriaAPIModel struct {
+	IncludePatterns []string `json:"includePatterns"`
+	ExcludePatterns []string `json:"excludePatterns"`
 }
 
 type HandlerAPIModel struct {
@@ -123,64 +441,52 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	ArtifactType:                 RepoCriteriaAPIModel{},
-	ArtifactPropertyType:         RepoCriteriaAPIModel{},
-	DockerType:                   RepoCriteriaAPIModel{},
-	BuildType:                    BuildWebhookCriteria{},
-	ReleaseBundleType:            ReleaseBundleWebhookCriteria{},
-	DistributionType:             ReleaseBundleWebhookCriteria{},
-	ArtifactoryReleaseBundleType: ReleaseBundleWebhookCriteria{},
-	DestinationType:              ReleaseBundleWebhookCriteria{},
-	UserType:                     EmptyWebhookCriteria{},
-	ReleaseBundleV2Type:          ReleaseBundleV2WebhookCriteria{},
-	ReleaseBundleV2PromotionType: ReleaseBundleV2PromotionWebhookCriteria{},
-	ArtifactLifecycleType:        EmptyWebhookCriteria{},
+	BuildDomain:                    BuildWebhookCriteria{},
+	ReleaseBundleDomain:            ReleaseBundleWebhookCriteria{},
+	DistributionDomain:             ReleaseBundleWebhookCriteria{},
+	ArtifactoryReleaseBundleDomain: ReleaseBundleWebhookCriteria{},
+	DestinationDomain:              ReleaseBundleWebhookCriteria{},
+	UserDomain:                     EmptyWebhookCriteria{},
+	ReleaseBundleV2Domain:          ReleaseBundleV2WebhookCriteria{},
+	ReleaseBundleV2PromotionDomain: ReleaseBundleV2PromotionWebhookCriteria{},
+	ArtifactLifecycleDomain:        EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	ArtifactType:                 packRepoCriteria,
-	ArtifactPropertyType:         packRepoCriteria,
-	DockerType:                   packRepoCriteria,
-	BuildType:                    packBuildCriteria,
-	ReleaseBundleType:            packReleaseBundleCriteria,
-	DistributionType:             packReleaseBundleCriteria,
-	ArtifactoryReleaseBundleType: packReleaseBundleCriteria,
-	DestinationType:              packReleaseBundleCriteria,
-	UserType:                     packEmptyCriteria,
-	ReleaseBundleV2Type:          packReleaseBundleV2Criteria,
-	ReleaseBundleV2PromotionType: packReleaseBundleV2PromotionCriteria,
-	ArtifactLifecycleType:        packEmptyCriteria,
+	BuildDomain:                    packBuildCriteria,
+	ReleaseBundleDomain:            packReleaseBundleCriteria,
+	DistributionDomain:             packReleaseBundleCriteria,
+	ArtifactoryReleaseBundleDomain: packReleaseBundleCriteria,
+	DestinationDomain:              packReleaseBundleCriteria,
+	UserDomain:                     packEmptyCriteria,
+	ReleaseBundleV2Domain:          packReleaseBundleV2Criteria,
+	ReleaseBundleV2PromotionDomain: packReleaseBundleV2PromotionCriteria,
+	ArtifactLifecycleDomain:        packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
-	ArtifactType:                 unpackRepoCriteria,
-	ArtifactPropertyType:         unpackRepoCriteria,
-	DockerType:                   unpackRepoCriteria,
-	BuildType:                    unpackBuildCriteria,
-	ReleaseBundleType:            unpackReleaseBundleCriteria,
-	DistributionType:             unpackReleaseBundleCriteria,
-	ArtifactoryReleaseBundleType: unpackReleaseBundleCriteria,
-	DestinationType:              unpackReleaseBundleCriteria,
-	UserType:                     unpackEmptyCriteria,
-	ReleaseBundleV2Type:          unpackReleaseBundleV2Criteria,
-	ReleaseBundleV2PromotionType: unpackReleaseBundleV2PromotionCriteria,
-	ArtifactLifecycleType:        unpackEmptyCriteria,
+	BuildDomain:                    unpackBuildCriteria,
+	ReleaseBundleDomain:            unpackReleaseBundleCriteria,
+	DistributionDomain:             unpackReleaseBundleCriteria,
+	ArtifactoryReleaseBundleDomain: unpackReleaseBundleCriteria,
+	DestinationDomain:              unpackReleaseBundleCriteria,
+	UserDomain:                     unpackEmptyCriteria,
+	ReleaseBundleV2Domain:          unpackReleaseBundleV2Criteria,
+	ReleaseBundleV2PromotionDomain: unpackReleaseBundleV2PromotionCriteria,
+	ArtifactLifecycleDomain:        unpackEmptyCriteria,
 }
 
-var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
-	return map[string]map[string]*schema.Schema{
-		ArtifactType:                 repoWebhookSchema(webhookType, version, isCustom),
-		ArtifactPropertyType:         repoWebhookSchema(webhookType, version, isCustom),
-		DockerType:                   repoWebhookSchema(webhookType, version, isCustom),
-		BuildType:                    buildWebhookSchema(webhookType, version, isCustom),
-		ReleaseBundleType:            releaseBundleWebhookSchema(webhookType, version, isCustom),
-		DistributionType:             releaseBundleWebhookSchema(webhookType, version, isCustom),
-		ArtifactoryReleaseBundleType: releaseBundleWebhookSchema(webhookType, version, isCustom),
-		DestinationType:              releaseBundleWebhookSchema(webhookType, version, isCustom),
-		UserType:                     userWebhookSchema(webhookType, version, isCustom),
-		ReleaseBundleV2Type:          releaseBundleV2WebhookSchema(webhookType, version, isCustom),
-		ReleaseBundleV2PromotionType: releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
-		ArtifactLifecycleType:        artifactLifecycleWebhookSchema(webhookType, version, isCustom),
+var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
+	return map[string]map[string]*sdkv2_schema.Schema{
+		BuildDomain:                    buildWebhookSchema(webhookType, version, isCustom),
+		ReleaseBundleDomain:            releaseBundleWebhookSchema(webhookType, version, isCustom),
+		DistributionDomain:             releaseBundleWebhookSchema(webhookType, version, isCustom),
+		ArtifactoryReleaseBundleDomain: releaseBundleWebhookSchema(webhookType, version, isCustom),
+		DestinationDomain:              releaseBundleWebhookSchema(webhookType, version, isCustom),
+		UserDomain:                     userWebhookSchema(webhookType, version, isCustom),
+		ReleaseBundleV2Domain:          releaseBundleV2WebhookSchema(webhookType, version, isCustom),
+		ReleaseBundleV2PromotionDomain: releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
+		ArtifactLifecycleDomain:        artifactLifecycleWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -188,13 +494,13 @@ var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface
 	var webhookCriteria interface{}
 
 	if v, ok := d.GetOk("criteria"); ok {
-		criteria := v.(*schema.Set).List()
+		criteria := v.(*sdkv2_schema.Set).List()
 		if len(criteria) == 1 {
 			id := criteria[0].(map[string]interface{})
 
 			baseCriteria := BaseCriteriaAPIModel{
-				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
-				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
+				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*sdkv2_schema.Set).List()),
+				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*sdkv2_schema.Set).List()),
 			}
 
 			webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
@@ -204,51 +510,48 @@ var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface
 	return webhookCriteria
 }
 
-var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map[string]interface{}) []error {
+var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criteria map[string]interface{}) []error {
 	setValue := utilsdk.MkLens(d)
 
-	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*schema.Resource)
+	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*sdkv2_schema.Resource)
 	packedCriteria := domainPackLookup[webhookType](criteria)
 
 	includePatterns := []interface{}{}
 	if v, ok := criteria["includePatterns"]; ok && v != nil {
 		includePatterns = v.([]interface{})
 	}
-	packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, includePatterns)
+	packedCriteria["include_patterns"] = sdkv2_schema.NewSet(sdkv2_schema.HashString, includePatterns)
 
 	excludePatterns := []interface{}{}
 	if v, ok := criteria["excludePatterns"]; ok && v != nil {
 		excludePatterns = v.([]interface{})
 	}
-	packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, excludePatterns)
+	packedCriteria["exclude_patterns"] = sdkv2_schema.NewSet(sdkv2_schema.HashString, excludePatterns)
 
-	return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
+	return setValue("criteria", sdkv2_schema.NewSet(sdkv2_schema.HashResource(resource), []interface{}{packedCriteria}))
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	ArtifactType:                 repoCriteriaValidation,
-	ArtifactPropertyType:         repoCriteriaValidation,
-	DockerType:                   repoCriteriaValidation,
-	BuildType:                    buildCriteriaValidation,
-	ReleaseBundleType:            releaseBundleCriteriaValidation,
-	DistributionType:             releaseBundleCriteriaValidation,
-	ArtifactoryReleaseBundleType: releaseBundleCriteriaValidation,
-	DestinationType:              releaseBundleCriteriaValidation,
-	UserType:                     emptyCriteriaValidation,
-	ReleaseBundleV2Type:          releaseBundleV2CriteriaValidation,
-	ReleaseBundleV2PromotionType: emptyCriteriaValidation,
-	ArtifactLifecycleType:        emptyCriteriaValidation,
+	BuildDomain:                    buildCriteriaValidation,
+	ReleaseBundleDomain:            releaseBundleCriteriaValidation,
+	DistributionDomain:             releaseBundleCriteriaValidation,
+	ArtifactoryReleaseBundleDomain: releaseBundleCriteriaValidation,
+	DestinationDomain:              releaseBundleCriteriaValidation,
+	UserDomain:                     emptyCriteriaValidation,
+	ReleaseBundleV2Domain:          releaseBundleV2CriteriaValidation,
+	ReleaseBundleV2PromotionDomain: emptyCriteriaValidation,
+	ArtifactLifecycleDomain:        emptyCriteriaValidation,
 }
 
 var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
 	return nil
 }
 
-var packSecret = func(d *schema.ResourceData, url string) string {
+var packSecret = func(d *sdkv2_schema.ResourceData, url string) string {
 	// Get secret from TF state
 	var secret string
 	if v, ok := d.GetOk("handler"); ok {
-		handlers := v.(*schema.Set).List()
+		handlers := v.(*sdkv2_schema.Set).List()
 		for _, handler := range handlers {
 			h := handler.(map[string]interface{})
 			// if urls match, assign the secret value from the state
@@ -267,16 +570,16 @@ var retryOnProxyError = func(response *resty.Response, _r error) bool {
 	return proxyNotFoundRegex.MatchString(string(response.Body()[:]))
 }
 
-func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
+func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 
-	var unpackWebhook = func(data *schema.ResourceData) (BaseAPIModel, error) {
+	var unpackWebhook = func(data *sdkv2_schema.ResourceData) (WebhookAPIModel, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 
 		var unpackHandlers = func(d *utilsdk.ResourceData) []HandlerAPIModel {
 			var webhookHandlers []HandlerAPIModel
 
 			if v, ok := d.GetOk("handler"); ok {
-				handlers := v.(*schema.Set).List()
+				handlers := v.(*sdkv2_schema.Set).List()
 				for _, handler := range handlers {
 					h := handler.(map[string]interface{})
 					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
@@ -311,7 +614,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			return webhookHandlers
 		}
 
-		webhook := BaseAPIModel{
+		webhook := WebhookAPIModel{
 			Key:         d.GetString("key", false),
 			Description: d.GetString("description", false),
 			Enabled:     d.GetBool("enabled", false),
@@ -326,9 +629,9 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return webhook, nil
 	}
 
-	var packHandlers = func(d *schema.ResourceData, handlers []HandlerAPIModel) []error {
+	var packHandlers = func(d *sdkv2_schema.ResourceData, handlers []HandlerAPIModel) []error {
 		setValue := utilsdk.MkLens(d)
-		resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["handler"].Elem.(*schema.Resource)
+		resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["handler"].Elem.(*sdkv2_schema.Resource)
 		var packedHandlers []interface{}
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
@@ -345,10 +648,10 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
 
-		return setValue("handler", schema.NewSet(schema.HashResource(resource), packedHandlers))
+		return setValue("handler", sdkv2_schema.NewSet(sdkv2_schema.HashResource(resource), packedHandlers))
 	}
 
-	var packWebhook = func(d *schema.ResourceData, webhook BaseAPIModel) diag.Diagnostics {
+	var packWebhook = func(d *sdkv2_schema.ResourceData, webhook WebhookAPIModel) sdkv2_diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
 		setValue("key", webhook.Key)
@@ -361,16 +664,16 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
 		if len(errors) > 0 {
-			return diag.Errorf("failed to pack webhook %q", errors)
+			return sdkv2_diag.Errorf("failed to pack webhook %q", errors)
 		}
 
 		return nil
 	}
 
-	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var readWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
 		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
 
-		webhook := BaseAPIModel{}
+		webhook := WebhookAPIModel{}
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
@@ -382,7 +685,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Get(WebhookURL)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		if resp.StatusCode() == http.StatusNotFound {
@@ -391,18 +694,18 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		}
 
 		if resp.IsError() {
-			return diag.Errorf("%s", artifactoryError.String())
+			return sdkv2_diag.Errorf("%s", artifactoryError.String())
 		}
 
 		return packWebhook(data, webhook)
 	}
 
-	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var createWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
 		tflog.Debug(ctx, "createWebhook")
 
 		webhook, err := unpackWebhook(data)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
@@ -412,11 +715,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			SetError(&artifactoryError).
 			Post(webhooksURL)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		if resp.IsError() {
-			return diag.Errorf("%s", artifactoryError.String())
+			return sdkv2_diag.Errorf("%s", artifactoryError.String())
 		}
 
 		data.SetId(webhook.Id())
@@ -424,12 +727,12 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return readWebhook(ctx, data, m)
 	}
 
-	var updateWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var updateWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
 		tflog.Debug(ctx, "updateWebhook")
 
 		webhook, err := unpackWebhook(data)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
@@ -440,11 +743,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			SetError(&artifactoryError).
 			Put(WebhookURL)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		if resp.IsError() {
-			return diag.Errorf("%s", artifactoryError.String())
+			return sdkv2_diag.Errorf("%s", artifactoryError.String())
 		}
 
 		data.SetId(webhook.Id())
@@ -452,7 +755,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return readWebhook(ctx, data, m)
 	}
 
-	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var deleteWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
 		tflog.Debug(ctx, "deleteWebhook")
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
@@ -462,7 +765,7 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 			Delete(WebhookURL)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkv2_diag.FromErr(err)
 		}
 
 		if resp.StatusCode() == http.StatusNotFound {
@@ -471,16 +774,16 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		}
 
 		if resp.IsError() {
-			return diag.Errorf("%s", artifactoryError.String())
+			return sdkv2_diag.Errorf("%s", artifactoryError.String())
 		}
 
 		return nil
 	}
 
-	var eventTypesDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	var eventTypesDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "eventTypesDiff")
 
-		eventTypes := diff.Get("event_types").(*schema.Set).List()
+		eventTypes := diff.Get("event_types").(*sdkv2_schema.Set).List()
 		if len(eventTypes) == 0 {
 			return nil
 		}
@@ -494,11 +797,11 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	var criteriaDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
 		tflog.Debug(ctx, "criteriaDiff")
 
 		if resource, ok := diff.GetOk("criteria"); ok {
-			criteria := resource.(*schema.Set).List()
+			criteria := resource.(*sdkv2_schema.Set).List()
 			if len(criteria) == 0 {
 				return nil
 			}
@@ -510,23 +813,23 @@ func ResourceArtifactoryWebhook(webhookType string) *schema.Resource {
 
 	// Previous version of the schema
 	// see example in https://www.terraform.io/plugin/sdkv2/resources/state-migration#terraform-v0-12-sdk-state-migrations
-	resourceSchemaV1 := &schema.Resource{
+	resourceSchemaV1 := &sdkv2_schema.Resource{
 		Schema: domainSchemaLookup(1, false, webhookType)[webhookType],
 	}
 
-	rs := schema.Resource{
+	rs := sdkv2_schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
 		UpdateContext: updateWebhook,
 		DeleteContext: deleteWebhook,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Importer: &sdkv2_schema.ResourceImporter{
+			StateContext: sdkv2_schema.ImportStatePassthroughContext,
 		},
 
 		Schema: domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType],
-		StateUpgraders: []schema.StateUpgrader{
+		StateUpgraders: []sdkv2_schema.StateUpgrader{
 			{
 				Type:    resourceSchemaV1.CoreConfigSchema().ImpliedType(),
 				Upgrade: ResourceStateUpgradeV1,

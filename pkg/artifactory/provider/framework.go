@@ -223,6 +223,8 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		replication.NewLocalRepositoryMultiReplicationResource,
 		replication.NewRemoteRepositoryReplicationResource,
 		webhook.NewArtifactWebhookResource,
+		webhook.NewArtifactPropertyWebhookResource,
+		webhook.NewDockerWebhookResource,
 	}
 }
 

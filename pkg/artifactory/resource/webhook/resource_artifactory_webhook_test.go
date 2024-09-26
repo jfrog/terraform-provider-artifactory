@@ -97,7 +97,7 @@ var releaseBundleV2Template = `
 `
 
 func TestAccWebhook_CriteriaValidation(t *testing.T) {
-	for _, webhookType := range webhook.TypesSupported {
+	for _, webhookType := range webhook.DomainSupported {
 		if !slices.Contains([]string{"user", "release_bundle_v2_promotion", "artifact_lifecycle"}, webhookType) {
 			t.Run(webhookType, func(t *testing.T) {
 				resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
