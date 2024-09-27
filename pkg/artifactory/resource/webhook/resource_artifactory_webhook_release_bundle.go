@@ -13,9 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -84,7 +82,7 @@ func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.
 						Required:    true,
 						Description: "Trigger on any release bundles or distributions",
 					},
-					"selected_builds": schema.SetAttribute{
+					"registered_release_bundle_names": schema.SetAttribute{
 						ElementType: types.StringType,
 						Required:    true,
 						Description: "Trigger on this list of release bundle names",
@@ -323,56 +321,4 @@ type ReleaseBundleCriteriaAPIModel struct {
 	BaseCriteriaAPIModel
 	AnyReleaseBundle              bool     `json:"anyReleaseBundle"`
 	RegisteredReleaseBundlesNames []string `json:"registeredReleaseBundlesNames"`
-}
-
-var releaseBundleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
-		"criteria": {
-			Type:     sdkv2_schema.TypeSet,
-			Required: true,
-			MaxItems: 1,
-			Elem: &sdkv2_schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
-					"any_release_bundle": {
-						Type:        sdkv2_schema.TypeBool,
-						Required:    true,
-						Description: "Trigger on any release bundles or distributions",
-					},
-					"registered_release_bundle_names": {
-						Type:        sdkv2_schema.TypeSet,
-						Required:    true,
-						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
-						Description: "Trigger on this list of release bundle names",
-					},
-				}),
-			},
-			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
-		},
-	})
-}
-
-var packReleaseBundleCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"any_release_bundle":              artifactoryCriteria["anyReleaseBundle"].(bool),
-		"registered_release_bundle_names": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["registeredReleaseBundlesNames"].([]interface{})),
-	}
-}
-
-var unpackReleaseBundleCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-	return ReleaseBundleCriteriaAPIModel{
-		AnyReleaseBundle:              terraformCriteria["any_release_bundle"].(bool),
-		RegisteredReleaseBundlesNames: utilsdk.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*sdkv2_schema.Set).List()),
-		BaseCriteriaAPIModel:          baseCriteria,
-	}
-}
-
-var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	anyReleaseBundle := criteria["any_release_bundle"].(bool)
-	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*sdkv2_schema.Set).List()
-
-	if !anyReleaseBundle && len(registeredReleaseBundlesNames) == 0 {
-		return fmt.Errorf("registered_release_bundle_names cannot be empty when any_release_bundle is false")
-	}
-
-	return nil
 }

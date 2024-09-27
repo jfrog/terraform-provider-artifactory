@@ -56,7 +56,6 @@ const (
 const currentSchemaVersion = 2
 
 var DomainSupported = []string{
-	ReleaseBundleV2Domain,
 	ReleaseBundleV2PromotionDomain,
 	UserDomain,
 }
@@ -609,26 +608,22 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 
 var domainCriteriaLookup = map[string]interface{}{
 	UserDomain:                     EmptyWebhookCriteria{},
-	ReleaseBundleV2Domain:          ReleaseBundleV2WebhookCriteria{},
 	ReleaseBundleV2PromotionDomain: ReleaseBundleV2PromotionWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
 	UserDomain:                     packEmptyCriteria,
-	ReleaseBundleV2Domain:          packReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: packReleaseBundleV2PromotionCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
 	UserDomain:                     unpackEmptyCriteria,
-	ReleaseBundleV2Domain:          unpackReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: unpackReleaseBundleV2PromotionCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
 	return map[string]map[string]*sdkv2_schema.Schema{
 		UserDomain:                     userWebhookSchema(webhookType, version, isCustom),
-		ReleaseBundleV2Domain:          releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleV2PromotionDomain: releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
 	}
 }
@@ -676,7 +671,6 @@ var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criter
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
 	UserDomain:                     emptyCriteriaValidation,
-	ReleaseBundleV2Domain:          releaseBundleV2CriteriaValidation,
 	ReleaseBundleV2PromotionDomain: emptyCriteriaValidation,
 }
 

@@ -4,64 +4,290 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/jfrog/terraform-provider-shared/util"
+	"github.com/samber/lo"
 )
 
-type ReleaseBundleV2WebhookCriteria struct {
-	BaseCriteriaAPIModel
-	AnyReleaseBundle       bool     `json:"anyReleaseBundle"`
-	SelectedReleaseBundles []string `json:"selectedReleaseBundles"`
+var _ resource.Resource = &ReleaseBundleV2WebhookResource{}
+
+func NewReleaseBundleV2WebhookResource() resource.Resource {
+	return &ReleaseBundleV2WebhookResource{
+		WebhookResource: WebhookResource{
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleV2Domain),
+			Domain:      ReleaseBundleV2Domain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+		},
+	}
 }
 
-var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
-		"criteria": {
-			Type:     schema.TypeSet,
-			Required: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
-					"any_release_bundle": {
-						Type:        schema.TypeBool,
+type ReleaseBundleV2WebhookResourceModel struct {
+	WebhookResourceModel
+}
+
+type ReleaseBundleV2WebhookResource struct {
+	WebhookResource
+}
+
+func (r *ReleaseBundleV2WebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	r.WebhookResource.Metadata(ctx, req, resp)
+}
+
+func (r *ReleaseBundleV2WebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	criteriaBlock := schema.SetNestedBlock{
+		NestedObject: schema.NestedBlockObject{
+			Attributes: lo.Assign(
+				patternsSchemaAttributes("Simple wildcard patterns for Release Bundle names.\nAnt-style path expressions are supported (*, **, ?).\nFor example: `product_*`"),
+				map[string]schema.Attribute{
+					"any_release_bundle": schema.BoolAttribute{
 						Required:    true,
 						Description: "Trigger on any release bundles or distributions",
 					},
-					"selected_release_bundles": {
-						Type:        schema.TypeSet,
+					"selected_release_bundles": schema.SetAttribute{
+						ElementType: types.StringType,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
 						Description: "Trigger on this list of release bundle names",
 					},
-				}),
-			},
-			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+				},
+			),
 		},
-	})
+		Validators: []validator.Set{
+			setvalidator.SizeBetween(1, 1),
+			setvalidator.IsRequired(),
+		},
+		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+	}
+
+	resp.Schema = r.schema(r.Domain, &criteriaBlock)
 }
 
-var packReleaseBundleV2Criteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"any_release_bundle":       artifactoryCriteria["anyReleaseBundle"].(bool),
-		"selected_release_bundles": schema.NewSet(schema.HashString, artifactoryCriteria["selectedReleaseBundles"].([]interface{})),
+func (r *ReleaseBundleV2WebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	r.WebhookResource.Configure(ctx, req, resp)
+}
+
+func (r ReleaseBundleV2WebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data ReleaseBundleV2WebhookResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	criteriaObj := data.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
+
+	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
+
+	if !anyReleaseBundle && len(criteriaAttrs["selected_release_bundles"].(types.Set).Elements()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_release_bundle"),
+			"Invalid Attribute Configuration",
+			"selected_release_bundles cannot be empty when any_release_bundle is false",
+		)
 	}
 }
 
-var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-	return ReleaseBundleV2WebhookCriteria{
-		AnyReleaseBundle:       terraformCriteria["any_release_bundle"].(bool),
-		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*schema.Set).List()),
+func (r *ReleaseBundleV2WebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var plan ReleaseBundleV2WebhookResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var webhook WebhookAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(ctx, r.Domain, &webhook)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	r.WebhookResource.Create(ctx, webhook, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *ReleaseBundleV2WebhookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var state ReleaseBundleV2WebhookResourceModel
+
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var webhook WebhookAPIModel
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !found {
+		return
+	}
+
+	resp.Diagnostics.Append(state.fromAPIModel(ctx, webhook, state.Handlers)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *ReleaseBundleV2WebhookResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var plan ReleaseBundleV2WebhookResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var webhook WebhookAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(ctx, r.Domain, &webhook)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *ReleaseBundleV2WebhookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var state ReleaseBundleV2WebhookResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the logic reaches here, it implicitly succeeded and will remove
+	// the resource from state if there are no other errors.
+}
+
+// ImportState imports the resource into the Terraform state.
+func (r *ReleaseBundleV2WebhookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	r.WebhookResource.ImportState(ctx, req, resp)
+}
+
+func (m ReleaseBundleV2WebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	critieriaObj := m.Criteria.Elements()[0].(types.Object)
+	critieriaAttrs := critieriaObj.Attributes()
+
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var releaseBundleNames []string
+	d = critieriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	criteriaAPIModel := ReleaseBundleV2CriteriaAPIModel{
 		BaseCriteriaAPIModel:   baseCriteria,
+		AnyReleaseBundle:       critieriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
+		SelectedReleaseBundles: releaseBundleNames,
 	}
+
+	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return
 }
 
-var releaseBundleV2CriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	anyReleaseBundle := criteria["any_release_bundle"].(bool)
-	selectedReleaseBundles := criteria["selected_release_bundles"].(*schema.Set).List()
+var releaseBundleV2CriteriaSetResourceModelAttributeTypes = lo.Assign(
+	patternsCriteriaSetResourceModelAttributeTypes,
+	map[string]attr.Type{
+		"any_release_bundle":       types.BoolType,
+		"selected_release_bundles": types.SetType{ElemType: types.StringType},
+	},
+)
 
-	if !anyReleaseBundle && len(selectedReleaseBundles) == 0 {
-		return fmt.Errorf("selected_release_bundles cannot be empty when any_release_bundle is false")
+var releaseBundleV2CriteriaSetResourceModelElementTypes = types.ObjectType{
+	AttrTypes: releaseBundleV2CriteriaSetResourceModelAttributeTypes,
+}
+
+func (m *ReleaseBundleV2WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
+
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+
+	releaseBundleNames := types.SetNull(types.StringType)
+	if v, ok := criteriaAPIModel["selectedReleaseBundles"]; ok && v != nil {
+		rb, d := types.SetValueFrom(ctx, types.StringType, v)
+		if d.HasError() {
+			diags.Append(d...)
+		}
+
+		releaseBundleNames = rb
 	}
 
-	return nil
+	criteria, d := types.ObjectValue(
+		releaseBundleV2CriteriaSetResourceModelAttributeTypes,
+		lo.Assign(
+			baseCriteriaAttrs,
+			map[string]attr.Value{
+				"any_release_bundle":       types.BoolValue(criteriaAPIModel["anyReleaseBundles"].(bool)),
+				"selected_release_bundles": releaseBundleNames,
+			},
+		),
+	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+	criteriaSet, d := types.SetValue(
+		releaseBundleV2CriteriaSetResourceModelElementTypes,
+		[]attr.Value{criteria},
+	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, &criteriaSet)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return diags
+}
+
+type ReleaseBundleV2CriteriaAPIModel struct {
+	BaseCriteriaAPIModel
+	AnyReleaseBundle       bool     `json:"anyReleaseBundle"`
+	SelectedReleaseBundles []string `json:"selectedReleaseBundles"`
 }
