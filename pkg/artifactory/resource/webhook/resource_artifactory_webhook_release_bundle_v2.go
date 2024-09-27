@@ -49,7 +49,7 @@ func (r *ReleaseBundleV2WebhookResource) Schema(ctx context.Context, req resourc
 				map[string]schema.Attribute{
 					"any_release_bundle": schema.BoolAttribute{
 						Required:    true,
-						Description: "Trigger on any release bundles or distributions",
+						Description: "Includes all existing release bundles and any future release bundles.",
 					},
 					"selected_release_bundles": schema.SetAttribute{
 						ElementType: types.StringType,
