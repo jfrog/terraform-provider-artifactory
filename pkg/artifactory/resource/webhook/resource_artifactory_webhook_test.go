@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"slices"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -25,13 +24,13 @@ var domainRepoTypeLookup = map[string]string{
 }
 
 var domainValidationErrorMessageLookup = map[string]string{
-	"artifact":                   "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
-	"artifact_property":          "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
-	"docker":                     "repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
-	"build":                      "selected_builds or include_patterns cannot be empty when any_build is false",
-	"release_bundle":             "registered_release_bundle_names cannot be empty when any_release_bundle is false",
-	"distribution":               "registered_release_bundle_names cannot be empty when any_release_bundle is false",
-	"artifactory_release_bundle": "registered_release_bundle_names cannot be empty when any_release_bundle is false",
+	"artifact":                   `repo_keys cannot be empty when any_local, any_remote, and any_federated are\s*false`,
+	"artifact_property":          `repo_keys cannot be empty when any_local, any_remote, and any_federated are\s*false`,
+	"docker":                     `repo_keys cannot be empty when any_local, any_remote, and any_federated are\s*false`,
+	"build":                      `selected_builds or include_patterns cannot be empty when any_build is false`,
+	"release_bundle":             `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
+	"distribution":               `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
+	"artifactory_release_bundle": `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
 }
 
 var repoTemplate = `
@@ -97,12 +96,10 @@ var releaseBundleV2Template = `
 `
 
 func TestAccWebhook_CriteriaValidation(t *testing.T) {
-	for _, webhookType := range webhook.DomainSupported {
-		if !slices.Contains([]string{"user", "release_bundle_v2_promotion", "artifact_lifecycle"}, webhookType) {
-			t.Run(webhookType, func(t *testing.T) {
-				resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
-			})
-		}
+	for _, webhookType := range []string{webhook.ArtifactDomain, webhook.ArtifactPropertyDomain, webhook.ArtifactoryReleaseBundleDomain, webhook.BuildDomain, webhook.DestinationDomain, webhook.DistributionDomain, webhook.DockerDomain, webhook.ReleaseBundleDomain, webhook.ReleaseBundleV2Domain} {
+		t.Run(webhookType, func(t *testing.T) {
+			resource.Test(webhookCriteriaValidationTestCase(webhookType, t))
+		})
 	}
 }
 

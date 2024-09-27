@@ -69,7 +69,8 @@ func TestAccWebhook_ArtifactLifecycle_UpgradeFromSDKv2(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
-			}},
+			},
+		},
 	})
 }
 
