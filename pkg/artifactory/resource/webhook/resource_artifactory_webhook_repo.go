@@ -142,8 +142,9 @@ func (r *RepoWebhookResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	r.WebhookResource.Create(ctx, webhook, req, resp)
-
-	plan.ID = plan.Key
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -161,7 +162,14 @@ func (r *RepoWebhookResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var webhook WebhookAPIModel
-	r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !found {
+		return
+	}
 
 	resp.Diagnostics.Append(state.fromAPIModel(ctx, webhook, state.Handlers)...)
 	if resp.Diagnostics.HasError() {
@@ -190,8 +198,9 @@ func (r *RepoWebhookResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
-
-	plan.ID = plan.Key
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -206,6 +215,9 @@ func (r *RepoWebhookResource) Delete(ctx context.Context, req resource.DeleteReq
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// If the logic reaches here, it implicitly succeeded and will remove
 	// the resource from state if there are no other errors.

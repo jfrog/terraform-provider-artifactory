@@ -16,13 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,7 +60,7 @@ var DomainSupported = []string{
 	ArtifactoryReleaseBundleDomain,
 	DestinationDomain,
 	DistributionDomain,
-	ReleaseBundleDomain,
+	// ReleaseBundleDomain,
 	ReleaseBundleV2Domain,
 	ReleaseBundleV2PromotionDomain,
 	UserDomain,
@@ -106,11 +105,8 @@ var patternsSchemaAttributes = func(description string) map[string]schema.Attrib
 
 func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBlock) schema.Schema {
 	return schema.Schema{
-		Version: 2,
+		Version: currentSchemaVersion,
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{ // for backward compatability
-				Computed: true,
-			},
 			"key": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -163,15 +159,17 @@ func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBl
 						},
 						"secret": schema.StringAttribute{
 							Optional: true,
-							Computed: true,
-							Default:  stringdefault.StaticString(""), // for backward compatability
 							// Sensitive: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 							Description: "Secret authentication token that will be sent to the configured URL.",
 						},
 						"use_secret_for_signing": schema.BoolAttribute{
-							Optional:            true,
-							Computed:            true,
-							Default:             booldefault.StaticBool(false),
+							Optional: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
 							MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
 						},
 						"proxy": schema.StringAttribute{
@@ -179,6 +177,9 @@ func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBl
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 								validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
 							},
 							Description: "Proxy key from Artifactory Proxies setting",
 						},
@@ -230,7 +231,7 @@ func (r *WebhookResource) Create(ctx context.Context, webhook WebhookAPIModel, r
 	}
 }
 
-func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("webhookKey", key).
@@ -239,18 +240,20 @@ func (r *WebhookResource) Read(ctx context.Context, key string, webhook *Webhook
 		Get(WebhookURL)
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
-		return
+		return false
 	}
 
 	if response.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
-		return
+		return false
 	}
 
 	if response.IsError() {
 		utilfw.UnableToRefreshResourceError(resp, artifactoryError.String())
-		return
+		return false
 	}
+
+	return true
 }
 
 func (r *WebhookResource) Update(ctx context.Context, key string, webhook WebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -302,7 +305,6 @@ func (r *WebhookResource) ImportState(ctx context.Context, req resource.ImportSt
 }
 
 type WebhookResourceModel struct {
-	ID          types.String `tfsdk:"id"`
 	Key         types.String `tfsdk:"key"`
 	Description types.String `tfsdk:"description"`
 	Enabled     types.Bool   `tfsdk:"enabled"`
@@ -336,9 +338,9 @@ func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, cri
 			return HandlerAPIModel{
 				HandlerType:         "webhook",
 				Url:                 attrs["url"].(types.String).ValueString(),
-				Secret:              attrs["secret"].(types.String).ValueString(),
-				UseSecretForSigning: attrs["use_secret_for_signing"].(types.Bool).ValueBool(),
-				Proxy:               attrs["proxy"].(types.String).ValueString(),
+				Secret:              attrs["secret"].(types.String).ValueStringPointer(),
+				UseSecretForSigning: attrs["use_secret_for_signing"].(types.Bool).ValueBoolPointer(),
+				Proxy:               attrs["proxy"].(types.String).ValueStringPointer(),
 				CustomHttpHeaders:   customHttpHeaders,
 			}
 		},
@@ -429,7 +431,6 @@ func (m *WebhookResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, cri
 func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	m.ID = types.StringValue(apiModel.Key)
 	m.Key = types.StringValue(apiModel.Key)
 
 	description := types.StringNull()
@@ -469,7 +470,9 @@ func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel Webhoo
 				customHttpHeaders = h
 			}
 
-			secret := types.StringValue("")
+			secret := types.StringNull()
+			useSecretForSigning := types.BoolPointerValue(handler.UseSecretForSigning)
+
 			matchedHandler, found := lo.Find(
 				stateHandlers.Elements(),
 				func(elem attr.Value) bool {
@@ -479,14 +482,17 @@ func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel Webhoo
 			)
 			if found {
 				attrs := matchedHandler.(types.Object).Attributes()
-				if !attrs["secret"].(types.String).IsNull() {
-					secret = attrs["secret"].(types.String)
+				s := attrs["secret"].(types.String)
+				if !s.IsNull() && s.ValueString() != "" {
+					secret = s
 				}
-			}
 
-			proxy := types.StringNull()
-			if handler.Proxy != "" {
-				proxy = types.StringValue(handler.Proxy)
+				// API doesn't include 'use_secret_for_signing' if set to 'false'
+				// so need set state to null if attribute is defined in config and set to 'false'
+				u := attrs["use_secret_for_signing"].(types.Bool)
+				if handler.UseSecretForSigning == nil && !u.IsNull() && !u.ValueBool() {
+					useSecretForSigning = types.BoolNull()
+				}
 			}
 
 			h, d := types.ObjectValue(
@@ -494,8 +500,8 @@ func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel Webhoo
 				map[string]attr.Value{
 					"url":                    types.StringValue(handler.Url),
 					"secret":                 secret,
-					"use_secret_for_signing": types.BoolValue(handler.UseSecretForSigning),
-					"proxy":                  proxy,
+					"use_secret_for_signing": useSecretForSigning,
+					"proxy":                  types.StringPointerValue(handler.Proxy),
 					"custom_http_headers":    customHttpHeaders,
 				},
 			)
@@ -545,9 +551,9 @@ type BaseCriteriaAPIModel struct {
 type HandlerAPIModel struct {
 	HandlerType         string                 `json:"handler_type"`
 	Url                 string                 `json:"url"`
-	Secret              string                 `json:"secret"`
-	UseSecretForSigning bool                   `json:"use_secret_for_signing"`
-	Proxy               string                 `json:"proxy"`
+	Secret              *string                `json:"secret"`
+	UseSecretForSigning *bool                  `json:"use_secret_for_signing,omitempty"`
+	Proxy               *string                `json:"proxy"`
 	CustomHttpHeaders   []KeyValuePairAPIModel `json:"custom_http_headers"`
 }
 
@@ -579,10 +585,10 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	ReleaseBundleDomain:            ReleaseBundleWebhookCriteria{},
-	DistributionDomain:             ReleaseBundleWebhookCriteria{},
-	ArtifactoryReleaseBundleDomain: ReleaseBundleWebhookCriteria{},
-	DestinationDomain:              ReleaseBundleWebhookCriteria{},
+	ReleaseBundleDomain:            ReleaseBundleCriteriaAPIModel{},
+	DistributionDomain:             ReleaseBundleCriteriaAPIModel{},
+	ArtifactoryReleaseBundleDomain: ReleaseBundleCriteriaAPIModel{},
+	DestinationDomain:              ReleaseBundleCriteriaAPIModel{},
 	UserDomain:                     EmptyWebhookCriteria{},
 	ReleaseBundleV2Domain:          ReleaseBundleV2WebhookCriteria{},
 	ReleaseBundleV2PromotionDomain: ReleaseBundleV2PromotionWebhookCriteria{},
@@ -724,15 +730,21 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 						}
 
 						if v, ok := h["secret"]; ok {
-							webhookHandler.Secret = v.(string)
+							if s, ok := v.(string); ok {
+								webhookHandler.Secret = &s
+							}
 						}
 
 						if v, ok := h["use_secret_for_signing"]; ok {
-							webhookHandler.UseSecretForSigning = v.(bool)
+							if b, ok := v.(bool); ok {
+								webhookHandler.UseSecretForSigning = &b
+							}
 						}
 
 						if v, ok := h["proxy"]; ok {
-							webhookHandler.Proxy = v.(string)
+							if s, ok := v.(string); ok {
+								webhookHandler.Proxy = &s
+							}
 						}
 
 						if v, ok := h["custom_http_headers"]; ok {
@@ -768,10 +780,16 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 		var packedHandlers []interface{}
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
-				"url":                    handler.Url,
-				"secret":                 packSecret(d, handler.Url),
-				"use_secret_for_signing": handler.UseSecretForSigning,
-				"proxy":                  handler.Proxy,
+				"url":    handler.Url,
+				"secret": packSecret(d, handler.Url),
+			}
+
+			if handler.UseSecretForSigning != nil {
+				packedHandler["use_secret_for_signing"] = *handler.UseSecretForSigning
+			}
+
+			if handler.Proxy != nil {
+				packedHandler["proxy"] = *handler.Proxy
 			}
 
 			if handler.CustomHttpHeaders != nil {
@@ -804,8 +822,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var readWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
-		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
-
 		webhook := WebhookAPIModel{}
 
 		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
@@ -834,8 +850,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var createWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
-		tflog.Debug(ctx, "createWebhook")
-
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return sdkv2_diag.FromErr(err)
@@ -861,8 +875,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var updateWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
-		tflog.Debug(ctx, "updateWebhook")
-
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return sdkv2_diag.FromErr(err)
@@ -889,8 +901,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var deleteWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) sdkv2_diag.Diagnostics {
-		tflog.Debug(ctx, "deleteWebhook")
-
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
@@ -914,8 +924,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var eventTypesDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
-		tflog.Debug(ctx, "eventTypesDiff")
-
 		eventTypes := diff.Get("event_types").(*sdkv2_schema.Set).List()
 		if len(eventTypes) == 0 {
 			return nil
@@ -931,8 +939,6 @@ func ResourceArtifactoryWebhook(webhookType string) *sdkv2_schema.Resource {
 	}
 
 	var criteriaDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
-		tflog.Debug(ctx, "criteriaDiff")
-
 		if resource, ok := diff.GetOk("criteria"); ok {
 			criteria := resource.(*sdkv2_schema.Set).List()
 			if len(criteria) == 0 {

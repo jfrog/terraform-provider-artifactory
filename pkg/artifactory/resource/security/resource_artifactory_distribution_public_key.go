@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -218,7 +217,6 @@ func (r *DistributionPublicKeyResource) Read(ctx context.Context, req resource.R
 	for _, key := range publicKeys.Keys {
 		if key.Alias == state.Alias.ValueString() {
 			resp.Diagnostics.Append(state.FromAPIModel(ctx, &key)...)
-			tflog.Debug(ctx, fmt.Sprintf("state after: %v", state))
 		}
 	}
 	if resp.Diagnostics.HasError() {

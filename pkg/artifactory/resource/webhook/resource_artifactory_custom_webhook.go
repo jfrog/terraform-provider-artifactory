@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -260,8 +259,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		tflog.Debug(ctx, "tflog.Debug(ctx, \"readWebhook\")")
-
 		webhook := CustomBaseParams{}
 
 		webhook.EventFilterAPIModel.Criteria = domainCriteriaLookup[webhookType]
@@ -296,8 +293,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		tflog.Debug(ctx, "createWebhook")
-
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return diag.FromErr(err)
@@ -323,8 +318,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var updateWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		tflog.Debug(ctx, "updateWebhook")
-
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return diag.FromErr(err)
@@ -351,8 +344,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		tflog.Debug(ctx, "deleteWebhook")
-
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
@@ -376,8 +367,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var eventTypesDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		tflog.Debug(ctx, "eventTypesDiff")
-
 		eventTypes := diff.Get("event_types").(*schema.Set).List()
 		if len(eventTypes) == 0 {
 			return nil
@@ -393,8 +382,6 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 	}
 
 	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		tflog.Debug(ctx, "criteriaDiff")
-
 		if resource, ok := diff.GetOk("criteria"); ok {
 			criteria := resource.(*schema.Set).List()
 			if len(criteria) == 0 {

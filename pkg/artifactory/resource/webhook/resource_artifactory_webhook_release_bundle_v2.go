@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
@@ -57,8 +56,6 @@ var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{
 }
 
 var releaseBundleV2CriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	tflog.Debug(ctx, "releaseBundleV2CriteriaValidation")
-
 	anyReleaseBundle := criteria["any_release_bundle"].(bool)
 	selectedReleaseBundles := criteria["selected_release_bundles"].(*schema.Set).List()
 
