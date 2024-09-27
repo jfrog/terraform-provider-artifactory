@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -21,7 +22,7 @@ var _ resource.Resource = &RepoWebhookResource{}
 func NewArtifactWebhookResource() resource.Resource {
 	return &RepoWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_artifact_webhook",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ArtifactDomain),
 			Domain:      ArtifactDomain,
 			Description: "Provides an artifact webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
 		},
@@ -31,7 +32,7 @@ func NewArtifactWebhookResource() resource.Resource {
 func NewArtifactPropertyWebhookResource() resource.Resource {
 	return &RepoWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_artifact_property_webhook",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ArtifactPropertyDomain),
 			Domain:      ArtifactPropertyDomain,
 			Description: "Provides an artifact property webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
 		},
@@ -41,7 +42,7 @@ func NewArtifactPropertyWebhookResource() resource.Resource {
 func NewDockerWebhookResource() resource.Resource {
 	return &RepoWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_docker_webhook",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", DockerDomain),
 			Domain:      DockerDomain,
 			Description: "Provides a Docker webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
 		},
@@ -93,7 +94,7 @@ func (r *RepoWebhookResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description: "Specifies where the webhook will be applied on which repositories.",
 	}
 
-	resp.Schema = r.schema(r.Domain, criteriaBlock)
+	resp.Schema = r.schema(r.Domain, &criteriaBlock)
 }
 
 func (r *RepoWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -313,7 +314,7 @@ func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel We
 		diags.Append(d...)
 	}
 
-	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, criteriaSet)
+	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, &criteriaSet)
 	if d.HasError() {
 		diags.Append(d...)
 	}

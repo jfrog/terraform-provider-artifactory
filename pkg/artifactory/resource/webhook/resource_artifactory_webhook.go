@@ -56,7 +56,6 @@ const (
 const currentSchemaVersion = 2
 
 var DomainSupported = []string{
-	ArtifactLifecycleDomain,
 	ReleaseBundleV2Domain,
 	ReleaseBundleV2PromotionDomain,
 	UserDomain,
@@ -99,7 +98,68 @@ var patternsSchemaAttributes = func(description string) map[string]schema.Attrib
 	}
 }
 
-func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBlock) schema.Schema {
+func (r *WebhookResource) schema(domain string, criteriaBlock *schema.SetNestedBlock) schema.Schema {
+	blocks := map[string]schema.Block{
+		"handler": schema.SetNestedBlock{
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"url": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
+							validatorfw_string.IsURLHttpOrHttps(),
+						},
+						Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
+					},
+					"secret": schema.StringAttribute{
+						Optional: true,
+						// Sensitive: true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
+						Description: "Secret authentication token that will be sent to the configured URL.",
+					},
+					"use_secret_for_signing": schema.BoolAttribute{
+						Optional: true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+						MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
+					},
+					"proxy": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
+							validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
+						},
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
+						Description: "Proxy key from Artifactory Proxies setting",
+					},
+					"custom_http_headers": schema.MapAttribute{
+						ElementType:         types.StringType,
+						Optional:            true,
+						MarkdownDescription: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
+					},
+				},
+			},
+			Validators: []validator.Set{
+				setvalidator.IsRequired(),
+				setvalidator.SizeAtLeast(1),
+			},
+		},
+	}
+
+	if criteriaBlock != nil {
+		blocks = lo.Assign(
+			blocks,
+			map[string]schema.Block{
+				"criteria": *criteriaBlock,
+			},
+		)
+	}
+
 	return schema.Schema{
 		Version: currentSchemaVersion,
 		Attributes: map[string]schema.Attribute{
@@ -140,58 +200,7 @@ func (r *WebhookResource) schema(domain string, criteriaBlock schema.SetNestedBl
 					"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[ArtifactDomain], ", "), "[]")),
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"criteria": criteriaBlock,
-			"handler": schema.SetNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"url": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthAtLeast(1),
-								validatorfw_string.IsURLHttpOrHttps(),
-							},
-							Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
-						},
-						"secret": schema.StringAttribute{
-							Optional: true,
-							// Sensitive: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-							Description: "Secret authentication token that will be sent to the configured URL.",
-						},
-						"use_secret_for_signing": schema.BoolAttribute{
-							Optional: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
-							MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
-						},
-						"proxy": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.LengthAtLeast(1),
-								validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
-							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-							Description: "Proxy key from Artifactory Proxies setting",
-						},
-						"custom_http_headers": schema.MapAttribute{
-							ElementType:         types.StringType,
-							Optional:            true,
-							MarkdownDescription: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
-						},
-					},
-				},
-				Validators: []validator.Set{
-					setvalidator.IsRequired(),
-					setvalidator.SizeAtLeast(1),
-				},
-			},
-		},
+		Blocks:              blocks,
 		MarkdownDescription: r.Description,
 	}
 }
@@ -300,16 +309,20 @@ func (r *WebhookResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }
 
-type WebhookResourceModel struct {
+type WebhookNoCriteriaResourceModel struct {
 	Key         types.String `tfsdk:"key"`
 	Description types.String `tfsdk:"description"`
 	Enabled     types.Bool   `tfsdk:"enabled"`
 	EventTypes  types.Set    `tfsdk:"event_types"`
-	Criteria    types.Set    `tfsdk:"criteria"`
 	Handlers    types.Set    `tfsdk:"handler"`
 }
 
-func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+type WebhookResourceModel struct {
+	WebhookNoCriteriaResourceModel
+	Criteria types.Set `tfsdk:"criteria"`
+}
+
+func (m WebhookNoCriteriaResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
 	var eventTypes []string
 	d := m.EventTypes.ElementsAs(ctx, &eventTypes, false)
 	if d.HasError() {
@@ -349,12 +362,19 @@ func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, cri
 		EventFilter: EventFilterAPIModel{
 			Domain:     domain,
 			EventTypes: eventTypes,
-			Criteria:   criteriaAPIModel,
 		},
 		Handlers: handlers,
 	}
 
 	return
+}
+
+func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	d := m.WebhookNoCriteriaResourceModel.toAPIModel(ctx, domain, apiModel)
+
+	apiModel.EventFilter.Criteria = criteriaAPIModel
+
+	return d
 }
 
 func (m *WebhookResourceModel) toBaseCriteriaAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (BaseCriteriaAPIModel, diag.Diagnostics) {
@@ -424,7 +444,7 @@ func (m *WebhookResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, cri
 	}, diags
 }
 
-func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet basetypes.SetValue) diag.Diagnostics {
+func (m *WebhookNoCriteriaResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	m.Key = types.StringValue(apiModel.Key)
@@ -442,7 +462,6 @@ func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel Webhoo
 		diags.Append(d...)
 	}
 	m.EventTypes = eventTypes
-	m.Criteria = criteriaSet
 
 	handlers := lo.Map(
 		apiModel.Handlers,
@@ -521,6 +540,14 @@ func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel Webhoo
 	return diags
 }
 
+func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet *basetypes.SetValue) diag.Diagnostics {
+	if criteriaSet != nil {
+		m.Criteria = *criteriaSet
+	}
+
+	return m.WebhookNoCriteriaResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
+}
+
 type WebhookAPIModel struct {
 	Key         string              `json:"key"`
 	Description string              `json:"description"`
@@ -536,7 +563,7 @@ func (w WebhookAPIModel) Id() string {
 type EventFilterAPIModel struct {
 	Domain     string      `json:"domain"`
 	EventTypes []string    `json:"event_types"`
-	Criteria   interface{} `json:"criteria"`
+	Criteria   interface{} `json:"criteria,omitempty"`
 }
 
 type BaseCriteriaAPIModel struct {
@@ -584,21 +611,18 @@ var domainCriteriaLookup = map[string]interface{}{
 	UserDomain:                     EmptyWebhookCriteria{},
 	ReleaseBundleV2Domain:          ReleaseBundleV2WebhookCriteria{},
 	ReleaseBundleV2PromotionDomain: ReleaseBundleV2PromotionWebhookCriteria{},
-	ArtifactLifecycleDomain:        EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
 	UserDomain:                     packEmptyCriteria,
 	ReleaseBundleV2Domain:          packReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: packReleaseBundleV2PromotionCriteria,
-	ArtifactLifecycleDomain:        packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
 	UserDomain:                     unpackEmptyCriteria,
 	ReleaseBundleV2Domain:          unpackReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: unpackReleaseBundleV2PromotionCriteria,
-	ArtifactLifecycleDomain:        unpackEmptyCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
@@ -606,7 +630,6 @@ var domainSchemaLookup = func(version int, isCustom bool, webhookType string) ma
 		UserDomain:                     userWebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleV2Domain:          releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleV2PromotionDomain: releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
-		ArtifactLifecycleDomain:        artifactLifecycleWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -655,7 +678,6 @@ var domainCriteriaValidationLookup = map[string]func(context.Context, map[string
 	UserDomain:                     emptyCriteriaValidation,
 	ReleaseBundleV2Domain:          releaseBundleV2CriteriaValidation,
 	ReleaseBundleV2PromotionDomain: emptyCriteriaValidation,
-	ArtifactLifecycleDomain:        emptyCriteriaValidation,
 }
 
 var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {

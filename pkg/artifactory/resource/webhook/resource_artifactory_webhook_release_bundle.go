@@ -24,8 +24,8 @@ var _ resource.Resource = &ReleaseBundleWebhookResource{}
 func NewArtifactoryReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_artifactory_release_bundle3_webhook",
-			Domain:      BuildDomain,
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ArtifactoryReleaseBundleDomain),
+			Domain:      ArtifactoryReleaseBundleDomain,
 			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 		},
 	}
@@ -34,8 +34,8 @@ func NewArtifactoryReleaseBundleWebhookResource() resource.Resource {
 func NewDestinationWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_destination_webhook",
-			Domain:      BuildDomain,
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", DestinationDomain),
+			Domain:      DestinationDomain,
 			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 		},
 	}
@@ -44,8 +44,8 @@ func NewDestinationWebhookResource() resource.Resource {
 func NewDistributionWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_distribution_webhook",
-			Domain:      BuildDomain,
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", DistributionDomain),
+			Domain:      DistributionDomain,
 			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 		},
 	}
@@ -54,8 +54,8 @@ func NewDistributionWebhookResource() resource.Resource {
 func NewReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName: "artifactory_release_bundle_webhook",
-			Domain:   BuildDomain,
+			TypeName: fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleDomain),
+			Domain:   ReleaseBundleDomain,
 			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
 				"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
 		},
@@ -99,7 +99,7 @@ func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.
 		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
 	}
 
-	resp.Schema = r.schema(r.Domain, criteriaBlock)
+	resp.Schema = r.schema(r.Domain, &criteriaBlock)
 }
 
 func (r *ReleaseBundleWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -311,7 +311,7 @@ func (m *ReleaseBundleWebhookResourceModel) fromAPIModel(ctx context.Context, ap
 		diags.Append(d...)
 	}
 
-	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, criteriaSet)
+	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, &criteriaSet)
 	if d.HasError() {
 		diags.Append(d...)
 	}

@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -12,9 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -23,7 +22,7 @@ var _ resource.Resource = &BuildWebhookResource{}
 func NewBuildWebhookResource() resource.Resource {
 	return &BuildWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    "artifactory_build_webhook",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", BuildDomain),
 			Domain:      BuildDomain,
 			Description: "Provides a build webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
 		},
@@ -67,7 +66,7 @@ func (r *BuildWebhookResource) Schema(ctx context.Context, req resource.SchemaRe
 		Description: "Specifies where the webhook will be applied on which builds.",
 	}
 
-	resp.Schema = r.schema(r.Domain, criteriaBlock)
+	resp.Schema = r.schema(r.Domain, &criteriaBlock)
 }
 
 func (r *BuildWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -279,7 +278,7 @@ func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel W
 		diags.Append(d...)
 	}
 
-	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, criteriaSet)
+	d = m.WebhookResourceModel.fromAPIModel(ctx, apiModel, stateHandlers, &criteriaSet)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -292,56 +291,3 @@ type BuildCriteriaAPIModel struct {
 	AnyBuild       bool     `json:"anyBuild"`
 	SelectedBuilds []string `json:"selectedBuilds"`
 }
-
-var buildWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
-		"criteria": {
-			Type:     sdkv2_schema.TypeSet,
-			Required: true,
-			MaxItems: 1,
-			Elem: &sdkv2_schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
-					"any_build": {
-						Type:        sdkv2_schema.TypeBool,
-						Required:    true,
-						Description: "Trigger on any builds",
-					},
-					"selected_builds": {
-						Type:        sdkv2_schema.TypeSet,
-						Required:    true,
-						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
-						Description: "Trigger on this list of build IDs",
-					},
-				}),
-			},
-			Description: "Specifies where the webhook will be applied on which builds.",
-		},
-	})
-}
-
-// var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-// 	return map[string]interface{}{
-// 		"any_build":       artifactoryCriteria["anyBuild"].(bool),
-// 		"selected_builds": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedBuilds"].([]interface{})),
-// 	}
-// }
-//
-// var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-// 	return BuildCriteriaAPIModel{
-// 		AnyBuild:             terraformCriteria["any_build"].(bool),
-// 		SelectedBuilds:       utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*sdkv2_schema.Set).List()),
-// 		BaseCriteriaAPIModel: baseCriteria,
-// 	}
-// }
-//
-// var buildCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-// 	anyBuild := criteria["any_build"].(bool)
-// 	selectedBuilds := criteria["selected_builds"].(*sdkv2_schema.Set).List()
-// 	includePatterns := criteria["include_patterns"].(*sdkv2_schema.Set).List()
-//
-// 	if !anyBuild && (len(selectedBuilds) == 0 && len(includePatterns) == 0) {
-// 		return fmt.Errorf("selected_builds or include_patterns cannot be empty when any_build is false")
-// 	}
-//
-// 	return nil
-// }
