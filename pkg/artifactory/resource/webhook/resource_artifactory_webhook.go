@@ -57,10 +57,6 @@ const currentSchemaVersion = 2
 
 var DomainSupported = []string{
 	ArtifactLifecycleDomain,
-	ArtifactoryReleaseBundleDomain,
-	DestinationDomain,
-	DistributionDomain,
-	// ReleaseBundleDomain,
 	ReleaseBundleV2Domain,
 	ReleaseBundleV2PromotionDomain,
 	UserDomain,
@@ -585,10 +581,6 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 }
 
 var domainCriteriaLookup = map[string]interface{}{
-	ReleaseBundleDomain:            ReleaseBundleCriteriaAPIModel{},
-	DistributionDomain:             ReleaseBundleCriteriaAPIModel{},
-	ArtifactoryReleaseBundleDomain: ReleaseBundleCriteriaAPIModel{},
-	DestinationDomain:              ReleaseBundleCriteriaAPIModel{},
 	UserDomain:                     EmptyWebhookCriteria{},
 	ReleaseBundleV2Domain:          ReleaseBundleV2WebhookCriteria{},
 	ReleaseBundleV2PromotionDomain: ReleaseBundleV2PromotionWebhookCriteria{},
@@ -596,10 +588,6 @@ var domainCriteriaLookup = map[string]interface{}{
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	ReleaseBundleDomain:            packReleaseBundleCriteria,
-	DistributionDomain:             packReleaseBundleCriteria,
-	ArtifactoryReleaseBundleDomain: packReleaseBundleCriteria,
-	DestinationDomain:              packReleaseBundleCriteria,
 	UserDomain:                     packEmptyCriteria,
 	ReleaseBundleV2Domain:          packReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: packReleaseBundleV2PromotionCriteria,
@@ -607,10 +595,6 @@ var domainPackLookup = map[string]func(map[string]interface{}) map[string]interf
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
-	ReleaseBundleDomain:            unpackReleaseBundleCriteria,
-	DistributionDomain:             unpackReleaseBundleCriteria,
-	ArtifactoryReleaseBundleDomain: unpackReleaseBundleCriteria,
-	DestinationDomain:              unpackReleaseBundleCriteria,
 	UserDomain:                     unpackEmptyCriteria,
 	ReleaseBundleV2Domain:          unpackReleaseBundleV2Criteria,
 	ReleaseBundleV2PromotionDomain: unpackReleaseBundleV2PromotionCriteria,
@@ -619,10 +603,6 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPI
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
 	return map[string]map[string]*sdkv2_schema.Schema{
-		ReleaseBundleDomain:            releaseBundleWebhookSchema(webhookType, version, isCustom),
-		DistributionDomain:             releaseBundleWebhookSchema(webhookType, version, isCustom),
-		ArtifactoryReleaseBundleDomain: releaseBundleWebhookSchema(webhookType, version, isCustom),
-		DestinationDomain:              releaseBundleWebhookSchema(webhookType, version, isCustom),
 		UserDomain:                     userWebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleV2Domain:          releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		ReleaseBundleV2PromotionDomain: releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
@@ -672,10 +652,6 @@ var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criter
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	ReleaseBundleDomain:            releaseBundleCriteriaValidation,
-	DistributionDomain:             releaseBundleCriteriaValidation,
-	ArtifactoryReleaseBundleDomain: releaseBundleCriteriaValidation,
-	DestinationDomain:              releaseBundleCriteriaValidation,
 	UserDomain:                     emptyCriteriaValidation,
 	ReleaseBundleV2Domain:          releaseBundleV2CriteriaValidation,
 	ReleaseBundleV2PromotionDomain: emptyCriteriaValidation,

@@ -21,6 +21,36 @@ import (
 
 var _ resource.Resource = &ReleaseBundleWebhookResource{}
 
+func NewArtifactoryReleaseBundleWebhookResource() resource.Resource {
+	return &ReleaseBundleWebhookResource{
+		WebhookResource: WebhookResource{
+			TypeName:    "artifactory_artifactory_release_bundle3_webhook",
+			Domain:      BuildDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+		},
+	}
+}
+
+func NewDestinationWebhookResource() resource.Resource {
+	return &ReleaseBundleWebhookResource{
+		WebhookResource: WebhookResource{
+			TypeName:    "artifactory_destination_webhook",
+			Domain:      BuildDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+		},
+	}
+}
+
+func NewDistributionWebhookResource() resource.Resource {
+	return &ReleaseBundleWebhookResource{
+		WebhookResource: WebhookResource{
+			TypeName:    "artifactory_distribution_webhook",
+			Domain:      BuildDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+		},
+	}
+}
+
 func NewReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
