@@ -86,57 +86,59 @@ var patternsSchemaAttributes = func(description string) map[string]schema.Attrib
 	}
 }
 
-func (r *WebhookResource) schema(domain string, criteriaBlock *schema.SetNestedBlock) schema.Schema {
-	blocks := map[string]schema.Block{
-		"handler": schema.SetNestedBlock{
-			NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					"url": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							stringvalidator.LengthAtLeast(1),
-							validatorfw_string.IsURLHttpOrHttps(),
-						},
-						Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
-					},
-					"secret": schema.StringAttribute{
-						Optional: true,
-						// Sensitive: true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
-						Description: "Secret authentication token that will be sent to the configured URL.",
-					},
-					"use_secret_for_signing": schema.BoolAttribute{
-						Optional: true,
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
-						MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
-					},
-					"proxy": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							stringvalidator.LengthAtLeast(1),
-							validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
-						},
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
-						Description: "Proxy key from Artifactory Proxies setting",
-					},
-					"custom_http_headers": schema.MapAttribute{
-						ElementType:         types.StringType,
-						Optional:            true,
-						MarkdownDescription: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
-					},
+var handlerBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			"url": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsURLHttpOrHttps(),
 				},
+				Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 			},
-			Validators: []validator.Set{
-				setvalidator.IsRequired(),
-				setvalidator.SizeAtLeast(1),
+			"secret": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Secret authentication token that will be sent to the configured URL.",
+			},
+			"use_secret_for_signing": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+				MarkdownDescription: "When set to `true`, the secret will be used to sign the event payload, allowing the target to validate that the payload content has not been changed and will not be passed as part of the event. If left unset or set to `false`, the secret is passed through the `X-JFrog-Event-Auth` HTTP header.",
+			},
+			"proxy": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Proxy key from Artifactory Proxies setting",
+			},
+			"custom_http_headers": schema.MapAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Custom HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair.",
 			},
 		},
+	},
+	Validators: []validator.Set{
+		setvalidator.IsRequired(),
+		setvalidator.SizeAtLeast(1),
+	},
+}
+
+func (r *WebhookResource) CreateSchema(domain string, criteriaBlock *schema.SetNestedBlock, handlerBlock schema.SetNestedBlock) schema.Schema {
+	blocks := map[string]schema.Block{
+		"handler": handlerBlock,
 	}
 
 	if criteriaBlock != nil {

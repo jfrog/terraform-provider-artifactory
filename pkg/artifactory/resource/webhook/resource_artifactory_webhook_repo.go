@@ -94,7 +94,7 @@ func (r *RepoWebhookResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description: "Specifies where the webhook will be applied on which repositories.",
 	}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+	resp.Schema = r.CreateSchema(r.Domain, &criteriaBlock, handlerBlock)
 }
 
 func (r *RepoWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

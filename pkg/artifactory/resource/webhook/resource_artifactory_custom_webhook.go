@@ -8,17 +8,95 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"github.com/jfrog/terraform-provider-shared/validator"
+	util_validator "github.com/jfrog/terraform-provider-shared/validator"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 
 	"golang.org/x/exp/slices"
 )
+
+type CustomWebhookResource struct {
+	WebhookResource
+}
+
+var customHandlerBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			"url": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsURLHttpOrHttps(),
+				},
+				Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
+			},
+			"secrets": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.Map{
+					mapvalidator.ValueStringsAre(
+						stringvalidator.RegexMatches(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'\""),
+					),
+				},
+				Description: "A set of sensitive values that will be injected in the request (headers and/or payload), comprise of key/value pair.",
+			},
+			"proxy": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Proxy key from Artifactory Proxies setting",
+			},
+			"http_headers": schema.MapAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair. Used in custom webhooks.",
+			},
+			"payload": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "This attribute is used to build the request body. Used in custom webhooks",
+			},
+		},
+	},
+	Validators: []validator.Set{
+		setvalidator.IsRequired(),
+		setvalidator.SizeAtLeast(1),
+	},
+}
+
+func (r *CustomWebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	r.WebhookResource.Metadata(ctx, req, resp)
+}
+
+func (r *CustomWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	r.WebhookResource.Configure(ctx, req, resp)
+}
+
+func (r *CustomWebhookResource) CreateSchema(domain string, criteriaBlock *schema.SetNestedBlock) schema.Schema {
+	return r.WebhookResource.CreateSchema(domain, criteriaBlock, customHandlerBlock)
+}
 
 var DomainSupported = []string{
 	ArtifactLifecycleDomain,
@@ -35,10 +113,10 @@ var DomainSupported = []string{
 	UserDomain,
 }
 
-func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
+func baseCustomWebhookBaseSchema(webhookType string) map[string]*sdkv2_schema.Schema {
+	return map[string]*sdkv2_schema.Schema{
 		"key": {
-			Type:     schema.TypeString,
+			Type:     sdkv2_schema.TypeString,
 			Required: true,
 			ValidateDiagFunc: validation.ToDiagFunc(
 				validation.All(
@@ -49,33 +127,33 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 			Description: "Key of webhook. Must be between 2 and 200 characters. Cannot contain spaces.",
 		},
 		"description": {
-			Type:             schema.TypeString,
+			Type:             sdkv2_schema.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 1000)),
 			Description:      "Description of webhook. Max length 1000 characters.",
 		},
 		"enabled": {
-			Type:        schema.TypeBool,
+			Type:        sdkv2_schema.TypeBool,
 			Optional:    true,
 			Default:     true,
 			Description: "Status of webhook. Default to 'true'",
 		},
 		"event_types": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MinItems: 1,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Elem:     &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 			Description: fmt.Sprintf("List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook.\n"+
 				"Allow values: %v", strings.Trim(strings.Join(DomainEventTypesSupported[webhookType], ", "), "[]")),
 		},
 		"handler": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MinItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: map[string]*sdkv2_schema.Schema{
 					"url": {
-						Type:     schema.TypeString,
+						Type:     sdkv2_schema.TypeString,
 						Required: true,
 						ValidateDiagFunc: validation.ToDiagFunc(
 							validation.All(
@@ -86,31 +164,31 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 						Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 					},
 					"secrets": {
-						Type:     schema.TypeMap,
+						Type:     sdkv2_schema.TypeMap,
 						Optional: true,
-						Elem: &schema.Schema{
-							Type:             schema.TypeString,
+						Elem: &sdkv2_schema.Schema{
+							Type:             sdkv2_schema.TypeString,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'\"")),
 						},
 						Description: "A set of sensitive values that will be injected in the request (headers and/or payload), comprise of key/value pair.",
 					},
 					"proxy": {
-						Type:     schema.TypeString,
+						Type:     sdkv2_schema.TypeString,
 						Optional: true,
-						ValidateDiagFunc: validator.All(
-							validator.StringIsNotEmpty,
-							validator.StringIsNotURL,
+						ValidateDiagFunc: util_validator.All(
+							util_validator.StringIsNotEmpty,
+							util_validator.StringIsNotURL,
 						),
 						Description: "Proxy key from Artifactory UI (Administration -> Proxies -> Configuration)",
 					},
 					"http_headers": {
-						Type:        schema.TypeMap,
+						Type:        sdkv2_schema.TypeMap,
 						Optional:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "HTTP headers you wish to use to invoke the Webhook, comprise of key/value pair. Used in custom webhooks.",
 					},
 					"payload": {
-						Type:             schema.TypeString,
+						Type:             sdkv2_schema.TypeString,
 						Optional:         true,
 						ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 						Description:      "This attribute is used to build the request body. Used in custom webhooks",
@@ -121,33 +199,33 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 	}
 }
 
-var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
 		"criteria": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
 					"any_local": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any local repositories",
 					},
 					"any_remote": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any remote repositories",
 					},
 					"any_federated": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any federated repositories",
 					},
 					"repo_keys": {
-						Type:        schema.TypeSet,
+						Type:        sdkv2_schema.TypeSet,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "Trigger on this list of repository keys",
 					},
 				}),
@@ -157,23 +235,23 @@ var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map
 	})
 }
 
-var buildWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+var buildWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
 		"criteria": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
 					"any_build": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any builds",
 					},
 					"selected_builds": {
-						Type:        schema.TypeSet,
+						Type:        sdkv2_schema.TypeSet,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "Trigger on this list of build IDs",
 					},
 				}),
@@ -183,23 +261,23 @@ var buildWebhookSchema = func(webhookType string, version int, isCustom bool) ma
 	})
 }
 
-var releaseBundleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+var releaseBundleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
 		"criteria": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
 					"any_release_bundle": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any release bundles or distributions",
 					},
 					"registered_release_bundle_names": {
-						Type:        schema.TypeSet,
+						Type:        sdkv2_schema.TypeSet,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "Trigger on this list of release bundle names",
 					},
 				}),
@@ -209,23 +287,23 @@ var releaseBundleWebhookSchema = func(webhookType string, version int, isCustom 
 	})
 }
 
-var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
 		"criteria": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
 					"any_release_bundle": {
-						Type:        schema.TypeBool,
+						Type:        sdkv2_schema.TypeBool,
 						Required:    true,
 						Description: "Trigger on any release bundles or distributions",
 					},
 					"selected_release_bundles": {
-						Type:        schema.TypeSet,
+						Type:        sdkv2_schema.TypeSet,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "Trigger on this list of release bundle names",
 					},
 				}),
@@ -235,18 +313,18 @@ var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCusto
 	})
 }
 
-var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
 		"criteria": {
-			Type:     schema.TypeSet,
+			Type:     sdkv2_schema.TypeSet,
 			Required: true,
 			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+			Elem: &sdkv2_schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
 					"selected_environments": {
-						Type:        schema.TypeSet,
+						Type:        sdkv2_schema.TypeSet,
 						Required:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
 						Description: "Trigger on this list of environments",
 					},
 				}),
@@ -256,27 +334,24 @@ var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int
 	})
 }
 
-var userWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+var userWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
 	return getBaseSchemaByVersion(webhookType, version, isCustom)
 }
 
-var artifactLifecycleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+var artifactLifecycleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
 	return getBaseSchemaByVersion(webhookType, version, isCustom)
 }
 
-type CustomBaseParams struct {
-	Key                 string              `json:"key"`
-	Description         string              `json:"description"`
-	Enabled             bool                `json:"enabled"`
-	EventFilterAPIModel EventFilterAPIModel `json:"event_filter"`
-	Handlers            []CustomHandler     `json:"handlers"`
+type CustomWebookAPIModel struct {
+	WebhookAPIModel
+	Handlers []CustomHandlerAPIModel `json:"handlers"`
 }
 
-func (w CustomBaseParams) Id() string {
+func (w CustomWebookAPIModel) Id() string {
 	return w.Key
 }
 
-type CustomHandler struct {
+type CustomHandlerAPIModel struct {
 	HandlerType string                 `json:"handler_type"`
 	Url         string                 `json:"url"`
 	Secrets     []KeyValuePairAPIModel `json:"secrets"`
@@ -289,12 +364,12 @@ type SecretName struct {
 	Name string `json:"name"`
 }
 
-var packSecretsCustom = func(keyValuePairs []KeyValuePairAPIModel, d *schema.ResourceData, url string) map[string]interface{} {
+var packSecretsCustom = func(keyValuePairs []KeyValuePairAPIModel, d *sdkv2_schema.ResourceData, url string) map[string]interface{} {
 	KVPairs := make(map[string]interface{})
 	// Get secrets from TF state
 	var secrets map[string]interface{}
 	if v, ok := d.GetOk("handler"); ok {
-		handlers := v.(*schema.Set).List()
+		handlers := v.(*sdkv2_schema.Set).List()
 		for _, handler := range handlers {
 			h := handler.(map[string]interface{})
 			// if url match, merge secret maps
@@ -313,22 +388,22 @@ var packSecretsCustom = func(keyValuePairs []KeyValuePairAPIModel, d *schema.Res
 	return KVPairs
 }
 
-func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
+func ResourceArtifactoryCustomWebhook(webhookType string) *sdkv2_schema.Resource {
 
-	var unpackWebhook = func(data *schema.ResourceData) (CustomBaseParams, error) {
+	var unpackWebhook = func(data *sdkv2_schema.ResourceData) (CustomWebookAPIModel, error) {
 		d := &utilsdk.ResourceData{ResourceData: data}
 
-		var unpackHandlers = func(d *utilsdk.ResourceData) []CustomHandler {
-			var webhookHandlers []CustomHandler
+		var unpackHandlers = func(d *utilsdk.ResourceData) []CustomHandlerAPIModel {
+			var webhookHandlers []CustomHandlerAPIModel
 
 			if v, ok := d.GetOk("handler"); ok {
-				handlers := v.(*schema.Set).List()
+				handlers := v.(*sdkv2_schema.Set).List()
 				for _, handler := range handlers {
 					h := handler.(map[string]interface{})
 					// use this to filter out weirdness with terraform adding an extra blank webhook in a set
 					// https://discuss.hashicorp.com/t/using-typeset-in-provider-always-adds-an-empty-element-on-update/18566/2
 					if h["url"].(string) != "" {
-						webhookHandler := CustomHandler{
+						webhookHandler := CustomHandlerAPIModel{
 							HandlerType: "custom-webhook",
 							Url:         h["url"].(string),
 						}
@@ -357,14 +432,16 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			return webhookHandlers
 		}
 
-		webhook := CustomBaseParams{
-			Key:         d.GetString("key", false),
-			Description: d.GetString("description", false),
-			Enabled:     d.GetBool("enabled", false),
-			EventFilterAPIModel: EventFilterAPIModel{
-				Domain:     webhookType,
-				EventTypes: d.GetSet("event_types"),
-				Criteria:   unpackCriteria(d, webhookType),
+		webhook := CustomWebookAPIModel{
+			WebhookAPIModel: WebhookAPIModel{
+				Key:         d.GetString("key", false),
+				Description: d.GetString("description", false),
+				Enabled:     d.GetBool("enabled", false),
+				EventFilter: EventFilterAPIModel{
+					Domain:     webhookType,
+					EventTypes: d.GetSet("event_types"),
+					Criteria:   unpackCriteria(d, webhookType),
+				},
 			},
 			Handlers: unpackHandlers(d),
 		}
@@ -372,9 +449,9 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return webhook, nil
 	}
 
-	var packHandlers = func(d *schema.ResourceData, handlers []CustomHandler) []error {
+	var packHandlers = func(d *sdkv2_schema.ResourceData, handlers []CustomHandlerAPIModel) []error {
 		setValue := utilsdk.MkLens(d)
-		resource := domainSchemaLookup(currentSchemaVersion, true, webhookType)[webhookType]["handler"].Elem.(*schema.Resource)
+		resource := domainSchemaLookup(currentSchemaVersion, true, webhookType)[webhookType]["handler"].Elem.(*sdkv2_schema.Resource)
 		packedHandlers := make([]interface{}, len(handlers))
 		for _, handler := range handlers {
 			packedHandler := map[string]interface{}{
@@ -394,18 +471,18 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 			packedHandlers = append(packedHandlers, packedHandler)
 		}
 
-		return setValue("handler", schema.NewSet(schema.HashResource(resource), packedHandlers))
+		return setValue("handler", sdkv2_schema.NewSet(sdkv2_schema.HashResource(resource), packedHandlers))
 	}
 
-	var packWebhook = func(d *schema.ResourceData, webhook CustomBaseParams) diag.Diagnostics {
+	var packWebhook = func(d *sdkv2_schema.ResourceData, webhook CustomWebookAPIModel) diag.Diagnostics {
 		setValue := utilsdk.MkLens(d)
 
 		setValue("key", webhook.Key)
 		setValue("description", webhook.Description)
 		setValue("enabled", webhook.Enabled)
-		errors := setValue("event_types", webhook.EventFilterAPIModel.EventTypes)
-		if webhook.EventFilterAPIModel.Criteria != nil {
-			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilterAPIModel.Criteria.(map[string]interface{}))...)
+		errors := setValue("event_types", webhook.EventFilter.EventTypes)
+		if webhook.EventFilter.Criteria != nil {
+			errors = append(errors, packCriteria(d, webhookType, webhook.EventFilter.Criteria.(map[string]interface{}))...)
 		}
 		errors = append(errors, packHandlers(d, webhook.Handlers)...)
 
@@ -416,10 +493,10 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var readWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
-		webhook := CustomBaseParams{}
+	var readWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) diag.Diagnostics {
+		webhook := CustomWebookAPIModel{}
 
-		webhook.EventFilterAPIModel.Criteria = domainCriteriaLookup[webhookType]
+		webhook.EventFilter.Criteria = domainCriteriaLookup[webhookType]
 
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProviderMetadata).Client.R().
@@ -450,7 +527,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return proxyNotFoundRegex.MatchString(string(response.Body()[:]))
 	}
 
-	var createWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var createWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) diag.Diagnostics {
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return diag.FromErr(err)
@@ -475,7 +552,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return readWebhook(ctx, data, m)
 	}
 
-	var updateWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var updateWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) diag.Diagnostics {
 		webhook, err := unpackWebhook(data)
 		if err != nil {
 			return diag.FromErr(err)
@@ -501,7 +578,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return readWebhook(ctx, data, m)
 	}
 
-	var deleteWebhook = func(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var deleteWebhook = func(ctx context.Context, data *sdkv2_schema.ResourceData, m interface{}) diag.Diagnostics {
 		var artifactoryError artifactory.ArtifactoryErrorsResponse
 		resp, err := m.(util.ProviderMetadata).Client.R().
 			SetPathParam("webhookKey", data.Id()).
@@ -524,8 +601,8 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var eventTypesDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-		eventTypes := diff.Get("event_types").(*schema.Set).List()
+	var eventTypesDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
+		eventTypes := diff.Get("event_types").(*sdkv2_schema.Set).List()
 		if len(eventTypes) == 0 {
 			return nil
 		}
@@ -539,9 +616,9 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	var criteriaDiff = func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	var criteriaDiff = func(ctx context.Context, diff *sdkv2_schema.ResourceDiff, v interface{}) error {
 		if resource, ok := diff.GetOk("criteria"); ok {
-			criteria := resource.(*schema.Set).List()
+			criteria := resource.(*sdkv2_schema.Set).List()
 			if len(criteria) == 0 {
 				return nil
 			}
@@ -551,15 +628,15 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		return nil
 	}
 
-	rs := schema.Resource{
+	rs := sdkv2_schema.Resource{
 		SchemaVersion: 2,
 		CreateContext: createWebhook,
 		ReadContext:   readWebhook,
 		UpdateContext: updateWebhook,
 		DeleteContext: deleteWebhook,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Importer: &sdkv2_schema.ResourceImporter{
+			StateContext: sdkv2_schema.ImportStatePassthroughContext,
 		},
 
 		Schema: domainSchemaLookup(currentSchemaVersion, true, webhookType)[webhookType],
@@ -647,8 +724,8 @@ var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPI
 	"artifact_lifecycle":          unpackEmptyCriteria,
 }
 
-var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
-	return map[string]map[string]*schema.Schema{
+var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
+	return map[string]map[string]*sdkv2_schema.Schema{
 		"artifact":                    repoWebhookSchema(webhookType, version, isCustom),
 		"artifact_property":           repoWebhookSchema(webhookType, version, isCustom),
 		"docker":                      repoWebhookSchema(webhookType, version, isCustom),
@@ -669,7 +746,7 @@ var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[stri
 		"any_local":     artifactoryCriteria["anyLocal"].(bool),
 		"any_remote":    artifactoryCriteria["anyRemote"].(bool),
 		"any_federated": false,
-		"repo_keys":     schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
+		"repo_keys":     sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
 	}
 
 	if v, ok := artifactoryCriteria["anyFederated"]; ok {
@@ -682,14 +759,14 @@ var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[stri
 var packReleaseBundleCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"any_release_bundle":              artifactoryCriteria["anyReleaseBundle"].(bool),
-		"registered_release_bundle_names": schema.NewSet(schema.HashString, artifactoryCriteria["registeredReleaseBundlesNames"].([]interface{})),
+		"registered_release_bundle_names": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["registeredReleaseBundlesNames"].([]interface{})),
 	}
 }
 
 var unpackReleaseBundleCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return ReleaseBundleCriteriaAPIModel{
 		AnyReleaseBundle:              terraformCriteria["any_release_bundle"].(bool),
-		RegisteredReleaseBundlesNames: utilsdk.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*schema.Set).List()),
+		RegisteredReleaseBundlesNames: utilsdk.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*sdkv2_schema.Set).List()),
 		BaseCriteriaAPIModel:          baseCriteria,
 	}
 }
@@ -699,7 +776,7 @@ var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCrit
 		AnyLocal:             terraformCriteria["any_local"].(bool),
 		AnyRemote:            terraformCriteria["any_remote"].(bool),
 		AnyFederated:         terraformCriteria["any_federated"].(bool),
-		RepoKeys:             utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
+		RepoKeys:             utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*sdkv2_schema.Set).List()),
 		BaseCriteriaAPIModel: baseCriteria,
 	}
 }
@@ -707,14 +784,14 @@ var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCrit
 var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"any_build":       artifactoryCriteria["anyBuild"].(bool),
-		"selected_builds": schema.NewSet(schema.HashString, artifactoryCriteria["selectedBuilds"].([]interface{})),
+		"selected_builds": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedBuilds"].([]interface{})),
 	}
 }
 
 var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return BuildCriteriaAPIModel{
 		AnyBuild:             terraformCriteria["any_build"].(bool),
-		SelectedBuilds:       utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
+		SelectedBuilds:       utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*sdkv2_schema.Set).List()),
 		BaseCriteriaAPIModel: baseCriteria,
 	}
 }
@@ -722,27 +799,27 @@ var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCri
 var packReleaseBundleV2Criteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"any_release_bundle":       artifactoryCriteria["anyReleaseBundle"].(bool),
-		"selected_release_bundles": schema.NewSet(schema.HashString, artifactoryCriteria["selectedReleaseBundles"].([]interface{})),
+		"selected_release_bundles": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedReleaseBundles"].([]interface{})),
 	}
 }
 
 var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return ReleaseBundleV2CriteriaAPIModel{
 		AnyReleaseBundle:       terraformCriteria["any_release_bundle"].(bool),
-		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*schema.Set).List()),
+		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*sdkv2_schema.Set).List()),
 		BaseCriteriaAPIModel:   baseCriteria,
 	}
 }
 
 var packReleaseBundleV2PromotionCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
-		"selected_environments": schema.NewSet(schema.HashString, artifactoryCriteria["selectedEnvironments"].([]interface{})),
+		"selected_environments": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedEnvironments"].([]interface{})),
 	}
 }
 
 var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
 	return ReleaseBundleV2PromotionCriteriaAPIModel{
-		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*schema.Set).List()),
+		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*sdkv2_schema.Set).List()),
 	}
 }
 
@@ -758,13 +835,13 @@ var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface
 	var webhookCriteria interface{}
 
 	if v, ok := d.GetOk("criteria"); ok {
-		criteria := v.(*schema.Set).List()
+		criteria := v.(*sdkv2_schema.Set).List()
 		if len(criteria) == 1 {
 			id := criteria[0].(map[string]interface{})
 
 			baseCriteria := BaseCriteriaAPIModel{
-				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*schema.Set).List()),
-				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*schema.Set).List()),
+				IncludePatterns: utilsdk.CastToStringArr(id["include_patterns"].(*sdkv2_schema.Set).List()),
+				ExcludePatterns: utilsdk.CastToStringArr(id["exclude_patterns"].(*sdkv2_schema.Set).List()),
 			}
 
 			webhookCriteria = domainUnpackLookup[webhookType](id, baseCriteria)
@@ -774,25 +851,25 @@ var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface
 	return webhookCriteria
 }
 
-var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map[string]interface{}) []error {
+var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criteria map[string]interface{}) []error {
 	setValue := utilsdk.MkLens(d)
 
-	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*schema.Resource)
+	resource := domainSchemaLookup(currentSchemaVersion, false, webhookType)[webhookType]["criteria"].Elem.(*sdkv2_schema.Resource)
 	packedCriteria := domainPackLookup[webhookType](criteria)
 
 	includePatterns := []interface{}{}
 	if v, ok := criteria["includePatterns"]; ok && v != nil {
 		includePatterns = v.([]interface{})
 	}
-	packedCriteria["include_patterns"] = schema.NewSet(schema.HashString, includePatterns)
+	packedCriteria["include_patterns"] = sdkv2_schema.NewSet(sdkv2_schema.HashString, includePatterns)
 
 	excludePatterns := []interface{}{}
 	if v, ok := criteria["excludePatterns"]; ok && v != nil {
 		excludePatterns = v.([]interface{})
 	}
-	packedCriteria["exclude_patterns"] = schema.NewSet(schema.HashString, excludePatterns)
+	packedCriteria["exclude_patterns"] = sdkv2_schema.NewSet(sdkv2_schema.HashString, excludePatterns)
 
-	return setValue("criteria", schema.NewSet(schema.HashResource(resource), []interface{}{packedCriteria}))
+	return setValue("criteria", sdkv2_schema.NewSet(sdkv2_schema.HashResource(resource), []interface{}{packedCriteria}))
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
@@ -814,7 +891,7 @@ var repoCriteriaValidation = func(ctx context.Context, criteria map[string]inter
 	anyLocal := criteria["any_local"].(bool)
 	anyRemote := criteria["any_remote"].(bool)
 	anyFederated := criteria["any_federated"].(bool)
-	repoKeys := criteria["repo_keys"].(*schema.Set).List()
+	repoKeys := criteria["repo_keys"].(*sdkv2_schema.Set).List()
 
 	if (!anyLocal && !anyRemote && !anyFederated) && len(repoKeys) == 0 {
 		return fmt.Errorf("repo_keys cannot be empty when any_local, any_remote, and any_federated are false")
@@ -825,8 +902,8 @@ var repoCriteriaValidation = func(ctx context.Context, criteria map[string]inter
 
 var buildCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
 	anyBuild := criteria["any_build"].(bool)
-	selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
-	includePatterns := criteria["include_patterns"].(*schema.Set).List()
+	selectedBuilds := criteria["selected_builds"].(*sdkv2_schema.Set).List()
+	includePatterns := criteria["include_patterns"].(*sdkv2_schema.Set).List()
 
 	if !anyBuild && (len(selectedBuilds) == 0 && len(includePatterns) == 0) {
 		return fmt.Errorf("selected_builds or include_patterns cannot be empty when any_build is false")
@@ -837,7 +914,7 @@ var buildCriteriaValidation = func(ctx context.Context, criteria map[string]inte
 
 var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
 	anyReleaseBundle := criteria["any_release_bundle"].(bool)
-	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*schema.Set).List()
+	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*sdkv2_schema.Set).List()
 
 	if !anyReleaseBundle && len(registeredReleaseBundlesNames) == 0 {
 		return fmt.Errorf("registered_release_bundle_names cannot be empty when any_release_bundle is false")
@@ -848,7 +925,7 @@ var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[str
 
 var releaseBundleV2CriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
 	anyReleaseBundle := criteria["any_release_bundle"].(bool)
-	selectedReleaseBundles := criteria["selected_release_bundles"].(*schema.Set).List()
+	selectedReleaseBundles := criteria["selected_release_bundles"].(*sdkv2_schema.Set).List()
 
 	if !anyReleaseBundle && len(selectedReleaseBundles) == 0 {
 		return fmt.Errorf("selected_release_bundles cannot be empty when any_release_bundle is false")
@@ -861,11 +938,11 @@ var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]inte
 	return nil
 }
 
-var packSecret = func(d *schema.ResourceData, url string) string {
+var packSecret = func(d *sdkv2_schema.ResourceData, url string) string {
 	// Get secret from TF state
 	var secret string
 	if v, ok := d.GetOk("handler"); ok {
-		handlers := v.(*schema.Set).List()
+		handlers := v.(*sdkv2_schema.Set).List()
 		for _, handler := range handlers {
 			h := handler.(map[string]interface{})
 			// if urls match, assign the secret value from the state
@@ -877,4 +954,3 @@ var packSecret = func(d *schema.ResourceData, url string) string {
 
 	return secret
 }
-

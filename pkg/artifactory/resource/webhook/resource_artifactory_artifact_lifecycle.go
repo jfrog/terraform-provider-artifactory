@@ -35,7 +35,7 @@ func (r *ArtifactLifecycleWebhookResource) Metadata(ctx context.Context, req res
 }
 
 func (r *ArtifactLifecycleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = r.schema(r.Domain, nil)
+	resp.Schema = r.CreateSchema(r.Domain, nil, handlerBlock)
 }
 
 func (r *ArtifactLifecycleWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

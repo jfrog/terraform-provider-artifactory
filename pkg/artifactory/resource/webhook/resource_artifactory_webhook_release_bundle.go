@@ -97,7 +97,7 @@ func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.
 		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
 	}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+	resp.Schema = r.CreateSchema(r.Domain, &criteriaBlock, handlerBlock)
 	if r.Domain == ReleaseBundleDomain {
 		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
 	}

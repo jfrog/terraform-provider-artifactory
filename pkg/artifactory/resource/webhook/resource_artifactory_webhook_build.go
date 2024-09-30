@@ -66,7 +66,7 @@ func (r *BuildWebhookResource) Schema(ctx context.Context, req resource.SchemaRe
 		Description: "Specifies where the webhook will be applied on which builds.",
 	}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+	resp.Schema = r.CreateSchema(r.Domain, &criteriaBlock, handlerBlock)
 }
 
 func (r *BuildWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

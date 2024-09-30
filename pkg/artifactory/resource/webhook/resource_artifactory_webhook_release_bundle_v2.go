@@ -66,7 +66,7 @@ func (r *ReleaseBundleV2WebhookResource) Schema(ctx context.Context, req resourc
 		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
 	}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+	resp.Schema = r.CreateSchema(r.Domain, &criteriaBlock, handlerBlock)
 }
 
 func (r *ReleaseBundleV2WebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
