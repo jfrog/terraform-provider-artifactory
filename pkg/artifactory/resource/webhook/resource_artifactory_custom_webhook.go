@@ -571,7 +571,7 @@ func ResourceArtifactoryCustomWebhook(webhookType string) *schema.Resource {
 		Description: "Provides an Artifactory webhook resource",
 	}
 
-	if webhookType == "artifactory_release_bundle" {
+	if webhookType == ReleaseBundleDomain {
 		rs.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_custom_webhook resource"
 	}
 

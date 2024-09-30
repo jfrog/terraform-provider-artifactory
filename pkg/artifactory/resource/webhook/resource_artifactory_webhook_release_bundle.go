@@ -98,6 +98,9 @@ func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.
 	}
 
 	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+	if r.Domain == ReleaseBundleDomain {
+		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
+	}
 }
 
 func (r *ReleaseBundleWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
