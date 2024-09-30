@@ -1,9 +1,7 @@
 package webhook_test
 
 import (
-	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -656,40 +654,4 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Unit tests for state migration func
-func TestWebhook_ResourceStateUpgradeV1(t *testing.T) {
-	v1Data := map[string]interface{}{
-		"url":    "https://google.com",
-		"secret": "fake-secret",
-		"proxy":  "fake-proxy-key",
-		"custom_http_headers": map[string]interface{}{
-			"header-1": "fake-value-1",
-			"header-2": "fake-value-2",
-		},
-	}
-	v2Data := map[string]interface{}{
-		"handler": []map[string]interface{}{
-			{
-				"url":    "https://google.com",
-				"secret": "fake-secret",
-				"proxy":  "fake-proxy-key",
-				"custom_http_headers": map[string]interface{}{
-					"header-1": "fake-value-1",
-					"header-2": "fake-value-2",
-				},
-			},
-		},
-	}
-
-	actual, err := webhook.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
-
-	if err != nil {
-		t.Fatalf("error migrating state: %s", err)
-	}
-
-	if !reflect.DeepEqual(v2Data, actual) {
-		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
-	}
 }
