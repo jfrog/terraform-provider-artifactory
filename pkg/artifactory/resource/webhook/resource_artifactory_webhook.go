@@ -142,12 +142,7 @@ func (r *WebhookResource) CreateSchema(domain string, criteriaBlock *schema.SetN
 	}
 
 	if criteriaBlock != nil {
-		blocks = lo.Assign(
-			blocks,
-			map[string]schema.Block{
-				"criteria": *criteriaBlock,
-			},
-		)
+		blocks["criteria"] = *criteriaBlock
 	}
 
 	return schema.Schema{
@@ -207,9 +202,9 @@ func (r *WebhookResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
-func (r *WebhookResource) Create(ctx context.Context, webhook WebhookAPIModel, req resource.CreateRequest, resp *resource.CreateResponse) {
+func createWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, webhook V, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
+	response, err := client.R().
 		SetBody(webhook).
 		SetError(&artifactoryError).
 		AddRetryCondition(retryOnProxyError).
@@ -226,9 +221,13 @@ func (r *WebhookResource) Create(ctx context.Context, webhook WebhookAPIModel, r
 	}
 }
 
-func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
+func (r *WebhookResource) Create(_ context.Context, webhook WebhookAPIModel, req resource.CreateRequest, resp *resource.CreateResponse) {
+	createWebhook(r.ProviderData.Client, webhook, req, resp)
+}
+
+func readWebhook[V WebhookAPIModel | CustomWebhookAPIModel](ctx context.Context, client *resty.Client, key string, webhook *V, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
+	response, err := client.R().
 		SetPathParam("webhookKey", key).
 		SetResult(&webhook).
 		SetError(&artifactoryError).
@@ -251,9 +250,13 @@ func (r *WebhookResource) Read(ctx context.Context, key string, webhook *Webhook
 	return true
 }
 
-func (r *WebhookResource) Update(ctx context.Context, key string, webhook WebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
+	return readWebhook(ctx, r.ProviderData.Client, key, webhook, req, resp)
+}
+
+func updateWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, key string, webhook V, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
-	response, err := r.ProviderData.Client.R().
+	response, err := client.R().
 		SetPathParam("webhookKey", key).
 		SetBody(webhook).
 		AddRetryCondition(retryOnProxyError).
@@ -269,6 +272,10 @@ func (r *WebhookResource) Update(ctx context.Context, key string, webhook Webhoo
 		utilfw.UnableToUpdateResourceError(resp, artifactoryError.String())
 		return
 	}
+}
+
+func (r *WebhookResource) Update(_ context.Context, key string, webhook WebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	updateWebhook(r.ProviderData.Client, key, webhook, req, resp)
 }
 
 func (r *WebhookResource) Delete(ctx context.Context, key string, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -544,10 +551,6 @@ type WebhookAPIModel struct {
 	Enabled     bool                `json:"enabled"`
 	EventFilter EventFilterAPIModel `json:"event_filter"`
 	Handlers    []HandlerAPIModel   `json:"handlers"`
-}
-
-func (w WebhookAPIModel) Id() string {
-	return w.Key
 }
 
 type EventFilterAPIModel struct {
