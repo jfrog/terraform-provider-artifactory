@@ -49,8 +49,6 @@ const (
 
 const currentSchemaVersion = 2
 
-var DomainSupported = []string{}
-
 var DomainEventTypesSupported = map[string][]string{
 	ArtifactDomain:                 {"deployed", "deleted", "moved", "copied", "cached"},
 	ArtifactPropertyDomain:         {"added", "deleted"},

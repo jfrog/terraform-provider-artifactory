@@ -20,6 +20,21 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+var DomainSupported = []string{
+	ArtifactLifecycleDomain,
+	ArtifactPropertyDomain,
+	ArtifactDomain,
+	ArtifactoryReleaseBundleDomain,
+	BuildDomain,
+	DestinationDomain,
+	DistributionDomain,
+	DockerDomain,
+	ReleaseBundleDomain,
+	ReleaseBundleV2Domain,
+	ReleaseBundleV2PromotionDomain,
+	UserDomain,
+}
+
 func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"key": {
@@ -104,6 +119,149 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*schema.Schema {
 			},
 		},
 	}
+}
+
+var repoWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+					"any_local": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any local repositories",
+					},
+					"any_remote": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any remote repositories",
+					},
+					"any_federated": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any federated repositories",
+					},
+					"repo_keys": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of repository keys",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied on which repositories.",
+		},
+	})
+}
+
+var buildWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+					"any_build": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any builds",
+					},
+					"selected_builds": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of build IDs",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied on which builds.",
+		},
+	})
+}
+
+var releaseBundleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+					"any_release_bundle": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any release bundles or distributions",
+					},
+					"registered_release_bundle_names": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of release bundle names",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+		},
+	})
+}
+
+var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+					"any_release_bundle": {
+						Type:        schema.TypeBool,
+						Required:    true,
+						Description: "Trigger on any release bundles or distributions",
+					},
+					"selected_release_bundles": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of release bundle names",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+		},
+	})
+}
+
+var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*schema.Schema{
+		"criteria": {
+			Type:     schema.TypeSet,
+			Required: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*schema.Schema{
+					"selected_environments": {
+						Type:        schema.TypeSet,
+						Required:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "Trigger on this list of environments",
+					},
+				}),
+			},
+			Description: "Specifies where the webhook will be applied, on which release bundles promotion.",
+		},
+	})
+}
+
+var userWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return getBaseSchemaByVersion(webhookType, version, isCustom)
+}
+
+var artifactLifecycleWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*schema.Schema {
+	return getBaseSchemaByVersion(webhookType, version, isCustom)
 }
 
 type CustomBaseParams struct {
@@ -442,14 +600,158 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 	return kvPairs
 }
 
-var domainCriteriaLookup = map[string]interface{}{}
+type EmptyWebhookCriteria struct{}
 
-var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{}
+var domainCriteriaLookup = map[string]interface{}{
+	"artifact":                    RepoCriteriaAPIModel{},
+	"artifact_property":           RepoCriteriaAPIModel{},
+	"docker":                      RepoCriteriaAPIModel{},
+	"build":                       BuildCriteriaAPIModel{},
+	"release_bundle":              ReleaseBundleCriteriaAPIModel{},
+	"distribution":                ReleaseBundleCriteriaAPIModel{},
+	"artifactory_release_bundle":  ReleaseBundleCriteriaAPIModel{},
+	"destination":                 ReleaseBundleCriteriaAPIModel{},
+	"user":                        EmptyWebhookCriteria{},
+	"release_bundle_v2":           ReleaseBundleV2CriteriaAPIModel{},
+	"release_bundle_v2_promotion": ReleaseBundleV2PromotionCriteriaAPIModel{},
+	"artifact_lifecycle":          EmptyWebhookCriteria{},
+}
 
-var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{}
+var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
+	"artifact":                    packRepoCriteria,
+	"artifact_property":           packRepoCriteria,
+	"docker":                      packRepoCriteria,
+	"build":                       packBuildCriteria,
+	"release_bundle":              packReleaseBundleCriteria,
+	"distribution":                packReleaseBundleCriteria,
+	"artifactory_release_bundle":  packReleaseBundleCriteria,
+	"destination":                 packReleaseBundleCriteria,
+	"user":                        packEmptyCriteria,
+	"release_bundle_v2":           packReleaseBundleV2Criteria,
+	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          packEmptyCriteria,
+}
+
+var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
+	"artifact":                    unpackRepoCriteria,
+	"artifact_property":           unpackRepoCriteria,
+	"docker":                      unpackRepoCriteria,
+	"build":                       unpackBuildCriteria,
+	"release_bundle":              unpackReleaseBundleCriteria,
+	"distribution":                unpackReleaseBundleCriteria,
+	"artifactory_release_bundle":  unpackReleaseBundleCriteria,
+	"destination":                 unpackReleaseBundleCriteria,
+	"user":                        unpackEmptyCriteria,
+	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
+	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
+	"artifact_lifecycle":          unpackEmptyCriteria,
+}
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*schema.Schema {
-	return map[string]map[string]*schema.Schema{}
+	return map[string]map[string]*schema.Schema{
+		"artifact":                    repoWebhookSchema(webhookType, version, isCustom),
+		"artifact_property":           repoWebhookSchema(webhookType, version, isCustom),
+		"docker":                      repoWebhookSchema(webhookType, version, isCustom),
+		"build":                       buildWebhookSchema(webhookType, version, isCustom),
+		"release_bundle":              releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"distribution":                releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"artifactory_release_bundle":  releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"destination":                 releaseBundleWebhookSchema(webhookType, version, isCustom),
+		"user":                        userWebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
+		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
+		"artifact_lifecycle":          artifactLifecycleWebhookSchema(webhookType, version, isCustom),
+	}
+}
+
+var packRepoCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	criteria := map[string]interface{}{
+		"any_local":     artifactoryCriteria["anyLocal"].(bool),
+		"any_remote":    artifactoryCriteria["anyRemote"].(bool),
+		"any_federated": false,
+		"repo_keys":     schema.NewSet(schema.HashString, artifactoryCriteria["repoKeys"].([]interface{})),
+	}
+
+	if v, ok := artifactoryCriteria["anyFederated"]; ok {
+		criteria["any_federated"] = v.(bool)
+	}
+
+	return criteria
+}
+
+var packReleaseBundleCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"any_release_bundle":              artifactoryCriteria["anyReleaseBundle"].(bool),
+		"registered_release_bundle_names": schema.NewSet(schema.HashString, artifactoryCriteria["registeredReleaseBundlesNames"].([]interface{})),
+	}
+}
+
+var unpackReleaseBundleCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return ReleaseBundleCriteriaAPIModel{
+		AnyReleaseBundle:              terraformCriteria["any_release_bundle"].(bool),
+		RegisteredReleaseBundlesNames: utilsdk.CastToStringArr(terraformCriteria["registered_release_bundle_names"].(*schema.Set).List()),
+		BaseCriteriaAPIModel:          baseCriteria,
+	}
+}
+
+var unpackRepoCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return RepoCriteriaAPIModel{
+		AnyLocal:             terraformCriteria["any_local"].(bool),
+		AnyRemote:            terraformCriteria["any_remote"].(bool),
+		AnyFederated:         terraformCriteria["any_federated"].(bool),
+		RepoKeys:             utilsdk.CastToStringArr(terraformCriteria["repo_keys"].(*schema.Set).List()),
+		BaseCriteriaAPIModel: baseCriteria,
+	}
+}
+
+var packBuildCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"any_build":       artifactoryCriteria["anyBuild"].(bool),
+		"selected_builds": schema.NewSet(schema.HashString, artifactoryCriteria["selectedBuilds"].([]interface{})),
+	}
+}
+
+var unpackBuildCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return BuildCriteriaAPIModel{
+		AnyBuild:             terraformCriteria["any_build"].(bool),
+		SelectedBuilds:       utilsdk.CastToStringArr(terraformCriteria["selected_builds"].(*schema.Set).List()),
+		BaseCriteriaAPIModel: baseCriteria,
+	}
+}
+
+var packReleaseBundleV2Criteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"any_release_bundle":       artifactoryCriteria["anyReleaseBundle"].(bool),
+		"selected_release_bundles": schema.NewSet(schema.HashString, artifactoryCriteria["selectedReleaseBundles"].([]interface{})),
+	}
+}
+
+var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return ReleaseBundleV2CriteriaAPIModel{
+		AnyReleaseBundle:       terraformCriteria["any_release_bundle"].(bool),
+		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*schema.Set).List()),
+		BaseCriteriaAPIModel:   baseCriteria,
+	}
+}
+
+var packReleaseBundleV2PromotionCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"selected_environments": schema.NewSet(schema.HashString, artifactoryCriteria["selectedEnvironments"].([]interface{})),
+	}
+}
+
+var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return ReleaseBundleV2PromotionCriteriaAPIModel{
+		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*schema.Set).List()),
+	}
+}
+
+var packEmptyCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+var unpackEmptyCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
+	return EmptyWebhookCriteria{}
 }
 
 var unpackCriteria = func(d *utilsdk.ResourceData, webhookType string) interface{} {
@@ -494,7 +796,65 @@ var packCriteria = func(d *schema.ResourceData, webhookType string, criteria map
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	UserDomain: emptyCriteriaValidation,
+	"artifact":                    repoCriteriaValidation,
+	"artifact_property":           repoCriteriaValidation,
+	"docker":                      repoCriteriaValidation,
+	"build":                       buildCriteriaValidation,
+	"release_bundle":              releaseBundleCriteriaValidation,
+	"distribution":                releaseBundleCriteriaValidation,
+	"artifactory_release_bundle":  releaseBundleCriteriaValidation,
+	"destination":                 releaseBundleCriteriaValidation,
+	"user":                        emptyCriteriaValidation,
+	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
+	"release_bundle_v2_promotion": emptyCriteriaValidation,
+	"artifact_lifecycle":          emptyCriteriaValidation,
+}
+
+var repoCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	anyLocal := criteria["any_local"].(bool)
+	anyRemote := criteria["any_remote"].(bool)
+	anyFederated := criteria["any_federated"].(bool)
+	repoKeys := criteria["repo_keys"].(*schema.Set).List()
+
+	if (!anyLocal && !anyRemote && !anyFederated) && len(repoKeys) == 0 {
+		return fmt.Errorf("repo_keys cannot be empty when any_local, any_remote, and any_federated are false")
+	}
+
+	return nil
+}
+
+var buildCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	anyBuild := criteria["any_build"].(bool)
+	selectedBuilds := criteria["selected_builds"].(*schema.Set).List()
+	includePatterns := criteria["include_patterns"].(*schema.Set).List()
+
+	if !anyBuild && (len(selectedBuilds) == 0 && len(includePatterns) == 0) {
+		return fmt.Errorf("selected_builds or include_patterns cannot be empty when any_build is false")
+	}
+
+	return nil
+}
+
+var releaseBundleCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	anyReleaseBundle := criteria["any_release_bundle"].(bool)
+	registeredReleaseBundlesNames := criteria["registered_release_bundle_names"].(*schema.Set).List()
+
+	if !anyReleaseBundle && len(registeredReleaseBundlesNames) == 0 {
+		return fmt.Errorf("registered_release_bundle_names cannot be empty when any_release_bundle is false")
+	}
+
+	return nil
+}
+
+var releaseBundleV2CriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
+	anyReleaseBundle := criteria["any_release_bundle"].(bool)
+	selectedReleaseBundles := criteria["selected_release_bundles"].(*schema.Set).List()
+
+	if !anyReleaseBundle && len(selectedReleaseBundles) == 0 {
+		return fmt.Errorf("selected_release_bundles cannot be empty when any_release_bundle is false")
+	}
+
+	return nil
 }
 
 var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
