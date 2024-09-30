@@ -17,7 +17,6 @@ type GenericRemoteRepo struct {
 }
 
 var genericSchemaV3 = lo.Assign(
-	baseSchema,
 	map[string]*schema.Schema{
 		"propagate_query_params": {
 			Type:        schema.TypeBool,
@@ -47,23 +46,23 @@ var getSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.
 	return map[int16]map[string]*schema.Schema{
 		0: lo.Assign(
 			baseSchemaV1,
-			s,
+			genericSchemaV3,
 		),
 		1: lo.Assign(
 			baseSchemaV1,
-			s,
+			genericSchemaV3,
 		),
 		2: lo.Assign(
 			baseSchemaV2,
-			s,
+			genericSchemaV3,
 		),
 		3: lo.Assign(
 			baseSchemaV3,
-			s,
+			genericSchemaV3,
 		),
 		4: lo.Assign(
 			baseSchemaV3,
-			genericSchemaV4,
+			s,
 		),
 	}
 }
