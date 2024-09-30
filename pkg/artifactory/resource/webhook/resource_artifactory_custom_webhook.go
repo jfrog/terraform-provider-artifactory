@@ -90,35 +90,27 @@ var customHandlerBlock = schema.SetNestedBlock{
 	},
 }
 
-func (r *CustomWebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	r.WebhookResource.Metadata(ctx, req, resp)
-}
-
-func (r *CustomWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.WebhookResource.Configure(ctx, req, resp)
-}
-
 func (r *CustomWebhookResource) CreateSchema(domain string, criteriaBlock *schema.SetNestedBlock) schema.Schema {
 	return r.WebhookResource.CreateSchema(domain, criteriaBlock, customHandlerBlock)
 }
 
-func (r *CustomWebhookResource) Create(ctx context.Context, webhook CustomWebhookAPIModel, req resource.CreateRequest, resp *resource.CreateResponse) {
-	createWebhook(r.ProviderData.Client, webhook, req, resp)
+func (r *CustomWebhookResource) Create(ctx context.Context, webhook CustomWebhookAPIModel, resp *resource.CreateResponse) {
+	createWebhook(r.ProviderData.Client, webhook, resp)
 }
 
-func (r *CustomWebhookResource) Read(ctx context.Context, key string, webhook *CustomWebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
-	return readWebhook(ctx, r.ProviderData.Client, key, webhook, req, resp)
+func (r *CustomWebhookResource) Read(ctx context.Context, key string, webhook *CustomWebhookAPIModel, resp *resource.ReadResponse) (found bool) {
+	return readWebhook(ctx, r.ProviderData.Client, key, webhook, resp)
 }
 
-func (r *CustomWebhookResource) Update(_ context.Context, key string, webhook CustomWebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	updateWebhook(r.ProviderData.Client, key, webhook, req, resp)
+func (r *CustomWebhookResource) Update(_ context.Context, key string, webhook CustomWebhookAPIModel, resp *resource.UpdateResponse) {
+	updateWebhook(r.ProviderData.Client, key, webhook, resp)
 }
 
-type CustomWebhookNoCriteriaResourceModel struct {
-	WebhookNoCriteriaResourceModel
+type CustomWebhookBaseResourceModel struct {
+	WebhookBaseResourceModel
 }
 
-func (m CustomWebhookNoCriteriaResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
+func (m CustomWebhookBaseResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
 	var eventTypes []string
 	d := m.EventTypes.ElementsAs(ctx, &eventTypes, false)
 	if d.HasError() {
@@ -189,7 +181,7 @@ var customHandlerSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: customHandlerSetResourceModelAttributeTypes,
 }
 
-func (m *CustomWebhookNoCriteriaResourceModel) fromAPIModel(ctx context.Context, apiModel CustomWebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+func (m *CustomWebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiModel CustomWebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	m.Key = types.StringValue(apiModel.Key)
@@ -278,66 +270,16 @@ func (m *CustomWebhookNoCriteriaResourceModel) fromAPIModel(ctx context.Context,
 }
 
 type CustomWebhookResourceModel struct {
-	CustomWebhookNoCriteriaResourceModel
-	Criteria types.Set `tfsdk:"criteria"`
-}
-
-func (m *CustomWebhookResourceModel) toBaseCriteriaAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (BaseCriteriaAPIModel, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-
-	var includePatterns []string
-	d := criteriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	var excludePatterns []string
-	d = criteriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	return BaseCriteriaAPIModel{
-		IncludePatterns: includePatterns,
-		ExcludePatterns: excludePatterns,
-	}, diags
+	CustomWebhookBaseResourceModel
+	WebhookCriteriaResourceModel
 }
 
 func (m CustomWebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
-	d := m.CustomWebhookNoCriteriaResourceModel.toAPIModel(ctx, domain, apiModel)
+	d := m.CustomWebhookBaseResourceModel.toAPIModel(ctx, domain, apiModel)
 
 	apiModel.EventFilter.Criteria = criteriaAPIModel
 
 	return d
-}
-
-func (m *CustomWebhookResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}) (map[string]attr.Value, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-
-	includePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		includePatterns = ps
-	}
-
-	excludePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		excludePatterns = ps
-	}
-
-	return map[string]attr.Value{
-		"include_patterns": includePatterns,
-		"exclude_patterns": excludePatterns,
-	}, diags
 }
 
 func (m *CustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel CustomWebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet *basetypes.SetValue) diag.Diagnostics {
@@ -345,7 +287,7 @@ func (m *CustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel 
 		m.Criteria = *criteriaSet
 	}
 
-	return m.CustomWebhookNoCriteriaResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
+	return m.CustomWebhookBaseResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
 }
 
 var DomainSupported = []string{

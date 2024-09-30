@@ -202,7 +202,7 @@ func (r *WebhookResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
-func createWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, webhook V, req resource.CreateRequest, resp *resource.CreateResponse) {
+func createWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, webhook V, resp *resource.CreateResponse) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := client.R().
 		SetBody(webhook).
@@ -221,11 +221,11 @@ func createWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Clie
 	}
 }
 
-func (r *WebhookResource) Create(_ context.Context, webhook WebhookAPIModel, req resource.CreateRequest, resp *resource.CreateResponse) {
-	createWebhook(r.ProviderData.Client, webhook, req, resp)
+func (r *WebhookResource) Create(_ context.Context, webhook WebhookAPIModel, resp *resource.CreateResponse) {
+	createWebhook(r.ProviderData.Client, webhook, resp)
 }
 
-func readWebhook[V WebhookAPIModel | CustomWebhookAPIModel](ctx context.Context, client *resty.Client, key string, webhook *V, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
+func readWebhook[V WebhookAPIModel | CustomWebhookAPIModel](ctx context.Context, client *resty.Client, key string, webhook *V, resp *resource.ReadResponse) (found bool) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := client.R().
 		SetPathParam("webhookKey", key).
@@ -250,11 +250,11 @@ func readWebhook[V WebhookAPIModel | CustomWebhookAPIModel](ctx context.Context,
 	return true
 }
 
-func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, req resource.ReadRequest, resp *resource.ReadResponse) (found bool) {
-	return readWebhook(ctx, r.ProviderData.Client, key, webhook, req, resp)
+func (r *WebhookResource) Read(ctx context.Context, key string, webhook *WebhookAPIModel, resp *resource.ReadResponse) (found bool) {
+	return readWebhook(ctx, r.ProviderData.Client, key, webhook, resp)
 }
 
-func updateWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, key string, webhook V, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func updateWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Client, key string, webhook V, resp *resource.UpdateResponse) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := client.R().
 		SetPathParam("webhookKey", key).
@@ -274,11 +274,11 @@ func updateWebhook[V WebhookAPIModel | CustomWebhookAPIModel](client *resty.Clie
 	}
 }
 
-func (r *WebhookResource) Update(_ context.Context, key string, webhook WebhookAPIModel, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	updateWebhook(r.ProviderData.Client, key, webhook, req, resp)
+func (r *WebhookResource) Update(_ context.Context, key string, webhook WebhookAPIModel, resp *resource.UpdateResponse) {
+	updateWebhook(r.ProviderData.Client, key, webhook, resp)
 }
 
-func (r *WebhookResource) Delete(ctx context.Context, key string, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *WebhookResource) Delete(ctx context.Context, key string, resp *resource.DeleteResponse) {
 	var artifactoryError artifactory.ArtifactoryErrorsResponse
 	response, err := r.ProviderData.Client.R().
 		SetPathParam("webhookKey", key).
@@ -306,7 +306,7 @@ func (r *WebhookResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }
 
-type WebhookNoCriteriaResourceModel struct {
+type WebhookBaseResourceModel struct {
 	Key         types.String `tfsdk:"key"`
 	Description types.String `tfsdk:"description"`
 	Enabled     types.Bool   `tfsdk:"enabled"`
@@ -314,12 +314,7 @@ type WebhookNoCriteriaResourceModel struct {
 	Handlers    types.Set    `tfsdk:"handler"`
 }
 
-type WebhookResourceModel struct {
-	WebhookNoCriteriaResourceModel
-	Criteria types.Set `tfsdk:"criteria"`
-}
-
-func (m WebhookNoCriteriaResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+func (m WebhookBaseResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
 	var eventTypes []string
 	d := m.EventTypes.ElementsAs(ctx, &eventTypes, false)
 	if d.HasError() {
@@ -366,40 +361,6 @@ func (m WebhookNoCriteriaResourceModel) toAPIModel(ctx context.Context, domain s
 	return
 }
 
-func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	d := m.WebhookNoCriteriaResourceModel.toAPIModel(ctx, domain, apiModel)
-
-	apiModel.EventFilter.Criteria = criteriaAPIModel
-
-	return d
-}
-
-func (m *WebhookResourceModel) toBaseCriteriaAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (BaseCriteriaAPIModel, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-
-	var includePatterns []string
-	d := criteriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	var excludePatterns []string
-	d = criteriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
-	return BaseCriteriaAPIModel{
-		IncludePatterns: includePatterns,
-		ExcludePatterns: excludePatterns,
-	}, diags
-}
-
-var patternsCriteriaSetResourceModelAttributeTypes = map[string]attr.Type{
-	"include_patterns": types.SetType{ElemType: types.StringType},
-	"exclude_patterns": types.SetType{ElemType: types.StringType},
-}
-
 var handlerSetResourceModelAttributeTypes = map[string]attr.Type{
 	"url":                    types.StringType,
 	"secret":                 types.StringType,
@@ -412,36 +373,7 @@ var handlerSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: handlerSetResourceModelAttributeTypes,
 }
 
-func (m *WebhookResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}) (map[string]attr.Value, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-
-	includePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		includePatterns = ps
-	}
-
-	excludePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
-		ps, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
-		}
-
-		excludePatterns = ps
-	}
-
-	return map[string]attr.Value{
-		"include_patterns": includePatterns,
-		"exclude_patterns": excludePatterns,
-	}, diags
-}
-
-func (m *WebhookNoCriteriaResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+func (m *WebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	m.Key = types.StringValue(apiModel.Key)
@@ -537,12 +469,84 @@ func (m *WebhookNoCriteriaResourceModel) fromAPIModel(ctx context.Context, apiMo
 	return diags
 }
 
+type WebhookCriteriaResourceModel struct {
+	Criteria types.Set `tfsdk:"criteria"`
+}
+
+func (m *WebhookCriteriaResourceModel) toBaseCriteriaAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (BaseCriteriaAPIModel, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	var includePatterns []string
+	d := criteriaAttrs["include_patterns"].(types.Set).ElementsAs(ctx, &includePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	var excludePatterns []string
+	d = criteriaAttrs["exclude_patterns"].(types.Set).ElementsAs(ctx, &excludePatterns, false)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return BaseCriteriaAPIModel{
+		IncludePatterns: includePatterns,
+		ExcludePatterns: excludePatterns,
+	}, diags
+}
+
+var patternsCriteriaSetResourceModelAttributeTypes = map[string]attr.Type{
+	"include_patterns": types.SetType{ElemType: types.StringType},
+	"exclude_patterns": types.SetType{ElemType: types.StringType},
+}
+
+func (m *WebhookCriteriaResourceModel) fromBaseCriteriaAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}) (map[string]attr.Value, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	includePatterns := types.SetNull(types.StringType)
+	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
+		ps, d := types.SetValueFrom(ctx, types.StringType, v)
+		if d.HasError() {
+			diags.Append(d...)
+		}
+
+		includePatterns = ps
+	}
+
+	excludePatterns := types.SetNull(types.StringType)
+	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
+		ps, d := types.SetValueFrom(ctx, types.StringType, v)
+		if d.HasError() {
+			diags.Append(d...)
+		}
+
+		excludePatterns = ps
+	}
+
+	return map[string]attr.Value{
+		"include_patterns": includePatterns,
+		"exclude_patterns": excludePatterns,
+	}, diags
+}
+
+type WebhookResourceModel struct {
+	WebhookBaseResourceModel
+	WebhookCriteriaResourceModel
+}
+
+func (m WebhookResourceModel) toAPIModel(ctx context.Context, domain string, criteriaAPIModel interface{}, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	d := m.WebhookBaseResourceModel.toAPIModel(ctx, domain, apiModel)
+
+	apiModel.EventFilter.Criteria = criteriaAPIModel
+
+	return d
+}
+
 func (m *WebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue, criteriaSet *basetypes.SetValue) diag.Diagnostics {
 	if criteriaSet != nil {
 		m.Criteria = *criteriaSet
 	}
 
-	return m.WebhookNoCriteriaResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
+	return m.WebhookBaseResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
 }
 
 type WebhookAPIModel struct {

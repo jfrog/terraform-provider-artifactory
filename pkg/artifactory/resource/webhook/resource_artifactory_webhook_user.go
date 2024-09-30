@@ -23,11 +23,11 @@ func NewUserWebhookResource() resource.Resource {
 }
 
 type UserWebhookResourceModel struct {
-	WebhookNoCriteriaResourceModel
+	WebhookBaseResourceModel
 }
 
 func (m UserWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	d := m.WebhookNoCriteriaResourceModel.toAPIModel(ctx, domain, apiModel)
+	d := m.WebhookBaseResourceModel.toAPIModel(ctx, domain, apiModel)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -38,7 +38,7 @@ func (m UserWebhookResourceModel) toAPIModel(ctx context.Context, domain string,
 func (m *UserWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	d := m.WebhookNoCriteriaResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
+	d := m.WebhookBaseResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -79,7 +79,7 @@ func (r *UserWebhookResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -100,7 +100,7 @@ func (r *UserWebhookResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -135,7 +135,7 @@ func (r *UserWebhookResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -152,7 +152,7 @@ func (r *UserWebhookResource) Delete(ctx context.Context, req resource.DeleteReq
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -2,6 +2,7 @@ package webhook_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,6 +13,51 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
+
+func TestAccCustomWebhook_CriteriaValidation(t *testing.T) {
+	for _, webhookType := range []string{webhook.ArtifactDomain, webhook.ArtifactPropertyDomain, webhook.ArtifactoryReleaseBundleDomain, webhook.BuildDomain, webhook.DestinationDomain, webhook.DistributionDomain, webhook.DockerDomain, webhook.ReleaseBundleDomain, webhook.ReleaseBundleV2Domain} {
+		t.Run(webhookType, func(t *testing.T) {
+			resource.Test(customWebhookCriteriaValidationTestCase(webhookType, t))
+		})
+	}
+}
+
+func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("webhook-%d", id)
+	fqrn := fmt.Sprintf("artifactory_%s_custom_webhook.%s", webhookType, name)
+
+	var template string
+	switch webhookType {
+	case "artifact", "artifact_property", "docker":
+		template = repoTemplate
+	case "build":
+		template = buildTemplate
+	case "release_bundle", "distribution", "artifactory_release_bundle", "destination":
+		template = releaseBundleTemplate
+	case "release_bundle_v2":
+		template = releaseBundleV2Template
+	}
+
+	params := map[string]interface{}{
+		"webhookType": webhookType,
+		"webhookName": name,
+		"eventTypes":  webhook.DomainEventTypesSupported[webhookType],
+	}
+	webhookConfig := util.ExecuteTemplate("TestAccCustomWebhookCriteriaValidation", template, params)
+
+	return t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      webhookConfig,
+				ExpectError: regexp.MustCompile(domainValidationErrorMessageLookup[webhookType]),
+			},
+		},
+	}
+}
 
 func TestAccCustomWebhook_AllTypes(t *testing.T) {
 	// Can only realistically test these 3 types of webhook since creating

@@ -12,66 +12,42 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var _ resource.Resource = &RepoCustomWebhookResource{}
+var _ resource.Resource = &BuildCustomWebhookResource{}
 
-func NewArtifactCustomWebhookResource() resource.Resource {
-	return &RepoCustomWebhookResource{
+func NewCustomBuildWebhookResource() resource.Resource {
+	return &BuildCustomWebhookResource{
 		CustomWebhookResource: CustomWebhookResource{
 			WebhookResource: WebhookResource{
-				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", ArtifactDomain),
-				Domain:      ArtifactDomain,
-				Description: "Provides an artifact webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
+				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", BuildDomain),
+				Domain:      BuildDomain,
+				Description: "Provides a build webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
 			},
 		},
 	}
 }
 
-func NewArtifactPropertyCustomWebhookResource() resource.Resource {
-	return &RepoCustomWebhookResource{
-		CustomWebhookResource: CustomWebhookResource{
-			WebhookResource: WebhookResource{
-				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", ArtifactPropertyDomain),
-				Domain:      ArtifactPropertyDomain,
-				Description: "Provides an artifact property webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
-			},
-		},
-	}
-}
-
-func NewDockerCustomWebhookResource() resource.Resource {
-	return &RepoCustomWebhookResource{
-		CustomWebhookResource: CustomWebhookResource{
-			WebhookResource: WebhookResource{
-				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", DockerDomain),
-				Domain:      DockerDomain,
-				Description: "Provides a Docker webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.",
-			},
-		},
-	}
-}
-
-type RepoCustomWebhookResourceModel struct {
+type BuildCustomWebhookResourceModel struct {
 	CustomWebhookResourceModel
 }
 
-type RepoCustomWebhookResource struct {
+type BuildCustomWebhookResource struct {
 	CustomWebhookResource
 }
 
-func (r *RepoCustomWebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *BuildCustomWebhookResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
-func (r *RepoCustomWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = r.CreateSchema(r.Domain, &repoCriteriaBlock)
+func (r *BuildCustomWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = r.CreateSchema(r.Domain, &buildCriteriaBlock)
 }
 
-func (r *RepoCustomWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *BuildCustomWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.WebhookResource.Configure(ctx, req, resp)
 }
 
-func (r RepoCustomWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data RepoWebhookResourceModel
+func (r BuildCustomWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data BuildCustomWebhookResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -81,23 +57,21 @@ func (r RepoCustomWebhookResource) ValidateConfig(ctx context.Context, req resou
 	criteriaObj := data.Criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
-	anyLocal := criteriaAttrs["any_local"].(types.Bool).ValueBool()
-	anyRemote := criteriaAttrs["any_remote"].(types.Bool).ValueBool()
-	anyFederated := criteriaAttrs["any_federated"].(types.Bool).ValueBool()
+	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
 
-	if (!anyLocal && !anyRemote && !anyFederated) && len(criteriaAttrs["repo_keys"].(types.Set).Elements()) == 0 {
+	if !anyBuild && len(criteriaAttrs["selected_builds"].(types.Set).Elements()) == 0 && len(criteriaAttrs["include_patterns"].(types.Set).Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("criteria").AtSetValue(criteriaObj).AtName("repo_keys"),
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_build"),
 			"Invalid Attribute Configuration",
-			"repo_keys cannot be empty when any_local, any_remote, and any_federated are false",
+			"selected_builds or include_patterns cannot be empty when any_build is false",
 		)
 	}
 }
 
-func (r *RepoCustomWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *BuildCustomWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var plan RepoCustomWebhookResourceModel
+	var plan BuildCustomWebhookResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -120,10 +94,10 @@ func (r *RepoCustomWebhookResource) Create(ctx context.Context, req resource.Cre
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *RepoCustomWebhookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *BuildCustomWebhookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var state RepoCustomWebhookResourceModel
+	var state BuildCustomWebhookResourceModel
 
 	// Read Terraform state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -150,10 +124,10 @@ func (r *RepoCustomWebhookResource) Read(ctx context.Context, req resource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *RepoCustomWebhookResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *BuildCustomWebhookResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var plan RepoCustomWebhookResourceModel
+	var plan BuildCustomWebhookResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -176,10 +150,10 @@ func (r *RepoCustomWebhookResource) Update(ctx context.Context, req resource.Upd
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *RepoCustomWebhookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *BuildCustomWebhookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var state RepoCustomWebhookResourceModel
+	var state BuildWebhookResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -194,11 +168,11 @@ func (r *RepoCustomWebhookResource) Delete(ctx context.Context, req resource.Del
 }
 
 // ImportState imports the resource into the Terraform state.
-func (r *RepoCustomWebhookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *BuildCustomWebhookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-func (m RepoCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
+func (m BuildCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
 	critieriaObj := m.Criteria.Elements()[0].(types.Object)
 	critieriaAttrs := critieriaObj.Attributes()
 
@@ -207,7 +181,10 @@ func (m RepoCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain s
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	d = m.CustomWebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
 	if d.HasError() {
@@ -217,14 +194,14 @@ func (m RepoCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain s
 	return
 }
 
-func (m *RepoCustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel CustomWebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+func (m *BuildCustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel CustomWebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.CustomWebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
 
-	criteriaSet, d := fromRepoCriteriaAPIMode(ctx, criteriaAPIModel, baseCriteriaAttrs)
+	criteriaSet, d := fromBuildAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
