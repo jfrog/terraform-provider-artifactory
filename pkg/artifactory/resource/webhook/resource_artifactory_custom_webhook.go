@@ -291,7 +291,6 @@ func (m *CustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel 
 }
 
 var DomainSupported = []string{
-	ReleaseBundleV2Domain,
 	ReleaseBundleV2PromotionDomain,
 	UserDomain,
 }
@@ -380,32 +379,6 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*sdkv2_schema.Sc
 			},
 		},
 	}
-}
-
-var releaseBundleV2WebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
-		"criteria": {
-			Type:     sdkv2_schema.TypeSet,
-			Required: true,
-			MaxItems: 1,
-			Elem: &sdkv2_schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
-					"any_release_bundle": {
-						Type:        sdkv2_schema.TypeBool,
-						Required:    true,
-						Description: "Trigger on any release bundles or distributions",
-					},
-					"selected_release_bundles": {
-						Type:        sdkv2_schema.TypeSet,
-						Required:    true,
-						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
-						Description: "Trigger on this list of release bundle names",
-					},
-				}),
-			},
-			Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
-		},
-	})
 }
 
 var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
@@ -781,42 +754,23 @@ type EmptyWebhookCriteria struct{}
 
 var domainCriteriaLookup = map[string]interface{}{
 	"user":                        EmptyWebhookCriteria{},
-	"release_bundle_v2":           ReleaseBundleV2CriteriaAPIModel{},
 	"release_bundle_v2_promotion": ReleaseBundleV2PromotionCriteriaAPIModel{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
 	"user":                        packEmptyCriteria,
-	"release_bundle_v2":           packReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
 	"user":                        unpackEmptyCriteria,
-	"release_bundle_v2":           unpackReleaseBundleV2Criteria,
 	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
 	return map[string]map[string]*sdkv2_schema.Schema{
 		"user":                        userWebhookSchema(webhookType, version, isCustom),
-		"release_bundle_v2":           releaseBundleV2WebhookSchema(webhookType, version, isCustom),
 		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
-	}
-}
-
-var packReleaseBundleV2Criteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"any_release_bundle":       artifactoryCriteria["anyReleaseBundle"].(bool),
-		"selected_release_bundles": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedReleaseBundles"].([]interface{})),
-	}
-}
-
-var unpackReleaseBundleV2Criteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-	return ReleaseBundleV2CriteriaAPIModel{
-		AnyReleaseBundle:       terraformCriteria["any_release_bundle"].(bool),
-		SelectedReleaseBundles: utilsdk.CastToStringArr(terraformCriteria["selected_release_bundles"].(*sdkv2_schema.Set).List()),
-		BaseCriteriaAPIModel:   baseCriteria,
 	}
 }
 
@@ -883,19 +837,7 @@ var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criter
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
 	"user":                        emptyCriteriaValidation,
-	"release_bundle_v2":           releaseBundleV2CriteriaValidation,
 	"release_bundle_v2_promotion": emptyCriteriaValidation,
-}
-
-var releaseBundleV2CriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
-	anyReleaseBundle := criteria["any_release_bundle"].(bool)
-	selectedReleaseBundles := criteria["selected_release_bundles"].(*sdkv2_schema.Set).List()
-
-	if !anyReleaseBundle && len(selectedReleaseBundles) == 0 {
-		return fmt.Errorf("selected_release_bundles cannot be empty when any_release_bundle is false")
-	}
-
-	return nil
 }
 
 var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
