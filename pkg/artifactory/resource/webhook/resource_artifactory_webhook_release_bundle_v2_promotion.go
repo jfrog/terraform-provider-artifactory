@@ -173,11 +173,11 @@ func (r *ReleaseBundleV2PromotionWebhookResource) ImportState(ctx context.Contex
 }
 
 func (m ReleaseBundleV2PromotionWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
 	var environments []string
-	d := critieriaAttrs["selected_environments"].(types.Set).ElementsAs(ctx, &environments, false)
+	d := criteriaAttrs["selected_environments"].(types.Set).ElementsAs(ctx, &environments, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}

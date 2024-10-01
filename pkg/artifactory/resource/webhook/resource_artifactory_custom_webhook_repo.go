@@ -199,15 +199,15 @@ func (r *RepoCustomWebhookResource) ImportState(ctx context.Context, req resourc
 }
 
 func (m RepoCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
-	baseCriteria, d := m.CustomWebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	baseCriteria, d := m.CustomWebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
 
 	d = m.CustomWebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
 	if d.HasError() {

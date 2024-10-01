@@ -200,23 +200,23 @@ func (r *ReleaseBundleV2WebhookResource) ImportState(ctx context.Context, req re
 }
 
 func (m ReleaseBundleV2WebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
 	var releaseBundleNames []string
-	d = critieriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
+	d = criteriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
 	criteriaAPIModel := ReleaseBundleV2CriteriaAPIModel{
 		BaseCriteriaAPIModel:   baseCriteria,
-		AnyReleaseBundle:       critieriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
+		AnyReleaseBundle:       criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
 		SelectedReleaseBundles: releaseBundleNames,
 	}
 

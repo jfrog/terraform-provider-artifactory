@@ -199,7 +199,7 @@ func (r *BuildWebhookResource) ImportState(ctx context.Context, req resource.Imp
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-var toBuildCriteriaAPIModel = func(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel BuildCriteriaAPIModel, diags diag.Diagnostics) {
+func toBuildCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel BuildCriteriaAPIModel, diags diag.Diagnostics) {
 	var selectedBuilds []string
 	d := criteriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
 	if d.HasError() {
@@ -216,15 +216,15 @@ var toBuildCriteriaAPIModel = func(ctx context.Context, baseCriteria BaseCriteri
 }
 
 func (m BuildWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -249,7 +249,7 @@ var buildCriteriaSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: buildCriteriaSetResourceModelAttributeTypes,
 }
 
-var fromBuildAPIModel = func(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
+func fromBuildAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	selectedBuilds := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["selectedBuilds"]; ok && v != nil {
 		sb, d := types.SetValueFrom(ctx, types.StringType, v)

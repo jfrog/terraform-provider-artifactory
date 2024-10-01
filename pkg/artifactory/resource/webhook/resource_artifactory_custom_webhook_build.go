@@ -14,7 +14,7 @@ import (
 
 var _ resource.Resource = &BuildCustomWebhookResource{}
 
-func NewCustomBuildWebhookResource() resource.Resource {
+func NewBuildCustomWebhookResource() resource.Resource {
 	return &BuildCustomWebhookResource{
 		CustomWebhookResource: CustomWebhookResource{
 			WebhookResource: WebhookResource{
@@ -173,15 +173,15 @@ func (r *BuildCustomWebhookResource) ImportState(ctx context.Context, req resour
 }
 
 func (m BuildCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *CustomWebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
-	baseCriteria, d := m.CustomWebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	baseCriteria, d := m.CustomWebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}

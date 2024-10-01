@@ -229,7 +229,7 @@ func (r *RepoWebhookResource) ImportState(ctx context.Context, req resource.Impo
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-var toRepoCriteriaAPIModel = func(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel RepoCriteriaAPIModel, diags diag.Diagnostics) {
+func toRepoCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel RepoCriteriaAPIModel, diags diag.Diagnostics) {
 	var repoKeys []string
 	d := criteriaAttrs["repo_keys"].(types.Set).ElementsAs(ctx, &repoKeys, false)
 	if d.HasError() {
@@ -248,15 +248,15 @@ var toRepoCriteriaAPIModel = func(ctx context.Context, baseCriteria BaseCriteria
 }
 
 func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
 
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, critieriaAttrs)
+	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
 	if d.HasError() {
@@ -280,7 +280,7 @@ var repoCriteriaSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: repoCriteriaSetResourceModelAttributeTypes,
 }
 
-var fromRepoCriteriaAPIMode = func(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
+func fromRepoCriteriaAPIMode(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	repoKeys := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["repoKeys"]; ok && v != nil {
 		ks, d := types.SetValueFrom(ctx, types.StringType, v)
