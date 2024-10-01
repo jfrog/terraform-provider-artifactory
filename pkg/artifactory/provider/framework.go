@@ -241,7 +241,9 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		webhook.NewReleaseBundleWebhookResource,
 		webhook.NewReleaseBundleCustomWebhookResource,
 		webhook.NewReleaseBundleV2WebhookResource,
+		webhook.NewReleaseBundleV2CustomWebhookResource,
 		webhook.NewReleaseBundleV2PromotionWebhookResource,
+		webhook.NewReleaseBundleV2PromotionCustomWebhookResource,
 		webhook.NewUserWebhookResource,
 	}
 }

@@ -291,7 +291,6 @@ func (m *CustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel 
 }
 
 var DomainSupported = []string{
-	ReleaseBundleV2PromotionDomain,
 	UserDomain,
 }
 
@@ -379,27 +378,6 @@ func baseCustomWebhookBaseSchema(webhookType string) map[string]*sdkv2_schema.Sc
 			},
 		},
 	}
-}
-
-var releaseBundleV2PromotionWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
-	return utilsdk.MergeMaps(getBaseSchemaByVersion(webhookType, version, isCustom), map[string]*sdkv2_schema.Schema{
-		"criteria": {
-			Type:     sdkv2_schema.TypeSet,
-			Required: true,
-			MaxItems: 1,
-			Elem: &sdkv2_schema.Resource{
-				Schema: utilsdk.MergeMaps(baseCriteriaSchema, map[string]*sdkv2_schema.Schema{
-					"selected_environments": {
-						Type:        sdkv2_schema.TypeSet,
-						Required:    true,
-						Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
-						Description: "Trigger on this list of environments",
-					},
-				}),
-			},
-			Description: "Specifies where the webhook will be applied, on which release bundles promotion.",
-		},
-	})
 }
 
 var userWebhookSchema = func(webhookType string, version int, isCustom bool) map[string]*sdkv2_schema.Schema {
@@ -753,36 +731,20 @@ var packKeyValuePair = func(keyValuePairs []KeyValuePairAPIModel) map[string]int
 type EmptyWebhookCriteria struct{}
 
 var domainCriteriaLookup = map[string]interface{}{
-	"user":                        EmptyWebhookCriteria{},
-	"release_bundle_v2_promotion": ReleaseBundleV2PromotionCriteriaAPIModel{},
+	"user": EmptyWebhookCriteria{},
 }
 
 var domainPackLookup = map[string]func(map[string]interface{}) map[string]interface{}{
-	"user":                        packEmptyCriteria,
-	"release_bundle_v2_promotion": packReleaseBundleV2PromotionCriteria,
+	"user": packEmptyCriteria,
 }
 
 var domainUnpackLookup = map[string]func(map[string]interface{}, BaseCriteriaAPIModel) interface{}{
-	"user":                        unpackEmptyCriteria,
-	"release_bundle_v2_promotion": unpackReleaseBundleV2PromotionCriteria,
+	"user": unpackEmptyCriteria,
 }
 
 var domainSchemaLookup = func(version int, isCustom bool, webhookType string) map[string]map[string]*sdkv2_schema.Schema {
 	return map[string]map[string]*sdkv2_schema.Schema{
-		"user":                        userWebhookSchema(webhookType, version, isCustom),
-		"release_bundle_v2_promotion": releaseBundleV2PromotionWebhookSchema(webhookType, version, isCustom),
-	}
-}
-
-var packReleaseBundleV2PromotionCriteria = func(artifactoryCriteria map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"selected_environments": sdkv2_schema.NewSet(sdkv2_schema.HashString, artifactoryCriteria["selectedEnvironments"].([]interface{})),
-	}
-}
-
-var unpackReleaseBundleV2PromotionCriteria = func(terraformCriteria map[string]interface{}, baseCriteria BaseCriteriaAPIModel) interface{} {
-	return ReleaseBundleV2PromotionCriteriaAPIModel{
-		SelectedEnvironments: utilsdk.CastToStringArr(terraformCriteria["selected_environments"].(*sdkv2_schema.Set).List()),
+		"user": userWebhookSchema(webhookType, version, isCustom),
 	}
 }
 
@@ -836,8 +798,7 @@ var packCriteria = func(d *sdkv2_schema.ResourceData, webhookType string, criter
 }
 
 var domainCriteriaValidationLookup = map[string]func(context.Context, map[string]interface{}) error{
-	"user":                        emptyCriteriaValidation,
-	"release_bundle_v2_promotion": emptyCriteriaValidation,
+	"user": emptyCriteriaValidation,
 }
 
 var emptyCriteriaValidation = func(ctx context.Context, criteria map[string]interface{}) error {
