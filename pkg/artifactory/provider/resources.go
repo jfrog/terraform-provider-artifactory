@@ -124,9 +124,7 @@ func resourcesMap() map[string]*schema.Resource {
 		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
 	}
 
-	for _, webhookType := range webhook.TypesSupported {
-		webhookResourceName := fmt.Sprintf("artifactory_%s_webhook", webhookType)
-		resourcesMap[webhookResourceName] = webhook.ResourceArtifactoryWebhook(webhookType)
+	for _, webhookType := range webhook.DomainSupported {
 		webhookCustomResourceName := fmt.Sprintf("artifactory_%s_custom_webhook", webhookType)
 		resourcesMap[webhookCustomResourceName] = webhook.ResourceArtifactoryCustomWebhook(webhookType)
 	}

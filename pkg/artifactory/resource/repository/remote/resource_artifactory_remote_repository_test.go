@@ -1204,7 +1204,7 @@ func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy: acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -1223,8 +1223,11 @@ func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
 			{
 				ProviderFactories: acctest.ProviderFactories,
 				Config:            config,
-				PlanOnly:          true,
-				ConfigPlanChecks:  testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

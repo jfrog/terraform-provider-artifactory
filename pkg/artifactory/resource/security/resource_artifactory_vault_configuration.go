@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -323,10 +322,6 @@ func (r VaultConfigurationResource) ValidateConfig(ctx context.Context, req reso
 	configAttrs := data.Config.Attributes()
 	authAttrs := configAttrs["auth"].(types.Object).Attributes()
 	authType := authAttrs["type"].(types.String)
-	tflog.Debug(ctx, "ValidateConfig", map[string]interface{}{
-		"configAttrs": configAttrs,
-		"authAttrs":   authAttrs,
-	})
 
 	switch authType.ValueString() {
 	case "Certificate":

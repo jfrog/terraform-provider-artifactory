@@ -1,3 +1,9 @@
+## 12.1.1 (October 1, 2024). Tested on Artifactory 7.90.13 with Terraform 1.9.6 and OpenTofu 1.8.2
+
+IMPROVEMENTS:
+
+* resource/artifactory_\*\_webhook is migrated to Plugin Framework. PR: [#1087](https://github.com/jfrog/terraform-provider-artifactory/pull/1087)
+
 ## 12.1.0 (September 26, 2024). Tested on Artifactory 7.90.10 with Terraform 1.9.6 and OpenTofu 1.8.2
 
 IMPROVEMENTS:

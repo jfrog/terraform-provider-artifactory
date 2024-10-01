@@ -9,11 +9,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-type BaseWebhookCriteria struct {
-	IncludePatterns []string `json:"includePatterns"`
-	ExcludePatterns []string `json:"excludePatterns"`
-}
-
 var baseCriteriaSchema = map[string]*schema.Schema{
 	"include_patterns": {
 		Type:        schema.TypeSet,

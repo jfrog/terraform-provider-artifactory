@@ -666,9 +666,6 @@ func (r *ScopedTokenResourceModel) splitScopes(ctx context.Context, scopes strin
 			})
 		}
 	}
-	tflog.Debug(ctx, "ScopedTokenResourceModel.splitScopes", map[string]any{
-		"separatorIndices": separatorIndices,
-	})
 
 	// insert a zero to the begining of the slice to represent the first index
 	separatorIndices = append([]int{0}, separatorIndices...)
@@ -687,9 +684,7 @@ func (r *ScopedTokenResourceModel) splitScopes(ctx context.Context, scopes strin
 		// trim the end of string off for next iteration
 		scopesCopy = scopesCopy[:idx]
 	}
-	tflog.Debug(ctx, "ScopedTokenResourceModel.splitScopes", map[string]any{
-		"scopesList": scopesList,
-	})
+
 	return scopesList
 }
 
