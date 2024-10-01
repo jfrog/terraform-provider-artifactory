@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -54,18 +53,7 @@ func (r BuildCustomWebhookResource) ValidateConfig(ctx context.Context, req reso
 		return
 	}
 
-	criteriaObj := data.Criteria.Elements()[0].(types.Object)
-	criteriaAttrs := criteriaObj.Attributes()
-
-	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
-
-	if !anyBuild && len(criteriaAttrs["selected_builds"].(types.Set).Elements()) == 0 && len(criteriaAttrs["include_patterns"].(types.Set).Elements()) == 0 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_build"),
-			"Invalid Attribute Configuration",
-			"selected_builds or include_patterns cannot be empty when any_build is false",
-		)
-	}
+	buildValidateConfig(data.Criteria, resp)
 }
 
 func (r *BuildCustomWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

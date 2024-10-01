@@ -503,7 +503,7 @@ func (m *WebhookCriteriaResourceModel) fromBaseCriteriaAPIModel(ctx context.Cont
 	diags := diag.Diagnostics{}
 
 	includePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil {
+	if v, ok := criteriaAPIModel["includePatterns"]; ok && v != nil && len(v.([]interface{})) > 0 {
 		ps, d := types.SetValueFrom(ctx, types.StringType, v)
 		if d.HasError() {
 			diags.Append(d...)
@@ -513,7 +513,7 @@ func (m *WebhookCriteriaResourceModel) fromBaseCriteriaAPIModel(ctx context.Cont
 	}
 
 	excludePatterns := types.SetNull(types.StringType)
-	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil {
+	if v, ok := criteriaAPIModel["excludePatterns"]; ok && v != nil && len(v.([]interface{})) > 0 {
 		ps, d := types.SetValueFrom(ctx, types.StringType, v)
 		if d.HasError() {
 			diags.Append(d...)

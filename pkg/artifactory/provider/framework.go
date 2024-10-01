@@ -225,6 +225,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		webhook.NewArtifactWebhookResource,
 		webhook.NewArtifactCustomWebhookResource,
 		webhook.NewArtifactLifecycleWebhookResource,
+		webhook.NewArtifactLifecycleCustomWebhookResource,
 		webhook.NewArtifactPropertyWebhookResource,
 		webhook.NewArtifactPropertyCustomWebhookResource,
 		webhook.NewArtifactoryReleaseBundleWebhookResource,

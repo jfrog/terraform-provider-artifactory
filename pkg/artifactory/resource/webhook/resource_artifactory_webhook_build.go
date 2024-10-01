@@ -73,15 +73,8 @@ func (r *BuildWebhookResource) Configure(ctx context.Context, req resource.Confi
 	r.WebhookResource.Configure(ctx, req, resp)
 }
 
-func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data BuildWebhookResourceModel
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	criteriaObj := data.Criteria.Elements()[0].(types.Object)
+func buildValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
+	criteriaObj := criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
 	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
@@ -93,6 +86,17 @@ func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.V
 			"selected_builds or include_patterns cannot be empty when any_build is false",
 		)
 	}
+}
+
+func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data BuildWebhookResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	buildValidateConfig(data.Criteria, resp)
 }
 
 func (r *BuildWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
