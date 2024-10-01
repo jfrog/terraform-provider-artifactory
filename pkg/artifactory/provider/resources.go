@@ -12,7 +12,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 )
 
@@ -122,11 +121,6 @@ func resourcesMap() map[string]*schema.Resource {
 	for _, repoType := range federated.PackageTypesLikeGeneric {
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
 		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
-	}
-
-	for _, webhookType := range webhook.DomainSupported {
-		webhookCustomResourceName := fmt.Sprintf("artifactory_%s_custom_webhook", webhookType)
-		resourcesMap[webhookCustomResourceName] = webhook.ResourceArtifactoryCustomWebhook(webhookType)
 	}
 
 	return utilsdk.AddTelemetry(productId, resourcesMap)

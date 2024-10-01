@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var _ resource.Resource = &ReleaseBundleWebhookResource{}
+var _ resource.Resource = &UserWebhookResource{}
 
 func NewUserWebhookResource() resource.Resource {
 	return &UserWebhookResource{

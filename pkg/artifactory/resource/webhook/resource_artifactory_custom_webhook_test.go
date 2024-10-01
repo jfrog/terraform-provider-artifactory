@@ -10,7 +10,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccCustomWebhook_CriteriaValidation(t *testing.T) {
@@ -56,61 +55,4 @@ func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (
 			},
 		},
 	}
-}
-
-func TestAccCustomWebhook_User(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("test-user-webhook", "artifactory_user_custom_webhook")
-
-	params := map[string]interface{}{
-		"webhookName": name,
-	}
-	webhookConfig := util.ExecuteTemplate("TestAccCustomWebhookUser", `
-		resource "artifactory_user_custom_webhook" "{{ .webhookName }}" {
-			key         = "{{ .webhookName }}"
-			description = "test description"
-			event_types = ["locked"]
-			handler {
-				url = "https://google.com"
-				secrets = {
-					secret1 = "value1"
-					secret2 = "value2"
-				}
-				http_headers = {
-					header-1 = "value-1"
-					header-2 = "value-2"
-				}
-				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
-			}
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-
-		Steps: []resource.TestStep{
-			{
-				Config: webhookConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "event_types.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret1", "value1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret2", "value2"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.http_headers.%", "2"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.http_headers.header-1", "value-1"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.http_headers.header-2", "value-2"),
-					resource.TestCheckResourceAttr(fqrn, "handler.0.payload", "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"),
-				),
-			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"handler.0.secrets"},
-			},
-		},
-	})
 }
