@@ -61,40 +61,40 @@ func (r *RepoWebhookResource) Metadata(ctx context.Context, req resource.Metadat
 	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
-func (r *RepoWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	criteriaBlock := schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: lo.Assign(
-				patternsSchemaAttributes("Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: `org/apache/**`"),
-				map[string]schema.Attribute{
-					"any_local": schema.BoolAttribute{
-						Required:    true,
-						Description: "Trigger on any local repositories",
-					},
-					"any_remote": schema.BoolAttribute{
-						Required:    true,
-						Description: "Trigger on any remote repositories",
-					},
-					"any_federated": schema.BoolAttribute{
-						Required:    true,
-						Description: "Trigger on any federated repositories",
-					},
-					"repo_keys": schema.SetAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "Trigger on this list of repository keys",
-					},
+var repoCriteriaBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: lo.Assign(
+			patternsSchemaAttributes("Simple comma separated wildcard patterns for repository artifact paths (with no leading slash).\nAnt-style path expressions are supported (*, **, ?).\nFor example: `org/apache/**`"),
+			map[string]schema.Attribute{
+				"any_local": schema.BoolAttribute{
+					Required:    true,
+					Description: "Trigger on any local repositories",
 				},
-			),
-		},
-		Validators: []validator.Set{
-			setvalidator.SizeBetween(1, 1),
-			setvalidator.IsRequired(),
-		},
-		Description: "Specifies where the webhook will be applied on which repositories.",
-	}
+				"any_remote": schema.BoolAttribute{
+					Required:    true,
+					Description: "Trigger on any remote repositories",
+				},
+				"any_federated": schema.BoolAttribute{
+					Required:    true,
+					Description: "Trigger on any federated repositories",
+				},
+				"repo_keys": schema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Description: "Trigger on this list of repository keys",
+				},
+			},
+		),
+	},
+	Validators: []validator.Set{
+		setvalidator.SizeBetween(1, 1),
+		setvalidator.IsRequired(),
+	},
+	Description: "Specifies where the webhook will be applied on which repositories.",
+}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+func (r *RepoWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = r.CreateSchema(r.Domain, &repoCriteriaBlock, handlerBlock)
 }
 
 func (r *RepoWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -142,7 +142,7 @@ func (r *RepoWebhookResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -163,7 +163,7 @@ func (r *RepoWebhookResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -198,7 +198,7 @@ func (r *RepoWebhookResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -215,7 +215,7 @@ func (r *RepoWebhookResource) Delete(ctx context.Context, req resource.DeleteReq
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -229,28 +229,34 @@ func (r *RepoWebhookResource) ImportState(ctx context.Context, req resource.Impo
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
-
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
+func toRepoCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel RepoCriteriaAPIModel, diags diag.Diagnostics) {
 	var repoKeys []string
-	d = critieriaAttrs["repo_keys"].(types.Set).ElementsAs(ctx, &repoKeys, false)
+	d := criteriaAttrs["repo_keys"].(types.Set).ElementsAs(ctx, &repoKeys, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel := RepoCriteriaAPIModel{
+	criteriaAPIModel = RepoCriteriaAPIModel{
 		BaseCriteriaAPIModel: baseCriteria,
-		AnyLocal:             critieriaAttrs["any_local"].(types.Bool).ValueBool(),
-		AnyRemote:            critieriaAttrs["any_remote"].(types.Bool).ValueBool(),
-		AnyFederated:         critieriaAttrs["any_federated"].(types.Bool).ValueBool(),
+		AnyLocal:             criteriaAttrs["any_local"].(types.Bool).ValueBool(),
+		AnyRemote:            criteriaAttrs["any_remote"].(types.Bool).ValueBool(),
+		AnyFederated:         criteriaAttrs["any_federated"].(types.Bool).ValueBool(),
 		RepoKeys:             repoKeys,
 	}
+
+	return
+}
+
+func (m RepoWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
+
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
 	if d.HasError() {
@@ -274,13 +280,7 @@ var repoCriteriaSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: repoCriteriaSetResourceModelAttributeTypes,
 }
 
-func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
-
-	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
-
+func fromRepoCriteriaAPIMode(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	repoKeys := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["repoKeys"]; ok && v != nil {
 		ks, d := types.SetValueFrom(ctx, types.StringType, v)
@@ -306,10 +306,25 @@ func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel We
 	if d.HasError() {
 		diags.Append(d...)
 	}
-	criteriaSet, d := types.SetValue(
+	criteriaSet, d = types.SetValue(
 		repoCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return
+}
+
+func (m *RepoWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
+
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+
+	criteriaSet, d := fromRepoCriteriaAPIMode(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}

@@ -72,32 +72,32 @@ func (r *ReleaseBundleWebhookResource) Metadata(ctx context.Context, req resourc
 	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
-func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	criteriaBlock := schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: lo.Assign(
-				patternsSchemaAttributes("Simple wildcard patterns for Release Bundle names.\nAnt-style path expressions are supported (*, **, ?).\nFor example: `product_*`"),
-				map[string]schema.Attribute{
-					"any_release_bundle": schema.BoolAttribute{
-						Required:    true,
-						Description: "Trigger on any release bundles or distributions",
-					},
-					"registered_release_bundle_names": schema.SetAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "Trigger on this list of release bundle names",
-					},
+var releaseBundleCriteriaBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: lo.Assign(
+			patternsSchemaAttributes("Simple wildcard patterns for Release Bundle names.\nAnt-style path expressions are supported (*, **, ?).\nFor example: `product_*`"),
+			map[string]schema.Attribute{
+				"any_release_bundle": schema.BoolAttribute{
+					Required:    true,
+					Description: "Trigger on any release bundles or distributions",
 				},
-			),
-		},
-		Validators: []validator.Set{
-			setvalidator.SizeBetween(1, 1),
-			setvalidator.IsRequired(),
-		},
-		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
-	}
+				"registered_release_bundle_names": schema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Description: "Trigger on this list of release bundle names",
+				},
+			},
+		),
+	},
+	Validators: []validator.Set{
+		setvalidator.SizeBetween(1, 1),
+		setvalidator.IsRequired(),
+	},
+	Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = r.CreateSchema(r.Domain, &releaseBundleCriteriaBlock, handlerBlock)
 	if r.Domain == ReleaseBundleDomain {
 		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
 	}
@@ -107,15 +107,8 @@ func (r *ReleaseBundleWebhookResource) Configure(ctx context.Context, req resour
 	r.WebhookResource.Configure(ctx, req, resp)
 }
 
-func (r ReleaseBundleWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data ReleaseBundleWebhookResourceModel
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	criteriaObj := data.Criteria.Elements()[0].(types.Object)
+func releaseBundleValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
+	criteriaObj := criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
 	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
@@ -127,6 +120,17 @@ func (r ReleaseBundleWebhookResource) ValidateConfig(ctx context.Context, req re
 			"registered_release_bundle_names cannot be empty when any_release_bundle is false",
 		)
 	}
+}
+
+func (r ReleaseBundleWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data ReleaseBundleWebhookResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	releaseBundleValidateConfig(data.Criteria, resp)
 }
 
 func (r *ReleaseBundleWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -146,7 +150,7 @@ func (r *ReleaseBundleWebhookResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -167,7 +171,7 @@ func (r *ReleaseBundleWebhookResource) Read(ctx context.Context, req resource.Re
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -202,7 +206,7 @@ func (r *ReleaseBundleWebhookResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -219,7 +223,7 @@ func (r *ReleaseBundleWebhookResource) Delete(ctx context.Context, req resource.
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -233,25 +237,35 @@ func (r *ReleaseBundleWebhookResource) ImportState(ctx context.Context, req reso
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-func (m ReleaseBundleWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
-
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
-	if d.HasError() {
-		diags.Append(d...)
-	}
+func toReleaseBundleCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleCriteriaAPIModel, diags diag.Diagnostics) {
 
 	var releaseBundleNames []string
-	d = critieriaAttrs["registered_release_bundle_names"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
+	d := criteriaAttrs["registered_release_bundle_names"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel := ReleaseBundleCriteriaAPIModel{
+	criteriaAPIModel = ReleaseBundleCriteriaAPIModel{
 		BaseCriteriaAPIModel:          baseCriteria,
-		AnyReleaseBundle:              critieriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
+		AnyReleaseBundle:              criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
 		RegisteredReleaseBundlesNames: releaseBundleNames,
+	}
+
+	return
+}
+
+func (m ReleaseBundleWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
+
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	criteriaAPIModel, d := toReleaseBundleCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
 	}
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
@@ -274,13 +288,7 @@ var releaseBundleCriteriaSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: releaseBundleCriteriaSetResourceModelAttributeTypes,
 }
 
-func (m *ReleaseBundleWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
-
-	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
-
+func fromReleaseBundleCriteriaAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	releaseBundleNames := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["registeredReleaseBundlesNames"]; ok && v != nil {
 		rb, d := types.SetValueFrom(ctx, types.StringType, v)
@@ -304,10 +312,25 @@ func (m *ReleaseBundleWebhookResourceModel) fromAPIModel(ctx context.Context, ap
 	if d.HasError() {
 		diags.Append(d...)
 	}
-	criteriaSet, d := types.SetValue(
+	criteriaSet, d = types.SetValue(
 		releaseBundleCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return
+}
+
+func (m *ReleaseBundleWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
+
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+
+	criteriaSet, d := fromReleaseBundleCriteriaAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}

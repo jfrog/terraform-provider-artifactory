@@ -10,7 +10,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-var _ resource.Resource = &ReleaseBundleWebhookResource{}
+var _ resource.Resource = &ArtifactLifecycleWebhookResource{}
 
 func NewArtifactLifecycleWebhookResource() resource.Resource {
 	return &ArtifactLifecycleWebhookResource{
@@ -23,7 +23,7 @@ func NewArtifactLifecycleWebhookResource() resource.Resource {
 }
 
 type ArtifactLifecycleWebhookResourceModel struct {
-	WebhookNoCriteriaResourceModel
+	WebhookBaseResourceModel
 }
 
 type ArtifactLifecycleWebhookResource struct {
@@ -35,7 +35,7 @@ func (r *ArtifactLifecycleWebhookResource) Metadata(ctx context.Context, req res
 }
 
 func (r *ArtifactLifecycleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = r.schema(r.Domain, nil)
+	resp.Schema = r.CreateSchema(r.Domain, nil, handlerBlock)
 }
 
 func (r *ArtifactLifecycleWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -59,7 +59,7 @@ func (r *ArtifactLifecycleWebhookResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -80,7 +80,7 @@ func (r *ArtifactLifecycleWebhookResource) Read(ctx context.Context, req resourc
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -115,7 +115,7 @@ func (r *ArtifactLifecycleWebhookResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -132,7 +132,7 @@ func (r *ArtifactLifecycleWebhookResource) Delete(ctx context.Context, req resou
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -147,7 +147,7 @@ func (r *ArtifactLifecycleWebhookResource) ImportState(ctx context.Context, req 
 }
 
 func (m ArtifactLifecycleWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	d := m.WebhookNoCriteriaResourceModel.toAPIModel(ctx, domain, apiModel)
+	d := m.WebhookBaseResourceModel.toAPIModel(ctx, domain, apiModel)
 	if d.HasError() {
 		diags.Append(d...)
 	}
@@ -158,7 +158,7 @@ func (m ArtifactLifecycleWebhookResourceModel) toAPIModel(ctx context.Context, d
 func (m *ArtifactLifecycleWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	d := m.WebhookNoCriteriaResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
+	d := m.WebhookBaseResourceModel.fromAPIModel(ctx, apiModel, stateHandlers)
 	if d.HasError() {
 		diags.Append(d...)
 	}

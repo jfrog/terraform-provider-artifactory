@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -161,6 +163,12 @@ func (r *ReleaseBundleV2PromotionResource) Configure(ctx context.Context, req re
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
+var retryOnNotAssignedToEnvironmentError = func(response *resty.Response, _r error) bool {
+	var notAssignedToEnvironmentRegex = regexp.MustCompile(".*not assigned to environment.*")
+
+	return notAssignedToEnvironmentRegex.MatchString(string(response.Body()[:]))
+}
+
 func (r *ReleaseBundleV2PromotionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -195,6 +203,7 @@ func (r *ReleaseBundleV2PromotionResource) Create(ctx context.Context, req resou
 		}).
 		SetBody(promotion).
 		SetResult(&result).
+		AddRetryCondition(retryOnNotAssignedToEnvironmentError).
 		Post(ReleaseBundleV2PromotionEndpoint)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())

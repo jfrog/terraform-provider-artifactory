@@ -16,7 +16,7 @@ import (
 	"github.com/samber/lo"
 )
 
-var _ resource.Resource = &ReleaseBundleV2WebhookResource{}
+var _ resource.Resource = &ReleaseBundleV2PromotionWebhookResource{}
 
 func NewReleaseBundleV2PromotionWebhookResource() resource.Resource {
 	return &ReleaseBundleV2PromotionWebhookResource{
@@ -40,28 +40,29 @@ func (r *ReleaseBundleV2PromotionWebhookResource) Metadata(ctx context.Context, 
 	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
-func (r *ReleaseBundleV2PromotionWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	criteriaBlock := schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: lo.Assign(
-				patternsSchemaAttributes(""),
-				map[string]schema.Attribute{
-					"selected_environments": schema.SetAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "Trigger on this list of environments",
-					},
+var releaseBundleV2PromotionCriteriaBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: lo.Assign(
+			patternsSchemaAttributes(""),
+			map[string]schema.Attribute{
+				"selected_environments": schema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Description: "Trigger on this list of environments",
 				},
-			),
-		},
-		Validators: []validator.Set{
-			setvalidator.SizeBetween(1, 1),
-			setvalidator.IsRequired(),
-		},
-		Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
-	}
+			},
+		),
+	},
+	Validators: []validator.Set{
+		setvalidator.SizeBetween(1, 1),
+		setvalidator.IsRequired(),
+	},
+	Description: "Specifies where the webhook will be applied, on which release bundles or distributions.",
+}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+func (r *ReleaseBundleV2PromotionWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+
+	resp.Schema = r.CreateSchema(r.Domain, &releaseBundleV2PromotionCriteriaBlock, handlerBlock)
 }
 
 func (r *ReleaseBundleV2PromotionWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -85,7 +86,7 @@ func (r *ReleaseBundleV2PromotionWebhookResource) Create(ctx context.Context, re
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -106,7 +107,7 @@ func (r *ReleaseBundleV2PromotionWebhookResource) Read(ctx context.Context, req 
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -141,7 +142,7 @@ func (r *ReleaseBundleV2PromotionWebhookResource) Update(ctx context.Context, re
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -158,7 +159,7 @@ func (r *ReleaseBundleV2PromotionWebhookResource) Delete(ctx context.Context, re
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,18 +173,27 @@ func (r *ReleaseBundleV2PromotionWebhookResource) ImportState(ctx context.Contex
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-func (m ReleaseBundleV2PromotionWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
-
+func toReleaseBundleV2PromotionAPIModel(ctx context.Context, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleV2PromotionCriteriaAPIModel, diags diag.Diagnostics) {
 	var environments []string
-	d := critieriaAttrs["selected_environments"].(types.Set).ElementsAs(ctx, &environments, false)
+	d := criteriaAttrs["selected_environments"].(types.Set).ElementsAs(ctx, &environments, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel := ReleaseBundleV2PromotionCriteriaAPIModel{
+	criteriaAPIModel = ReleaseBundleV2PromotionCriteriaAPIModel{
 		SelectedEnvironments: environments,
+	}
+
+	return
+}
+
+func (m ReleaseBundleV2PromotionWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
+
+	criteriaAPIModel, d := toReleaseBundleV2PromotionAPIModel(ctx, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
 	}
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
@@ -205,13 +215,7 @@ var releaseBundleV2PromotionCriteriaSetResourceModelElementTypes = types.ObjectT
 	AttrTypes: releaseBundleV2PromotionCriteriaSetResourceModelAttributeTypes,
 }
 
-func (m *ReleaseBundleV2PromotionWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
-
-	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
-
+func fromReleaseBundleV2PromotionAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	releaseBundleNames := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["selectedEnvironments"]; ok && v != nil {
 		rb, d := types.SetValueFrom(ctx, types.StringType, v)
@@ -234,10 +238,26 @@ func (m *ReleaseBundleV2PromotionWebhookResourceModel) fromAPIModel(ctx context.
 	if d.HasError() {
 		diags.Append(d...)
 	}
-	criteriaSet, d := types.SetValue(
+
+	criteriaSet, d = types.SetValue(
 		releaseBundleV2PromotionCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	return
+}
+
+func (m *ReleaseBundleV2PromotionWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
+
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+
+	criteriaSet, d := fromReleaseBundleV2PromotionAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}

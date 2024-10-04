@@ -41,47 +41,40 @@ func (r *BuildWebhookResource) Metadata(ctx context.Context, req resource.Metada
 	r.WebhookResource.Metadata(ctx, req, resp)
 }
 
-func (r *BuildWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	criteriaBlock := schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: lo.Assign(
-				patternsSchemaAttributes("Use Ant-style wildcard patterns to specify build names (i.e. artifact paths) in the build info repository (without a leading slash) that will be excluded from this permission target.\nAnt-style path expressions are supported (*, **, ?).\nFor example, an `apache/**` pattern will exclude the `apache` build info from the permission."),
-				map[string]schema.Attribute{
-					"any_build": schema.BoolAttribute{
-						Required:    true,
-						Description: "Trigger on any builds",
-					},
-					"selected_builds": schema.SetAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "Trigger on this list of build IDs",
-					},
+var buildCriteriaBlock = schema.SetNestedBlock{
+	NestedObject: schema.NestedBlockObject{
+		Attributes: lo.Assign(
+			patternsSchemaAttributes("Use Ant-style wildcard patterns to specify build names (i.e. artifact paths) in the build info repository (without a leading slash) that will be excluded from this permission target.\nAnt-style path expressions are supported (*, **, ?).\nFor example, an `apache/**` pattern will exclude the `apache` build info from the permission."),
+			map[string]schema.Attribute{
+				"any_build": schema.BoolAttribute{
+					Required:    true,
+					Description: "Trigger on any builds",
 				},
-			),
-		},
-		Validators: []validator.Set{
-			setvalidator.SizeBetween(1, 1),
-			setvalidator.IsRequired(),
-		},
-		Description: "Specifies where the webhook will be applied on which builds.",
-	}
+				"selected_builds": schema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Description: "Trigger on this list of build IDs",
+				},
+			},
+		),
+	},
+	Validators: []validator.Set{
+		setvalidator.SizeBetween(1, 1),
+		setvalidator.IsRequired(),
+	},
+	Description: "Specifies where the webhook will be applied on which builds.",
+}
 
-	resp.Schema = r.schema(r.Domain, &criteriaBlock)
+func (r *BuildWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = r.CreateSchema(r.Domain, &buildCriteriaBlock, handlerBlock)
 }
 
 func (r *BuildWebhookResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.WebhookResource.Configure(ctx, req, resp)
 }
 
-func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data BuildWebhookResourceModel
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	criteriaObj := data.Criteria.Elements()[0].(types.Object)
+func buildValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
+	criteriaObj := criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
 	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
@@ -93,6 +86,17 @@ func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.V
 			"selected_builds or include_patterns cannot be empty when any_build is false",
 		)
 	}
+}
+
+func (r BuildWebhookResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data BuildWebhookResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	buildValidateConfig(data.Criteria, resp)
 }
 
 func (r *BuildWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -112,7 +116,7 @@ func (r *BuildWebhookResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	r.WebhookResource.Create(ctx, webhook, req, resp)
+	r.WebhookResource.Create(ctx, webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -133,7 +137,7 @@ func (r *BuildWebhookResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	var webhook WebhookAPIModel
-	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, req, resp)
+	found := r.WebhookResource.Read(ctx, state.Key.ValueString(), &webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -168,7 +172,7 @@ func (r *BuildWebhookResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, req, resp)
+	r.WebhookResource.Update(ctx, plan.Key.ValueString(), webhook, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -185,7 +189,7 @@ func (r *BuildWebhookResource) Delete(ctx context.Context, req resource.DeleteRe
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	r.WebhookResource.Delete(ctx, state.Key.ValueString(), req, resp)
+	r.WebhookResource.Delete(ctx, state.Key.ValueString(), resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -199,25 +203,34 @@ func (r *BuildWebhookResource) ImportState(ctx context.Context, req resource.Imp
 	r.WebhookResource.ImportState(ctx, req, resp)
 }
 
-func (m BuildWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
-	critieriaObj := m.Criteria.Elements()[0].(types.Object)
-	critieriaAttrs := critieriaObj.Attributes()
-
-	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, critieriaAttrs)
-	if d.HasError() {
-		diags.Append(d...)
-	}
-
+func toBuildCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel BuildCriteriaAPIModel, diags diag.Diagnostics) {
 	var selectedBuilds []string
-	d = critieriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
+	d := criteriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
 	if d.HasError() {
 		diags.Append(d...)
 	}
 
-	criteriaAPIModel := BuildCriteriaAPIModel{
+	criteriaAPIModel = BuildCriteriaAPIModel{
 		BaseCriteriaAPIModel: baseCriteria,
-		AnyBuild:             critieriaAttrs["any_build"].(types.Bool).ValueBool(),
+		AnyBuild:             criteriaAttrs["any_build"].(types.Bool).ValueBool(),
 		SelectedBuilds:       selectedBuilds,
+	}
+
+	return
+}
+
+func (m BuildWebhookResourceModel) toAPIModel(ctx context.Context, domain string, apiModel *WebhookAPIModel) (diags diag.Diagnostics) {
+	criteriaObj := m.Criteria.Elements()[0].(types.Object)
+	criteriaAttrs := criteriaObj.Attributes()
+
+	baseCriteria, d := m.WebhookResourceModel.toBaseCriteriaAPIModel(ctx, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
+
+	criteriaAPIModel, d := toBuildCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
 	}
 
 	d = m.WebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
@@ -240,13 +253,7 @@ var buildCriteriaSetResourceModelElementTypes = types.ObjectType{
 	AttrTypes: buildCriteriaSetResourceModelAttributeTypes,
 }
 
-func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
-
-	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
-
+func fromBuildAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
 	selectedBuilds := types.SetNull(types.StringType)
 	if v, ok := criteriaAPIModel["selectedBuilds"]; ok && v != nil {
 		sb, d := types.SetValueFrom(ctx, types.StringType, v)
@@ -270,10 +277,22 @@ func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel W
 	if d.HasError() {
 		diags.Append(d...)
 	}
-	criteriaSet, d := types.SetValue(
+	criteriaSet, d = types.SetValue(
 		buildCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+
+	return criteriaSet, diags
+}
+
+func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel WebhookAPIModel, stateHandlers basetypes.SetValue) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
+
+	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+
+	criteriaSet, d := fromBuildAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
 		diags.Append(d...)
 	}
