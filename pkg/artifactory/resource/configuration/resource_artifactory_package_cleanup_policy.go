@@ -493,7 +493,7 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 		Version:    1,
 		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. " +
 			"See [Rentation Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
-			"~>Currently in beta and not yet globally available. A full rollout is scheduled for early October 2024.",
+			"~>Currently in beta and will be globally available in v7.98.x.",
 	}
 }
 
