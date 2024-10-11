@@ -11,7 +11,7 @@ See the [Official Documentation](https://www.jfrog.com/confluence/display/JFROG/
 
 This resource replaces `artifactory_push_replication` and used to create a replication of one local repository to multiple repositories on the remote server. 
 
-~> This resource requires Artifactory Enterprise license. Use `artifactory_local_repository_single_replication` with other licenses.
+~>This resource requires Artifactory Enterprise license. Use `artifactory_local_repository_single_replication` with other licenses.
 
 ## Example Usage
 
@@ -55,12 +55,13 @@ resource "artifactory_local_repository_multi_replication" "foo-rep" {
       password = "$var.artifactory_password"
       enabled  = true
 	}
-    replication {
-      url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest1.key}"
-      username = "$var.artifactory_username"
-      password = "$var.artifactory_password"
-      enabled  = true
-    }
+
+  replication {
+    url      = "${var.artifactory_url}/artifactory/${artifactory_local_maven_repository.provider_test_dest1.key}"
+    username = "$var.artifactory_username"
+    password = "$var.artifactory_password"
+    enabled  = true
+  }
 }
 ```
 
@@ -83,6 +84,7 @@ The following arguments are supported:
     * `include_path_prefix_pattern` - (Optional) List of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included `(**/*)`.
     * `exclude_path_prefix_pattern` - (Optional) List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. By default, no artifacts are excluded.
     * `proxy` - (Optional) Proxy key from Artifactory Proxies settings. The proxy configuration will be used when communicating with the remote instance.
+    * `disable_proxy` - (Optional) When set to `true`, the `proxy` attribute will be ignored (from version 7.41.7). The default value is `false`.
     * `replication_key` - (Computed) Replication ID, the value is unknown until the resource is created. Can't be set or updated.
     * `check_binary_existence_in_filestore` - (Optional) Enabling the `check_binary_existence_in_filestore` flag requires an Enterprise Plus license. When true, enables distributed checksum storage. For more information, see [Optimizing Repository Replication with Checksum-Based Storage](https://www.jfrog.com/confluence/display/JFROG/Repository+Replication#RepositoryReplication-OptimizingRepositoryReplicationUsingStorageLevelSynchronizationOptions).
 

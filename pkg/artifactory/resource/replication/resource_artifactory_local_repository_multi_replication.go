@@ -69,7 +69,8 @@ func (m LocalRepositoryMultiReplicationResourceModel) toAPIModel(_ context.Conte
 					ExcludePathPrefixPattern:        attrs["exclude_path_prefix_pattern"].(types.String).ValueString(),
 					CheckBinaryExistenceInFilestore: attrs["check_binary_existence_in_filestore"].(types.Bool).ValueBool(),
 				},
-				Proxy: attrs["proxy"].(types.String).ValueString(),
+				Proxy:        attrs["proxy"].(types.String).ValueString(),
+				DisableProxy: attrs["disable_proxy"].(types.Bool).ValueBool(),
 			}
 		},
 	)
@@ -96,6 +97,7 @@ var replicationResourceModelAttributeTypes map[string]attr.Type = map[string]att
 	"exclude_path_prefix_pattern":         types.StringType,
 	"check_binary_existence_in_filestore": types.BoolType,
 	"proxy":                               types.StringType,
+	"disable_proxy":                       types.BoolType,
 	"replication_key":                     types.StringType,
 }
 
@@ -143,6 +145,7 @@ func (m *LocalRepositoryMultiReplicationResourceModel) fromAPIModel(_ context.Co
 					"exclude_path_prefix_pattern":         types.StringValue(replication.ExcludePathPrefixPattern),
 					"check_binary_existence_in_filestore": types.BoolValue(replication.CheckBinaryExistenceInFilestore),
 					"proxy":                               types.StringValue(replication.ProxyRef),
+					"disable_proxy":                       types.BoolValue(replication.DisableProxy),
 					"replication_key":                     types.StringValue(replication.ReplicationKey),
 				},
 			)
@@ -189,11 +192,13 @@ type ReplicationGetAPIModel struct {
 	ReplicationAPIModel
 	ProxyRef       string `json:"proxyRef"`
 	ReplicationKey string `json:"replicationKey"`
+	DisableProxy   bool   `json:"disableProxy"`
 }
 
 type ReplicationUpdateAPIModel struct {
 	ReplicationAPIModel
-	Proxy string `json:"proxy"`
+	Proxy        string `json:"proxy"`
+	DisableProxy bool   `json:"disableProxy"`
 }
 
 type LocalMultiReplicationUpdateAPIModel struct {
@@ -208,6 +213,7 @@ func (r *LocalRepositoryMultiReplicationResource) Metadata(ctx context.Context, 
 
 func (r *LocalRepositoryMultiReplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 0,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -324,6 +330,12 @@ func (r *LocalRepositoryMultiReplicationResource) Schema(ctx context.Context, re
 								stringvalidator.LengthAtLeast(1),
 							},
 							Description: "A proxy configuration to use when communicating with the remote instance.",
+						},
+						"disable_proxy": schema.BoolAttribute{
+							Optional:            true,
+							Computed:            true,
+							Default:             booldefault.StaticBool(false),
+							MarkdownDescription: "When set to `true`, the `proxy` attribute will be ignored (from version 7.41.7). The default value is `false`.",
 						},
 						"replication_key": schema.StringAttribute{
 							Computed:    true,
