@@ -26,7 +26,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
-
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 
 
 ## Import

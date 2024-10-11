@@ -4,15 +4,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
 type HuggingFaceRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 }
 
 var HuggingFaceSchema = lo.Assign(
 	baseSchema,
+	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"url": {
 			Type:        schema.TypeString,
@@ -28,8 +31,12 @@ var HuggingFaceSchemas = GetSchemas(HuggingFaceSchema)
 
 func ResourceArtifactoryRemoteHuggingFaceRepository() *schema.Resource {
 	var unpackRepo = func(s *schema.ResourceData) (interface{}, string, error) {
+		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := HuggingFaceRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.HuggingFacePackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
 		}
 		return repo, repo.Id(), nil
 	}

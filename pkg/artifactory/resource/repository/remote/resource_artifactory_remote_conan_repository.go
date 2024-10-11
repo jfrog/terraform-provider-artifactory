@@ -10,11 +10,13 @@ import (
 
 type ConanRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	repository.ConanBaseParams
 }
 
 var conanSchema = lo.Assign(
 	baseSchema,
+	CurationRemoteRepoSchema,
 	repository.ConanBaseSchema,
 	repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
 )
@@ -26,6 +28,9 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := ConanRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.ConanPackageType),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
 			ConanBaseParams: repository.ConanBaseParams{
 				EnableConanSupport:       true,
 				ForceConanAuthentication: d.GetBool("force_conan_authentication", false),
@@ -45,9 +50,6 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 				Rclass:        Rclass,
 				PackageType:   repository.ConanPackageType,
 				RepoLayoutRef: repoLayout.(string),
-			},
-			ConanBaseParams: repository.ConanBaseParams{
-				EnableConanSupport: true,
 			},
 		}, nil
 	}

@@ -37,7 +37,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `v3_feed_url` - (Optional) The URL to the NuGet v3 feed. Default value is `https://api.nuget.org/v3/index.json`.
 * `force_nuget_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is `false`.
 * `symbol_server_url` - (Optional) NuGet symbol server URL. Default value is `https://symbols.nuget.org/download/symbols`.
-
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 
 
 ## Import

@@ -99,7 +99,6 @@ var PackageTypesLikeBasic = []string{
 	repository.CondaPackageType,
 	repository.CranPackageType,
 	repository.DebianPackageType,
-	repository.GemsPackageType,
 	repository.GitLFSPackageType,
 	repository.OpkgPackageType,
 	repository.P2PackageType,

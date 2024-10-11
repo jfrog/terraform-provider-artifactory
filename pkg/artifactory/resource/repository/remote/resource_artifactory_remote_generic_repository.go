@@ -28,7 +28,7 @@ var genericSchemaV3 = lo.Assign(
 	repository.RepoLayoutRefSchema(Rclass, repository.GenericPackageType),
 )
 
-var genericSchemaV4 = lo.Assign(
+var GenericSchemaV4 = lo.Assign(
 	genericSchemaV3,
 	map[string]*schema.Schema{
 		"retrieve_sha256_from_server": {
@@ -42,7 +42,7 @@ var genericSchemaV4 = lo.Assign(
 
 const currentGenericSchemaVersion = 4
 
-var getSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.Schema {
+var GetGenericSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.Schema {
 	return map[int16]map[string]*schema.Schema{
 		0: lo.Assign(
 			baseSchemaV1,
@@ -67,7 +67,7 @@ var getSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.
 	}
 }
 
-var GenericSchemas = getSchemas(genericSchemaV4)
+var GenericSchemas = GetGenericSchemas(GenericSchemaV4)
 
 func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	var unpackGenericRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -108,7 +108,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 		resourceSchema.StateUpgraders,
 		schema.StateUpgrader{
 			Type:    repository.Resource(GenericSchemas[3]).CoreConfigSchema().ImpliedType(),
-			Upgrade: genericResourceStateUpgradeV3,
+			Upgrade: GenericResourceStateUpgradeV3,
 			Version: 3,
 		},
 	)
@@ -116,7 +116,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	return resourceSchema
 }
 
-func genericResourceStateUpgradeV3(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+func GenericResourceStateUpgradeV3(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	rawState["retrieve_sha256_from_server"] = false
 	if v, ok := rawState["property_sets"]; !ok || v == nil {
 		rawState["property_sets"] = []string{}

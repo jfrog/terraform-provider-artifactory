@@ -11,11 +11,13 @@ import (
 
 type GoRemoteRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	VcsGitProvider string `json:"vcsGitProvider"`
 }
 
 var GoSchema = lo.Assign(
 	baseSchema,
+	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"vcs_git_provider": {
 			Type:             schema.TypeString,
@@ -36,7 +38,10 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := GoRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.GoPackageType),
-			VcsGitProvider:             d.GetString("vcs_git_provider", false),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
+			VcsGitProvider: d.GetString("vcs_git_provider", false),
 		}
 		return repo, repo.Id(), nil
 	}

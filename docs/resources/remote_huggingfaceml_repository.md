@@ -25,6 +25,7 @@ The following arguments are supported, along with the [common list of arguments 
   contain spaces or special characters.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 
 ## Import
 

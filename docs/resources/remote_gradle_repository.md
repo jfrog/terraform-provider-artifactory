@@ -38,6 +38,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `reject_invalid_jars` - (Optional, Default: `false`) Reject the caching of jar files that are found to be invalid. For example, pseudo jars retrieved behind a "captive portal".
 * `remote_repo_checksum_policy_type` - (Optional, Default: `generate-if-absent`) Checking the Checksum effectively verifies the integrity of a deployed resource. The Checksum Policy determines how the system behaves when a client checksum for a remote resource is missing or conflicts with the locally calculated checksum. Available policies are `generate-if-absent`, `fail`, `ignore-and-generate`, and `pass-thru`.
 * `max_unique_snapshots` - (Optional) The maximum number of unique snapshots of a single artifact to store. Once the number of snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 
 ## Import
 

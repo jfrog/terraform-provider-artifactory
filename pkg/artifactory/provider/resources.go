@@ -53,16 +53,20 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_composer_repository":              remote.ResourceArtifactoryRemoteComposerRepository(),
 		"artifactory_remote_conan_repository":                 remote.ResourceArtifactoryRemoteConanRepository(),
 		"artifactory_remote_docker_repository":                remote.ResourceArtifactoryRemoteDockerRepository(),
+		"artifactory_remote_gems_repository":                  remote.ResourceArtifactoryRemoteGemsRepository(),
 		"artifactory_remote_generic_repository":               remote.ResourceArtifactoryRemoteGenericRepository(),
 		"artifactory_remote_go_repository":                    remote.ResourceArtifactoryRemoteGoRepository(),
+		"artifactory_remote_gradle_repository":                remote.ResourceArtifactoryRemoteGradleRepository(),
 		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
 		"artifactory_remote_helmoci_repository":               remote.ResourceArtifactoryRemoteHelmOciRepository(),
 		"artifactory_remote_huggingfaceml_repository":         remote.ResourceArtifactoryRemoteHuggingFaceRepository(),
+		"artifactory_remote_ivy_repository":                   remote.ResourceArtifactoryRemoteJavaRepository(repository.IvyPackageType, true),
 		"artifactory_remote_maven_repository":                 remote.ResourceArtifactoryRemoteMavenRepository(),
 		"artifactory_remote_npm_repository":                   remote.ResourceArtifactoryRemoteNpmRepository(),
 		"artifactory_remote_nuget_repository":                 remote.ResourceArtifactoryRemoteNugetRepository(),
 		"artifactory_remote_oci_repository":                   remote.ResourceArtifactoryRemoteOciRepository(),
 		"artifactory_remote_pypi_repository":                  remote.ResourceArtifactoryRemotePypiRepository(),
+		"artifactory_remote_sbt_repository":                   remote.ResourceArtifactoryRemoteJavaRepository(repository.SBTPackageType, true),
 		"artifactory_remote_terraform_repository":             remote.ResourceArtifactoryRemoteTerraformRepository(),
 		"artifactory_remote_vcs_repository":                   remote.ResourceArtifactoryRemoteVcsRepository(),
 		"artifactory_virtual_alpine_repository":               virtual.ResourceArtifactoryVirtualAlpineRepository(),
@@ -88,39 +92,38 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
 	}
 
-	for _, repoType := range local.PackageTypesLikeGeneric {
-		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
-		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(repoType)
+	for _, packageType := range local.PackageTypesLikeGeneric {
+		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", packageType)
+		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(packageType)
 	}
 
-	for _, repoType := range remote.PackageTypesLikeBasic {
-		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
-		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(repoType)
+	for _, packageType := range remote.PackageTypesLikeBasic {
+		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
+		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(packageType)
 	}
 
-	for _, repoType := range repository.GradleLikePackageTypes {
-		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", repoType)
-		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(repoType, true)
-		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", repoType)
-		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteJavaRepository(repoType, true)
-		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(repoType)
-		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedJavaRepository(repoType, true)
+	for _, packageType := range repository.PackageTypesLikeGradle {
+		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", packageType)
+		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(packageType, true)
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(packageType)
+		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", packageType)
+		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedJavaRepository(packageType, true)
 	}
 
-	for _, repoType := range virtual.PackageTypesLikeGeneric {
-		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(repoType)
-	}
-	for _, repoType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
-		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", repoType)
-		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(repoType)
+	for _, packageType := range virtual.PackageTypesLikeGeneric {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualGenericRepository(packageType)
 	}
 
-	for _, repoType := range federated.PackageTypesLikeGeneric {
-		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", repoType)
-		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(repoType)
+	for _, packageType := range virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs {
+		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
+		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageType)
+	}
+
+	for _, packageType := range federated.PackageTypesLikeGeneric {
+		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", packageType)
+		resourcesMap[federatedResourceName] = federated.ResourceArtifactoryFederatedGenericRepository(packageType)
 	}
 
 	return utilsdk.AddTelemetry(productId, resourcesMap)
