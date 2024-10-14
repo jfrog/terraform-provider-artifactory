@@ -1285,7 +1285,7 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 }
 
 func TestAccAllGradleLikeLocalRepoTypes(t *testing.T) {
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(makeLocalGradleLikeRepoTestCase(packageType, t))
 		})

@@ -694,7 +694,7 @@ func TestAccRemoteTerraformRepository(t *testing.T) {
 }
 
 func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.GradleLikePackageTypes {
+	for _, repoType := range repository.PackageTypesLikeGradle {
 		t.Run(repoType, func(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225

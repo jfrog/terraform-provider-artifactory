@@ -405,7 +405,7 @@ func Retry400(response *resty.Response, _ error) bool {
 	return response.StatusCode() == http.StatusBadRequest
 }
 
-var GradleLikePackageTypes = []string{
+var PackageTypesLikeGradle = []string{
 	GradlePackageType,
 	SBTPackageType,
 	IvyPackageType,
