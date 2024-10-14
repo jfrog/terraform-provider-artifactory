@@ -521,7 +521,7 @@ func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T
 }
 
 func TestAccDataSourceRemoteAllGradleLikePackageTypes(t *testing.T) {
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(makeDataSourceRemoteGradleLikeRepoTestCase(packageType, t))
 		})

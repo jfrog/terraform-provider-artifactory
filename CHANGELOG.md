@@ -1,8 +1,9 @@
-## 12.2.0 (October 14, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.7 and OpenTofu 1.8.3
+## 12.2.0 (October 15, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.7 and OpenTofu 1.8.3
 
 IMPROVEMENTS:
 
 * resource/artifactory_local_repository_multi_replication: Add `disable_proxy` attribute to `replication` to support not using proxy. Issue: [#1088](https://github.com/jfrog/terraform-provider-artifactory/issues/1088) PR: [#1095](https://github.com/jfrog/terraform-provider-artifactory/pull/1095)
+* resource/artifactory_remote_conan_repository, resource/artifactory_remote_gems_repository, resource/artifactory_remote_go_repository, resource/artifactory_remote_gradle_repository, resource/artifactory_remote_huggingfaceml_repository, resource/artifactory_remote_nuget_repository: Add `curated` attribute to support enabled Curation for these package types. Issue: [#1091](https://github.com/jfrog/terraform-provider-artifactory/issues/1091) PR: [#1096](https://github.com/jfrog/terraform-provider-artifactory/pull/1096)
 
 ## 12.1.1 (October 2, 2024). Tested on Artifactory 7.90.13 with Terraform 1.9.6 and OpenTofu 1.8.2
 

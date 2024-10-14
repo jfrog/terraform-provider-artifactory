@@ -1,6 +1,8 @@
 package remote
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
 type RepositoryCurationParams struct {
 	Curated bool `json:"curated"`

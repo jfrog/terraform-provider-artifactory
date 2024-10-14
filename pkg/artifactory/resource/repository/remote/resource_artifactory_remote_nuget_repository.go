@@ -11,6 +11,7 @@ import (
 
 type NugetRemoteRepo struct {
 	RepositoryRemoteBaseParams
+	RepositoryCurationParams
 	FeedContextPath          string `json:"feedContextPath"`
 	DownloadContextPath      string `json:"downloadContextPath"`
 	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
@@ -20,6 +21,7 @@ type NugetRemoteRepo struct {
 
 var NugetSchema = lo.Assign(
 	baseSchema,
+	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"feed_context_path": {
 			Type:        schema.TypeString,
@@ -65,11 +67,14 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 		repo := NugetRemoteRepo{
 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.NugetPackageType),
-			FeedContextPath:            d.GetString("feed_context_path", false),
-			DownloadContextPath:        d.GetString("download_context_path", false),
-			V3FeedUrl:                  d.GetString("v3_feed_url", false),
-			ForceNugetAuthentication:   d.GetBool("force_nuget_authentication", false),
-			SymbolServerUrl:            d.GetString("symbol_server_url", false),
+			RepositoryCurationParams: RepositoryCurationParams{
+				Curated: d.GetBool("curated", false),
+			},
+			FeedContextPath:          d.GetString("feed_context_path", false),
+			DownloadContextPath:      d.GetString("download_context_path", false),
+			V3FeedUrl:                d.GetString("v3_feed_url", false),
+			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
+			SymbolServerUrl:          d.GetString("symbol_server_url", false),
 		}
 		return repo, repo.Id(), nil
 	}

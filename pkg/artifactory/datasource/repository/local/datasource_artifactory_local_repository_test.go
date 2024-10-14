@@ -641,7 +641,7 @@ func TestAccDataSourceLocalHelmOciRepository(t *testing.T) {
 }
 
 func TestAccDataSourceLocalAllGradleLikePackageTypes(t *testing.T) {
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(makeDataSourceLocalGradleLikeRepoTestCase(packageType, t))
 		})

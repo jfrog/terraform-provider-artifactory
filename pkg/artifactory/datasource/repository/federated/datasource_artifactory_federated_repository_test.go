@@ -927,7 +927,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 }
 
 func TestAccDataSourceFederatedAllGradleLikePackageTypes(t *testing.T) {
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(makeFederatedGradleLikeRepoTestCase(packageType, t))
 		})

@@ -756,7 +756,7 @@ func TestAccVirtualRepository(t *testing.T) {
 }
 
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(mkNewVirtualTestCase(packageType, t, map[string]interface{}{
 				"description": fmt.Sprintf("%s virtual repository public description testing.", packageType),

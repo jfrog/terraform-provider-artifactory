@@ -88,7 +88,7 @@ func datasourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_terraform_provider_repository": datasource_federated.DataSourceArtifactoryFederatedTerraformRepository("provider"),
 	}
 
-	for _, packageType := range repository.GradleLikePackageTypes {
+	for _, packageType := range repository.PackageTypesLikeGradle {
 		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", packageType)
 		dataSourcesMap[localResourceName] = datasource_local.DataSourceArtifactoryLocalJavaRepository(packageType, true)
 
