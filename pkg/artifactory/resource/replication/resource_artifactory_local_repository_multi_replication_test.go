@@ -266,7 +266,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				url 								= "https://dummyurl.com/"
 				username 							= "{{ .username }}"
 				password 							= "Passw0rd!"
-				proxy 								= artifactory_proxy.{{ .proxy }}.key
+				disable_proxy						= true
 				enabled 							= false
 				socket_timeout_millis 				= 16000
 				sync_deletes 						= true
@@ -312,7 +312,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "replication.0.check_binary_existence_in_filestore", "true"),
 					resource.TestCheckResourceAttr(fqrn, "replication.1.username", acctest.RtDefaultUser),
 					resource.TestCheckResourceAttr(fqrn, "replication.1.password", "Passw0rd!"),
-					resource.TestCheckResourceAttr(fqrn, "replication.1.proxy", testProxy),
+					resource.TestCheckResourceAttr(fqrn, "replication.1.disable_proxy", "true"),
 					resource.TestCheckResourceAttr(fqrn, "replication.1.enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "replication.1.check_binary_existence_in_filestore", "true"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "replication.*.*", acctest.GetArtifactoryUrl(t)),

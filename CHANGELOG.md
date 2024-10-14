@@ -1,3 +1,9 @@
+## 12.2.0 (October 14, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.7 and OpenTofu 1.8.3
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_repository_multi_replication: Add `disable_proxy` attribute to `replication` to support not using proxy. Issue: [#1088](https://github.com/jfrog/terraform-provider-artifactory/issues/1088) PR: [#1095](https://github.com/jfrog/terraform-provider-artifactory/pull/1095)
+
 ## 12.1.1 (October 2, 2024). Tested on Artifactory 7.90.13 with Terraform 1.9.6 and OpenTofu 1.8.2
 
 IMPROVEMENTS:
