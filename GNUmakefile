@@ -45,7 +45,9 @@ install: clean build
 		sed -i.bak 's/version = ".*"/version = "${NEXT_PROVIDER_VERSION}"/' sample.tf && rm sample.tf.bak && \
 		${TERRAFORM_CLI} init
 
+		# move this line up when testing on TFC
 		# mv -v dist/terraform-provider-${PRODUCT}_${LINUX_GORELEASER_ARCH}/terraform-provider-${PRODUCT}_v${NEXT_PROVIDER_VERSION}* ${LINUX_BUILD_PATH} && \
+
 clean:
 	rm -fR dist terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
 
