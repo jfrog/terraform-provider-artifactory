@@ -107,6 +107,8 @@ In your workspace, add an environment variable `TFC_WORKLOAD_IDENTITY_AUDIENCE` 
 
 When a run starts on Terraform Cloud, it will create a workload identity token with the specified audience and assigns it to the environment variable `TFC_WORKLOAD_IDENTITY_TOKEN` for the provider to consume.
 
+See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details on using different tokens.
+
 #### Setup Terraform Cloud in your configuration
 
 Add `cloud` block to `terraform` block, and add `oidc_provider_name` attribute (from JFrog OIDC integration) to provider block:
@@ -131,6 +133,7 @@ terraform {
 provider "artifactory" {
   url = "https://myinstance.jfrog.io"
   oidc_provider_name = "terraform-cloud"
+  tfc_credential_tag_name = "JFROG"
 }
 ```
 
@@ -144,4 +147,4 @@ The following arguments are supported:
 * `access_token` - (Optional) This can also be sourced from `JFROG_ACCESS_TOKEN` or `ARTIFACTORY_ACCESS_TOKEN` environment variables.
 * `api_key` - (Optional, deprecated) API key for api auth.
 * `oidc_provider_name` - (Optional) OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.
-* `check_license` - (Optional) Toggle for pre-flight checking of Artifactory license. Default to `true`.
+* `tfc_credential_tag_name` - (Optional) Terraform Cloud Workload Identity Token tag name. Use for generating multiple TFC workload identity tokens. When set, the provider will attempt to use env var with this tag name as suffix. **Note:** this is case sensitive, so if set to `JFROG`, then env var `TFC_WORKLOAD_IDENTITY_TOKEN_JFROG` is used instead of `TFC_WORKLOAD_IDENTITY_TOKEN`. See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details.
