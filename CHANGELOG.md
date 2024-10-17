@@ -1,3 +1,9 @@
+## 12.3.1 (October 18, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_local_repository_multi_replication: Fix error when updating resource with new `cron_exp` value. Issue: [#1099](https://github.com/jfrog/terraform-provider-artifactory/issues/1099) PR: [#1100](https://github.com/jfrog/terraform-provider-artifactory/pull/1100)
+
 ## 12.3.0 (October 16, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.7 and OpenTofu 1.8.3
 
 IMPROVEMENTS:
