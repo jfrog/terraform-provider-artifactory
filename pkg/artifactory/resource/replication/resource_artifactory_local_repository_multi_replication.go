@@ -61,6 +61,8 @@ func (m LocalRepositoryMultiReplicationResourceModel) toAPIModel(_ context.Conte
 					SocketTimeoutMillis:             attrs["socket_timeout_millis"].(types.Int64).ValueInt64(),
 					Username:                        attrs["username"].(types.String).ValueString(),
 					Password:                        attrs["password"].(types.String).ValueString(),
+					CronExp:                         m.CronExp.ValueString(),
+					RepoKey:                         m.RepoKey.ValueString(),
 					Enabled:                         attrs["enabled"].(types.Bool).ValueBool(),
 					SyncDeletes:                     attrs["sync_deletes"].(types.Bool).ValueBool(),
 					SyncProperties:                  attrs["sync_properties"].(types.Bool).ValueBool(),
