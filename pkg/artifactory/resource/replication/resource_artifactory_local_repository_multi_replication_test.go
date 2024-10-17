@@ -244,7 +244,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 
 		resource "artifactory_local_repository_multi_replication" "{{ .repo_name }}" {
 			repo_key = artifactory_local_maven_repository.{{ .repo_name }}.key
-			cron_exp = "0 0 * * * ?"
+			cron_exp = "0 0 */2 * * ?"
 			enable_event_replication = true
 
 			replication {
@@ -302,7 +302,7 @@ func TestAccLocalMultiReplication_full(t *testing.T) {
 				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
-					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 */2 * * ?"),
 					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "replication.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "replication.0.username", acctest.RtDefaultUser),
