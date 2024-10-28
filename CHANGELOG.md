@@ -1,3 +1,9 @@
+## 12.3.2 (October 29, 2024)
+
+BUG FIXES:
+
+* resource/artifactory_mail_server: Fix error when unsetting an optional attribute. Issue: [#1103](https://github.com/jfrog/terraform-provider-artifactory/issues/1103) PR: [#1106](https://github.com/jfrog/terraform-provider-artifactory/pull/1106)
+
 ## 12.3.1 (October 18, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.8 and OpenTofu 1.8.3
 
 BUG FIXES:
