@@ -21,16 +21,16 @@ import (
 )
 
 type MailServerAPIModel struct {
-	Enabled        bool   `xml:"enabled" yaml:"enabled"`
-	ArtifactoryURL string `xml:"artifactoryUrl" yaml:"artifactoryUrl"`
-	From           string `xml:"from" yaml:"from"`
-	Host           string `xml:"host" yaml:"host"`
-	Username       string `xml:"username" yaml:"username"`
-	Password       string `xml:"password" yaml:"password"`
-	Port           int64  `xml:"port" yaml:"port"`
-	SubjectPrefix  string `xml:"subjectPrefix" yaml:"subjectPrefix"`
-	UseSSL         bool   `xml:"ssl" yaml:"ssl"`
-	UseTLS         bool   `xml:"tls" yaml:"tls"`
+	Enabled        bool    `xml:"enabled" yaml:"enabled"`
+	ArtifactoryURL string  `xml:"artifactoryUrl" yaml:"artifactoryUrl"`
+	Host           string  `xml:"host" yaml:"host"`
+	Port           int64   `xml:"port" yaml:"port"`
+	From           *string `xml:"from" yaml:"from"`
+	Username       *string `xml:"username" yaml:"username"`
+	Password       *string `xml:"password" yaml:"password"`
+	SubjectPrefix  *string `xml:"subjectPrefix" yaml:"subjectPrefix"`
+	UseSSL         bool    `xml:"ssl" yaml:"ssl"`
+	UseTLS         bool    `xml:"tls" yaml:"tls"`
 }
 
 type MailServer struct {
@@ -55,12 +55,12 @@ func (r *MailServerResourceModel) ToAPIModel(ctx context.Context, mailServer *Ma
 	*mailServer = MailServerAPIModel{
 		Enabled:        r.Enabled.ValueBool(),
 		ArtifactoryURL: r.ArtifactoryURL.ValueString(),
-		From:           r.From.ValueString(),
 		Host:           r.Host.ValueString(),
-		Username:       r.Username.ValueString(),
-		Password:       r.Password.ValueString(),
 		Port:           r.Port.ValueInt64(),
-		SubjectPrefix:  r.SubjectPrefix.ValueString(),
+		From:           r.From.ValueStringPointer(),
+		Username:       r.Username.ValueStringPointer(),
+		Password:       r.Password.ValueStringPointer(),
+		SubjectPrefix:  r.SubjectPrefix.ValueStringPointer(),
 		UseSSL:         r.UseSSL.ValueBool(),
 		UseTLS:         r.UseTLS.ValueBool(),
 	}
@@ -71,11 +71,12 @@ func (r *MailServerResourceModel) ToAPIModel(ctx context.Context, mailServer *Ma
 func (r *MailServerResourceModel) FromAPIModel(ctx context.Context, mailServer *MailServerAPIModel) diag.Diagnostics {
 	r.Enabled = types.BoolValue(mailServer.Enabled)
 	r.ArtifactoryURL = types.StringValue(mailServer.ArtifactoryURL)
-	r.From = types.StringValue(mailServer.From)
 	r.Host = types.StringValue(mailServer.Host)
-	r.Username = types.StringValue(mailServer.Username)
 	r.Port = types.Int64Value(mailServer.Port)
-	r.SubjectPrefix = types.StringValue(mailServer.SubjectPrefix)
+
+	r.From = types.StringPointerValue(mailServer.From)
+	r.Username = types.StringPointerValue(mailServer.Username)
+	r.SubjectPrefix = types.StringPointerValue(mailServer.SubjectPrefix)
 	r.UseSSL = types.BoolValue(mailServer.UseSSL)
 	r.UseTLS = types.BoolValue(mailServer.UseTLS)
 

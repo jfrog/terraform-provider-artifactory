@@ -48,8 +48,6 @@ func TestAccMailServer_full(t *testing.T) {
 		artifactory_url = "{{ .artifactory_url }}"
 		from            = "{{ .from }}"
 		host            = "{{ .host }}"
-		username        = "test-user"
-		password        = "test-password"
 		port            = 25
 		subject_prefix  = "[Test]"
 		use_ssl         = true
@@ -84,8 +82,8 @@ func TestAccMailServer_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "artifactory_url", testData["artifactory_url"]),
 					resource.TestCheckResourceAttr(fqrn, "from", testData["from"]),
 					resource.TestCheckResourceAttr(fqrn, "host", testData["host"]),
-					resource.TestCheckResourceAttr(fqrn, "username", "test-user"),
-					resource.TestCheckResourceAttr(fqrn, "password", "test-password"),
+					resource.TestCheckNoResourceAttr(fqrn, "username"),
+					resource.TestCheckNoResourceAttr(fqrn, "password"),
 					resource.TestCheckResourceAttr(fqrn, "port", "25"),
 					resource.TestCheckResourceAttr(fqrn, "subject_prefix", "[Test]"),
 					resource.TestCheckResourceAttr(fqrn, "use_ssl", "true"),
