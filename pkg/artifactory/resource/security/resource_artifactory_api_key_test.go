@@ -12,6 +12,19 @@ import (
 )
 
 func TestAccApiKey(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.98.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if valid {
+		t.Skipf("Artifactory version %s is 7.98.1 or later", version)
+	}
+
 	fqrn := "artifactory_api_key.foobar"
 	const apiKey = `
 		resource "artifactory_api_key" "foobar" {}
