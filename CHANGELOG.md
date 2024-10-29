@@ -1,5 +1,9 @@
 ## 12.3.2 (October 29, 2024). Tested on Artifactory 7.90.15 with Terraform 1.9.8 and OpenTofu 1.8.4
 
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Update valid values for `package_types` attribute. PR: [#1107](https://github.com/jfrog/terraform-provider-artifactory/pull/1107)
+
 BUG FIXES:
 
 * resource/artifactory_mail_server: Fix error when unsetting an optional attribute. Issue: [#1103](https://github.com/jfrog/terraform-provider-artifactory/issues/1103) PR: [#1106](https://github.com/jfrog/terraform-provider-artifactory/pull/1106)
