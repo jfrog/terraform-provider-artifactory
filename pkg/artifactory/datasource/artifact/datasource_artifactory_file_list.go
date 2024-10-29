@@ -241,6 +241,11 @@ func (d *FileListDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var fileList FileListAPIModel
+	folderPath := ""
+	if data.FolderPath.ValueString() != "/" { // only use config folder path if it isn't just "/"
+		folderPath = data.FolderPath.ValueString()
+	}
+
 	response, err := d.ProviderData.Client.R().
 		SetQueryParams(map[string]string{
 			"list":            "",
@@ -253,7 +258,7 @@ func (d *FileListDataSource) Read(ctx context.Context, req datasource.ReadReques
 		SetResult(&fileList).
 		SetPathParams(map[string]string{
 			"repoKey":    data.RepositoryKey.ValueString(),
-			"folderPath": data.FolderPath.ValueString(),
+			"folderPath": folderPath,
 		}).
 		Get("artifactory/api/storage/{repoKey}/{folderPath}")
 
