@@ -270,7 +270,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		search_criteria = {
 			package_types = ["docker", "maven", "gradle"]
 			repos = ["**"]
-			included_packages = ["com/jfrog"]
+			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			include_all_projects = true
 			created_before_in_months = 12
@@ -345,7 +345,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckNoResourceAttr(fqrn, "search_criteria.include_projects"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_packages.*", "com/jfrog"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_packages.*", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "12"),
@@ -415,7 +415,6 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
-			// include_all_projects = true
 			included_projects = []
 			created_before_in_months = 1
 			last_downloaded_before_in_months = 6
@@ -455,9 +454,8 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		search_criteria = {
 			package_types = ["docker", "maven", "gradle"]
 			repos = ["**"]
-			included_packages = ["com/jfrog"]
+			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
-			// include_all_projects = true
 			included_projects = []
 			created_before_in_months = 12
 			last_downloaded_before_in_months = 24
@@ -530,7 +528,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gradle"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", "**"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_packages.*", "com/jfrog"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_packages.*", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "12"),

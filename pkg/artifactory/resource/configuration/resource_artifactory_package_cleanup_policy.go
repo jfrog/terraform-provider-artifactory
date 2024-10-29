@@ -32,7 +32,7 @@ const (
 	PackageCleanupPolicyEnablementEndpointPath = "artifactory/api/cleanup/packages/policies/{policyKey}/enablement"
 )
 
-var cleanupPolicySupportedPackageType = []string{"conan", "docker", "generic", "gradle", "maven", "npm", "nuget", "rpm"}
+var cleanupPolicySupportedPackageType = []string{"conan", "debian", "docker", "gems", "generic", "go", "gradle", "helm", "maven", "npm", "nuget", "pypi", "yum"}
 
 func NewPackageCleanupPolicyResource() resource.Resource {
 	return &PackageCleanupPolicyResource{
