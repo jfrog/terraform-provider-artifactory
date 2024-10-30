@@ -83,7 +83,6 @@ func TestAccRemoteRepositoryReplication_InvalidPushCron_fails(t *testing.T) {
 			sync_properties 					= true
 			include_path_prefix_pattern 		= "/some-repo/"
 			exclude_path_prefix_pattern 		= "/some-other-repo/"
-			check_binary_existence_in_filestore = true
 		}
 	`
 	resource.Test(t, resource.TestCase{
@@ -113,7 +112,6 @@ func TestAccRemoteRepositoryReplication_InvalidRclass_fails(t *testing.T) {
 			sync_properties 					= true
 			include_path_prefix_pattern 		= "/some-repo/"
 			exclude_path_prefix_pattern 		= "/some-other-repo/"
-			check_binary_existence_in_filestore = false
 		}
 	`
 	resource.Test(t, resource.TestCase{
@@ -169,7 +167,6 @@ func TestAccRemoteRepositoryReplication_full(t *testing.T) {
 			sync_properties 					= false
 			include_path_prefix_pattern 		= "/some-repo-modified/"
 			exclude_path_prefix_pattern 		= "/some-other-repo-modified/"
-			check_binary_existence_in_filestore = false
 		}
 	`, params)
 

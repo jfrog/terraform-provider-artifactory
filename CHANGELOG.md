@@ -1,8 +1,13 @@
-## 12.3.2 (October 29, 2024). Tested on Artifactory 7.90.15 with Terraform 1.9.8 and OpenTofu 1.8.4
+## 12.3.2 (October 30, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.4
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Update valid values for `package_types` attribute. PR: [#1107](https://github.com/jfrog/terraform-provider-artifactory/pull/1107)
 
 BUG FIXES:
 
 * resource/artifactory_mail_server: Fix error when unsetting an optional attribute. Issue: [#1103](https://github.com/jfrog/terraform-provider-artifactory/issues/1103) PR: [#1106](https://github.com/jfrog/terraform-provider-artifactory/pull/1106)
+* resource/artifactory_remote_repository_replication: Fix unknown value error for `check_binary_existence_in_filestore`. Issue: [#1105](https://github.com/jfrog/terraform-provider-artifactory/issues/1105) PR: [#1107](https://github.com/jfrog/terraform-provider-artifactory/pull/1107)
 
 ## 12.3.1 (October 18, 2024). Tested on Artifactory 7.90.14 with Terraform 1.9.8 and OpenTofu 1.8.3
 

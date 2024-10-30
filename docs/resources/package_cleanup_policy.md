@@ -71,7 +71,7 @@ resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
 Required:
 
 - `included_packages` (Set of String) Specify a pattern for a package name or an explicit package name. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example: `included_packages = ["**"]`
-- `package_types` (Set of String) Types of packages to be removed. Support: conan, docker, generic, gradle, maven, npm, nuget, rpm.
+- `package_types` (Set of String) Types of packages to be removed. Support: conan, debian, docker, gems, generic, go, gradle, helm, maven, npm, nuget, pypi, yum.
 - `repos` (Set of String) Specify patterns for repository names or explicit repository names. For including all repos use `**`. Example: `repos = ["**"]`
 
 Optional:
