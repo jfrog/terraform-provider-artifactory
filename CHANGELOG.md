@@ -1,3 +1,9 @@
+## 12.3.3 (November 1, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.4
+
+BUG FIXES:
+
+* resource/artifactory_local_repository_single_replication: Fix unknown value error for `check_binary_existence_in_filestore`. Issue: [#1105](https://github.com/jfrog/terraform-provider-artifactory/issues/1105) PR: [#1113](https://github.com/jfrog/terraform-provider-artifactory/pull/1113)
+
 ## 12.3.2 (October 30, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.4
 
 IMPROVEMENTS:
