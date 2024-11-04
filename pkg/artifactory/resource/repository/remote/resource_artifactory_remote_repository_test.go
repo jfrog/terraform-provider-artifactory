@@ -608,11 +608,16 @@ func TestAccRemoteAllRepository(t *testing.T) {
 
 func TestAccRemoteGoRepository(t *testing.T) {
 	const packageType = "go"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://proxy.golang.org/",
-		"vcs_git_provider":            "ARTIFACTORY",
-		"missed_cache_period_seconds": 1800,
-	}))
+
+	for _, vcsGitProvider := range remote.SupportedGoVCSGitProviders {
+		t.Run(vcsGitProvider, func(t *testing.T) {
+			resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+				"url":                         "https://proxy.golang.org/",
+				"vcs_git_provider":            vcsGitProvider,
+				"missed_cache_period_seconds": 1800,
+			}))
+		})
+	}
 }
 
 func TestAccRemoteVcsRepository(t *testing.T) {

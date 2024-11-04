@@ -15,6 +15,15 @@ type GoRemoteRepo struct {
 	VcsGitProvider string `json:"vcsGitProvider"`
 }
 
+var SupportedGoVCSGitProviders = []string{
+	"ARTIFACTORY",
+	"BITBUCKET",
+	"GITHUB",
+	"GITHUBENTERPRISE",
+	"GITLAB",
+	"STASH",
+}
+
 var GoSchema = lo.Assign(
 	baseSchema,
 	CurationRemoteRepoSchema,
@@ -23,8 +32,8 @@ var GoSchema = lo.Assign(
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "ARTIFACTORY",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"GITHUB", "ARTIFACTORY"}, false)),
-			Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "ARTIFACTORY".`,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(SupportedGoVCSGitProviders, false)),
+			Description:      "Artifactory supports proxying the following Git providers out-of-the-box: GitHub (`GITHUB`), GitHub Enterprise (`GITHUBENTERPRISE`), BitBucket Cloud (`BITBUCKET`), BitBucket Server (`STASH`), GitLab (`GITLAB`), or a remote Artifactory instance (`ARTIFACTORY`). Default value is `ARTIFACTORY`.",
 		},
 	},
 	repository.RepoLayoutRefSchema(Rclass, repository.GoPackageType),
