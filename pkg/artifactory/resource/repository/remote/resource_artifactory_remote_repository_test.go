@@ -1210,7 +1210,7 @@ func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						Source:            "jfrog/artifactory",
-						VersionConstraint: "12.3.3",
+						VersionConstraint: "12.0.0",
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
