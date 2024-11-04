@@ -1,3 +1,9 @@
+## 12.4.0 (November 4, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.5
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_go_repository: Update list of valid values for attribute `vcs_git_provider`. PR: [#1115](https://github.com/jfrog/terraform-provider-artifactory/pull/1115)
+
 ## 12.3.3 (November 1, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.4
 
 BUG FIXES:
