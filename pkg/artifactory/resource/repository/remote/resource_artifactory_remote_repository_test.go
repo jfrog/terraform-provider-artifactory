@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
@@ -1211,7 +1210,7 @@ func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						Source:            "jfrog/artifactory",
-						VersionConstraint: "12.0.0",
+						VersionConstraint: "12.3.3",
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
