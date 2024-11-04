@@ -88,10 +88,6 @@ func ResourceArtifactoryRemoteMavenRepository() *schema.Resource {
 	)
 }
 
-var resourceMavenV1 = &schema.Resource{
-	Schema: mavenSchemaV1,
-}
-
 func mkResourceSchemaMaven(skeemas map[int16]map[string]*schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *schema.Resource {
 	var reader = repository.MkRepoRead(packer, constructor)
 	return &schema.Resource{
