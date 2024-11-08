@@ -450,7 +450,7 @@ var cleanupPolicySchemaV1 = lo.Assign(
 						int64validator.ConflictsWith(
 							path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
 						),
-						int64validator.AtLeast(1),
+						int64validator.AtLeast(0),
 					},
 					MarkdownDescription: "Remove packages based on when they were created. For example, remove packages that were created more than a year ago. The default value is to remove packages created more than 2 years ago.",
 				},
@@ -463,7 +463,7 @@ var cleanupPolicySchemaV1 = lo.Assign(
 						int64validator.ConflictsWith(
 							path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
 						),
-						int64validator.AtLeast(1),
+						int64validator.AtLeast(0),
 					},
 					MarkdownDescription: "Removes packages based on when they were last downloaded. For example, removes packages that were not downloaded in the past year. The default value is to remove packages that were downloaded more than 2 years ago.\n\n" +
 						"~>If a package was never downloaded, the policy will remove it based only on the age-condition (`created_before_in_months`).\n\n" +
@@ -486,6 +486,41 @@ var cleanupPolicySchemaV1 = lo.Assign(
 		},
 	},
 )
+
+func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data PackageCleanupPolicyResourceModelV1
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If search_criteria is not configured, return without warning.
+	if data.SearchCriteria.IsNull() || data.SearchCriteria.IsUnknown() {
+		return
+	}
+
+	searchCriteriaAttrs := data.SearchCriteria.Attributes()
+	createdBeforeInMonths := searchCriteriaAttrs["created_before_in_months"].(types.Int64)
+	lastDownloadedBeforeInMonths := searchCriteriaAttrs["last_downloaded_before_in_months"].(types.Int64)
+
+	if createdBeforeInMonths.IsNull() || createdBeforeInMonths.IsUnknown() {
+		return
+	}
+
+	if lastDownloadedBeforeInMonths.IsNull() || lastDownloadedBeforeInMonths.IsUnknown() {
+		return
+	}
+
+	if createdBeforeInMonths.ValueInt64() == 0 && lastDownloadedBeforeInMonths.ValueInt64() == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("search_criteria").AtName("created_before_in_months"),
+			"Invalid Attribute Configuration",
+			"Both created_before_in_months and last_downloaded_before_in_months cannot be zero at the same time.",
+		)
+	}
+}
 
 func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{

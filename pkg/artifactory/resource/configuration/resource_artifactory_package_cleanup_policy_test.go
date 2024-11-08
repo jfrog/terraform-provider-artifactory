@@ -162,7 +162,7 @@ func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
 				skip_trashcan = false
 				
 				search_criteria = {
-					repos = []
+					repos = ["**"]
 					package_types = ["docker"]
 					include_all_projects = true
 					included_packages = ["**"]
@@ -193,6 +193,62 @@ func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAccPackageCleanupPolicy_invalid_conditions(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = true
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_months = 0
+			last_downloaded_before_in_months = 0
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*Both created_before_in_months and last_downloaded_before_in_months cannot be\n.*zero at the same time.*"),
+			},
+		},
+	})
 }
 
 func TestAccPackageCleanupPolicy_full(t *testing.T) {
@@ -247,7 +303,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 			included_projects = [project.myproject.key]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
-			created_before_in_months = 1
+			created_before_in_months = 0
 			last_downloaded_before_in_months = 6
 		}
 	}`
@@ -274,7 +330,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 			excluded_packages = ["com/jfrog/latest"]
 			include_all_projects = true
 			created_before_in_months = 12
-			last_downloaded_before_in_months = 24
+			last_downloaded_before_in_months = 0
 		}
 	}`
 
@@ -323,7 +379,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "0"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
 				),
 			},
@@ -349,7 +405,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "12"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "24"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "0"),
 				),
 			},
 			{
