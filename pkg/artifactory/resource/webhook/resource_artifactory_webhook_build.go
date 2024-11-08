@@ -74,12 +74,22 @@ func (r *BuildWebhookResource) Configure(ctx context.Context, req resource.Confi
 }
 
 func buildValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
+	if criteria.IsNull() || criteria.IsUnknown() {
+		return
+	}
+
 	criteriaObj := criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
-	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
+	anyBuild := criteriaAttrs["any_build"].(types.Bool)
+	selectedBuilds := criteriaAttrs["selected_builds"].(types.Set)
+	includePatterns := criteriaAttrs["include_patterns"].(types.Set)
 
-	if !anyBuild && len(criteriaAttrs["selected_builds"].(types.Set).Elements()) == 0 && len(criteriaAttrs["include_patterns"].(types.Set).Elements()) == 0 {
+	if anyBuild.IsUnknown() || selectedBuilds.IsUnknown() || includePatterns.IsUnknown() {
+		return
+	}
+
+	if !anyBuild.ValueBool() && len(selectedBuilds.Elements()) == 0 && len(includePatterns.Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_build"),
 			"Invalid Attribute Configuration",
@@ -281,6 +291,9 @@ func fromBuildAPIModel(ctx context.Context, criteriaAPIModel map[string]interfac
 		buildCriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	return criteriaSet, diags
 }
@@ -291,6 +304,9 @@ func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel W
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromBuildAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {

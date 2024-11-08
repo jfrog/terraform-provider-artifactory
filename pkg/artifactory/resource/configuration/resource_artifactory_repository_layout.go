@@ -123,7 +123,15 @@ func (r RepositoryLayoutResource) ValidateConfig(ctx context.Context, req resour
 		return
 	}
 
-	if data.DistinctiveDescriptorPathPattern.ValueBool() && len(data.DescriptorPathPattern.ValueString()) == 0 {
+	if data.DistinctiveDescriptorPathPattern.IsNull() || data.DistinctiveDescriptorPathPattern.IsUnknown() {
+		return
+	}
+
+	if data.DescriptorPathPattern.IsUnknown() {
+		return
+	}
+
+	if data.DistinctiveDescriptorPathPattern.ValueBool() && (data.DescriptorPathPattern.IsNull() || len(data.DescriptorPathPattern.ValueString()) == 0) {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("descriptor_path_pattern"),
 			"Invalid attribute configuration",

@@ -504,6 +504,10 @@ func (r *ArtifactoryBaseUserResource) validatePasswordByPolicy(plan ArtifactoryU
 		return nil
 	}
 
+	if plan.PasswordPolicy.IsUnknown() {
+		return nil
+	}
+
 	// Default password policy should match Access default configuration:
 	// https://jfrog.com/help/r/jfrog-installation-setup-documentation/supported-access-configurations
 	minLength := int64(8)

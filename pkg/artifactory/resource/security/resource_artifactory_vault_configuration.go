@@ -319,6 +319,10 @@ func (r VaultConfigurationResource) ValidateConfig(ctx context.Context, req reso
 		return
 	}
 
+	if data.Config.IsNull() || data.Config.IsUnknown() {
+		return
+	}
+
 	configAttrs := data.Config.Attributes()
 	authAttrs := configAttrs["auth"].(types.Object).Attributes()
 	authType := authAttrs["type"].(types.String)

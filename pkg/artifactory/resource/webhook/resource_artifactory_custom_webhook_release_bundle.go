@@ -228,6 +228,9 @@ func (m *ReleaseBundleCustomWebhookResourceModel) fromAPIModel(ctx context.Conte
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.CustomWebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromReleaseBundleCriteriaAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {

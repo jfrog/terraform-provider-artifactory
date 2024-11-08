@@ -78,14 +78,23 @@ func (r RepoCustomWebhookResource) ValidateConfig(ctx context.Context, req resou
 		return
 	}
 
+	if data.Criteria.IsNull() || data.Criteria.IsUnknown() {
+		return
+	}
+
 	criteriaObj := data.Criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
-	anyLocal := criteriaAttrs["any_local"].(types.Bool).ValueBool()
-	anyRemote := criteriaAttrs["any_remote"].(types.Bool).ValueBool()
-	anyFederated := criteriaAttrs["any_federated"].(types.Bool).ValueBool()
+	anyLocal := criteriaAttrs["any_local"].(types.Bool)
+	anyRemote := criteriaAttrs["any_remote"].(types.Bool)
+	anyFederated := criteriaAttrs["any_federated"].(types.Bool)
+	repoKeys := criteriaAttrs["repo_keys"].(types.Set)
 
-	if (!anyLocal && !anyRemote && !anyFederated) && len(criteriaAttrs["repo_keys"].(types.Set).Elements()) == 0 {
+	if anyLocal.IsUnknown() || anyRemote.IsUnknown() || anyFederated.IsUnknown() || repoKeys.IsUnknown() {
+		return
+	}
+
+	if (!anyLocal.ValueBool() && !anyRemote.ValueBool() && !anyFederated.ValueBool()) && len(repoKeys.Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("criteria").AtSetValue(criteriaObj).AtName("repo_keys"),
 			"Invalid Attribute Configuration",
@@ -208,6 +217,9 @@ func (m RepoCustomWebhookResourceModel) toAPIModel(ctx context.Context, domain s
 	}
 
 	criteriaAPIModel, d := toRepoCriteriaAPIModel(ctx, baseCriteria, criteriaAttrs)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	d = m.CustomWebhookResourceModel.toAPIModel(ctx, domain, criteriaAPIModel, apiModel)
 	if d.HasError() {
@@ -223,6 +235,9 @@ func (m *RepoCustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiMo
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.CustomWebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromRepoCriteriaAPIMode(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {

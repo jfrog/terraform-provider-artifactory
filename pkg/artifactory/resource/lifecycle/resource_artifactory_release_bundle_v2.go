@@ -439,6 +439,14 @@ func (r ReleaseBundleV2Resource) ValidateConfig(ctx context.Context, req resourc
 		return
 	}
 
+	if data.SourceType.IsNull() || data.SourceType.IsUnknown() {
+		return
+	}
+
+	if data.Source.IsNull() || data.Source.IsUnknown() {
+		return
+	}
+
 	sourceType := data.SourceType.ValueString()
 	sourceAttrs := data.Source.Attributes()
 

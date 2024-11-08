@@ -74,12 +74,21 @@ func (r *ReleaseBundleV2WebhookResource) Configure(ctx context.Context, req reso
 }
 
 func releaseBundleV2ValidatConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
+	if criteria.IsNull() || criteria.IsUnknown() {
+		return
+	}
+
 	criteriaObj := criteria.Elements()[0].(types.Object)
 	criteriaAttrs := criteriaObj.Attributes()
 
-	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
+	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool)
+	selectedReleaseBundles := criteriaAttrs["selected_release_bundles"].(types.Set)
 
-	if !anyReleaseBundle && len(criteriaAttrs["selected_release_bundles"].(types.Set).Elements()) == 0 {
+	if anyReleaseBundle.IsUnknown() || selectedReleaseBundles.IsUnknown() {
+		return
+	}
+
+	if !anyReleaseBundle.ValueBool() && len(selectedReleaseBundles.Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_release_bundle"),
 			"Invalid Attribute Configuration",
@@ -279,6 +288,9 @@ func fromReleaseBundleV2APIModel(ctx context.Context, criteriaAPIModel map[strin
 		releaseBundleV2CriteriaSetResourceModelElementTypes,
 		[]attr.Value{criteria},
 	)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	return
 }
@@ -289,6 +301,9 @@ func (m *ReleaseBundleV2WebhookResourceModel) fromAPIModel(ctx context.Context, 
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromReleaseBundleV2APIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
