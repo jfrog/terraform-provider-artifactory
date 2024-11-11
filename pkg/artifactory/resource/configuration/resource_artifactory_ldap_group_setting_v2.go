@@ -358,8 +358,16 @@ func (r *ArtifactoryLdapGroupSettingResource) ValidateConfig(ctx context.Context
 		return
 	}
 
+	if data.Strategy.IsNull() || data.Strategy.IsUnknown() {
+		return
+	}
+
+	if data.SubTree.IsNull() || data.SubTree.IsUnknown() {
+		return
+	}
+
 	// Validate strategy and sub_tree
-	if !data.Strategy.IsNull() && strings.ToUpper(data.Strategy.ValueString()) == "HIERARCHICAL" && data.SubTree.ValueBool() {
+	if strings.ToUpper(data.Strategy.ValueString()) == "HIERARCHICAL" && data.SubTree.ValueBool() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("sub_tree"),
 			"Incorrect Attribute Configuration",

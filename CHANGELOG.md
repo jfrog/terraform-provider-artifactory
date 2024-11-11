@@ -1,3 +1,9 @@
+## 12.4.1 (November 11, 2024). Tested on Artifactory 7.98.8 with Terraform 1.9.8 and OpenTofu 1.8.5
+
+BUG FIXES:
+
+* resource/artifactory_build_webhook, resource/artifactory_release_bundle_webhook, resource/artifactory_release_bundle_v2_webhook, resource/artifactory_artifact_webhook, resource/artifactory_artifact_property_webhook, resource/artifactory_docker_webhook, resource/artifactory_build_custom_webhook, resource/artifactory_release_bundle_custom_webhook, resource/artifactory_release_bundle_v2_custom_webhook, resource/artifactory_artifact_custom_webhook, resource/artifactory_artifact_property_custom_webhook, resource/artifactory_docker_custom_webhook, resource/artifactory_ldap_group_setting_v2, resource/artifactory_repository_layout, resource/artifactory_release_bundle_v2, resource/artifactory_vault_configuration, resource/artifactory_user, resource/artifactory_managed_user, resource/artifactory_unmanaged_user: Fix attribute validation not working for unknown value (e.g. when resource is used in a module). Issue: [#1120](https://github.com/jfrog/terraform-provider-artifactory/issues/1120) PR: [#1123](https://github.com/jfrog/terraform-provider-artifactory/pull/1123)
+
 ## 12.4.0 (November 4, 2024). Tested on Artifactory 7.98.7 with Terraform 1.9.8 and OpenTofu 1.8.5
 
 IMPROVEMENTS:

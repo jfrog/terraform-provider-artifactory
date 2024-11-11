@@ -256,6 +256,9 @@ func (m *ReleaseBundleV2PromotionWebhookResourceModel) fromAPIModel(ctx context.
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.WebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromReleaseBundleV2PromotionAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {

@@ -188,6 +188,9 @@ func (m *BuildCustomWebhookResourceModel) fromAPIModel(ctx context.Context, apiM
 	criteriaAPIModel := apiModel.EventFilter.Criteria.(map[string]interface{})
 
 	baseCriteriaAttrs, d := m.CustomWebhookResourceModel.fromBaseCriteriaAPIModel(ctx, criteriaAPIModel)
+	if d.HasError() {
+		diags.Append(d...)
+	}
 
 	criteriaSet, d := fromBuildAPIModel(ctx, criteriaAPIModel, baseCriteriaAttrs)
 	if d.HasError() {
