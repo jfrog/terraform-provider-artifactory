@@ -7,7 +7,7 @@ subcategory: "Deprecated"
 
 Provides an Artifactory group resource. This can be used to create and manage Artifactory groups.
 
-!>This resource is deprecated and will be removed in the next major version. Use `platform_group` resource in the JFrog Platform provider instead.
+!>This resource is deprecated and will be removed in the next major version. Use [`platform_group` resource](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/group) in the JFrog Platform provider instead.
 
 ## Example Usage
 
