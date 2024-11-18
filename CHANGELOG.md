@@ -1,3 +1,9 @@
+## 12.5.0 (November 15, 2024). Tested on Artifactory 7.98.8 with Terraform 1.9.8 and OpenTofu 1.8.5
+
+NOTES:
+
+* resource/artifactory_group: This resource is being deprecated and replaced by new [platform_group](https://registry.terraform.io/providers/jfrog/platform/latest/docs/resources/group) resource in the Platform provider. PR: [#1130](https://github.com/jfrog/terraform-provider-artifactory/pull/1130)
+
 ## 12.4.1 (November 11, 2024). Tested on Artifactory 7.98.8 with Terraform 1.9.8 and OpenTofu 1.8.5
 
 BUG FIXES:

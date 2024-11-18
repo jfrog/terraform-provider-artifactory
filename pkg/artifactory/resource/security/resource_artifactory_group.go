@@ -77,6 +77,7 @@ func (r *ArtifactoryGroupResource) Metadata(ctx context.Context, req resource.Me
 func (r *ArtifactoryGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Provides an Artifactory group resource. This can be used to create and manage Artifactory groups. A group represents a role in the system and is assigned a set of permissions.",
+		DeprecationMessage:  "This resource is deprecated. Use 'platform_group' resource in the JFrog Platform provider instead.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
