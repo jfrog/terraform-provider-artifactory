@@ -6,7 +6,7 @@ module github.com/jfrog/terraform-provider-artifactory/v12
 go 1.22.7
 
 require (
-	github.com/go-resty/resty/v2 v2.16.1
+	github.com/go-resty/resty/v2 v2.16.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/terraform-plugin-docs v0.20.0
@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.17.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
-	github.com/jfrog/terraform-provider-shared v1.27.0
+	github.com/jfrog/terraform-provider-shared v1.27.1
 	github.com/samber/lo v1.47.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.9.0
