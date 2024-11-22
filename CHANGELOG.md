@@ -1,3 +1,9 @@
+## 12.5.1 (November 22, 2024)
+
+BUG FIXES:
+
+* dependency: Update Resty to 1.26.2. Potentially fix intermittent HTTP authentication issue. Issue: [#1135](https://github.com/jfrog/terraform-provider-artifactory/issues/1135) PR: [#1136](https://github.com/jfrog/terraform-provider-artifactory/pull/1136)
+
 ## 12.5.0 (November 15, 2024). Tested on Artifactory 7.98.8 with Terraform 1.9.8 and OpenTofu 1.8.5
 
 NOTES:
