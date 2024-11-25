@@ -20,7 +20,7 @@ require (
 	github.com/jfrog/terraform-provider-shared v1.27.1
 	github.com/samber/lo v1.47.0
 	github.com/sethvargo/go-password v0.3.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	golang.org/x/net v0.31.0
 	gopkg.in/ldap.v2 v2.5.1
