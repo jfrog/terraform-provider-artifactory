@@ -32,7 +32,7 @@ BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_PROVIDER
 LINUX_BUILD_PATH=terraform.d/plugins/${REGISTRY_HOST}/jfrog/${PRODUCT}/${NEXT_PROVIDER_VERSION}/linux_amd64
 
 SONAR_SCANNER_VERSION?=4.7.0.2747
-SONAR_SCANNER_HOME?=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-macosx
+SONAR_SCANNER_HOME?=${HOME}/.sonar/sonar-scanner-${SONAR_SCANNER_VERSION}-macosx
 
 SMOKE_TESTS=(TestAccDataSourceUser_basic|TestAccLocalGenericRepository|TestAccLocalGenericRepositoryWithProjectAttributes|TestAccRemoteRepository_basic|TestAccRemoteRepositoryWithProjectAttributes|TestAccVirtualRepository_basic|TestAccVirtualGenericRepositoryWithProjectAttributes|TestAccFederatedRepoWithMembers|TestAccFederatedRepoWithProjectAttributes|TestAccWebhookAllTypes|TestAccUser_basic|TestAccGroup_basic|TestAccScopedToken_WithDefaults|TestAccPermissionTarget_full|TestAccBackup_full|TestAccGeneralSecurity_full|TestAccLdapGroupSetting_full|TestAccLdapSetting_full|TestAccOauthSettings_full|TestAccPropertySet|TestAccProxy|TestAccLayout_full|TestAccSamlSettings_full)
 

@@ -9,124 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccPackageCleanupPolicy_migrate_schema_v0(t *testing.T) {
-	client := acctest.GetTestResty(t)
-	version, err := util.GetArtifactoryVersion(client)
-	if err != nil {
-		t.Fatal(err)
-	}
-	valid, err := util.CheckVersion(version, "7.90.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !valid {
-		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
-	}
-
-	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
-	_, _, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
-
-	temp := `
-	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
-		key             = "{{ .repoName }}"
-		tag_retention   = 3
-		max_unique_tags = 5
-	}
-
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
-		key = "{{ .policyName }}"
-		description = "Test policy"
-		cron_expression = "0 0 2 ? * MON-SAT *"
-		duration_in_minutes = 60
-		enabled = true
-		skip_trashcan = false
-		
-		search_criteria = {
-			package_types = ["docker"]
-			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			include_all_projects = true
-			included_packages = ["**"]
-			excluded_packages = ["com/jfrog/latest"]
-			created_before_in_months = 1
-			last_downloaded_before_in_months = 6
-		}
-	}`
-
-	config := util.ExecuteTemplate(
-		policyName,
-		temp,
-		map[string]string{
-			"policyName": policyName,
-			"repoName":   repoName,
-		},
-	)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: testAccCleanupPolicyDestroy(fqrn),
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"artifactory": {
-						Source:            "jfrog/artifactory",
-						VersionConstraint: "11.8.0",
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
-					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
-					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
-					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
-					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
-				),
-			},
-			{
-				Config:                   config,
-				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
-					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
-					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
-					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
-					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
-					resource.TestCheckNoResourceAttr(fqrn, "project_key"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", repoName),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_packages.0", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
+func TestAccArchivePolicy_invalid_key(t *testing.T) {
 	testCases := []struct {
 		key        string
 		errorRegex string
@@ -150,10 +37,10 @@ func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
 				t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
 			}
 
-			_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+			_, _, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
 
 			temp := `
-			resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+			resource "artifactory_archive_policy" "{{ .policyName }}" {
 				key = "{{ .policyKey }}"
 				description = "Test policy"
 				cron_expression = "0 0 2 ? * MON-SAT *"
@@ -195,24 +82,24 @@ func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
 	}
 }
 
-func TestAccPackageCleanupPolicy_invalid_conditions(t *testing.T) {
+func TestAccArchivePolicy_invalid_conditions(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	valid, err := util.CheckVersion(version, "7.90.1")
+	valid, err := util.CheckVersion(version, "7.101.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !valid {
-		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
 	}
 
-	_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+	_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_archive_policy")
 
 	temp := `
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
 		key = "{{ .policyName }}"
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
@@ -251,22 +138,23 @@ func TestAccPackageCleanupPolicy_invalid_conditions(t *testing.T) {
 	})
 }
 
-func TestAccPackageCleanupPolicy_full(t *testing.T) {
+func TestAccArchivePolicy_full(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	valid, err := util.CheckVersion(version, "7.90.1")
+	valid, err := util.CheckVersion(version, "7.101.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !valid {
-		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
 	}
 
-	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+	_, fqrn, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
 	_, _, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
+	_, _, projectKey := testutil.MkNames("testproj", "project")
 
 	temp := `
 	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
@@ -275,10 +163,10 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		max_unique_tags = 5
 	}
 
-	resource "project" "myproject" {
-		key = "myproj"
-		display_name = "My Project"
-		description  = "My Project"
+	resource "project" "{{ .projectKey }}" {
+		key = "{{ .projectKey }}"
+		display_name = "Test Project"
+		description  = "Test Project"
 		admin_privileges {
 			manage_members   = true
 			manage_resources = true
@@ -289,7 +177,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		email_notification         = true
 	}
 
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
 		key = "{{ .policyName }}"
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
@@ -300,7 +188,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		search_criteria = {
 			package_types = ["docker"]
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
-			included_projects = [project.myproject.key]
+			included_projects = [project.{{ .projectKey }}.key]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			created_before_in_months = 0
@@ -315,7 +203,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		max_unique_tags = 5
 	}
 
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
 		key = "{{ .policyName }}"
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
@@ -340,6 +228,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 		map[string]string{
 			"policyName": policyName,
 			"repoName":   repoName,
+			"projectKey": projectKey,
 		},
 	)
 
@@ -360,7 +249,7 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 				Source: "jfrog/project",
 			},
 		},
-		CheckDestroy: testAccCleanupPolicyDestroy(fqrn),
+		CheckDestroy: testAccArchivePolicyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -419,22 +308,23 @@ func TestAccPackageCleanupPolicy_full(t *testing.T) {
 	})
 }
 
-func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
+func TestAccArchivePolicy_with_project_key(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	valid, err := util.CheckVersion(version, "7.90.1")
+	valid, err := util.CheckVersion(version, "7.101.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !valid {
-		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
 	}
 
-	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_archive_policy")
 	_, _, repoName := testutil.MkNames("test-docker-local", "artifactory_local_docker_v2_repository")
+	_, _, projectKey := testutil.MkNames("testproj", "project")
 
 	temp := `
 	resource "artifactory_local_docker_v2_repository" "{{ .repoName }}" {
@@ -443,10 +333,10 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		max_unique_tags = 5
 	}
 
-	resource "project" "myproject" {
-		key = "myproj"
-		display_name = "My Project"
-		description  = "My Project"
+	resource "project" "{{ .projectKey }}" {
+		key = "{{ .projectKey }}"
+		display_name = "Test Project"
+		description  = "Test Project"
 		admin_privileges {
 			manage_members   = true
 			manage_resources = true
@@ -457,14 +347,14 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		email_notification         = true
 	}
 
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
-		key = "${project.myproject.key}-{{ .policyName }}"
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "${project.{{ .projectKey }}.key}-{{ .policyName }}"
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 60
 		enabled = true
 		skip_trashcan = false
-		project_key = project.myproject.key
+		project_key = project.{{ .projectKey }}.key
 		
 		search_criteria = {
 			package_types = ["docker"]
@@ -484,10 +374,10 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		max_unique_tags = 5
 	}
 
-	resource "project" "myproject" {
-		key = "myproj"
-		display_name = "My Project"
-		description  = "My Project"
+	resource "project" "{{ .projectKey }}" {
+		key = "{{ .projectKey }}"
+		display_name = "Test Project"
+		description  = "Test Project"
 		admin_privileges {
 			manage_members   = true
 			manage_resources = true
@@ -498,14 +388,14 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		email_notification         = true
 	}
 
-	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
-		key = "${project.myproject.key}-{{ .policyName }}"
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "${project.{{ .projectKey }}.key}-{{ .policyName }}"
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 120
 		enabled = false
 		skip_trashcan = false
-		project_key = project.myproject.key
+		project_key = project.{{ .projectKey }}.key
 
 		search_criteria = {
 			package_types = ["docker", "maven", "gradle"]
@@ -524,6 +414,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		map[string]string{
 			"policyName": policyName,
 			"repoName":   repoName,
+			"projectKey": projectKey,
 		},
 	)
 
@@ -533,6 +424,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		map[string]string{
 			"policyName": policyName,
 			"repoName":   repoName,
+			"projectKey": projectKey,
 		},
 	)
 
@@ -544,7 +436,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 				Source: "jfrog/project",
 			},
 		},
-		CheckDestroy: testAccCleanupPolicyDestroy(fqrn),
+		CheckDestroy: testAccArchivePolicyDestroy(fqrn),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -602,7 +494,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 	})
 }
 
-func testAccCleanupPolicyDestroy(id string) func(*terraform.State) error {
+func testAccArchivePolicyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -612,7 +504,7 @@ func testAccCleanupPolicyDestroy(id string) func(*terraform.State) error {
 		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
 		resp, err := client.R().
 			SetPathParam("policyKey", rs.Primary.Attributes["key"]).
-			Get(configuration.PackageCleanupPolicyEndpointPath)
+			Get("artifactory/api/archive/v2/packages/policies/{policyKey}")
 		if err != nil {
 			return err
 		}
@@ -621,6 +513,6 @@ func testAccCleanupPolicyDestroy(id string) func(*terraform.State) error {
 			return nil
 		}
 
-		return fmt.Errorf("error: Package Cleanup Policy %s still exists", rs.Primary.ID)
+		return fmt.Errorf("error: Archive Policy %s still exists", rs.Primary.ID)
 	}
 }
