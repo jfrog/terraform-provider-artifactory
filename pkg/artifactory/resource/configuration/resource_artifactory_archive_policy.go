@@ -21,12 +21,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
-var archivePolicySupportedPackageType = []string{}
+var archivePolicySupportedPackageType = []string{
+	repository.CargoPackageType,
+	repository.ConanPackageType,
+	repository.DebianPackageType,
+	repository.DockerPackageType,
+	repository.GemsPackageType,
+	repository.GenericPackageType,
+	repository.GoPackageType,
+	repository.GradlePackageType,
+	repository.HelmPackageType,
+	repository.HelmOCIPackageType,
+	repository.MavenPackageType,
+	repository.NPMPackageType,
+	repository.NugetPackageType,
+	repository.PyPiPackageType,
+	repository.RPMPackageType,
+}
 
 func NewArchivePolicyResource() resource.Resource {
 	return &ArchivePolicyResource{
@@ -254,8 +271,9 @@ func (r *ArchivePolicyResource) Schema(ctx context.Context, req resource.SchemaR
 						ElementType: types.StringType,
 						Required:    true,
 						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
 							setvalidator.ValueStringsAre(
-								stringvalidator.OneOf(cleanupPolicySupportedPackageType...),
+								stringvalidator.OneOf(archivePolicySupportedPackageType...),
 							),
 						},
 						MarkdownDescription: fmt.Sprintf("The package types that are archived by the policy. Support: %s.", strings.Join(archivePolicySupportedPackageType, ", ")),

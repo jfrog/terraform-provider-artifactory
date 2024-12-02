@@ -331,6 +331,10 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 		key             = "{{ .repoName }}"
 		tag_retention   = 3
 		max_unique_tags = 5
+
+		lifecycle {
+			ignore_changes = ["project_key"]
+		}
 	}
 
 	resource "project" "{{ .projectKey }}" {
@@ -347,6 +351,11 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 		email_notification         = true
 	}
 
+	resource "project_repository" "{{ .projectKey }}-{{ .repoName }}" {
+		project_key = project.{{ .projectKey }}.key
+		key = artifactory_local_docker_v2_repository.{{ .repoName }}.key
+	}
+
 	resource "artifactory_archive_policy" "{{ .policyName }}" {
 		key = "${project.{{ .projectKey }}.key}-{{ .policyName }}"
 		description = "Test policy"
@@ -354,11 +363,11 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 		duration_in_minutes = 60
 		enabled = true
 		skip_trashcan = false
-		project_key = project.{{ .projectKey }}.key
+		project_key = project_repository.{{ .projectKey }}-{{ .repoName }}.project_key
 		
 		search_criteria = {
 			package_types = ["docker"]
-			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
+			repos = [project_repository.{{ .projectKey }}-{{ .repoName }}.key]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			included_projects = []
@@ -372,6 +381,10 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 		key             = "{{ .repoName }}"
 		tag_retention   = 3
 		max_unique_tags = 5
+
+		lifecycle {
+			ignore_changes = ["project_key"]
+		}
 	}
 
 	resource "project" "{{ .projectKey }}" {
@@ -441,13 +454,13 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", fmt.Sprintf("myproj-%s", policyName)),
+					resource.TestCheckResourceAttr(fqrn, "key", fmt.Sprintf("%s-%s", projectKey, policyName)),
 					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
 					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
-					resource.TestCheckResourceAttr(fqrn, "project_key", "myproj"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
@@ -463,13 +476,13 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", fmt.Sprintf("myproj-%s", policyName)),
+					resource.TestCheckResourceAttr(fqrn, "key", fmt.Sprintf("%s-%s", projectKey, policyName)),
 					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
 					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "120"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
-					resource.TestCheckResourceAttr(fqrn, "project_key", "myproj"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "3"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "docker"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "maven"),
@@ -486,7 +499,7 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 			{
 				ResourceName:                         fqrn,
 				ImportState:                          true,
-				ImportStateId:                        fmt.Sprintf("myproj-%s:myproj", policyName),
+				ImportStateId:                        fmt.Sprintf("%s-%s:%s", projectKey, policyName, projectKey),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "key",
 			},
