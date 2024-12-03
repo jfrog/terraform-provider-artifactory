@@ -1,3 +1,9 @@
+## 12.6.0 (December 4, 2024)
+
+FEATURES:
+
+**New Resource:** `artifactory_archive_policy` to support [Archive Policy](https://jfrog.com/help/r/jfrog-platform-administration-documentation/archive-policies) PR: [#1138](https://github.com/jfrog/terraform-provider-artifactory/pull/1138)
+
 ## 12.5.1 (November 22, 2024)
 
 BUG FIXES:

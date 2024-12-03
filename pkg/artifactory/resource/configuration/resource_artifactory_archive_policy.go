@@ -29,6 +29,7 @@ import (
 
 var archivePolicySupportedPackageType = []string{
 	repository.CargoPackageType,
+	repository.CocoapodsPackageType,
 	repository.ConanPackageType,
 	repository.DebianPackageType,
 	repository.DockerPackageType,
@@ -38,11 +39,14 @@ var archivePolicySupportedPackageType = []string{
 	repository.GradlePackageType,
 	repository.HelmPackageType,
 	repository.HelmOCIPackageType,
+	repository.HuggingFacePackageType,
 	repository.MavenPackageType,
 	repository.NPMPackageType,
 	repository.NugetPackageType,
+	repository.OCIPackageType,
 	repository.PyPiPackageType,
 	repository.RPMPackageType,
+	repository.TerraformPackageType,
 }
 
 func NewArchivePolicyResource() resource.Resource {
