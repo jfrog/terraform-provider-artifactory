@@ -35,6 +35,7 @@ const (
 
 var cleanupPolicySupportedPackageType = []string{
 	repository.CargoPackageType,
+	repository.CocoapodsPackageType,
 	repository.ConanPackageType,
 	repository.DebianPackageType,
 	repository.DockerPackageType,
@@ -44,11 +45,14 @@ var cleanupPolicySupportedPackageType = []string{
 	repository.GradlePackageType,
 	repository.HelmPackageType,
 	repository.HelmOCIPackageType,
+	repository.HuggingFacePackageType,
 	repository.MavenPackageType,
 	repository.NPMPackageType,
 	repository.NugetPackageType,
+	repository.OCIPackageType,
 	repository.PyPiPackageType,
 	repository.RPMPackageType,
+	repository.TerraformPackageType,
 }
 
 func NewPackageCleanupPolicyResource() resource.Resource {

@@ -98,7 +98,7 @@ resource "artifactory_archive_policy" "my-archive-policy" {
 Required:
 
 - `included_packages` (Set of String) Specify a pattern for a package name or an explicit package name. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example: `included_packages = ["**"]`
-- `package_types` (Set of String) The package types that are archived by the policy. Support: .
+- `package_types` (Set of String) The package types that are archived by the policy. Support: cargo, cocoapods, conan, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, maven, npm, nuget, oci, pypi, rpm, terraform.
 - `repos` (Set of String) Specify one or more patterns for the repository name(s) on which you want the archive policy to run. You can also specify explicit repository names. Specifying at least one pattern or explicit name is required. Only packages in repositories that match the pattern or explicit name will be archived. For including all repos use `**`. Example: `repos = ["**"]`
 
 Optional:
