@@ -27,6 +27,8 @@ import (
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
+var yumPolicyPackageType = "yum" // Only used by cleanup and archive policies as RPM
+
 var archivePolicySupportedPackageType = []string{
 	repository.CargoPackageType,
 	repository.CocoapodsPackageType,
@@ -45,15 +47,15 @@ var archivePolicySupportedPackageType = []string{
 	repository.NugetPackageType,
 	repository.OCIPackageType,
 	repository.PyPiPackageType,
-	repository.RPMPackageType,
 	repository.TerraformPackageType,
+	yumPolicyPackageType,
 }
 
 func NewArchivePolicyResource() resource.Resource {
 	return &ArchivePolicyResource{
 		JFrogResource: util.JFrogResource{
 			TypeName:                "artifactory_archive_policy",
-			ValidArtifactoryVersion: "7.101.0",
+			ValidArtifactoryVersion: "7.102.0",
 			DocumentEndpoint:        "artifactory/api/archive/v2/packages/policies/{policyKey}",
 		},
 		EnablementEndpoint: "artifactory/api/archive/v2/packages/policies/{policyKey}/enablement",

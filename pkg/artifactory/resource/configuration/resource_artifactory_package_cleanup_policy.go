@@ -51,8 +51,8 @@ var cleanupPolicySupportedPackageType = []string{
 	repository.NugetPackageType,
 	repository.OCIPackageType,
 	repository.PyPiPackageType,
-	repository.RPMPackageType,
 	repository.TerraformPackageType,
+	yumPolicyPackageType,
 }
 
 func NewPackageCleanupPolicyResource() resource.Resource {

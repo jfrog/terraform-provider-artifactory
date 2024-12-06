@@ -212,7 +212,7 @@ func TestAccArchivePolicy_full(t *testing.T) {
 		skip_trashcan = false
 		
 		search_criteria = {
-			package_types = ["docker", "maven", "gradle"]
+			package_types = ["cargo", "cocoapods", "conan", "debian", "docker", "gems", "generic", "go", "gradle", "helm", "helmoci", "huggingfaceml", "maven", "npm", "nuget", "oci", "pypi", "terraform", "yum"]
 			repos = ["**"]
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
@@ -281,10 +281,26 @@ func TestAccArchivePolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "120"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "3"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "19"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "cargo"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "cocoapods"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "conan"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "debian"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "docker"),
-					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "maven"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gems"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "generic"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "go"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gradle"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "helm"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "helmoci"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "huggingfaceml"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "maven"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "npm"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "nuget"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "oci"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "pypi"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "terraform"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "yum"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", "**"),
 					resource.TestCheckNoResourceAttr(fqrn, "search_criteria.include_projects"),
