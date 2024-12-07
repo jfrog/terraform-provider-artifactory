@@ -1,0 +1,1 @@
+terraform import artifactory_backup.backup_name backup_name
