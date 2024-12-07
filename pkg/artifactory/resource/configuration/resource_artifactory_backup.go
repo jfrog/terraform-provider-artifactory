@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -24,16 +25,16 @@ import (
 )
 
 type BackupAPIModel struct {
-	Key                    string    `xml:"key" yaml:"key"`
-	CronExp                string    `xml:"cronExp" yaml:"cronExp"`
-	Enabled                bool      `xml:"enabled" yaml:"enabled"`
-	RetentionPeriodHours   int64     `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
-	ExcludedRepositories   *[]string `xml:"excludedRepositories>repositoryRef" yaml:"excludedRepositories"`
-	CreateArchive          bool      `xml:"createArchive" yaml:"createArchive"`
-	ExcludeNewRepositories bool      `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
-	SendMailOnError        bool      `xml:"sendMailOnError" yaml:"sendMailOnError"`
-	VerifyDiskSpace        bool      `xml:"precalculate" yaml:"precalculate"`
-	ExportMissionControl   bool      `xml:"exportMissionControl" yaml:"exportMissionControl"`
+	Key                    string   `xml:"key" yaml:"key"`
+	CronExp                string   `xml:"cronExp" yaml:"cronExp"`
+	Enabled                bool     `xml:"enabled" yaml:"enabled"`
+	RetentionPeriodHours   int64    `xml:"retentionPeriodHours" yaml:"retentionPeriodHours"`
+	ExcludedRepositories   []string `xml:"excludedRepositories>repositoryRef" yaml:"excludedRepositories,omitempty"`
+	CreateArchive          bool     `xml:"createArchive" yaml:"createArchive"`
+	ExcludeNewRepositories bool     `xml:"excludeNewRepositories" yaml:"excludeNewRepositories"`
+	SendMailOnError        bool     `xml:"sendMailOnError" yaml:"sendMailOnError"`
+	VerifyDiskSpace        bool     `xml:"precalculate" yaml:"precalculate"`
+	ExportMissionControl   bool     `xml:"exportMissionControl" yaml:"exportMissionControl"`
 }
 
 func (m BackupAPIModel) Id() string {
@@ -60,7 +61,7 @@ type BackupResourceModel struct {
 func (r *BackupResourceModel) toAPIModel(ctx context.Context, backup *BackupAPIModel) diag.Diagnostics {
 	// Convert from Terraform resource model into API model
 	var excludedRepositories []string
-	diags := r.ExcludedRepositories.ElementsAs(ctx, &excludedRepositories, true)
+	diags := r.ExcludedRepositories.ElementsAs(ctx, &excludedRepositories, false)
 	if diags != nil {
 		return diags
 	}
@@ -73,7 +74,7 @@ func (r *BackupResourceModel) toAPIModel(ctx context.Context, backup *BackupAPIM
 		CreateArchive:          r.CreateArchive.ValueBool(),
 		ExcludeNewRepositories: r.ExcludeNewRepositories.ValueBool(),
 		SendMailOnError:        r.SendMailOnError.ValueBool(),
-		ExcludedRepositories:   &excludedRepositories,
+		ExcludedRepositories:   excludedRepositories,
 		VerifyDiskSpace:        r.VerifyDiskSpace.ValueBool(),
 		ExportMissionControl:   r.ExportMissionControl.ValueBool(),
 	}
@@ -81,7 +82,7 @@ func (r *BackupResourceModel) toAPIModel(ctx context.Context, backup *BackupAPIM
 	return nil
 }
 
-func (r *BackupResourceModel) FromAPIModel(ctx context.Context, backup *BackupAPIModel) diag.Diagnostics {
+func (r *BackupResourceModel) fromAPIModel(ctx context.Context, backup *BackupAPIModel) diag.Diagnostics {
 	r.Key = types.StringValue(backup.Key)
 	r.Enabled = types.BoolValue(backup.Enabled)
 	r.CronExp = types.StringValue(backup.CronExp)
@@ -94,6 +95,7 @@ func (r *BackupResourceModel) FromAPIModel(ctx context.Context, backup *BackupAP
 	if diags != nil {
 		return diags
 	}
+
 	r.ExcludedRepositories = excludedRepositories
 	r.VerifyDiskSpace = types.BoolValue(backup.VerifyDiskSpace)
 	r.ExportMissionControl = types.BoolValue(backup.ExportMissionControl)
@@ -118,7 +120,6 @@ func (r *BackupResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Provides an Artifactory backup config resource. This resource configuration corresponds to backup config block in system configuration XML (REST endpoint: artifactory/api/system/configuration). Manages the automatic and periodic backups of the entire Artifactory instance.",
 		Attributes: map[string]schema.Attribute{
 			"key": schema.StringAttribute{
 				Required: true,
@@ -152,9 +153,12 @@ func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"excluded_repositories": schema.ListAttribute{
-				MarkdownDescription: "List of excluded repositories from the backup. Default is empty list.",
+				MarkdownDescription: "List of excluded repositories from the backup.",
 				Optional:            true,
 				ElementType:         types.StringType,
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+				},
 			},
 			"create_archive": schema.BoolAttribute{
 				MarkdownDescription: "If set to true, backups will be created within a Zip archive (Slow and CPU intensive). Default value is `false`",
@@ -187,6 +191,7 @@ func (r *BackupResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Default:             booldefault.StaticBool(false),
 			},
 		},
+		MarkdownDescription: "This resource can be used to manage the automatic and periodic backups of the entire Artifactory instance.\n\nWhen an `artifactory_backup` resource is configured and enabled to true, backup of the entire Artifactory system will be done automatically and periodically.\n\nThe backup process creates a time-stamped directory in the target backup directory.\n\nSee [JFrog Artifactory Backup](https://www.jfrog.com/confluence/display/JFROG/Backups) for more details.\n\n~>Only supported in self-hosted environment.",
 	}
 }
 
@@ -282,7 +287,7 @@ func (r *BackupResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	resp.Diagnostics.Append(state.FromAPIModel(ctx, matchedBackup)...)
+	resp.Diagnostics.Append(state.fromAPIModel(ctx, matchedBackup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -331,7 +336,7 @@ func (r *BackupResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(data.FromAPIModel(ctx, &backup)...)
+	resp.Diagnostics.Append(data.fromAPIModel(ctx, &backup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
