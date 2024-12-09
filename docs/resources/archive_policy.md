@@ -3,13 +3,13 @@
 page_title: "artifactory_archive_policy Resource - terraform-provider-artifactory"
 subcategory: "Configuration"
 description: |-
-  Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See Archive Policies https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies for more details.
+  Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See Retention Policies https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies for more details.
   ~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.
 ---
 
 # artifactory_archive_policy (Resource)
 
-Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Archive Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
+Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
 
 ~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.
 
@@ -63,7 +63,7 @@ resource "artifactory_archive_policy" "my-archive-policy" {
     ]
     excluded_repos = ["gradle-global"]
     include_all_projects = false
-    included_projects = []
+    included_projects = [project.myproj.key]
     included_packages = ["com/jfrog"]
     excluded_packages = ["com/jfrog/latest"]
     created_before_in_months = 1

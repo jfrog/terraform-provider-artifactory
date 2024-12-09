@@ -45,7 +45,7 @@ resource "artifactory_archive_policy" "my-archive-policy" {
     ]
     excluded_repos = ["gradle-global"]
     include_all_projects = false
-    included_projects = []
+    included_projects = [project.myproj.key]
     included_packages = ["com/jfrog"]
     excluded_packages = ["com/jfrog/latest"]
     created_before_in_months = 1

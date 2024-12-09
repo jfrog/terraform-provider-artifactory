@@ -371,7 +371,7 @@ func (r *ArchivePolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 		},
 		Description: "Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. " +
-			"See [Archive Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
+			"See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
 			"~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.",
 	}
 }
