@@ -1,3 +1,9 @@
+## 12.6.0 (December 10, 2024). Tested on Artifactory 7.98.10 with Terraform 1.10.1 and OpenTofu 1.8.7
+
+FEATURES:
+
+**New Resource:** `artifactory_archive_policy` to support upcoming Archive Policy feature. PR: [#1146](https://github.com/jfrog/terraform-provider-artifactory/pull/1146)
+
 ## 12.5.1 (November 22, 2024)
 
 BUG FIXES:

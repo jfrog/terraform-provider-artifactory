@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -32,7 +33,27 @@ const (
 	PackageCleanupPolicyEnablementEndpointPath = "artifactory/api/cleanup/packages/policies/{policyKey}/enablement"
 )
 
-var cleanupPolicySupportedPackageType = []string{"conan", "debian", "docker", "gems", "generic", "go", "gradle", "helm", "maven", "npm", "nuget", "pypi", "yum"}
+var cleanupPolicySupportedPackageType = []string{
+	repository.CargoPackageType,
+	repository.CocoapodsPackageType,
+	repository.ConanPackageType,
+	repository.DebianPackageType,
+	repository.DockerPackageType,
+	repository.GemsPackageType,
+	repository.GenericPackageType,
+	repository.GoPackageType,
+	repository.GradlePackageType,
+	repository.HelmPackageType,
+	repository.HelmOCIPackageType,
+	repository.HuggingFacePackageType,
+	repository.MavenPackageType,
+	repository.NPMPackageType,
+	repository.NugetPackageType,
+	repository.OCIPackageType,
+	repository.PyPiPackageType,
+	repository.TerraformPackageType,
+	yumPolicyPackageType,
+}
 
 func NewPackageCleanupPolicyResource() resource.Resource {
 	return &PackageCleanupPolicyResource{
@@ -527,7 +548,7 @@ func (r *PackageCleanupPolicyResource) Schema(ctx context.Context, req resource.
 		Attributes: cleanupPolicySchemaV1,
 		Version:    1,
 		Description: "Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. " +
-			"See [Rentation Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
+			"See [Cleanup Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/cleanup-policies) for more details.\n\n" +
 			"~>Currently in beta and will be globally available in v7.98.x.",
 	}
 }
