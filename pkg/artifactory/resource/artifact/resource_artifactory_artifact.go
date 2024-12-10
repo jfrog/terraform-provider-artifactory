@@ -2,6 +2,7 @@ package artifact
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"path"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	tfpath "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,6 +37,7 @@ type ArtifactResourceModel struct {
 	Repository     types.String `tfsdk:"repository"`
 	Path           types.String `tfsdk:"path"`
 	FilePath       types.String `tfsdk:"file_path"`
+	ContentBase64  types.String `tfsdk:"content_base64"`
 	ChecksumMD5    types.String `tfsdk:"checksum_md5"`
 	ChecksumSHA1   types.String `tfsdk:"checksum_sha1"`
 	ChecksumSHA256 types.String `tfsdk:"checksum_sha256"`
@@ -46,7 +49,33 @@ type ArtifactResourceModel struct {
 	URI            types.String `tfsdk:"uri"`
 }
 
-func (r *ArtifactResourceModel) toState(apiModel ArtifactResourceAPIModel) diag.Diagnostics {
+func (r *ArtifactResourceModel) LocalFilePath() (string, error) {
+	if !r.FilePath.IsNull() && !r.FilePath.IsUnknown() {
+		return r.FilePath.ValueString(), nil
+	}
+
+	f, err := os.CreateTemp("", "artifactory_artifact_")
+	if err != nil {
+		return "", err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(r.ContentBase64.ValueString())
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = f.Write(data); err != nil {
+		return "", err
+	}
+
+	if err = f.Sync(); err != nil {
+		return "", err
+	}
+
+	return f.Name(), nil
+}
+
+func (r *ArtifactResourceModel) fromAPIModel(apiModel ArtifactAPIModel) diag.Diagnostics {
 	r.Repository = types.StringValue(apiModel.Repository)
 	r.Path = types.StringValue(apiModel.Path)
 	r.ChecksumMD5 = types.StringValue(apiModel.Checksums.MD5)
@@ -72,22 +101,22 @@ func (r *ArtifactResourceModel) toState(apiModel ArtifactResourceAPIModel) diag.
 	return nil
 }
 
-type ArtifactResourceChecksumsAPIModel struct {
+type ArtifactChecksumsAPIModel struct {
 	MD5    string `json:"md5"`
 	SHA1   string `json:"sha1"`
 	SHA256 string `json:"sha256"`
 }
 
-type ArtifactResourceAPIModel struct {
-	Repository  string                            `json:"repo"`
-	Path        string                            `json:"path"`
-	Checksums   ArtifactResourceChecksumsAPIModel `json:"checksums"`
-	Created     string                            `json:"created"`
-	CreatedBy   string                            `json:"createdBy"`
-	DownloadURI string                            `json:"downloadUri"`
-	MimeType    string                            `json:"mimeType"`
-	Size        string                            `json:"size"`
-	URI         string                            `json:"uri"`
+type ArtifactAPIModel struct {
+	Repository  string                    `json:"repo"`
+	Path        string                    `json:"path"`
+	Checksums   ArtifactChecksumsAPIModel `json:"checksums"`
+	Created     string                    `json:"created"`
+	CreatedBy   string                    `json:"createdBy"`
+	DownloadURI string                    `json:"downloadUri"`
+	MimeType    string                    `json:"mimeType"`
+	Size        string                    `json:"size"`
+	URI         string                    `json:"uri"`
 }
 
 func (r *ArtifactResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -119,12 +148,21 @@ func (r *ArtifactResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "The relative path in the target repository. Must begin with a '/'. You can add key-value matrix parameters to deploy the artifacts with properties. For more details, please refer to [Introducing Matrix Parameters](https://jfrog.com/help/r/jfrog-artifactory-documentation/using-properties-in-deployment-and-resolution).",
 			},
 			"file_path": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(tfpath.MatchRoot("content_base64")),
 					stringvalidator.LengthAtLeast(1),
 					fileExistValidator{},
 				},
-				MarkdownDescription: "Path to the source file.",
+				MarkdownDescription: "Path to the source file. Conflicts with `content_base64`. Either one of these attribute must be set.",
+			},
+			"content_base64": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(tfpath.MatchRoot("file_path")),
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "Base64 content of the source file. Conflicts with `file_path`. Either one of these attribute must be set.",
 			},
 			"checksum_md5": schema.StringAttribute{
 				Computed:            true,
@@ -185,13 +223,22 @@ func (r *ArtifactResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	var result ArtifactResourceAPIModel
+	var result ArtifactAPIModel
 
 	// upload file to Artifactory repo
 	repo_target_path := path.Join(plan.Repository.ValueString(), plan.Path.ValueString())
+	localFilePath, err := plan.LocalFilePath()
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+	if !plan.ContentBase64.IsNull() {
+		defer os.Remove(localFilePath)
+	}
+
 	response, err := r.ProviderData.Client.R().
 		SetRawPathParam("repo_target_path", repo_target_path).
-		SetFile(plan.Path.ValueString(), plan.FilePath.ValueString()).
+		SetFile(plan.Path.ValueString(), localFilePath).
 		SetResult(&result).
 		Put("/artifactory/{repo_target_path}")
 
@@ -205,7 +252,7 @@ func (r *ArtifactResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	resp.Diagnostics.Append(plan.toState(result)...)
+	resp.Diagnostics.Append(plan.fromAPIModel(result)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -226,7 +273,7 @@ func (r *ArtifactResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	// Convert from Terraform data model into API data model
-	var artifact ArtifactResourceAPIModel
+	var artifact ArtifactAPIModel
 	repo_path := path.Join(state.Repository.ValueString(), state.Path.ValueString())
 	response, err := r.ProviderData.Client.R().
 		SetRawPathParam("repo_path", repo_path).
@@ -252,7 +299,7 @@ func (r *ArtifactResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
-	resp.Diagnostics.Append(state.toState(artifact)...)
+	resp.Diagnostics.Append(state.fromAPIModel(artifact)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -271,13 +318,22 @@ func (r *ArtifactResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var result ArtifactResourceAPIModel
+	var result ArtifactAPIModel
 
 	// upload file to Artifactory repo
 	repo_target_path := path.Join(plan.Repository.ValueString(), plan.Path.ValueString())
+	localFilePath, err := plan.LocalFilePath()
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+	if !plan.ContentBase64.IsNull() {
+		defer os.Remove(localFilePath)
+	}
+
 	response, err := r.ProviderData.Client.R().
 		SetRawPathParam("repo_target_path", repo_target_path).
-		SetFile(plan.Path.ValueString(), plan.FilePath.ValueString()).
+		SetFile(plan.Path.ValueString(), localFilePath).
 		SetResult(&result).
 		Put("/artifactory/{repo_target_path}")
 
@@ -291,7 +347,7 @@ func (r *ArtifactResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	resp.Diagnostics.Append(plan.toState(result)...)
+	resp.Diagnostics.Append(plan.fromAPIModel(result)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
