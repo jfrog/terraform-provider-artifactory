@@ -4,6 +4,10 @@ FEATURES:
 
 **New Resource:** `artifactory_archive_policy` to support upcoming Archive Policy feature. PR: [#1146](https://github.com/jfrog/terraform-provider-artifactory/pull/1146)
 
+BUG FIXES:
+
+* resource/artifactory_backup: Add size validation to `excluded_repositories` attribute to ensure at least 1 item. Issue: [#1143](https://github.com/jfrog/terraform-provider-artifactory/issues/1143) PR: [#1147](https://github.com/jfrog/terraform-provider-artifactory/pull/1147)
+
 ## 12.5.1 (November 22, 2024)
 
 BUG FIXES:

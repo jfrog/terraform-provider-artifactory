@@ -72,6 +72,7 @@ resource "artifactory_backup" "{{ .resourceName }}" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "excluded_repositories.#", "0"),
 				),
 			},
 			{
