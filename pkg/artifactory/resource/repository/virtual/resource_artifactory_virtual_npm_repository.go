@@ -11,7 +11,7 @@ import (
 var npmSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	externalDependenciesSchema,
-	repository.RepoLayoutRefSchema(Rclass, repository.NPMPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NPMPackageType),
 )
 
 var NPMSchemas = GetSchemas(npmSchema)

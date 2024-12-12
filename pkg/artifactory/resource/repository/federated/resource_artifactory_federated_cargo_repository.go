@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	cargoFederatedSchema := lo.Assign(
 		local.CargoSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.CargoPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.CargoPackageType),
 	)
 
 	var unpackFederatedCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {

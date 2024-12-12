@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 	rpmFederatedSchema := lo.Assign(
 		local.RPMSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 	)
 
 	var unpackFederatedRpmRepository = func(data *schema.ResourceData) (interface{}, string, error) {

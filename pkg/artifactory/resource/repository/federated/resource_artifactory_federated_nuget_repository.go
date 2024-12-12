@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	nugetFederatedSchema := lo.Assign(
 		local.NugetSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 	)
 
 	var unpackFederatedNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {

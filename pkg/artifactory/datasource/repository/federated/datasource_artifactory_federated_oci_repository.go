@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedOciRepository() *schema.Resource {
 	ociFederatedSchema := lo.Assign(
 		local.OCILocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.OCIPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.OCIPackageType),
 	)
 
 	var packOciMembers = func(repo interface{}, d *schema.ResourceData) error {

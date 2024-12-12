@@ -27,7 +27,7 @@ var cocoapodsSchema = lo.Assign(
 			Description:  `Proxy remote CocoaPods Specs repositories. Default value is "https://github.com/CocoaPods/Specs".`,
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.CocoapodsPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.CocoapodsPackageType),
 )
 
 var CocoapodsSchemas = GetSchemas(cocoapodsSchema)
@@ -44,7 +44,7 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.CocoapodsPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.CocoapodsPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func ResourceArtifactoryRemoteCocoapodsRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.CocoapodsPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

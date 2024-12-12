@@ -12,7 +12,7 @@ import (
 
 func DataSourceArtifactoryVirtualGenericRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,11 +20,11 @@ func DataSourceArtifactoryVirtualGenericRepository(packageType string) *schema.R
 		return &virtual.RepositoryBaseParams{
 			PackageType:   packageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 
-	genericSchemas := virtual.GetSchemas(resource_repository.RepoLayoutRefSchema(virtual.Rclass, packageType))
+	genericSchemas := virtual.GetSchemas(resource_repository.RepoLayoutRefSDKv2Schema(virtual.Rclass, packageType))
 
 	return &schema.Resource{
 		Schema:      genericSchemas[virtual.CurrentSchemaVersion],
@@ -35,7 +35,7 @@ func DataSourceArtifactoryVirtualGenericRepository(packageType string) *schema.R
 
 func DataSourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func DataSourceArtifactoryVirtualRepositoryWithRetrievalCachePeriodSecs(packageT
 			RepositoryBaseParams: virtual.RepositoryBaseParams{
 				Rclass:        virtual.Rclass,
 				PackageType:   packageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

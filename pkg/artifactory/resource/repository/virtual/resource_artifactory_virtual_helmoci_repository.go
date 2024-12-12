@@ -17,7 +17,7 @@ var helmOCISchema = lo.Assign(
 			Description: "When enabled, in cases where the same OCI tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmOCIPackageType),
 )
 
 var HelmOCISchemas = GetSchemas(helmOCISchema)

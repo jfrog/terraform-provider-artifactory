@@ -211,7 +211,7 @@ func TestAccRepositoryLayout_validate_distinctive_descriptor_path_pattern(t *tes
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

@@ -56,7 +56,7 @@ var NugetSchema = lo.Assign(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
 			Description:      `NuGet symbol server URL.`,
 		},
-	}, repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
+	}, repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 )
 
 var NugetSchemas = GetSchemas(NugetSchema)
@@ -80,7 +80,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NugetPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NugetPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.NugetPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

@@ -18,7 +18,7 @@ var helmSchema = lo.Assign(
 			Description: "From Artifactory 7.24.1 (SaaS Version), you can explicitly state a specific aggregated local or remote repository to fetch from a virtual by assigning namespaces to local and remote repositories\nSee https://www.jfrog.com/confluence/display/JFROG/Kubernetes+Helm+Chart+Repositories#KubernetesHelmChartRepositories-NamespaceSupportforHelmVirtualRepositories. Default to 'false'",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HelmPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmPackageType),
 )
 
 var HelmSchemas = GetSchemas(helmSchema)

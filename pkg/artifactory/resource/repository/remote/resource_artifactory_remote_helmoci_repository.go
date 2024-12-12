@@ -47,7 +47,7 @@ var HelmOCISchema = lo.Assign(
 				"will default to their default project as you have set up in your account.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmOCIPackageType),
 )
 
 var HelmOCISchemas = GetSchemas(HelmOCISchema)

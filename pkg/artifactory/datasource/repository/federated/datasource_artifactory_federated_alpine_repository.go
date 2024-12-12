@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	alpineFederatedSchema := lo.Assign(
 		local.AlpineLocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.AlpinePackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.AlpinePackageType),
 	)
 
 	var packAlpineMembers = func(repo interface{}, d *schema.ResourceData) error {

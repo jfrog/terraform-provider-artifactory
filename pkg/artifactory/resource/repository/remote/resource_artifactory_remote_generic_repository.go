@@ -25,7 +25,7 @@ var genericSchemaV3 = lo.Assign(
 			Description: "When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.GenericPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.GenericPackageType),
 )
 
 var GenericSchemaV4 = lo.Assign(
@@ -81,7 +81,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GenericPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GenericPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +90,7 @@ func ResourceArtifactoryRemoteGenericRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.GenericPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}
@@ -128,13 +128,13 @@ func GenericResourceStateUpgradeV3(_ context.Context, rawState map[string]interf
 var BasicSchema = func(packageType string) map[string]*schema.Schema {
 	return lo.Assign(
 		baseSchema,
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 }
 
 func ResourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, packageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, packageType)
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +142,7 @@ func ResourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resour
 		return &RepositoryRemoteBaseParams{
 			PackageType:   packageType,
 			Rclass:        Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

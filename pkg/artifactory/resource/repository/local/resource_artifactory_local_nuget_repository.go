@@ -24,7 +24,7 @@ var nugetSchema = lo.Assign(
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 )
 
 var NugetSchemas = GetSchemas(nugetSchema)

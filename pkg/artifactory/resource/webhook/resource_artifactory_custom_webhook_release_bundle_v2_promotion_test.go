@@ -48,7 +48,7 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion_UpgradeFromSDKv2(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

@@ -16,7 +16,7 @@ type NpmRemoteRepo struct {
 var NPMSchema = lo.Assign(
 	baseSchema,
 	CurationRemoteRepoSchema,
-	repository.RepoLayoutRefSchema(Rclass, repository.NPMPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NPMPackageType),
 )
 
 var NPMSchemas = GetSchemas(NPMSchema)
@@ -34,7 +34,7 @@ func ResourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NPMPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NPMPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func ResourceArtifactoryRemoteNpmRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.NPMPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

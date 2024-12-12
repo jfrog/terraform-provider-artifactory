@@ -20,6 +20,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
@@ -234,6 +235,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		replication.NewLocalRepositorySingleReplicationResource,
 		replication.NewLocalRepositoryMultiReplicationResource,
 		replication.NewRemoteRepositoryReplicationResource,
+		local.NewMachineLearningLocalRepositoryResource,
 		webhook.NewArtifactWebhookResource,
 		webhook.NewArtifactCustomWebhookResource,
 		webhook.NewArtifactLifecycleWebhookResource,

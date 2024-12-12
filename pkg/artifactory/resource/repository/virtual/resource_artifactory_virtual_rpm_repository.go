@@ -11,7 +11,7 @@ import (
 var rpmSchema = lo.Assign(
 	repository.PrimaryKeyPairRef,
 	repository.SecondaryKeyPairRef,
-	repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 )
 
 var RPMSchemas = GetSchemas(rpmSchema)

@@ -48,7 +48,7 @@ var JavaSchema = map[string]*schema.Schema{
 func ResourceArtifactoryVirtualJavaRepository(packageType string) *schema.Resource {
 	var mavenSchema = lo.Assign(
 		JavaSchema,
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 
 	var mavenSchemas = GetSchemas(mavenSchema)

@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 	ociFederatedSchema := lo.Assign(
 		local.HelmOCISchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.HelmOCIPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.HelmOCIPackageType),
 	)
 
 	var packOciMembers = func(repo interface{}, d *schema.ResourceData) error {

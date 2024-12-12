@@ -35,7 +35,7 @@ var PyPiSchema = lo.Assign(
 			Description:      "Usually should be left as a default for 'simple', unless the remote is a PyPI server that has custom registry suffix, like +simple in DevPI. Default value is 'simple'.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.PyPiPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.PyPiPackageType),
 )
 
 var PyPiSchemas = GetSchemas(PyPiSchema)

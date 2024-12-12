@@ -18,7 +18,7 @@ func DataSourceArtifactoryFederatedJavaRepository(packageType string, suppressPo
 	javaFederatedSchema := lo.Assign(
 		local.GetJavaSchemas(packageType, suppressPom)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema("federated", packageType),
+		resource_repository.RepoLayoutRefSDKv2Schema("federated", packageType),
 	)
 
 	var packJavaMembers = func(repo interface{}, d *schema.ResourceData) error {

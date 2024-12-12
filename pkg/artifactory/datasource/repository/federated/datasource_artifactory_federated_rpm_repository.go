@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedRpmRepository() *schema.Resource {
 	rpmFederatedSchema := lo.Assign(
 		local.RPMSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.RPMPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.RPMPackageType),
 	)
 
 	var packRpmMembers = func(repo interface{}, d *schema.ResourceData) error {

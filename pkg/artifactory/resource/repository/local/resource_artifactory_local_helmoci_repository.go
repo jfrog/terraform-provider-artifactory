@@ -33,7 +33,7 @@ var helmOCISchema = utilsdk.MergeMaps(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmOCIPackageType),
 )
 
 var HelmOCISchemas = GetSchemas(helmOCISchema)

@@ -51,7 +51,7 @@ func TestAccRemoteRepository_with_curated(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck:          func() { acctest.PreCheck(t) },
 				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+				CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 				Steps: []resource.TestStep{
 					{
 						Config: config,

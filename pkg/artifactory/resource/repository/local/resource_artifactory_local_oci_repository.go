@@ -34,7 +34,7 @@ var ociSchema = lo.Assign(
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.OCIPackageType),
 )
 
 var OCILocalSchemas = GetSchemas(ociSchema)

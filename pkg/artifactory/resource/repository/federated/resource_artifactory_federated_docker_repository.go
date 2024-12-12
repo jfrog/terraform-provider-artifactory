@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	dockerV2FederatedSchema := lo.Assign(
 		local.DockerV2Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 	)
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
@@ -64,7 +64,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	dockerFederatedSchema := lo.Assign(
 		local.DockerV1Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 	)
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {

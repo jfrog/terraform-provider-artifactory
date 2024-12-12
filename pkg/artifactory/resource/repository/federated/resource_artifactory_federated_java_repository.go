@@ -20,7 +20,7 @@ func ResourceArtifactoryFederatedJavaRepository(packageType string, suppressPom 
 	javaFederatedSchema := lo.Assign(
 		local.GetJavaSchemas(packageType, suppressPom)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema("federated", packageType),
+		repository.RepoLayoutRefSDKv2Schema("federated", packageType),
 	)
 
 	var unpackFederatedJavaRepository = func(data *schema.ResourceData) (interface{}, string, error) {

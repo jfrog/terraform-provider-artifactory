@@ -35,7 +35,7 @@ var debianSchema = lo.Assign(
 			StateFunc:        utilsdk.FormatCommaSeparatedString,
 			Description:      `Specifying  architectures will speed up Artifactory's initial metadata indexing process. The default architecture values are amd64 and i386.`,
 		},
-	}, repository.RepoLayoutRefSchema(Rclass, repository.DebianPackageType),
+	}, repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DebianPackageType),
 )
 
 var DebianSchemas = GetSchemas(debianSchema)

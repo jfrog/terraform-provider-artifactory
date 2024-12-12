@@ -27,7 +27,7 @@ var bowerSchema = lo.Assign(
 			Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.BowerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.BowerPackageType),
 )
 
 var BowerSchemas = GetSchemas(bowerSchema)
@@ -45,7 +45,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.BowerPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.BowerPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.BowerPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

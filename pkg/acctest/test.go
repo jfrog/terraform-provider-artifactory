@@ -118,7 +118,7 @@ func GetArtifactoryUrl(t *testing.T) string {
 
 type CheckFun func(id string, request *resty.Request) (*resty.Response, error)
 
-func VerifyDeleted(id, identifierAttribute string, check CheckFun) func(*terraform.State) error {
+func VerifyDeleted(t *testing.T, id, identifierAttribute string, check CheckFun) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -129,14 +129,13 @@ func VerifyDeleted(id, identifierAttribute string, check CheckFun) func(*terrafo
 			return fmt.Errorf("provider is not initialized. Please PreCheck() is included in your acceptance test")
 		}
 
-		providerMeta := Provider.Meta().(util.ProviderMetadata)
-
 		identifier := rs.Primary.ID
 		if identifierAttribute != "" {
 			identifier = rs.Primary.Attributes[identifierAttribute]
 		}
 
-		resp, err := check(identifier, providerMeta.Client.R())
+		client := GetTestResty(t)
+		resp, err := check(identifier, client.R())
 		if err != nil {
 			return err
 		}
@@ -374,8 +373,10 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 		return false, err
 	}
 
-	meta := Provider.Meta().(util.ProviderMetadata)
-	runtimeVersion, err := version.NewVersion(meta.ArtifactoryVersion)
+	client := GetTestResty(t)
+	artifactoryVersion, err := util.GetArtifactoryVersion(client)
+
+	runtimeVersion, err := version.NewVersion(artifactoryVersion)
 	if err != nil {
 		return false, err
 	}
@@ -385,4 +386,25 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 		t.Skipf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String())
 	}
 	return skipTest, nil
+}
+
+func SkipIfNotSupportedVersion(t *testing.T, supportedVersion string) error {
+	supported, err := version.NewVersion(supportedVersion)
+	if err != nil {
+		return err
+	}
+
+	client := GetTestResty(t)
+	artifactoryVersion, err := util.GetArtifactoryVersion(client)
+
+	current, err := version.NewVersion(artifactoryVersion)
+	if err != nil {
+		return err
+	}
+
+	skipTest := current.LessThan(supported)
+	if skipTest {
+		t.Skipf("Test skip because: current version %s is earlier than %s\n", current.String(), supported.String())
+	}
+	return nil
 }

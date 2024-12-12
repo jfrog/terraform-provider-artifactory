@@ -17,7 +17,7 @@ var dockerSchema = lo.Assign(
 			Description: "When enabled, in cases where the same Docker tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 )
 
 var DockerSchemas = GetSchemas(dockerSchema)

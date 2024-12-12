@@ -27,7 +27,7 @@ var composerSchema = lo.Assign(
 			Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.ComposerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ComposerPackageType),
 )
 
 var ComposerSchemas = GetSchemas(composerSchema)
@@ -44,7 +44,7 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ComposerPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ComposerPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.ComposerPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

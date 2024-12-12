@@ -65,7 +65,7 @@ func GetJavaSchemas(packageType string, suppressPom bool) map[int16]map[string]*
 					"behavior by setting the Suppress POM Consistency Checks checkbox.",
 			},
 		},
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 
 	return map[int16]map[string]*schema.Schema{

@@ -10,7 +10,7 @@ import (
 
 func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.MavenPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.MavenPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 				RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 					Rclass:        remote.Rclass,
 					PackageType:   resource_repository.MavenPackageType,
-					RepoLayoutRef: repoLayout.(string),
+					RepoLayoutRef: repoLayout,
 				},
 				SuppressPomConsistencyChecks: false,
 			},

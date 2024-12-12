@@ -21,7 +21,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 	terraformFederatedSchema := lo.Assign(
 		local.GetTerraformSchemas(registryType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 
 	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {

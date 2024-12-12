@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedCargoRepository() *schema.Resource {
 	cargoFederatedSchema := lo.Assign(
 		local.CargoSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.CargoPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.CargoPackageType),
 	)
 
 	var packCargoMembers = func(repo interface{}, d *schema.ResourceData) error {

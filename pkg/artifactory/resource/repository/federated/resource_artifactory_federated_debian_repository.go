@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.DebianPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DebianPackageType),
 	)
 
 	var unpackFederatedDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {

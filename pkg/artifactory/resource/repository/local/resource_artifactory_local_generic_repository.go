@@ -11,11 +11,11 @@ func GetGenericSchemas(packageType string) map[int16]map[string]*schema.Schema {
 	return map[int16]map[string]*schema.Schema{
 		0: lo.Assign(
 			BaseSchemaV1,
-			repository.RepoLayoutRefSchema(Rclass, packageType),
+			repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 		),
 		1: lo.Assign(
 			BaseSchemaV1,
-			repository.RepoLayoutRefSchema(Rclass, packageType),
+			repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 		),
 	}
 }

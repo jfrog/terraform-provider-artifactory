@@ -11,7 +11,7 @@ import (
 var conanSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	repository.ConanBaseSchema,
-	repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ConanPackageType),
 )
 
 var ConanSchemas = GetSchemas(conanSchema)

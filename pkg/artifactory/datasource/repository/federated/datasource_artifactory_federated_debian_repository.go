@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	debianFederatedSchema := lo.Assign(
 		local.DebianSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DebianPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.DebianPackageType),
 	)
 
 	var packDebianMembers = func(repo interface{}, d *schema.ResourceData) error {

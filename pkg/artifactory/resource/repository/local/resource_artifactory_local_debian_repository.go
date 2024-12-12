@@ -20,7 +20,7 @@ var debianSchema = lo.Assign(
 			Deprecated:  "You shouldn't be using this",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.DebianPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DebianPackageType),
 	repository.CompressionFormats,
 )
 

@@ -9,7 +9,7 @@ import (
 
 var bowerSchema = lo.Assign(
 	externalDependenciesSchema,
-	repository.RepoLayoutRefSchema(Rclass, repository.BowerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.BowerPackageType),
 )
 
 var BowerSchemas = GetSchemas(bowerSchema)

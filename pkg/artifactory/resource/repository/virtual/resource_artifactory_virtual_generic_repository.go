@@ -19,7 +19,7 @@ func ResourceArtifactoryVirtualGenericRepository(packageType string) *schema.Res
 		return repo, repo.Id(), nil
 	}
 
-	genericSchemas := GetSchemas(repository.RepoLayoutRefSchema(Rclass, packageType))
+	genericSchemas := GetSchemas(repository.RepoLayoutRefSDKv2Schema(Rclass, packageType))
 
 	return repository.MkResourceSchema(
 		genericSchemas,
@@ -32,7 +32,7 @@ func ResourceArtifactoryVirtualGenericRepository(packageType string) *schema.Res
 var RepoWithRetrivalCachePeriodSecsVirtualSchemas = func(packageType string) map[int16]map[string]*schema.Schema {
 	var repoWithRetrivalCachePeriodSecsVirtualSchema = lo.Assign(
 		RetrievalCachePeriodSecondsSchema,
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 
 	return GetSchemas(repoWithRetrivalCachePeriodSecsVirtualSchema)

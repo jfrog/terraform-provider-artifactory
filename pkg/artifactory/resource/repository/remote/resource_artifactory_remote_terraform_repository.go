@@ -35,7 +35,7 @@ var TerraformSchema = lo.Assign(
 				"the URL to <base_Artifactory_URL>/api/terraform/repokey/providers. Default value in UI is https://releases.hashicorp.com",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.TerraformPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.TerraformPackageType),
 )
 
 var TerraformSchemas = GetSchemas(TerraformSchema)

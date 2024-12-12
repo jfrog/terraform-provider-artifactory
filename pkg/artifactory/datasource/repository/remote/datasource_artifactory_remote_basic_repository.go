@@ -12,7 +12,7 @@ import (
 
 func DataSourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, packageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DataSourceArtifactoryRemoteBasicRepository(packageType string) *schema.Reso
 		return &remote.RepositoryRemoteBaseParams{
 			PackageType:   packageType,
 			Rclass:        remote.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

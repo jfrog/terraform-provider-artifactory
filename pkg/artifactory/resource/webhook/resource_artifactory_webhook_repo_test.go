@@ -177,7 +177,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", testCheckWebhook),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: webhookConfig,
@@ -291,7 +291,7 @@ func webhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*testing
 
 	return t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "key", testCheckWebhook),
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

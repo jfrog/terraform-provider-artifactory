@@ -190,6 +190,15 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	MachineLearningType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    false,
+			"virtual":   false,
+			"federated": true,
+		},
+	},
 	MavenPackageType: {
 		RepoLayoutRef: "maven-2-default",
 		SupportedRepoTypes: map[string]bool{
