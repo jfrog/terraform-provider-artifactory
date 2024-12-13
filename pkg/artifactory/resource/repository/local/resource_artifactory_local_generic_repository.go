@@ -3,7 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,7 +13,6 @@ import (
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
-	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"github.com/samber/lo"
 )
 
@@ -50,9 +49,11 @@ func NewGenericLocalRepositoryResource(packageType string) func() resource.Resou
 						CollectionEndpoint: "artifactory/api/repositories",
 						DocumentEndpoint:   "artifactory/api/repositories/{key}",
 					},
-					Description: "Provides a resource to creates a local Machine Learning repository.",
-					PackageType: packageType,
-					Rclass:      Rclass,
+					Description:       "Provides a resource to creates a local Machine Learning repository.",
+					PackageType:       packageType,
+					Rclass:            Rclass,
+					ResourceModelType: reflect.TypeFor[LocalGenericResourceModel](),
+					APIModelType:      reflect.TypeFor[LocalGenericAPIModel](),
 				},
 			},
 		}
@@ -69,29 +70,67 @@ type LocalGenericResourceModel struct {
 	CDNRedirect   types.Bool   `tfsdk:"cdn_redirect"`
 }
 
-func (r *LocalGenericResourceModel) FromAPIModel(ctx context.Context, apiModel LocalGenericAPIModel) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	r.LocalResourceModel.FromAPIModel(ctx, apiModel.LocalAPIModel)
-
-	r.RepoLayoutRef = types.StringValue(apiModel.RepoLayoutRef)
-	r.CDNRedirect = types.BoolPointerValue(apiModel.CDNRedirect)
-
-	return diags
+func (r *LocalGenericResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
 }
 
-func (r LocalGenericResourceModel) ToAPIModel(ctx context.Context, packageType string, apiModel *LocalGenericAPIModel) diag.Diagnostics {
+func (r LocalGenericResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *LocalGenericResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r LocalGenericResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *LocalGenericResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *LocalGenericResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r LocalGenericResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r LocalGenericResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 
-	var localAPIModel LocalAPIModel
-	r.LocalResourceModel.ToAPIModel(ctx, packageType, &localAPIModel)
+	model, d := r.LocalResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
+	}
 
+	localAPIModel := model.(LocalAPIModel)
 	localAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
 
-	*apiModel = LocalGenericAPIModel{
+	return LocalGenericAPIModel{
 		LocalAPIModel: localAPIModel,
 		CDNRedirect:   r.CDNRedirect.ValueBoolPointer(),
-	}
+	}, diags
+}
+
+func (r *LocalGenericResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(*LocalGenericAPIModel)
+
+	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
+
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.CDNRedirect = types.BoolPointerValue(model.CDNRedirect)
 
 	return diags
 }
@@ -120,161 +159,6 @@ func (r *localGenericResource) Schema(ctx context.Context, req resource.SchemaRe
 		Attributes:  localGenericAttributes,
 		Description: r.Description,
 	}
-}
-
-func (r *localGenericResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
-
-	var plan LocalGenericResourceModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var repo LocalGenericAPIModel
-	resp.Diagnostics.Append(plan.ToAPIModel(ctx, r.PackageType, &repo)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var jfrogErrors util.JFrogErrors
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("key", plan.Key.ValueString()).
-		SetBody(repo).
-		SetError(&jfrogErrors).
-		Put(r.DocumentEndpoint)
-
-	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, err.Error())
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToCreateResourceError(resp, jfrogErrors.String())
-		return
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *localGenericResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
-
-	var state LocalGenericResourceModel
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Convert from Terraform data model into API data model
-	var repo LocalGenericAPIModel
-	var jfrogErrors util.JFrogErrors
-
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("key", state.Key.ValueString()).
-		SetResult(&repo).
-		SetError(&jfrogErrors).
-		Get(r.DocumentEndpoint)
-
-	if err != nil {
-		utilfw.UnableToRefreshResourceError(resp, err.Error())
-		return
-	}
-
-	// Treat HTTP 404 Not Found status as a signal to recreate resource
-	// and return early
-	if response.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToRefreshResourceError(resp, jfrogErrors.String())
-		return
-	}
-
-	// Convert from the API data model to the Terraform data model
-	// and refresh any attribute values.
-	resp.Diagnostics.Append(state.FromAPIModel(ctx, repo)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *localGenericResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
-
-	var plan LocalGenericResourceModel
-	var state LocalGenericResourceModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read Terraform state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var repo LocalGenericAPIModel
-	resp.Diagnostics.Append(plan.ToAPIModel(ctx, r.PackageType, &repo)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var jfrogErrors util.JFrogErrors
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("key", plan.Key.ValueString()).
-		SetBody(repo).
-		SetError(&jfrogErrors).
-		Post(r.DocumentEndpoint)
-
-	if err != nil {
-		utilfw.UnableToUpdateResourceError(resp, err.Error())
-		return
-	}
-
-	if response.IsError() {
-		utilfw.UnableToUpdateResourceError(resp, jfrogErrors.String())
-		return
-	}
-
-	if !plan.ProjectKey.Equal(state.ProjectKey) {
-		key := plan.Key.ValueString()
-		oldProjectKey := state.ProjectKey.ValueString()
-		newProjectKey := plan.ProjectKey.ValueString()
-
-		assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
-		unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
-
-		var err error
-		if assignToProject {
-			err = repository.AssignRepoToProject(key, newProjectKey, r.ProviderData.Client)
-		} else if unassignFromProject {
-			err = repository.UnassignRepoFromProject(key, r.ProviderData.Client)
-		}
-
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to assign/unassign repository to project",
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func GetGenericSchemas(packageType string) map[int16]map[string]*sdkv2_schema.Schema {

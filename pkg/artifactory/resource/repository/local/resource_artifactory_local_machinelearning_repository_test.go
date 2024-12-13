@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccLocalMachineLearningRepository(t *testing.T) {
-	acctest.SkipIfNotSupportedVersion(t, "7.120.0")
+	acctest.SkipIfNotSupportedVersion(t, "7.102.0")
 
 	_, fqrn, name := testutil.MkNames("machinelearning-local", "artifactory_local_machinelearning_repository")
 

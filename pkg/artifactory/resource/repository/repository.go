@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
@@ -19,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,9 +82,11 @@ const (
 
 type BaseResource struct {
 	util.JFrogResource
-	Description string
-	PackageType string
-	Rclass      string
+	Description       string
+	PackageType       string
+	Rclass            string
+	ResourceModelType reflect.Type
+	APIModelType      reflect.Type
 }
 
 func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
@@ -139,6 +142,177 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	}
 }
 
+func (r *BaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	if r.ResourceModelType == nil || r.APIModelType == nil {
+		resp.Diagnostics.AddError(
+			"ResourceModelType or APIModelType is nil",
+			"",
+		)
+		return
+	}
+
+	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	plan := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
+
+	plan.GetCreateResourcePlanData(ctx, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	repo, d := plan.ToAPIModel(ctx, r.PackageType)
+	if d != nil {
+		resp.Diagnostics.Append(d...)
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var jfrogErrors util.JFrogErrors
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("key", plan.KeyString()).
+		SetBody(repo).
+		SetError(&jfrogErrors).
+		Put(r.DocumentEndpoint)
+
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToCreateResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	if plan.ProjectEnvironmentsValue().IsUnknown() {
+		plan.SetProjectEnvironments(types.SetNull(types.StringType))
+	}
+
+	plan.SetCreateResourceStateData(ctx, resp)
+}
+
+func (r *BaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	state := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
+
+	state.GetReadResourceStateData(ctx, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Convert from Terraform data model into API data model
+	repo := reflect.New(r.APIModelType).Interface()
+	var jfrogErrors util.JFrogErrors
+
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("key", state.KeyString()).
+		SetResult(repo).
+		SetError(&jfrogErrors).
+		Get(r.DocumentEndpoint)
+
+	if err != nil {
+		utilfw.UnableToRefreshResourceError(resp, err.Error())
+		return
+	}
+
+	// Treat HTTP 404 Not Found status as a signal to recreate resource
+	// and return early
+	if response.StatusCode() == http.StatusNotFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToRefreshResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	// Convert from the API data model to the Terraform data model
+	// and refresh any attribute values.
+	resp.Diagnostics.Append(state.FromAPIModel(ctx, repo)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.SetReadResourceStateData(ctx, resp)
+}
+
+func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	plan := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
+	plan.GetUpdateResourcePlanData(ctx, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
+	state.GetUpdateResourceStateData(ctx, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	repo, d := plan.ToAPIModel(ctx, r.PackageType)
+	if d != nil {
+		resp.Diagnostics.Append(d...)
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	key := plan.KeyString()
+	var jfrogErrors util.JFrogErrors
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("key", key).
+		SetBody(repo).
+		SetError(&jfrogErrors).
+		Post(r.DocumentEndpoint)
+
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	if response.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	if plan.ProjectEnvironmentsValue().IsUnknown() {
+		plan.SetProjectEnvironments(types.SetNull(types.StringType))
+	}
+
+	planProjectKey := plan.ProjectKeyValue()
+	stateProjectKey := state.ProjectKeyValue()
+
+	if !planProjectKey.Equal(stateProjectKey) {
+		oldProjectKey := stateProjectKey.ValueString()
+		newProjectKey := planProjectKey.ValueString()
+
+		assignToProject := oldProjectKey == "" && len(newProjectKey) > 0
+		unassignFromProject := len(oldProjectKey) > 0 && newProjectKey == ""
+
+		var err error
+		if assignToProject {
+			err = AssignRepoToProject(key, newProjectKey, r.ProviderData.Client)
+		} else if unassignFromProject {
+			err = UnassignRepoFromProject(key, r.ProviderData.Client)
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to assign/unassign repository to project",
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	plan.SetUpdateResourceStateData(ctx, resp)
+}
+
 func (r *BaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -174,6 +348,22 @@ func (r *BaseResource) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }
 
+type ResourceModelIface interface {
+	KeyString() string
+	ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics)
+	FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics
+	GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse)
+	SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse)
+	GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse)
+	SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse)
+	GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
+	SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse)
+	ProjectEnvironmentsValue() basetypes.SetValue
+	SetProjectEnvironments(basetypes.SetValue)
+	ProjectKeyValue() basetypes.StringValue
+}
+
 type BaseResourceModel struct {
 	Key                 types.String `tfsdk:"key"`
 	ProjectKey          types.String `tfsdk:"project_key"`
@@ -184,13 +374,31 @@ type BaseResourceModel struct {
 	ExcludesPattern     types.String `tfsdk:"excludes_pattern"`
 }
 
-func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType string, apiModel *BaseAPIModel) diag.Diagnostics {
+func (r BaseResourceModel) KeyString() string {
+	return r.Key.ValueString()
+}
+
+func (r BaseResourceModel) ProjectEnvironmentsValue() basetypes.SetValue {
+	return r.ProjectEnvironments
+}
+
+func (r *BaseResourceModel) SetProjectEnvironments(v basetypes.SetValue) {
+	r.ProjectEnvironments = v
+}
+
+func (r BaseResourceModel) ProjectKeyValue() basetypes.StringValue {
+	return r.ProjectKey
+}
+
+func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType string) (interface{}, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 
 	var projectEnviroments []string
-	d := r.ProjectEnvironments.ElementsAs(ctx, &projectEnviroments, false)
-	if d != nil {
-		diags.Append(d...)
+	if !r.ProjectEnvironments.IsUnknown() {
+		d := r.ProjectEnvironments.ElementsAs(ctx, &projectEnviroments, false)
+		if d != nil {
+			diags.Append(d...)
+		}
 	}
 
 	repoLayoutRef, err := GetDefaultRepoLayoutRef(rclass, packageType)
@@ -201,7 +409,7 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 		)
 	}
 
-	*apiModel = BaseAPIModel{
+	return BaseAPIModel{
 		Key:                 r.Key.ValueString(),
 		ProjectKey:          r.ProjectKey.ValueString(),
 		ProjectEnvironments: projectEnviroments,
@@ -212,28 +420,24 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 		IncludesPattern:     r.IncludesPattern.ValueString(),
 		ExcludesPattern:     r.ExcludesPattern.ValueString(),
 		RepoLayoutRef:       repoLayoutRef,
-	}
-
-	return diags
+	}, diags
 }
 
-func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel BaseAPIModel) diag.Diagnostics {
+func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	tflog.Debug(ctx, "BaseResourceModel.FromAPIModel", map[string]interface{}{
-		"apiModel": apiModel,
-	})
+	model := apiModel.(BaseAPIModel)
 
-	r.Key = types.StringValue(apiModel.Key)
-	r.ProjectKey = types.StringValue(apiModel.ProjectKey)
-	r.Description = types.StringValue(apiModel.Description)
-	r.Notes = types.StringValue(apiModel.Notes)
-	r.IncludesPattern = types.StringValue(apiModel.IncludesPattern)
-	r.ExcludesPattern = types.StringValue(apiModel.ExcludesPattern)
+	r.Key = types.StringValue(model.Key)
+	r.ProjectKey = types.StringValue(model.ProjectKey)
+	r.Description = types.StringValue(model.Description)
+	r.Notes = types.StringValue(model.Notes)
+	r.IncludesPattern = types.StringValue(model.IncludesPattern)
+	r.ExcludesPattern = types.StringValue(model.ExcludesPattern)
 
 	projectEnviroments := types.SetNull(types.StringType)
-	if len(apiModel.ProjectEnvironments) > 0 {
-		envs, ds := types.SetValueFrom(ctx, types.StringType, apiModel.ProjectEnvironments)
+	if len(model.ProjectEnvironments) > 0 {
+		envs, ds := types.SetValueFrom(ctx, types.StringType, model.ProjectEnvironments)
 		if ds.HasError() {
 			diags.Append(ds...)
 			return diags
@@ -249,7 +453,7 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel BaseAPIMo
 type BaseAPIModel struct {
 	Key                 string   `json:"key"`
 	ProjectKey          string   `json:"projectKey"`
-	ProjectEnvironments []string `json:"environments"`
+	ProjectEnvironments []string `json:"environments,omitempty"`
 	Rclass              string   `json:"rclass"`
 	PackageType         string   `json:"packageType"`
 	Description         string   `json:"description"`
@@ -282,6 +486,7 @@ var BaseAttributes = map[string]schema.Attribute{
 	"project_environments": schema.SetAttribute{
 		ElementType: types.StringType,
 		Optional:    true,
+		Computed:    true,
 		Validators: []validator.Set{
 			setvalidator.SizeBetween(0, 2),
 		},

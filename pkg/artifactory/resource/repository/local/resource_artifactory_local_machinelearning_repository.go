@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,9 +20,11 @@ func NewMachineLearningLocalRepositoryResource() resource.Resource {
 					CollectionEndpoint:      "artifactory/api/repositories",
 					DocumentEndpoint:        "artifactory/api/repositories/{key}",
 				},
-				Description: "Provides a resource to creates a local Machine Learning repository.\n\nOfficial documentation can be found [here](https://jfrog.com/help/r/jfrog-artifactory-documentation/machine-learning-repositories).",
-				PackageType: repository.MachineLearningType,
-				Rclass:      Rclass,
+				Description:       "Provides a resource to creates a local Machine Learning repository.\n\nOfficial documentation can be found [here](https://jfrog.com/help/r/jfrog-artifactory-documentation/machine-learning-repositories).",
+				PackageType:       repository.MachineLearningType,
+				Rclass:            Rclass,
+				ResourceModelType: reflect.TypeFor[LocalResourceModel](),
+				APIModelType:      reflect.TypeFor[LocalAPIModel](),
 			},
 		},
 	}
