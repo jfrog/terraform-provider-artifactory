@@ -1,8 +1,10 @@
 package artifact_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"regexp"
 	"testing"
@@ -14,7 +16,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/util"
 )
 
-func TestAccArtifact_full(t *testing.T) {
+func TestAccArtifact_filepath(t *testing.T) {
 	_, _, repoName := testutil.MkNames("test-generic-local", "artifactory_local_generic_repository")
 	_, fqrn, name := testutil.MkNames("test-artifact-", "artifactory_artifact")
 
@@ -34,6 +36,60 @@ func TestAccArtifact_full(t *testing.T) {
 		"repoName": repoName,
 		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
 		"filePath": "../../../../samples/multi1-3.7-20220310.233748-1.jar",
+	}
+	config := util.ExecuteTemplate(name, temp, testData)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCheckArtifactDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repository", repoName),
+					resource.TestCheckResourceAttr(fqrn, "path", testData["path"]),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_md5"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha1"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha256"),
+					resource.TestCheckResourceAttrSet(fqrn, "created"),
+					resource.TestCheckResourceAttrSet(fqrn, "created_by"),
+					resource.TestCheckResourceAttrSet(fqrn, "download_uri"),
+					resource.TestCheckResourceAttrSet(fqrn, "mime_type"),
+					resource.TestCheckResourceAttrSet(fqrn, "size"),
+					resource.TestCheckResourceAttrSet(fqrn, "uri"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccArtifact_content_base64(t *testing.T) {
+	_, _, repoName := testutil.MkNames("test-generic-local", "artifactory_local_generic_repository")
+	_, fqrn, name := testutil.MkNames("test-artifact-", "artifactory_artifact")
+
+	temp := `
+	resource "artifactory_local_generic_repository" "{{ .repoName }}" {
+		key = "{{ .repoName }}"
+	}
+
+	resource "artifactory_artifact" "{{ .name }}" {
+		repository = artifactory_local_generic_repository.{{ .repoName }}.key
+		path = "{{ .path }}"
+		content_base64 = "{{ .content }}"
+	}`
+
+	data, err := os.ReadFile("../../../../samples/multi1-3.7-20220310.233748-1.jar")
+	if err != nil {
+		t.Fatalf("failed to read file. %v", err)
+		return
+	}
+
+	testData := map[string]string{
+		"name":     name,
+		"repoName": repoName,
+		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
+		"content":  base64.StdEncoding.EncodeToString(data),
 	}
 	config := util.ExecuteTemplate(name, temp, testData)
 
@@ -115,6 +171,64 @@ func TestAccArtifact_invalid_file_path(t *testing.T) {
 			{
 				Config:      config,
 				ExpectError: regexp.MustCompile(".*Invalid file path.*"),
+			},
+		},
+	})
+}
+
+func TestAccArtifact_file_path_conflict(t *testing.T) {
+	_, _, name := testutil.MkNames("test-artifact-", "artifactory_artifact")
+
+	temp := `
+	resource "artifactory_artifact" "{{ .name }}" {
+		repository = "test-repo"
+		path = "{{ .path }}"
+		file_path = "{{ .filePath }}"
+		content_base64 = "{{ .content }}"
+	}`
+	testData := map[string]string{
+		"name":     name,
+		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
+		"filePath": "../../../../samples/multi1-3.7-20220310.233748-1.jar",
+		"content":  "foobar",
+	}
+
+	config := util.ExecuteTemplate(name, temp, testData)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*Invalid Attribute Combination.*"),
+			},
+		},
+	})
+}
+
+func TestAccArtifact_missing_file_path_and_content_base64(t *testing.T) {
+	_, _, name := testutil.MkNames("test-artifact-", "artifactory_artifact")
+
+	temp := `
+	resource "artifactory_artifact" "{{ .name }}" {
+		repository = "test-repo"
+		path = "{{ .path }}"
+	}`
+	testData := map[string]string{
+		"name": name,
+		"path": "/foo/bar/multi1-3.7-20220310.233748-1.jar",
+	}
+
+	config := util.ExecuteTemplate(name, temp, testData)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*Invalid Attribute Combination.*"),
 			},
 		},
 	})
