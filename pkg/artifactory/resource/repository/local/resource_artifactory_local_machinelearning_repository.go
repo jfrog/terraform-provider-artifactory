@@ -19,7 +19,7 @@ func NewMachineLearningLocalRepositoryResource() resource.Resource {
 					CollectionEndpoint:      "artifactory/api/repositories",
 					DocumentEndpoint:        "artifactory/api/repositories/{key}",
 				},
-				Description: "Provides a resource to creates a local Machine Learning repository.",
+				Description: "Provides a resource to creates a local Machine Learning repository.\n\nOfficial documentation can be found [here](https://jfrog.com/help/r/jfrog-artifactory-documentation/machine-learning-repositories).",
 				PackageType: repository.MachineLearningType,
 				Rclass:      Rclass,
 			},
@@ -29,10 +29,6 @@ func NewMachineLearningLocalRepositoryResource() resource.Resource {
 
 type MachineLearningLocalRepositoryResource struct {
 	localResource
-}
-
-type MachineLearningLocalRepositoryResourceModel struct {
-	LocalResourceModel
 }
 
 func (r *MachineLearningLocalRepositoryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

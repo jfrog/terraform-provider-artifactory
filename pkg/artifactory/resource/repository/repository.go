@@ -9,6 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,19 +19,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/jfrog/terraform-provider-shared/util"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
-	"golang.org/x/exp/slices"
-
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/unpacker"
+	"github.com/jfrog/terraform-provider-shared/util"
+	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	sdkv2_validator "github.com/jfrog/terraform-provider-shared/validator"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
+
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -81,6 +84,89 @@ type BaseResource struct {
 	Description string
 	PackageType string
 	Rclass      string
+}
+
+func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	if r.ProviderData == nil {
+		return
+	}
+
+	var projectEnviroments types.Set
+
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("project_environments"), &projectEnviroments)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If project_environments is not configured, return without warning.
+	if projectEnviroments.IsNull() || projectEnviroments.IsUnknown() {
+		return
+	}
+
+	var envs []string
+	resp.Diagnostics.Append(projectEnviroments.ElementsAs(ctx, &envs, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	isSupported, err := util.CheckVersion(r.ProviderData.ArtifactoryVersion, CustomProjectEnvironmentSupportedVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to check Artifactory version",
+			err.Error(),
+		)
+		return
+	}
+
+	if isSupported {
+		if len(envs) == 2 {
+			resp.Diagnostics.AddError(
+				"Too many project environment",
+				fmt.Sprintf("for Artifactory %s or later, only one environment can be assigned to a repository", CustomProjectEnvironmentSupportedVersion),
+			)
+			return
+		}
+	} else { // Before 7.53.1
+		for _, env := range envs {
+			if !slices.Contains(ProjectEnvironmentsSupported, env) {
+				resp.Diagnostics.AddError(
+					"Invalid project_environment not allowed",
+					env,
+				)
+				return
+			}
+		}
+	}
+}
+
+func (r *BaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var key types.String
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("key"), &key)...)
+
+	var jfrogErrors util.JFrogErrors
+
+	response, err := r.ProviderData.Client.R().
+		SetPathParam("key", key.ValueString()).
+		SetError(&jfrogErrors).
+		Delete(r.DocumentEndpoint)
+
+	if err != nil {
+		utilfw.UnableToDeleteResourceError(resp, err.Error())
+		return
+	}
+
+	// Return error if the HTTP status code is not 200 OK
+	if response.StatusCode() != http.StatusOK {
+		utilfw.UnableToDeleteResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	// If the logic reaches here, it implicitly succeeded and will remove
+	// the resource from state if there are no other errors.
 }
 
 // ImportState imports the resource into the Terraform state.
@@ -134,37 +220,16 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel BaseAPIModel) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
+	tflog.Debug(ctx, "BaseResourceModel.FromAPIModel", map[string]interface{}{
+		"apiModel": apiModel,
+	})
+
 	r.Key = types.StringValue(apiModel.Key)
-
-	projectKey := types.StringNull()
-	if len(apiModel.ProjectKey) > 0 {
-		projectKey = types.StringValue(apiModel.ProjectKey)
-	}
-	r.ProjectKey = projectKey
-
-	description := types.StringNull()
-	if len(apiModel.Description) > 0 {
-		description = types.StringValue(apiModel.Description)
-	}
-	r.Description = description
-
-	notes := types.StringNull()
-	if len(apiModel.Notes) > 0 {
-		notes = types.StringValue(apiModel.Notes)
-	}
-	r.Notes = notes
-
-	includesPattern := types.StringNull()
-	if len(apiModel.IncludesPattern) > 0 {
-		includesPattern = types.StringValue(apiModel.IncludesPattern)
-	}
-	r.IncludesPattern = includesPattern
-
-	excludesPattern := types.StringNull()
-	if len(apiModel.ExcludesPattern) > 0 {
-		excludesPattern = types.StringValue(apiModel.ExcludesPattern)
-	}
-	r.ExcludesPattern = excludesPattern
+	r.ProjectKey = types.StringValue(apiModel.ProjectKey)
+	r.Description = types.StringValue(apiModel.Description)
+	r.Notes = types.StringValue(apiModel.Notes)
+	r.IncludesPattern = types.StringValue(apiModel.IncludesPattern)
+	r.ExcludesPattern = types.StringValue(apiModel.ExcludesPattern)
 
 	projectEnviroments := types.SetNull(types.StringType)
 	if len(apiModel.ProjectEnvironments) > 0 {
@@ -183,15 +248,15 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel BaseAPIMo
 
 type BaseAPIModel struct {
 	Key                 string   `json:"key"`
-	ProjectKey          string   `json:"projectKey,omitempty"`
-	ProjectEnvironments []string `json:"environments,omitempty"`
+	ProjectKey          string   `json:"projectKey"`
+	ProjectEnvironments []string `json:"environments"`
 	Rclass              string   `json:"rclass"`
 	PackageType         string   `json:"packageType"`
-	Description         string   `json:"description,omitempty"`
-	Notes               string   `json:"notes,omitempty"`
-	IncludesPattern     string   `json:"includesPattern,omitempty"`
-	ExcludesPattern     string   `json:"excludesPattern,omitempty"`
-	RepoLayoutRef       string   `json:"repoLayoutRef,omitempty"`
+	Description         string   `json:"description"`
+	Notes               string   `json:"notes"`
+	IncludesPattern     string   `json:"includesPattern"`
+	ExcludesPattern     string   `json:"excludesPattern"`
+	RepoLayoutRef       string   `json:"repoLayoutRef"`
 }
 
 var BaseAttributes = map[string]schema.Attribute{
@@ -207,6 +272,8 @@ var BaseAttributes = map[string]schema.Attribute{
 	},
 	"project_key": schema.StringAttribute{
 		Optional: true,
+		Computed: true,
+		Default:  stringdefault.StaticString(""),
 		Validators: []validator.String{
 			validatorfw_string.ProjectKey(),
 		},
@@ -226,21 +293,30 @@ var BaseAttributes = map[string]schema.Attribute{
 	},
 	"description": schema.StringAttribute{
 		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString(""),
 		MarkdownDescription: "Public description.",
 	},
 	"notes": schema.StringAttribute{
 		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString(""),
 		MarkdownDescription: "Internal description.",
 	},
 	"includes_pattern": schema.StringAttribute{
 		Optional: true,
 		Computed: true,
 		Default:  stringdefault.StaticString("**/*"),
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
 		MarkdownDescription: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": schema.StringAttribute{
 		Optional: true,
+		Computed: true,
+		Default:  stringdefault.StaticString(""),
 		MarkdownDescription: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
 			"By default no artifacts are excluded.",
 	},

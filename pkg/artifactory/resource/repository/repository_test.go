@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -45,6 +44,7 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = project.{{ .projectKey }}.key
+		  project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
 		"name":       name,
@@ -58,8 +58,8 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 				Source: "jfrog/project",
 			},
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -85,9 +85,23 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
 
 	localRepositoryWithProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
-	 	  project_key = "{{ .projectKey }}"
+	 	  project_key = project.{{ .projectKey }}.key
 		  project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
@@ -96,23 +110,38 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 	})
 
 	localRepositoryNoProjectKey := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key = "{{ .name }}"
+		  project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
-		"name": name,
+		"name":       name,
+		"projectKey": projectKey,
 	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryWithProjectKey,
@@ -171,8 +200,8 @@ func TestAccRepository_can_set_two_project_environments_before_7_53_1(t *testing
 				Source: "jfrog/project",
 			},
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
@@ -229,8 +258,8 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 				Source: "jfrog/project",
 			},
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
@@ -283,8 +312,8 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 				Source: "jfrog/project",
 			},
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				SkipFunc: func() (bool, error) {
@@ -293,7 +322,7 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 					return !isSupported, err
 				},
 				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory %s or later, only one environment can be assigned to a repository.*", repository.CustomProjectEnvironmentSupportedVersion)),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory %s or later, only one environment can be assigned to a\n.*repository.*", repository.CustomProjectEnvironmentSupportedVersion)),
 			},
 		},
 	})
@@ -314,13 +343,13 @@ func TestAccRepository_invalid_key(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(`.*expected length of key to be in the range \(1 - 64\).*`),
+				ExpectError: regexp.MustCompile(`.*Attribute key must be 1 - 64 alphanumeric and hyphen characters.*`),
 			},
 		},
 	})

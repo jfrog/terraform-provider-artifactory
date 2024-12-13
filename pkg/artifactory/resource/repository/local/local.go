@@ -25,29 +25,6 @@ const (
 	CurrentSchemaVersion = 1
 )
 
-var PackageTypesLikeGeneric = []string{
-	repository.BowerPackageType,
-	repository.ChefPackageType,
-	repository.CocoapodsPackageType,
-	repository.ComposerPackageType,
-	repository.CondaPackageType,
-	repository.CranPackageType,
-	repository.GemsPackageType,
-	repository.GenericPackageType,
-	repository.GitLFSPackageType,
-	repository.GoPackageType,
-	repository.HelmPackageType,
-	repository.HuggingFacePackageType,
-	repository.NPMPackageType,
-	repository.OpkgPackageType,
-	repository.PubPackageType,
-	repository.PuppetPackageType,
-	repository.PyPiPackageType,
-	repository.SwiftPackageType,
-	repository.TerraformBackendPackageType,
-	repository.VagrantPackageType,
-}
-
 type localResource struct {
 	repository.BaseResource
 }
@@ -207,36 +184,6 @@ func (r *localResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *localResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
-
-	var state LocalResourceModel
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	var jfrogErrors util.JFrogErrors
-
-	response, err := r.ProviderData.Client.R().
-		SetPathParam("key", state.Key.ValueString()).
-		SetError(&jfrogErrors).
-		Delete(r.DocumentEndpoint)
-
-	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, err.Error())
-		return
-	}
-
-	// Return error if the HTTP status code is not 200 OK
-	if response.StatusCode() != http.StatusOK {
-		utilfw.UnableToDeleteResourceError(resp, jfrogErrors.String())
-		return
-	}
-
-	// If the logic reaches here, it implicitly succeeded and will remove
-	// the resource from state if there are no other errors.
-}
-
 type LocalResourceModel struct {
 	repository.BaseResourceModel
 	BlackedOut             types.Bool `tfsdk:"blacked_out"`
@@ -284,46 +231,18 @@ func (r *LocalResourceModel) FromAPIModel(ctx context.Context, apiModel LocalAPI
 	r.DownloadDirect = types.BoolPointerValue(apiModel.DownloadRedirect)
 	r.PriorityResolution = types.BoolValue(apiModel.PriorityResolution)
 
-	propertySets, ds := types.SetValueFrom(ctx, types.StringType, apiModel.PropertySets)
-	if ds.HasError() {
-		diags.Append(ds...)
+	var propertySets = types.SetNull(types.StringType)
+	if len(apiModel.PropertySets) > 0 {
+		ps, ds := types.SetValueFrom(ctx, types.StringType, apiModel.PropertySets)
+		if ds.HasError() {
+			diags.Append(ds...)
+			return diags
+		}
+
+		propertySets = ps
 	}
 
 	r.PropertySets = propertySets
-
-	return diags
-}
-
-type LocalGenericResourceModel struct {
-	LocalResourceModel
-	RepoLayoutRef types.String `tfsdk:"repo_layout_ref"`
-	CDNRedirect   types.Bool   `tfsdk:"cdn_redirect"`
-}
-
-func (r *LocalGenericResourceModel) fromAPIModel(ctx context.Context, apiModel LocalGenericAPIModel) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	r.BaseResourceModel.FromAPIModel(ctx, apiModel.BaseAPIModel)
-	r.LocalResourceModel.FromAPIModel(ctx, apiModel.LocalAPIModel)
-
-	r.RepoLayoutRef = types.StringValue(apiModel.RepoLayoutRef)
-	r.CDNRedirect = types.BoolPointerValue(apiModel.CDNRedirect)
-
-	return diags
-}
-
-func (r LocalGenericResourceModel) ToAPIModel(ctx context.Context, packageType string, apiModel *LocalGenericAPIModel) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	var localAPIModel LocalAPIModel
-	r.LocalResourceModel.ToAPIModel(ctx, packageType, &localAPIModel)
-
-	localAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
-
-	*apiModel = LocalGenericAPIModel{
-		LocalAPIModel: localAPIModel,
-		CDNRedirect:   r.CDNRedirect.ValueBoolPointer(),
-	}
 
 	return diags
 }
@@ -336,11 +255,6 @@ type LocalAPIModel struct {
 	ArchiveBrowsingEnabled *bool    `json:"archiveBrowsingEnabled"`
 	DownloadRedirect       *bool    `json:"downloadRedirect"`
 	PriorityResolution     bool     `json:"priorityResolution"`
-}
-
-type LocalGenericAPIModel struct {
-	LocalAPIModel
-	CDNRedirect *bool `json:"cdnRedirect"`
 }
 
 var LocalAttributes = lo.Assign(
@@ -383,18 +297,6 @@ var LocalAttributes = lo.Assign(
 			Computed:            true,
 			Default:             booldefault.StaticBool(false),
 			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
-		},
-	},
-)
-
-var LocalGenericAttributes = lo.Assign(
-	LocalAttributes,
-	map[string]schema.Attribute{
-		"cdn_redirect": schema.BoolAttribute{
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(false),
-			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is `false`",
 		},
 	},
 )
