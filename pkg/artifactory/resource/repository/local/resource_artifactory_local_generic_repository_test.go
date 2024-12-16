@@ -38,6 +38,7 @@ func TestAccLocalGenericRepository_UpgradeFromSDKv2(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "id", name),
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 				),
 			},

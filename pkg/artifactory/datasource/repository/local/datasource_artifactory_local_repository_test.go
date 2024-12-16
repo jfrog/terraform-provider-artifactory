@@ -49,7 +49,7 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
