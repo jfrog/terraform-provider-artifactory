@@ -286,6 +286,8 @@ func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		plan.SetProjectEnvironments(types.SetNull(types.StringType))
 	}
 
+	plan.SetID(plan.KeyString())
+
 	planProjectKey := plan.ProjectKeyValue()
 	stateProjectKey := state.ProjectKeyValue()
 
