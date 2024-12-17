@@ -36,7 +36,7 @@ var GoSchema = lo.Assign(
 			Description:      "Artifactory supports proxying the following Git providers out-of-the-box: GitHub (`GITHUB`), GitHub Enterprise (`GITHUBENTERPRISE`), BitBucket Cloud (`BITBUCKET`), BitBucket Server (`STASH`), GitLab (`GITLAB`), or a remote Artifactory instance (`ARTIFACTORY`). Default value is `ARTIFACTORY`.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.GoPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.GoPackageType),
 )
 
 var GoSchemas = GetSchemas(GoSchema)
@@ -56,7 +56,7 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GoPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GoPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func ResourceArtifactoryRemoteGoRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.GoPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

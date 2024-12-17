@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedOciRepository() *schema.Resource {
 	ociFederatedSchema := lo.Assign(
 		local.OCILocalSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.OCIPackageType),
 	)
 
 	var unpackFederatedOciRepository = func(data *schema.ResourceData) (interface{}, string, error) {

@@ -1,0 +1,1 @@
+terraform import artifactory_local_machinelearning_repository.my-machinelearning-local my-machinelearning-local

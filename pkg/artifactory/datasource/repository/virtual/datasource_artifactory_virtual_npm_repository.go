@@ -12,7 +12,7 @@ import (
 
 func DatasourceArtifactoryVirtualNpmRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.NPMPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.NPMPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DatasourceArtifactoryVirtualNpmRepository() *schema.Resource {
 		return &virtual.RepositoryBaseParams{
 			PackageType:   resource_repository.NPMPackageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

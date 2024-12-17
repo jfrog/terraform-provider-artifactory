@@ -89,7 +89,7 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
@@ -130,7 +130,7 @@ func TestAccWebhook_EventTypesValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
@@ -169,7 +169,7 @@ func TestAccWebhook_HandlerValidation_EmptyProxy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
@@ -209,7 +209,7 @@ func TestAccWebhook_HandlerValidation_ProxyWithURL(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,
@@ -274,7 +274,7 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(fqrn, "key", testCheckWebhook),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config:           config1,

@@ -262,9 +262,9 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -275,8 +275,8 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -321,7 +321,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

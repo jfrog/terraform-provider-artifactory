@@ -2,18 +2,14 @@ package local_test
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -92,8 +88,8 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +98,7 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -185,8 +181,8 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +191,7 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", "ansible"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "ansible")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "ansible"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -326,9 +322,9 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -342,7 +338,7 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
 					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "debian")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "debian"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -474,9 +470,9 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "pair_name", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -489,7 +485,7 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "true"),
 					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
 					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "1"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "rpm")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "rpm"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -521,7 +517,7 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -530,7 +526,7 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -563,7 +559,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -572,7 +568,7 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -599,7 +595,7 @@ func TestAccLocalDockerV2RepositoryWithDefaultMaxUniqueTagsGH370(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -636,7 +632,7 @@ func TestAccLocalHelmOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -644,7 +640,7 @@ func TestAccLocalHelmOciRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "helmoci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "helmoci"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -678,9 +674,9 @@ func TestAccLocalHuggingFaceMLRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -692,16 +688,17 @@ func TestAccLocalHuggingFaceMLRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
 					resource.TestCheckResourceAttr(fqrn, "archive_browsing_enabled", strconv.FormatBool(params["archive_browsing_enabled"].(bool))),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef("local", "huggingfaceml")()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef("local", "huggingfaceml")
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -725,7 +722,7 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -733,7 +730,7 @@ func TestAccLocalNugetRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -778,7 +775,7 @@ func TestAccLocalOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -786,7 +783,7 @@ func TestAccLocalOciRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -795,7 +792,7 @@ func TestAccLocalOciRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", updatedParams["retention"])),
 					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", updatedParams["max_tags"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "oci"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -824,7 +821,7 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -860,7 +857,7 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -913,7 +910,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -925,7 +922,7 @@ func TestAccLocalMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "handle_releases", fmt.Sprintf("%v", tempStruct["handle_releases"])),
 					resource.TestCheckResourceAttr(fqrn, "handle_snapshots", fmt.Sprintf("%v", tempStruct["handle_snapshots"])),
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%v", tempStruct["suppress_pom_consistency_checks"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "maven")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "maven"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -933,131 +930,6 @@ func TestAccLocalMavenRepository(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccLocalGenericRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("generic-local", "artifactory_local_generic_repository")
-	params := map[string]interface{}{
-		"name":                name,
-		"priority_resolution": testutil.RandBool(),
-		"property_set":        "artifactory",
-	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
-		resource "artifactory_local_generic_repository" "{{ .name }}" {
-		  key                 = "{{ .name }}"
-		  priority_resolution = "{{ .priority_resolution }}"
-		  property_sets       = ["{{ .property_set }}"]
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: localRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "priority_resolution", fmt.Sprintf("%t", params["priority_resolution"])),
-					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccLocalGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
-	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
-	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
-	repoName := fmt.Sprintf("%s-generic-local", projectKey)
-
-	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
-
-	params := map[string]interface{}{
-		"name":       name,
-		"projectKey": projectKey,
-		"projectEnv": projectEnv,
-	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
-		resource "artifactory_local_generic_repository" "{{ .name }}" {
-		  key                  = "{{ .name }}"
-	 	  project_key          = "{{ .projectKey }}"
-	 	  project_environments = ["{{ .projectEnv }}"]
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
-		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
-		Steps: []resource.TestStep{
-			{
-				Config: localRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
-					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccLocalGenericRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
-	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
-	repoName := fmt.Sprintf("%s-generic-local", projectKey)
-
-	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
-
-	params := map[string]interface{}{
-		"name":       name,
-		"projectKey": projectKey,
-	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
-		resource "artifactory_local_generic_repository" "{{ .name }}" {
-		  key                  = "{{ .name }}"
-	 	  project_key          = "invalid-project-key-too-long-really-long"
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProject(t, projectKey)
-		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProject(t, projectKey)
-			return acctest.CheckRepo(id, request)
-		}),
-		Steps: []resource.TestStep{
-			{
-				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 32 lowercase alphanumeric and hyphen characters"),
 			},
 		},
 	})
@@ -1075,9 +947,9 @@ func TestAccLocalNpmRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -1086,165 +958,14 @@ func TestAccLocalNpmRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
-}
-
-func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("local-%s-%d-full", packageType, rand.Int())
-	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", packageType, name)
-	xrayIndex := testutil.RandBool()
-	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", packageType, name)
-
-	params := map[string]interface{}{
-		"packageType":  packageType,
-		"name":         name,
-		"xrayIndex":    xrayIndex,
-		"cdnRedirect":  false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
-		"property_set": "artifactory",
-	}
-	cfg := util.ExecuteTemplate("TestAccLocalRepository", `
-		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
-		  key           = "{{ .name }}"
-		  description   = "Test repo for {{ .name }}"
-		  notes         = "Test repo for {{ .name }}"
-		  xray_index    = {{ .xrayIndex }}
-		  cdn_redirect  = {{ .cdnRedirect }}
-		  property_sets = ["{{ .property_set }}"]
-		}
-	`, params)
-
-	updatedCfg := util.ExecuteTemplate("TestAccLocalRepository", `
-		resource "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
-		  key           = "{{ .name }}"
-		  description   = ""
-		  notes         = ""
-		  xray_index    = {{ .xrayIndex }}
-		  cdn_redirect  = {{ .cdnRedirect }}
-		  property_sets = ["{{ .property_set }}"]
-		}
-	`, params)
-
-	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: cfg,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", packageType),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
-					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
-					resource.TestCheckResourceAttr(resourceName, "cdn_redirect", fmt.Sprintf("%t", params["cdnRedirect"])),
-					resource.TestCheckResourceAttr(resourceName, "property_sets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "property_sets.0", params["property_set"].(string)),
-				),
-			},
-			{
-				Config: updatedCfg,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", packageType),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "notes", ""),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", packageType)(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
-					resource.TestCheckResourceAttr(resourceName, "xray_index", fmt.Sprintf("%t", xrayIndex)),
-					resource.TestCheckResourceAttr(resourceName, "cdn_redirect", fmt.Sprintf("%t", params["cdnRedirect"])),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	}
-}
-
-func TestAccLocalAllPackageTypes(t *testing.T) {
-	for _, packageType := range local.PackageTypesLikeGeneric {
-		t.Run(packageType, func(t *testing.T) {
-			resource.Test(mkTestCase(packageType, t))
-		})
-	}
-}
-
-func makeLocalRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
-	name := fmt.Sprintf("terraform-local-%s-%d-full", repoType, rand.Int())
-	resourceName := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
-	repoLayoutRef := acctest.GetValidRandomDefaultRepoLayoutRef()
-	fqrn := fmt.Sprintf("artifactory_local_%s_repository.%s", repoType, name)
-
-	const localRepositoryConfigFull = `
-		resource "artifactory_local_%[1]s_repository" "%[2]s" {
-			key             = "%[2]s"
-			description     = "Test repo for %[2]s"
-			notes           = "Test repo for %[2]s"
-			repo_layout_ref = "%[3]s"
-		}
-	`
-
-	const localRepositoryConfigFullUpdated = `
-		resource "artifactory_local_%[1]s_repository" "%[2]s" {
-			key             = "%[2]s"
-			description     = ""
-			notes           = ""
-			repo_layout_ref = "%[3]s"
-		}
-	`
-
-	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(resourceName, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(localRepositoryConfigFull, repoType, name, repoLayoutRef),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "notes", fmt.Sprintf("Test repo for %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", repoLayoutRef), //Check to ensure repository layout is set as per default even when it is not passed.
-				),
-			},
-			{
-				Config: fmt.Sprintf(localRepositoryConfigFullUpdated, repoType, name, repoLayoutRef),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", name),
-					resource.TestCheckResourceAttr(resourceName, "package_type", repoType),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "notes", ""),
-					resource.TestCheckResourceAttr(resourceName, "repo_layout_ref", repoLayoutRef),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	}
-}
-
-// Test case to cover when repoLayoutRef not left as blank and set to some value other than default
-func TestAccAllLocalRepoTypes(t *testing.T) {
-	for _, packageType := range local.PackageTypesLikeGeneric {
-		t.Run(packageType, func(t *testing.T) {
-			resource.Test(makeLocalRepoTestCase(packageType, t))
-		})
-	}
 }
 
 func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
@@ -1260,7 +981,7 @@ func makeLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*testing.T,
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -1310,7 +1031,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -1318,7 +1039,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "anonymous_access", fmt.Sprintf("%t", params["anonymous_access"])),
 					resource.TestCheckResourceAttr(fqrn, "enable_sparse_index", fmt.Sprintf("%t", params["enable_sparse_index"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "cargo"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -1347,14 +1068,14 @@ func TestAccLocalConanRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", fmt.Sprintf("%t", params["force_conan_authentication"])),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "conan")(); return r.(string) }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "conan"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{

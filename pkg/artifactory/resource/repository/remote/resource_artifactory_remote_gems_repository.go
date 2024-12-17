@@ -39,7 +39,7 @@ func ResourceArtifactoryRemoteGemsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GemsPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GemsPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func ResourceArtifactoryRemoteGemsRepository() *schema.Resource {
 				RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 					Rclass:        Rclass,
 					PackageType:   repository.GemsPackageType,
-					RepoLayoutRef: repoLayout.(string),
+					RepoLayoutRef: repoLayout,
 				},
 			},
 		}, nil

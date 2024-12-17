@@ -17,7 +17,7 @@ var ociSchema = lo.Assign(
 			Description: "When enabled, in cases where the same OCI tag exists in two or more of the aggregated repositories, Artifactory will return the tag that has the latest timestamp.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.OCIPackageType),
 )
 
 var OCISchemas = GetSchemas(ociSchema)

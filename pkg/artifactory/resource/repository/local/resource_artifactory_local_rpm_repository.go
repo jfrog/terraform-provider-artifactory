@@ -42,7 +42,7 @@ var rpmSchema = utilsdk.MergeMaps(
 				"gzipped version of the group files, if required.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.RPMPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 )
 
 var RPMSchemas = GetSchemas(rpmSchema)

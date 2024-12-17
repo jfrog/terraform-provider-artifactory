@@ -12,7 +12,7 @@ import (
 
 func DatasourceArtifactoryVirtualHelmRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.HelmPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.HelmPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DatasourceArtifactoryVirtualHelmRepository() *schema.Resource {
 		return &virtual.RepositoryBaseParams{
 			PackageType:   resource_repository.HelmPackageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedGenericRepository(packageType string) *schema.R
 	var genericSchema = lo.Assign(
 		local.GetGenericSchemas(packageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {

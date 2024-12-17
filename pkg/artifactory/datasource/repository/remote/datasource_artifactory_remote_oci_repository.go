@@ -10,7 +10,7 @@ import (
 
 func DataSourceArtifactoryRemoteOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.OCIPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.OCIPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -19,7 +19,7 @@ func DataSourceArtifactoryRemoteOciRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.OCIPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

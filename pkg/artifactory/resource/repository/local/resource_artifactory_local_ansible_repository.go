@@ -9,7 +9,7 @@ import (
 )
 
 var ansibleSchema = lo.Assign(
-	repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AnsiblePackageType),
 	repository.AlpinePrimaryKeyPairRef,
 )
 

@@ -10,7 +10,7 @@ import (
 
 func DataSourceArtifactoryRemoteBowerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.BowerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.BowerPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -19,7 +19,7 @@ func DataSourceArtifactoryRemoteBowerRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.BowerPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

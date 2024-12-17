@@ -10,7 +10,7 @@ import (
 
 func DatasourceArtifactoryVirtualHelmOciRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.HelmOCIPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.HelmOCIPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -18,7 +18,7 @@ func DatasourceArtifactoryVirtualHelmOciRepository() *schema.Resource {
 		return &virtual.RepositoryBaseParams{
 			PackageType:   resource_repository.HelmOCIPackageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

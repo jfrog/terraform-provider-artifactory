@@ -1,3 +1,13 @@
+## 12.7.0 (December 17, 2024). Tested on Artifactory 7.98.11 with Terraform 1.10.2 and OpenTofu 1.8.7
+
+FEATURES:
+
+**New Resource:** `artifactory_local_machinelearning_repository` to support local Machine Learning repository. PR: [#1152](https://github.com/jfrog/terraform-provider-artifactory/pull/1152)
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_bower_repository, resource/artifactory_local_chef_repository, resource/artifactory_local_cocoapods_repository, resource/artifactory_local_composer_repository, resource/artifactory_local_conda_repository, resource/artifactory_local_cran_repository, resource/artifactory_local_gems_repository, resource/artifactory_local_generic_repository, resource/artifactory_local_gitlfs_repository, resource/artifactory_local_go_repository, resource/artifactory_local_helm_repository, resource/artifactory_local_hunggingfaceml_repository, resource/artifactory_local_npm_repository, resource/artifactory_local_opkg_repository, resource/artifactory_local_pup_repository, resource/artifactory_local_puppet_repository, resource/artifactory_local_pypi_repository, resource/artifactory_local_swift_repository, resource/artifactory_local_terraformbackend_repository, resource/artifactory_local_vagrant_repository are migrated to Plugin Framework. PR: [#1152](https://github.com/jfrog/terraform-provider-artifactory/pull/1152)
+
 ## 12.6.0 (December 13, 2024). Tested on Artifactory 7.98.10 with Terraform 1.10.2 and OpenTofu 1.8.7
 
 FEATURES:

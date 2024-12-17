@@ -498,7 +498,7 @@ func JavaSchema(packageType string, suppressPom bool) map[string]*schema.Schema 
 					"no limit, and unique snapshots are not cleaned up.",
 			},
 		},
-		repository.RepoLayoutRefSchema(Rclass, packageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
 }
 

@@ -11,11 +11,11 @@ func GetTerraformSchemas(registryType string) map[int16]map[string]*schema.Schem
 	return map[int16]map[string]*schema.Schema{
 		0: lo.Assign(
 			BaseSchemaV1,
-			repository.RepoLayoutRefSchema(Rclass, "terraform_"+registryType),
+			repository.RepoLayoutRefSDKv2Schema(Rclass, "terraform_"+registryType),
 		),
 		1: lo.Assign(
 			BaseSchemaV1,
-			repository.RepoLayoutRefSchema(Rclass, "terraform_"+registryType),
+			repository.RepoLayoutRefSDKv2Schema(Rclass, "terraform_"+registryType),
 		),
 	}
 }

@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 	ansibleFederatedSchema := lo.Assign(
 		local.AnsibleSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.AnsiblePackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.AnsiblePackageType),
 	)
 
 	var packMembers = func(repo interface{}, d *schema.ResourceData) error {

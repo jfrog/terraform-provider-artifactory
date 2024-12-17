@@ -27,7 +27,7 @@ var goSchema = lo.Assign(
 				"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.GoPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.GoPackageType),
 )
 
 var GoSchemas = GetSchemas(goSchema)

@@ -18,7 +18,7 @@ var conanSchema = lo.Assign(
 	baseSchema,
 	CurationRemoteRepoSchema,
 	repository.ConanBaseSchema,
-	repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ConanPackageType),
 )
 
 var ConanSchemas = GetSchemas(conanSchema)
@@ -40,7 +40,7 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ConanPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ConanPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func ResourceArtifactoryRemoteConanRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.ConanPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

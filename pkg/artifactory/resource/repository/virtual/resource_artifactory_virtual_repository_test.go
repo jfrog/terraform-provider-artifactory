@@ -32,7 +32,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -85,7 +85,7 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -158,8 +158,8 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.1", "**/go.googlesource.com/**"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "2"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -191,7 +191,7 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -240,8 +240,8 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -277,7 +277,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -291,8 +291,8 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key_pair", ""),
 					resource.TestCheckResourceAttr(fqrn, "pom_repository_references_cleanup_policy", "discard_active_reference"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -325,7 +325,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -472,9 +472,9 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
-			acctest.VerifyDeleted(kpFqrn, "", security.VerifyKeyPair),
-			acctest.VerifyDeleted(kpFqrn2, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -485,8 +485,8 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
-						return r.(string)
+						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
+						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -524,7 +524,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -578,7 +578,7 @@ func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -621,7 +621,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -674,7 +674,7 @@ func TestAccVirtualGenericRepositoryWithProjectAttributesGH318(t *testing.T) {
 			acctest.CreateProject(t, projectKey)
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
 			return acctest.CheckRepo(id, request)
 		}),
@@ -721,7 +721,7 @@ func TestAccVirtualRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 			acctest.CreateProject(t, projectKey)
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
 			acctest.DeleteProject(t, projectKey)
 			return acctest.CheckRepo(id, request)
 		}),
@@ -808,7 +808,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -918,7 +918,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -1008,7 +1008,7 @@ func TestAccVirtualGoExternalDependenciesRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -1106,7 +1106,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -1173,7 +1173,7 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

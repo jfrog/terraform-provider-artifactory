@@ -52,7 +52,7 @@ var dockerSchema = lo.Assign(
 			Description: "Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 )
 
 var DockerSchemas = GetSchemas(dockerSchema)

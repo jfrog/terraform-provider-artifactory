@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedNugetRepository() *schema.Resource {
 	nugetFederatedSchema := lo.Assign(
 		local.NugetSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.NugetPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.NugetPackageType),
 	)
 
 	var packNugetMembers = func(repo interface{}, d *schema.ResourceData) error {

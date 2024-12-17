@@ -47,7 +47,7 @@ var dockerV2Schema = lo.Assign(
 			Description: "The Docker API version to use. This cannot be set",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 )
 
 var DockerV2Schemas = GetSchemas(dockerV2Schema)
@@ -112,7 +112,7 @@ var dockerV1Schema = utilsdk.MergeMaps(
 			Computed: true,
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.DockerPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DockerPackageType),
 )
 
 var DockerV1Schemas = GetSchemas(dockerV1Schema)

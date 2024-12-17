@@ -19,7 +19,7 @@ func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *sch
 	terraformFederatedSchema := lo.Assign(
 		local.GetTerraformSchemas(registryType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, packageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, packageType),
 	)
 
 	var packTerraformMembers = func(repo interface{}, d *schema.ResourceData) error {

@@ -20,12 +20,14 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/util"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
+	"github.com/samber/lo"
 )
 
 // Ensure the implementation satisfies the provider.Provider interface.
@@ -203,62 +205,74 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		artifact.NewArtifactResource,
-		artifact.NewItemPropertiesResource,
-		user.NewAnonymousUserResource,
-		user.NewManagedUserResource,
-		user.NewUnmanagedUserResource,
-		user.NewUserResource,
-		security.NewGroupResource,
-		security.NewScopedTokenResource,
-		security.NewGlobalEnvironmentResource,
-		security.NewDistributionPublicKeyResource,
-		security.NewCertificateResource,
-		security.NewKeyPairResource,
-		security.NewPasswordExpirationPolicyResource,
-		security.NewUserLockPolicyResource,
-		security.NewVaultConfigurationResource,
-		configuration.NewArchivePolicyResource,
-		configuration.NewLdapSettingResource,
-		configuration.NewLdapGroupSettingResource,
-		configuration.NewBackupResource,
-		configuration.NewGeneralSecurityResource,
-		configuration.NewMailServerResource,
-		configuration.NewPackageCleanupPolicyResource,
-		configuration.NewPropertySetResource,
-		configuration.NewProxyResource,
-		configuration.NewRepositoryLayoutResource,
-		lifecycle.NewReleaseBundleV2Resource,
-		lifecycle.NewReleaseBundleV2PromotionResource,
-		replication.NewLocalRepositorySingleReplicationResource,
-		replication.NewLocalRepositoryMultiReplicationResource,
-		replication.NewRemoteRepositoryReplicationResource,
-		webhook.NewArtifactWebhookResource,
-		webhook.NewArtifactCustomWebhookResource,
-		webhook.NewArtifactLifecycleWebhookResource,
-		webhook.NewArtifactLifecycleCustomWebhookResource,
-		webhook.NewArtifactPropertyWebhookResource,
-		webhook.NewArtifactPropertyCustomWebhookResource,
-		webhook.NewArtifactoryReleaseBundleWebhookResource,
-		webhook.NewArtifactoryReleaseBundleCustomWebhookResource,
-		webhook.NewBuildWebhookResource,
-		webhook.NewBuildCustomWebhookResource,
-		webhook.NewDestinationWebhookResource,
-		webhook.NewDestinationCustomWebhookResource,
-		webhook.NewDistributionWebhookResource,
-		webhook.NewDistributionCustomWebhookResource,
-		webhook.NewDockerWebhookResource,
-		webhook.NewDockerCustomWebhookResource,
-		webhook.NewReleaseBundleWebhookResource,
-		webhook.NewReleaseBundleCustomWebhookResource,
-		webhook.NewReleaseBundleV2WebhookResource,
-		webhook.NewReleaseBundleV2CustomWebhookResource,
-		webhook.NewReleaseBundleV2PromotionWebhookResource,
-		webhook.NewReleaseBundleV2PromotionCustomWebhookResource,
-		webhook.NewUserWebhookResource,
-		webhook.NewUserCustomWebhookResource,
-	}
+
+	localGenericLikeRepositoryResources := lo.Map(
+		local.PackageTypesLikeGeneric,
+		func(packageType string, _ int) func() resource.Resource {
+			return local.NewGenericLocalRepositoryResource(packageType)
+		},
+	)
+
+	return append(
+		localGenericLikeRepositoryResources,
+		[]func() resource.Resource{
+			artifact.NewArtifactResource,
+			artifact.NewItemPropertiesResource,
+			user.NewAnonymousUserResource,
+			user.NewManagedUserResource,
+			user.NewUnmanagedUserResource,
+			user.NewUserResource,
+			security.NewGroupResource,
+			security.NewScopedTokenResource,
+			security.NewGlobalEnvironmentResource,
+			security.NewDistributionPublicKeyResource,
+			security.NewCertificateResource,
+			security.NewKeyPairResource,
+			security.NewPasswordExpirationPolicyResource,
+			security.NewUserLockPolicyResource,
+			security.NewVaultConfigurationResource,
+			configuration.NewArchivePolicyResource,
+			configuration.NewLdapSettingResource,
+			configuration.NewLdapGroupSettingResource,
+			configuration.NewBackupResource,
+			configuration.NewGeneralSecurityResource,
+			configuration.NewMailServerResource,
+			configuration.NewPackageCleanupPolicyResource,
+			configuration.NewPropertySetResource,
+			configuration.NewProxyResource,
+			configuration.NewRepositoryLayoutResource,
+			lifecycle.NewReleaseBundleV2Resource,
+			lifecycle.NewReleaseBundleV2PromotionResource,
+			replication.NewLocalRepositorySingleReplicationResource,
+			replication.NewLocalRepositoryMultiReplicationResource,
+			replication.NewRemoteRepositoryReplicationResource,
+			local.NewMachineLearningLocalRepositoryResource,
+			webhook.NewArtifactWebhookResource,
+			webhook.NewArtifactCustomWebhookResource,
+			webhook.NewArtifactLifecycleWebhookResource,
+			webhook.NewArtifactLifecycleCustomWebhookResource,
+			webhook.NewArtifactPropertyWebhookResource,
+			webhook.NewArtifactPropertyCustomWebhookResource,
+			webhook.NewArtifactoryReleaseBundleWebhookResource,
+			webhook.NewArtifactoryReleaseBundleCustomWebhookResource,
+			webhook.NewBuildWebhookResource,
+			webhook.NewBuildCustomWebhookResource,
+			webhook.NewDestinationWebhookResource,
+			webhook.NewDestinationCustomWebhookResource,
+			webhook.NewDistributionWebhookResource,
+			webhook.NewDistributionCustomWebhookResource,
+			webhook.NewDockerWebhookResource,
+			webhook.NewDockerCustomWebhookResource,
+			webhook.NewReleaseBundleWebhookResource,
+			webhook.NewReleaseBundleCustomWebhookResource,
+			webhook.NewReleaseBundleV2WebhookResource,
+			webhook.NewReleaseBundleV2CustomWebhookResource,
+			webhook.NewReleaseBundleV2PromotionWebhookResource,
+			webhook.NewReleaseBundleV2PromotionCustomWebhookResource,
+			webhook.NewUserWebhookResource,
+			webhook.NewUserCustomWebhookResource,
+		}...,
+	)
 }
 
 // DataSources satisfies the provider.Provider interface for ArtifactoryProvider.

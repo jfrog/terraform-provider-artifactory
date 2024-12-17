@@ -47,7 +47,7 @@ var HelmSchema = lo.Assign(
 				"Default value in UI is empty. This attribute must be set together with `external_dependencies_enabled = true`",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HelmPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmPackageType),
 )
 
 var HelmSchemas = GetSchemas(HelmSchema)

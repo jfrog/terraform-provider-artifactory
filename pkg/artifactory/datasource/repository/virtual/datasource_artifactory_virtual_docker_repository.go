@@ -12,7 +12,7 @@ import (
 
 func DatasourceArtifactoryVirtualDockerRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.DockerPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, resource_repository.DockerPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -20,7 +20,7 @@ func DatasourceArtifactoryVirtualDockerRepository() *schema.Resource {
 		return &virtual.RepositoryBaseParams{
 			PackageType:   resource_repository.DockerPackageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 

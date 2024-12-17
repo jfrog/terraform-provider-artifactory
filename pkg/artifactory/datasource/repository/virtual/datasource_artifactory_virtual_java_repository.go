@@ -13,7 +13,7 @@ import (
 
 func DataSourceArtifactoryVirtualJavaRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
 		if err != nil {
 			return nil, err
 		}
@@ -21,12 +21,12 @@ func DataSourceArtifactoryVirtualJavaRepository(packageType string) *schema.Reso
 		return &virtual.RepositoryBaseParams{
 			PackageType:   packageType,
 			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout.(string),
+			RepoLayoutRef: repoLayout,
 		}, nil
 	}
 	var mavenSchema = lo.Assign(
 		virtual.JavaSchema,
-		resource_repository.RepoLayoutRefSchema(virtual.Rclass, packageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(virtual.Rclass, packageType),
 	)
 
 	var mavenSchemas = virtual.GetSchemas(mavenSchema)

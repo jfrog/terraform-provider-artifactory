@@ -92,11 +92,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
 	}
 
-	for _, packageType := range local.PackageTypesLikeGeneric {
-		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", packageType)
-		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalGenericRepository(packageType)
-	}
-
 	for _, packageType := range remote.PackageTypesLikeBasic {
 		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
 		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(packageType)

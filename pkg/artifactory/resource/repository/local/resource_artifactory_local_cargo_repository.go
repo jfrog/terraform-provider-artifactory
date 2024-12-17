@@ -9,7 +9,7 @@ import (
 )
 
 var cargoSchema = lo.Assign(
-	repository.RepoLayoutRefSchema(Rclass, repository.CargoPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.CargoPackageType),
 	map[string]*schema.Schema{
 		"anonymous_access": {
 			Type:        schema.TypeBool,

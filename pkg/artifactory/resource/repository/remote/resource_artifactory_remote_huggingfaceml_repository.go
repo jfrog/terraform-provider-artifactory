@@ -24,7 +24,7 @@ var HuggingFaceSchema = lo.Assign(
 			Description: "The remote repo URL. Default to 'https://huggingface.co'",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.HuggingFacePackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HuggingFacePackageType),
 )
 
 var HuggingFaceSchemas = GetSchemas(HuggingFaceSchema)
@@ -42,7 +42,7 @@ func ResourceArtifactoryRemoteHuggingFaceRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.HuggingFacePackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.HuggingFacePackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func ResourceArtifactoryRemoteHuggingFaceRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.HuggingFacePackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

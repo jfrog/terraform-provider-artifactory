@@ -10,7 +10,7 @@ import (
 
 func DataSourceArtifactoryRemotePypiRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
-		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.PyPiPackageType)()
+		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.PyPiPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -19,7 +19,7 @@ func DataSourceArtifactoryRemotePypiRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.PyPiPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

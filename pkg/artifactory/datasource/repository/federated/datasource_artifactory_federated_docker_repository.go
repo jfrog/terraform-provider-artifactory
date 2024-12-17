@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	dockerV2FederatedSchema := lo.Assign(
 		local.DockerV2Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DockerPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.DockerPackageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {
@@ -55,7 +55,7 @@ func DataSourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	dockerFederatedSchema := lo.Assign(
 		local.DockerV1Schemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.DockerPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.DockerPackageType),
 	)
 
 	var packDockerMembers = func(repo interface{}, d *schema.ResourceData) error {

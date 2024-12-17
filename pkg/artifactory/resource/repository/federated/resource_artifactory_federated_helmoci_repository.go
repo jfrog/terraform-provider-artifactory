@@ -19,7 +19,7 @@ func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 	helmociSchema := lo.Assign(
 		local.HelmOCISchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.HelmOCIPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HelmOCIPackageType),
 	)
 
 	var unpackRepository = func(data *schema.ResourceData) (interface{}, string, error) {

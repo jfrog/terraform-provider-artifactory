@@ -17,7 +17,7 @@ func DataSourceArtifactoryFederatedGenericRepository(packageType string) *schema
 	var genericSchema = lo.Assign(
 		local.GetGenericSchemas(packageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, packageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, packageType),
 	)
 
 	var packGenericMembers = func(repo interface{}, d *schema.ResourceData) error {

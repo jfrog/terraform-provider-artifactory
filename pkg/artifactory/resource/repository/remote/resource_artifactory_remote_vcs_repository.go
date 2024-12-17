@@ -27,7 +27,7 @@ var VCSSchema = lo.Assign(
 				"no limit, and unique snapshots are not cleaned up.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.VCSPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.VCSPackageType),
 )
 
 var VCSSchemas = GetSchemas(VCSSchema)
@@ -44,7 +44,7 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.VCSPackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.VCSPackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func ResourceArtifactoryRemoteVcsRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.VCSPackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

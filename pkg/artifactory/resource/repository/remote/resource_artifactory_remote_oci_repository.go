@@ -47,7 +47,7 @@ var OCISchema = lo.Assign(
 				"will default to their default project as you have set up in your account.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.OCIPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.OCIPackageType),
 )
 
 var OCISchemas = GetSchemas(OCISchema)

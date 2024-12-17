@@ -15,7 +15,7 @@ func DataSourceArtifactoryFederatedConanRepository() *schema.Resource {
 	conanSchema := lo.Assign(
 		local.ConanSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		resource_repository.RepoLayoutRefSchema(federated.Rclass, resource_repository.ConanPackageType),
+		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, resource_repository.ConanPackageType),
 	)
 
 	var packConanMembers = func(repo interface{}, d *schema.ResourceData) error {

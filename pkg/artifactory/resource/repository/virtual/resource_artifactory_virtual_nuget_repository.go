@@ -17,7 +17,7 @@ var nugetSchema = lo.Assign(
 			Description: "If set, user authentication is required when accessing the repository. An anonymous request will display an HTTP 401 error. This is also enforced when aggregated repositories support anonymous requests.",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.NugetPackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 )
 
 var NugetSchemas = GetSchemas(nugetSchema)

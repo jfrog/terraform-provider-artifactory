@@ -21,7 +21,7 @@ var ansibleSchema = lo.Assign(
 			Description: "The remote repo URL. Default to 'https://galaxy.ansible.com'",
 		},
 	},
-	repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AnsiblePackageType),
 )
 
 var AnsibleSchemas = GetSchemas(ansibleSchema)
@@ -35,7 +35,7 @@ func ResourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 	}
 
 	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.AnsiblePackageType)()
+		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.AnsiblePackageType)
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func ResourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
 				Rclass:        Rclass,
 				PackageType:   repository.AnsiblePackageType,
-				RepoLayoutRef: repoLayout.(string),
+				RepoLayoutRef: repoLayout,
 			},
 		}, nil
 	}

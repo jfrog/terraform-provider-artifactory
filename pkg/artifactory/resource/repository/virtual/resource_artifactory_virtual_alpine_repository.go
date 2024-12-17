@@ -11,7 +11,7 @@ import (
 var alpineSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
 	repository.PrimaryKeyPairRef,
-	repository.RepoLayoutRefSchema(Rclass, repository.AlpinePackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AlpinePackageType),
 )
 
 var AlpineSchemas = GetSchemas(alpineSchema)

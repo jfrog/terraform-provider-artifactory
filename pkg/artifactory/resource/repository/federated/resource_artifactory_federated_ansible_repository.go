@@ -22,7 +22,7 @@ func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 		local.GetGenericSchemas(repository.AnsiblePackageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
 		repository.AlpinePrimaryKeyPairRef,
-		repository.RepoLayoutRefSchema(Rclass, repository.AnsiblePackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AnsiblePackageType),
 	)
 
 	var unpackFederatedRepository = func(data *schema.ResourceData) (interface{}, string, error) {

@@ -9,7 +9,7 @@ import (
 )
 
 var alpineSchema = lo.Assign(
-	repository.RepoLayoutRefSchema(Rclass, repository.AlpinePackageType),
+	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AlpinePackageType),
 	repository.AlpinePrimaryKeyPairRef,
 	repository.CompressionFormats,
 )

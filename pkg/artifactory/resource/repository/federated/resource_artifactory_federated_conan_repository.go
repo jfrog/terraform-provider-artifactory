@@ -20,7 +20,7 @@ func ResourceArtifactoryFederatedConanRepository() *schema.Resource {
 	conanSchema := lo.Assign(
 		local.ConanSchemas[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.RepoLayoutRefSchema(Rclass, repository.ConanPackageType),
+		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ConanPackageType),
 	)
 
 	var unpackConanRepository = func(data *schema.ResourceData) (interface{}, string, error) {

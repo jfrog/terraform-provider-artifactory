@@ -1,9 +1,17 @@
 package local
 
 import (
+	"context"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
@@ -14,28 +22,163 @@ const (
 	CurrentSchemaVersion = 1
 )
 
-var PackageTypesLikeGeneric = []string{
-	repository.BowerPackageType,
-	repository.ChefPackageType,
-	repository.CocoapodsPackageType,
-	repository.ComposerPackageType,
-	repository.CondaPackageType,
-	repository.CranPackageType,
-	repository.GemsPackageType,
-	repository.GenericPackageType,
-	repository.GitLFSPackageType,
-	repository.GoPackageType,
-	repository.HelmPackageType,
-	repository.HuggingFacePackageType,
-	repository.NPMPackageType,
-	repository.OpkgPackageType,
-	repository.PubPackageType,
-	repository.PuppetPackageType,
-	repository.PyPiPackageType,
-	repository.SwiftPackageType,
-	repository.TerraformBackendPackageType,
-	repository.VagrantPackageType,
+type localResource struct {
+	repository.BaseResource
 }
+
+type LocalResourceModel struct {
+	repository.BaseResourceModel
+	BlackedOut             types.Bool `tfsdk:"blacked_out"`
+	XrayIndex              types.Bool `tfsdk:"xray_index"`
+	PropertySets           types.Set  `tfsdk:"property_sets"`
+	ArchiveBrowsingEnabled types.Bool `tfsdk:"archive_browsing_enabled"`
+	DownloadDirect         types.Bool `tfsdk:"download_direct"`
+	PriorityResolution     types.Bool `tfsdk:"priority_resolution"`
+}
+
+func (r *LocalResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r LocalResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *LocalResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r LocalResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *LocalResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *LocalResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r LocalResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r LocalResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	model, d := r.BaseResourceModel.ToAPIModel(ctx, Rclass, packageType)
+	if d != nil {
+		diags.Append(d...)
+	}
+	baseRepositoryAPIModel := model.(repository.BaseAPIModel)
+
+	var propertySets []string
+	d = r.PropertySets.ElementsAs(ctx, &propertySets, false)
+	if d != nil {
+		diags.Append(d...)
+	}
+
+	return LocalAPIModel{
+		BaseAPIModel:           baseRepositoryAPIModel,
+		BlackedOut:             r.BlackedOut.ValueBoolPointer(),
+		XrayIndex:              r.XrayIndex.ValueBool(),
+		PropertySets:           propertySets,
+		ArchiveBrowsingEnabled: r.ArchiveBrowsingEnabled.ValueBoolPointer(),
+		DownloadRedirect:       r.DownloadDirect.ValueBoolPointer(),
+		PriorityResolution:     r.PriorityResolution.ValueBool(),
+	}, diags
+}
+
+func (r *LocalResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(LocalAPIModel)
+
+	r.BaseResourceModel.FromAPIModel(ctx, model.BaseAPIModel)
+
+	r.BlackedOut = types.BoolPointerValue(model.BlackedOut)
+	r.XrayIndex = types.BoolValue(model.XrayIndex)
+	r.ArchiveBrowsingEnabled = types.BoolPointerValue(model.ArchiveBrowsingEnabled)
+	r.DownloadDirect = types.BoolPointerValue(model.DownloadRedirect)
+	r.PriorityResolution = types.BoolValue(model.PriorityResolution)
+
+	var propertySets = types.SetNull(types.StringType)
+	if len(model.PropertySets) > 0 {
+		ps, ds := types.SetValueFrom(ctx, types.StringType, model.PropertySets)
+		if ds.HasError() {
+			diags.Append(ds...)
+			return diags
+		}
+
+		propertySets = ps
+	}
+
+	r.PropertySets = propertySets
+
+	return diags
+}
+
+type LocalAPIModel struct {
+	repository.BaseAPIModel
+	BlackedOut             *bool    `json:"blackedOut"`
+	XrayIndex              bool     `json:"xrayIndex"`
+	PropertySets           []string `json:"propertySets,omitempty"`
+	ArchiveBrowsingEnabled *bool    `json:"archiveBrowsingEnabled"`
+	DownloadRedirect       *bool    `json:"downloadRedirect"`
+	PriorityResolution     bool     `json:"priorityResolution"`
+}
+
+var LocalAttributes = lo.Assign(
+	repository.BaseAttributes,
+	map[string]schema.Attribute{
+		"blacked_out": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed.",
+		},
+		"xray_index": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
+		},
+		"priority_resolution": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
+		},
+		"property_sets": schema.SetAttribute{
+			ElementType: types.StringType,
+			Optional:    true,
+			Validators: []validator.Set{
+				setvalidator.SizeAtLeast(1),
+			},
+			MarkdownDescription: "List of property set name",
+		},
+		"archive_browsing_enabled": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
+		},
+		"download_direct": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
+		},
+	},
+)
 
 type RepositoryBaseParams struct {
 	Key                    string   `hcl:"key" json:"key,omitempty"`
@@ -62,44 +205,44 @@ func (bp RepositoryBaseParams) Id() string {
 	return bp.Key
 }
 
-var baseSchema = map[string]*schema.Schema{
+var baseSchema = map[string]*sdkv2_schema.Schema{
 	"blacked_out": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "When set, the repository does not participate in artifact resolution and new artifacts cannot be deployed.",
 	},
 	"xray_index": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Enable Indexing In Xray. Repository will be indexed with the default retention period. You will be able to change it via Xray settings.",
 	},
 	"priority_resolution": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "Setting repositories with priority will cause metadata to be merged only from repositories set with this field",
 	},
 	"property_sets": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Set:         schema.HashString,
+		Type:        sdkv2_schema.TypeSet,
+		Elem:        &sdkv2_schema.Schema{Type: sdkv2_schema.TypeString},
+		Set:         sdkv2_schema.HashString,
 		Optional:    true,
 		Description: "List of property set name",
 	},
 	"archive_browsing_enabled": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Description: "When set, you may view content such as HTML or Javadoc files directly from Artifactory.\nThis may not be safe and therefore requires strict content moderation to prevent malicious users from uploading content that may compromise security (e.g., cross-site scripting attacks).",
 	},
 	"download_direct": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
 	},
 	"cdn_redirect": {
-		Type:        schema.TypeBool,
+		Type:        sdkv2_schema.TypeBool,
 		Optional:    true,
 		Default:     false,
 		Description: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
@@ -111,8 +254,8 @@ var BaseSchemaV1 = lo.Assign(
 	baseSchema,
 )
 
-var GetSchemas = func(s map[string]*schema.Schema) map[int16]map[string]*schema.Schema {
-	return map[int16]map[string]*schema.Schema{
+var GetSchemas = func(s map[string]*sdkv2_schema.Schema) map[int16]map[string]*sdkv2_schema.Schema {
+	return map[int16]map[string]*sdkv2_schema.Schema{
 		0: lo.Assign(
 			BaseSchemaV1,
 			s,
@@ -133,7 +276,7 @@ func GetPackageType(packageType string) string {
 	return packageType
 }
 
-func UnpackBaseRepo(rclassType string, s *schema.ResourceData, packageType string) RepositoryBaseParams {
+func UnpackBaseRepo(rclassType string, s *sdkv2_schema.ResourceData, packageType string) RepositoryBaseParams {
 	d := &utilsdk.ResourceData{ResourceData: s}
 	return RepositoryBaseParams{
 		Rclass:                 rclassType,
