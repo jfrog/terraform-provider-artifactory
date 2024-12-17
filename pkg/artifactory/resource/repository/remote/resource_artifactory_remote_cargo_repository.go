@@ -21,7 +21,7 @@ var cargoSchema = lo.Assign(
 	map[string]*schema.Schema{
 		"git_registry_url": {
 			Type:         schema.TypeString,
-			Required:     true,
+			Required:     false,
 			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			Description:  `This is the index url, expected to be a git repository. Default value in UI is "https://github.com/rust-lang/crates.io-index"`,
 		},
