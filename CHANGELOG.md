@@ -1,3 +1,9 @@
+## 12.7.1 (December 18, 2024). Tested on Artifactory 7.98.11 with Terraform 1.10.2 and OpenTofu 1.8.7
+
+BUG FIXES:
+
+* resource/artifactory_remote_cargo_repository: Fix `git_registry_url` attribute to be incorrectly set to required. Issue: [#1153](https://github.com/jfrog/terraform-provider-artifactory/issues/1153) PR: [#1154](https://github.com/jfrog/terraform-provider-artifactory/pull/1154) and [#1155](https://github.com/jfrog/terraform-provider-artifactory/pull/1155)
+
 ## 12.7.0 (December 17, 2024). Tested on Artifactory 7.98.11 with Terraform 1.10.2 and OpenTofu 1.8.7
 
 FEATURES:
