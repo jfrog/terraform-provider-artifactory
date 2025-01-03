@@ -252,8 +252,7 @@ func GetValidRandomDefaultRepoLayoutRef() string {
 var updateProxiesConfig = func(t *testing.T, getProxiesBody func() []byte) {
 	body := getProxiesBody()
 	restyClient := GetTestResty(t)
-	metadata := util.ProviderMetadata{Client: restyClient}
-	err := configuration.SendConfigurationPatch(body, metadata)
+	err := configuration.SendConfigurationPatch(body, restyClient)
 	if err != nil {
 		t.Fatal(err)
 	}

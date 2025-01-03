@@ -347,7 +347,7 @@ func (r *PropertySetResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
 		return
@@ -440,7 +440,7 @@ func (r *PropertySetResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
 		return
@@ -485,7 +485,7 @@ propertySets:
   %s: ~
 `, matchedPropertySet.Name)
 
-	err = SendConfigurationPatch([]byte(deleteConfig), r.ProviderData)
+	err = SendConfigurationPatch([]byte(deleteConfig), r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return

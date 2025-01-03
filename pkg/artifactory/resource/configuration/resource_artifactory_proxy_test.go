@@ -296,7 +296,7 @@ func testAccProxyDestroy(id string) func(*terraform.State) error {
 
 		matchedProxyConfig := configuration.FindConfigurationById[configuration.ProxyAPIModel](proxies.Proxies, id)
 		if matchedProxyConfig != nil {
-			return fmt.Errorf("error: Proxy with key: " + id + " still exists.")
+			return fmt.Errorf("error: Proxy with key: %s still exists.", id)
 		}
 
 		return nil

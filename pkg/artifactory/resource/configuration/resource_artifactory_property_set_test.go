@@ -269,7 +269,7 @@ func testAccPropertySetDestroy(id string) func(*terraform.State) error {
 
 		for _, iterPropertySet := range propertySets.PropertySets {
 			if iterPropertySet.Name == id {
-				return fmt.Errorf("error: Property set with key: " + id + " still exists.")
+				return fmt.Errorf("error: Property set with key: %s still exists.", id)
 			}
 		}
 		return nil

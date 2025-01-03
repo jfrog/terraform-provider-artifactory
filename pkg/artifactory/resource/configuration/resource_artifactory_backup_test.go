@@ -238,7 +238,7 @@ func testAccBackupDestroy(id string) func(*terraform.State) error {
 
 		for _, iterBackup := range backups.BackupArr {
 			if iterBackup.Key == id {
-				return fmt.Errorf("error: Backup config with key: " + id + " still exists.")
+				return fmt.Errorf("error: Backup config with key: %s still exists.", id)
 			}
 		}
 		return nil

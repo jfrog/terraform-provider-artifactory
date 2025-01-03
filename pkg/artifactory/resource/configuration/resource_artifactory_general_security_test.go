@@ -1,23 +1,15 @@
 package configuration_test
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
-
-const generalSecurityTemplateFull = `
-resource "artifactory_general_security" "security" {
-	enable_anonymous_access = true
-}`
 
 func TestAccGeneralSecurity_UpgradeFromSDKv2(t *testing.T) {
 	jfrogURL := os.Getenv("JFROG_URL")
@@ -47,10 +39,15 @@ func TestAccGeneralSecurity_UpgradeFromSDKv2(t *testing.T) {
 				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
-				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-				Config:                   generalSecurityTemplateFull,
-				PlanOnly:                 true,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.7.1",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config:           config,
+				PlanOnly:         true,
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 		},
 	})
@@ -62,18 +59,21 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
 	}
 
-	fqrn := "artifactory_general_security.security"
+	_, fqrn, resourceName := testutil.MkNames("test-general-security", "artifactory_general_security")
 
 	temp := `
-	resource "artifactory_general_security" "security" {
+	resource "artifactory_general_security" "{{ .name }}" {
 		enable_anonymous_access = {{ .enableAnonymousAccess }}
+		encryption_policy = "{{ .encryption_policy }}"
 	}`
 
 	config := util.ExecuteTemplate(
 		"TestAccGeneralSecurity_full",
 		temp,
 		map[string]interface{}{
-			"enableAnonymousAccess": true,
+			"name":                  resourceName,
+			"enableAnonymousAccess": false,
+			"encryption_policy":     "UNSUPPORTED",
 		},
 	)
 
@@ -81,26 +81,27 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 		"TestAccGeneralSecurity_full",
 		temp,
 		map[string]interface{}{
-			"enableAnonymousAccess": false,
+			"name":                  resourceName,
+			"enableAnonymousAccess": true,
+			"encryption_policy":     "SUPPORTED",
 		},
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccGeneralSecurityDestroy(fqrn),
-
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "encryption_policy", "UNSUPPORTED"),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "false"),
+					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "true"),
+					resource.TestCheckResourceAttr(fqrn, "encryption_policy", "SUPPORTED"),
 				),
 			},
 			{
@@ -110,26 +111,4 @@ func TestAccGeneralSecurity_full(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccGeneralSecurityDestroy(id string) func(*terraform.State) error {
-	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(util.ProviderMetadata).Client
-
-		_, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("error: resource id [%s] not found", id)
-		}
-
-		var generalSettings configuration.GeneralSettingsAPIModel
-		resp, err := client.R().SetResult(&generalSettings).Get("artifactory/api/securityconfig")
-		if err != nil || resp.IsError() {
-			return fmt.Errorf("error: failed to retrieve data from <base_url>/artifactory/api/securityconfig during Read")
-		}
-		if generalSettings.AnonAccessEnabled != false {
-			return fmt.Errorf("error: general security setting to allow anonymous access is still enabled")
-		}
-
-		return nil
-	}
 }

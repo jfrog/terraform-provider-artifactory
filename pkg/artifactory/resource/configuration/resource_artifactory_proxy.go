@@ -305,7 +305,7 @@ func (r *ProxyResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
@@ -396,7 +396,7 @@ func (r *ProxyResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
@@ -422,7 +422,7 @@ proxies:
   %s: ~
 `, data.Key.ValueString())
 
-	err := SendConfigurationPatch([]byte(deleteBackupConfig), r.ProviderData)
+	err := SendConfigurationPatch([]byte(deleteBackupConfig), r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return

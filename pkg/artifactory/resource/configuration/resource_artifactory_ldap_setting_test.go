@@ -331,7 +331,7 @@ func testAccLdapSettingDestroy(id string) func(*terraform.State) error {
 
 		for _, iterLdapSetting := range ldapConfigs.Security.LdapSettings.LdapSettingArr {
 			if iterLdapSetting.Key == id {
-				return fmt.Errorf("error: LdapSetting with key: " + id + " still exists.")
+				return fmt.Errorf("error: LdapSetting with key: %s still exists.", id)
 			}
 		}
 		return nil
