@@ -102,7 +102,7 @@ See the [contribution guide](CONTRIBUTIONS.md).
 
 ## License
 
-Copyright (c) 2024 JFrog.
+Copyright (c) 2025 JFrog.
 
 Apache 2.0 licensed, see [LICENSE][LICENSE] file.
 

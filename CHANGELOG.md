@@ -1,3 +1,9 @@
+## 12.8.0 (January 3, 2025)
+
+FEATURES:
+
+**New Resource:** `artifactory_federated_huggingfaceml_repository` to support federated HuggingFace ML repository. PR: [#1161](https://github.com/jfrog/terraform-provider-artifactory/pull/1161)
+
 ## 12.7.1 (December 18, 2024). Tested on Artifactory 7.98.11 with Terraform 1.10.2 and OpenTofu 1.8.7
 
 BUG FIXES:
