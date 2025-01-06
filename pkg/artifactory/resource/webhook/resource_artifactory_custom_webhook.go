@@ -36,7 +36,7 @@ var customHandlerBlock = schema.SetNestedBlock{
 				Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 			},
 			"method": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("GET", "POST", "PUT", "PATCH", "DELETE"),
 				},
@@ -138,7 +138,7 @@ func (m CustomWebhookBaseResourceModel) toAPIModel(ctx context.Context, domain s
 			return CustomHandlerAPIModel{
 				HandlerType: "custom-webhook",
 				Url:         attrs["url"].(types.String).ValueString(),
-				Method:      attrs["method"].(types.String).ValueString(),
+				Method:      attrs["method"].(types.String).ValueStringPointer(),
 				Secrets:     secrets,
 				Proxy:       attrs["proxy"].(types.String).ValueStringPointer(),
 				HttpHeaders: httpHeaders,
@@ -238,7 +238,7 @@ func (m *CustomWebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiMo
 				customHandlerSetResourceModelAttributeTypes,
 				map[string]attr.Value{
 					"url":          types.StringValue(handler.Url),
-					"method":       types.StringValue(handler.Method),
+					"method":       types.StringPointerValue(handler.Method),
 					"secrets":      secrets,
 					"proxy":        types.StringPointerValue(handler.Proxy),
 					"http_headers": httpHeaders,
@@ -298,7 +298,7 @@ func (w CustomWebhookAPIModel) Id() string {
 type CustomHandlerAPIModel struct {
 	HandlerType string                 `json:"handler_type"`
 	Url         string                 `json:"url"`
-	Method      string                 `json:"method"`
+	Method      *string                `json:"method"`
 	Secrets     []KeyValuePairAPIModel `json:"secrets"`
 	Proxy       *string                `json:"proxy"`
 	HttpHeaders []KeyValuePairAPIModel `json:"http_headers"`

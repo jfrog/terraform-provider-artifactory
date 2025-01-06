@@ -60,6 +60,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 			}
 			handler {
 				url     = "https://google.com"
+				method = "POST"
 				secrets = {
 					secret1 = "value1"
 					secret2 = "value2"
@@ -72,6 +73,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 			}
 			handler {
 				url     = "https://yahoo.com"
+				method = "PUT"
 				secrets = {
 					secret3 = "value3"
 					secret4 = "value4"
@@ -105,6 +107,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 		resource.TestCheckResourceAttr(fqrn, "criteria.0.exclude_patterns.0", "bar/**"),
 		resource.TestCheckResourceAttr(fqrn, "handler.#", "3"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
+		resource.TestCheckResourceAttr(fqrn, "handler.0.method", "POST"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret1", "value1"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret2", "value2"),
@@ -113,6 +116,7 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 		resource.TestCheckResourceAttr(fqrn, "handler.0.http_headers.header-2", "value-2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.0.payload", "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path/1\" } }"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.url", "https://yahoo.com"),
+		resource.TestCheckResourceAttr(fqrn, "handler.1.method", "PUT"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.secrets.%", "2"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.secrets.secret3", "value3"),
 		resource.TestCheckResourceAttr(fqrn, "handler.1.secrets.secret4", "value4"),
@@ -132,7 +136,6 @@ func customWebhookTestCase(webhookType string, t *testing.T) (*testing.T, resour
 	}
 
 	return t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 
@@ -273,9 +276,7 @@ func customWebhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*t
 	}
 
 	return t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
 		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
-
 		Steps: []resource.TestStep{
 			{
 				Config: config,
