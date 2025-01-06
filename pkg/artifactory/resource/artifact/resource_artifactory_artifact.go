@@ -236,9 +236,18 @@ func (r *ArtifactResource) Create(ctx context.Context, req resource.CreateReques
 		defer os.Remove(localFilePath)
 	}
 
+	// open the file as stream
+	f, err := os.Open(localFilePath)
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+	defer f.Close()
+
 	response, err := r.ProviderData.Client.R().
 		SetRawPathParam("repo_target_path", repo_target_path).
-		SetFile(plan.Path.ValueString(), localFilePath).
+		SetHeader("Content-Type", "application/octet-stream").
+		SetBody(f).
 		SetResult(&result).
 		Put("/artifactory/{repo_target_path}")
 
@@ -331,9 +340,18 @@ func (r *ArtifactResource) Update(ctx context.Context, req resource.UpdateReques
 		defer os.Remove(localFilePath)
 	}
 
+	// open the file as stream
+	f, err := os.Open(localFilePath)
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+	defer f.Close()
+
 	response, err := r.ProviderData.Client.R().
 		SetRawPathParam("repo_target_path", repo_target_path).
-		SetFile(plan.Path.ValueString(), localFilePath).
+		SetHeader("Content-Type", "application/octet-stream").
+		SetBody(f).
 		SetResult(&result).
 		Put("/artifactory/{repo_target_path}")
 
