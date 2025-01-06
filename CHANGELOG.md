@@ -1,4 +1,4 @@
-## 12.7.2 (January 6, 2025)
+## 12.8.0 (January 6, 2025)
 
 IMPROVEMENTS:
 
