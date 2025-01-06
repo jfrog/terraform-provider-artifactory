@@ -1,3 +1,9 @@
+## 12.7.2 (January 6, 2025)
+
+IMPROVEMENTS:
+
+* resource/artifactory_\*\_custom_webhook: Add attribute `method` to support setting HTTP method. PR: [#1160](https://github.com/jfrog/terraform-provider-artifactory/pull/1160) and [#1163](https://github.com/jfrog/terraform-provider-artifactory/pull/1163)
+
 ## 12.7.1 (December 18, 2024). Tested on Artifactory 7.98.11 with Terraform 1.10.2 and OpenTofu 1.8.7
 
 BUG FIXES:
