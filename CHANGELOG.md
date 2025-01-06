@@ -1,4 +1,4 @@
-## 12.8.0 (January 7, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.3 and OpenTofu 1.8.8
+## 12.8.0 (January 7, 2025)
 
 FEATURES:
 
@@ -7,6 +7,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * resource/artifactory_\*\_custom_webhook: Add attribute `method` to support setting HTTP method. PR: [#1160](https://github.com/jfrog/terraform-provider-artifactory/pull/1160) and [#1163](https://github.com/jfrog/terraform-provider-artifactory/pull/1163)
+* resource/artifactory_general_security: Add attribute `encryption_policy` to support setting password encryption policy. Issue: [#1159](https://github.com/jfrog/terraform-provider-artifactory/issues/1159) PR: [#1162](https://github.com/jfrog/terraform-provider-artifactory/pull/1162)
 
 BUG FIXES:
 
