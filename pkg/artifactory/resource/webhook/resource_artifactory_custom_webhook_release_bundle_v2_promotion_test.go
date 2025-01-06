@@ -47,9 +47,7 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion_UpgradeFromSDKv2(t *testing.T
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
-
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -111,6 +109,7 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 			}
 			handler {
 				url = "https://google.com"
+				method = "POST"
 				secrets = {
 					secret1 = "value1"
 					secret2 = "value2"
@@ -125,9 +124,8 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 
 		Steps: []resource.TestStep{
 			{
@@ -140,6 +138,7 @@ func TestAccCustomWebhook_ReleaseBundleV2Promotion(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(fqrn, "criteria.0.selected_environments.*", "DEV"),
 					resource.TestCheckResourceAttr(fqrn, "handler.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.url", "https://google.com"),
+					resource.TestCheckResourceAttr(fqrn, "handler.0.method", "POST"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret1", "value1"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.secret2", "value2"),
 					resource.TestCheckResourceAttr(fqrn, "handler.0.http_headers.%", "2"),

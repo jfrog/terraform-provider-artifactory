@@ -22,6 +22,7 @@ resource "artifactory_release_bundle_v2_promotion_custom_webhook" "release-bundl
 
   handler {
     url       = "https://tempurl.org"
+    method    = "POST"
     secrets   = {
       secretName1 = "value1"
       secretName2 = "value2"
@@ -49,6 +50,7 @@ The following arguments are supported:
   * `selected_environments` - (Required) Trigger on this list of environment names.
 * `handler` - (Required) At least one is required.
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
+  * `method` - (Required) Specifies the HTTP method for the URL that the Webhook invokes. Allowed values are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
   * `secrets` - (Optional) Defines a set of sensitive values (such as, tokens and passwords) that can be injected in the headers and/or payload.Secrets’ values are encrypted. In the header/payload, the value can be invoked using the `{{.secrets.token}}` format, where token is the name provided for the secret value. Comprise key/value pair. **Note:** if multiple handlers are used, same secret name and different secret value for the same url won't work. Example:
 
 ```hcl
