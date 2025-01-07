@@ -35,6 +35,13 @@ var customHandlerBlock = schema.SetNestedBlock{
 				},
 				Description: "Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.",
 			},
+			"method": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("GET", "POST", "PUT", "PATCH", "DELETE"),
+				},
+				Description: "Specifies the HTTP Method for URL that the Webhook invokes. Allowed values are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.",
+			},
 			"secrets": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -131,6 +138,7 @@ func (m CustomWebhookBaseResourceModel) toAPIModel(ctx context.Context, domain s
 			return CustomHandlerAPIModel{
 				HandlerType: "custom-webhook",
 				Url:         attrs["url"].(types.String).ValueString(),
+				Method:      attrs["method"].(types.String).ValueStringPointer(),
 				Secrets:     secrets,
 				Proxy:       attrs["proxy"].(types.String).ValueStringPointer(),
 				HttpHeaders: httpHeaders,
@@ -157,6 +165,7 @@ func (m CustomWebhookBaseResourceModel) toAPIModel(ctx context.Context, domain s
 
 var customHandlerSetResourceModelAttributeTypes = map[string]attr.Type{
 	"url":          types.StringType,
+	"method":       types.StringType,
 	"secrets":      types.MapType{ElemType: types.StringType},
 	"proxy":        types.StringType,
 	"http_headers": types.MapType{ElemType: types.StringType},
@@ -229,6 +238,7 @@ func (m *CustomWebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiMo
 				customHandlerSetResourceModelAttributeTypes,
 				map[string]attr.Value{
 					"url":          types.StringValue(handler.Url),
+					"method":       types.StringPointerValue(handler.Method),
 					"secrets":      secrets,
 					"proxy":        types.StringPointerValue(handler.Proxy),
 					"http_headers": httpHeaders,
@@ -288,6 +298,7 @@ func (w CustomWebhookAPIModel) Id() string {
 type CustomHandlerAPIModel struct {
 	HandlerType string                 `json:"handler_type"`
 	Url         string                 `json:"url"`
+	Method      *string                `json:"method"`
 	Secrets     []KeyValuePairAPIModel `json:"secrets"`
 	Proxy       *string                `json:"proxy"`
 	HttpHeaders []KeyValuePairAPIModel `json:"http_headers"`

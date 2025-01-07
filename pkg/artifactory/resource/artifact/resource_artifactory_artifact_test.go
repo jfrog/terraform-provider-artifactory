@@ -39,6 +39,14 @@ func TestAccArtifact_filepath(t *testing.T) {
 	}
 	config := util.ExecuteTemplate(name, temp, testData)
 
+	updatedTestData := map[string]string{
+		"name":     name,
+		"repoName": repoName,
+		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
+		"filePath": "../../../../samples/multi1-3.7-20220310.233859-2.jar",
+	}
+	updatedConfig := util.ExecuteTemplate(name, temp, updatedTestData)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
@@ -56,7 +64,23 @@ func TestAccArtifact_filepath(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "created_by"),
 					resource.TestCheckResourceAttrSet(fqrn, "download_uri"),
 					resource.TestCheckResourceAttrSet(fqrn, "mime_type"),
-					resource.TestCheckResourceAttrSet(fqrn, "size"),
+					resource.TestCheckResourceAttr(fqrn, "size", "1034"),
+					resource.TestCheckResourceAttrSet(fqrn, "uri"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repository", repoName),
+					resource.TestCheckResourceAttr(fqrn, "path", updatedTestData["path"]),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_md5"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha1"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha256"),
+					resource.TestCheckResourceAttrSet(fqrn, "created"),
+					resource.TestCheckResourceAttrSet(fqrn, "created_by"),
+					resource.TestCheckResourceAttrSet(fqrn, "download_uri"),
+					resource.TestCheckResourceAttrSet(fqrn, "mime_type"),
+					resource.TestCheckResourceAttr(fqrn, "size", "1034"),
 					resource.TestCheckResourceAttrSet(fqrn, "uri"),
 				),
 			},
@@ -93,6 +117,20 @@ func TestAccArtifact_content_base64(t *testing.T) {
 	}
 	config := util.ExecuteTemplate(name, temp, testData)
 
+	updatedData, err := os.ReadFile("../../../../samples/multi1-3.7-20220310.233859-2.jar")
+	if err != nil {
+		t.Fatalf("failed to read file. %v", err)
+		return
+	}
+
+	updatedTestData := map[string]string{
+		"name":     name,
+		"repoName": repoName,
+		"path":     "/foo/bar/multi1-3.7-20220310.233748-1.jar",
+		"content":  base64.StdEncoding.EncodeToString(updatedData),
+	}
+	updatedConfig := util.ExecuteTemplate(name, temp, updatedTestData)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
@@ -110,7 +148,23 @@ func TestAccArtifact_content_base64(t *testing.T) {
 					resource.TestCheckResourceAttrSet(fqrn, "created_by"),
 					resource.TestCheckResourceAttrSet(fqrn, "download_uri"),
 					resource.TestCheckResourceAttrSet(fqrn, "mime_type"),
-					resource.TestCheckResourceAttrSet(fqrn, "size"),
+					resource.TestCheckResourceAttr(fqrn, "size", "1034"),
+					resource.TestCheckResourceAttrSet(fqrn, "uri"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repository", repoName),
+					resource.TestCheckResourceAttr(fqrn, "path", updatedTestData["path"]),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_md5"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha1"),
+					resource.TestCheckResourceAttrSet(fqrn, "checksum_sha256"),
+					resource.TestCheckResourceAttrSet(fqrn, "created"),
+					resource.TestCheckResourceAttrSet(fqrn, "created_by"),
+					resource.TestCheckResourceAttrSet(fqrn, "download_uri"),
+					resource.TestCheckResourceAttrSet(fqrn, "mime_type"),
+					resource.TestCheckResourceAttr(fqrn, "size", "1034"),
 					resource.TestCheckResourceAttrSet(fqrn, "uri"),
 				),
 			},

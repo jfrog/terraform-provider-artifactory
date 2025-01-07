@@ -23,7 +23,6 @@ func TestAccCustomWebhook_CriteriaValidation(t *testing.T) {
 func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
-	fqrn := fmt.Sprintf("artifactory_%s_custom_webhook.%s", webhookType, name)
 
 	var template string
 	switch webhookType {
@@ -45,9 +44,7 @@ func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (
 	webhookConfig := util.ExecuteTemplate("TestAccCustomWebhookCriteriaValidation", template, params)
 
 	return t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      webhookConfig,

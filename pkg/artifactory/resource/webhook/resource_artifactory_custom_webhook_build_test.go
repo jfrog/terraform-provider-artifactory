@@ -37,9 +37,7 @@ func TestAccCustomWebhook_Build_UpgradeFromSDKv2(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
-
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -87,16 +85,15 @@ func TestAccCustomWebhook_Build(t *testing.T) {
 			}
 			handler {
 				url = "https://google.com"
+				method = "POST"
 				payload = "{ \"ref\": \"main\" , \"inputs\": { \"artifact_path\": \"test-repo/repo-path\" } }"
 			}
 		}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
 				Config: webhookConfig,
