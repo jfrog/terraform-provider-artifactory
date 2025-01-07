@@ -178,7 +178,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"local":     true,
 			"remote":    true,
 			"virtual":   false,
-			"federated": false,
+			"federated": true,
 		},
 	},
 	IvyPackageType: {

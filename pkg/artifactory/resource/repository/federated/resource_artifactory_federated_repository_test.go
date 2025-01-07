@@ -34,7 +34,7 @@ func skipFederatedRepo() (bool, string) {
 // https://github.com/jfrog/terraform-provider-artifactory/wiki/Testing#enable-acceptance-tests
 func TestAccFederatedRepoWithMembers(t *testing.T) {
 	if skip, reason := skipFederatedRepo(); skip {
-		t.Skipf(reason)
+		t.Skip(reason)
 	}
 
 	name := fmt.Sprintf("federated-generic-%d-full", rand.Int())
