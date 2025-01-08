@@ -15,6 +15,21 @@ type DebianFederatedRepositoryParams struct {
 	RepoParams
 }
 
+func unpackLocalDebianRepository(data *schema.ResourceData, Rclass string) local.DebianLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.DebianLocalRepositoryParams{
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
+		},
+		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+			SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
+		},
+		RepositoryBaseParams:    local.UnpackBaseRepo(Rclass, data, repository.DebianPackageType),
+		TrivialLayout:           d.GetBool("trivial_layout", false),
+		IndexCompressionFormats: d.GetSet("index_compression_formats"),
+	}
+}
+
 func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 	debianFederatedSchema := utilsdk.MergeMaps(
 		local.DebianSchemas[local.CurrentSchemaVersion],
@@ -24,7 +39,7 @@ func ResourceArtifactoryFederatedDebianRepository() *schema.Resource {
 
 	var unpackFederatedDebianRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DebianFederatedRepositoryParams{
-			DebianLocalRepositoryParams: local.UnpackLocalDebianRepository(data, Rclass),
+			DebianLocalRepositoryParams: unpackLocalDebianRepository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}

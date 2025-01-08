@@ -2,6 +2,8 @@ package local
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
+	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
@@ -21,6 +24,23 @@ const (
 	Rclass               = "local"
 	CurrentSchemaVersion = 1
 )
+
+func NewLocalRepositoryResource(packageType string, resourceModelType, apiModelType reflect.Type) localResource {
+	return localResource{
+		BaseResource: repository.BaseResource{
+			JFrogResource: util.JFrogResource{
+				TypeName:           fmt.Sprintf("artifactory_local_%s_repository", packageType),
+				CollectionEndpoint: "artifactory/api/repositories",
+				DocumentEndpoint:   "artifactory/api/repositories/{key}",
+			},
+			Description:       fmt.Sprintf("Provides a resource to creates a %s repository.", packageType),
+			PackageType:       packageType,
+			Rclass:            Rclass,
+			ResourceModelType: resourceModelType,
+			APIModelType:      apiModelType,
+		},
+	}
+}
 
 type localResource struct {
 	repository.BaseResource

@@ -247,6 +247,12 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			replication.NewLocalRepositoryMultiReplicationResource,
 			replication.NewRemoteRepositoryReplicationResource,
 			local.NewAlpineLocalRepositoryResource,
+			local.NewAnsibleLocalRepositoryResource,
+			local.NewCargoLocalRepositoryResource,
+			local.NewConanLocalRepositoryResource,
+			local.NewDebianLocalRepositoryResource,
+			local.NewDockerV2LocalRepositoryResource,
+			local.NewDockerV1LocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
 			webhook.NewArtifactWebhookResource,
 			webhook.NewArtifactCustomWebhookResource,
@@ -279,7 +285,6 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 // DataSources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		datasource_repository.NewAlpineLocalRepositoryDataSource,
 		datasource_repository.NewRepositoriesDataSource,
 		datasource_artifact.NewFileListDataSource,
 	}

@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -11,26 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/samber/lo"
 )
 
 func NewAlpineLocalRepositoryResource() resource.Resource {
 	return &localAlpineResource{
-		localResource: localResource{
-			BaseResource: repository.BaseResource{
-				JFrogResource: util.JFrogResource{
-					TypeName:           fmt.Sprintf("artifactory_local_%s_repository", repository.AlpinePackageType),
-					CollectionEndpoint: "artifactory/api/repositories",
-					DocumentEndpoint:   "artifactory/api/repositories/{key}",
-				},
-				Description:       "Provides a resource to creates a Alpine repository.",
-				PackageType:       repository.AlpinePackageType,
-				Rclass:            Rclass,
-				ResourceModelType: reflect.TypeFor[LocalAlpineResourceModel](),
-				APIModelType:      reflect.TypeFor[LocalAlpineAPIModel](),
-			},
-		},
+		localResource: NewLocalRepositoryResource(repository.AlpinePackageType, reflect.TypeFor[LocalAlpineResourceModel](), reflect.TypeFor[LocalAlpineAPIModel]()),
 	}
 }
 
@@ -126,7 +111,7 @@ var AlpinePrimaryKeyPairRefAttribute = map[string]schema.Attribute{
 func (r *localAlpineResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attributes := lo.Assign(
 		LocalAttributes,
-		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		repository.RepoLayoutRefAttribute(r.Rclass, r.PackageType),
 		AlpinePrimaryKeyPairRefAttribute,
 	)
 

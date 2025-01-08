@@ -557,6 +557,33 @@ func RepoLayoutRefAttribute(repositoryType string, packageType string) map[strin
 	}
 }
 
+var PrimaryKeyPairRefAttribute = map[string]schema.Attribute{
+	"primary_keypair_ref": schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		MarkdownDescription: "Primary keypair used to sign artifacts. Default value is empty.",
+	},
+}
+
+var SecondaryKeyPairRefAttribute = map[string]schema.Attribute{
+	"secondary_keypair_ref": schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		MarkdownDescription: "Secondary keypair used to sign artifacts.",
+	},
+}
+
+var CompressionFormatsAttribute = map[string]schema.Attribute{
+	"index_compression_formats": schema.SetAttribute{
+		ElementType: types.StringType,
+		Optional:    true,
+	},
+}
+
 var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	"key": {
 		Type:             sdkv2_schema.TypeString,

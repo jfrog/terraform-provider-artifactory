@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,15 @@ type CargoFederatedRepositoryParams struct {
 	local.CargoLocalRepoParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalCargoRepository(data *schema.ResourceData, Rclass string) local.CargoLocalRepoParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.CargoLocalRepoParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.CargoPackageType),
+		AnonymousAccess:      d.GetBool("anonymous_access", false),
+		EnableSparseIndex:    d.GetBool("enable_sparse_index", false),
+	}
 }
 
 func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
@@ -24,7 +34,7 @@ func ResourceArtifactoryFederatedCargoRepository() *schema.Resource {
 
 	var unpackFederatedCargoRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := CargoFederatedRepositoryParams{
-			CargoLocalRepoParams: local.UnpackLocalCargoRepository(data, Rclass),
+			CargoLocalRepoParams: unpackLocalCargoRepository(data, Rclass),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
 		}
