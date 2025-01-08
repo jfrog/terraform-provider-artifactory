@@ -33,7 +33,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_terraform_module_repository":   federated.ResourceArtifactoryFederatedTerraformRepository("module"),
 		"artifactory_federated_terraform_provider_repository": federated.ResourceArtifactoryFederatedTerraformRepository("provider"),
 		"artifactory_local_ansible_repository":                local.ResourceArtifactoryLocalAnsibleRepository(),
-		"artifactory_local_alpine_repository":                 local.ResourceArtifactoryLocalAlpineRepository(),
 		"artifactory_local_cargo_repository":                  local.ResourceArtifactoryLocalCargoRepository(),
 		"artifactory_local_conan_repository":                  local.ResourceArtifactoryLocalConanRepository(),
 		"artifactory_local_debian_repository":                 local.ResourceArtifactoryLocalDebianRepository(),

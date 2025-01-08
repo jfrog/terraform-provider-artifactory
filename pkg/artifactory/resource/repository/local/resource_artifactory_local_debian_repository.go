@@ -9,8 +9,8 @@ import (
 )
 
 var debianSchema = lo.Assign(
-	repository.PrimaryKeyPairRef,
-	repository.SecondaryKeyPairRef,
+	repository.PrimaryKeyPairRefSDKv2,
+	repository.SecondaryKeyPairRefSDKv2,
 	map[string]*schema.Schema{
 		"trivial_layout": {
 			Type:        schema.TypeBool,
@@ -21,7 +21,7 @@ var debianSchema = lo.Assign(
 		},
 	},
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.DebianPackageType),
-	repository.CompressionFormats,
+	repository.CompressionFormatsSDKv2,
 )
 
 var DebianSchemas = GetSchemas(debianSchema)
@@ -38,10 +38,10 @@ func UnpackLocalDebianRepository(data *schema.ResourceData, Rclass string) Debia
 	d := &utilsdk.ResourceData{ResourceData: data}
 	return DebianLocalRepositoryParams{
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 		},
 		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
-			SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+			SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
 		},
 		RepositoryBaseParams:    UnpackBaseRepo(Rclass, data, repository.DebianPackageType),
 		TrivialLayout:           d.GetBool("trivial_layout", false),

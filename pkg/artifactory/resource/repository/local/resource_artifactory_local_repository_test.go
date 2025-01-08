@@ -74,9 +74,8 @@ EOF
 		}
 
 		resource "artifactory_local_alpine_repository" "{{ .repo_name }}" {
-			key 	     = "{{ .repo_name }}"
+			key = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
-			depends_on = [artifactory_keypair.{{ .kp_name }}]
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -85,8 +84,7 @@ EOF
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
@@ -96,9 +94,11 @@ EOF
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "alpine"),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "alpine"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("local", repository.AlpinePackageType)
+						return r
+					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{

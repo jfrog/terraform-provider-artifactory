@@ -13,8 +13,8 @@ import (
 
 var debianSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
-	repository.PrimaryKeyPairRef,
-	repository.SecondaryKeyPairRef,
+	repository.PrimaryKeyPairRefSDKv2,
+	repository.SecondaryKeyPairRefSDKv2,
 	map[string]*schema.Schema{
 		"optional_index_compression_formats": {
 			Type:     schema.TypeSet,
@@ -56,10 +56,10 @@ func ResourceArtifactoryVirtualDebianRepository() *schema.Resource {
 		repo := DebianVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, repository.DebianPackageType),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+				PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 			},
 			SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
-				SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+				SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
 			},
 			OptionalIndexCompressionFormats: d.GetSet("optional_index_compression_formats"),
 			DebianDefaultArchitectures:      d.GetString("debian_default_architectures", false),

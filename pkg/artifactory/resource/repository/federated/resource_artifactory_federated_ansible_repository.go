@@ -21,7 +21,7 @@ func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 	var ansibleSchema = lo.Assign(
 		local.GetGenericSchemas(repository.AnsiblePackageType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
-		repository.AlpinePrimaryKeyPairRef,
+		repository.AlpinePrimaryKeyPairRefSDKv2,
 		repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AnsiblePackageType),
 	)
 
@@ -33,7 +33,7 @@ func ResourceArtifactoryFederatedAnsibleRepository() *schema.Resource {
 			RepoParams:           unpackRepoParams(data),
 			Members:              unpackMembers(data),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+				PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 			},
 		}
 		return repo, repo.Id(), nil

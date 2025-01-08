@@ -10,8 +10,8 @@ import (
 )
 
 var rpmSchema = utilsdk.MergeMaps(
-	repository.PrimaryKeyPairRef,
-	repository.SecondaryKeyPairRef,
+	repository.PrimaryKeyPairRefSDKv2,
+	repository.SecondaryKeyPairRefSDKv2,
 	map[string]*schema.Schema{
 		"yum_root_depth": {
 			Type:             schema.TypeInt,
@@ -62,10 +62,10 @@ func UnpackLocalRpmRepository(data *schema.ResourceData, Rclass string) RpmLocal
 	return RpmLocalRepositoryParams{
 		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.RPMPackageType),
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 		},
 		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
-			SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+			SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
 		},
 		RootDepth:               d.GetInt("yum_root_depth", false),
 		CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),

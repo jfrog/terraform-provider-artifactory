@@ -10,7 +10,7 @@ import (
 
 var ansibleSchema = lo.Assign(
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AnsiblePackageType),
-	repository.AlpinePrimaryKeyPairRef,
+	repository.AlpinePrimaryKeyPairRefSDKv2,
 )
 
 var AnsibleSchemas = GetSchemas(ansibleSchema)
@@ -25,7 +25,7 @@ func UnpackLocalAnsibleRepository(data *schema.ResourceData, Rclass string) Ansi
 	return AnsibleLocalRepoParams{
 		RepositoryBaseParams: UnpackBaseRepo(Rclass, data, repository.AnsiblePackageType),
 		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-			PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 		},
 	}
 }

@@ -56,7 +56,7 @@ type Member struct {
 
 var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 	return lo.Assign(
-		repository.ProxySchema,
+		repository.ProxySchemaSDKv2,
 		map[string]*schema.Schema{
 			"cleanup_on_delete": {
 				Type:        schema.TypeBool,

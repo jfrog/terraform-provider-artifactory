@@ -28,12 +28,13 @@ type localResource struct {
 
 type LocalResourceModel struct {
 	repository.BaseResourceModel
-	BlackedOut             types.Bool `tfsdk:"blacked_out"`
-	XrayIndex              types.Bool `tfsdk:"xray_index"`
-	PropertySets           types.Set  `tfsdk:"property_sets"`
-	ArchiveBrowsingEnabled types.Bool `tfsdk:"archive_browsing_enabled"`
-	DownloadDirect         types.Bool `tfsdk:"download_direct"`
-	PriorityResolution     types.Bool `tfsdk:"priority_resolution"`
+	BlackedOut             types.Bool   `tfsdk:"blacked_out"`
+	XrayIndex              types.Bool   `tfsdk:"xray_index"`
+	PropertySets           types.Set    `tfsdk:"property_sets"`
+	ArchiveBrowsingEnabled types.Bool   `tfsdk:"archive_browsing_enabled"`
+	DownloadDirect         types.Bool   `tfsdk:"download_direct"`
+	PriorityResolution     types.Bool   `tfsdk:"priority_resolution"`
+	RepoLayoutRef          types.String `tfsdk:"repo_layout_ref"`
 }
 
 func (r *LocalResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

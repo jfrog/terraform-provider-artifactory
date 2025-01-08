@@ -24,7 +24,7 @@ var cargoSchema = lo.Assign(
 			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
 		},
 	},
-	repository.CompressionFormats,
+	repository.CompressionFormatsSDKv2,
 )
 
 var CargoSchemas = GetSchemas(cargoSchema)

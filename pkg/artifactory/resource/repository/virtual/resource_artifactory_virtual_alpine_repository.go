@@ -10,7 +10,7 @@ import (
 
 var alpineSchema = lo.Assign(
 	RetrievalCachePeriodSecondsSchema,
-	repository.PrimaryKeyPairRef,
+	repository.PrimaryKeyPairRefSDKv2,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.AlpinePackageType),
 )
 
@@ -28,7 +28,7 @@ func ResourceArtifactoryVirtualAlpineRepository() *schema.Resource {
 		repo := AlpineVirtualRepositoryParams{
 			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, repository.AlpinePackageType),
 			PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-				PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+				PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 			},
 		}
 		repo.PackageType = repository.AlpinePackageType

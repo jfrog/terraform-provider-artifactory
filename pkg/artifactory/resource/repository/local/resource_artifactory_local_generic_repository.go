@@ -66,8 +66,7 @@ type localGenericResource struct {
 
 type LocalGenericResourceModel struct {
 	LocalResourceModel
-	RepoLayoutRef types.String `tfsdk:"repo_layout_ref"`
-	CDNRedirect   types.Bool   `tfsdk:"cdn_redirect"`
+	CDNRedirect types.Bool `tfsdk:"cdn_redirect"`
 }
 
 func (r *LocalGenericResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

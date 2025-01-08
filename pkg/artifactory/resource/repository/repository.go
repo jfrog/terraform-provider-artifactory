@@ -623,7 +623,7 @@ var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var ProxySchema = map[string]*sdkv2_schema.Schema{
+var ProxySchemaSDKv2 = map[string]*sdkv2_schema.Schema{
 	"proxy": {
 		Type:        sdkv2_schema.TypeString,
 		Optional:    true,
@@ -637,7 +637,7 @@ var ProxySchema = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var CompressionFormats = map[string]*sdkv2_schema.Schema{
+var CompressionFormatsSDKv2 = map[string]*sdkv2_schema.Schema{
 	"index_compression_formats": {
 		Type: sdkv2_schema.TypeSet,
 		Elem: &sdkv2_schema.Schema{
@@ -648,7 +648,7 @@ var CompressionFormats = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var AlpinePrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var AlpinePrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"primary_keypair_ref": {
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
@@ -657,7 +657,7 @@ var AlpinePrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var PrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var PrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"primary_keypair_ref": {
 		Type:             sdkv2_schema.TypeString,
 		Optional:         true,
@@ -666,7 +666,7 @@ var PrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var SecondaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var SecondaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"secondary_keypair_ref": {
 		Type:             sdkv2_schema.TypeString,
 		Optional:         true,
@@ -676,11 +676,11 @@ var SecondaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 }
 
 type PrimaryKeyPairRefParam struct {
-	PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+	PrimaryKeyPairRefSDKv2 string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
 }
 
 type SecondaryKeyPairRefParam struct {
-	SecondaryKeyPairRef string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
+	SecondaryKeyPairRefSDKv2 string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 }
 
 type ContentSynchronisation struct {
