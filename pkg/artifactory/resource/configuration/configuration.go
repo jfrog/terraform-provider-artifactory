@@ -3,8 +3,8 @@ package configuration
 import (
 	"fmt"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/jfrog/terraform-provider-shared/client"
-	"github.com/jfrog/terraform-provider-shared/util"
 )
 
 const ConfigurationEndpoint = "artifactory/api/system/configuration"
@@ -14,8 +14,8 @@ const ConfigurationEndpoint = "artifactory/api/system/configuration"
 
 See https://www.jfrog.com/confluence/display/JFROG/Artifactory+YAML+Configuration
 */
-func SendConfigurationPatch(content []byte, m interface{}) error {
-	resp, err := m.(util.ProviderMetadata).Client.R().SetBody(content).
+func SendConfigurationPatch(content []byte, restyClient *resty.Client) error {
+	resp, err := restyClient.R().SetBody(content).
 		SetHeader("Content-Type", "application/yaml").
 		AddRetryCondition(client.RetryOnMergeError).
 		Patch(ConfigurationEndpoint)

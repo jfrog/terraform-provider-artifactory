@@ -217,7 +217,7 @@ func (r *MailServerResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
@@ -303,7 +303,7 @@ func (r *MailServerResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
@@ -331,7 +331,7 @@ func (r *MailServerResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	deleteMailServerConfig := `mailServer: ~`
 
-	err := SendConfigurationPatch([]byte(deleteMailServerConfig), r.ProviderData)
+	err := SendConfigurationPatch([]byte(deleteMailServerConfig), r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToDeleteResourceError(resp, err.Error())
 		return

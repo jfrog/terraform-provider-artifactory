@@ -152,7 +152,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 			return diag.Errorf("failed to marshal ldap group settings during Update")
 		}
 
-		err = SendConfigurationPatch(content, m)
+		err = SendConfigurationPatch(content, m.(util.ProviderMetadata).Client)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -195,7 +195,7 @@ Hierarchy: The user's DN is indicative of the groups the user belongs to by usin
 security:
   ldapGroupSettings: ~
 `
-		err = SendConfigurationPatch([]byte(clearAllLdapGroupSettingsConfigs), m)
+		err = SendConfigurationPatch([]byte(clearAllLdapGroupSettingsConfigs), m.(util.ProviderMetadata).Client)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete for clearing all Ldap Group Settings")
 		}
@@ -205,7 +205,7 @@ security:
 			return diag.Errorf("failed to marshal ldap group settings during Update")
 		}
 
-		err = SendConfigurationPatch(restoreRestOfLdapGroupSettingsConfigs, m)
+		err = SendConfigurationPatch(restoreRestOfLdapGroupSettingsConfigs, m.(util.ProviderMetadata).Client)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during restoration of Ldap Group Settings")
 		}

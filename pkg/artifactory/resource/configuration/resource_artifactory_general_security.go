@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -15,32 +19,60 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var _ resource.Resource = (*GeneralSecurityResource)(nil)
+
 func NewGeneralSecurityResource() resource.Resource {
 	return &GeneralSecurityResource{
-		TypeName: "artifactory_general_security",
+		JFrogResource: util.JFrogResource{
+			TypeName: "artifactory_general_security",
+		},
 	}
 }
 
 type GeneralSecurityResource struct {
-	ProviderData util.ProviderMetadata
-	TypeName     string
+	util.JFrogResource
 }
 
 type GeneralSecurityResourceModel struct {
 	ID                    types.String `tfsdk:"id"`
 	EnableAnonymousAccess types.Bool   `tfsdk:"enable_anonymous_access"`
+	EncryptionPolicy      types.String `tfsdk:"encryption_policy"`
 }
 
-type GeneralSecurityAPIModel struct {
-	GeneralSettingsAPIModel `yaml:"security" json:"security"`
+func (r *GeneralSecurityResourceModel) toAPIModel(security *SecurityWrapperAPIModel) diag.Diagnostics {
+	*security = SecurityWrapperAPIModel{
+		SecurityAPIModel: SecurityAPIModel{
+			AnonAccessEnabled: r.EnableAnonymousAccess.ValueBool(),
+			PasswordSettings: PasswordSettingsAPIModel{
+				EncryptionPolicy: r.EncryptionPolicy.ValueString(),
+			},
+		},
+	}
+
+	return nil
 }
 
-type GeneralSettingsAPIModel struct {
-	AnonAccessEnabled bool `yaml:"anonAccessEnabled" json:"anonAccessEnabled"`
+func (r *GeneralSecurityResourceModel) fromAPIModel(security *SecurityAPIModel) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	r.ID = types.StringValue("security")
+	r.EnableAnonymousAccess = types.BoolValue(security.AnonAccessEnabled)
+	r.EncryptionPolicy = types.StringValue(security.PasswordSettings.EncryptionPolicy)
+
+	return diags
 }
 
-func (r *GeneralSecurityResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = r.TypeName
+type SecurityWrapperAPIModel struct {
+	SecurityAPIModel `yaml:"security" json:"security"`
+}
+
+type SecurityAPIModel struct {
+	AnonAccessEnabled bool                     `yaml:"anonAccessEnabled" json:"anonAccessEnabled"`
+	PasswordSettings  PasswordSettingsAPIModel `yaml:"passwordSettings" json:"passwordSettings"`
+}
+
+type PasswordSettingsAPIModel struct {
+	EncryptionPolicy string `yaml:"encryptionPolicy" json:"encryptionPolicy"`
 }
 
 func (r *GeneralSecurityResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -54,16 +86,17 @@ func (r *GeneralSecurityResource) Schema(ctx context.Context, req resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			"encryption_policy": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("SUPPORTED"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("REQUIRED", "SUPPORTED", "UNSUPPORTED"),
+				},
+				MarkdownDescription: "Determines the password requirements from users identified to Artifactory from a remote client such as Maven. The options are: (1) `SUPPORTED` (default): Users can authenticate using secure encrypted passwords or clear-text passwords. (2) `REQUIRED`: Users must authenticate using secure encrypted passwords. Clear-text authentication fails. (3) `UNSUPPORTED`: Only clear-text passwords can be used for authentication. Default value is `SUPPORTED`.",
+			},
 		},
 	}
-}
-
-func (r *GeneralSecurityResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
-	if req.ProviderData == nil {
-		return
-	}
-	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r *GeneralSecurityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -77,10 +110,10 @@ func (r *GeneralSecurityResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	security := GeneralSecurityAPIModel{
-		GeneralSettingsAPIModel: GeneralSettingsAPIModel{
-			AnonAccessEnabled: plan.EnableAnonymousAccess.ValueBool(),
-		},
+	var security SecurityWrapperAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(&security)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	content, err := yaml.Marshal(&security)
@@ -89,14 +122,15 @@ func (r *GeneralSecurityResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
 		return
 	}
 
-	// we should only have one general security settings resource, using same id
-	plan.ID = types.StringValue("security")
+	if plan.ID.IsUnknown() {
+		plan.ID = types.StringValue("security")
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -112,10 +146,10 @@ func (r *GeneralSecurityResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	var generalSettings GeneralSettingsAPIModel
+	var security SecurityAPIModel
 
 	response, err := r.ProviderData.Client.R().
-		SetResult(&generalSettings).
+		SetResult(&security).
 		Get("artifactory/api/securityconfig")
 	if err != nil {
 		utilfw.UnableToRefreshResourceError(resp, err.Error())
@@ -127,7 +161,10 @@ func (r *GeneralSecurityResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	state.EnableAnonymousAccess = types.BoolValue(generalSettings.AnonAccessEnabled)
+	resp.Diagnostics.Append(state.fromAPIModel(&security)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -144,10 +181,10 @@ func (r *GeneralSecurityResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	security := GeneralSecurityAPIModel{
-		GeneralSettingsAPIModel: GeneralSettingsAPIModel{
-			AnonAccessEnabled: plan.EnableAnonymousAccess.ValueBool(),
-		},
+	var security SecurityWrapperAPIModel
+	resp.Diagnostics.Append(plan.toAPIModel(&security)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	content, err := yaml.Marshal(&security)
@@ -156,14 +193,15 @@ func (r *GeneralSecurityResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	err = SendConfigurationPatch(content, r.ProviderData)
+	err = SendConfigurationPatch(content, r.ProviderData.Client)
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, fmt.Sprintf("failed to send PATCH request to Artifactory during Update: %s", err.Error()))
 		return
 	}
 
-	// we should only have one general security settings resource, using same id
-	plan.ID = types.StringValue("security")
+	if plan.ID.IsUnknown() {
+		plan.ID = types.StringValue("security")
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -172,26 +210,10 @@ func (r *GeneralSecurityResource) Update(ctx context.Context, req resource.Updat
 func (r *GeneralSecurityResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
-	var state GeneralSecurityResourceModel
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	content := `
-security:
-  anonAccessEnabled: false
-`
-	err := SendConfigurationPatch([]byte(content), r.ProviderData)
-	if err != nil {
-		utilfw.UnableToDeleteResourceError(resp, err.Error())
-		return
-	}
-
-	// If the logic reaches here, it implicitly succeeded and will remove
-	// the resource from state if there are no other errors.
+	resp.Diagnostics.AddWarning(
+		"Security configuration cannot be deleted",
+		"Artifactory does not support deletion of the security configurations.",
+	)
 }
 
 // ImportState imports the resource into the Terraform state.

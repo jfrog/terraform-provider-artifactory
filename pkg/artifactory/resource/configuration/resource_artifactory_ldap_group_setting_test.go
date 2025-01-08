@@ -149,7 +149,7 @@ func testAccLdapGroupSettingDestroy(id string) func(*terraform.State) error {
 
 		for _, iterLdapGroupSetting := range ldapGroupConfigs.Security.LdapGroupSettings.LdapGroupSettingArr {
 			if iterLdapGroupSetting.Name == id {
-				return fmt.Errorf("error: LdapGroupSetting with name: " + id + " still exists.")
+				return fmt.Errorf("error: LdapGroupSetting with name: %s still exists.", id)
 			}
 		}
 		return nil

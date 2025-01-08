@@ -233,7 +233,7 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 			return diag.Errorf("failed to marshal oauth settings during Update")
 		}
 
-		err = SendConfigurationPatch(content, m)
+		err = SendConfigurationPatch(content, m.(util.ProviderMetadata).Client)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Update")
 		}
@@ -249,7 +249,7 @@ security:
   oauthSettings: ~
 `
 
-		err := SendConfigurationPatch([]byte(content), m)
+		err := SendConfigurationPatch([]byte(content), m.(util.ProviderMetadata).Client)
 		if err != nil {
 			return diag.Errorf("failed to send PATCH request to Artifactory during Delete")
 		}
