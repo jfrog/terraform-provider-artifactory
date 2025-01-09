@@ -25,7 +25,7 @@ func NewDockerV1LocalRepositoryResource() resource.Resource {
 					CollectionEndpoint: "artifactory/api/repositories",
 					DocumentEndpoint:   "artifactory/api/repositories/{key}",
 				},
-				Description:       fmt.Sprintf("Provides a resource to creates a %s V1 repository.", repository.DockerPackageType),
+				Description:       "Provides a resource to creates a Docker V1 repository.",
 				PackageType:       repository.DockerPackageType,
 				Rclass:            Rclass,
 				ResourceModelType: reflect.TypeFor[LocalDockerV1ResourceModel](),

@@ -16,7 +16,12 @@ import (
 
 func NewCargoLocalRepositoryResource() resource.Resource {
 	return &localCargoResource{
-		localResource: NewLocalRepositoryResource(repository.CargoPackageType, reflect.TypeFor[LocalCargoResourceModel](), reflect.TypeFor[LocalCargoAPIModel]()),
+		localResource: NewLocalRepositoryResource(
+			repository.CargoPackageType,
+			"Cargo",
+			reflect.TypeFor[LocalCargoResourceModel](),
+			reflect.TypeFor[LocalCargoAPIModel](),
+		),
 	}
 }
 

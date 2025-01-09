@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -77,7 +78,6 @@ func TestAccLocalGenericRepository_withProjectAttributes(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
 		},
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
@@ -125,7 +125,6 @@ func TestAccLocalGenericRepository_WithInvalidProjectKey(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
 			acctest.CreateProject(t, projectKey)
 		},
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
@@ -186,7 +185,6 @@ func localGenericLikeTestCase(packageType string, t *testing.T) (*testing.T, res
 	`, params)
 
 	return t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, resourceName, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
@@ -258,7 +256,6 @@ func makeLocalRepoTestCaseWithRepoLayoutRef(packageType string, t *testing.T) (*
 	`
 
 	return t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, resourceName, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
@@ -289,4 +286,87 @@ func makeLocalRepoTestCaseWithRepoLayoutRef(packageType string, t *testing.T) (*
 			},
 		},
 	}
+}
+
+func TestAccLocalHuggingFaceMLRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("huggingfaceml-local", "artifactory_local_huggingfaceml_repository")
+
+	params := map[string]interface{}{
+		"name":                     name,
+		"blacked_out":              testutil.RandBool(),
+		"xray_index":               testutil.RandBool(),
+		"property_set":             "artifactory",
+		"archive_browsing_enabled": testutil.RandBool(),
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalHuggingFaceMLRepository", `
+		resource "artifactory_local_huggingfaceml_repository" "{{ .name }}" {
+		  key                      = "{{ .name }}"
+		  blacked_out              = {{ .blacked_out }}
+		  xray_index               = {{ .xray_index }}
+		  property_sets            = ["{{ .property_set }}"]
+		  archive_browsing_enabled = {{ .archive_browsing_enabled }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "blacked_out", strconv.FormatBool(params["blacked_out"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "xray_index", strconv.FormatBool(params["xray_index"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
+					resource.TestCheckResourceAttr(fqrn, "archive_browsing_enabled", strconv.FormatBool(params["archive_browsing_enabled"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("local", "huggingfaceml")
+						return r
+					}()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
+}
+
+func TestAccLocalNpmRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("npm-local", "artifactory_local_npm_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalNpmRepository", `
+		resource "artifactory_local_npm_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
 }

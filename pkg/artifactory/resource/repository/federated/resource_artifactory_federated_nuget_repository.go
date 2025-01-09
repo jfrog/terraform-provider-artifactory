@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,15 @@ type NugetFederatedRepositoryParams struct {
 	local.NugetLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalNugetRepository(data *schema.ResourceData, Rclass string) local.NugetLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.NugetLocalRepositoryParams{
+		RepositoryBaseParams:     local.UnpackBaseRepo(Rclass, data, repository.NugetPackageType),
+		MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
+		ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
+	}
 }
 
 func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
@@ -24,7 +34,7 @@ func ResourceArtifactoryFederatedNugetRepository() *schema.Resource {
 
 	var unpackFederatedNugetRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := NugetFederatedRepositoryParams{
-			NugetLocalRepositoryParams: local.UnpackLocalNugetRepository(data, Rclass),
+			NugetLocalRepositoryParams: unpackLocalNugetRepository(data, Rclass),
 			Members:                    unpackMembers(data),
 			RepoParams:                 unpackRepoParams(data),
 		}

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -45,6 +46,47 @@ func TestAccLocalConanRepository(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
+func TestAccLocalConanRepository_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("conan-local", "artifactory_local_conan_repository")
+	params := map[string]interface{}{
+		"force_conan_authentication": testutil.RandBool(),
+		"name":                       name,
+	}
+	config := util.ExecuteTemplate("TestAccLocalConanRepository", `
+		resource "artifactory_local_conan_repository" "{{ .name }}" {
+		  key                        = "{{ .name }}"
+		  force_conan_authentication = {{ .force_conan_authentication }}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.8.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "id", name),
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				Config:                   config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

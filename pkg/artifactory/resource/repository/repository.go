@@ -80,6 +80,32 @@ const (
 	VCSPackageType               = "vcs"
 )
 
+var PackageNameLookup = map[string]string{
+	BowerPackageType:            "Bower",
+	ChefPackageType:             "Chef",
+	CocoapodsPackageType:        "CocoaPods",
+	ComposerPackageType:         "Composer",
+	CondaPackageType:            "Conda",
+	CranPackageType:             "CRAN",
+	GemsPackageType:             "Gems",
+	GenericPackageType:          "Generic",
+	GitLFSPackageType:           "GitLfs",
+	GoPackageType:               "Go",
+	GradlePackageType:           "Gradle",
+	HelmPackageType:             "Helm",
+	HuggingFacePackageType:      "HuggingFace ML",
+	IvyPackageType:              "Ivy",
+	NPMPackageType:              "Npm",
+	OpkgPackageType:             "Opkg",
+	PubPackageType:              "Pub",
+	PuppetPackageType:           "Puppet",
+	PyPiPackageType:             "PyPi",
+	SBTPackageType:              "SBT",
+	SwiftPackageType:            "Swift",
+	TerraformBackendPackageType: "Terraform Backend",
+	VagrantPackageType:          "Vagrant",
+}
+
 type BaseResource struct {
 	util.JFrogResource
 	Description       string

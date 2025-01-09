@@ -25,7 +25,7 @@ const (
 	CurrentSchemaVersion = 1
 )
 
-func NewLocalRepositoryResource(packageType string, resourceModelType, apiModelType reflect.Type) localResource {
+func NewLocalRepositoryResource(packageType, packageName string, resourceModelType, apiModelType reflect.Type) localResource {
 	return localResource{
 		BaseResource: repository.BaseResource{
 			JFrogResource: util.JFrogResource{
@@ -33,7 +33,7 @@ func NewLocalRepositoryResource(packageType string, resourceModelType, apiModelT
 				CollectionEndpoint: "artifactory/api/repositories",
 				DocumentEndpoint:   "artifactory/api/repositories/{key}",
 			},
-			Description:       fmt.Sprintf("Provides a resource to creates a %s repository.", packageType),
+			Description:       fmt.Sprintf("Provides a resource to creates a %s repository.", packageName),
 			PackageType:       packageType,
 			Rclass:            Rclass,
 			ResourceModelType: resourceModelType,

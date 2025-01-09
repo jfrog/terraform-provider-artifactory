@@ -13,10 +13,11 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccLocalDebianRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("local-debian-repo", "artifactory_local_debian_repository")
+func TestAccLocalRPMRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("local-rpm-repo", "artifactory_local_rpm_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
+
 	localRepositoryBasic := util.ExecuteTemplate("keypair", `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
 			pair_name  = "{{ .kp_name }}"
@@ -108,11 +109,13 @@ EOF
 			}
 		}
 
-		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
-			key = "{{ .repo_name }}"
+		resource "artifactory_local_rpm_repository" "{{ .repo_name }}" {
+			key 	     = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
-			index_compression_formats = ["bz2","lzma","xz"]
+			yum_root_depth = 1
+			enable_file_lists_indexing = true
+			calculate_yum_metadata = true
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -136,11 +139,11 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
-					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.0", "bz2"),
-					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.1", "lzma"),
-					resource.TestCheckResourceAttr(fqrn, "index_compression_formats.2", "xz"),
+					resource.TestCheckResourceAttr(fqrn, "enable_file_lists_indexing", "true"),
+					resource.TestCheckResourceAttr(fqrn, "calculate_yum_metadata", "true"),
+					resource.TestCheckResourceAttr(fqrn, "yum_root_depth", "1"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
-						r, _ := repository.GetDefaultRepoLayoutRef("local", repository.DebianPackageType)
+						r, _ := repository.GetDefaultRepoLayoutRef("local", repository.RPMPackageType)
 						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
@@ -155,8 +158,8 @@ EOF
 	})
 }
 
-func TestAccLocalDebianRepository_UpgradeFromSDKv2(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("local-debian-repo", "artifactory_local_debian_repository")
+func TestAccLocalRPMRepository_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("local-rpm-repo", "artifactory_local_rpm_repository")
 	kpId, _, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
 	kpId2, _, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
 
@@ -251,11 +254,13 @@ EOF
 			}
 		}
 
-		resource "artifactory_local_debian_repository" "{{ .repo_name }}" {
-			key = "{{ .repo_name }}"
+		resource "artifactory_local_rpm_repository" "{{ .repo_name }}" {
+			key 	     = "{{ .repo_name }}"
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
-			index_compression_formats = ["bz2","lzma","xz"]
+			yum_root_depth = 1
+			enable_file_lists_indexing = true
+			calculate_yum_metadata = true
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,

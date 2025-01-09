@@ -1,8 +1,7 @@
 package local_test
 
 import (
-	"os"
-	"strings"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,19 +13,18 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccLocalDockerV1Repository(t *testing.T) {
-	jfrogURL := os.Getenv("JFROG_URL")
-	if strings.HasSuffix(jfrogURL, "jfrog.io") {
-		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
-	}
-
-	_, fqrn, name := testutil.MkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
+func TestAccLocalNugetRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
-		"name": name,
+		"force_nuget_authentication": testutil.RandBool(),
+		"max_unique_snapshots":       testutil.RandSelect(0, 5, 10),
+		"name":                       name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerv1Repository", `
-		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
-			key = "{{ .name }}"
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalNugetRepository", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  max_unique_snapshots = {{ .max_unique_snapshots }}
+		  force_nuget_authentication = {{ .force_nuget_authentication }}
 		}
 	`, params)
 
@@ -38,10 +36,9 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 				Config: localRepositoryBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "false"),
-					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
-					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "max_unique_snapshots", fmt.Sprintf("%d", params["max_unique_snapshots"])),
+					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", fmt.Sprintf("%t", params["force_nuget_authentication"])),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "nuget"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
 			{
@@ -54,19 +51,18 @@ func TestAccLocalDockerV1Repository(t *testing.T) {
 	})
 }
 
-func TestAccLocalDockerV1Repository_UpgradeFromSDKv2(t *testing.T) {
-	jfrogURL := os.Getenv("JFROG_URL")
-	if strings.HasSuffix(jfrogURL, "jfrog.io") {
-		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
-	}
-
-	_, fqrn, name := testutil.MkNames("dockerv1-local", "artifactory_local_docker_v1_repository")
+func TestAccLocalNugetRepository_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{
-		"name": name,
+		"force_nuget_authentication": testutil.RandBool(),
+		"max_unique_snapshots":       testutil.RandSelect(0, 5, 10),
+		"name":                       name,
 	}
-	config := util.ExecuteTemplate("TestAccLocalDockerv1Repository", `
-		resource "artifactory_local_docker_v1_repository" "{{ .name }}" {
-			key = "{{ .name }}"
+	config := util.ExecuteTemplate("TestAccLocalNugetRepository", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                 = "{{ .name }}"
+		  max_unique_snapshots = {{ .max_unique_snapshots }}
+		  force_nuget_authentication = {{ .force_nuget_authentication }}
 		}
 	`, params)
 

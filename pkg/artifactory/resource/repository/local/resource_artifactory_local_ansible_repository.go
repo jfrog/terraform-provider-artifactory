@@ -14,7 +14,12 @@ import (
 
 func NewAnsibleLocalRepositoryResource() resource.Resource {
 	return &localAnsibleResource{
-		localResource: NewLocalRepositoryResource(repository.AnsiblePackageType, reflect.TypeFor[LocalAnsibleResourceModel](), reflect.TypeFor[LocalAnsibleAPIModel]()),
+		localResource: NewLocalRepositoryResource(
+			repository.AnsiblePackageType,
+			"Ansible",
+			reflect.TypeFor[LocalAnsibleResourceModel](),
+			reflect.TypeFor[LocalAnsibleAPIModel](),
+		),
 	}
 }
 

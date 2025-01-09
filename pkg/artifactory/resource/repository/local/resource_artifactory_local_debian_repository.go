@@ -17,6 +17,7 @@ func NewDebianLocalRepositoryResource() resource.Resource {
 	return &localDebianResource{
 		localResource: NewLocalRepositoryResource(
 			repository.DebianPackageType,
+			"Debian",
 			reflect.TypeFor[LocalDebianResourceModel](),
 			reflect.TypeFor[LocalDebianAPIModel](),
 		),

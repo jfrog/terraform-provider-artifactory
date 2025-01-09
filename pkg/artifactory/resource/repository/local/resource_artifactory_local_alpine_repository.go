@@ -15,7 +15,12 @@ import (
 
 func NewAlpineLocalRepositoryResource() resource.Resource {
 	return &localAlpineResource{
-		localResource: NewLocalRepositoryResource(repository.AlpinePackageType, reflect.TypeFor[LocalAlpineResourceModel](), reflect.TypeFor[LocalAlpineAPIModel]()),
+		localResource: NewLocalRepositoryResource(
+			repository.AlpinePackageType,
+			"Alpine",
+			reflect.TypeFor[LocalAlpineResourceModel](),
+			reflect.TypeFor[LocalAlpineAPIModel](),
+		),
 	}
 }
 

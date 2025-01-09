@@ -17,6 +17,7 @@ func NewConanLocalRepositoryResource() resource.Resource {
 	return &localConanResource{
 		localResource: NewLocalRepositoryResource(
 			repository.ConanPackageType,
+			"Conan",
 			reflect.TypeFor[LocalConanResourceModel](),
 			reflect.TypeFor[LocalConanAPIModel](),
 		),

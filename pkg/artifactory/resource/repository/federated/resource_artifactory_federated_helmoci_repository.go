@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,15 @@ type HelmOciFederatedRepositoryParams struct {
 	local.HelmOciLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalHelmOciRepository(data *schema.ResourceData, Rclass string) local.HelmOciLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.HelmOciLocalRepositoryParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.HelmOCIPackageType),
+		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
+		TagRetention:         d.GetInt("tag_retention", false),
+	}
 }
 
 func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
@@ -24,7 +34,7 @@ func ResourceArtifactoryFederatedHelmOciRepository() *schema.Resource {
 
 	var unpackRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := HelmOciFederatedRepositoryParams{
-			HelmOciLocalRepositoryParams: local.UnpackLocalHelmOciRepository(data, Rclass),
+			HelmOciLocalRepositoryParams: unpackLocalHelmOciRepository(data, Rclass),
 			Members:                      unpackMembers(data),
 			RepoParams:                   unpackRepoParams(data),
 		}
