@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -33,6 +34,8 @@ type LocalDebianResourceModel struct {
 	PrimaryKeyPairRef   types.String `tfsdk:"primary_keypair_ref"`
 	SecondaryKeyPairRef types.String `tfsdk:"secondary_keypair_ref"`
 	CompressionFormats  types.Set    `tfsdk:"index_compression_formats"`
+	TrivialLayout       types.Bool   `tfsdk:"trivial_layout"`
+	DdebSupported       types.Bool   `tfsdk:"ddeb_supported"`
 }
 
 func (r *LocalDebianResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -92,6 +95,8 @@ func (r LocalDebianResourceModel) ToAPIModel(ctx context.Context, packageType st
 		PrimaryKeyPairRef:   r.PrimaryKeyPairRef.ValueString(),
 		SecondaryKeyPairRef: r.SecondaryKeyPairRef.ValueString(),
 		CompressionFormats:  compressionFormats,
+		TrivialLayout:       r.TrivialLayout.ValueBool(),
+		DdebSupported:       r.DdebSupported.ValueBool(),
 	}, diags
 }
 
@@ -111,6 +116,8 @@ func (r *LocalDebianResourceModel) FromAPIModel(ctx context.Context, apiModel in
 	}
 
 	r.CompressionFormats = compressionFormats
+	r.TrivialLayout = types.BoolValue(model.TrivialLayout)
+	r.DdebSupported = types.BoolValue(model.DdebSupported)
 
 	return diags
 }
@@ -120,6 +127,8 @@ type LocalDebianAPIModel struct {
 	PrimaryKeyPairRef   string   `json:"primaryKeyPairRef"`
 	SecondaryKeyPairRef string   `json:"secondaryKeyPairRef"`
 	CompressionFormats  []string `json:"optionalIndexCompressionFormats,omitempty"`
+	TrivialLayout       bool     `json:"debianTrivialLayout"`
+	DdebSupported       bool     `json:"ddebSupported"`
 }
 
 func (r *localDebianResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -129,6 +138,20 @@ func (r *localDebianResource) Schema(ctx context.Context, req resource.SchemaReq
 		repository.CompressionFormatsAttribute,
 		repository.PrimaryKeyPairRefAttribute,
 		repository.SecondaryKeyPairRefAttribute,
+		map[string]schema.Attribute{
+			"trivial_layout": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "When set, the repository will use the deprecated trivial layout.",
+			},
+			"ddeb_supported": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "When set, enable indexing with debug symbols (.ddeb).",
+			},
+		},
 	)
 
 	resp.Schema = schema.Schema{

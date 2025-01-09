@@ -113,6 +113,8 @@ EOF
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
+			trivial_layout = true
+			ddeb_supported = true
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
@@ -143,6 +145,8 @@ EOF
 						r, _ := repository.GetDefaultRepoLayoutRef("local", repository.DebianPackageType)
 						return r
 					}()), //Check to ensure repository layout is set as per default even when it is not passed.
+					resource.TestCheckResourceAttr(fqrn, "trivial_layout", "true"),
+					resource.TestCheckResourceAttr(fqrn, "ddeb_supported", "true"),
 				),
 			},
 			{
@@ -256,6 +260,7 @@ EOF
 			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
+			trivial_layout = true
 		}
 	`, map[string]interface{}{
 		"kp_id":     kpId,
