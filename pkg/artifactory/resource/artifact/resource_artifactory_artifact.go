@@ -86,7 +86,7 @@ func (r *ArtifactResourceModel) fromAPIModel(apiModel ArtifactAPIModel) diag.Dia
 	r.DownloadURI = types.StringValue(apiModel.DownloadURI)
 	r.MimeType = types.StringValue(apiModel.MimeType)
 
-	size, err := strconv.ParseInt(apiModel.Size, 10, 16)
+	size, err := strconv.ParseInt(apiModel.Size, 10, 64)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.NewErrorDiagnostic(
