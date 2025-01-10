@@ -80,7 +80,7 @@ func (r LocalAnsibleResourceModel) ToAPIModel(ctx context.Context, packageType s
 
 	return LocalAnsibleAPIModel{
 		LocalAPIModel:     localAPIModel,
-		PrimaryKeyPairRef: r.PrimaryKeyPairRef.ValueStringPointer(),
+		PrimaryKeyPairRef: r.PrimaryKeyPairRef.ValueString(),
 	}, diags
 }
 
@@ -92,14 +92,14 @@ func (r *LocalAnsibleResourceModel) FromAPIModel(ctx context.Context, apiModel i
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
-	r.PrimaryKeyPairRef = types.StringPointerValue(model.PrimaryKeyPairRef)
+	r.PrimaryKeyPairRef = types.StringValue(model.PrimaryKeyPairRef)
 
 	return diags
 }
 
 type LocalAnsibleAPIModel struct {
 	LocalAPIModel
-	PrimaryKeyPairRef *string `json:"primaryKeyPairRef"`
+	PrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }
 
 func (r *localAnsibleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

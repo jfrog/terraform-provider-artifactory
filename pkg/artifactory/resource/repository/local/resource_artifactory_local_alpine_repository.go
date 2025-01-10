@@ -81,7 +81,7 @@ func (r LocalAlpineResourceModel) ToAPIModel(ctx context.Context, packageType st
 
 	return LocalAlpineAPIModel{
 		LocalAPIModel:     localAPIModel,
-		PrimaryKeyPairRef: r.PrimaryKeyPairRef.ValueStringPointer(),
+		PrimaryKeyPairRef: r.PrimaryKeyPairRef.ValueString(),
 	}, diags
 }
 
@@ -93,14 +93,14 @@ func (r *LocalAlpineResourceModel) FromAPIModel(ctx context.Context, apiModel in
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
-	r.PrimaryKeyPairRef = types.StringPointerValue(model.PrimaryKeyPairRef)
+	r.PrimaryKeyPairRef = types.StringValue(model.PrimaryKeyPairRef)
 
 	return diags
 }
 
 type LocalAlpineAPIModel struct {
 	LocalAPIModel
-	PrimaryKeyPairRef *string `json:"primaryKeyPairRef"`
+	PrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }
 
 var AlpinePrimaryKeyPairRefAttribute = map[string]schema.Attribute{
