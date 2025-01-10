@@ -151,11 +151,11 @@ func (r *localDockerV2Resource) Schema(ctx context.Context, req resource.SchemaR
 			"tag_retention": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(1),
+				Default:  int64default.StaticInt64(0),
 				Validators: []validator.Int64{
-					int64validator.AtLeast(1),
+					int64validator.AtLeast(0),
 				},
-				MarkdownDescription: "If greater than 1, overwritten tags will be saved by their digest, up to the set up number. This only applies to manifest V2",
+				MarkdownDescription: "If greater than 1, overwritten tags will be saved by their digest, up to the set up number.",
 			},
 			"block_pushing_schema1": schema.BoolAttribute{
 				Optional:            true,
