@@ -1,3 +1,9 @@
+## 12.8.1 (January 13, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.4 and OpenTofu 1.9.0
+
+BUG FIXES:
+
+* resource/artifactory_artifact: Fix incorrect integer parsing for `size` attribute. Issue: [#1169](https://github.com/jfrog/terraform-provider-artifactory/issues/1169) PR: [#1171](https://github.com/jfrog/terraform-provider-artifactory/pull/1171)
+
 ## 12.8.0 (January 8, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.3 and OpenTofu 1.8.8
 
 FEATURES:
