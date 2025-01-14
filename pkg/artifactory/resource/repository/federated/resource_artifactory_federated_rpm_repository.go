@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,23 @@ type RpmFederatedRepositoryParams struct {
 	local.RpmLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalRpmRepository(data *schema.ResourceData, Rclass string) local.RpmLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.RpmLocalRepositoryParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.RPMPackageType),
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
+		},
+		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+			SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
+		},
+		RootDepth:               d.GetInt("yum_root_depth", false),
+		CalculateYumMetadata:    d.GetBool("calculate_yum_metadata", false),
+		EnableFileListsIndexing: d.GetBool("enable_file_lists_indexing", false),
+		GroupFileNames:          d.GetString("yum_group_file_names", false),
+	}
 }
 
 func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
@@ -24,7 +42,7 @@ func ResourceArtifactoryFederatedRpmRepository() *schema.Resource {
 
 	var unpackFederatedRpmRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := RpmFederatedRepositoryParams{
-			RpmLocalRepositoryParams: local.UnpackLocalRpmRepository(data, Rclass),
+			RpmLocalRepositoryParams: unpackLocalRpmRepository(data, Rclass),
 			Members:                  unpackMembers(data),
 			RepoParams:               unpackRepoParams(data),
 		}

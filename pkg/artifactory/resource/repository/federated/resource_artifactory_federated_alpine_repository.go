@@ -15,6 +15,16 @@ type AlpineRepositoryParams struct {
 	RepoParams
 }
 
+func unpackLocalAlpineRepository(data *schema.ResourceData, Rclass string) local.AlpineLocalRepoParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.AlpineLocalRepoParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.AlpinePackageType),
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
+		},
+	}
+}
+
 func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 	alpineFederatedSchema := utilsdk.MergeMaps(
 		local.AlpineLocalSchemas[local.CurrentSchemaVersion],
@@ -24,7 +34,7 @@ func ResourceArtifactoryFederatedAlpineRepository() *schema.Resource {
 
 	var unpackFederatedAlpineRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := AlpineRepositoryParams{
-			AlpineLocalRepoParams: local.UnpackLocalAlpineRepository(data, Rclass),
+			AlpineLocalRepoParams: unpackLocalAlpineRepository(data, Rclass),
 			Members:               unpackMembers(data),
 			RepoParams:            unpackRepoParams(data),
 		}

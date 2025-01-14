@@ -256,8 +256,7 @@ func TestAccDataSourceLocalCargoRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -290,8 +289,7 @@ func TestAccDataSourceLocalConanRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -406,10 +404,6 @@ EOF
 			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
 			index_compression_formats = ["bz2","lzma","xz"]
 			trivial_layout = true
-			depends_on = [
-				artifactory_keypair.{{ .kp_name }},
-				artifactory_keypair.{{ .kp_name2 }},
-			]
 		}
 
 		data "artifactory_local_debian_repository" "{{ .repo_name }}" {
@@ -424,7 +418,6 @@ EOF
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -467,8 +460,7 @@ func TestAccDataSourceLocalDockerV2Repository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -499,8 +491,7 @@ func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -551,8 +542,7 @@ func TestAccDataSourceLocalMavenRepository(t *testing.T) {
 	tempStruct["suppress_pom_consistency_checks"] = false
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -584,9 +574,8 @@ func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*
 	fqrn := "data." + tempFqrn
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -624,8 +613,7 @@ func TestAccDataSourceLocalHelmOciRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -667,9 +655,8 @@ func TestAccDataSourceLocalNugetRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -704,8 +691,7 @@ func TestAccDataSourceLocalOciRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -840,7 +826,6 @@ EOF
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
@@ -883,9 +868,8 @@ func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -917,9 +901,8 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,

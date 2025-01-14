@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -12,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/samber/lo"
 )
 
@@ -42,20 +40,12 @@ var PackageTypesLikeGeneric = []string{
 func NewGenericLocalRepositoryResource(packageType string) func() resource.Resource {
 	return func() resource.Resource {
 		return &localGenericResource{
-			localResource: localResource{
-				BaseResource: repository.BaseResource{
-					JFrogResource: util.JFrogResource{
-						TypeName:           fmt.Sprintf("artifactory_local_%s_repository", packageType),
-						CollectionEndpoint: "artifactory/api/repositories",
-						DocumentEndpoint:   "artifactory/api/repositories/{key}",
-					},
-					Description:       "Provides a resource to creates a local Machine Learning repository.",
-					PackageType:       packageType,
-					Rclass:            Rclass,
-					ResourceModelType: reflect.TypeFor[LocalGenericResourceModel](),
-					APIModelType:      reflect.TypeFor[LocalGenericAPIModel](),
-				},
-			},
+			localResource: NewLocalRepositoryResource(
+				packageType,
+				repository.PackageNameLookup[packageType],
+				reflect.TypeFor[LocalGenericResourceModel](),
+				reflect.TypeFor[LocalGenericAPIModel](),
+			),
 		}
 	}
 }
@@ -66,8 +56,7 @@ type localGenericResource struct {
 
 type LocalGenericResourceModel struct {
 	LocalResourceModel
-	RepoLayoutRef types.String `tfsdk:"repo_layout_ref"`
-	CDNRedirect   types.Bool   `tfsdk:"cdn_redirect"`
+	CDNRedirect types.Bool `tfsdk:"cdn_redirect"`
 }
 
 func (r *LocalGenericResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

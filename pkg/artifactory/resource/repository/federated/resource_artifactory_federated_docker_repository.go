@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,17 @@ type DockerFederatedRepositoryParams struct {
 	local.DockerLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalDockerV2Repository(data *schema.ResourceData, Rclass string) local.DockerLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.DockerLocalRepositoryParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.DockerPackageType),
+		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
+		DockerApiVersion:     "V2",
+		TagRetention:         d.GetInt("tag_retention", false),
+		BlockPushingSchema1:  d.GetBool("block_pushing_schema1", false),
+	}
 }
 
 func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
@@ -24,7 +36,7 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV2Repository(data, Rclass),
+			DockerLocalRepositoryParams: unpackLocalDockerV2Repository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}
@@ -60,6 +72,16 @@ func ResourceArtifactoryFederatedDockerV2Repository() *schema.Resource {
 	return mkResourceSchema(dockerV2FederatedSchema, pkr, unpackFederatedDockerRepository, constructor)
 }
 
+func unpackLocalDockerV1Repository(data *schema.ResourceData, Rclass string) local.DockerLocalRepositoryParams {
+	return local.DockerLocalRepositoryParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.DockerPackageType),
+		DockerApiVersion:     "V1",
+		MaxUniqueTags:        0,
+		TagRetention:         1,
+		BlockPushingSchema1:  false,
+	}
+}
+
 func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 	dockerFederatedSchema := lo.Assign(
 		local.DockerV1Schemas[local.CurrentSchemaVersion],
@@ -69,7 +91,7 @@ func ResourceArtifactoryFederatedDockerV1Repository() *schema.Resource {
 
 	var unpackFederatedDockerRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := DockerFederatedRepositoryParams{
-			DockerLocalRepositoryParams: local.UnpackLocalDockerV1Repository(data, Rclass),
+			DockerLocalRepositoryParams: unpackLocalDockerV1Repository(data, Rclass),
 			Members:                     unpackMembers(data),
 			RepoParams:                  unpackRepoParams(data),
 		}

@@ -80,6 +80,32 @@ const (
 	VCSPackageType               = "vcs"
 )
 
+var PackageNameLookup = map[string]string{
+	BowerPackageType:            "Bower",
+	ChefPackageType:             "Chef",
+	CocoapodsPackageType:        "CocoaPods",
+	ComposerPackageType:         "Composer",
+	CondaPackageType:            "Conda",
+	CranPackageType:             "CRAN",
+	GemsPackageType:             "Gems",
+	GenericPackageType:          "Generic",
+	GitLFSPackageType:           "GitLfs",
+	GoPackageType:               "Go",
+	GradlePackageType:           "Gradle",
+	HelmPackageType:             "Helm",
+	HuggingFacePackageType:      "HuggingFace ML",
+	IvyPackageType:              "Ivy",
+	NPMPackageType:              "Npm",
+	OpkgPackageType:             "Opkg",
+	PubPackageType:              "Pub",
+	PuppetPackageType:           "Puppet",
+	PyPiPackageType:             "PyPi",
+	SBTPackageType:              "SBT",
+	SwiftPackageType:            "Swift",
+	TerraformBackendPackageType: "Terraform Backend",
+	VagrantPackageType:          "Vagrant",
+}
+
 type BaseResource struct {
 	util.JFrogResource
 	Description       string
@@ -557,6 +583,33 @@ func RepoLayoutRefAttribute(repositoryType string, packageType string) map[strin
 	}
 }
 
+var PrimaryKeyPairRefAttribute = map[string]schema.Attribute{
+	"primary_keypair_ref": schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		MarkdownDescription: "Primary keypair used to sign artifacts. Default value is empty.",
+	},
+}
+
+var SecondaryKeyPairRefAttribute = map[string]schema.Attribute{
+	"secondary_keypair_ref": schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		MarkdownDescription: "Secondary keypair used to sign artifacts.",
+	},
+}
+
+var CompressionFormatsAttribute = map[string]schema.Attribute{
+	"index_compression_formats": schema.SetAttribute{
+		ElementType: types.StringType,
+		Optional:    true,
+	},
+}
+
 var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	"key": {
 		Type:             sdkv2_schema.TypeString,
@@ -623,7 +676,7 @@ var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var ProxySchema = map[string]*sdkv2_schema.Schema{
+var ProxySchemaSDKv2 = map[string]*sdkv2_schema.Schema{
 	"proxy": {
 		Type:        sdkv2_schema.TypeString,
 		Optional:    true,
@@ -637,7 +690,7 @@ var ProxySchema = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var CompressionFormats = map[string]*sdkv2_schema.Schema{
+var CompressionFormatsSDKv2 = map[string]*sdkv2_schema.Schema{
 	"index_compression_formats": {
 		Type: sdkv2_schema.TypeSet,
 		Elem: &sdkv2_schema.Schema{
@@ -648,7 +701,7 @@ var CompressionFormats = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var AlpinePrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var AlpinePrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"primary_keypair_ref": {
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
@@ -657,7 +710,7 @@ var AlpinePrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var PrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var PrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"primary_keypair_ref": {
 		Type:             sdkv2_schema.TypeString,
 		Optional:         true,
@@ -666,7 +719,7 @@ var PrimaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var SecondaryKeyPairRef = map[string]*sdkv2_schema.Schema{
+var SecondaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"secondary_keypair_ref": {
 		Type:             sdkv2_schema.TypeString,
 		Optional:         true,
@@ -676,11 +729,11 @@ var SecondaryKeyPairRef = map[string]*sdkv2_schema.Schema{
 }
 
 type PrimaryKeyPairRefParam struct {
-	PrimaryKeyPairRef string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
+	PrimaryKeyPairRefSDKv2 string `hcl:"primary_keypair_ref" json:"primaryKeyPairRef"`
 }
 
 type SecondaryKeyPairRefParam struct {
-	SecondaryKeyPairRef string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
+	SecondaryKeyPairRefSDKv2 string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
 }
 
 type ContentSynchronisation struct {

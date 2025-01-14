@@ -109,7 +109,7 @@ var PackageTypesLikeBasic = []string{
 }
 
 var baseSchema = lo.Assign(
-	repository.ProxySchema,
+	repository.ProxySchemaSDKv2,
 	map[string]*schema.Schema{
 		"url": {
 			Type:         schema.TypeString,

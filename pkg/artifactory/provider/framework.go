@@ -20,6 +20,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
@@ -205,6 +206,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 // Resources satisfies the provider.Provider interface for ArtifactoryProvider.
 func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.Resource {
+	resources := []func() resource.Resource{}
 
 	localGenericLikeRepositoryResources := lo.Map(
 		local.PackageTypesLikeGeneric,
@@ -212,9 +214,19 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			return local.NewGenericLocalRepositoryResource(packageType)
 		},
 	)
+	resources = append(resources, localGenericLikeRepositoryResources...)
+
+	localGradleLikeRepositoryResources := lo.Map(
+		repository.PackageTypesLikeGradle,
+		func(packageType string, _ int) func() resource.Resource {
+			return local.NewJavaLocalRepositoryResource(packageType, true)
+		},
+	)
+	resources = append(resources, localGradleLikeRepositoryResources...)
+	resources = append(resources, local.NewJavaLocalRepositoryResource(repository.MavenPackageType, false))
 
 	return append(
-		localGenericLikeRepositoryResources,
+		resources,
 		[]func() resource.Resource{
 			artifact.NewArtifactResource,
 			artifact.NewItemPropertiesResource,
@@ -246,7 +258,20 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			replication.NewLocalRepositorySingleReplicationResource,
 			replication.NewLocalRepositoryMultiReplicationResource,
 			replication.NewRemoteRepositoryReplicationResource,
+			local.NewAlpineLocalRepositoryResource,
+			local.NewAnsibleLocalRepositoryResource,
+			local.NewCargoLocalRepositoryResource,
+			local.NewConanLocalRepositoryResource,
+			local.NewDebianLocalRepositoryResource,
+			local.NewDockerV2LocalRepositoryResource,
+			local.NewDockerV1LocalRepositoryResource,
+			local.NewHelmOCILocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
+			local.NewNugetLocalRepositoryResource,
+			local.NewOCILocalRepositoryResource,
+			local.NewRPMLocalRepositoryResource,
+			local.NewTerraformModuleLocalRepositoryResource,
+			local.NewTerraformProviderLocalRepositoryResource,
 			webhook.NewArtifactWebhookResource,
 			webhook.NewArtifactCustomWebhookResource,
 			webhook.NewArtifactLifecycleWebhookResource,

@@ -59,7 +59,6 @@ func TestAccDataSourceRepositories(t *testing.T) {
 	artifactoryURL := acctest.GetArtifactoryUrl(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{

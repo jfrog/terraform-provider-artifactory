@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
@@ -32,20 +31,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_rpm_repository":                federated.ResourceArtifactoryFederatedRpmRepository(),
 		"artifactory_federated_terraform_module_repository":   federated.ResourceArtifactoryFederatedTerraformRepository("module"),
 		"artifactory_federated_terraform_provider_repository": federated.ResourceArtifactoryFederatedTerraformRepository("provider"),
-		"artifactory_local_ansible_repository":                local.ResourceArtifactoryLocalAnsibleRepository(),
-		"artifactory_local_alpine_repository":                 local.ResourceArtifactoryLocalAlpineRepository(),
-		"artifactory_local_cargo_repository":                  local.ResourceArtifactoryLocalCargoRepository(),
-		"artifactory_local_conan_repository":                  local.ResourceArtifactoryLocalConanRepository(),
-		"artifactory_local_debian_repository":                 local.ResourceArtifactoryLocalDebianRepository(),
-		"artifactory_local_docker_v2_repository":              local.ResourceArtifactoryLocalDockerV2Repository(),
-		"artifactory_local_docker_v1_repository":              local.ResourceArtifactoryLocalDockerV1Repository(),
-		"artifactory_local_helmoci_repository":                local.ResourceArtifactoryLocalHelmOciRepository(),
-		"artifactory_local_maven_repository":                  local.ResourceArtifactoryLocalJavaRepository(repository.MavenPackageType, false),
-		"artifactory_local_nuget_repository":                  local.ResourceArtifactoryLocalNugetRepository(),
-		"artifactory_local_oci_repository":                    local.ResourceArtifactoryLocalOciRepository(),
-		"artifactory_local_rpm_repository":                    local.ResourceArtifactoryLocalRpmRepository(),
-		"artifactory_local_terraform_module_repository":       local.ResourceArtifactoryLocalTerraformRepository("module"),
-		"artifactory_local_terraform_provider_repository":     local.ResourceArtifactoryLocalTerraformRepository("provider"),
 		"artifactory_remote_ansible_repository":               remote.ResourceArtifactoryRemoteAnsibleRepository(),
 		"artifactory_remote_bower_repository":                 remote.ResourceArtifactoryRemoteBowerRepository(),
 		"artifactory_remote_cargo_repository":                 remote.ResourceArtifactoryRemoteCargoRepository(),
@@ -98,8 +83,6 @@ func resourcesMap() map[string]*schema.Resource {
 	}
 
 	for _, packageType := range repository.PackageTypesLikeGradle {
-		localResourceName := fmt.Sprintf("artifactory_local_%s_repository", packageType)
-		resourcesMap[localResourceName] = local.ResourceArtifactoryLocalJavaRepository(packageType, true)
 		virtualResourceName := fmt.Sprintf("artifactory_virtual_%s_repository", packageType)
 		resourcesMap[virtualResourceName] = virtual.ResourceArtifactoryVirtualJavaRepository(packageType)
 		federatedResourceName := fmt.Sprintf("artifactory_federated_%s_repository", packageType)

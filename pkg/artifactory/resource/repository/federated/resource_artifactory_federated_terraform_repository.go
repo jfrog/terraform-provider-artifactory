@@ -15,6 +15,13 @@ type TerraformFederatedRepositoryParams struct {
 	RepoParams
 }
 
+func unpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, registryType string) local.RepositoryBaseParams {
+	repo := local.UnpackBaseRepo(Rclass, data, "terraform_"+registryType)
+	repo.TerraformType = registryType
+
+	return repo
+}
+
 func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
 
@@ -26,7 +33,7 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: local.UnpackLocalTerraformRepository(data, Rclass, registryType),
+			RepositoryBaseParams: unpackLocalTerraformRepository(data, Rclass, registryType),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
 		}

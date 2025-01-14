@@ -6,6 +6,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -13,6 +14,16 @@ type OciFederatedRepositoryParams struct {
 	local.OciLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+}
+
+func unpackLocalOciRepository(data *schema.ResourceData, Rclass string) local.OciLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
+	return local.OciLocalRepositoryParams{
+		RepositoryBaseParams: local.UnpackBaseRepo(Rclass, data, repository.OCIPackageType),
+		MaxUniqueTags:        d.GetInt("max_unique_tags", false),
+		DockerApiVersion:     "V2",
+		TagRetention:         d.GetInt("tag_retention", false),
+	}
 }
 
 func ResourceArtifactoryFederatedOciRepository() *schema.Resource {
@@ -24,7 +35,7 @@ func ResourceArtifactoryFederatedOciRepository() *schema.Resource {
 
 	var unpackFederatedOciRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := OciFederatedRepositoryParams{
-			OciLocalRepositoryParams: local.UnpackLocalOciRepository(data, Rclass),
+			OciLocalRepositoryParams: unpackLocalOciRepository(data, Rclass),
 			Members:                  unpackMembers(data),
 			RepoParams:               unpackRepoParams(data),
 		}

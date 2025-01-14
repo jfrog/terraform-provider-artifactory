@@ -83,9 +83,8 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

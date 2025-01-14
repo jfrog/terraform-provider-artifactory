@@ -1,3 +1,9 @@
+## 12.8.2 (January 14, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.4 and OpenTofu 1.9.0
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_alpine_repository, resource/artifactory_local_ansible_repository, resource/artifactory_local_cargo_repository, resource/artifactory_local_conan_repository, resource/artifactory_local_docker_v1_repository, resource/artifactory_local_docker_v2_repository, resource/artifactory_local_gradle_repository, resource/artifactory_local_helmoci_repository, resource/artifactory_local_ivy_repository, resource/artifactory_local_nuget_repository, resource/artifactory_local_helm_repository, resource/artifactory_local_hunggingfaceml_repository, resource/artifactory_local_oci_repository, resource/artifactory_local_rpm_repository, resource/artifactory_local_sbt_repository, resource/artifactory_local_terraform_module_repository, resource/artifactory_local_terraform_provider_repository are migrated to Plugin Framework. PR: [#1168](https://github.com/jfrog/terraform-provider-artifactory/pull/1168)
+
 ## 12.8.1 (January 13, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.4 and OpenTofu 1.9.0
 
 BUG FIXES:

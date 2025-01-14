@@ -9,8 +9,8 @@ import (
 )
 
 var rpmSchema = lo.Assign(
-	repository.PrimaryKeyPairRef,
-	repository.SecondaryKeyPairRef,
+	repository.PrimaryKeyPairRefSDKv2,
+	repository.SecondaryKeyPairRefSDKv2,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 )
 
@@ -34,10 +34,10 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 			RepositoryBaseParams: UnpackBaseVirtRepo(s, "rpm"),
 			CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
 				PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
-					PrimaryKeyPairRef: d.GetString("primary_keypair_ref", false),
+					PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
 				},
 				SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
-					SecondaryKeyPairRef: d.GetString("secondary_keypair_ref", false),
+					SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
 				},
 			},
 		}
