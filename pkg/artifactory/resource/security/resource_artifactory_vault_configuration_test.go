@@ -229,7 +229,7 @@ func testAccVaultConfigurationDestroy(id string) func(*terraform.State) error {
 			return err
 		}
 		if response.IsError() {
-			return fmt.Errorf(response.String())
+			return fmt.Errorf("%s", response.String())
 		}
 
 		_, ok = lo.Find(

@@ -252,7 +252,7 @@ func scopedTokenUpgradeTestCase(version string, t *testing.T) (*testing.T, resou
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	config := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -321,7 +321,7 @@ func TestAccScopedToken_WithDefaults(t *testing.T) {
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	template := `resource "artifactory_user" "{{ .user_resource_name }}" {
 		name              = "{{ .username }}"
@@ -406,7 +406,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -594,7 +594,7 @@ func TestAccScopedToken_WithResourceScopes(t *testing.T) {
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -653,7 +653,7 @@ func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -1107,7 +1107,7 @@ func TestAccScopedToken_WithExpiresInLessThanPersistencyThreshold(t *testing.T) 
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
@@ -1151,7 +1151,7 @@ func TestAccScopedToken_WithExpiresInSetToZeroForNonExpiringToken(t *testing.T) 
 
 	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	accessTokenConfig := util.ExecuteTemplate(
 		"TestAccScopedToken",
