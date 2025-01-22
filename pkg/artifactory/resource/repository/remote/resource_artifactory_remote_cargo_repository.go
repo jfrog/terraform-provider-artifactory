@@ -17,7 +17,7 @@ type CargoRemoteRepo struct {
 }
 
 var cargoSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	map[string]*schema.Schema{
 		"git_registry_url": {
 			Type:         schema.TypeString,

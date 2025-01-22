@@ -16,7 +16,7 @@ type TerraformRemoteRepo struct {
 }
 
 var TerraformSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	map[string]*schema.Schema{
 		"terraform_registry_url": {
 			Type:         schema.TypeString,

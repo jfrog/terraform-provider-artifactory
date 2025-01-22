@@ -14,7 +14,7 @@ type HuggingFaceRepo struct {
 }
 
 var HuggingFaceSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"url": {

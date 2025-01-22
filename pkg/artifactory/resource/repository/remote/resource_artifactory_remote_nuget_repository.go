@@ -20,7 +20,7 @@ type NugetRemoteRepo struct {
 }
 
 var NugetSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"feed_context_path": {

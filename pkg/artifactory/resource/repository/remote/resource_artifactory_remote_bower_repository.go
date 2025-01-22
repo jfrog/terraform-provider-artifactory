@@ -16,7 +16,7 @@ type BowerRemoteRepo struct {
 }
 
 var bowerSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	VcsRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"bower_registry_url": {

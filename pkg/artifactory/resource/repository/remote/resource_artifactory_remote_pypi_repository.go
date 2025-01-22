@@ -17,7 +17,7 @@ type PypiRemoteRepo struct {
 }
 
 var PyPiSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"pypi_registry_url": {

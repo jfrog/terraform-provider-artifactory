@@ -168,7 +168,7 @@ func TestAccRemoteAnsibleRepository(t *testing.T) {
 
 func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
 	const packageType = "docker"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	_, testCase := mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"external_dependencies_enabled":  true,
 		"enable_token_authentication":    true,
 		"block_pushing_schema1":          true,
@@ -187,7 +187,7 @@ func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
 
 func TestAccRemoteDockerRepositoryDepFalse(t *testing.T) {
 	const packageType = "docker"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	_, testCase := mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"external_dependencies_enabled":  false,
 		"enable_token_authentication":    true,
 		"block_pushing_schema1":          true,
@@ -381,7 +381,7 @@ func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 
 func TestAccRemoteCargoRepository(t *testing.T) {
 	const packageType = "cargo"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	_, testCase := mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"git_registry_url":            "https://github.com/rust-lang/foo.index",
 		"anonymous_access":            true,
 		"enable_sparse_index":         true,
@@ -427,7 +427,7 @@ func TestAccRemoteHelmRepository(t *testing.T) {
 func testAccRemoteHelmRepository(scheme string) func(t *testing.T) {
 	return func(t *testing.T) {
 		const packageType = "helm"
-		resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+		resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 			"helm_charts_base_url":           fmt.Sprintf("%s://github.com/rust-lang/foo.index", scheme),
 			"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 			"external_dependencies_enabled":  true,
@@ -445,7 +445,7 @@ func testAccRemoteHelmRepository(scheme string) func(t *testing.T) {
 
 func TestAccRemoteHelmRepositoryDepFalse(t *testing.T) {
 	const packageType = "helm"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"external_dependencies_enabled":  false,
@@ -521,7 +521,7 @@ func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 
 func TestAccRemoteNpmRepository(t *testing.T) {
 	const packageType = "npm"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"list_remote_folder_items":             true,
 		"priority_resolution":                  true,
 		"mismatching_mime_types_override_list": "application/json,application/xml",
@@ -565,7 +565,7 @@ func TestAccRemoteOciRepository(t *testing.T) {
 
 func TestAccRemotePypiRepository(t *testing.T) {
 	const packageType = "pypi"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"pypi_registry_url":           "https://pypi.org",
 		"priority_resolution":         true,
 		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
@@ -596,22 +596,12 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 	}))
 }
 
-func TestAccRemoteAllRepository(t *testing.T) {
-	for _, repoType := range remote.PackageTypesLikeBasic {
-		t.Run(repoType, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
-				"missed_cache_period_seconds": 1800,
-			}))
-		})
-	}
-}
-
 func TestAccRemoteGoRepository(t *testing.T) {
 	const packageType = "go"
 
 	for _, vcsGitProvider := range remote.SupportedGoVCSGitProviders {
 		t.Run(vcsGitProvider, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+			resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 				"url":                         "https://proxy.golang.org/",
 				"vcs_git_provider":            vcsGitProvider,
 				"missed_cache_period_seconds": 1800,
@@ -622,7 +612,7 @@ func TestAccRemoteGoRepository(t *testing.T) {
 
 func TestAccRemoteVcsRepository(t *testing.T) {
 	const packageType = "vcs"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                  "https://github.com/",
 		"vcs_git_provider":     "CUSTOM",
 		"vcs_git_download_url": "https://www.customrepo.com",
@@ -632,7 +622,7 @@ func TestAccRemoteVcsRepository(t *testing.T) {
 
 func TestAccRemoteVcsRepositoryWithFormattedUrl(t *testing.T) {
 	const packageType = "vcs"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                  "https://github.com/",
 		"vcs_git_provider":     "CUSTOM",
 		"vcs_git_download_url": "{0}/{1}/+archive/{2}.{3}",
@@ -642,7 +632,7 @@ func TestAccRemoteVcsRepositoryWithFormattedUrl(t *testing.T) {
 
 func TestAccRemoteCocoapodsRepository(t *testing.T) {
 	const packageType = "cocoapods"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
 		"vcs_git_provider":            "GITHUB",
 		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
@@ -652,7 +642,7 @@ func TestAccRemoteCocoapodsRepository(t *testing.T) {
 
 func TestAccRemoteComposerRepository(t *testing.T) {
 	const packageType = "composer"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
 		"vcs_git_provider":            "GITHUB",
 		"composer_registry_url":       "https://packagist1.org",
@@ -662,7 +652,7 @@ func TestAccRemoteComposerRepository(t *testing.T) {
 
 func TestAccRemoteBowerRepository(t *testing.T) {
 	const packageType = "bower"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
 		"vcs_git_provider":            "ARTIFACTORY",
 		"bower_registry_url":          "https://registry1.bower.io",
@@ -672,14 +662,14 @@ func TestAccRemoteBowerRepository(t *testing.T) {
 
 func TestAccRemoteConanRepository(t *testing.T) {
 	const packageType = "conan"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"force_conan_authentication": true,
 	}))
 }
 
 func TestAccRemoteNugetRepository(t *testing.T) {
 	const packageType = "nuget"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://www.nuget.org/",
 		"download_context_path":       "api/v2/package",
 		"force_nuget_authentication":  true,
@@ -690,7 +680,7 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 
 func TestAccRemoteTerraformRepository(t *testing.T) {
 	const packageType = "terraform"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                     "https://github.com/",
 		"terraform_registry_url":  "https://registry.terraform.io",
 		"terraform_providers_url": "https://releases.hashicorp.com",
@@ -699,9 +689,9 @@ func TestAccRemoteTerraformRepository(t *testing.T) {
 }
 
 func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.PackageTypesLikeGradle {
-		t.Run(repoType, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
+	for _, packageType := range repository.PackageTypesLikeGradle {
+		t.Run(packageType, func(t *testing.T) {
+			resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 				"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 				"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
 				"list_remote_folder_items":        true,
@@ -718,7 +708,7 @@ func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
 }
 
 func TestAccRemoteMavenRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
+	resource.Test(mkNewRemoteSDKv2TestCase("maven", t, map[string]interface{}{
 		"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
 		"list_remote_folder_items":        true,
@@ -738,14 +728,14 @@ func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
 	extraFields := map[string]interface{}{
 		"pypi_registry_url": "https://custom.PYPI.registry.url",
 	}
-	resource.Test(mkNewRemoteTestCase(packageType, t, extraFields))
+	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, extraFields))
 }
 
 func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
 	extraFields := map[string]interface{}{
 		"list_remote_folder_items": true,
 	}
-	resource.Test(mkNewRemoteTestCase("docker", t, extraFields))
+	resource.Test(mkNewRemoteSDKv2TestCase("docker", t, extraFields))
 }
 
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
@@ -908,8 +898,8 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 }
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
-func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+func mkNewRemoteTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", packageType))
 	certificateAlias := fmt.Sprintf("certificate-%d", testutil.RandomInt())
 
 	defaultFields := map[string]interface{}{
@@ -936,7 +926,6 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"missed_cache_period_seconds":           2500,
 		"unused_artifacts_cleanup_period_hours": 96,
 		"assumed_offline_period_secs":           96,
-		"share_configuration":                   true,
 		"synchronize_properties":                true,
 		"block_mismatching_mime_types":          true,
 		"property_sets":                         []interface{}{"artifactory"},
@@ -944,12 +933,9 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"enable_cookie_management":              true,
 		"bypass_head_requests":                  true,
 		"client_tls_certificate":                certificateAlias,
-		"content_synchronisation": map[string]interface{}{
-			"enabled": false, // even when set to true, it seems to come back as false on the wire
-		},
-		"download_direct":           true,
-		"cdn_redirect":              false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
-		"disable_url_normalization": true,
+		"download_direct":                       true,
+		"cdn_redirect":                          false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"disable_url_normalization":             true,
 	}
 	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
@@ -962,14 +948,109 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
-	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
+	config := fmt.Sprintf(remoteRepoFull, packageType, name, allFieldsHcl)
 
 	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
 		"description": "",
 		"notes":       "",
 	})
 	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
-	updatedConfig := fmt.Sprintf(remoteRepoFull, repoType, name, updatedFieldsHcl)
+	updatedConfig := fmt.Sprintf(remoteRepoFull, packageType, name, updatedFieldsHcl)
+	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
+	updatedChecks = append(updatedChecks, extraChecks...)
+
+	var delCertTestCheckRepo = func(id string, request *resty.Request) (*resty.Response, error) {
+		deleteTestCertificate(t, certificateAlias, security.CertificateEndpoint)
+		return acctest.CheckRepo(id, request.AddRetryCondition(client.NeverRetry))
+	}
+
+	return t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			addTestCertificate(t, certificateAlias, security.CertificateEndpoint)
+		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", delCertTestCheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:           config,
+				Check:            resource.ComposeTestCheckFunc(checks...),
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
+			},
+			{
+				Config: updatedConfig,
+				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	}
+}
+
+// if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
+func mkNewRemoteSDKv2TestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", packageType))
+	certificateAlias := fmt.Sprintf("certificate-%d", testutil.RandomInt())
+
+	defaultFields := map[string]interface{}{
+		"key":                            name,
+		"url":                            "https://registry.npmjs.org/",
+		"username":                       "user",
+		"password":                       "Passw0rd!",
+		"proxy":                          "",
+		"description":                    "description",
+		"notes":                          "notes",
+		"includes_pattern":               "**/*.js",
+		"excludes_pattern":               "**/*.jsx",
+		"repo_layout_ref":                "npm-default",
+		"hard_fail":                      true,
+		"offline":                        true,
+		"blacked_out":                    true,
+		"xray_index":                     testutil.RandBool(),
+		"store_artifacts_locally":        true,
+		"socket_timeout_millis":          25000,
+		"local_address":                  "",
+		"retrieval_cache_period_seconds": 70,
+		// this doesn't get returned on a GET
+		//"failed_retrieval_cache_period_secs": 140,
+		"missed_cache_period_seconds":           2500,
+		"unused_artifacts_cleanup_period_hours": 96,
+		"assumed_offline_period_secs":           96,
+		"synchronize_properties":                true,
+		"block_mismatching_mime_types":          true,
+		"property_sets":                         []interface{}{"artifactory"},
+		"allow_any_host_auth":                   true,
+		"enable_cookie_management":              true,
+		"bypass_head_requests":                  true,
+		"client_tls_certificate":                certificateAlias,
+		"download_direct":                       true,
+		"cdn_redirect":                          false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"disable_url_normalization":             true,
+	}
+	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
+	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
+	const remoteRepoFull = `
+		resource "artifactory_remote_%s_repository" "%s" {
+%s
+		}
+	`
+	extraChecks := testutil.MapToTestChecks(fqrn, extraFields)
+	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
+
+	checks := append(defaultChecks, extraChecks...)
+	config := fmt.Sprintf(remoteRepoFull, packageType, name, allFieldsHcl)
+
+	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
+		"description": "",
+		"notes":       "",
+	})
+	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
+	updatedConfig := fmt.Sprintf(remoteRepoFull, packageType, name, updatedFieldsHcl)
 	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
 	updatedChecks = append(updatedChecks, extraChecks...)
 
@@ -1032,8 +1113,8 @@ func deleteTestCertificate(t *testing.T, certificateAlias string, certificateEnd
 	}
 }
 
-func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+func mkRemoteTestCaseWithAdditionalCheckFunctions(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", packageType))
 
 	defaultFields := map[string]interface{}{
 		"key":      name,
@@ -1042,7 +1123,7 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 		"password": "Passw0rd!",
 		"proxy":    "",
 
-		//"description":                        "foo", // the server returns this suffixed. Test separate
+		"description":                    "foo",
 		"notes":                          "notes",
 		"includes_pattern":               "**/*.js",
 		"excludes_pattern":               "**/*.jsx",
@@ -1083,11 +1164,11 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
 
 	var addCheckFunctions = []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("remote", repoType); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("remote", packageType); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 	}
 
 	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)
-	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
+	config := fmt.Sprintf(remoteRepoFull, packageType, name, allFieldsHcl)
 
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1109,137 +1190,8 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T,
 	}
 }
 
-func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
-
-	const remoteGenericRepoBasicWithPropagate = `
-		resource "artifactory_remote_generic_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate, name, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckResourceAttr(fqrn, "propagate_query_params", "true"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_generic_with_retrieve_sha256_from_server(t *testing.T) {
-
-	const temp = `
-		resource "artifactory_remote_generic_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			retrieve_sha256_from_server     = true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(temp, name, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckResourceAttr(fqrn, "retrieve_sha256_from_server", "true"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("test-generic-remote", "artifactory_remote_generic_repository")
-
-	const temp = `
-		resource "artifactory_remote_generic_repository" "{{ .name }}" {
-			key                     		= "{{ .name }}"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-
-	params := map[string]interface{}{
-		"name": name,
-	}
-
-	config := util.ExecuteTemplate("TestAccRemoteRepository_generic_migrate_to_schema_v4", temp, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"artifactory": {
-						Source:            "jfrog/artifactory",
-						VersionConstraint: "12.0.0",
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckNoResourceAttr(fqrn, "retrieve_sha256_from_server"),
-				),
-			},
-			{
-				ProviderFactories: acctest.ProviderFactories,
-				Config:            config,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-			},
-		},
-	})
-}
-
 func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
-	for _, repoType := range remote.PackageTypesLikeBasic {
+	for _, packageType := range remote.PackageTypesLikeBasic {
 		const remoteGemsRepoBasicWithPropagate = `
 		resource "artifactory_remote_%s_repository" "%s" {
 			key                     		= "%s"
@@ -1259,7 +1211,7 @@ func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
 			CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 			Steps: []resource.TestStep{
 				{
-					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, repoType, name, name),
+					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, packageType, name, name),
 					ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
 				},
 			},

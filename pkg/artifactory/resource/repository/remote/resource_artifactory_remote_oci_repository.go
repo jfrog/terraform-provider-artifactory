@@ -10,7 +10,7 @@ import (
 )
 
 var OCISchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	map[string]*schema.Schema{
 		"external_dependencies_enabled": {
 			Type:        schema.TypeBool,

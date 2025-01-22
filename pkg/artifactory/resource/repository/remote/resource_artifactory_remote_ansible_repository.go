@@ -12,7 +12,7 @@ type AnsibleRepo struct {
 }
 
 var ansibleSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	map[string]*schema.Schema{
 		"url": {
 			Type:        schema.TypeString,

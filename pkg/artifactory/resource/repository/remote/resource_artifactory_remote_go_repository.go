@@ -25,7 +25,7 @@ var SupportedGoVCSGitProviders = []string{
 }
 
 var GoSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"vcs_git_provider": {

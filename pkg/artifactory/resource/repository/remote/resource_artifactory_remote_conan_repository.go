@@ -15,7 +15,7 @@ type ConanRepo struct {
 }
 
 var conanSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	repository.ConanBaseSchema,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ConanPackageType),

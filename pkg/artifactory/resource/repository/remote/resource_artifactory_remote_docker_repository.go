@@ -10,7 +10,7 @@ import (
 )
 
 var dockerSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"external_dependencies_enabled": {

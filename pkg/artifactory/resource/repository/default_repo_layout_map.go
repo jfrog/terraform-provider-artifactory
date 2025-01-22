@@ -247,8 +247,10 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 	P2PackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
-			"remote":  true,
-			"virtual": true,
+			"local":     false,
+			"remote":    true,
+			"virtual":   true,
+			"federated": false,
 		},
 	},
 	PubPackageType: {

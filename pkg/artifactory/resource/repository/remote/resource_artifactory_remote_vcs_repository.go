@@ -15,7 +15,7 @@ type VcsRemoteRepo struct {
 }
 
 var VCSSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	VcsRemoteRepoSchema,
 	map[string]*schema.Schema{
 		"max_unique_snapshots": {

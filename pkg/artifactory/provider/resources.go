@@ -39,7 +39,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_remote_conan_repository":                 remote.ResourceArtifactoryRemoteConanRepository(),
 		"artifactory_remote_docker_repository":                remote.ResourceArtifactoryRemoteDockerRepository(),
 		"artifactory_remote_gems_repository":                  remote.ResourceArtifactoryRemoteGemsRepository(),
-		"artifactory_remote_generic_repository":               remote.ResourceArtifactoryRemoteGenericRepository(),
 		"artifactory_remote_go_repository":                    remote.ResourceArtifactoryRemoteGoRepository(),
 		"artifactory_remote_gradle_repository":                remote.ResourceArtifactoryRemoteGradleRepository(),
 		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
@@ -75,11 +74,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_saml_settings":                           configuration.ResourceArtifactorySamlSettings(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
-	}
-
-	for _, packageType := range remote.PackageTypesLikeBasic {
-		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
-		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(packageType)
 	}
 
 	for _, packageType := range repository.PackageTypesLikeGradle {

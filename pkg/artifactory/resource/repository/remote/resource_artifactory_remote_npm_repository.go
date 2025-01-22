@@ -14,7 +14,7 @@ type NpmRemoteRepo struct {
 }
 
 var NPMSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	CurationRemoteRepoSchema,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NPMPackageType),
 )

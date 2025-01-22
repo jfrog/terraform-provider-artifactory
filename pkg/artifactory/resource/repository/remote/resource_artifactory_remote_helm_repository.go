@@ -11,7 +11,7 @@ import (
 )
 
 var HelmSchema = lo.Assign(
-	baseSchema,
+	BaseSchema,
 	map[string]*schema.Schema{
 		"helm_charts_base_url": {
 			Type:     schema.TypeString,

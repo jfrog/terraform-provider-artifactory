@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
@@ -27,18 +25,7 @@ const (
 
 func NewLocalRepositoryResource(packageType, packageName string, resourceModelType, apiModelType reflect.Type) localResource {
 	return localResource{
-		BaseResource: repository.BaseResource{
-			JFrogResource: util.JFrogResource{
-				TypeName:           fmt.Sprintf("artifactory_local_%s_repository", packageType),
-				CollectionEndpoint: "artifactory/api/repositories",
-				DocumentEndpoint:   "artifactory/api/repositories/{key}",
-			},
-			Description:       fmt.Sprintf("Provides a resource to creates a %s repository.", packageName),
-			PackageType:       packageType,
-			Rclass:            Rclass,
-			ResourceModelType: resourceModelType,
-			APIModelType:      apiModelType,
-		},
+		BaseResource: repository.NewRepositoryResource(packageType, packageName, Rclass, resourceModelType, apiModelType),
 	}
 }
 
@@ -100,6 +87,19 @@ func (r LocalResourceModel) ToAPIModel(ctx context.Context, packageType string) 
 		diags.Append(d...)
 	}
 	baseRepositoryAPIModel := model.(repository.BaseAPIModel)
+
+	if r.RepoLayoutRef.IsNull() {
+		repoLayoutRef, err := repository.GetDefaultRepoLayoutRef(Rclass, packageType)
+		if err != nil {
+			diags.AddError(
+				"Failed to get default repo layout ref",
+				err.Error(),
+			)
+		}
+		baseRepositoryAPIModel.RepoLayoutRef = repoLayoutRef
+	} else {
+		baseRepositoryAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
+	}
 
 	var propertySets []string
 	d = r.PropertySets.ElementsAs(ctx, &propertySets, false)
