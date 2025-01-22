@@ -6,7 +6,27 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/samber/lo"
 )
+
+type ansibleRepo struct {
+	remote.RepositoryRemoteBaseParams
+}
+
+var ansibleSchema = lo.Assign(
+	remote.BaseSchema,
+	map[string]*schema.Schema{
+		"url": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "https://galaxy.ansible.com",
+			Description: "The remote repo URL. Default to 'https://galaxy.ansible.com'",
+		},
+	},
+	resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, resource_repository.AnsiblePackageType),
+)
+
+var ansibleSchemas = remote.GetSchemas(ansibleSchema)
 
 func DataSourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
@@ -15,7 +35,7 @@ func DataSourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.AnsibleRepo{
+		return &ansibleRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.AnsiblePackageType,
@@ -24,7 +44,7 @@ func DataSourceArtifactoryRemoteAnsibleRepository() *schema.Resource {
 		}, nil
 	}
 
-	ansibleSchema := getSchema(remote.AnsibleSchemas)
+	ansibleSchema := getSchema(ansibleSchemas)
 
 	return &schema.Resource{
 		Schema:      ansibleSchema,

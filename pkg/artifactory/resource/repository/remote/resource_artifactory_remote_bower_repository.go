@@ -1,68 +1,132 @@
 package remote
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"context"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
-type BowerRemoteRepo struct {
-	RepositoryRemoteBaseParams
-	RepositoryVcsParams
-	BowerRegistryUrl string `json:"bowerRegistryUrl"`
+func NewBowerRemoteRepositoryResource() resource.Resource {
+	return &remoteBowerResource{
+		remoteResource: NewRemoteRepositoryResource(
+			repository.BowerPackageType,
+			repository.PackageNameLookup[repository.BowerPackageType],
+			reflect.TypeFor[remoteBowerResourceModel](),
+			reflect.TypeFor[RemoteBowerAPIModel](),
+		),
+	}
 }
 
-var bowerSchema = lo.Assign(
-	BaseSchema,
-	VcsRemoteRepoSchema,
-	map[string]*schema.Schema{
-		"bower_registry_url": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "https://registry.bower.io",
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `Proxy remote Bower repository. Default value is "https://registry.bower.io".`,
+type remoteBowerResource struct {
+	remoteResource
+}
+
+type remoteBowerResourceModel struct {
+	RemoteResourceModel
+	vcsResourceModel
+	BowerRegistryURL types.String `tfsdk:"bower_registry_url"`
+}
+
+func (r *remoteBowerResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r remoteBowerResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteBowerResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteBowerResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteBowerResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *remoteBowerResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteBowerResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r remoteBowerResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	remoteAPIModel, d := r.RemoteResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
+	}
+
+	return RemoteBowerAPIModel{
+		RemoteAPIModel: remoteAPIModel,
+		vcsAPIModel: vcsAPIModel{
+			GitProvider:    r.VCSGitProvider.ValueStringPointer(),
+			GitDownloadURL: r.VCSGitDownloadURL.ValueStringPointer(),
 		},
-	},
-	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.BowerPackageType),
-)
+		BowerRegistryURL: r.BowerRegistryURL.ValueString(),
+	}, diags
+}
 
-var BowerSchemas = GetSchemas(bowerSchema)
+func (r *remoteBowerResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
 
-func ResourceArtifactoryRemoteBowerRepository() *schema.Resource {
+	model := apiModel.(*RemoteBowerAPIModel)
 
-	var unpackBowerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		repo := BowerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.BowerPackageType),
-			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
-			BowerRegistryUrl:           d.GetString("bower_registry_url", false),
-		}
-		return repo, repo.Id(), nil
-	}
+	r.RemoteResourceModel.FromAPIModel(ctx, model.RemoteAPIModel)
 
-	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.BowerPackageType)
-		if err != nil {
-			return nil, err
-		}
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.BowerRegistryURL = types.StringValue(model.BowerRegistryURL)
+	r.VCSGitProvider = types.StringPointerValue(model.vcsAPIModel.GitProvider)
+	r.VCSGitDownloadURL = types.StringPointerValue(model.vcsAPIModel.GitDownloadURL)
 
-		return &BowerRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        Rclass,
-				PackageType:   repository.BowerPackageType,
-				RepoLayoutRef: repoLayout,
+	return diags
+}
+
+type RemoteBowerAPIModel struct {
+	RemoteAPIModel
+	vcsAPIModel
+	BowerRegistryURL string `json:"bowerRegistryUrl"`
+}
+
+func (r *remoteBowerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	remoteAnsibleAttributes := lo.Assign(
+		RemoteAttributes,
+		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		vcsAttributes,
+		map[string]schema.Attribute{
+			"bower_registry_url": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("https://registry.bower.io"),
+				MarkdownDescription: "Proxy remote Bower repository. Default value is 'https://registry.bower.io'.",
 			},
-		}, nil
-	}
-
-	return mkResourceSchema(
-		BowerSchemas,
-		packer.Default(BowerSchemas[CurrentSchemaVersion]),
-		unpackBowerRemoteRepo,
-		constructor,
+		},
 	)
+
+	resp.Schema = schema.Schema{
+		Version:     CurrentSchemaVersion,
+		Attributes:  remoteAnsibleAttributes,
+		Blocks:      remoteBlocks,
+		Description: r.Description,
+	}
 }

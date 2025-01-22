@@ -81,6 +81,11 @@ type RemoteResourceModel struct {
 	DisableURLNormalization           types.Bool   `tfsdk:"disable_url_normalization"`
 }
 
+type vcsResourceModel struct {
+	VCSGitProvider    types.String `tfsdk:"vcs_git_provider"`
+	VCSGitDownloadURL types.String `tfsdk:"vcs_git_download_url"`
+}
+
 func (r *RemoteResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
@@ -299,6 +304,11 @@ type RemoteAPIModel struct {
 	DisableURLNormalization           bool                    `json:"disableUrlNormalization"`
 }
 
+type vcsAPIModel struct {
+	GitProvider    *string `json:"vcsGitProvider,omitempty"`
+	GitDownloadURL *string `json:"vcsGitDownloadUrl,omitempty"`
+}
+
 var RemoteAttributes = lo.Assign(
 	local.LocalAttributes,
 	map[string]schema.Attribute{
@@ -316,9 +326,7 @@ var RemoteAttributes = lo.Assign(
 		},
 		"password": schema.StringAttribute{
 			Optional:  true,
-			Computed:  true,
 			Sensitive: true,
-			Default:   stringdefault.StaticString(""),
 		},
 		"proxy": schema.StringAttribute{
 			Optional:            true,
@@ -560,6 +568,25 @@ var remoteBlocks = map[string]schema.Block{
 		PlanModifiers: []planmodifier.List{
 			listplanmodifier.UseStateForUnknown(),
 		},
+	},
+}
+
+var vcsAttributes = map[string]schema.Attribute{
+	"vcs_git_provider": schema.StringAttribute{
+		Optional: true,
+		Computed: true,
+		Default:  stringdefault.StaticString("GITHUB"),
+		Validators: []validator.String{
+			stringvalidator.OneOf("GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"),
+		},
+		MarkdownDescription: `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "GITHUB".`,
+	},
+	"vcs_git_download_url": schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		MarkdownDescription: `This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
 	},
 }
 
@@ -983,7 +1010,7 @@ var GetSchemas = func(s map[string]*sdkv2_schema.Schema) map[int16]map[string]*s
 	}
 }
 
-var VcsRemoteRepoSchema = map[string]*sdkv2_schema.Schema{
+var VcsRemoteRepoSchemaSDKv2 = map[string]*sdkv2_schema.Schema{
 	"vcs_git_provider": {
 		Type:             sdkv2_schema.TypeString,
 		Optional:         true,

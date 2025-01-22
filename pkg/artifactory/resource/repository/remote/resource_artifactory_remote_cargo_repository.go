@@ -1,74 +1,143 @@
 package remote
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"context"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
-type CargoRemoteRepo struct {
-	RepositoryRemoteBaseParams
-	RegistryUrl       string `hcl:"git_registry_url" json:"gitRegistryUrl"`
+func NewCargoRemoteRepositoryResource() resource.Resource {
+	return &remoteCargoResource{
+		remoteResource: NewRemoteRepositoryResource(
+			repository.CargoPackageType,
+			repository.PackageNameLookup[repository.CargoPackageType],
+			reflect.TypeFor[remoteCargoResourceModel](),
+			reflect.TypeFor[RemoteCargoAPIModel](),
+		),
+	}
+}
+
+type remoteCargoResource struct {
+	remoteResource
+}
+
+type remoteCargoResourceModel struct {
+	RemoteResourceModel
+	GitRegistryURL    types.String `tfsdk:"git_registry_url"`
+	AnonymousAccess   types.Bool   `tfsdk:"anonymous_access"`
+	EnableSparseIndex types.Bool   `tfsdk:"enable_sparse_index"`
+}
+
+func (r *remoteCargoResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r remoteCargoResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteCargoResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteCargoResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteCargoResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *remoteCargoResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteCargoResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r remoteCargoResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	remoteAPIModel, d := r.RemoteResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
+	}
+
+	return RemoteCargoAPIModel{
+		RemoteAPIModel:    remoteAPIModel,
+		GitRegistryURL:    r.GitRegistryURL.ValueString(),
+		AnonymousAccess:   r.AnonymousAccess.ValueBool(),
+		EnableSparseIndex: r.EnableSparseIndex.ValueBool(),
+	}, diags
+}
+
+func (r *remoteCargoResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(*RemoteCargoAPIModel)
+
+	r.RemoteResourceModel.FromAPIModel(ctx, model.RemoteAPIModel)
+
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.GitRegistryURL = types.StringValue(model.GitRegistryURL)
+	r.AnonymousAccess = types.BoolValue(model.AnonymousAccess)
+	r.EnableSparseIndex = types.BoolValue(model.EnableSparseIndex)
+
+	return diags
+}
+
+type RemoteCargoAPIModel struct {
+	RemoteAPIModel
+	GitRegistryURL    string `json:"gitRegistryUrl"`
 	AnonymousAccess   bool   `json:"cargoAnonymousAccess"`
 	EnableSparseIndex bool   `json:"cargoInternalIndex"`
 }
 
-var cargoSchema = lo.Assign(
-	BaseSchema,
-	map[string]*schema.Schema{
-		"git_registry_url": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `This is the index url, expected to be a git repository. Default value in UI is "https://index.crates.io/"`,
-		},
-		"anonymous_access": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Description: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
-				"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
-		},
-		"enable_sparse_index": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is 'false'.",
-		},
-	},
-	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.CargoPackageType),
-)
-
-var CargoSchemas = GetSchemas(cargoSchema)
-
-func ResourceArtifactoryRemoteCargoRepository() *schema.Resource {
-
-	var unpackCargoRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		repo := CargoRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.CargoPackageType),
-			RegistryUrl:                d.GetString("git_registry_url", false),
-			AnonymousAccess:            d.GetBool("anonymous_access", false),
-			EnableSparseIndex:          d.GetBool("enable_sparse_index", false),
-		}
-		return repo, repo.Id(), nil
-	}
-
-	constructor := func() (interface{}, error) {
-		return &CargoRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:      Rclass,
-				PackageType: repository.CargoPackageType,
+func (r *remoteCargoResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	remoteAnsibleAttributes := lo.Assign(
+		RemoteAttributes,
+		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		map[string]schema.Attribute{
+			"git_registry_url": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("https://registry.Cargo.io"),
+				MarkdownDescription: "This is the index url, expected to be a git repository. Default value in UI is 'https://index.crates.io/'",
 			},
-		}, nil
-	}
-
-	return mkResourceSchema(
-		CargoSchemas,
-		packer.Default(CargoSchemas[CurrentSchemaVersion]),
-		unpackCargoRemoteRepo,
-		constructor,
+			"anonymous_access": schema.BoolAttribute{
+				Optional: true,
+				MarkdownDescription: "(On the UI: Anonymous download and search) Cargo client does not send credentials when performing download and search for crates. " +
+					"Enable this to allow anonymous access to these resources (only), note that this will override the security anonymous access option.",
+			},
+			"enable_sparse_index": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Enable internal index support based on Cargo sparse index specifications, instead of the default git index. Default value is `false`.",
+			},
+		},
 	)
+
+	resp.Schema = schema.Schema{
+		Version:     CurrentSchemaVersion,
+		Attributes:  remoteAnsibleAttributes,
+		Blocks:      remoteBlocks,
+		Description: r.Description,
+	}
 }

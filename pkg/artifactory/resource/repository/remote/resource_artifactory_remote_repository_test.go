@@ -135,37 +135,6 @@ func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	})
 }
 
-func TestAccRemoteAnsibleRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-ansible", "artifactory_remote_ansible_repository")
-
-	remoteRepositoryBasic := fmt.Sprintf(`
-		resource "artifactory_remote_ansible_repository" "%s" {
-			key = "%s"
-		}
-	`, name, name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: remoteRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "url", "https://galaxy.ansible.com"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
 func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
 	const packageType = "docker"
 	_, testCase := mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
@@ -375,43 +344,6 @@ func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 			"source_origin_absence_detection": true,
 		},
 		"curated": false,
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteCargoRepository(t *testing.T) {
-	const packageType = "cargo"
-	_, testCase := mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-		"git_registry_url":            "https://github.com/rust-lang/foo.index",
-		"anonymous_access":            true,
-		"enable_sparse_index":         true,
-		"priority_resolution":         false,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "cargo"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"git_registry_url":            "https://github.com/rust-lang/foo.index",
-		"anonymous_access":            true,
-		"enable_sparse_index":         true,
-		"priority_resolution":         false,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"list_remote_folder_items":    true,
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
 	})
 	resource.Test(t, testCase)
 }
@@ -630,32 +562,12 @@ func TestAccRemoteVcsRepositoryWithFormattedUrl(t *testing.T) {
 	}))
 }
 
-func TestAccRemoteCocoapodsRepository(t *testing.T) {
-	const packageType = "cocoapods"
-	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://github.com/",
-		"vcs_git_provider":            "GITHUB",
-		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
-		"missed_cache_period_seconds": 1800,
-	}))
-}
-
 func TestAccRemoteComposerRepository(t *testing.T) {
 	const packageType = "composer"
 	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
 		"url":                         "https://github.com/",
 		"vcs_git_provider":            "GITHUB",
 		"composer_registry_url":       "https://packagist1.org",
-		"missed_cache_period_seconds": 1800,
-	}))
-}
-
-func TestAccRemoteBowerRepository(t *testing.T) {
-	const packageType = "bower"
-	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://github.com/",
-		"vcs_git_provider":            "ARTIFACTORY",
-		"bower_registry_url":          "https://registry1.bower.io",
 		"missed_cache_period_seconds": 1800,
 	}))
 }

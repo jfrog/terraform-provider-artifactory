@@ -76,8 +76,6 @@ func (r RemoteBasicResourceModel) ToAPIModel(ctx context.Context, packageType st
 		diags.Append(d...)
 	}
 
-	remoteAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
-
 	return RemoteBasicAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 	}, diags

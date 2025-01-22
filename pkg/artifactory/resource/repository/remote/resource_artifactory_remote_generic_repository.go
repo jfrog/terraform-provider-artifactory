@@ -86,7 +86,9 @@ func (r RemoteGenericResourceModelV4) ToAPIModel(ctx context.Context, packageTyp
 		diags.Append(d...)
 	}
 
-	remoteAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
+	if !r.RepoLayoutRef.IsNull() {
+		remoteAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
+	}
 
 	return RemoteGenericAPIModel{
 		RemoteAPIModel:           remoteAPIModel,
