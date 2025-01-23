@@ -1,67 +1,132 @@
 package remote
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"context"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
-type ComposerRemoteRepo struct {
-	RepositoryRemoteBaseParams
-	RepositoryVcsParams
+func NewComposerRemoteRepositoryResource() resource.Resource {
+	return &remoteComposerResource{
+		remoteResource: NewRemoteRepositoryResource(
+			repository.ComposerPackageType,
+			repository.PackageNameLookup[repository.ComposerPackageType],
+			reflect.TypeFor[remoteComposerResourceModel](),
+			reflect.TypeFor[RemoteComposerAPIModel](),
+		),
+	}
+}
+
+type remoteComposerResource struct {
+	remoteResource
+}
+
+type remoteComposerResourceModel struct {
+	RemoteResourceModel
+	vcsResourceModel
+	ComposerRegistryUrl types.String `tfsdk:"composer_registry_url"`
+}
+
+func (r *remoteComposerResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r remoteComposerResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteComposerResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteComposerResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteComposerResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *remoteComposerResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteComposerResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r remoteComposerResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	remoteAPIModel, d := r.RemoteResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
+	}
+
+	return RemoteComposerAPIModel{
+		RemoteAPIModel: remoteAPIModel,
+		vcsAPIModel: vcsAPIModel{
+			GitProvider:    r.VCSGitProvider.ValueStringPointer(),
+			GitDownloadURL: r.VCSGitDownloadURL.ValueStringPointer(),
+		},
+		ComposerRegistryUrl: r.ComposerRegistryUrl.ValueString(),
+	}, diags
+}
+
+func (r *remoteComposerResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(*RemoteComposerAPIModel)
+
+	r.RemoteResourceModel.FromAPIModel(ctx, model.RemoteAPIModel)
+
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.VCSGitProvider = types.StringPointerValue(model.vcsAPIModel.GitProvider)
+	r.VCSGitDownloadURL = types.StringPointerValue(model.vcsAPIModel.GitDownloadURL)
+	r.ComposerRegistryUrl = types.StringValue(model.ComposerRegistryUrl)
+
+	return diags
+}
+
+type RemoteComposerAPIModel struct {
+	RemoteAPIModel
+	vcsAPIModel
 	ComposerRegistryUrl string `json:"composerRegistryUrl"`
 }
 
-var composerSchema = lo.Assign(
-	BaseSchema,
-	VcsRemoteRepoSchemaSDKv2,
-	map[string]*schema.Schema{
-		"composer_registry_url": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "https://packagist.org",
-			ValidateFunc: validation.IsURLWithHTTPorHTTPS,
-			Description:  `Proxy remote Composer repository. Default value is "https://packagist.org".`,
-		},
-	},
-	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ComposerPackageType),
-)
-
-var ComposerSchemas = GetSchemas(composerSchema)
-
-func ResourceArtifactoryRemoteComposerRepository() *schema.Resource {
-	var unpackComposerRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		repo := ComposerRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.ComposerPackageType),
-			RepositoryVcsParams:        UnpackVcsRemoteRepo(s),
-			ComposerRegistryUrl:        d.GetString("composer_registry_url", false),
-		}
-		return repo, repo.Id(), nil
-	}
-
-	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.ComposerPackageType)
-		if err != nil {
-			return nil, err
-		}
-
-		return &ComposerRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        Rclass,
-				PackageType:   repository.ComposerPackageType,
-				RepoLayoutRef: repoLayout,
+func (r *remoteComposerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	remoteAnsibleAttributes := lo.Assign(
+		RemoteAttributes,
+		vcsAttributes,
+		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		map[string]schema.Attribute{
+			"composer_registry_url": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("https://packagist.org"),
+				MarkdownDescription: "Proxy remote Composer repository. Default value is 'https://packagist.org'.",
 			},
-		}, nil
-	}
-
-	return mkResourceSchema(
-		ComposerSchemas,
-		packer.Default(ComposerSchemas[CurrentSchemaVersion]),
-		unpackComposerRemoteRepo,
-		constructor,
+		},
 	)
+
+	resp.Schema = schema.Schema{
+		Version:     CurrentSchemaVersion,
+		Attributes:  remoteAnsibleAttributes,
+		Blocks:      remoteBlocks,
+		Description: r.Description,
+	}
 }
