@@ -1254,7 +1254,7 @@ func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 }
 
 func ResourceStateUpgradeV2(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	// this only works because the sdkv2_schema hasn't changed, except the removal of default value
+	// this only works because the schema hasn't changed, except the removal of default value
 	// from `project_key` attribute.
 	if rawState["project_key"] == "default" {
 		rawState["project_key"] = ""

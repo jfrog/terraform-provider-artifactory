@@ -6,7 +6,21 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/samber/lo"
 )
+
+type NpmRemoteRepo struct {
+	remote.RepositoryRemoteBaseParams
+	remote.RepositoryCurationParams
+}
+
+var NPMSchema = lo.Assign(
+	remote.BaseSchema,
+	remote.CurationRemoteRepoSchema,
+	resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, resource_repository.NPMPackageType),
+)
+
+var NPMSchemas = remote.GetSchemas(NPMSchema)
 
 func DataSourceArtifactoryRemoteNpmRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
@@ -15,7 +29,7 @@ func DataSourceArtifactoryRemoteNpmRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.NpmRemoteRepo{
+		return &NpmRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.NPMPackageType,
@@ -24,7 +38,7 @@ func DataSourceArtifactoryRemoteNpmRepository() *schema.Resource {
 		}, nil
 	}
 
-	npmSchema := getSchema(remote.NPMSchemas)
+	npmSchema := getSchema(NPMSchemas)
 
 	return &schema.Resource{
 		Schema:      npmSchema,

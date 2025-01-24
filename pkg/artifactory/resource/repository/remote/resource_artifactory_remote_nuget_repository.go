@@ -1,103 +1,184 @@
 package remote
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"context"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
+	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 	"github.com/samber/lo"
 )
 
-type NugetRemoteRepo struct {
-	RepositoryRemoteBaseParams
-	RepositoryCurationParams
-	FeedContextPath          string `json:"feedContextPath"`
-	DownloadContextPath      string `json:"downloadContextPath"`
-	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
-	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
-	SymbolServerUrl          string `json:"symbolServerUrl"`
+func NewNugetRemoteRepositoryResource() resource.Resource {
+	return &remoteNugetResource{
+		remoteResource: NewRemoteRepositoryResource(
+			repository.NugetPackageType,
+			repository.PackageNameLookup[repository.NugetPackageType],
+			reflect.TypeFor[remoteNugetResourceModel](),
+			reflect.TypeFor[RemoteNugetAPIModel](),
+		),
+	}
 }
 
-var NugetSchema = lo.Assign(
-	BaseSchema,
-	CurationRemoteRepoSchema,
-	map[string]*schema.Schema{
-		"feed_context_path": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "api/v2",
-			Description: `When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.`,
-		},
-		"download_context_path": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "api/v2/package",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-			Description:      `The context path prefix through which NuGet downloads are served. Default value is 'api/v2/package'.`,
-		},
-		"v3_feed_url": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "https://api.nuget.org/v3/index.json",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
-			Description:      `The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.`,
-		},
-		"force_nuget_authentication": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: `Force basic authentication credentials in order to use this repository. Default value is 'false'.`,
-		},
-		"symbol_server_url": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "https://symbols.nuget.org/download/symbols",
-			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
-			Description:      `NuGet symbol server URL.`,
-		},
-	}, repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
-)
+type remoteNugetResource struct {
+	remoteResource
+}
 
-var NugetSchemas = GetSchemas(NugetSchema)
+type remoteNugetResourceModel struct {
+	RemoteResourceModel
+	CurationResourceModel
+	FeedContextPath          types.String `tfsdk:"feed_context_path"`
+	DownloadContextPath      types.String `tfsdk:"download_context_path"`
+	V3FeedURL                types.String `tfsdk:"v3_feed_url"`
+	ForceNugetAuthentication types.Bool   `tfsdk:"force_nuget_authentication"`
+	SymbolServerURL          types.String `tfsdk:"symbol_server_url"`
+}
 
-func ResourceArtifactoryRemoteNugetRepository() *schema.Resource {
+func (r *remoteNugetResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
 
-	var unpackNugetRemoteRepo = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		repo := NugetRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.NugetPackageType),
-			RepositoryCurationParams: RepositoryCurationParams{
-				Curated: d.GetBool("curated", false),
-			},
-			FeedContextPath:          d.GetString("feed_context_path", false),
-			DownloadContextPath:      d.GetString("download_context_path", false),
-			V3FeedUrl:                d.GetString("v3_feed_url", false),
-			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
-			SymbolServerUrl:          d.GetString("symbol_server_url", false),
-		}
-		return repo, repo.Id(), nil
+func (r remoteNugetResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteNugetResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteNugetResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteNugetResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *remoteNugetResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteNugetResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	remoteAPIModel, d := r.RemoteResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
 	}
 
-	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NugetPackageType)
-		if err != nil {
-			return nil, err
-		}
+	return RemoteNugetAPIModel{
+		RemoteAPIModel: remoteAPIModel,
+		CurationAPIModel: CurationAPIModel{
+			Curated: r.Curated.ValueBool(),
+		},
+		FeedContextPath:          r.FeedContextPath.ValueString(),
+		DownloadContextPath:      r.DownloadContextPath.ValueString(),
+		V3FeedURL:                r.V3FeedURL.ValueString(),
+		ForceNugetAuthentication: r.ForceNugetAuthentication.ValueBool(),
+		SymbolServerURL:          r.SymbolServerURL.ValueString(),
+	}, diags
+}
 
-		return &NugetRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        Rclass,
-				PackageType:   repository.NugetPackageType,
-				RepoLayoutRef: repoLayout,
+func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(*RemoteNugetAPIModel)
+
+	r.RemoteResourceModel.FromAPIModel(ctx, model.RemoteAPIModel)
+
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.FeedContextPath = types.StringValue(model.FeedContextPath)
+	r.DownloadContextPath = types.StringValue(model.DownloadContextPath)
+	r.V3FeedURL = types.StringValue(model.V3FeedURL)
+	r.ForceNugetAuthentication = types.BoolValue(model.ForceNugetAuthentication)
+	r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
+	return diags
+}
+
+type RemoteNugetAPIModel struct {
+	RemoteAPIModel
+	CurationAPIModel
+	FeedContextPath          string `json:"feedContextPath"`
+	DownloadContextPath      string `json:"downloadContextPath"`
+	V3FeedURL                string `json:"v3FeedUrl"`
+	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
+	SymbolServerURL          string `json:"symbolServerUrl"`
+}
+
+func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	remoteNugetAttributes := lo.Assign(
+		RemoteAttributes,
+		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		CurationAttributes,
+		map[string]schema.Attribute{
+			"feed_context_path": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("api/v2"),
+				MarkdownDescription: "When proxying a remote NuGet repository, customize feed resource location using this attribute. Default value is 'api/v2'.",
 			},
-		}, nil
-	}
-
-	return mkResourceSchema(
-		NugetSchemas,
-		packer.Default(NugetSchemas[CurrentSchemaVersion]),
-		unpackNugetRemoteRepo,
-		constructor,
+			"download_context_path": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("api/v2/package"),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "The context path prefix through which NuGet downloads are served. Default value is 'api/v2/package'.",
+			},
+			"v3_feed_url": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("https://api.nuget.org/v3/index.json"),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsURLHttpOrHttps(),
+				},
+				MarkdownDescription: "The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.",
+			},
+			"force_nuget_authentication": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Force basic authentication credentials in order to use this repository. Default value is 'false'",
+			},
+			"symbol_server_url": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("https://symbols.nuget.org/download/symbols"),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					validatorfw_string.IsURLHttpOrHttps(),
+				},
+				MarkdownDescription: "NuGet symbol server URL.",
+			},
+		},
 	)
+
+	resp.Schema = schema.Schema{
+		Version:     CurrentSchemaVersion,
+		Attributes:  remoteNugetAttributes,
+		Blocks:      remoteBlocks,
+		Description: r.Description,
+	}
 }
