@@ -109,7 +109,7 @@ type RemoteBowerAPIModel struct {
 }
 
 func (r *remoteBowerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	remoteAnsibleAttributes := lo.Assign(
+	remoteBowerAttributes := lo.Assign(
 		RemoteAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
 		vcsAttributes,
@@ -125,7 +125,7 @@ func (r *remoteBowerResource) Schema(ctx context.Context, req resource.SchemaReq
 
 	resp.Schema = schema.Schema{
 		Version:     CurrentSchemaVersion,
-		Attributes:  remoteAnsibleAttributes,
+		Attributes:  remoteBowerAttributes,
 		Blocks:      remoteBlocks,
 		Description: r.Description,
 	}

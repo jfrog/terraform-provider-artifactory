@@ -2,6 +2,7 @@ package remote_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +19,34 @@ func TestAccRemoteLikeBasicRepository(t *testing.T) {
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
 			}))
+		})
+	}
+}
+
+func TestAccRemoteLikeBasicRepository_with_propagate_fails(t *testing.T) {
+	for _, packageType := range remote.PackageTypesLikeBasic {
+		const remoteGemsRepoBasicWithPropagate = `
+		resource "artifactory_remote_%s_repository" "%s" {
+			key                     		= "%s"
+			description 					= "This is a test"
+			url                     		= "https://rubygems.org/"
+			repo_layout_ref         		= "simple-default"
+			propagate_query_params  		= true
+		}
+	`
+		id := testutil.RandomInt()
+		name := fmt.Sprintf("remote-test-repo-basic%d", id)
+		fqrn := fmt.Sprintf("artifactory_remote_%s_repository.%s", packageType, name)
+
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+			CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			Steps: []resource.TestStep{
+				{
+					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, packageType, name, name),
+					ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
+				},
+			},
 		})
 	}
 }

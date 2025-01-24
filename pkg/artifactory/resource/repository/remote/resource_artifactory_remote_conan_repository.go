@@ -109,7 +109,7 @@ type RemoteConanAPIModel struct {
 }
 
 func (r *remoteConanResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	remoteAnsibleAttributes := lo.Assign(
+	remoteConanAttributes := lo.Assign(
 		RemoteAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
 		CurationAttributes,
@@ -118,7 +118,7 @@ func (r *remoteConanResource) Schema(ctx context.Context, req resource.SchemaReq
 
 	resp.Schema = schema.Schema{
 		Version:     CurrentSchemaVersion,
-		Attributes:  remoteAnsibleAttributes,
+		Attributes:  remoteConanAttributes,
 		Blocks:      remoteBlocks,
 		Description: r.Description,
 	}

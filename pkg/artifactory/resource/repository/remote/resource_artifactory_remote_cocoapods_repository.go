@@ -109,7 +109,7 @@ type RemoteCocoapodsAPIModel struct {
 }
 
 func (r *remoteCocoapodsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	remoteAnsibleAttributes := lo.Assign(
+	remoteCocoapodsAttributes := lo.Assign(
 		RemoteAttributes,
 		vcsAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
@@ -125,7 +125,7 @@ func (r *remoteCocoapodsResource) Schema(ctx context.Context, req resource.Schem
 
 	resp.Schema = schema.Schema{
 		Version:     CurrentSchemaVersion,
-		Attributes:  remoteAnsibleAttributes,
+		Attributes:  remoteCocoapodsAttributes,
 		Blocks:      remoteBlocks,
 		Description: r.Description,
 	}

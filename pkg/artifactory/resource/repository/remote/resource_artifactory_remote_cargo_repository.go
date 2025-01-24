@@ -110,7 +110,7 @@ type RemoteCargoAPIModel struct {
 }
 
 func (r *remoteCargoResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	remoteAnsibleAttributes := lo.Assign(
+	remoteCargoAttributes := lo.Assign(
 		RemoteAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
 		map[string]schema.Attribute{
@@ -136,7 +136,7 @@ func (r *remoteCargoResource) Schema(ctx context.Context, req resource.SchemaReq
 
 	resp.Schema = schema.Schema{
 		Version:     CurrentSchemaVersion,
-		Attributes:  remoteAnsibleAttributes,
+		Attributes:  remoteCargoAttributes,
 		Blocks:      remoteBlocks,
 		Description: r.Description,
 	}

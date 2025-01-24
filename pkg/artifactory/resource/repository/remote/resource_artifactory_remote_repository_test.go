@@ -154,78 +154,6 @@ func verifyRepository(fqrn string, testData map[string]string) resource.TestChec
 	)
 }
 
-func TestAccRemoteHelmRepository(t *testing.T) {
-	testCase := []string{"http", "https", "oci"}
-
-	for _, tc := range testCase {
-		t.Run(tc, testAccRemoteHelmRepository(tc))
-	}
-}
-
-func testAccRemoteHelmRepository(scheme string) func(t *testing.T) {
-	return func(t *testing.T) {
-		const packageType = "helm"
-		resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-			"helm_charts_base_url":           fmt.Sprintf("%s://github.com/rust-lang/foo.index", scheme),
-			"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-			"external_dependencies_enabled":  true,
-			"priority_resolution":            false,
-			"external_dependencies_patterns": []interface{}{"**github.com**"},
-			"content_synchronisation": map[string]interface{}{
-				"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-				"statistics_enabled":              true,
-				"properties_enabled":              true,
-				"source_origin_absence_detection": true,
-			},
-		}))
-	}
-}
-
-func TestAccRemoteHelmRepositoryDepFalse(t *testing.T) {
-	const packageType = "helm"
-	resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"external_dependencies_enabled":  false,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**github.com**"},
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	}))
-}
-
-func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "helm"
-	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"external_dependencies_enabled":  true,
-		"priority_resolution":            false,
-		"list_remote_folder_items":       true,
-		"external_dependencies_patterns": []interface{}{"**github.com**"},
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	}))
-}
-
-func TestAccRemoteHelmOciRepository(t *testing.T) {
-	const packageType = "helmoci"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  true,
-		"enable_token_authentication":    true,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-	})
-	resource.Test(t, testCase)
-}
-
 func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("remote-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
 
@@ -332,20 +260,6 @@ func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
 		},
 		"curated": false,
 	}))
-}
-
-func TestAccRemoteGoRepository(t *testing.T) {
-	const packageType = "go"
-
-	for _, vcsGitProvider := range remote.SupportedGoVCSGitProviders {
-		t.Run(vcsGitProvider, func(t *testing.T) {
-			resource.Test(mkNewRemoteSDKv2TestCase(packageType, t, map[string]interface{}{
-				"url":                         "https://proxy.golang.org/",
-				"vcs_git_provider":            vcsGitProvider,
-				"missed_cache_period_seconds": 1800,
-			}))
-		})
-	}
 }
 
 func TestAccRemoteVcsRepository(t *testing.T) {
@@ -880,35 +794,6 @@ func mkRemoteTestCaseWithAdditionalCheckFunctions(packageType string, t *testing
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
-	}
-}
-
-func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
-	for _, packageType := range remote.PackageTypesLikeBasic {
-		const remoteGemsRepoBasicWithPropagate = `
-		resource "artifactory_remote_%s_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://rubygems.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-		}
-	`
-		id := testutil.RandomInt()
-		name := fmt.Sprintf("remote-test-repo-basic%d", id)
-		fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
-
-		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { acctest.PreCheck(t) },
-			ProviderFactories: acctest.ProviderFactories,
-			CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-			Steps: []resource.TestStep{
-				{
-					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, packageType, name, name),
-					ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
-				},
-			},
-		})
 	}
 }
 

@@ -109,7 +109,7 @@ type RemoteComposerAPIModel struct {
 }
 
 func (r *remoteComposerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	remoteAnsibleAttributes := lo.Assign(
+	remoteComposerAttributes := lo.Assign(
 		RemoteAttributes,
 		vcsAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
@@ -125,7 +125,7 @@ func (r *remoteComposerResource) Schema(ctx context.Context, req resource.Schema
 
 	resp.Schema = schema.Schema{
 		Version:     CurrentSchemaVersion,
-		Attributes:  remoteAnsibleAttributes,
+		Attributes:  remoteComposerAttributes,
 		Blocks:      remoteBlocks,
 		Description: r.Description,
 	}
