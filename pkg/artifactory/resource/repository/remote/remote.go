@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -20,13 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkv2_validator "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	"github.com/jfrog/terraform-provider-shared/unpacker"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	utilvalidator "github.com/jfrog/terraform-provider-shared/validator"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -84,6 +82,17 @@ type RemoteResourceModel struct {
 type vcsResourceModel struct {
 	VCSGitProvider    types.String `tfsdk:"vcs_git_provider"`
 	VCSGitDownloadURL types.String `tfsdk:"vcs_git_download_url"`
+}
+
+type JavaResourceModel struct {
+	FetchJarsEagerly             types.Bool   `tfsdk:"fetch_jars_eagerly"`
+	FetchSourcesEagerly          types.Bool   `tfsdk:"fetch_sources_eagerly"`
+	RemoteRepoChecksumPolicyType types.String `tfsdk:"remote_repo_checksum_policy_type"`
+	HandleReleases               types.Bool   `tfsdk:"handle_releases"`
+	HandleSnapshots              types.Bool   `tfsdk:"handle_snapshots"`
+	SuppressPomConsistencyChecks types.Bool   `tfsdk:"suppress_pom_consistency_checks"`
+	RejectInvalidJars            types.Bool   `tfsdk:"reject_invalid_jars"`
+	MaxUniqueSnapshots           types.Int64  `tfsdk:"max_unique_snapshots"`
 }
 
 func (r *RemoteResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -167,6 +176,7 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		URL:                               r.URL.ValueString(),
 		Username:                          r.Username.ValueString(),
 		Password:                          r.Password.ValueString(),
+		Proxy:                             r.Proxy.ValueString(),
 		DisableProxy:                      r.DisableProxy.ValueBool(),
 		RemoteRepoLayoutRef:               r.RemoteRepoLayoutRef.ValueString(),
 		HardFail:                          r.HardFail.ValueBoolPointer(),
@@ -307,6 +317,17 @@ type RemoteAPIModel struct {
 type vcsAPIModel struct {
 	GitProvider    *string `json:"vcsGitProvider,omitempty"`
 	GitDownloadURL *string `json:"vcsGitDownloadUrl,omitempty"`
+}
+
+type JavaAPIModel struct {
+	FetchJarsEagerly             bool   `json:"fetchJarsEagerly"`
+	FetchSourcesEagerly          bool   `json:"fetchSourcesEagerly"`
+	RemoteRepoChecksumPolicyType string `json:"remoteRepoChecksumPolicyType"`
+	HandleReleases               bool   `json:"handleReleases"`
+	HandleSnapshots              bool   `json:"handleSnapshots"`
+	SuppressPomConsistencyChecks bool   `json:"suppressPomConsistencyChecks"`
+	RejectInvalidJars            bool   `json:"rejectInvalidJars"`
+	MaxUniqueSnapshots           int64  `json:"maxUniqueSnapshots"`
 }
 
 var RemoteAttributes = lo.Assign(
@@ -588,6 +609,104 @@ var vcsAttributes = map[string]schema.Attribute{
 		},
 		MarkdownDescription: `This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
 	},
+}
+
+var javaAttributes = func(suppressPOM bool) map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"fetch_jars_eagerly": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, if a POM is requested, Artifactory attempts to fetch the corresponding jar in the background. This will accelerate first access time to the jar when it is subsequently requested. Default value is 'false'.",
+		},
+		"fetch_sources_eagerly": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, if a binaries jar is requested, Artifactory attempts to fetch the corresponding source jar in the background. This will accelerate first access time to the source jar when it is subsequently requested. Default value is 'false'.",
+		},
+		"remote_repo_checksum_policy_type": schema.StringAttribute{
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString("generate-if-absent"),
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					"generate-if-absent",
+					"fail",
+					"ignore-and-generate",
+					"pass-thru",
+				),
+			},
+			MarkdownDescription: "Checking the Checksum effectively verifies the integrity of a deployed resource. The Checksum Policy determines how the system behaves when a client checksum for a remote resource is missing or conflicts with the locally calculated checksum. Default value is 'generate-if-absent'.",
+		},
+		"handle_releases": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(true),
+			MarkdownDescription: "If set, Artifactory allows you to deploy release artifacts into this repository. Default value is 'true'.",
+		},
+		"handle_snapshots": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(true),
+			MarkdownDescription: "If set, Artifactory allows you to deploy snapshot artifacts into this repository. Default value is 'true'.",
+		},
+		"suppress_pom_consistency_checks": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(suppressPOM),
+			MarkdownDescription: "By default, the system keeps your repositories healthy by refusing POMs with incorrect coordinates (path). If the groupId:artifactId:version information inside the POM does not match the deployed path, Artifactory rejects the deployment with a \"409 Conflict\" error. You can disable this behavior by setting this attribute to 'true'. Default value is 'false'.",
+		},
+		"reject_invalid_jars": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "Reject the caching of jar files that are found to be invalid. For example, pseudo jars retrieved behind a \"captive portal\". Default value is 'false'.",
+		},
+		"max_unique_snapshots": schema.Int64Attribute{
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(0),
+			Validators: []validator.Int64{
+				int64validator.AtLeast(0),
+			},
+			MarkdownDescription: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
+				"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
+				"no limit, and unique snapshots are not cleaned up.",
+		},
+	}
+}
+
+func (r remoteResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	r.BaseResource.ValidateConfig(ctx, req, resp)
+
+	var disableProxy types.Bool
+
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("disable_proxy"), &disableProxy)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var proxy types.String
+
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("proxy"), &proxy)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If proxy is not configured, return without warning.
+	if proxy.IsNull() || proxy.IsUnknown() {
+		return
+	}
+
+	// If external_dependencies_enabled is not null, return without warning.
+	if disableProxy.ValueBool() && len(proxy.ValueString()) > 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("proxy"),
+			"Invalid Attribute Configuration",
+			"proxy cannot be set to 'when disable_proxy is set to 'true'.",
+		)
+	}
 }
 
 // SDKv2
@@ -1185,108 +1304,4 @@ func UnpackJavaRemoteRepo(s *sdkv2_schema.ResourceData, repoType string) JavaRem
 		RejectInvalidJars:            d.GetBool("reject_invalid_jars", false),
 		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
 	}
-}
-
-func mkResourceSchema(skeemas map[int16]map[string]*sdkv2_schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor repository.Constructor) *sdkv2_schema.Resource {
-	var reader = repository.MkRepoRead(packer, constructor)
-
-	return &sdkv2_schema.Resource{
-		CreateContext: repository.MkRepoCreate(unpack, reader),
-		ReadContext:   reader,
-		UpdateContext: repository.MkRepoUpdate(unpack, reader),
-		DeleteContext: repository.DeleteRepo,
-
-		Importer: &sdkv2_schema.ResourceImporter{
-			StateContext: sdkv2_schema.ImportStatePassthroughContext,
-		},
-
-		StateUpgraders: []sdkv2_schema.StateUpgrader{
-			{
-				Type:    repository.Resource(skeemas[1]).CoreConfigSchema().ImpliedType(),
-				Upgrade: ResourceStateUpgradeV1,
-				Version: 1,
-			},
-			{
-				Type:    repository.Resource(skeemas[2]).CoreConfigSchema().ImpliedType(),
-				Upgrade: ResourceStateUpgradeV2,
-				Version: 2,
-			},
-		},
-
-		Schema:        skeemas[CurrentSchemaVersion],
-		SchemaVersion: CurrentSchemaVersion,
-
-		CustomizeDiff: customdiff.All(
-			repository.ProjectEnvironmentsDiff,
-			verifyExternalDependenciesDockerAndHelm,
-			repository.VerifyDisableProxy,
-			verifyRemoteRepoLayoutRef,
-		),
-	}
-}
-
-func verifyExternalDependenciesDockerAndHelm(_ context.Context, diff *sdkv2_schema.ResourceDiff, _ interface{}) error {
-	// Skip the verification if sdkv2_schema doesn't have `external_dependencies_enabled` attribute (only docker and helm have it)
-	if _, ok := diff.GetOkExists("external_dependencies_enabled"); !ok {
-		return nil
-	}
-	for _, dep := range diff.Get("external_dependencies_patterns").([]interface{}) {
-		if dep == "" {
-			return fmt.Errorf("`external_dependencies_patterns` can't have an item of \"\" inside a list")
-		}
-	}
-
-	if diff.Get("external_dependencies_enabled") == true {
-		if _, ok := diff.GetOk("external_dependencies_patterns"); !ok {
-			return fmt.Errorf("if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set")
-		}
-	}
-
-	return nil
-}
-
-func ResourceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	if rawState["package_type"] != "generic" {
-		delete(rawState, "propagate_query_params")
-	}
-
-	return rawState, nil
-}
-
-func ResourceStateUpgradeV2(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	// this only works because the schema hasn't changed, except the removal of default value
-	// from `project_key` attribute.
-	if rawState["project_key"] == "default" {
-		rawState["project_key"] = ""
-	}
-
-	if _, ok := rawState["archive_browsing_enabled"]; !ok {
-		rawState["archive_browsing_enabled"] = false
-	}
-
-	if _, ok := rawState["disable_proxy"]; !ok {
-		rawState["disable_proxy"] = false
-	}
-
-	if _, ok := rawState["disable_url_normalization"]; !ok {
-		rawState["disable_url_normalization"] = false
-	}
-
-	if _, ok := rawState["property_sets"]; !ok {
-		rawState["property_sets"] = []string{}
-	}
-
-	return rawState, nil
-}
-
-func verifyRemoteRepoLayoutRef(_ context.Context, diff *sdkv2_schema.ResourceDiff, _ interface{}) error {
-	ref := diff.Get("remote_repo_layout_ref").(string)
-	isChanged := diff.HasChange("remote_repo_layout_ref")
-
-	if isChanged && len(ref) == 0 {
-		return fmt.Errorf("empty remote_repo_layout_ref will not remove the actual attribute value and will be ignored by the API, " +
-			"thus will create a state drift on the next plan. Please add the attribute, according to the repository type")
-	}
-
-	return nil
 }

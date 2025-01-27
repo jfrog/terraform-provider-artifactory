@@ -267,53 +267,6 @@ var GetGenericSchemas = func(s map[string]*sdkv2_schema.Schema) map[int16]map[st
 
 var GenericSchemas = GetGenericSchemas(GenericSchemaV4)
 
-// func ResourceArtifactoryRemoteGenericRepository() *sdkv2_schema.Resource {
-// 	var unpackGenericRemoteRepo = func(s *sdkv2_schema.ResourceData) (interface{}, string, error) {
-// 		d := &utilsdk.ResourceData{ResourceData: s}
-// 		repo := GenericRemoteRepo{
-// 			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.GenericPackageType),
-// 			PropagateQueryParams:       d.GetBool("propagate_query_params", false),
-// 			RetrieveSha256FromServer:   d.GetBool("retrieve_sha256_from_server", false),
-// 		}
-// 		return repo, repo.Id(), nil
-// 	}
-//
-// 	constructor := func() (interface{}, error) {
-// 		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.GenericPackageType)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-//
-// 		return &GenericRemoteRepo{
-// 			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-// 				Rclass:        Rclass,
-// 				PackageType:   repository.GenericPackageType,
-// 				RepoLayoutRef: repoLayout,
-// 			},
-// 		}, nil
-// 	}
-//
-// 	resourceSchema := mkResourceSchema(
-// 		GenericSchemas,
-// 		packer.Default(GenericSchemas[currentGenericSchemaVersion]),
-// 		unpackGenericRemoteRepo,
-// 		constructor,
-// 	)
-//
-// 	resourceSchema.Schema = GenericSchemas[currentGenericSchemaVersion]
-// 	resourceSchema.SchemaVersion = currentGenericSchemaVersion
-// 	resourceSchema.StateUpgraders = append(
-// 		resourceSchema.StateUpgraders,
-// 		sdkv2_schema.StateUpgrader{
-// 			Type:    repository.Resource(GenericSchemas[3]).CoreConfigSchema().ImpliedType(),
-// 			Upgrade: GenericResourceStateUpgradeV3,
-// 			Version: 3,
-// 		},
-// 	)
-//
-// 	return resourceSchema
-// }
-
 func GenericResourceStateUpgradeV3(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	rawState["retrieve_sha256_from_server"] = false
 	if v, ok := rawState["property_sets"]; !ok || v == nil {

@@ -4,14 +4,14 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,7 +38,7 @@ type remoteDockerResourceModel struct {
 	RemoteResourceModel
 	CurationResourceModel
 	ExternalDependenciesEnabled  types.Bool   `tfsdk:"external_dependencies_enabled"`
-	ExternalDependenciesPatterns types.Set    `tfsdk:"external_dependencies_patterns"`
+	ExternalDependenciesPatterns types.List   `tfsdk:"external_dependencies_patterns"`
 	EnableTokenAuthentication    types.Bool   `tfsdk:"enable_token_authentication"`
 	BlockPushingSchema1          types.Bool   `tfsdk:"block_pushing_schema1"`
 	ProjectId                    types.String `tfsdk:"project_id"`
@@ -117,7 +117,7 @@ func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel i
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 
-	externalDependenciesPatterns, d := types.SetValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
+	externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
 	if d != nil {
 		diags.Append(d...)
 	}
@@ -164,16 +164,16 @@ func (r *remoteDockerResource) Schema(ctx context.Context, req resource.SchemaRe
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "When set, Artifactory will block the pulling of Docker images with manifest v2 schema 1 from the remote repository (i.e. the upstream). It will be possible to pull images with manifest v2 schema 1 that exist in the cache.",
 			},
-			"external_dependencies_patterns": schema.SetAttribute{
+			"external_dependencies_patterns": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Default: setdefault.StaticValue(
-					types.SetValueMust(types.StringType, []attr.Value{types.StringValue("**")}),
+				Default: listdefault.StaticValue(
+					types.ListValueMust(types.StringType, []attr.Value{types.StringValue("**")}),
 				),
-				Validators: []validator.Set{
-					setvalidator.AlsoRequires(path.MatchRoot("external_dependencies_enabled")),
-					setvalidator.SizeAtLeast(1),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.MatchRoot("external_dependencies_enabled")),
+					listvalidator.SizeAtLeast(1),
 				},
 				MarkdownDescription: "An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will " +
 					"follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. " +

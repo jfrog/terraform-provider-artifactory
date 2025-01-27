@@ -49,15 +49,13 @@ func TestAccRemoteRepository_with_curated(t *testing.T) {
 			config := util.ExecuteTemplate("TestAccRemoteRepository_with_curated", temp, testData)
 
 			resource.Test(t, resource.TestCase{
-				PreCheck:          func() { acctest.PreCheck(t) },
-				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+				CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 				Steps: []resource.TestStep{
 					{
 						Config: config,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(fqrn, "key", resourceName),
-							resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 							resource.TestCheckResourceAttr(fqrn, "curated", "true"),
 						),
 					},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -133,10 +134,9 @@ func (r *remoteHelmResource) Schema(ctx context.Context, req resource.SchemaRequ
 		map[string]schema.Attribute{
 			"helm_charts_base_url": schema.StringAttribute{
 				Optional: true,
-				// Computed: true,
-				// Default:  stringdefault.StaticString(""),
+				Computed: true,
+				Default:  stringdefault.StaticString(""),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^(?:http|https|oci):\/\/.+$`), "must start with http, https, or oci"),
 				},
 				MarkdownDescription: "Base URL for the translation of chart source URLs in the index.yaml of virtual repos. " +

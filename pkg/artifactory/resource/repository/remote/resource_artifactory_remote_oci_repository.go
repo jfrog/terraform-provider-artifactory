@@ -143,6 +143,7 @@ func (r *remoteOCIResource) Schema(ctx context.Context, req resource.SchemaReque
 			"enable_token_authentication": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
+				Default:             booldefault.StaticBool(true),
 				MarkdownDescription: "Enable token (Bearer) based authentication.",
 			},
 			"external_dependencies_patterns": schema.ListAttribute{
