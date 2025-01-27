@@ -112,7 +112,7 @@ func TestAccRepositoryLayout_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "artifact_path_pattern", "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"),
 					resource.TestCheckResourceAttr(fqrn, "distinctive_descriptor_path_pattern", "false"),
-					resource.TestCheckNoResourceAttr(fqrn, "descriptor_path_pattern"),
+					resource.TestCheckResourceAttr(fqrn, "descriptor_path_pattern", ""),
 					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "SNAPSHOT"),
 					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
 				),
