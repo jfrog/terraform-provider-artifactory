@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
@@ -57,7 +58,11 @@ func TestAccRepositoryLayout_UpgradeFromSDKv2(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -107,7 +112,7 @@ func TestAccRepositoryLayout_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "name", name),
 					resource.TestCheckResourceAttr(fqrn, "artifact_path_pattern", "[orgPath]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]"),
 					resource.TestCheckResourceAttr(fqrn, "distinctive_descriptor_path_pattern", "false"),
-					resource.TestCheckNoResourceAttr(fqrn, "descriptor_path_pattern"),
+					resource.TestCheckResourceAttr(fqrn, "descriptor_path_pattern", ""),
 					resource.TestCheckResourceAttr(fqrn, "folder_integration_revision_regexp", "SNAPSHOT"),
 					resource.TestCheckResourceAttr(fqrn, "file_integration_revision_regexp", "SNAPSHOT|(?:(?:[0-9]{8}.[0-9]{6})-(?:[0-9]+))"),
 				),

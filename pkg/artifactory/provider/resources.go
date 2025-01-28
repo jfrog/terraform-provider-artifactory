@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/federated"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
@@ -31,29 +30,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_rpm_repository":                federated.ResourceArtifactoryFederatedRpmRepository(),
 		"artifactory_federated_terraform_module_repository":   federated.ResourceArtifactoryFederatedTerraformRepository("module"),
 		"artifactory_federated_terraform_provider_repository": federated.ResourceArtifactoryFederatedTerraformRepository("provider"),
-		"artifactory_remote_ansible_repository":               remote.ResourceArtifactoryRemoteAnsibleRepository(),
-		"artifactory_remote_bower_repository":                 remote.ResourceArtifactoryRemoteBowerRepository(),
-		"artifactory_remote_cargo_repository":                 remote.ResourceArtifactoryRemoteCargoRepository(),
-		"artifactory_remote_cocoapods_repository":             remote.ResourceArtifactoryRemoteCocoapodsRepository(),
-		"artifactory_remote_composer_repository":              remote.ResourceArtifactoryRemoteComposerRepository(),
-		"artifactory_remote_conan_repository":                 remote.ResourceArtifactoryRemoteConanRepository(),
-		"artifactory_remote_docker_repository":                remote.ResourceArtifactoryRemoteDockerRepository(),
-		"artifactory_remote_gems_repository":                  remote.ResourceArtifactoryRemoteGemsRepository(),
-		"artifactory_remote_generic_repository":               remote.ResourceArtifactoryRemoteGenericRepository(),
-		"artifactory_remote_go_repository":                    remote.ResourceArtifactoryRemoteGoRepository(),
-		"artifactory_remote_gradle_repository":                remote.ResourceArtifactoryRemoteGradleRepository(),
-		"artifactory_remote_helm_repository":                  remote.ResourceArtifactoryRemoteHelmRepository(),
-		"artifactory_remote_helmoci_repository":               remote.ResourceArtifactoryRemoteHelmOciRepository(),
-		"artifactory_remote_huggingfaceml_repository":         remote.ResourceArtifactoryRemoteHuggingFaceRepository(),
-		"artifactory_remote_ivy_repository":                   remote.ResourceArtifactoryRemoteJavaRepository(repository.IvyPackageType, true),
-		"artifactory_remote_maven_repository":                 remote.ResourceArtifactoryRemoteMavenRepository(),
-		"artifactory_remote_npm_repository":                   remote.ResourceArtifactoryRemoteNpmRepository(),
-		"artifactory_remote_nuget_repository":                 remote.ResourceArtifactoryRemoteNugetRepository(),
-		"artifactory_remote_oci_repository":                   remote.ResourceArtifactoryRemoteOciRepository(),
-		"artifactory_remote_pypi_repository":                  remote.ResourceArtifactoryRemotePypiRepository(),
-		"artifactory_remote_sbt_repository":                   remote.ResourceArtifactoryRemoteJavaRepository(repository.SBTPackageType, true),
-		"artifactory_remote_terraform_repository":             remote.ResourceArtifactoryRemoteTerraformRepository(),
-		"artifactory_remote_vcs_repository":                   remote.ResourceArtifactoryRemoteVcsRepository(),
 		"artifactory_virtual_alpine_repository":               virtual.ResourceArtifactoryVirtualAlpineRepository(),
 		"artifactory_virtual_bower_repository":                virtual.ResourceArtifactoryVirtualBowerRepository(),
 		"artifactory_virtual_conan_repository":                virtual.ResourceArtifactoryVirtualConanRepository(),
@@ -75,11 +51,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_saml_settings":                           configuration.ResourceArtifactorySamlSettings(),
 		"artifactory_ldap_setting":                            configuration.ResourceArtifactoryLdapSetting(),
 		"artifactory_ldap_group_setting":                      configuration.ResourceArtifactoryLdapGroupSetting(),
-	}
-
-	for _, packageType := range remote.PackageTypesLikeBasic {
-		remoteResourceName := fmt.Sprintf("artifactory_remote_%s_repository", packageType)
-		resourcesMap[remoteResourceName] = remote.ResourceArtifactoryRemoteBasicRepository(packageType)
 	}
 
 	for _, packageType := range repository.PackageTypesLikeGradle {

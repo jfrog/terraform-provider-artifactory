@@ -127,7 +127,7 @@ func (r *localConanResource) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 var conanSchema = lo.Assign(
-	repository.ConanBaseSchema,
+	repository.ConanBaseSchemaSDKv2,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.ConanPackageType),
 )
 

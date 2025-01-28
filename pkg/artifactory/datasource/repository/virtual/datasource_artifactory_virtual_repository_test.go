@@ -208,7 +208,6 @@ EOF
 	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
 			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
@@ -253,8 +252,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 
 		resource "artifactory_virtual_%[1]s_repository" "%[2]s" {
 %[4]s
-            repositories = ["%[3]s"]
-            depends_on = [artifactory_remote_%[1]s_repository.%[3]s]
+            repositories = [artifactory_remote_%[1]s_repository.%[3]s.key]
 		}
 
 		data "artifactory_virtual_%[1]s_repository" "%[2]s" {
@@ -268,13 +266,18 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 	config := fmt.Sprintf(virtualRepoFull, packageType, name, remoteRepoName, allFieldsHcl)
 
 	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: config,
-				Check:  resource.ComposeTestCheckFunc(checks...),
+				Config:           config,
+				Check:            resource.ComposeTestCheckFunc(checks...),
+				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
+				// ConfigPlanChecks: resource.ConfigPlanChecks{
+				// 	PostApplyPreRefresh: []plancheck.PlanCheck{
+				// 		plancheck.ExpectEmptyPlan(),
+				// 	},
+				// },
 			},
 		},
 	}
@@ -294,8 +297,7 @@ func TestAccDataSourceVirtualMissingRepository(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,

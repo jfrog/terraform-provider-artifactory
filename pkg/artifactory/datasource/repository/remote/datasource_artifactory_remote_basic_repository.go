@@ -8,7 +8,15 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/samber/lo"
 )
+
+var basicSchema = func(packageType string) map[string]*schema.Schema {
+	return lo.Assign(
+		remote.BaseSchema,
+		resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, packageType),
+	)
+}
 
 func DataSourceArtifactoryRemoteBasicRepository(packageType string) *schema.Resource {
 	constructor := func() (interface{}, error) {
@@ -24,7 +32,7 @@ func DataSourceArtifactoryRemoteBasicRepository(packageType string) *schema.Reso
 		}, nil
 	}
 
-	basicSchemas := remote.GetSchemas(remote.BasicSchema(packageType))
+	basicSchemas := remote.GetSchemas(basicSchema(packageType))
 	basicSchema := getSchema(basicSchemas)
 
 	return &schema.Resource{

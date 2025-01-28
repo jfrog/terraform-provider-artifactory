@@ -1,3 +1,9 @@
+## 12.8.3 (January 28, 2025). Tested on Artifactory 7.98.14 with Terraform 1.10.5 and OpenTofu 1.9.0
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_\*\_repository are migrated to Plugin Framework. PR: [#1180](https://github.com/jfrog/terraform-provider-artifactory/pull/1180)
+
 ## 12.8.2 (January 14, 2025). Tested on Artifactory 7.98.13 with Terraform 1.10.4 and OpenTofu 1.9.0
 
 IMPROVEMENTS:

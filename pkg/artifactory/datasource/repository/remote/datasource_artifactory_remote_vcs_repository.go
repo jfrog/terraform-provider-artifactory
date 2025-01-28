@@ -6,7 +6,32 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/samber/lo"
 )
+
+type VcsRemoteRepo struct {
+	remote.RepositoryRemoteBaseParams
+	remote.RepositoryVcsParams
+	MaxUniqueSnapshots int `json:"maxUniqueSnapshots"`
+}
+
+var VCSSchema = lo.Assign(
+	remote.BaseSchema,
+	remote.VcsRemoteRepoSchemaSDKv2,
+	map[string]*schema.Schema{
+		"max_unique_snapshots": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
+			Description: "The maximum number of unique snapshots of a single artifact to store. Once the number of " +
+				"snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is " +
+				"no limit, and unique snapshots are not cleaned up.",
+		},
+	},
+	resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, resource_repository.VCSPackageType),
+)
+
+var VCSSchemas = remote.GetSchemas(VCSSchema)
 
 func DataSourceArtifactoryRemoteVcsRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
@@ -15,7 +40,7 @@ func DataSourceArtifactoryRemoteVcsRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.VcsRemoteRepo{
+		return &VcsRemoteRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.VCSPackageType,
@@ -24,7 +49,7 @@ func DataSourceArtifactoryRemoteVcsRepository() *schema.Resource {
 		}, nil
 	}
 
-	vcsSchema := getSchema(remote.VCSSchemas)
+	vcsSchema := getSchema(VCSSchemas)
 
 	return &schema.Resource{
 		Schema:      vcsSchema,

@@ -22,6 +22,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/replication"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
@@ -225,6 +226,14 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 	resources = append(resources, localGradleLikeRepositoryResources...)
 	resources = append(resources, local.NewJavaLocalRepositoryResource(repository.MavenPackageType, false))
 
+	remoteBasicLikeRepositoryResources := lo.Map(
+		remote.PackageTypesLikeBasic,
+		func(packageType string, _ int) func() resource.Resource {
+			return remote.NewBasicLikeRemoteRepositoryResource(packageType)
+		},
+	)
+	resources = append(resources, remoteBasicLikeRepositoryResources...)
+
 	return append(
 		resources,
 		[]func() resource.Resource{
@@ -272,6 +281,29 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewRPMLocalRepositoryResource,
 			local.NewTerraformModuleLocalRepositoryResource,
 			local.NewTerraformProviderLocalRepositoryResource,
+			remote.NewAnsibleRemoteRepositoryResource,
+			remote.NewBowerRemoteRepositoryResource,
+			remote.NewCargoRemoteRepositoryResource,
+			remote.NewCocoapodsRemoteRepositoryResource,
+			remote.NewComposerRemoteRepositoryResource,
+			remote.NewConanRemoteRepositoryResource,
+			remote.NewDockerRemoteRepositoryResource,
+			remote.NewGemsRemoteRepositoryResource,
+			remote.NewGenericRemoteRepositoryResource,
+			remote.NewGoRemoteRepositoryResource,
+			remote.NewGradleRemoteRepositoryResource,
+			remote.NewHelmRemoteRepositoryResource,
+			remote.NewHelmOCIRemoteRepositoryResource,
+			remote.NewHuggingFaceMLRemoteRepositoryResource,
+			remote.NewJavaRemoteRepositoryResource(repository.IvyPackageType, true),
+			remote.NewMavenRemoteRepositoryResource,
+			remote.NewNPMRemoteRepositoryResource,
+			remote.NewNugetRemoteRepositoryResource,
+			remote.NewOCIRemoteRepositoryResource,
+			remote.NewPyPIRemoteRepositoryResource,
+			remote.NewJavaRemoteRepositoryResource(repository.SBTPackageType, true),
+			remote.NewTerraformRemoteRepositoryResource,
+			remote.NewVCSRemoteRepositoryResource,
 			webhook.NewArtifactWebhookResource,
 			webhook.NewArtifactCustomWebhookResource,
 			webhook.NewArtifactLifecycleWebhookResource,

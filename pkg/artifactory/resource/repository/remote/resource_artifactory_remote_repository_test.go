@@ -1,11 +1,9 @@
 package remote_test
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -14,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -64,7 +60,25 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.8.0",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// Plugin Framework UpgradeState is not implemented in remoteResource for schema v2 to v3
+				// due to Golang/Terraform type complexity.
+				// Instead user/practitioner should upgrade from v8 to v12.8.0 (last version in SDKv2 with state upgrade) first
+				// then upgrade to >12.8.1
+				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -88,16 +102,12 @@ func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 			notes            = "managed by terraform"
 			property_sets    = ["artifactory"]
 			includes_pattern = "**/*"
-			content_synchronisation {
-				enabled = false
-			}
 		}
 	`, name, key)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryBasic,
@@ -124,221 +134,15 @@ func TestAccRemoteKeyHasSpecialCharsFails(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      failKey,
-				ExpectError: regexp.MustCompile(".*expected value of key to not contain any of.*"),
+				ExpectError: regexp.MustCompile(".*Attribute key cannot contain spaces or special characters.*"),
 			},
 		},
 	})
 }
-
-func TestAccRemoteAnsibleRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-ansible", "artifactory_remote_ansible_repository")
-
-	remoteRepositoryBasic := fmt.Sprintf(`
-		resource "artifactory_remote_ansible_repository" "%s" {
-			key = "%s"
-		}
-	`, name, name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: remoteRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "url", "https://galaxy.ansible.com"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteDockerRepositoryDepTrue(t *testing.T) {
-	const packageType = "docker"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  true,
-		"enable_token_authentication":    true,
-		"block_pushing_schema1":          true,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false,
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteDockerRepositoryDepFalse(t *testing.T) {
-	const packageType = "docker"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  false,
-		"enable_token_authentication":    true,
-		"block_pushing_schema1":          true,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false,
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteDockerRepositoryDependenciesTrueEmptyListFails(t *testing.T) {
-	const failKey = `
-		resource "artifactory_remote_docker_repository" "remote-docker-repo-basic" {
-			key                     		= "remote-docker"
-			url                     		= "https://registry.npmjs.org/"
-			retrieval_cache_period_seconds 	= 70
-			enable_token_authentication    	= true
-			block_pushing_schema1          	= true
-			priority_resolution            	= false
-			external_dependencies_enabled   = true
-		}
-	`
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      failKey,
-				ExpectError: regexp.MustCompile(".*if `external_dependencies_enabled` is set to `true`, `external_dependencies_patterns` list must be set.*"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteDockerRepositoryDepListEmptyStringFails(t *testing.T) {
-	const failKey = `
-		resource "artifactory_remote_docker_repository" "remote-docker-repo-basic" {
-			key                     		= "remote-docker"
-			url                     		= "https://registry.npmjs.org/"
-			retrieval_cache_period_seconds 	= 70
-			enable_token_authentication    	= true
-			block_pushing_schema1          	= true
-			priority_resolution            	= false
-			external_dependencies_enabled   = true
-			external_dependencies_patterns 	= ["**/hub.docker.io/**", ""]
-		}
-	`
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      failKey,
-				ExpectError: regexp.MustCompile(".*`external_dependencies_patterns` can't have an item of \"\" inside a list.*"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteDockerRepo_full(t *testing.T) {
-	id, fqrn, name := testutil.MkNames("docker-remote-", "artifactory_remote_docker_repository")
-	var testData = map[string]string{
-		"resource_name":                  name,
-		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
-		"url":                            "https://registry-1.docker.io/",
-		"assumed_offline_period_secs":    "300",
-		"retrieval_cache_period_seconds": "43200",
-		"missed_cache_period_seconds":    "7200",
-		"excludes_pattern":               "nopat3,nopat2,nopat1",
-		"includes_pattern":               "pat3,pat2,pat1",
-		"project_id":                     "",
-		"notes":                          "internal description",
-		"proxy":                          "",
-		"username":                       "admin",
-		"password":                       "password1",
-		"xray_index":                     "false",
-		"archive_browsing_enabled":       "false",
-	}
-	var testDataUpdated = map[string]string{
-		"resource_name":                  name,
-		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
-		"url":                            "https://registry-1.docker.io/",
-		"assumed_offline_period_secs":    "301",
-		"retrieval_cache_period_seconds": "43201",
-		"missed_cache_period_seconds":    "7201",
-		"excludes_pattern":               "nopat3,nopat2,nopat1",
-		"includes_pattern":               "pat3,pat2,pat1",
-		"project_id":                     "fake-project-id",
-		"notes":                          "internal description",
-		"proxy":                          "",
-		"username":                       "admin1",
-		"password":                       "password",
-		"xray_index":                     "true",
-		"archive_browsing_enabled":       "true",
-	}
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-
-		Steps: []resource.TestStep{
-			{
-				Config: util.ExecuteTemplate(fqrn, repoTemplate, testData),
-				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testData)),
-			},
-			{
-				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
-				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
-			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"password"},
-			},
-		},
-	})
-}
-
-const repoTemplate = `
-resource "artifactory_remote_docker_repository" "{{ .resource_name }}" {
-  key                            = "{{ .repo_name }}"
-  url                            = "{{ .url }}"
-  assumed_offline_period_secs    = {{ .assumed_offline_period_secs }}
-
-  retrieval_cache_period_seconds = {{ .retrieval_cache_period_seconds }}
-  missed_cache_period_seconds    = {{ .missed_cache_period_seconds }}
-  excludes_pattern               = "{{ .excludes_pattern }}"
-  includes_pattern               = "{{ .includes_pattern }}"
-  project_id                     = "{{ .project_id }}"
-  notes                          = "{{ .notes }}"
-  proxy                          = "{{ .proxy }}"
-  property_sets                  = [
-    "artifactory",
-  ]
-  username                  = "{{ .username }}"
-  password                  = "{{ .password }}"
-  xray_index                = {{ .xray_index }}
-  archive_browsing_enabled  = {{ .archive_browsing_enabled }}
-}
-`
 
 func verifyRepository(fqrn string, testData map[string]string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
@@ -359,395 +163,6 @@ func verifyRepository(fqrn string, testData map[string]string) resource.TestChec
 	)
 }
 
-func TestAccRemoteDockerRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "docker"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  true,
-		"enable_token_authentication":    true,
-		"block_pushing_schema1":          true,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteCargoRepository(t *testing.T) {
-	const packageType = "cargo"
-	_, testCase := mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"git_registry_url":            "https://github.com/rust-lang/foo.index",
-		"anonymous_access":            true,
-		"enable_sparse_index":         true,
-		"priority_resolution":         false,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteCargoRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "cargo"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"git_registry_url":            "https://github.com/rust-lang/foo.index",
-		"anonymous_access":            true,
-		"enable_sparse_index":         true,
-		"priority_resolution":         false,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"list_remote_folder_items":    true,
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteHelmRepository(t *testing.T) {
-	testCase := []string{"http", "https", "oci"}
-
-	for _, tc := range testCase {
-		t.Run(tc, testAccRemoteHelmRepository(tc))
-	}
-}
-
-func testAccRemoteHelmRepository(scheme string) func(t *testing.T) {
-	return func(t *testing.T) {
-		const packageType = "helm"
-		resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-			"helm_charts_base_url":           fmt.Sprintf("%s://github.com/rust-lang/foo.index", scheme),
-			"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-			"external_dependencies_enabled":  true,
-			"priority_resolution":            false,
-			"external_dependencies_patterns": []interface{}{"**github.com**"},
-			"content_synchronisation": map[string]interface{}{
-				"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-				"statistics_enabled":              true,
-				"properties_enabled":              true,
-				"source_origin_absence_detection": true,
-			},
-		}))
-	}
-}
-
-func TestAccRemoteHelmRepositoryDepFalse(t *testing.T) {
-	const packageType = "helm"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"external_dependencies_enabled":  false,
-		"priority_resolution":            false,
-		"external_dependencies_patterns": []interface{}{"**github.com**"},
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	}))
-}
-
-func TestAccRemoteHelmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "helm"
-	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"helm_charts_base_url":           "https://github.com/rust-lang/foo.index",
-		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"external_dependencies_enabled":  true,
-		"priority_resolution":            false,
-		"list_remote_folder_items":       true,
-		"external_dependencies_patterns": []interface{}{"**github.com**"},
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-	}))
-}
-
-func TestAccRemoteHelmOciRepository(t *testing.T) {
-	const packageType = "helmoci"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  true,
-		"enable_token_authentication":    true,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemoteHuggingFaceRepository(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-huggingfaceml", "artifactory_remote_huggingfaceml_repository")
-
-	remoteRepositoryBasic := fmt.Sprintf(`
-		resource "artifactory_remote_huggingfaceml_repository" "%s" {
-			key = "%s"
-		}
-	`, name, name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: remoteRepositoryBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "url", "https://huggingface.co"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteNpmRepository(t *testing.T) {
-	const packageType = "npm"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"list_remote_folder_items":             true,
-		"priority_resolution":                  true,
-		"mismatching_mime_types_override_list": "application/json,application/xml",
-		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	}))
-}
-
-func TestAccRemoteNpmRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "npm"
-	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"list_remote_folder_items":             true,
-		"priority_resolution":                  true,
-		"mismatching_mime_types_override_list": "application/json,application/xml",
-		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	}))
-}
-
-func TestAccRemoteOciRepository(t *testing.T) {
-	const packageType = "oci"
-	_, testCase := mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"external_dependencies_enabled":  true,
-		"enable_token_authentication":    true,
-		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
-	})
-	resource.Test(t, testCase)
-}
-
-func TestAccRemotePypiRepository(t *testing.T) {
-	const packageType = "pypi"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"pypi_registry_url":           "https://pypi.org",
-		"priority_resolution":         true,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	}))
-}
-
-func TestAccRemotePypiRepositoryWithAdditionalCheckFunctions(t *testing.T) {
-	const packageType = "pypi"
-	resource.Test(mkRemoteTestCaseWithAdditionalCheckFunctions(packageType, t, map[string]interface{}{
-		"pypi_registry_url":           "https://pypi.org",
-		"priority_resolution":         true,
-		"missed_cache_period_seconds": 1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"list_remote_folder_items":    true,
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"curated": false,
-	}))
-}
-
-func TestAccRemoteAllRepository(t *testing.T) {
-	for _, repoType := range remote.PackageTypesLikeBasic {
-		t.Run(repoType, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
-				"missed_cache_period_seconds": 1800,
-			}))
-		})
-	}
-}
-
-func TestAccRemoteGoRepository(t *testing.T) {
-	const packageType = "go"
-
-	for _, vcsGitProvider := range remote.SupportedGoVCSGitProviders {
-		t.Run(vcsGitProvider, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-				"url":                         "https://proxy.golang.org/",
-				"vcs_git_provider":            vcsGitProvider,
-				"missed_cache_period_seconds": 1800,
-			}))
-		})
-	}
-}
-
-func TestAccRemoteVcsRepository(t *testing.T) {
-	const packageType = "vcs"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                  "https://github.com/",
-		"vcs_git_provider":     "CUSTOM",
-		"vcs_git_download_url": "https://www.customrepo.com",
-		"max_unique_snapshots": 5,
-	}))
-}
-
-func TestAccRemoteVcsRepositoryWithFormattedUrl(t *testing.T) {
-	const packageType = "vcs"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                  "https://github.com/",
-		"vcs_git_provider":     "CUSTOM",
-		"vcs_git_download_url": "{0}/{1}/+archive/{2}.{3}",
-		"max_unique_snapshots": 5,
-	}))
-}
-
-func TestAccRemoteCocoapodsRepository(t *testing.T) {
-	const packageType = "cocoapods"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://github.com/",
-		"vcs_git_provider":            "GITHUB",
-		"pods_specs_repo_url":         "https://github.com/CocoaPods/Specs1",
-		"missed_cache_period_seconds": 1800,
-	}))
-}
-
-func TestAccRemoteComposerRepository(t *testing.T) {
-	const packageType = "composer"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://github.com/",
-		"vcs_git_provider":            "GITHUB",
-		"composer_registry_url":       "https://packagist1.org",
-		"missed_cache_period_seconds": 1800,
-	}))
-}
-
-func TestAccRemoteBowerRepository(t *testing.T) {
-	const packageType = "bower"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://github.com/",
-		"vcs_git_provider":            "ARTIFACTORY",
-		"bower_registry_url":          "https://registry1.bower.io",
-		"missed_cache_period_seconds": 1800,
-	}))
-}
-
-func TestAccRemoteConanRepository(t *testing.T) {
-	const packageType = "conan"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"force_conan_authentication": true,
-	}))
-}
-
-func TestAccRemoteNugetRepository(t *testing.T) {
-	const packageType = "nuget"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                         "https://www.nuget.org/",
-		"download_context_path":       "api/v2/package",
-		"force_nuget_authentication":  true,
-		"missed_cache_period_seconds": 1800,
-		"symbol_server_url":           "https://symbols.nuget.org/download/symbols",
-	}))
-}
-
-func TestAccRemoteTerraformRepository(t *testing.T) {
-	const packageType = "terraform"
-	resource.Test(mkNewRemoteTestCase(packageType, t, map[string]interface{}{
-		"url":                     "https://github.com/",
-		"terraform_registry_url":  "https://registry.terraform.io",
-		"terraform_providers_url": "https://releases.hashicorp.com",
-		"repo_layout_ref":         "simple-default",
-	}))
-}
-
-func TestAccRemoteAllGradleLikeRepository(t *testing.T) {
-	for _, repoType := range repository.PackageTypesLikeGradle {
-		t.Run(repoType, func(t *testing.T) {
-			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
-				"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-				"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
-				"list_remote_folder_items":        true,
-				"content_synchronisation": map[string]interface{}{
-					"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-					"statistics_enabled":              true,
-					"properties_enabled":              true,
-					"source_origin_absence_detection": true,
-				},
-				"max_unique_snapshots": 6,
-			}))
-		})
-	}
-}
-
-func TestAccRemoteMavenRepository(t *testing.T) {
-	resource.Test(mkNewRemoteTestCase("maven", t, map[string]interface{}{
-		"missed_cache_period_seconds":     1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
-		"metadata_retrieval_timeout_secs": 30,   // https://github.com/jfrog/terraform-provider-artifactory/issues/509
-		"list_remote_folder_items":        true,
-		"content_synchronisation": map[string]interface{}{
-			"enabled":                         false, // even when set to true, it seems to come back as false on the wire
-			"statistics_enabled":              true,
-			"properties_enabled":              true,
-			"source_origin_absence_detection": true,
-		},
-		"max_unique_snapshots": 6,
-		"curated":              false,
-	}))
-}
-
-func TestAccRemotePypiRepositoryWithCustomRegistryUrl(t *testing.T) {
-	const packageType = "pypi"
-	extraFields := map[string]interface{}{
-		"pypi_registry_url": "https://custom.PYPI.registry.url",
-	}
-	resource.Test(mkNewRemoteTestCase(packageType, t, extraFields))
-}
-
-func TestAccRemoteDockerRepositoryWithListRemoteFolderItems(t *testing.T) {
-	extraFields := map[string]interface{}{
-		"list_remote_folder_items": true,
-	}
-	resource.Test(mkNewRemoteTestCase("docker", t, extraFields))
-}
-
 func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("github-remote", "artifactory_remote_generic_repository")
 	const step1 = `
@@ -762,9 +177,6 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		  url = "https://github.com"
 		  repo_layout_ref = "simple-default"
 		  notes = "managed by terraform"
-		  content_synchronisation {
-			enabled = false
-		  }
 		  bypass_head_requests = true
 		  property_sets = [
 			"artifactory"
@@ -783,9 +195,6 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 		  url = "https://github.com"
 		  repo_layout_ref = "simple-default"
 		  notes = "managed by terraform"
-		  content_synchronisation {
-			enabled = false
-		  }
 		  bypass_head_requests = true
 		  property_sets = [
 			"artifactory"
@@ -795,9 +204,8 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -805,7 +213,6 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 				),
 			},
@@ -815,7 +222,6 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 				),
 			},
@@ -838,63 +244,18 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 			key 				  = "%s"
 			url                   = "https://registry.npmjs.org/"
 			repo_layout_ref       = "npm-default"
-			content_synchronisation {
-				enabled = false
-			}
 		}
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoBasic, name, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "npm"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://registry.npmjs.org/"),
-					resource.TestCheckResourceAttr(fqrn, "content_synchronisation.0.enabled", "false"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_nugetNew(t *testing.T) {
-	const remoteRepoNuget = `
-		resource "artifactory_remote_nuget_repository" "%s" {
-			key               		   = "%s"
-			url               		   = "https://www.nuget.org/"
-			repo_layout_ref   		   = "nuget-default"
-			download_context_path	   = "Download"
-			feed_context_path 		   = "/api/notdefault"
-			force_nuget_authentication = true
-		}
-	`
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("remote-test-repo-nuget%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_nuget_repository.%s", name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(remoteRepoNuget, name, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", "https://api.nuget.org/v3/index.json"),
-					resource.TestCheckResourceAttr(fqrn, "feed_context_path", "/api/notdefault"),
-					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
 				),
 			},
 			{
@@ -908,8 +269,8 @@ func TestAccRemoteRepository_nugetNew(t *testing.T) {
 }
 
 // if you wish to override any of the default fields, just pass it as "extrFields" as these will overwrite
-func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
+func mkNewRemoteTestCase(packageType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
+	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", packageType))
 	certificateAlias := fmt.Sprintf("certificate-%d", testutil.RandomInt())
 
 	defaultFields := map[string]interface{}{
@@ -936,7 +297,6 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"missed_cache_period_seconds":           2500,
 		"unused_artifacts_cleanup_period_hours": 96,
 		"assumed_offline_period_secs":           96,
-		"share_configuration":                   true,
 		"synchronize_properties":                true,
 		"block_mismatching_mime_types":          true,
 		"property_sets":                         []interface{}{"artifactory"},
@@ -944,12 +304,9 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 		"enable_cookie_management":              true,
 		"bypass_head_requests":                  true,
 		"client_tls_certificate":                certificateAlias,
-		"content_synchronisation": map[string]interface{}{
-			"enabled": false, // even when set to true, it seems to come back as false on the wire
-		},
-		"download_direct":           true,
-		"cdn_redirect":              false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
-		"disable_url_normalization": true,
+		"download_direct":                       true,
+		"cdn_redirect":                          false, // even when set to true, it comes back as false on the wire (presumably unless testing against a cloud platform)
+		"disable_url_normalization":             true,
 	}
 	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
 	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
@@ -962,14 +319,14 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
 
 	checks := append(defaultChecks, extraChecks...)
-	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
+	config := fmt.Sprintf(remoteRepoFull, packageType, name, allFieldsHcl)
 
 	updatedFields := utilsdk.MergeMaps(defaultFields, extraFields, map[string]any{
 		"description": "",
 		"notes":       "",
 	})
 	updatedFieldsHcl := utilsdk.FmtMapToHcl(updatedFields)
-	updatedConfig := fmt.Sprintf(remoteRepoFull, repoType, name, updatedFieldsHcl)
+	updatedConfig := fmt.Sprintf(remoteRepoFull, packageType, name, updatedFieldsHcl)
 	updatedChecks := testutil.MapToTestChecks(fqrn, updatedFields)
 	updatedChecks = append(updatedChecks, extraChecks...)
 
@@ -983,8 +340,8 @@ func mkNewRemoteTestCase(repoType string, t *testing.T, extraFields map[string]i
 			acctest.PreCheck(t)
 			addTestCertificate(t, certificateAlias, security.CertificateEndpoint)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", delCertTestCheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", delCertTestCheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -1032,286 +389,6 @@ func deleteTestCertificate(t *testing.T, certificateAlias string, certificateEnd
 	}
 }
 
-func mkRemoteTestCaseWithAdditionalCheckFunctions(repoType string, t *testing.T, extraFields map[string]interface{}) (*testing.T, resource.TestCase) {
-	_, fqrn, name := testutil.MkNames("remote-test-repo-full", fmt.Sprintf("artifactory_remote_%s_repository", repoType))
-
-	defaultFields := map[string]interface{}{
-		"key":      name,
-		"url":      "https://registry.npmjs.org/",
-		"username": "user",
-		"password": "Passw0rd!",
-		"proxy":    "",
-
-		//"description":                        "foo", // the server returns this suffixed. Test separate
-		"notes":                          "notes",
-		"includes_pattern":               "**/*.js",
-		"excludes_pattern":               "**/*.jsx",
-		"hard_fail":                      true,
-		"offline":                        true,
-		"blacked_out":                    true,
-		"xray_index":                     true,
-		"store_artifacts_locally":        true,
-		"socket_timeout_millis":          25000,
-		"local_address":                  "",
-		"retrieval_cache_period_seconds": 70,
-		// this doesn't get returned on a GET
-		//"failed_retrieval_cache_period_secs": 140,
-		"missed_cache_period_seconds":           2500,
-		"unused_artifacts_cleanup_period_hours": 96,
-		"assumed_offline_period_secs":           96,
-		"share_configuration":                   true,
-		"synchronize_properties":                true,
-		"block_mismatching_mime_types":          true,
-		"property_sets":                         []interface{}{"artifactory"},
-		"allow_any_host_auth":                   true,
-		"enable_cookie_management":              true,
-		"bypass_head_requests":                  true,
-		"client_tls_certificate":                "",
-		"content_synchronisation": map[string]interface{}{
-			"enabled": false, // even when set to true, it seems to come back as false on the wire
-		},
-		"disable_url_normalization": true,
-	}
-	allFields := utilsdk.MergeMaps(defaultFields, extraFields)
-	allFieldsHcl := utilsdk.FmtMapToHcl(allFields)
-	const remoteRepoFull = `
-		resource "artifactory_remote_%s_repository" "%s" {
-%s
-		}
-	`
-	extraChecks := testutil.MapToTestChecks(fqrn, extraFields)
-	defaultChecks := testutil.MapToTestChecks(fqrn, allFields)
-
-	var addCheckFunctions = []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("remote", repoType); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
-	}
-
-	checks := append(defaultChecks, append(extraChecks, addCheckFunctions...)...)
-	config := fmt.Sprintf(remoteRepoFull, repoType, name, allFieldsHcl)
-
-	return t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check:  resource.ComposeTestCheckFunc(checks...),
-			},
-			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"password"},
-			},
-		},
-	}
-}
-
-func TestAccRemoteRepository_generic_with_propagate(t *testing.T) {
-
-	const remoteGenericRepoBasicWithPropagate = `
-		resource "artifactory_remote_generic_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(remoteGenericRepoBasicWithPropagate, name, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckResourceAttr(fqrn, "propagate_query_params", "true"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_generic_with_retrieve_sha256_from_server(t *testing.T) {
-
-	const temp = `
-		resource "artifactory_remote_generic_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			retrieve_sha256_from_server     = true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("remote-test-repo-basic%d", id)
-	fqrn := fmt.Sprintf("artifactory_remote_generic_repository.%s", name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(temp, name, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckResourceAttr(fqrn, "retrieve_sha256_from_server", "true"),
-				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_generic_migrate_to_schema_v4(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("test-generic-remote", "artifactory_remote_generic_repository")
-
-	const temp = `
-		resource "artifactory_remote_generic_repository" "{{ .name }}" {
-			key                     		= "{{ .name }}"
-			description 					= "This is a test"
-			url                     		= "https://registry.npmjs.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-			retrieval_cache_period_seconds  = 70
-		}
-	`
-
-	params := map[string]interface{}{
-		"name": name,
-	}
-
-	config := util.ExecuteTemplate("TestAccRemoteRepository_generic_migrate_to_schema_v4", temp, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"artifactory": {
-						Source:            "jfrog/artifactory",
-						VersionConstraint: "12.0.0",
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
-					resource.TestCheckNoResourceAttr(fqrn, "retrieve_sha256_from_server"),
-				),
-			},
-			{
-				ProviderFactories: acctest.ProviderFactories,
-				Config:            config,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_gems_with_propagate_fails(t *testing.T) {
-	for _, repoType := range remote.PackageTypesLikeBasic {
-		const remoteGemsRepoBasicWithPropagate = `
-		resource "artifactory_remote_%s_repository" "%s" {
-			key                     		= "%s"
-			description 					= "This is a test"
-			url                     		= "https://rubygems.org/"
-			repo_layout_ref         		= "simple-default"
-			propagate_query_params  		= true
-		}
-	`
-		id := testutil.RandomInt()
-		name := fmt.Sprintf("remote-test-repo-basic%d", id)
-		fqrn := fmt.Sprintf("artifactory_remote_gems_repository.%s", name)
-
-		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { acctest.PreCheck(t) },
-			ProviderFactories: acctest.ProviderFactories,
-			CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-			Steps: []resource.TestStep{
-				{
-					Config:      fmt.Sprintf(remoteGemsRepoBasicWithPropagate, repoType, name, name),
-					ExpectError: regexp.MustCompile(".*Unsupported argument.*"),
-				},
-			},
-		})
-	}
-}
-
-func TestRemoteRepoResourceStateUpgradeV1(t *testing.T) {
-	v1Data := map[string]interface{}{
-		"description":            "This is a test",
-		"propagate_query_params": "true",
-		"repo_layout_ref":        "simple-default",
-	}
-	v2Data := map[string]interface{}{
-		"description":     "This is a test",
-		"repo_layout_ref": "simple-default",
-	}
-
-	actual, err := remote.ResourceStateUpgradeV1(context.Background(), v1Data, nil)
-
-	if err != nil {
-		t.Fatalf("error migrating state: %s", err)
-	}
-
-	if !reflect.DeepEqual(v2Data, actual) {
-		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
-	}
-}
-
-func TestRemoteMavenRepoResourceStateUpgradeV1(t *testing.T) {
-	v1Data := map[string]interface{}{
-		"description":                        "This is a test",
-		"url":                                "https://repo1.maven.org/maven2/",
-		"metadata_retrieval_timeout_seconds": 120,
-	}
-	v2Data := map[string]interface{}{
-		"description":                     "This is a test",
-		"url":                             "https://repo1.maven.org/maven2/",
-		"metadata_retrieval_timeout_secs": 120,
-	}
-
-	actual, err := remote.ResourceMavenStateUpgradeV1(context.Background(), v1Data, nil)
-
-	if err != nil {
-		t.Fatalf("error migrating state: %s", err)
-	}
-
-	if !reflect.DeepEqual(v2Data, actual) {
-		t.Fatalf("expected: %v\n\ngot: %v", v2Data, actual)
-	}
-}
-
 // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_updates_GH225(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("remote-test-cran-remote-", "artifactory_remote_cran_repository")
@@ -1343,9 +420,8 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 	`, name, name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -1362,81 +438,6 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
 					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
 				),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
-			},
-		},
-	})
-}
-
-func TestAccRemoteRepository_AttemptToRemoveRemoteRepoLayout_GH746(t *testing.T) {
-	_, fqrn, name := testutil.MkNames("remote-test-cran-remote-", "artifactory_remote_cran_repository")
-
-	remoteRepositoryInit := fmt.Sprintf(`
-		resource "artifactory_remote_cran_repository" "%s" {
-			key              = "%s"
-			repo_layout_ref  = "bower-default"
-			url              = "https://cran.r-project.org/"
-			notes            = "managed by terraform"
-			property_sets    = ["artifactory"]
-			unused_artifacts_cleanup_period_hours = 10100
-			retrieval_cache_period_seconds        = 600
-			missed_cache_period_seconds           = 1800
-			remote_repo_layout_ref 			      = "bower-default"
-		}
-	`, name, name)
-
-	remoteRepositoryUpdateNoAttribute := fmt.Sprintf(`
-		resource "artifactory_remote_cran_repository" "%s" {
-			key              					  = "%s"
-			repo_layout_ref  					  = "bower-default"
-			url              					  = "https://cran.r-project.org/"
-			notes            					  = "managed by terraform"
-			property_sets    					  = ["artifactory"]
-			unused_artifacts_cleanup_period_hours = 10100
-			retrieval_cache_period_seconds        = 600
-			missed_cache_period_seconds           = 1800
-		}
-	`, name, name)
-
-	remoteRepositoryUpdateEmptyAttribute := fmt.Sprintf(`
-		resource "artifactory_remote_cran_repository" "%s" {
-			key              					  = "%s"
-			repo_layout_ref  					  = "bower-default"
-			url              					  = "https://cran.r-project.org/"
-			notes            					  = "managed by terraform"
-			property_sets    					  = ["artifactory"]
-			unused_artifacts_cleanup_period_hours = 10100
-			retrieval_cache_period_seconds        = 600
-			missed_cache_period_seconds           = 1800
-			remote_repo_layout_ref 			      = ""
-		}
-	`, name, name)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
-		Steps: []resource.TestStep{
-			{
-				Config: remoteRepositoryInit,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "missed_cache_period_seconds", "1800"),
-					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "600"),
-				),
-			},
-			{
-				Config:      remoteRepositoryUpdateNoAttribute,
-				ExpectError: regexp.MustCompile(".*empty remote_repo_layout_ref will not remove the actual attribute value.*"),
-			},
-			{
-				Config:      remoteRepositoryUpdateEmptyAttribute,
-				ExpectError: regexp.MustCompile(".*empty remote_repo_layout_ref will not remove the actual attribute value.*"),
 			},
 			{
 				ResourceName:      fqrn,
@@ -1466,9 +467,8 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 	`, name, name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -1493,13 +493,19 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 	fakeProxy := "test-proxy"
 
 	remoteRepositoryWithProxy := fmt.Sprintf(`
+		resource "artifactory_proxy" "%s" {
+			key  = "%s"
+			host = "http://tempurl.org"
+			port = 8080
+		}
+		
 		resource "artifactory_remote_go_repository" "%s" {
 			key             = "%s"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
-			proxy           = "%s"
+			proxy           = artifactory_proxy.%s.key
 		}
-	`, name, name, fakeProxy)
+	`, fakeProxy, fakeProxy, name, name, fakeProxy)
 
 	remoteRepositoryResetProxyWithEmptyString := fmt.Sprintf(`
 		resource "artifactory_remote_go_repository" "%s" {
@@ -1518,18 +524,9 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 		}
 	`, name, name)
 
-	testProxyKey := "test-proxy"
-
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.CreateProxy(t, testProxyKey)
-		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "", func(id string, request *resty.Request) (*resty.Response, error) {
-			acctest.DeleteProxy(t, testProxyKey)
-			return acctest.CheckRepo(id, request)
-		}),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryWithProxy,
@@ -1602,8 +599,7 @@ func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
@@ -1651,8 +647,7 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 			key             = "{{ .name }}"
 			repo_layout_ref = "go-default"
 			url             = "https://gocenter.io"
-			proxy 			= "my-proxy"
-			depends_on 		= [artifactory_proxy.my-proxy]
+			proxy 			= artifactory_proxy.my-proxy.key
 		}
 
 	`, params)
@@ -1668,8 +663,7 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
@@ -1716,13 +710,12 @@ func TestAccRemoteDisableDefaultProxyConflictAttrGH739(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile(".*if `disable_proxy` is set to `true`, `proxy` can't be set"),
+				ExpectError: regexp.MustCompile(".*proxy cannot be set to 'when disable_proxy is set to 'true'.*"),
 			},
 		},
 	})
@@ -1758,7 +751,7 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 			acctest.DeleteProject(t, projectKey)
 			return acctest.CheckRepo(id, request)
 		}),
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryBasic,
@@ -1806,11 +799,11 @@ func TestAccRemoteRepositoryWithInvalidProjectKeyGH318(t *testing.T) {
 			acctest.DeleteProject(t, projectKey)
 			return acctest.CheckRepo(id, request)
 		}),
-		ProviderFactories: acctest.ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      remoteRepositoryBasic,
-				ExpectError: regexp.MustCompile(".*project_key must be 2 - 32 lowercase alphanumeric and hyphen characters"),
+				ExpectError: regexp.MustCompile(".*Attribute project_key must be 2 - 32 lowercase alphanumeric and hyphen.*"),
 			},
 		},
 	})
@@ -1836,9 +829,8 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 	`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -1846,7 +838,6 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", "fake-pattern"),
 				),
@@ -1857,7 +848,6 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "package_type", "generic"),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com"),
 					resource.TestCheckResourceAttr(fqrn, "excludes_pattern", ""),
 				),

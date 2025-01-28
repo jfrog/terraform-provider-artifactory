@@ -6,7 +6,23 @@ import (
 	resource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/packer"
+	"github.com/samber/lo"
 )
+
+type ConanRepo struct {
+	remote.RepositoryRemoteBaseParams
+	remote.RepositoryCurationParams
+	resource_repository.ConanBaseParams
+}
+
+var conanSchema = lo.Assign(
+	remote.BaseSchema,
+	remote.CurationRemoteRepoSchema,
+	resource_repository.ConanBaseSchemaSDKv2,
+	resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, resource_repository.ConanPackageType),
+)
+
+var ConanSchemas = remote.GetSchemas(conanSchema)
 
 func DataSourceArtifactoryRemoteConanRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
@@ -15,7 +31,7 @@ func DataSourceArtifactoryRemoteConanRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.ConanRepo{
+		return &ConanRepo{
 			RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 				Rclass:        remote.Rclass,
 				PackageType:   resource_repository.ConanPackageType,
@@ -24,7 +40,7 @@ func DataSourceArtifactoryRemoteConanRepository() *schema.Resource {
 		}, nil
 	}
 
-	conanSchema := getSchema(remote.ConanSchemas)
+	conanSchema := getSchema(ConanSchemas)
 
 	return &schema.Resource{
 		Schema:      conanSchema,

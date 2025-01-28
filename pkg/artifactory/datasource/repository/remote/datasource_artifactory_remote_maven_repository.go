@@ -8,6 +8,11 @@ import (
 	"github.com/jfrog/terraform-provider-shared/packer"
 )
 
+type MavenRemoteRepo struct {
+	remote.JavaRemoteRepo
+	remote.RepositoryCurationParams
+}
+
 func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 	constructor := func() (interface{}, error) {
 		repoLayout, err := resource_repository.GetDefaultRepoLayoutRef(remote.Rclass, resource_repository.MavenPackageType)
@@ -15,7 +20,7 @@ func DataSourceArtifactoryRemoteMavenRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &remote.MavenRemoteRepo{
+		return &MavenRemoteRepo{
 			JavaRemoteRepo: remote.JavaRemoteRepo{
 				RepositoryRemoteBaseParams: remote.RepositoryRemoteBaseParams{
 					Rclass:        remote.Rclass,

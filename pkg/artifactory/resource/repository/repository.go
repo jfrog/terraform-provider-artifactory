@@ -106,6 +106,21 @@ var PackageNameLookup = map[string]string{
 	VagrantPackageType:          "Vagrant",
 }
 
+func NewRepositoryResource(packageType, packageName, rclass string, resourceModelType, apiModelType reflect.Type) BaseResource {
+	return BaseResource{
+		JFrogResource: util.JFrogResource{
+			TypeName:           fmt.Sprintf("artifactory_%s_%s_repository", rclass, packageType),
+			CollectionEndpoint: "artifactory/api/repositories",
+			DocumentEndpoint:   "artifactory/api/repositories/{key}",
+		},
+		Description:       fmt.Sprintf("Provides a resource to creates a %s repository.", packageName),
+		PackageType:       packageType,
+		Rclass:            rclass,
+		ResourceModelType: resourceModelType,
+		APIModelType:      apiModelType,
+	}
+}
+
 type BaseResource struct {
 	util.JFrogResource
 	Description       string
@@ -437,14 +452,6 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 		}
 	}
 
-	repoLayoutRef, err := GetDefaultRepoLayoutRef(rclass, packageType)
-	if err != nil {
-		diags.AddError(
-			"Failed to get default repo layout ref",
-			err.Error(),
-		)
-	}
-
 	return BaseAPIModel{
 		Key:                 r.Key.ValueString(),
 		ProjectKey:          r.ProjectKey.ValueString(),
@@ -455,7 +462,6 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 		Notes:               r.Notes.ValueString(),
 		IncludesPattern:     r.IncludesPattern.ValueString(),
 		ExcludesPattern:     r.ExcludesPattern.ValueString(),
-		RepoLayoutRef:       repoLayoutRef,
 	}, diags
 }
 
@@ -734,25 +740,6 @@ type PrimaryKeyPairRefParam struct {
 
 type SecondaryKeyPairRefParam struct {
 	SecondaryKeyPairRefSDKv2 string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
-}
-
-type ContentSynchronisation struct {
-	Enabled    bool                             `json:"enabled"`
-	Statistics ContentSynchronisationStatistics `json:"statistics"`
-	Properties ContentSynchronisationProperties `json:"properties"`
-	Source     ContentSynchronisationSource     `json:"source"`
-}
-
-type ContentSynchronisationStatistics struct {
-	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
-}
-
-type ContentSynchronisationProperties struct {
-	Enabled bool `hcl:"properties_enabled" json:"enabled"`
-}
-
-type ContentSynchronisationSource struct {
-	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection"`
 }
 
 type ReadFunc func(d *sdkv2_schema.ResourceData, m interface{}) error

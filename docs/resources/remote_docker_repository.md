@@ -36,13 +36,7 @@ The following arguments are supported, along with the [common list of arguments 
   that exist in the cache.
 * `enable_token_authentication` - (Optional) Enable token (Bearer) based authentication.
 * `external_dependencies_enabled` - (Optional) Also known as 'Foreign Layers Caching' on the UI.
-* `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will
-  follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response.
-  By default, this is set to `[**]` in the UI, which means that remote modules may be downloaded from any external VCS source.
-  Due to SDKv2 limitations, we can't set the default value for the list.
-  This value `[**]` must be assigned to the attribute manually, if user don't specify any other non-default values.
-  We don't want to make this attribute required, but it must be set to avoid the state drift on update. Note: Artifactory assigns
-  `[**]` on update if HCL doesn't have the attribute set or the list is empty.
+* `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. Default to `["**"]`
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
 * `project_id` (Optional) Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.
 

@@ -1,57 +1,130 @@
 package remote
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"context"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
-	"github.com/jfrog/terraform-provider-shared/packer"
-	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
-type NpmRemoteRepo struct {
-	RepositoryRemoteBaseParams
-	RepositoryCurationParams
+func NewNPMRemoteRepositoryResource() resource.Resource {
+	return &remoteNPMResource{
+		remoteResource: NewRemoteRepositoryResource(
+			repository.NPMPackageType,
+			repository.PackageNameLookup[repository.NPMPackageType],
+			reflect.TypeFor[remoteNPMResourceModel](),
+			reflect.TypeFor[RemoteNPMAPIModel](),
+		),
+	}
 }
 
-var NPMSchema = lo.Assign(
-	baseSchema,
-	CurationRemoteRepoSchema,
-	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NPMPackageType),
-)
+type remoteNPMResource struct {
+	remoteResource
+}
 
-var NPMSchemas = GetSchemas(NPMSchema)
+type remoteNPMResourceModel struct {
+	RemoteResourceModel
+	CurationResourceModel
+}
 
-func ResourceArtifactoryRemoteNpmRepository() *schema.Resource {
-	var unpack = func(s *schema.ResourceData) (interface{}, string, error) {
-		d := &utilsdk.ResourceData{ResourceData: s}
-		repo := NpmRemoteRepo{
-			RepositoryRemoteBaseParams: UnpackBaseRemoteRepo(s, repository.NPMPackageType),
-			RepositoryCurationParams: RepositoryCurationParams{
-				Curated: d.GetBool("curated", false),
-			},
-		}
-		return repo, repo.Id(), nil
+func (r *remoteNPMResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r remoteNPMResourceModel) SetCreateResourceStateData(ctx context.Context, resp *resource.CreateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteNPMResourceModel) GetReadResourceStateData(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteNPMResourceModel) SetReadResourceStateData(ctx context.Context, resp *resource.ReadResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r *remoteNPMResourceModel) GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, r)...)
+}
+
+func (r *remoteNPMResourceModel) GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Read Terraform state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, r)...)
+}
+
+func (r remoteNPMResourceModel) SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse) {
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
+}
+
+func (r remoteNPMResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	remoteAPIModel, d := r.RemoteResourceModel.ToAPIModel(ctx, packageType)
+	if d != nil {
+		diags.Append(d...)
 	}
 
-	constructor := func() (interface{}, error) {
-		repoLayout, err := repository.GetDefaultRepoLayoutRef(Rclass, repository.NPMPackageType)
-		if err != nil {
-			return nil, err
-		}
+	return RemoteNPMAPIModel{
+		RemoteAPIModel: remoteAPIModel,
+		CurationAPIModel: CurationAPIModel{
+			Curated: r.Curated.ValueBool(),
+		},
+	}, diags
+}
 
-		return &NpmRemoteRepo{
-			RepositoryRemoteBaseParams: RepositoryRemoteBaseParams{
-				Rclass:        Rclass,
-				PackageType:   repository.NPMPackageType,
-				RepoLayoutRef: repoLayout,
+func (r *remoteNPMResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	model := apiModel.(*RemoteNPMAPIModel)
+
+	r.RemoteResourceModel.FromAPIModel(ctx, model.RemoteAPIModel)
+
+	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	return diags
+}
+
+type RemoteNPMAPIModel struct {
+	RemoteAPIModel
+	CurationAPIModel
+}
+
+func (r *remoteNPMResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	remoteNPMAttributes := lo.Assign(
+		RemoteAttributes,
+		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
+		CurationAttributes,
+		map[string]schema.Attribute{
+			"url": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("https://registry.npmjs.org/"),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "The remote repo URL. Default to 'https://registry.npmjs.org/'",
 			},
-		}, nil
-	}
-
-	return mkResourceSchema(
-		NPMSchemas,
-		packer.Default(NPMSchemas[CurrentSchemaVersion]),
-		unpack,
-		constructor,
+		},
 	)
+
+	resp.Schema = schema.Schema{
+		Version:     CurrentSchemaVersion,
+		Attributes:  remoteNPMAttributes,
+		Blocks:      remoteBlocks,
+		Description: r.Description,
+	}
 }
