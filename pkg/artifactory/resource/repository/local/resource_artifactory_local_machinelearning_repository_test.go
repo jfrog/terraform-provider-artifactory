@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 )
@@ -53,6 +54,10 @@ func TestAccLocalMachineLearningRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "blacked_out", strconv.FormatBool(params["blacked_out"].(bool))),
 					resource.TestCheckResourceAttr(fqrn, "xray_index", strconv.FormatBool(params["xray_index"].(bool))),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("local", repository.MachineLearningType)
+						return r
+					}()), //Check to ensure repository layout is set as per default even when it is not passed.
 					resource.TestCheckResourceAttr(fqrn, "property_sets.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "property_sets.0", params["property_set"].(string)),
 					resource.TestCheckResourceAttr(fqrn, "archive_browsing_enabled", strconv.FormatBool(params["archive_browsing_enabled"].(bool))),
