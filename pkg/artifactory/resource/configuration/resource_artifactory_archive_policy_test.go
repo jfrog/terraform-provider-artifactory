@@ -3,7 +3,9 @@ package configuration_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -139,6 +141,11 @@ func TestAccArchivePolicy_invalid_conditions(t *testing.T) {
 }
 
 func TestAccArchivePolicy_full(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
@@ -325,6 +332,11 @@ func TestAccArchivePolicy_full(t *testing.T) {
 }
 
 func TestAccArchivePolicy_with_project_key(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
