@@ -18,7 +18,7 @@ type ComposerRemoteRepo struct {
 
 var composerSchema = lo.Assign(
 	remote.BaseSchema,
-	remote.VcsRemoteRepoSchemaSDKv2,
+	VcsRemoteRepoSchemaSDKv2,
 	map[string]*schema.Schema{
 		"composer_registry_url": {
 			Type:         schema.TypeString,

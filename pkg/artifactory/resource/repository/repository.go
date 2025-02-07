@@ -616,6 +616,7 @@ var CompressionFormatsAttribute = map[string]schema.Attribute{
 	},
 }
 
+// SDKv2
 var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	"key": {
 		Type:             sdkv2_schema.TypeString,
