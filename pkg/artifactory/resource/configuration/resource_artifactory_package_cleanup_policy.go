@@ -232,7 +232,7 @@ type PackageCleanupPolicySearchCriteriaAPIModel struct {
 	ExcludedRepos                *[]string `json:"excludedRepos,omitempty"`
 	IncludedPackages             []string  `json:"includedPackages"`
 	ExcludedPackages             *[]string `json:"excludedPackages,omitempty"`
-	IncludeAllProjects           *bool     `json:"includeAllProjects,omitempty"`
+	IncludeAllProjects           *bool     `json:"includeAllProjects"`
 	IncludedProjects             *[]string `json:"includedProjects,omitempty"`
 	CreatedBeforeInMonths        *int64    `json:"createdBeforeInMonths,omitempty"`
 	LastDownloadedBeforeInMonths *int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
@@ -454,6 +454,8 @@ var cleanupPolicySchemaV1 = lo.Assign(
 				},
 				"include_all_projects": schema.BoolAttribute{
 					Optional:    true,
+					Computed:    true,
+					Default:     booldefault.StaticBool(false),
 					Description: "Set this to `true` if you want the policy to run on all projects on the platform.",
 				},
 				"included_projects": schema.SetAttribute{
