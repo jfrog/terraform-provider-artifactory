@@ -313,7 +313,7 @@ func fromReleaseBundleCriteriaAPIModel(ctx context.Context, criteriaAPIModel map
 		lo.Assign(
 			baseCriteriaAttrs,
 			map[string]attr.Value{
-				"any_release_bundle":              types.BoolValue(criteriaAPIModel["anyReleaseBundles"].(bool)),
+				"any_release_bundle":              types.BoolValue(criteriaAPIModel["anyReleaseBundle"].(bool)),
 				"registered_release_bundle_names": releaseBundleNames,
 			},
 		),
