@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/artifactory_\*\_repository: Fix error when provider tries to refresh the resource for repository that is no longer existed on Artifactory. Issue: [#1189](https://github.com/jfrog/terraform-provider-artifactory/issues/1189) PR: [#1190](https://github.com/jfrog/terraform-provider-artifactory/pull/1190)
+* resource/artifactory_local_debian_repository: Fix state drift when `index_compression_formats` attribute is not set in configuration. Added default value of `bz2`. Issue: [#1183](https://github.com/jfrog/terraform-provider-artifactory/issues/1183) PR: [#1195](https://github.com/jfrog/terraform-provider-artifactory/pull/1195)
 
 ## 12.8.3 (January 28, 2025). Tested on Artifactory 7.98.14 with Terraform 1.10.5 and OpenTofu 1.9.0
 
