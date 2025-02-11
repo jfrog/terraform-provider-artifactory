@@ -1,8 +1,9 @@
-## 12.8.4 (Februry 7, 2025). Tested on Artifactory 7.104.6 with Terraform 1.10.5 and OpenTofu 1.9.0
+## 12.8.4 (Februry 12, 2025). Tested on Artifactory 7.104.6 with Terraform 1.10.5 and OpenTofu 1.9.0
 
 BUG FIXES:
 
 * resource/artifactory_\*\_repository: Fix error when provider tries to refresh the resource for repository that is no longer existed on Artifactory. Issue: [#1189](https://github.com/jfrog/terraform-provider-artifactory/issues/1189) PR: [#1190](https://github.com/jfrog/terraform-provider-artifactory/pull/1190)
+* resource/artifactory_artifactory_release_bundle_custom_webhook, resource/artifactory_destination_custom_webhook, resource/artifactory_distribution_custom_webhook, resource/artifactory_release_bundle_custom_webhook: Fix provider panic crash. Issue: [#1192](https://github.com/jfrog/terraform-provider-artifactory/issues/1192) PR: [#1196](https://github.com/jfrog/terraform-provider-artifactory/pull/1196)
 
 ## 12.8.3 (January 28, 2025). Tested on Artifactory 7.98.14 with Terraform 1.10.5 and OpenTofu 1.9.0
 
