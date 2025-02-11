@@ -260,9 +260,9 @@ func (r *BaseResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Treat HTTP 404 Not Found status as a signal to recreate resource
+	// Treat HTTP 400 Bad Request or 404 Not Found status as a signal to recreate resource
 	// and return early
-	if response.StatusCode() == http.StatusNotFound {
+	if response.StatusCode() == http.StatusBadRequest || response.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -616,6 +616,7 @@ var CompressionFormatsAttribute = map[string]schema.Attribute{
 	},
 }
 
+// SDKv2
 var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 	"key": {
 		Type:             sdkv2_schema.TypeString,

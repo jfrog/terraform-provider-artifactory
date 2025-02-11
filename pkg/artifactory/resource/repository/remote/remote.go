@@ -314,6 +314,25 @@ type RemoteAPIModel struct {
 	DisableURLNormalization           bool                    `json:"disableUrlNormalization"`
 }
 
+type ContentSynchronisation struct {
+	Enabled    bool                             `json:"enabled"`
+	Statistics ContentSynchronisationStatistics `json:"statistics"`
+	Properties ContentSynchronisationProperties `json:"properties"`
+	Source     ContentSynchronisationSource     `json:"source"`
+}
+
+type ContentSynchronisationStatistics struct {
+	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationProperties struct {
+	Enabled bool `hcl:"properties_enabled" json:"enabled"`
+}
+
+type ContentSynchronisationSource struct {
+	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection"`
+}
+
 type vcsAPIModel struct {
 	GitProvider    *string `json:"vcsGitProvider,omitempty"`
 	GitDownloadURL *string `json:"vcsGitDownloadUrl,omitempty"`
@@ -710,24 +729,6 @@ func (r remoteResource) ValidateConfig(ctx context.Context, req resource.Validat
 }
 
 // SDKv2
-type ContentSynchronisation struct {
-	Enabled    bool                             `json:"enabled"`
-	Statistics ContentSynchronisationStatistics `json:"statistics"`
-	Properties ContentSynchronisationProperties `json:"properties"`
-	Source     ContentSynchronisationSource     `json:"source"`
-}
-
-type ContentSynchronisationStatistics struct {
-	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
-}
-
-type ContentSynchronisationProperties struct {
-	Enabled bool `hcl:"properties_enabled" json:"enabled"`
-}
-
-type ContentSynchronisationSource struct {
-	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection"`
-}
 
 type RepositoryRemoteBaseParams struct {
 	Key                               string                  `json:"key,omitempty"`
@@ -1129,22 +1130,6 @@ var GetSchemas = func(s map[string]*sdkv2_schema.Schema) map[int16]map[string]*s
 	}
 }
 
-var VcsRemoteRepoSchemaSDKv2 = map[string]*sdkv2_schema.Schema{
-	"vcs_git_provider": {
-		Type:             sdkv2_schema.TypeString,
-		Optional:         true,
-		Default:          "GITHUB",
-		ValidateDiagFunc: sdkv2_validator.ToDiagFunc(sdkv2_validator.StringInSlice([]string{"GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"}, false)),
-		Description:      `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "GITHUB".`,
-	},
-	"vcs_git_download_url": {
-		Type:             sdkv2_schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: sdkv2_validator.ToDiagFunc(sdkv2_validator.StringIsNotEmpty),
-		Description:      `This attribute is used when vcs_git_provider is set to 'CUSTOM'. Provided URL will be used as proxy.`,
-	},
-}
-
 func JavaSchema(packageType string, suppressPom bool) map[string]*sdkv2_schema.Schema {
 	return lo.Assign(
 		BaseSchema,
@@ -1209,99 +1194,4 @@ func JavaSchema(packageType string, suppressPom bool) map[string]*sdkv2_schema.S
 		},
 		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
-}
-
-func UnpackBaseRemoteRepo(s *sdkv2_schema.ResourceData, packageType string) RepositoryRemoteBaseParams {
-	d := &utilsdk.ResourceData{ResourceData: s}
-
-	repo := RepositoryRemoteBaseParams{
-		Rclass:                            Rclass,
-		Key:                               d.GetString("key", false),
-		ProjectKey:                        d.GetString("project_key", false),
-		ProjectEnvironments:               d.GetSet("project_environments"),
-		PackageType:                       packageType, // must be set independently
-		Url:                               d.GetString("url", false),
-		Username:                          d.GetString("username", false),
-		Password:                          d.GetString("password", false),
-		Proxy:                             d.GetString("proxy", false),
-		DisableProxy:                      d.GetBool("disable_proxy", false),
-		Description:                       d.GetString("description", false),
-		Notes:                             d.GetString("notes", false),
-		IncludesPattern:                   d.GetString("includes_pattern", false),
-		ExcludesPattern:                   d.GetString("excludes_pattern", false),
-		RepoLayoutRef:                     d.GetString("repo_layout_ref", false),
-		RemoteRepoLayoutRef:               d.GetString("remote_repo_layout_ref", false),
-		HardFail:                          d.GetBoolRef("hard_fail", false),
-		Offline:                           d.GetBoolRef("offline", false),
-		BlackedOut:                        d.GetBoolRef("blacked_out", false),
-		XrayIndex:                         d.GetBool("xray_index", false),
-		DownloadRedirect:                  d.GetBool("download_direct", false),
-		CdnRedirect:                       d.GetBool("cdn_redirect", false),
-		QueryParams:                       d.GetString("query_params", false),
-		StoreArtifactsLocally:             d.GetBoolRef("store_artifacts_locally", false),
-		SocketTimeoutMillis:               d.GetInt("socket_timeout_millis", false),
-		LocalAddress:                      d.GetString("local_address", false),
-		RetrievalCachePeriodSecs:          d.GetInt("retrieval_cache_period_seconds", false),
-		MissedRetrievalCachePeriodSecs:    d.GetInt("missed_cache_period_seconds", false),
-		MetadataRetrievalTimeoutSecs:      d.GetInt("metadata_retrieval_timeout_secs", false),
-		UnusedArtifactsCleanupPeriodHours: d.GetInt("unused_artifacts_cleanup_period_hours", false),
-		AssumedOfflinePeriodSecs:          d.GetInt("assumed_offline_period_secs", false),
-		ShareConfiguration:                d.GetBoolRef("share_configuration", false),
-		SynchronizeProperties:             d.GetBoolRef("synchronize_properties", false),
-		BlockMismatchingMimeTypes:         d.GetBoolRef("block_mismatching_mime_types", false),
-		PropertySets:                      d.GetSet("property_sets"),
-		AllowAnyHostAuth:                  d.GetBoolRef("allow_any_host_auth", false),
-		EnableCookieManagement:            d.GetBoolRef("enable_cookie_management", false),
-		BypassHeadRequests:                d.GetBoolRef("bypass_head_requests", false),
-		ClientTLSCertificate:              d.GetString("client_tls_certificate", false),
-		PriorityResolution:                d.GetBool("priority_resolution", false),
-		ListRemoteFolderItems:             d.GetBool("list_remote_folder_items", false),
-		MismatchingMimeTypeOverrideList:   d.GetString("mismatching_mime_types_override_list", false),
-		DisableURLNormalization:           d.GetBool("disable_url_normalization", false),
-		ArchiveBrowsingEnabled:            d.GetBoolRef("archive_browsing_enabled", false),
-	}
-
-	if v, ok := d.GetOk("content_synchronisation"); ok {
-		contentSynchronisationConfig := v.([]interface{})[0].(map[string]interface{})
-		enabled := contentSynchronisationConfig["enabled"].(bool)
-		statisticsEnabled := contentSynchronisationConfig["statistics_enabled"].(bool)
-		propertiesEnabled := contentSynchronisationConfig["properties_enabled"].(bool)
-		sourceOriginAbsenceDetection := contentSynchronisationConfig["source_origin_absence_detection"].(bool)
-		repo.ContentSynchronisation = &ContentSynchronisation{
-			Enabled: enabled,
-			Statistics: ContentSynchronisationStatistics{
-				Enabled: statisticsEnabled,
-			},
-			Properties: ContentSynchronisationProperties{
-				Enabled: propertiesEnabled,
-			},
-			Source: ContentSynchronisationSource{
-				OriginAbsenceDetection: sourceOriginAbsenceDetection,
-			},
-		}
-	}
-	return repo
-}
-
-func UnpackVcsRemoteRepo(s *sdkv2_schema.ResourceData) RepositoryVcsParams {
-	d := &utilsdk.ResourceData{ResourceData: s}
-	return RepositoryVcsParams{
-		VcsGitProvider:    d.GetString("vcs_git_provider", false),
-		VcsGitDownloadUrl: d.GetString("vcs_git_download_url", false),
-	}
-}
-
-func UnpackJavaRemoteRepo(s *sdkv2_schema.ResourceData, repoType string) JavaRemoteRepo {
-	d := &utilsdk.ResourceData{ResourceData: s}
-	return JavaRemoteRepo{
-		RepositoryRemoteBaseParams:   UnpackBaseRemoteRepo(s, repoType),
-		FetchJarsEagerly:             d.GetBool("fetch_jars_eagerly", false),
-		FetchSourcesEagerly:          d.GetBool("fetch_sources_eagerly", false),
-		RemoteRepoChecksumPolicyType: d.GetString("remote_repo_checksum_policy_type", false),
-		HandleReleases:               d.GetBool("handle_releases", false),
-		HandleSnapshots:              d.GetBool("handle_snapshots", false),
-		SuppressPomConsistencyChecks: d.GetBool("suppress_pom_consistency_checks", false),
-		RejectInvalidJars:            d.GetBool("reject_invalid_jars", false),
-		MaxUniqueSnapshots:           d.GetInt("max_unique_snapshots", false),
-	}
 }

@@ -441,6 +441,12 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		key             = "{{ .repoName }}"
 		tag_retention   = 3
 		max_unique_tags = 5
+
+		lifecycle {
+			ignore_changes = [
+				project_key,
+			]
+		}
 	}
 
 	resource "project" "myproject" {
@@ -455,6 +461,11 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		max_storage_in_gibibytes   = 10
 		block_deployments_on_limit = false
 		email_notification         = true
+	}
+
+	resource "project_repository" "{{ .repoName }}" {
+		project_key = project.myproject.key
+		key         = artifactory_local_docker_v2_repository.{{ .repoName }}.key
 	}
 
 	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
@@ -475,6 +486,8 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 			created_before_in_months = 1
 			last_downloaded_before_in_months = 6
 		}
+
+		depends_on = [project_repository.{{ .repoName }}]
 	}`
 
 	updatedTemp := `

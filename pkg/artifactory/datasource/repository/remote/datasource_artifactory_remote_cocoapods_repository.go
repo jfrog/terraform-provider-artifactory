@@ -18,7 +18,7 @@ type CocoapodsRemoteRepo struct {
 
 var cocoapodsSchema = lo.Assign(
 	remote.BaseSchema,
-	remote.VcsRemoteRepoSchemaSDKv2,
+	VcsRemoteRepoSchemaSDKv2,
 	map[string]*schema.Schema{
 		"pods_specs_repo_url": {
 			Type:         schema.TypeString,

@@ -49,7 +49,7 @@ install: clean build
 		# mv -v dist/terraform-provider-${PRODUCT}_${LINUX_GORELEASER_ARCH}/terraform-provider-${PRODUCT}_v${NEXT_PROVIDER_VERSION}* ${LINUX_BUILD_PATH} && \
 
 clean:
-	rm -fR dist terraform.d/ .terraform terraform.tfstate* terraform.d/ .terraform.lock.hcl
+	rm -fR dist terraform.d/ .terraform terraform.tfstate* .terraform.lock.hcl
 
 release:
 	@git tag ${NEXT_PROVIDER_VERSION} && git push --mirror
