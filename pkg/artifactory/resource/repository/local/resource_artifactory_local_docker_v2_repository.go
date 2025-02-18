@@ -151,7 +151,7 @@ func (r *localDockerV2Resource) Schema(ctx context.Context, req resource.SchemaR
 			"tag_retention": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(0),
+				Default:  int64default.StaticInt64(1),
 				Validators: []validator.Int64{
 					int64validator.AtLeast(0),
 				},
