@@ -1,3 +1,10 @@
+## 12.8.5 (Februry 20, 2025)
+
+BUG FIXES:
+
+* resource/artifactory_remote_docker_v2_repository: Fix incorrect default value for `block_pushing_schema1` and `tag_retention`. Issue: [#1186](https://github.com/jfrog/terraform-provider-artifactory/issues/1186) PR: [#1201](https://github.com/jfrog/terraform-provider-artifactory/pull/1201)
+* resource/artifactory_\*\_repository: Improve state handling of `project_environments` attribute. Issue: [#1186](https://github.com/jfrog/terraform-provider-artifactory/issues/1186) PR: [#1201](https://github.com/jfrog/terraform-provider-artifactory/pull/1201)
+
 ## 12.8.4 (Februry 13, 2025). Tested on Artifactory 7.104.6 with Terraform 1.10.5 and OpenTofu 1.9.0
 
 BUG FIXES:
