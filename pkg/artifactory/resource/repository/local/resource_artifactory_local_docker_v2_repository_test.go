@@ -21,18 +21,18 @@ func TestAccLocalDockerV2Repository_full(t *testing.T) {
 		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 	}
+
 	config := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
-			key 	     = "{{ .name }}"
-			tag_retention = {{ .retention }}
-			max_unique_tags = {{ .max_tags }}
-			block_pushing_schema1 = {{ .block }}
+			key = "{{ .name }}"
 		}
 	`, params)
 
 	updatedConfig := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
+			tag_retention = {{ .retention }}
+			max_unique_tags = {{ .max_tags }}
 			block_pushing_schema1 = {{ .block }}
 		}
 	`, params)
@@ -45,9 +45,9 @@ func TestAccLocalDockerV2Repository_full(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
-					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
-					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "true"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
@@ -56,8 +56,8 @@ func TestAccLocalDockerV2Repository_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),
-					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
-					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", fmt.Sprintf("%d", params["retention"])),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", fmt.Sprintf("%d", params["max_tags"])),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
 				),
 			},
