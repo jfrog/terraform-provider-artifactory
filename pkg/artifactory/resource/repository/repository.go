@@ -480,17 +480,12 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface
 	r.IncludesPattern = types.StringValue(model.IncludesPattern)
 	r.ExcludesPattern = types.StringValue(model.ExcludesPattern)
 
-	projectEnviroments := types.SetNull(types.StringType)
-	if len(model.ProjectEnvironments) > 0 {
-		envs, ds := types.SetValueFrom(ctx, types.StringType, model.ProjectEnvironments)
-		if ds.HasError() {
-			diags.Append(ds...)
-			return diags
-		}
-		projectEnviroments = envs
+	envs, ds := types.SetValueFrom(ctx, types.StringType, model.ProjectEnvironments)
+	if ds.HasError() {
+		diags.Append(ds...)
+		return diags
 	}
-
-	r.ProjectEnvironments = projectEnviroments
+	r.ProjectEnvironments = envs
 
 	return diags
 }
@@ -498,7 +493,7 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface
 type BaseAPIModel struct {
 	Key                 string   `json:"key"`
 	ProjectKey          string   `json:"projectKey"`
-	ProjectEnvironments []string `json:"environments,omitempty"`
+	ProjectEnvironments []string `json:"environments"`
 	Rclass              string   `json:"rclass"`
 	PackageType         string   `json:"packageType"`
 	Description         string   `json:"description"`
