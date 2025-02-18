@@ -42,6 +42,7 @@ type LocalResourceModel struct {
 	DownloadDirect         types.Bool   `tfsdk:"download_direct"`
 	PriorityResolution     types.Bool   `tfsdk:"priority_resolution"`
 	RepoLayoutRef          types.String `tfsdk:"repo_layout_ref"`
+	CDNRedirect            types.Bool   `tfsdk:"cdn_redirect"`
 }
 
 func (r *LocalResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -115,6 +116,7 @@ func (r LocalResourceModel) ToAPIModel(ctx context.Context, packageType string) 
 		ArchiveBrowsingEnabled: r.ArchiveBrowsingEnabled.ValueBoolPointer(),
 		DownloadRedirect:       r.DownloadDirect.ValueBoolPointer(),
 		PriorityResolution:     r.PriorityResolution.ValueBool(),
+		CDNRedirect:            r.CDNRedirect.ValueBoolPointer(),
 	}, diags
 }
 
@@ -130,6 +132,7 @@ func (r *LocalResourceModel) FromAPIModel(ctx context.Context, apiModel interfac
 	r.ArchiveBrowsingEnabled = types.BoolPointerValue(model.ArchiveBrowsingEnabled)
 	r.DownloadDirect = types.BoolPointerValue(model.DownloadRedirect)
 	r.PriorityResolution = types.BoolValue(model.PriorityResolution)
+	r.CDNRedirect = types.BoolPointerValue(model.CDNRedirect)
 
 	var propertySets = types.SetNull(types.StringType)
 	if len(model.PropertySets) > 0 {
@@ -155,6 +158,7 @@ type LocalAPIModel struct {
 	ArchiveBrowsingEnabled *bool    `json:"archiveBrowsingEnabled"`
 	DownloadRedirect       *bool    `json:"downloadRedirect"`
 	PriorityResolution     bool     `json:"priorityResolution"`
+	CDNRedirect            *bool    `json:"cdnRedirect"`
 }
 
 var LocalAttributes = lo.Assign(
@@ -197,6 +201,12 @@ var LocalAttributes = lo.Assign(
 			Computed:            true,
 			Default:             booldefault.StaticBool(false),
 			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.",
+		},
+		"cdn_redirect": schema.BoolAttribute{ // For backward compatibility with SDKv2. Only generic repo uses this
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
 		},
 	},
 )

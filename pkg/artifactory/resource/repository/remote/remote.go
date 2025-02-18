@@ -75,7 +75,6 @@ type RemoteResourceModel struct {
 	ContentSynchronisation            types.List   `tfsdk:"content_synchronisation"`
 	MismatchingMimeTypeOverrideList   types.String `tfsdk:"mismatching_mime_types_override_list"`
 	ListRemoteFolderItems             types.Bool   `tfsdk:"list_remote_folder_items"`
-	CDNRedirect                       types.Bool   `tfsdk:"cdn_redirect"`
 	DisableURLNormalization           types.Bool   `tfsdk:"disable_url_normalization"`
 }
 
@@ -199,7 +198,6 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		ContentSynchronisation:            contentSynchronisation,
 		MismatchingMimeTypeOverrideList:   r.MismatchingMimeTypeOverrideList.ValueString(),
 		ListRemoteFolderItems:             r.ListRemoteFolderItems.ValueBool(),
-		CDNRedirect:                       r.CDNRedirect.ValueBool(),
 		DisableURLNormalization:           r.DisableURLNormalization.ValueBool(),
 	}, diags
 }
@@ -275,7 +273,6 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 
 	r.MismatchingMimeTypeOverrideList = types.StringValue(apiModel.MismatchingMimeTypeOverrideList)
 	r.ListRemoteFolderItems = types.BoolValue(apiModel.ListRemoteFolderItems)
-	r.CDNRedirect = types.BoolValue(apiModel.CDNRedirect)
 	r.DisableURLNormalization = types.BoolValue(apiModel.DisableURLNormalization)
 
 	return diags
@@ -310,7 +307,6 @@ type RemoteAPIModel struct {
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 	MismatchingMimeTypeOverrideList   string                  `json:"mismatchingMimeTypesOverrideList"`
 	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
-	CDNRedirect                       bool                    `json:"cdnRedirect"`
 	DisableURLNormalization           bool                    `json:"disableUrlNormalization"`
 }
 
@@ -556,12 +552,6 @@ var RemoteAttributes = lo.Assign(
 			Default:  booldefault.StaticBool(false),
 			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact " +
 				"directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only. Default value is 'false'.",
-		},
-		"cdn_redirect": schema.BoolAttribute{
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(false),
-			MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is 'false'",
 		},
 		"disable_url_normalization": schema.BoolAttribute{
 			Optional:            true,
