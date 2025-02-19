@@ -44,6 +44,7 @@ func TestAccRepository_assign_project_key_gh_329(t *testing.T) {
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = project.{{ .projectKey }}.key
+		  project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
 		"name":       name,
@@ -101,6 +102,7 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
 		  key         = "{{ .name }}"
 	 	  project_key = project.{{ .projectKey }}.key
+		  project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
 		"name":       name,
@@ -123,7 +125,8 @@ func TestAccRepository_unassign_project_key_gh_329(t *testing.T) {
 		}
 
 		resource "artifactory_local_generic_repository" "{{ .name }}" {
-		  key = "{{ .name }}"
+			key = "{{ .name }}"
+			project_environments = ["DEV"]
 		}
 	`, map[string]interface{}{
 		"name":       name,
