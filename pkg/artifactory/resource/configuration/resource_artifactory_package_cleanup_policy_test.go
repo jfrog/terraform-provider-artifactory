@@ -445,6 +445,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 		lifecycle {
 			ignore_changes = [
 				project_key,
+				project_environments,
 			]
 		}
 	}

@@ -305,7 +305,7 @@ func webhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*testing
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
 				// ConfigPlanChecks: resource.ConfigPlanChecks{
 				// 	PreApply: []plancheck.PlanCheck{
 				// 		plancheck.ExpectEmptyPlan(),
