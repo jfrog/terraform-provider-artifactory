@@ -15,6 +15,25 @@ BUG FIXES:
 
 ## 12.8.3 (January 28, 2025). Tested on Artifactory 7.98.14 with Terraform 1.10.5 and OpenTofu 1.9.0
 
+NOTES:
+
+If you are upgrading to this version from before 12.8.0 and encountered the following error message, please upgrade to 12.8.0 first. Then upgrade to the latest.
+
+```
+│ Error: Unable to Upgrade Resource State
+│ 
+│   with artifactory_remote_gems_repository.remote_gems_repo["DEV"],
+│   on remote_repositories.tf line 360, in resource "artifactory_remote_gems_repository" "remote_gems_repo":
+│  360: resource "artifactory_remote_gems_repository" "remote_gems_repo" {
+│ 
+│ This resource was implemented without an UpgradeState() method, however
+│ Terraform was expecting an implementation for version 3 upgrade.
+│ 
+│ This is always an issue with the Terraform Provider and should be reported
+│ to the provider developer.
+╵
+``
+
 IMPROVEMENTS:
 
 * resource/artifactory_remote_\*\_repository are migrated to Plugin Framework. PR: [#1180](https://github.com/jfrog/terraform-provider-artifactory/pull/1180)
