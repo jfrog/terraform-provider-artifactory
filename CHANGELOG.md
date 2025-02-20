@@ -32,7 +32,7 @@ If you are upgrading to this version from before 12.8.0 and encountered the foll
 │ This is always an issue with the Terraform Provider and should be reported
 │ to the provider developer.
 ╵
-``
+```
 
 IMPROVEMENTS:
 
