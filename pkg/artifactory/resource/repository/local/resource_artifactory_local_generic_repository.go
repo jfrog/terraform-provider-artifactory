@@ -24,7 +24,6 @@ var PackageTypesLikeGeneric = []string{
 	repository.GenericPackageType,
 	repository.GitLFSPackageType,
 	repository.GoPackageType,
-	repository.HelmPackageType,
 	repository.HuggingFacePackageType,
 	repository.NPMPackageType,
 	repository.OpkgPackageType,
