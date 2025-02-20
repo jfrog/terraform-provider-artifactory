@@ -22,7 +22,7 @@ func NewHelmOCILocalRepositoryResource() resource.Resource {
 	return &localHelmOCIResource{
 		localResource: NewLocalRepositoryResource(
 			repository.HelmOCIPackageType,
-			"Helm",
+			"Helm OCI",
 			reflect.TypeFor[LocalHelmOCIResourceModel](),
 			reflect.TypeFor[LocalHelmOCIAPIModel](),
 		),
