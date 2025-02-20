@@ -13,7 +13,7 @@ import (
 	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
-func TestAccLocalDockerV2Repository(t *testing.T) {
+func TestAccLocalDockerV2Repository_full(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("dockerv2-local", "artifactory_local_docker_v2_repository")
 	params := map[string]interface{}{
 		"block":     testutil.RandBool(),
@@ -21,7 +21,14 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 		"max_tags":  testutil.RandSelect(0, 5, 10),
 		"name":      name,
 	}
-	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
+
+	config := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
+		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+		}
+	`, params)
+
+	updatedConfig := util.ExecuteTemplate("TestAccLocalDockerV2Repository", `
 		resource "artifactory_local_docker_v2_repository" "{{ .name }}" {
 			key 	     = "{{ .name }}"
 			tag_retention = {{ .retention }}
@@ -35,7 +42,17 @@ func TestAccLocalDockerV2Repository(t *testing.T) {
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config: localRepositoryBasic,
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", "true"),
+					resource.TestCheckResourceAttr(fqrn, "tag_retention", "1"),
+					resource.TestCheckResourceAttr(fqrn, "max_unique_tags", "0"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("local", "docker"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "block_pushing_schema1", fmt.Sprintf("%t", params["block"])),

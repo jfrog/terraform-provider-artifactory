@@ -29,6 +29,7 @@ func TestAccLocalCargoRepository(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
@@ -70,6 +71,7 @@ func TestAccLocalCargoRepository_UpgradeFromSDKv2(t *testing.T) {
 	`, params)
 
 	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{

@@ -1,3 +1,10 @@
+## 12.8.5 (Februry 20, 2025). Tested on Artifactory 7.104.7 with Terraform 1.10.5 and OpenTofu 1.9.0
+
+BUG FIXES:
+
+* resource/artifactory_remote_docker_v2_repository: Fix incorrect default value for `block_pushing_schema1` and `tag_retention`. Issue: [#1186](https://github.com/jfrog/terraform-provider-artifactory/issues/1186) PR: [#1201](https://github.com/jfrog/terraform-provider-artifactory/pull/1201)
+* resource/artifactory_\*\_repository: Improve state handling of `project_environments` attribute. Issue: [#1186](https://github.com/jfrog/terraform-provider-artifactory/issues/1186) PR: [#1201](https://github.com/jfrog/terraform-provider-artifactory/pull/1201)
+
 ## 12.8.4 (Februry 13, 2025). Tested on Artifactory 7.104.6 with Terraform 1.10.5 and OpenTofu 1.9.0
 
 BUG FIXES:
@@ -7,6 +14,25 @@ BUG FIXES:
 * resource/artifactory_artifactory_release_bundle_custom_webhook, resource/artifactory_destination_custom_webhook, resource/artifactory_distribution_custom_webhook, resource/artifactory_release_bundle_custom_webhook: Fix provider panic crash. Issue: [#1192](https://github.com/jfrog/terraform-provider-artifactory/issues/1192) PR: [#1196](https://github.com/jfrog/terraform-provider-artifactory/pull/1196)
 
 ## 12.8.3 (January 28, 2025). Tested on Artifactory 7.98.14 with Terraform 1.10.5 and OpenTofu 1.9.0
+
+NOTES:
+
+If you are upgrading to this version from before 12.8.0 and encountered the following error message, please upgrade to 12.8.0 first. Then upgrade to the latest.
+
+```
+│ Error: Unable to Upgrade Resource State
+│ 
+│   with artifactory_remote_gems_repository.remote_gems_repo["DEV"],
+│   on remote_repositories.tf line 360, in resource "artifactory_remote_gems_repository" "remote_gems_repo":
+│  360: resource "artifactory_remote_gems_repository" "remote_gems_repo" {
+│ 
+│ This resource was implemented without an UpgradeState() method, however
+│ Terraform was expecting an implementation for version 3 upgrade.
+│ 
+│ This is always an issue with the Terraform Provider and should be reported
+│ to the provider developer.
+╵
+```
 
 IMPROVEMENTS:
 

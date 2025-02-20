@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
@@ -270,14 +271,14 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
-				Config:           config,
-				Check:            resource.ComposeTestCheckFunc(checks...),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
-				// ConfigPlanChecks: resource.ConfigPlanChecks{
-				// 	PostApplyPreRefresh: []plancheck.PlanCheck{
-				// 		plancheck.ExpectEmptyPlan(),
-				// 	},
-				// },
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(checks...),
+				// ConfigPlanChecks: testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	}

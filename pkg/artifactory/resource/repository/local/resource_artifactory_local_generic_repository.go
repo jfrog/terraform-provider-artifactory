@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -56,7 +55,6 @@ type localGenericResource struct {
 
 type LocalGenericResourceModel struct {
 	LocalResourceModel
-	CDNRedirect types.Bool `tfsdk:"cdn_redirect"`
 }
 
 func (r *LocalGenericResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -107,7 +105,6 @@ func (r LocalGenericResourceModel) ToAPIModel(ctx context.Context, packageType s
 
 	return LocalGenericAPIModel{
 		LocalAPIModel: localAPIModel,
-		CDNRedirect:   r.CDNRedirect.ValueBoolPointer(),
 	}, diags
 }
 
@@ -119,28 +116,18 @@ func (r *LocalGenericResourceModel) FromAPIModel(ctx context.Context, apiModel i
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
-	r.CDNRedirect = types.BoolPointerValue(model.CDNRedirect)
 
 	return diags
 }
 
 type LocalGenericAPIModel struct {
 	LocalAPIModel
-	CDNRedirect *bool `json:"cdnRedirect"`
 }
 
 func (r *localGenericResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	localGenericAttributes := lo.Assign(
 		LocalAttributes,
 		repository.RepoLayoutRefAttribute(Rclass, r.PackageType),
-		map[string]schema.Attribute{
-			"cdn_redirect": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
-				MarkdownDescription: "When set, download requests to this repository will redirect the client to download the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only. Default value is `false`",
-			},
-		},
 	)
 
 	resp.Schema = schema.Schema{

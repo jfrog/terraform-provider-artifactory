@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -175,8 +174,7 @@ func webhookTestCase(webhookType string, t *testing.T) (*testing.T, resource.Tes
 	}
 
 	return t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
@@ -294,23 +292,25 @@ func webhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*testing
 		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
-				Config: config,
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						Source:            "jfrog/artifactory",
 						VersionConstraint: "12.1.0",
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(testChecks...),
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(testChecks...),
+				// ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
-				Config:                   config,
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
+				Config:                   config,
+				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
+				// ConfigPlanChecks: resource.ConfigPlanChecks{
+				// 	PreApply: []plancheck.PlanCheck{
+				// 		plancheck.ExpectEmptyPlan(),
+				// 	},
+				// },
 			},
 		},
 	}

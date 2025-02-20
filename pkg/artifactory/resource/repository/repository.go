@@ -230,10 +230,6 @@ func (r *BaseResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.SetID(plan.KeyString())
 
-	if plan.ProjectEnvironmentsValue().IsUnknown() {
-		plan.SetProjectEnvironments(types.SetNull(types.StringType))
-	}
-
 	plan.SetCreateResourceStateData(ctx, resp)
 }
 
@@ -325,10 +321,6 @@ func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	if plan.ProjectEnvironmentsValue().IsUnknown() {
-		plan.SetProjectEnvironments(types.SetNull(types.StringType))
-	}
-
 	plan.SetID(plan.KeyString())
 
 	planProjectKey := plan.ProjectKeyValue()
@@ -407,8 +399,6 @@ type ResourceModelIface interface {
 	GetUpdateResourcePlanData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
 	GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
 	SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse)
-	ProjectEnvironmentsValue() basetypes.SetValue
-	SetProjectEnvironments(basetypes.SetValue)
 	ProjectKeyValue() basetypes.StringValue
 }
 
@@ -431,14 +421,6 @@ func (r BaseResourceModel) KeyString() string {
 	return r.Key.ValueString()
 }
 
-func (r BaseResourceModel) ProjectEnvironmentsValue() basetypes.SetValue {
-	return r.ProjectEnvironments
-}
-
-func (r *BaseResourceModel) SetProjectEnvironments(v basetypes.SetValue) {
-	r.ProjectEnvironments = v
-}
-
 func (r BaseResourceModel) ProjectKeyValue() basetypes.StringValue {
 	return r.ProjectKey
 }
@@ -447,11 +429,9 @@ func (r BaseResourceModel) ToAPIModel(ctx context.Context, rclass, packageType s
 	diags := diag.Diagnostics{}
 
 	var projectEnviroments []string
-	if !r.ProjectEnvironments.IsUnknown() {
-		d := r.ProjectEnvironments.ElementsAs(ctx, &projectEnviroments, false)
-		if d != nil {
-			diags.Append(d...)
-		}
+	d := r.ProjectEnvironments.ElementsAs(ctx, &projectEnviroments, false)
+	if d != nil {
+		diags.Append(d...)
 	}
 
 	return BaseAPIModel{
@@ -480,17 +460,12 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface
 	r.IncludesPattern = types.StringValue(model.IncludesPattern)
 	r.ExcludesPattern = types.StringValue(model.ExcludesPattern)
 
-	projectEnviroments := types.SetNull(types.StringType)
-	if len(model.ProjectEnvironments) > 0 {
-		envs, ds := types.SetValueFrom(ctx, types.StringType, model.ProjectEnvironments)
-		if ds.HasError() {
-			diags.Append(ds...)
-			return diags
-		}
-		projectEnviroments = envs
+	envs, ds := types.SetValueFrom(ctx, types.StringType, model.ProjectEnvironments)
+	if ds.HasError() {
+		diags.Append(ds...)
+		return diags
 	}
-
-	r.ProjectEnvironments = projectEnviroments
+	r.ProjectEnvironments = envs
 
 	return diags
 }
@@ -498,7 +473,7 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface
 type BaseAPIModel struct {
 	Key                 string   `json:"key"`
 	ProjectKey          string   `json:"projectKey"`
-	ProjectEnvironments []string `json:"environments,omitempty"`
+	ProjectEnvironments []string `json:"environments"`
 	Rclass              string   `json:"rclass"`
 	PackageType         string   `json:"packageType"`
 	Description         string   `json:"description"`
@@ -535,6 +510,7 @@ var BaseAttributes = map[string]schema.Attribute{
 		ElementType: types.StringType,
 		Optional:    true,
 		Computed:    true,
+		Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
 		Validators: []validator.Set{
 			setvalidator.SizeBetween(0, 2),
 		},

@@ -151,7 +151,7 @@ func (r *localDockerV2Resource) Schema(ctx context.Context, req resource.SchemaR
 			"tag_retention": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(0),
+				Default:  int64default.StaticInt64(1),
 				Validators: []validator.Int64{
 					int64validator.AtLeast(0),
 				},
@@ -160,7 +160,7 @@ func (r *localDockerV2Resource) Schema(ctx context.Context, req resource.SchemaR
 			"block_pushing_schema1": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(false),
+				Default:             booldefault.StaticBool(true),
 				MarkdownDescription: "When set, Artifactory will block the pushing of Docker images with manifest v2 schema 1 to this repository.",
 			},
 			"api_version": schema.StringAttribute{
