@@ -1,4 +1,8 @@
-## 12.8.5 (Februry 20, 2025). Tested on Artifactory 7.104.7 with Terraform 1.10.5 and OpenTofu 1.9.0
+## 12.9.0 (Februry 20, 2025)
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_helm_repository: Add attributes `force_non_duplicate_chart` and `force_metadata_name_version` to support new settings introduced in Artifactory v7.104.5. Issue: [#1199](https://github.com/jfrog/terraform-provider-artifactory/issues/1199) PR: [#1207](https://github.com/jfrog/terraform-provider-artifactory/pull/1207)
 
 BUG FIXES:
 
