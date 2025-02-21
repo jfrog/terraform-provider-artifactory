@@ -47,6 +47,3 @@ uploading content that may compromise security (e.g., cross-site scripting attac
 the artifact directly from the cloud storage provider. Available in Enterprise+ and Edge licenses only.
 * `cdn_redirect` - (Optional) When set, download requests to this repository will redirect the client to download
 the artifact directly from AWS CloudFront. Available in Enterprise+ and Edge licenses only.
-* `allow_delete` - (Optional) When unset or set to `true`, provider will delete the repository even if it contains artifacts. Must be set to `false` for the provider to return error when destroying the resource.
-
-~>To maintain backward compatibility with provider version 12.0.0 and earlier, the state value for `allow_delete` is automatically set to `true` for existing resources.
