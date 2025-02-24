@@ -76,7 +76,7 @@ EOF
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
