@@ -110,13 +110,13 @@ func (r LocalResourceModel) ToAPIModel(ctx context.Context, packageType string) 
 
 	return LocalAPIModel{
 		BaseAPIModel:           baseRepositoryAPIModel,
-		BlackedOut:             r.BlackedOut.ValueBoolPointer(),
+		BlackedOut:             r.BlackedOut.ValueBool(),
 		XrayIndex:              r.XrayIndex.ValueBool(),
 		PropertySets:           propertySets,
-		ArchiveBrowsingEnabled: r.ArchiveBrowsingEnabled.ValueBoolPointer(),
-		DownloadRedirect:       r.DownloadDirect.ValueBoolPointer(),
+		ArchiveBrowsingEnabled: r.ArchiveBrowsingEnabled.ValueBool(),
+		DownloadRedirect:       r.DownloadDirect.ValueBool(),
 		PriorityResolution:     r.PriorityResolution.ValueBool(),
-		CDNRedirect:            r.CDNRedirect.ValueBoolPointer(),
+		CDNRedirect:            r.CDNRedirect.ValueBool(),
 	}, diags
 }
 
@@ -127,12 +127,12 @@ func (r *LocalResourceModel) FromAPIModel(ctx context.Context, apiModel interfac
 
 	r.BaseResourceModel.FromAPIModel(ctx, model.BaseAPIModel)
 
-	r.BlackedOut = types.BoolPointerValue(model.BlackedOut)
+	r.BlackedOut = types.BoolValue(model.BlackedOut)
 	r.XrayIndex = types.BoolValue(model.XrayIndex)
-	r.ArchiveBrowsingEnabled = types.BoolPointerValue(model.ArchiveBrowsingEnabled)
-	r.DownloadDirect = types.BoolPointerValue(model.DownloadRedirect)
+	r.ArchiveBrowsingEnabled = types.BoolValue(model.ArchiveBrowsingEnabled)
+	r.DownloadDirect = types.BoolValue(model.DownloadRedirect)
 	r.PriorityResolution = types.BoolValue(model.PriorityResolution)
-	r.CDNRedirect = types.BoolPointerValue(model.CDNRedirect)
+	r.CDNRedirect = types.BoolValue(model.CDNRedirect)
 
 	var propertySets = types.SetNull(types.StringType)
 	if len(model.PropertySets) > 0 {
@@ -152,13 +152,13 @@ func (r *LocalResourceModel) FromAPIModel(ctx context.Context, apiModel interfac
 
 type LocalAPIModel struct {
 	repository.BaseAPIModel
-	BlackedOut             *bool    `json:"blackedOut"`
+	BlackedOut             bool     `json:"blackedOut"`
 	XrayIndex              bool     `json:"xrayIndex"`
 	PropertySets           []string `json:"propertySets,omitempty"`
-	ArchiveBrowsingEnabled *bool    `json:"archiveBrowsingEnabled"`
-	DownloadRedirect       *bool    `json:"downloadRedirect"`
+	ArchiveBrowsingEnabled bool     `json:"archiveBrowsingEnabled"`
+	DownloadRedirect       bool     `json:"downloadRedirect"`
 	PriorityResolution     bool     `json:"priorityResolution"`
-	CDNRedirect            *bool    `json:"cdnRedirect"`
+	CDNRedirect            bool     `json:"cdnRedirect"`
 }
 
 var LocalAttributes = lo.Assign(
