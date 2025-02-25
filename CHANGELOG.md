@@ -1,4 +1,11 @@
-## 12.9.0 (Februry 20, 2025). Tested on Artifactory 7.104.9 with Terraform 1.10.5 and OpenTofu 1.9.0
+## 12.9.1 (Februry 25, 2025)
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Improve state drift handling. Issue: [#1200](https://github.com/jfrog/terraform-provider-artifactory/issues/1200) PR: [#1212](https://github.com/jfrog/terraform-provider-artifactory/pull/1212)
+* resource/artifactory_\*\_webhook: Improve state drift handling. PR: [#1212](https://github.com/jfrog/terraform-provider-artifactory/pull/1212)
+
+## 12.9.0 (Februry 20, 2025). Tested on Artifactory 7.104.7 with Terraform 1.10.5 and OpenTofu 1.9.0
 
 IMPROVEMENTS:
 
