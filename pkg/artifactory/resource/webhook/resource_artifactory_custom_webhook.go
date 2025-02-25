@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -45,6 +43,7 @@ var customHandlerBlock = schema.SetNestedBlock{
 			"secrets": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Sensitive:   true,
 				Validators: []validator.Map{
 					mapvalidator.ValueStringsAre(
 						stringvalidator.RegexMatches(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'\""),
@@ -57,9 +56,6 @@ var customHandlerBlock = schema.SetNestedBlock{
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 					validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Proxy key from Artifactory Proxies setting",
 			},
@@ -215,6 +211,11 @@ func (m *CustomWebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiMo
 				}
 			}
 
+			proxy := types.StringNull()
+			if handler.Proxy != nil {
+				proxy = types.StringPointerValue(handler.Proxy)
+			}
+
 			httpHeaders := types.MapNull(types.StringType)
 			if len(handler.HttpHeaders) > 0 {
 				headerElems := lo.Associate(
@@ -240,7 +241,7 @@ func (m *CustomWebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiMo
 					"url":          types.StringValue(handler.Url),
 					"method":       types.StringPointerValue(handler.Method),
 					"secrets":      secrets,
-					"proxy":        types.StringPointerValue(handler.Proxy),
+					"proxy":        proxy,
 					"http_headers": httpHeaders,
 					"payload":      types.StringValue(handler.Payload),
 				},

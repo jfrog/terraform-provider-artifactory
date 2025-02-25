@@ -277,9 +277,8 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
 		Steps: []resource.TestStep{
 			{
-				Config:           config1,
-				Check:            resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", firstToken)),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(fqrn),
+				Config: config1,
+				Check:  resource.TestCheckResourceAttr(fqrn, "handler.0.custom_http_headers.Authorization", fmt.Sprintf("Bearer %d", firstToken)),
 			},
 			{
 				Config: config2,

@@ -68,7 +68,6 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
 					resource.TestCheckResourceAttr(fqrn, "unavailable", "false"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,

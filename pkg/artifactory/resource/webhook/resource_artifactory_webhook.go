@@ -118,9 +118,6 @@ var handlerBlock = schema.SetNestedBlock{
 					stringvalidator.LengthAtLeast(1),
 					validatorfw_string.RegexNotMatches(regexp.MustCompile(`^http.+`), "expected \"proxy\" not to be a valid url"),
 				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 				Description: "Proxy key from Artifactory Proxies setting",
 			},
 			"custom_http_headers": schema.MapAttribute{
@@ -414,9 +411,12 @@ func (m *WebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiModel We
 				customHttpHeaders = h
 			}
 
-			secret := types.StringNull()
-			useSecretForSigning := types.BoolPointerValue(handler.UseSecretForSigning)
+			useSecretForSigning := types.BoolNull()
+			if handler.UseSecretForSigning != nil {
+				useSecretForSigning = types.BoolPointerValue(handler.UseSecretForSigning)
+			}
 
+			secret := types.StringNull()
 			matchedHandler, found := lo.Find(
 				stateHandlers.Elements(),
 				func(elem attr.Value) bool {
@@ -430,13 +430,11 @@ func (m *WebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiModel We
 				if !s.IsNull() && s.ValueString() != "" {
 					secret = s
 				}
+			}
 
-				// API doesn't include 'use_secret_for_signing' if set to 'false'
-				// so need set state to null if attribute is defined in config and set to 'false'
-				u := attrs["use_secret_for_signing"].(types.Bool)
-				if handler.UseSecretForSigning == nil && !u.IsNull() && !u.ValueBool() {
-					useSecretForSigning = types.BoolNull()
-				}
+			proxy := types.StringNull()
+			if handler.Proxy != nil {
+				proxy = types.StringPointerValue(handler.Proxy)
 			}
 
 			h, d := types.ObjectValue(
@@ -445,7 +443,7 @@ func (m *WebhookBaseResourceModel) fromAPIModel(ctx context.Context, apiModel We
 					"url":                    types.StringValue(handler.Url),
 					"secret":                 secret,
 					"use_secret_for_signing": useSecretForSigning,
-					"proxy":                  types.StringPointerValue(handler.Proxy),
+					"proxy":                  proxy,
 					"custom_http_headers":    customHttpHeaders,
 				},
 			)

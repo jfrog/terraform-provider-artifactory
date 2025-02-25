@@ -96,7 +96,7 @@ func (r LocalDebianResourceModel) ToAPIModel(ctx context.Context, packageType st
 		SecondaryKeyPairRef: r.SecondaryKeyPairRef.ValueString(),
 		CompressionFormats:  compressionFormats,
 		TrivialLayout:       r.TrivialLayout.ValueBool(),
-		DdebSupported:       r.DdebSupported.ValueBool(),
+		DdebSupported:       r.DdebSupported.ValueBoolPointer(),
 	}, diags
 }
 
@@ -117,7 +117,11 @@ func (r *LocalDebianResourceModel) FromAPIModel(ctx context.Context, apiModel in
 
 	r.CompressionFormats = compressionFormats
 	r.TrivialLayout = types.BoolValue(model.TrivialLayout)
-	r.DdebSupported = types.BoolValue(model.DdebSupported)
+	ddebSupported := types.BoolNull()
+	if model.DdebSupported != nil {
+		ddebSupported = types.BoolPointerValue(model.DdebSupported)
+	}
+	r.DdebSupported = ddebSupported
 
 	return diags
 }
@@ -128,7 +132,7 @@ type LocalDebianAPIModel struct {
 	SecondaryKeyPairRef string   `json:"secondaryKeyPairRef"`
 	CompressionFormats  []string `json:"optionalIndexCompressionFormats,omitempty"`
 	TrivialLayout       bool     `json:"debianTrivialLayout"`
-	DdebSupported       bool     `json:"ddebSupported"`
+	DdebSupported       *bool    `json:"ddebSupported,omitempty"`
 }
 
 func (r *localDebianResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

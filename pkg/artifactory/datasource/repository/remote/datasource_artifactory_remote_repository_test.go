@@ -37,7 +37,7 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 		}
 
 		data "artifactory_remote_{{ .packageType }}_repository" "{{ .name }}" {
-		    key = artifactory_remote_{{ .packageType }}_repository.{{ .name }}.id
+		    key = artifactory_remote_{{ .packageType }}_repository.{{ .name }}.key
 		}
 	`, params)
 
@@ -71,7 +71,7 @@ func TestAccDataSourceRemoteAnsibleRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_ansible_repository" "{{ .name }}" {
-		    key = artifactory_remote_ansible_repository.{{ .name }}.id
+		    key = artifactory_remote_ansible_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -106,7 +106,7 @@ func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_bower_repository" "{{ .name }}" {
-		    key = artifactory_remote_bower_repository.{{ .name }}.id
+		    key = artifactory_remote_bower_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -145,7 +145,7 @@ func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_cargo_repository" "{{ .name }}" {
-		    key = artifactory_remote_cargo_repository.{{ .name }}.id
+		    key = artifactory_remote_cargo_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -184,7 +184,7 @@ func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_cocoapods_repository" "{{ .name }}" {
-		    key = artifactory_remote_cocoapods_repository.{{ .name }}.id
+		    key = artifactory_remote_cocoapods_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -221,7 +221,7 @@ func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_composer_repository" "{{ .name }}" {
-		    key = artifactory_remote_composer_repository.{{ .name }}.id
+		    key = artifactory_remote_composer_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -258,7 +258,7 @@ func TestAccDataSourceRemoteConanRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_conan_repository" "{{ .name }}" {
-		    key = artifactory_remote_conan_repository.{{ .name }}.id
+		    key = artifactory_remote_conan_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -299,7 +299,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
-		    key = artifactory_remote_docker_repository.{{ .name }}.id
+		    key = artifactory_remote_docker_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -340,7 +340,7 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_generic_repository" "{{ .name }}" {
-		    key = artifactory_remote_generic_repository.{{ .name }}.id
+		    key = artifactory_remote_generic_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -376,7 +376,7 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_go_repository" "{{ .name }}" {
-		    key = artifactory_remote_go_repository.{{ .name }}.id
+		    key = artifactory_remote_go_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -415,7 +415,7 @@ func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_helm_repository" "{{ .name }}" {
-		    key = artifactory_remote_helm_repository.{{ .name }}.id
+		    key = artifactory_remote_helm_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -469,7 +469,7 @@ resource "{{ .resource_name }}" "{{ .name }}" {
 }
 
 data "{{ .resource_name }}" "{{ .name }}" {
-    key = {{ .resource_name }}.{{ .name }}.id
+    key = {{ .resource_name }}.{{ .name }}.key
 }`
 
 func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
@@ -530,7 +530,7 @@ func TestAccDataSourceRemoteHelmOciRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_helmoci_repository" "{{ .name }}" {
-		    key = artifactory_remote_helmoci_repository.{{ .name }}.id
+		    key = artifactory_remote_helmoci_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -602,7 +602,7 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_nuget_repository" "{{ .name }}" {
-		    key = artifactory_remote_nuget_repository.{{ .name }}.id
+		    key = artifactory_remote_nuget_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -645,7 +645,7 @@ func TestAccDataSourceRemoteOciRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_oci_repository" "{{ .name }}" {
-		    key = artifactory_remote_oci_repository.{{ .name }}.id
+		    key = artifactory_remote_oci_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -685,7 +685,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_pypi_repository" "{{ .name }}" {
-		    key = artifactory_remote_pypi_repository.{{ .name }}.id
+		    key = artifactory_remote_pypi_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -724,7 +724,7 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_terraform_repository" "{{ .name }}" {
-		    key = artifactory_remote_terraform_repository.{{ .name }}.id
+		    key = artifactory_remote_terraform_repository.{{ .name }}.key
 		}`,
 		params,
 	)
@@ -763,7 +763,7 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_vcs_repository" "{{ .name }}" {
-		    key = artifactory_remote_vcs_repository.{{ .name }}.id
+		    key = artifactory_remote_vcs_repository.{{ .name }}.key
 		}`,
 		params,
 	)
