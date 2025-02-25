@@ -30,8 +30,10 @@ func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (
 		template = repoTemplate
 	case "build":
 		template = buildTemplate
-	case "release_bundle", "distribution", "artifactory_release_bundle", "destination":
-		template = releaseBundleTemplate
+	case "release_bundle", "distribution":
+		template = sourceReleaseBundleTemplate
+	case "artifactory_release_bundle", "destination":
+		template = targetReleaseBundleTemplate
 	case "release_bundle_v2":
 		template = releaseBundleV2Template
 	}
