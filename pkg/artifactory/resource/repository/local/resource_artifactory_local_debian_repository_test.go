@@ -11,7 +11,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccLocalDebianRepository_full(t *testing.T) {
@@ -140,7 +139,7 @@ EOF
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "pair_name", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "pair_name", security.VerifyKeyPair),
 		),
@@ -173,10 +172,11 @@ EOF
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -246,7 +246,7 @@ EOF
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
-						VersionConstraint: "12.8.0",
+						VersionConstraint: "10.3.3",
 						Source:            "jfrog/artifactory",
 					},
 				},

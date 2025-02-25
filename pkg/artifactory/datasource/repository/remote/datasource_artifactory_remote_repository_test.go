@@ -37,7 +37,7 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 		}
 
 		data "artifactory_remote_{{ .packageType }}_repository" "{{ .name }}" {
-		    key = artifactory_remote_{{ .packageType }}_repository.{{ .name }}.id
+		    key = artifactory_remote_{{ .packageType }}_repository.{{ .name }}.key
 		}
 	`, params)
 
@@ -71,14 +71,14 @@ func TestAccDataSourceRemoteAnsibleRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_ansible_repository" "{{ .name }}" {
-		    key = artifactory_remote_ansible_repository.{{ .name }}.id
+		    key = artifactory_remote_ansible_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -106,14 +106,14 @@ func TestAccDataSourceRemoteBowerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_bower_repository" "{{ .name }}" {
-		    key = artifactory_remote_bower_repository.{{ .name }}.id
+		    key = artifactory_remote_bower_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -145,14 +145,14 @@ func TestAccDataSourceRemoteCargoRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_cargo_repository" "{{ .name }}" {
-		    key = artifactory_remote_cargo_repository.{{ .name }}.id
+		    key = artifactory_remote_cargo_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -184,14 +184,14 @@ func TestAccDataSourceRemoteCocoaPodsRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_cocoapods_repository" "{{ .name }}" {
-		    key = artifactory_remote_cocoapods_repository.{{ .name }}.id
+		    key = artifactory_remote_cocoapods_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -221,14 +221,14 @@ func TestAccDataSourceRemoteComposerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_composer_repository" "{{ .name }}" {
-		    key = artifactory_remote_composer_repository.{{ .name }}.id
+		    key = artifactory_remote_composer_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -258,14 +258,14 @@ func TestAccDataSourceRemoteConanRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_conan_repository" "{{ .name }}" {
-		    key = artifactory_remote_conan_repository.{{ .name }}.id
+		    key = artifactory_remote_conan_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -299,14 +299,14 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
-		    key = artifactory_remote_docker_repository.{{ .name }}.id
+		    key = artifactory_remote_docker_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -340,14 +340,14 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_generic_repository" "{{ .name }}" {
-		    key = artifactory_remote_generic_repository.{{ .name }}.id
+		    key = artifactory_remote_generic_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -376,14 +376,14 @@ func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_go_repository" "{{ .name }}" {
-		    key = artifactory_remote_go_repository.{{ .name }}.id
+		    key = artifactory_remote_go_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -415,14 +415,14 @@ func TestAccDataSourceRemoteHelmRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_helm_repository" "{{ .name }}" {
-		    key = artifactory_remote_helm_repository.{{ .name }}.id
+		    key = artifactory_remote_helm_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -469,7 +469,7 @@ resource "{{ .resource_name }}" "{{ .name }}" {
 }
 
 data "{{ .resource_name }}" "{{ .name }}" {
-    key = {{ .resource_name }}.{{ .name }}.id
+    key = {{ .resource_name }}.{{ .name }}.key
 }`
 
 func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase) {
@@ -486,7 +486,7 @@ func makeDataSourceRemoteGradleLikeRepoTestCase(packageType string, t *testing.T
 
 	return t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, javaRepositoryBasic, params),
@@ -530,14 +530,14 @@ func TestAccDataSourceRemoteHelmOciRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_helmoci_repository" "{{ .name }}" {
-		    key = artifactory_remote_helmoci_repository.{{ .name }}.id
+		    key = artifactory_remote_helmoci_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -602,14 +602,14 @@ func TestAccDataSourceRemoteNugetRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_nuget_repository" "{{ .name }}" {
-		    key = artifactory_remote_nuget_repository.{{ .name }}.id
+		    key = artifactory_remote_nuget_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -645,14 +645,14 @@ func TestAccDataSourceRemoteOciRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_oci_repository" "{{ .name }}" {
-		    key = artifactory_remote_oci_repository.{{ .name }}.id
+		    key = artifactory_remote_oci_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -685,14 +685,14 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_pypi_repository" "{{ .name }}" {
-		    key = artifactory_remote_pypi_repository.{{ .name }}.id
+		    key = artifactory_remote_pypi_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -724,14 +724,14 @@ func TestAccDataSourceRemoteTerraformRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_terraform_repository" "{{ .name }}" {
-		    key = artifactory_remote_terraform_repository.{{ .name }}.id
+		    key = artifactory_remote_terraform_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -763,14 +763,14 @@ func TestAccDataSourceRemoteVcsRepository(t *testing.T) {
 		}
 
 		data "artifactory_remote_vcs_repository" "{{ .name }}" {
-		    key = artifactory_remote_vcs_repository.{{ .name }}.id
+		    key = artifactory_remote_vcs_repository.{{ .name }}.key
 		}`,
 		params,
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

@@ -32,7 +32,7 @@ func TestAccVirtualRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccVirtualRepository_reset_default_deployment_repo(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func TestAccVirtualGoRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -188,7 +188,7 @@ func TestAccVirtualConanRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func TestAccVirtualGenericRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -272,7 +272,7 @@ func TestAccVirtualMavenRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -319,7 +319,7 @@ func TestAccVirtualHelmRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -414,7 +414,7 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
@@ -465,7 +465,7 @@ func TestAccVirtualRepository_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -518,7 +518,7 @@ func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -560,7 +560,7 @@ func TestAccVirtualRepository_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -746,7 +746,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 
 	return t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -855,7 +855,7 @@ func TestAccVirtualBowerExternalDependenciesRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -944,7 +944,7 @@ func TestAccVirtualGoExternalDependenciesRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -1041,7 +1041,7 @@ func TestAccVirtualNpmExternalDependenciesRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{
@@ -1107,7 +1107,7 @@ func TestAccVirtualDebianRepository_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 
 		Steps: []resource.TestStep{
 			{

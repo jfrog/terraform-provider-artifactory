@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -164,7 +166,10 @@ func (r *localDockerV2Resource) Schema(ctx context.Context, req resource.SchemaR
 				MarkdownDescription: "When set, Artifactory will block the pushing of Docker images with manifest v2 schema 1 to this repository.",
 			},
 			"api_version": schema.StringAttribute{
-				Computed:            true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				MarkdownDescription: "The Docker API version to use.",
 			},
 		},
