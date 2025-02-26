@@ -178,6 +178,4 @@ func (m preventUpdateModifier) PlanModifyBool(_ context.Context, req planmodifie
 		"Attribute cannot be updated",
 		fmt.Sprintf("%s cannot be updated after it is set.", req.Path.String()),
 	)
-
-	return
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -36,7 +37,6 @@ func TestAccGeneralSecurity_UpgradeFromSDKv2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "enable_anonymous_access", "true"),
 				),
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -45,9 +45,12 @@ func TestAccGeneralSecurity_UpgradeFromSDKv2(t *testing.T) {
 						Source:            "jfrog/artifactory",
 					},
 				},
-				Config:           config,
-				PlanOnly:         true,
-				ConfigPlanChecks: testutil.ConfigPlanChecks(""),
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

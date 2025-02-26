@@ -211,7 +211,7 @@ EOF
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
@@ -268,7 +268,7 @@ func mkNewVirtualTestCase(packageType string, t *testing.T, extraFields map[stri
 
 	return t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

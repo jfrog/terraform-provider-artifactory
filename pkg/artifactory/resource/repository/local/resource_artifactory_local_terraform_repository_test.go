@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccLocalTerraformModuleRepository(t *testing.T) {
@@ -26,7 +25,7 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -36,10 +35,11 @@ func TestAccLocalTerraformModuleRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -60,7 +60,7 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -70,10 +70,11 @@ func TestAccLocalTerraformProviderRepository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})

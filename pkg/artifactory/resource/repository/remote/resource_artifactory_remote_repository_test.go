@@ -17,7 +17,6 @@ import (
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
-	"github.com/jfrog/terraform-provider-shared/validator"
 )
 
 func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
@@ -107,17 +106,11 @@ func TestAccRemoteAllowDotsUnderscorersAndDashesInKeyGH129(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryBasic,
 				Check:  resource.TestCheckResourceAttr(fqrn, "key", key),
-			},
-			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(key, "key"),
 			},
 		},
 	})
@@ -205,7 +198,7 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -226,10 +219,11 @@ func TestAccRemoteRepositoryChangeConfigGH148(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -249,7 +243,7 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(remoteRepoBasic, name, name),
@@ -259,10 +253,11 @@ func TestAccRemoteRepository_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -352,11 +347,12 @@ func mkNewRemoteTestCase(packageType string, t *testing.T, extraFields map[strin
 				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
 			},
 			{
-				ResourceName:            fqrn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"password"},
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+				ImportStateVerifyIgnore:              []string{"password"},
 			},
 		},
 	}
@@ -421,7 +417,7 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -440,10 +436,11 @@ func TestAccRemoteRepository_MissedRetrievalCachePeriodSecs_retained_between_upd
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -468,7 +465,7 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryInit,
@@ -478,10 +475,11 @@ func TestAccRemoteRepository_assumed_offline_period_secs_has_default_value_GH241
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -526,7 +524,7 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: remoteRepositoryWithProxy,
@@ -551,10 +549,11 @@ func TestAccRemoteProxyUpdateGH2(t *testing.T) {
 				Check:  resource.TestCheckResourceAttr(fqrn, "proxy", ""),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -600,7 +599,7 @@ func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -610,10 +609,11 @@ func TestAccRemoteDisableDefaultProxyGH739(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -664,7 +664,7 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -683,10 +683,11 @@ func TestAccRemoteDisableProxyGH739(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -711,7 +712,7 @@ func TestAccRemoteDisableDefaultProxyConflictAttrGH739(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
@@ -763,10 +764,11 @@ func TestAccRemoteRepositoryWithProjectAttributesGH318(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})
@@ -830,7 +832,7 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate("one", step1, map[string]interface{}{
@@ -853,10 +855,11 @@ func TestAccRemoteRepository_excludes_pattern_reset(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "key"),
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})

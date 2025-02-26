@@ -42,7 +42,7 @@ func mkTestCase(packageType string, t *testing.T) (*testing.T, resource.TestCase
 		}
 
 		data "artifactory_local_{{ .packageType }}_repository" "{{ .name }}" {
-			key = artifactory_local_{{ .packageType }}_repository.{{ .name }}.id
+			key = artifactory_local_{{ .packageType }}_repository.{{ .name }}.key
 		}
 	`, params)
 
@@ -93,7 +93,7 @@ EOF
 		}
 
 		data "artifactory_local_alpine_repository" "{{ .repo_name }}" {
-			key = artifactory_local_alpine_repository.{{ .repo_name }}.id
+			key = artifactory_local_alpine_repository.{{ .repo_name }}.key
 		}
 	`, map[string]interface{}{
 		"kp_id":       kpId,
@@ -148,7 +148,7 @@ EOF
 		}
 
 		data "artifactory_local_ansible_repository" "{{ .repo_name }}" {
-			key = artifactory_local_ansible_repository.{{ .repo_name }}.id
+			key = artifactory_local_ansible_repository.{{ .repo_name }}.key
 		}
 	`, map[string]interface{}{
 		"kp_id":       kpId,
@@ -188,7 +188,7 @@ func TestAccDataSourceLocalCargoRepository(t *testing.T) {
 		}
 
 		data "artifactory_local_cargo_repository" "{{ .name }}" {
-		  key = artifactory_local_cargo_repository.{{ .name }}.id
+		  key = artifactory_local_cargo_repository.{{ .name }}.key
 		}
 	`, params)
 
@@ -221,7 +221,7 @@ func TestAccDataSourceLocalConanRepository(t *testing.T) {
 		}
 
 		data "artifactory_local_conan_repository" "{{ .name }}" {
-			key = artifactory_local_conan_repository.{{ .name }}.id
+			key = artifactory_local_conan_repository.{{ .name }}.key
 		}
 	`, params)
 
@@ -290,7 +290,7 @@ EOF
 		}
 
 		data "artifactory_local_debian_repository" "{{ .repo_name }}" {
-			key = artifactory_local_debian_repository.{{ .repo_name }}.id
+			key = artifactory_local_debian_repository.{{ .repo_name }}.key
 		}
 	`, map[string]interface{}{
 		"kp_id":       kpId,
@@ -340,7 +340,7 @@ func TestAccDataSourceLocalDockerV2Repository(t *testing.T) {
 	}
 
 	data "artifactory_local_docker_v2_repository" "{{ .name }}" {
-	  key = artifactory_local_docker_v2_repository.{{ .name }}.id
+	  key = artifactory_local_docker_v2_repository.{{ .name }}.key
 	}
 	`, params)
 
@@ -371,7 +371,7 @@ func TestAccDataSourceLocalDockerV1Repository(t *testing.T) {
 		key = "{{ .name }}"
 	}
 	data "artifactory_local_docker_v1_repository" "{{ .name }}" {
-		key = artifactory_local_docker_v1_repository.{{ .name }}.id
+		key = artifactory_local_docker_v1_repository.{{ .name }}.key
 	}
 	`, params)
 
@@ -414,7 +414,7 @@ const localJavaRepositoryBasic = `
 	}
 
 	data "{{ .resource_name }}" "{{ .name }}" {
-		key = {{ .resource_name }}.{{ .name }}.id
+		key = {{ .resource_name }}.{{ .name }}.key
 	}
 `
 
@@ -460,7 +460,7 @@ func makeDataSourceLocalGradleLikeRepoTestCase(repoType string, t *testing.T) (*
 
 	return t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, localJavaRepositoryBasic, tempStruct),
@@ -493,7 +493,7 @@ func TestAccDataSourceLocalHelmOciRepository(t *testing.T) {
 	}
 
 	data "artifactory_local_helmoci_repository" "{{ .name }}" {
-		key = artifactory_local_helmoci_repository.{{ .name }}.id
+		key = artifactory_local_helmoci_repository.{{ .name }}.key
 	}
 	`, params)
 
@@ -535,13 +535,13 @@ func TestAccDataSourceLocalNugetRepository(t *testing.T) {
 		force_nuget_authentication = {{ .force_nuget_authentication }}
 	}
 	data "artifactory_local_nuget_repository" "{{ .name }}" {
-		key = artifactory_local_nuget_repository.{{ .name }}.id
+		key = artifactory_local_nuget_repository.{{ .name }}.key
 	}
 	`, params)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -571,7 +571,7 @@ func TestAccDataSourceLocalOciRepository(t *testing.T) {
 	}
 
 	data "artifactory_local_oci_repository" "{{ .name }}" {
-		key = artifactory_local_oci_repository.{{ .name }}.id
+		key = artifactory_local_oci_repository.{{ .name }}.key
 	}
 	`, params)
 
@@ -646,7 +646,7 @@ EOF
 		}
 
 		data "artifactory_local_rpm_repository" "{{ .repo_name }}" {
-			key = artifactory_local_rpm_repository.{{ .repo_name }}.id
+			key = artifactory_local_rpm_repository.{{ .repo_name }}.key
 		}
 	`, map[string]interface{}{
 		"kp_id":       kpId,
@@ -661,7 +661,7 @@ EOF
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
@@ -694,7 +694,7 @@ func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
 			key            = "{{ .name }}"
 		}
 		data "artifactory_local_terraform_module_repository" "{{ .name }}" {
-			key = artifactory_local_terraform_module_repository.{{ .name }}.id
+			key = artifactory_local_terraform_module_repository.{{ .name }}.key
 		}
 		`,
 		params,
@@ -702,7 +702,7 @@ func TestAccDataSourceLocalTerraformModuleRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,
@@ -727,7 +727,7 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 			key = "{{ .name }}"
 		}
 		data "artifactory_local_terraform_provider_repository" "{{ .name }}" {
-			key = artifactory_local_terraform_provider_repository.{{ .name }}.id
+			key = artifactory_local_terraform_provider_repository.{{ .name }}.key
 		}
 	`,
 		params,
@@ -735,7 +735,7 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: localRepositoryBasic,

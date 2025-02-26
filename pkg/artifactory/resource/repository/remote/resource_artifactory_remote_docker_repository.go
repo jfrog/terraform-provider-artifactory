@@ -5,13 +5,11 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -167,10 +165,6 @@ func (r *remoteDockerResource) Schema(ctx context.Context, req resource.SchemaRe
 			"external_dependencies_patterns": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
-				Computed:    true,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(types.StringType, []attr.Value{types.StringValue("**")}),
-				),
 				Validators: []validator.List{
 					listvalidator.AlsoRequires(path.MatchRoot("external_dependencies_enabled")),
 					listvalidator.SizeAtLeast(1),

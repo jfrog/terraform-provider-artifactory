@@ -228,8 +228,6 @@ func (r *BaseResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.SetID(plan.KeyString())
-
 	plan.SetCreateResourceStateData(ctx, resp)
 }
 
@@ -321,8 +319,6 @@ func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	plan.SetID(plan.KeyString())
-
 	planProjectKey := plan.ProjectKeyValue()
 	stateProjectKey := state.ProjectKeyValue()
 
@@ -388,7 +384,6 @@ func (r *BaseResource) ImportState(ctx context.Context, req resource.ImportState
 }
 
 type ResourceModelIface interface {
-	SetID(string)
 	KeyString() string
 	ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics)
 	FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics
@@ -403,7 +398,6 @@ type ResourceModelIface interface {
 }
 
 type BaseResourceModel struct {
-	ID                  types.String `tfsdk:"id"`
 	Key                 types.String `tfsdk:"key"`
 	ProjectKey          types.String `tfsdk:"project_key"`
 	ProjectEnvironments types.Set    `tfsdk:"project_environments"`
@@ -411,10 +405,6 @@ type BaseResourceModel struct {
 	Notes               types.String `tfsdk:"notes"`
 	IncludesPattern     types.String `tfsdk:"includes_pattern"`
 	ExcludesPattern     types.String `tfsdk:"excludes_pattern"`
-}
-
-func (r *BaseResourceModel) SetID(id string) {
-	r.ID = types.StringValue(id)
 }
 
 func (r BaseResourceModel) KeyString() string {
@@ -452,7 +442,6 @@ func (r *BaseResourceModel) FromAPIModel(ctx context.Context, apiModel interface
 
 	model := apiModel.(BaseAPIModel)
 
-	r.ID = types.StringValue(model.Key)
 	r.Key = types.StringValue(model.Key)
 	r.ProjectKey = types.StringValue(model.ProjectKey)
 	r.Description = types.StringValue(model.Description)
@@ -484,9 +473,6 @@ type BaseAPIModel struct {
 }
 
 var BaseAttributes = map[string]schema.Attribute{
-	"id": schema.StringAttribute{
-		Computed: true,
-	},
 	"key": schema.StringAttribute{
 		Required: true,
 		Validators: []validator.String{
@@ -569,20 +555,18 @@ func RepoLayoutRefAttribute(repositoryType string, packageType string) map[strin
 
 var PrimaryKeyPairRefAttribute = map[string]schema.Attribute{
 	"primary_keypair_ref": schema.StringAttribute{
-		Optional: true,
-		Validators: []validator.String{
-			stringvalidator.LengthAtLeast(1),
-		},
+		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString(""),
 		MarkdownDescription: "Primary keypair used to sign artifacts. Default value is empty.",
 	},
 }
 
 var SecondaryKeyPairRefAttribute = map[string]schema.Attribute{
 	"secondary_keypair_ref": schema.StringAttribute{
-		Optional: true,
-		Validators: []validator.String{
-			stringvalidator.LengthAtLeast(1),
-		},
+		Optional:            true,
+		Computed:            true,
+		Default:             stringdefault.StaticString(""),
 		MarkdownDescription: "Secondary keypair used to sign artifacts.",
 	},
 }

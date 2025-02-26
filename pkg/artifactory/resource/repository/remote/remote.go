@@ -152,11 +152,11 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		localRepositoryAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
 	}
 
-	var contentSynchronisation *ContentSynchronisation
+	var contentSynchronisation ContentSynchronisation
 	elems := r.ContentSynchronisation.Elements()
 	if len(elems) > 0 {
 		attrs := elems[0].(types.Object).Attributes()
-		contentSynchronisation = &ContentSynchronisation{
+		contentSynchronisation = ContentSynchronisation{
 			Enabled: attrs["enabled"].(types.Bool).ValueBool(),
 			Statistics: ContentSynchronisationStatistics{
 				Enabled: attrs["statistics_enabled"].(types.Bool).ValueBool(),
@@ -194,8 +194,8 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		AllowAnyHostAuth:                  r.AllowAnyHostAuth.ValueBoolPointer(),
 		EnableCookieManagement:            r.EnableCookieManagement.ValueBoolPointer(),
 		BypassHeadRequests:                r.BypassHeadRequests.ValueBoolPointer(),
-		ClientTLSCertificate:              r.ClientTLSCertificate.ValueStringPointer(),
-		ContentSynchronisation:            contentSynchronisation,
+		ClientTLSCertificate:              r.ClientTLSCertificate.ValueString(),
+		ContentSynchronisation:            &contentSynchronisation,
 		MismatchingMimeTypeOverrideList:   r.MismatchingMimeTypeOverrideList.ValueString(),
 		ListRemoteFolderItems:             r.ListRemoteFolderItems.ValueBool(),
 		DisableURLNormalization:           r.DisableURLNormalization.ValueBool(),
@@ -240,7 +240,7 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 	r.AllowAnyHostAuth = types.BoolPointerValue(apiModel.AllowAnyHostAuth)
 	r.EnableCookieManagement = types.BoolPointerValue(apiModel.EnableCookieManagement)
 	r.BypassHeadRequests = types.BoolPointerValue(apiModel.BypassHeadRequests)
-	r.ClientTLSCertificate = types.StringPointerValue(apiModel.ClientTLSCertificate)
+	r.ClientTLSCertificate = types.StringValue(apiModel.ClientTLSCertificate)
 
 	contentSynchronisationList := types.ListNull(contentSynchronisationAttrType)
 	// only update plan/state with ContentSynchronisation from API if it is enabled
@@ -303,8 +303,8 @@ type RemoteAPIModel struct {
 	AllowAnyHostAuth                  *bool                   `json:"allowAnyHostAuth,omitempty"`
 	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
-	ClientTLSCertificate              *string                 `json:"clientTlsCertificate,omitempty"`
-	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
+	ClientTLSCertificate              string                  `json:"clientTlsCertificate"`
+	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation"`
 	MismatchingMimeTypeOverrideList   string                  `json:"mismatchingMimeTypesOverrideList"`
 	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
 	DisableURLNormalization           bool                    `json:"disableUrlNormalization"`
@@ -520,6 +520,8 @@ var RemoteAttributes = lo.Assign(
 		},
 		"client_tls_certificate": schema.StringAttribute{
 			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString(""),
 			MarkdownDescription: "Client TLS certificate name.",
 		},
 		"query_params": schema.StringAttribute{

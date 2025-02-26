@@ -16,6 +16,8 @@ A clear and concise description of what the bug is.
 - [ ] Your version of artifactory (you can `curl` it at `$host/artifactory/api/system/version`
 - [ ] Your version of terraform
 - [ ] Your version of terraform provider
+- [ ] Your product license (E+/E/Pro/oss)
+- [ ] JFrog support reference (if already raised with support team)
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.

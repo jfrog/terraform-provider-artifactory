@@ -84,7 +84,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -197,7 +197,7 @@ func genericTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCa
 	return t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -278,7 +278,7 @@ func TestAccFederatedRepo_DisableDefaultProxyConflictAttr(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
@@ -440,7 +440,7 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
@@ -511,7 +511,7 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 		),
 		Steps: []resource.TestStep{
@@ -574,7 +574,7 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -642,7 +642,7 @@ func TestAccFederatedConanRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -762,7 +762,7 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
@@ -845,7 +845,7 @@ func TestAccFederatedDockerV2Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -918,7 +918,7 @@ func TestAccFederatedDockerRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -980,7 +980,7 @@ func TestAccFederatedDockerV1Repository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -1038,7 +1038,7 @@ func TestAccFederatedHelmOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -1104,7 +1104,7 @@ func TestAccFederatedNugetRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,
@@ -1180,7 +1180,7 @@ func TestAccFederatedMavenRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
@@ -1239,7 +1239,7 @@ func makeFederatedGradleLikeRepoTestCase(repoType string, t *testing.T) (*testin
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: util.ExecuteTemplate(fqrn, federatedJavaRepositoryBasic, tempStruct),
@@ -1319,7 +1319,7 @@ func TestAccFederatedOciRepository(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -1444,7 +1444,7 @@ EOF
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
 		CheckDestroy: acctest.CompositeCheckDestroy(
-			acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
 			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
 		),
@@ -1513,7 +1513,7 @@ func makeFederatedTerraformRepoTestCase(registryType string, t *testing.T) (*tes
 	return t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "", acctest.CheckRepo),
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config: federatedRepositoryBasic,

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -229,6 +230,15 @@ func webhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*testing
 	config := util.ExecuteTemplate("TestAccWebhook{{ .webhookType }}Type", `
 		resource "artifactory_local_{{ .repoType }}_repository" "{{ .repoName }}" {
 			key = "{{ .repoName }}"
+
+			{{if eq .webhookType "docker"}}
+			lifecycle {
+				ignore_changes = [
+					block_pushing_schema1,
+					tag_retention,
+				]
+			}
+			{{end}}
 		}
 
 		resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
@@ -300,17 +310,16 @@ func webhookMigrateFromSDKv2TestCase(webhookType string, t *testing.T) (*testing
 				},
 				Config: config,
 				Check:  resource.ComposeTestCheckFunc(testChecks...),
-				// ConfigPlanChecks: testutil.ConfigPlanChecks(""),
 			},
 			{
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
-				ConfigPlanChecks:         testutil.ConfigPlanChecks(fqrn),
-				// ConfigPlanChecks: resource.ConfigPlanChecks{
-				// 	PreApply: []plancheck.PlanCheck{
-				// 		plancheck.ExpectEmptyPlan(),
-				// 	},
-				// },
+				// ConfigPlanChecks:         testutil.ConfigPlanChecks(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	}
