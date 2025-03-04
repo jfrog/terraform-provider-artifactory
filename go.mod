@@ -4,6 +4,7 @@ module github.com/jfrog/terraform-provider-artifactory/v12
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
 go 1.22.7
+toolchain go1.23.7
 
 require (
 	github.com/go-resty/resty/v2 v2.16.5
@@ -22,7 +23,7 @@ require (
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
-	golang.org/x/net v0.35.0
+	golang.org/x/net v0.36.0
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -92,7 +93,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
