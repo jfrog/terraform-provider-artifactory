@@ -17,6 +17,7 @@ A clear and concise description of what the bug is.
 - [ ] Your version of terraform
 - [ ] Your version of terraform provider
 - [ ] Your product license (E+/E/Pro/oss)
+- [ ] Is your Artifactory Cloud or Self-Hosted
 - [ ] JFrog support reference (if already raised with support team)
 
 **Expected behavior**
