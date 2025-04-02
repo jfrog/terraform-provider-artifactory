@@ -91,17 +91,20 @@ func (r remoteDockerResourceModel) ToAPIModel(ctx context.Context, packageType s
 		diags.Append(d...)
 	}
 
-	return RemoteDockerAPIModel{
+	var apiModel = RemoteDockerAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
 			Curated: r.Curated.ValueBool(),
 		},
-		ExternalDependenciesEnabled:  r.ExternalDependenciesEnabled.ValueBool(),
-		ExternalDependenciesPatterns: externalDependenciesPatterns,
-		EnableTokenAuthentication:    r.EnableTokenAuthentication.ValueBool(),
-		BlockPushingSchema1:          r.BlockPushingSchema1.ValueBool(),
-		ProjectId:                    r.ProjectId.ValueString(),
-	}, diags
+		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
+		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
+		BlockPushingSchema1:         r.BlockPushingSchema1.ValueBool(),
+		ProjectId:                   r.ProjectId.ValueString(),
+	}
+	if r.ExternalDependenciesEnabled.ValueBool() == true {
+		apiModel.ExternalDependenciesPatterns = externalDependenciesPatterns
+	}
+	return apiModel, diags
 }
 
 func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
@@ -115,12 +118,14 @@ func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel i
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 
-	externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
-	if d != nil {
-		diags.Append(d...)
+	if r.ExternalDependenciesEnabled.ValueBool() == true {
+		externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
+		if d != nil {
+			diags.Append(d...)
+		}
+		r.ExternalDependenciesPatterns = externalDependenciesPatterns
 	}
 
-	r.ExternalDependenciesPatterns = externalDependenciesPatterns
 	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 	r.BlockPushingSchema1 = types.BoolValue(model.BlockPushingSchema1)
 	r.ProjectId = types.StringValue(model.ProjectId)

@@ -48,6 +48,72 @@ func TestAccRemoteDockerRepository_DependenciesTrueEmptyListFails(t *testing.T) 
 		},
 	})
 }
+func TestAccRemoteDockerRepository_DependenciesTrueAndFalseToggle(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("docker-remote-", "artifactory_remote_docker_repository")
+	var testData = map[string]string{
+		"resource_name":                  name,
+		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
+		"url":                            "https://registry-1.docker.io/",
+		"assumed_offline_period_secs":    "300",
+		"retrieval_cache_period_seconds": "43200",
+		"missed_cache_period_seconds":    "7200",
+		"excludes_pattern":               "nopat3,nopat2,nopat1",
+		"includes_pattern":               "pat3,pat2,pat1",
+		"project_id":                     "",
+		"notes":                          "internal description",
+		"proxy":                          "",
+		"username":                       "admin",
+		"password":                       "password1",
+		"xray_index":                     "false",
+		"archive_browsing_enabled":       "false",
+		"list_remote_folder_items":       "true",
+		"external_dependencies_enabled":  "true",
+		"enable_token_authentication":    "true",
+	}
+	var testDataUpdated = map[string]string{
+		"resource_name":                  name,
+		"repo_name":                      fmt.Sprintf("docker-remote-%d", id),
+		"url":                            "https://registry-1.docker.io/",
+		"assumed_offline_period_secs":    "301",
+		"retrieval_cache_period_seconds": "43201",
+		"missed_cache_period_seconds":    "7201",
+		"excludes_pattern":               "nopat3,nopat2,nopat1",
+		"includes_pattern":               "pat3,pat2,pat1",
+		"project_id":                     "fake-project-id",
+		"notes":                          "internal description",
+		"proxy":                          "",
+		"username":                       "admin1",
+		"password":                       "password",
+		"xray_index":                     "true",
+		"archive_browsing_enabled":       "true",
+		"list_remote_folder_items":       "false",
+		"external_dependencies_enabled":  "false",
+		"enable_token_authentication":    "false",
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testData),
+				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testData)),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
+				Check:  resource.ComposeTestCheckFunc(verifyRepository(fqrn, testDataUpdated)),
+			},
+			{
+				Config: util.ExecuteTemplate(fqrn, repoTemplate, testDataUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
 
 func TestAccRemoteDockerRepository_full(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("docker-remote-", "artifactory_remote_docker_repository")
