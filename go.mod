@@ -10,7 +10,7 @@ require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-version v1.7.0
-	github.com/hashicorp/terraform-plugin-docs v0.20.1
+	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.17.0
 	github.com/hashicorp/terraform-plugin-go v0.26.0
@@ -31,8 +31,8 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Kunde21/markdownfmt/v3 v3.1.0 // indirect
-	github.com/bmatcuk/doublestar/v4 v4.7.1 // indirect
-	github.com/hashicorp/cli v1.1.6 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.8.1 // indirect
+	github.com/hashicorp/cli v1.1.7 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/terraform-json v0.24.0 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
