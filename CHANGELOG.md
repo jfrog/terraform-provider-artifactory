@@ -1,3 +1,9 @@
+## 12.9.2 (April 2, 2025). Tested on Artifactory 7.104.14 with Terraform 1.11.3 and OpenTofu 1.9.0
+
+BUG FIXES:
+
+* resource/artifactory_remote_docker_repository,resource/artifactory_remote_helmoci_repository,resource/artifactory_remote_oci_repository : Fix artifactory_remote_docker_repository shows constant diff on external_dependencies_patterns. Issue: [#1217](https://github.com/jfrog/terraform-provider-artifactory/issues/1217) PR: [#1237](https://github.com/jfrog/terraform-provider-artifactory/pull/1237)
+
 ## 12.9.1 (Februry 25, 2025). Tested on Artifactory 7.104.9 with Terraform 1.10.5 and OpenTofu 1.9.0
 
 BUG FIXES:
