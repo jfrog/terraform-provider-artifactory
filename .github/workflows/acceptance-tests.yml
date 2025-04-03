@@ -192,13 +192,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "Terraform Provider Platform. A new PR was submitted by ${{ github.event.pull_request.user.login }} - ${{ github.event.pull_request.html_url }}, branch ${{ github.event.pull_request.base.ref }}. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge.",
+              "text": "Terraform Provider Platform. A new PR was submitted by ${{ github.event.pull_request.user.login }} - ${{ github.event.pull_request.html_url }}, branch ${{ github.event.pull_request.base.ref }}. Changes tested successfully. <@U953714BC>, <@U61EEPXRV>, <@UPJ95RNSE> or <@U03KYAAS248> please, review and merge.",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "<http://github.com/${{ github.repository }}|Terraform Provider Platform>. A new PR was submitted by *${{ github.event.pull_request.user.login }}* - <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>, branch *${{ github.event.pull_request.base.ref }}*. Changes tested successfully. <@U01H1SLSPA8> or <@UNDRUL1EU> please, review and merge."
+                    "text": "<http://github.com/${{ github.repository }}|Terraform Provider Platform>. A new PR was submitted by *${{ github.event.pull_request.user.login }}* - <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>, branch *${{ github.event.pull_request.base.ref }}*. Changes tested successfully. <@U953714BC>, <@U61EEPXRV>, <@UPJ95RNSE> or <@U03KYAAS248> please, review and merge."
                   }
                 }
               ]
