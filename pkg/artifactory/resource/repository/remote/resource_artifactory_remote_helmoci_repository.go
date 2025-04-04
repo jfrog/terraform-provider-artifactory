@@ -88,14 +88,16 @@ func (r remoteHelmOCIResourceModel) ToAPIModel(ctx context.Context, packageType 
 	if d != nil {
 		diags.Append(d...)
 	}
-
-	return RemoteHelmOCIAPIModel{
-		RemoteAPIModel:               remoteAPIModel,
-		ExternalDependenciesEnabled:  r.ExternalDependenciesEnabled.ValueBool(),
-		ExternalDependenciesPatterns: externalDependenciesPatterns,
-		EnableTokenAuthentication:    r.EnableTokenAuthentication.ValueBool(),
-		ProjectID:                    r.ProjectID.ValueString(),
-	}, diags
+	var apiModel = RemoteHelmOCIAPIModel{
+		RemoteAPIModel:              remoteAPIModel,
+		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
+		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
+		ProjectID:                   r.ProjectID.ValueString(),
+	}
+	if r.ExternalDependenciesEnabled.ValueBool() == true {
+		apiModel.ExternalDependenciesPatterns = externalDependenciesPatterns
+	}
+	return apiModel, diags
 }
 
 func (r *remoteHelmOCIResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
@@ -109,11 +111,14 @@ func (r *remoteHelmOCIResourceModel) FromAPIModel(ctx context.Context, apiModel 
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 
-	externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
-	if d != nil {
-		diags.Append(d...)
+	if r.ExternalDependenciesEnabled.ValueBool() == true {
+		externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
+		if d != nil {
+			diags.Append(d...)
+		}
+		r.ExternalDependenciesPatterns = externalDependenciesPatterns
 	}
-	r.ExternalDependenciesPatterns = externalDependenciesPatterns
+
 	r.ProjectID = types.StringValue(model.ProjectID)
 
 	return diags

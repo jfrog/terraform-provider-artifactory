@@ -71,3 +71,59 @@ func TestAccRemoteOCIRepository_migrate_from_SDKv2(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRemoteOCIRepository_DependenciesTrueAndFalseToggle(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-oci-remote", "artifactory_remote_oci_repository")
+
+	const temp = `
+		resource "artifactory_remote_oci_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			external_dependencies_enabled = true
+			enable_token_authentication = true
+			external_dependencies_patterns = ["**"]
+		}
+	`
+	const tempUpdate = `
+		resource "artifactory_remote_oci_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			external_dependencies_enabled = false
+			enable_token_authentication = true
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate("TestAccRemoteOCIRepository_DependenciesTrueAndFalseToggle", temp, params),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "true"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "external_dependencies_patterns.*", "**"),
+				),
+			},
+			{
+				Config: util.ExecuteTemplate("TestAccRemoteOCIRepository_DependenciesTrueAndFalseToggle", tempUpdate, params),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "external_dependencies_enabled", "false"),
+				),
+			},
+			{
+				Config: util.ExecuteTemplate("TestAccRemoteOCIRepository_DependenciesTrueAndFalseToggle", tempUpdate, params),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
