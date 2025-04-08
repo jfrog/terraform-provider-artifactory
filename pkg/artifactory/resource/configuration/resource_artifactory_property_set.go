@@ -174,7 +174,7 @@ type PredefinedValueAPIModel struct {
 
 type PropertyAPIModel struct {
 	Name                  string                    `xml:"name" yaml:"-"`
-	PredefinedValues      []PredefinedValueAPIModel `xml:"predefinedValues>predefinedValue" yaml:"predefinedValues"`
+	PredefinedValues      []PredefinedValueAPIModel `xml:"predefinedValues>predefinedValue" yaml:"predefinedValues,omitempty"`
 	ClosedPredefinedValue bool                      `xml:"closedPredefinedValues" yaml:"closedPredefinedValues"`
 	MultipleChoice        bool                      `xml:"multipleChoice" yaml:"multipleChoice"`
 }
@@ -258,10 +258,7 @@ func (r *PropertySetResource) Schema(ctx context.Context, req resource.SchemaReq
 									},
 								},
 							},
-							Validators: []validator.Set{
-								setvalidator.IsRequired(),
-							},
-							Description: "Properties in the property set.",
+							Description: "Properties in the property set. Predefined values is mandatory when closed_predefined_values or multiple_choice is set to 'true'",
 						},
 					},
 					Validators: []validator.Object{
@@ -523,4 +520,12 @@ func (v propertyValidator) ValidateObject(ctx context.Context, req validator.Obj
 			"Setting closed_predefined_values to 'false' and multiple_choice to 'true' disables multiple_choice",
 		)
 	}
+	if (closedPredefinedValues || multipleChoice) && len(attrs["predefined_value"].(types.Set).Elements()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("predefined_value"),
+			"Missing Attribute predefined_value",
+			"Predefined values is mandatory when closed_predefined_values or multiple_choice is set to 'true'",
+		)
+	}
+
 }
