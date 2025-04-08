@@ -338,3 +338,103 @@ resource "artifactory_property_set" "{{ .resource_name }}" {
     multiple_choice          = {{ .multiple_choice }}
   }
 }`
+
+const PropertySetNoPredefinedValueClosedPredefinedValuesEnabled = `
+resource "artifactory_property_set" "{{ .resource_name }}" {
+  name    = "{{ .property_set_name }}"
+  visible = {{ .visible }}
+
+  property {
+    name = "{{ .property1 }}"
+	multiple_choice          = {{ .multiple_choice }}
+    closed_predefined_values = {{ .closed_predefined_values }}
+  }
+}`
+
+const PropertySetNoPredefinedValue = `
+resource "artifactory_property_set" "{{ .resource_name }}" {
+  name    = "{{ .property_set_name }}"
+  visible = {{ .visible }}
+
+  property {
+    name = "{{ .property1 }}"
+	multiple_choice          = {{ .multiple_choice }}
+    closed_predefined_values = {{ .closed_predefined_values }}
+  }
+}`
+
+func TestAccPropertySet_with_no_predefined_value_closed_predefined_values_enabled(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":            resourceName,
+		"property_set_name":        resourceName,
+		"visible":                  "true",
+		"property1":                "set1property1",
+		"closed_predefined_values": "true",
+		"multiple_choice":          "false",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccPropertySetDestroy(resourceName),
+		Steps: []resource.TestStep{
+			{
+				Config:      util.ExecuteTemplate(fqrn, PropertySetNoPredefinedValueClosedPredefinedValuesEnabled, testData),
+				ExpectError: regexp.MustCompile(".*Predefined values is mandatory when closed_predefined_values or\n.*multiple_choice is set to 'true'.*"),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportStateId:                        resourceName,
+				ImportState:                          true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ExpectError:                          regexp.MustCompile("Cannot import non-existent remote object"),
+			},
+		},
+	})
+}
+
+func TestAccPropertySet_Create_With_no_Predefined_values(t *testing.T) {
+	jfrogURL := os.Getenv("JFROG_URL")
+	if strings.HasSuffix(jfrogURL, "jfrog.io") {
+		t.Skipf("env var JFROG_URL '%s' is a cloud instance.", jfrogURL)
+	}
+	_, fqrn, resourceName := testutil.MkNames("property-set-", "artifactory_property_set")
+	var testData = map[string]string{
+		"resource_name":            resourceName,
+		"property_set_name":        resourceName,
+		"visible":                  "true",
+		"property1":                "set1property1",
+		"closed_predefined_values": "false",
+		"multiple_choice":          "false",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccPropertySetDestroy(resourceName),
+
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate(fqrn, PropertySetNoPredefinedValue, testData),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        resourceName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", testData["property_set_name"]),
+					resource.TestCheckResourceAttr(fqrn, "visible", testData["visible"]),
+					resource.TestCheckResourceAttr(fqrn, "property.0.name", testData["property1"]),
+				),
+			},
+		},
+	})
+}
