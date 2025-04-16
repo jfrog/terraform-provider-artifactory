@@ -432,7 +432,7 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 		resource "artifactory_scoped_token" "{{ .name }}" {
 			username    = artifactory_user.{{ .user_resource_name }}.name
 			project_key = project.{{ .projectKey }}.key
-			scopes      = ["applied-permissions/admin", "system:metrics:r"]
+			scopes      = ["applied-permissions/admin", "system:metrics:r", "system:identities:r"]
 			description = "test description"
 			refreshable = true
 			expires_in  = 0
@@ -462,9 +462,10 @@ func TestAccScopedToken_WithAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "username", username),
 					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
-					resource.TestCheckResourceAttr(fqrn, "scopes.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "scopes.#", "3"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "applied-permissions/admin"),
 					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:metrics:r"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "scopes.*", "system:identities:r"),
 					resource.TestCheckResourceAttr(fqrn, "refreshable", "true"),
 					resource.TestCheckResourceAttr(fqrn, "expires_in", "0"),
 					resource.TestCheckResourceAttr(fqrn, "description", "test description"),
@@ -687,6 +688,50 @@ func TestAccScopedToken_WithInvalidResourceScopes(t *testing.T) {
 			{
 				Config:      accessTokenConfig,
 				ExpectError: regexp.MustCompile(`.*'<resource-type>:<target>\[\/<sub-resource>]:<actions>'.*`),
+			},
+		},
+	})
+}
+
+func TestAccScopedToken_WithInvalidSystemScopes(t *testing.T) {
+	_, _, name := testutil.MkNames("test-access-token", "artifactory_scoped_token")
+
+	id, _, userResourceName := testutil.MkNames("test-user-", "artifactory_user")
+	username := fmt.Sprintf("dummy_user%d", id)
+	email := username + "@test.com"
+
+	accessTokenConfig := util.ExecuteTemplate(
+		"TestAccScopedToken",
+		`resource "artifactory_user" "{{ .user_resource_name }}" {
+			name              = "{{ .username }}"
+			email             = "{{ .email }}"
+			admin             = true
+			disable_ui_access = false
+			groups            = ["readers"]
+			password          = "Passw0rd!"
+		}
+
+		resource "artifactory_scoped_token" "{{ .name }}" {
+			username = artifactory_user.{{ .user_resource_name }}.name
+			scopes   = [
+				"system:invalid:r",
+			]
+		}`,
+		map[string]interface{}{
+			"name":               name,
+			"user_resource_name": userResourceName,
+			"username":           username,
+			"email":              email,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      accessTokenConfig,
+				ExpectError: regexp.MustCompile(`.*'system:\(metrics|livelogs|identities|permissions\):<actions>'.*`),
 			},
 		},
 	})

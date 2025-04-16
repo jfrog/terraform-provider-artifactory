@@ -174,8 +174,6 @@ var schemaAttributesV0 = map[string]schema.Attribute{
 			"in the Platform but does not grant any specific access permissions.\n" +
 			"  - `applied-permissions/admin` - the scope assigned to admin users.\n" +
 			"  - `applied-permissions/groups` - this scope assigns permissions to groups using the following format: `applied-permissions/groups:<group-name>[,<group-name>...]`\n" +
-			"  - `system:metrics:r` - for getting the service metrics\n" +
-			"  - `system:livelogs:r` - for getting the service livelogs\n" +
 			"  - Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. " +
 			"A permission can be represented as a scope token string in the following format: `<resource-type>:<target>[/<sub-resource>]:<actions>`\n" +
 			"    - Where:\n" +
@@ -190,6 +188,14 @@ var schemaAttributesV0 = map[string]schema.Attribute{
 			"      - `[\"applied-permissions/group\", \"artifact:generic-local/path:*\"]`\n" +
 			"      - `[\"applied-permissions/admin\", \"system:metrics:r\", \"artifact:generic-local:*\"]`\n" +
 			"  - `applied-permissions/roles:project-key` - provides access to elements associated with the project based on the project role. For example, `applied-permissions/roles:project-type:developer,qa`.\n\n" +
+			"  - System Permissions: Used to grant access to system resources. " +
+			"A permission can be represented as a scope token string in the following format: `system:(metrics|livelogs|identities|permissions):<actions>`\n" +
+			"    - Where:\n" +
+			"      - `metrics|livelogs|identities|permissions` - one of these options can be chosen" +
+			"      - `<actions>` - comma-separated list of action acronyms. " +
+			"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions. To allow all actions - use `*`\n" +
+			"    - Examples:\n" +
+			"      - `[\"system:livelogs:r\", \"system:metrics:r,w,d\"]`\n" +
 			"->The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
 			"From Artifactory 7.84.3, [project admins](https://jfrog.com/help/r/jfrog-platform-administration-documentation/access-token-creation-by-project-admins) can create access tokens that are tied to the projects in which they hold administrative privileges.",
 		Optional:    true,
@@ -205,12 +211,11 @@ var schemaAttributesV0 = map[string]schema.Attribute{
 					stringvalidator.OneOf(
 						"applied-permissions/user",
 						"applied-permissions/admin",
-						"system:metrics:r",
-						"system:livelogs:r",
 					),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:(?:.+):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^system:(?:metrics|livelogs|identities|permissions):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be 'system:(metrics|livelogs|identities|permissions):<actions>'"),
 				),
 			),
 		},
