@@ -148,7 +148,7 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 		return
 	}
 
-	var envs []string
+	var envs []types.String
 	resp.Diagnostics.Append(projectEnviroments.ElementsAs(ctx, &envs, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -187,10 +187,10 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	if !isSupported {
 		// Before 7.53.1
 		for _, env := range envs {
-			if !slices.Contains(ProjectEnvironmentsSupported, env) {
+			if !slices.Contains(ProjectEnvironmentsSupported, env.ValueString()) {
 				resp.Diagnostics.AddError(
 					"Invalid project_environment not allowed",
-					env,
+					env.ValueString(),
 				)
 				return
 			}
