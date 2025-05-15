@@ -1,3 +1,9 @@
+## 12.9.4 (May 15, 2025). Tested on Artifactory 7.111.4 with Terraform 1.11.3 and OpenTofu 1.9.0
+
+BUG FIXES:
+
+* resource/artifactory_*_repository: Fix to enable multiple project environments for repositories in Artifactory 7.107.1 and later.
+
 ## 12.9.3 (April 14, 2025).
 
 BUG FIXES:
