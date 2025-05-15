@@ -1,15 +1,10 @@
-## 12.9.4 (May 15, 2025). Tested on Artifactory 7.111.4 with Terraform 1.11.3 and OpenTofu 1.9.0
-
-BUG FIXES:
-
-* resource/artifactory_*_repository: Fix to enable multiple project environments for repositories in Artifactory 7.107.1 and later.
-
-## 12.9.3 (April 14, 2025).
+## 12.9.3 (May 15, 2025). Tested on Artifactory 7.111.4 with Terraform 1.11.3 and OpenTofu 1.9.0
 
 BUG FIXES:
 
 * resource/artifactory_property_set : Fix to remove the enforcement of artificial requirements on predefined_value. It is now only mandatory when closed_predefined_values or multiple_choice is set to true. Issue: [#1214](https://github.com/jfrog/terraform-provider-artifactory/issues/1214) PR: [#1240](https://github.com/jfrog/terraform-provider-artifactory/pull/1240)
 * resource/resource_artifactory_scoped_token : Fix #Validation of scope when creating tokens doesn't include all valid options. Issue: [#1235](https://github.com/jfrog/terraform-provider-artifactory/issues/1235) PR: [#1241](https://github.com/jfrog/terraform-provider-artifactory/pull/1241)
+* resource/artifactory_*_repository: Fix to enable multiple project environments for repositories in Artifactory 7.107.1 and later.
 
 ## 12.9.2 (April 2, 2025). Tested on Artifactory 7.104.14 with Terraform 1.11.3 and OpenTofu 1.9.0
 
