@@ -1,3 +1,9 @@
+## 12.9.4 (May 19, 2025). Tested on Artifactory 7.111.7 with Terraform 1.11.3 and OpenTofu 1.9.0
+
+FEATURES:
+
+**New Resource:** `artifactory_release_bundle_v2_cleanup_policy` to support release bundle v2 cleanup policy. PR: [#1161](https://github.com/jfrog/terraform-provider-artifactory/pull/1266)
+
 ## 12.9.3 (May 15, 2025). Tested on Artifactory 7.111.4 with Terraform 1.11.3 and OpenTofu 1.9.0
 
 BUG FIXES:
