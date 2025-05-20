@@ -38,19 +38,32 @@ With the script you can start one or two Artifactory instances using docker comp
 
 The license is not supplied, but a [30 day trial license can be freely obtained](https://jfrog.com/start-free/#hosted) and will allow local development. Make sure the license saved as a multi line text file.
 
-Currently, acceptance tests **require an access key** and don't support basic authentication or an API key. To generate an access key, please refer to the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-GeneratingAdminTokens)
+Currently, acceptance tests **require an access token** and don't support basic authentication or an API key. To generate an access token, please refer to the [official documentation](https://www.jfrog.com/confluence/display/JFROG/Access+Tokens#AccessTokens-GeneratingAdminTokens)
 
 Then, you have to set some environment variables as this is how the acceptance tests pick up their config.
 
 ```sh
-ARTIFACTORY_URL=http://localhost:8082
+JFROG_URL=http://localhost:8082
 ARTIFACTORY_USERNAME=admin
-ARTIFACTORY_ACCESS_TOKEN=<your_access_token>
+JFROG_ACCESS_TOKEN=<your_access_token>
 TF_ACC=true
 ```
 `ARTIFACTORY_USERNAME` is not used in authentication, but used in several tests, related to replication functionality. It should be hardcoded to `admin`, because it's a default user created in the Artifactory instance from the start.
 
 A crucial env var to set is `TF_ACC=true` - you can literally set `TF_ACC` to anything you want, so long as it's set. The acceptance tests use terraform testing libraries that, if this flag isn't set, will skip all tests.
+
+Some tests exercise Artifactory support for managing RSA Key Pairs. These tests require configuring key pairs as decribed in [Setting Up RSA Key Pairs](https://jfrog.com/help/r/jfrog-artifactory-documentation/setting-up-rsa-key-pairs). This can be done using the following commands, which assume use of the Bash shell.
+
+```
+openssl genrsa -traditional -out private-key.pem 2048
+openssl rsa -in private-key.pem -outform PEM -pubout -out private-key.pem.pub
+
+export JFROG_TEST_RSA_PRIVATE_KEY=$(<private-key.pem)
+export JFROG_TEST_RSA_PUBLIC_KEY=$(<private-key.pem.pub)
+
+export JFROG_TEST_PGP_PRIVATE_KEY=$(<private-key.pem)
+export JFROG_TEST_PGP_PUBLIC_KEY=$(<private-key.pem.pub)
+```
 
 You can then run the tests as
 
