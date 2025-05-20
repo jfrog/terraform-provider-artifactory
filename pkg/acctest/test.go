@@ -309,7 +309,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		InsecureSkipVerify: true,
 	}
 	restyClient.SetTLSClientConfig(tlsConfig)
-
+	restyClient.SetRetryCount(5)
 	accessToken := testutil.GetEnvVarWithFallback(t, "JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN")
 	restyClient, err = client.AddAuth(restyClient, "", accessToken)
 	if err != nil {

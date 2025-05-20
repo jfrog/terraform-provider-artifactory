@@ -164,15 +164,29 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 		return
 	}
 
-	if isSupported {
-		if len(envs) == 2 {
+	// Check if multiple environments are supported (7.107.1 or later)
+	multipleEnvsSupported, err := util.CheckVersion(r.ProviderData.ArtifactoryVersion, MultipleEnvironmentsSupportedVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to check Artifactory version",
+			err.Error(),
+		)
+		return
+	}
+
+	if isSupported && !multipleEnvsSupported {
+		// For versions between 7.53.1 and 7.107.1, only one environment can be assigned
+		if len(envs) >= 2 {
 			resp.Diagnostics.AddError(
-				"Too many project environment",
-				fmt.Sprintf("for Artifactory %s or later, only one environment can be assigned to a repository", CustomProjectEnvironmentSupportedVersion),
+				"Too many project environments",
+				fmt.Sprintf("for Artifactory versions %s to %s, only one environment can be assigned to a repository. Multiple environments are supported starting from version %s",
+					CustomProjectEnvironmentSupportedVersion, MultipleEnvironmentsSupportedVersion, MultipleEnvironmentsSupportedVersion),
 			)
-			return
 		}
-	} else { // Before 7.53.1
+	}
+
+	if !isSupported {
+		// Before 7.53.1
 		for _, env := range envs {
 			if !slices.Contains(ProjectEnvironmentsSupported, env) {
 				resp.Diagnostics.AddError(
@@ -944,6 +958,7 @@ func HandleResetWithNonExistentValue(d *utilsdk.ResourceData, key string) string
 }
 
 const CustomProjectEnvironmentSupportedVersion = "7.53.1"
+const MultipleEnvironmentsSupportedVersion = "7.107.1"
 
 func ProjectEnvironmentsDiff(ctx context.Context, diff *sdkv2_schema.ResourceDiff, meta interface{}) error {
 	if data, ok := diff.GetOk("project_environments"); ok {
@@ -955,11 +970,20 @@ func ProjectEnvironmentsDiff(ctx context.Context, diff *sdkv2_schema.ResourceDif
 			return fmt.Errorf("failed to check version %s", err)
 		}
 
-		if isSupported {
-			if len(projectEnvironments) == 2 {
-				return fmt.Errorf("for Artifactory %s or later, only one environment can be assigned to a repository", CustomProjectEnvironmentSupportedVersion)
+		// Check if multiple environments are supported (7.107.1 or later)
+		multipleEnvsSupported, err := util.CheckVersion(providerMetadata.ArtifactoryVersion, MultipleEnvironmentsSupportedVersion)
+		if err != nil {
+			return fmt.Errorf("failed to check version for multiple environments support: %s", err)
+		}
+
+		if isSupported && !multipleEnvsSupported {
+			// For versions between 7.53.1 and 7.107.1, only one environment can be assigned
+			if len(projectEnvironments) >= 2 {
+				return fmt.Errorf("for Artifactory versions %s to %s, only one environment can be assigned to a repository. Multiple environments are supported starting from version %s",
+					CustomProjectEnvironmentSupportedVersion, MultipleEnvironmentsSupportedVersion, MultipleEnvironmentsSupportedVersion)
 			}
-		} else { // Before 7.53.1
+		}
+		if !isSupported { // Before 7.53.1
 			projectEnvironments := data.(*sdkv2_schema.Set).List()
 			for _, projectEnvironment := range projectEnvironments {
 				if !slices.Contains(ProjectEnvironmentsSupported, projectEnvironment.(string)) {
