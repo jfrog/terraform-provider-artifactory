@@ -1,3 +1,9 @@
+## 12.9.5 (June 3, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
+
+BUG FIXES:
+
+* resource/artifactory_package_cleanup_policy : Fix the cron expression validation failure for "0 0 2 ? * SAT" (run every Saturday at 2am). Issue: [#1247](https://github.com/jfrog/terraform-provider-artifactory/issues/1247). PR: [#1272](https://github.com/jfrog/terraform-provider-artifactory/pull/1272)
+
 ## 12.9.4 (May 19, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
 
 FEATURES:
