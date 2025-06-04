@@ -59,6 +59,7 @@ const (
 	GradlePackageType            = "gradle"
 	HelmPackageType              = "helm"
 	HelmOCIPackageType           = "helmoci"
+	HexPackageType               = "hex"
 	HuggingFacePackageType       = "huggingfaceml"
 	IvyPackageType               = "ivy"
 	MachineLearningType          = "machinelearning"
@@ -95,6 +96,7 @@ var PackageNameLookup = map[string]string{
 	GoPackageType:               "Go",
 	GradlePackageType:           "Gradle",
 	HelmPackageType:             "Helm",
+	HexPackageType:              "Hex",
 	HuggingFacePackageType:      "HuggingFace ML",
 	IvyPackageType:              "Ivy",
 	NPMPackageType:              "Npm",
@@ -695,6 +697,14 @@ var AlpinePrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	},
 }
 
+var HexPrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
+	"primary_keypair_ref": {
+		Type:        sdkv2_schema.TypeString,
+		Required:    true,
+		Description: "Reference to the RSA key pair used to sign Hex repository index files. ",
+	},
+}
+
 var PrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	"primary_keypair_ref": {
 		Type:             sdkv2_schema.TypeString,
@@ -719,6 +729,10 @@ type PrimaryKeyPairRefParam struct {
 
 type SecondaryKeyPairRefParam struct {
 	SecondaryKeyPairRefSDKv2 string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
+}
+
+type HexLocalRepositoryParams struct {
+	PrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }
 
 type ReadFunc func(d *sdkv2_schema.ResourceData, m interface{}) error

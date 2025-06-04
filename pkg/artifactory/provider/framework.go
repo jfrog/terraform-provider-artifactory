@@ -283,6 +283,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewRPMLocalRepositoryResource,
 			local.NewTerraformModuleLocalRepositoryResource,
 			local.NewTerraformProviderLocalRepositoryResource,
+			local.NewHexLocalRepositoryResource,
 			remote.NewAnsibleRemoteRepositoryResource,
 			remote.NewBowerRemoteRepositoryResource,
 			remote.NewCargoRemoteRepositoryResource,
