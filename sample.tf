@@ -712,3 +712,34 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
     enabled = true
   }
 }
+
+resource "artifactory_ldap_setting_v2" "ldap_name" {
+  key                           = "ldap_name"
+  enabled                       = true
+  ldap_url                      = "ldap://10.90.117.207:10389/ou=people,dc=planetexpress,dc=com"
+  user_dn_pattern               = "uid={0}"
+  email_attribute               = "mail"
+  auto_create_user              = true
+  ldap_poisoning_protection     = true
+  allow_user_to_access_profile  = false
+  paging_support_enabled        = false
+  search_filter                 = "(&(uid={0})(objectClass=inetOrgPerson))"
+  search_sub_tree               = true
+  search_base                   = ""
+  manager_dn                    = "cn=admin,dc=planetexpress,dc=com"
+  manager_password              = "GoodNewsEveryone"
+}
+
+resource "artifactory_ldap_group_setting_v2" "ldap_group_name" {
+  name                   = "ldap_group_name1"
+  enabled_ldap           = "ldap_name"
+  group_name_attribute   = "cn"
+  group_member_attribute = "uniqueMember"
+  sub_tree               = true
+  force_attribute_search = true
+  filter                 = "(objectClass=group)"
+  description_attribute  = "description"
+  strategy               = "STATIC"
+  refresh_operation      = "UPDATE_AND_IMPORT"
+  refresh_username       = "admin"
+}
