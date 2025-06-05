@@ -1,3 +1,8 @@
+## 12.9.6 (June 5, 2025).
+
+BUG FIXES:
+* resource/artifactory_\*\_repository: Fix state drift handling for content_synchronisation attribute in remote repo's. Issue: [#](https://github.com/jfrog/terraform-provider-artifactory/issues/1250). PR: [#1274](https://github.com/jfrog/terraform-provider-artifactory/pull/1274)
+
 ## 12.9.5 (June 3, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
 
 BUG FIXES:

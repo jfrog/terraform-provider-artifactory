@@ -152,21 +152,23 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		localRepositoryAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
 	}
 
-	var contentSynchronisation ContentSynchronisation
-	elems := r.ContentSynchronisation.Elements()
-	if len(elems) > 0 {
-		attrs := elems[0].(types.Object).Attributes()
-		contentSynchronisation = ContentSynchronisation{
-			Enabled: attrs["enabled"].(types.Bool).ValueBool(),
-			Statistics: ContentSynchronisationStatistics{
-				Enabled: attrs["statistics_enabled"].(types.Bool).ValueBool(),
-			},
-			Properties: ContentSynchronisationProperties{
-				Enabled: attrs["properties_enabled"].(types.Bool).ValueBool(),
-			},
-			Source: ContentSynchronisationSource{
-				OriginAbsenceDetection: attrs["source_origin_absence_detection"].(types.Bool).ValueBool(),
-			},
+	var contentSynchronisation *ContentSynchronisation = nil
+	if !r.ContentSynchronisation.IsNull() && !r.ContentSynchronisation.IsUnknown() {
+		elems := r.ContentSynchronisation.Elements()
+		if len(elems) > 0 {
+			attrs := elems[0].(types.Object).Attributes()
+			contentSynchronisation = &ContentSynchronisation{
+				Enabled: attrs["enabled"].(types.Bool).ValueBool(),
+				Statistics: ContentSynchronisationStatistics{
+					Enabled: attrs["statistics_enabled"].(types.Bool).ValueBool(),
+				},
+				Properties: ContentSynchronisationProperties{
+					Enabled: attrs["properties_enabled"].(types.Bool).ValueBool(),
+				},
+				Source: ContentSynchronisationSource{
+					OriginAbsenceDetection: attrs["source_origin_absence_detection"].(types.Bool).ValueBool(),
+				},
+			}
 		}
 	}
 
@@ -195,7 +197,7 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		EnableCookieManagement:            r.EnableCookieManagement.ValueBoolPointer(),
 		BypassHeadRequests:                r.BypassHeadRequests.ValueBoolPointer(),
 		ClientTLSCertificate:              r.ClientTLSCertificate.ValueString(),
-		ContentSynchronisation:            &contentSynchronisation,
+		ContentSynchronisation:            contentSynchronisation, // Always set if present in config
 		MismatchingMimeTypeOverrideList:   r.MismatchingMimeTypeOverrideList.ValueString(),
 		ListRemoteFolderItems:             r.ListRemoteFolderItems.ValueBool(),
 		DisableURLNormalization:           r.DisableURLNormalization.ValueBool(),
@@ -243,33 +245,32 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 	r.ClientTLSCertificate = types.StringValue(apiModel.ClientTLSCertificate)
 
 	contentSynchronisationList := types.ListNull(contentSynchronisationAttrType)
-	// only update plan/state with ContentSynchronisation from API if it is enabled
-	// not perfect conditional but we are limited by SDKv2 loosy logic for 'computed' list
-	// if apiModel.ContentSynchronisation != nil && apiModel.ContentSynchronisation.Enabled {
-	if apiModel.ContentSynchronisation != nil && apiModel.ContentSynchronisation.Enabled {
-		contentSynchronisation, ds := types.ObjectValue(
-			contentSynchronisationAttrTypes,
-			map[string]attr.Value{
-				"enabled":                         types.BoolValue(apiModel.ContentSynchronisation.Enabled),
-				"statistics_enabled":              types.BoolValue(apiModel.ContentSynchronisation.Statistics.Enabled),
-				"properties_enabled":              types.BoolValue(apiModel.ContentSynchronisation.Properties.Enabled),
-				"source_origin_absence_detection": types.BoolValue(apiModel.ContentSynchronisation.Source.OriginAbsenceDetection),
-			},
-		)
-		if ds.HasError() {
-			diags.Append(ds...)
-		}
+	if !r.ContentSynchronisation.IsNull() && !r.ContentSynchronisation.IsUnknown() {
+		if apiModel.ContentSynchronisation != nil {
+			contentSynchronisation, ds := types.ObjectValue(
+				contentSynchronisationAttrTypes,
+				map[string]attr.Value{
+					"enabled":                         types.BoolValue(apiModel.ContentSynchronisation.Enabled),
+					"statistics_enabled":              types.BoolValue(apiModel.ContentSynchronisation.Statistics.Enabled),
+					"properties_enabled":              types.BoolValue(apiModel.ContentSynchronisation.Properties.Enabled),
+					"source_origin_absence_detection": types.BoolValue(apiModel.ContentSynchronisation.Source.OriginAbsenceDetection),
+				},
+			)
+			if ds.HasError() {
+				diags.Append(ds...)
+			}
 
-		contentSynchronisationList, ds = types.ListValue(
-			contentSynchronisationAttrType,
-			[]attr.Value{contentSynchronisation},
-		)
+			contentSynchronisationList, ds = types.ListValue(
+				contentSynchronisationAttrType,
+				[]attr.Value{contentSynchronisation},
+			)
 
-		if ds != nil {
-			diags = append(diags, ds...)
+			if ds != nil {
+				diags = append(diags, ds...)
+			}
 		}
+		r.ContentSynchronisation = contentSynchronisationList
 	}
-	r.ContentSynchronisation = contentSynchronisationList
 
 	r.MismatchingMimeTypeOverrideList = types.StringValue(apiModel.MismatchingMimeTypeOverrideList)
 	r.ListRemoteFolderItems = types.BoolValue(apiModel.ListRemoteFolderItems)
@@ -304,29 +305,29 @@ type RemoteAPIModel struct {
 	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTLSCertificate              string                  `json:"clientTlsCertificate"`
-	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation"`
+	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
 	MismatchingMimeTypeOverrideList   string                  `json:"mismatchingMimeTypesOverrideList"`
 	ListRemoteFolderItems             bool                    `json:"listRemoteFolderItems"`
 	DisableURLNormalization           bool                    `json:"disableUrlNormalization"`
 }
 
 type ContentSynchronisation struct {
-	Enabled    bool                             `json:"enabled"`
-	Statistics ContentSynchronisationStatistics `json:"statistics"`
-	Properties ContentSynchronisationProperties `json:"properties"`
-	Source     ContentSynchronisationSource     `json:"source"`
+	Enabled    bool                             `json:"enabled,omitempty"`
+	Statistics ContentSynchronisationStatistics `json:"statistics,omitempty"`
+	Properties ContentSynchronisationProperties `json:"properties,omitempty"`
+	Source     ContentSynchronisationSource     `json:"source,omitempty"`
 }
 
 type ContentSynchronisationStatistics struct {
-	Enabled bool `hcl:"statistics_enabled" json:"enabled"`
+	Enabled bool `hcl:"statistics_enabled" json:"enabled,omitempty"`
 }
 
 type ContentSynchronisationProperties struct {
-	Enabled bool `hcl:"properties_enabled" json:"enabled"`
+	Enabled bool `hcl:"properties_enabled" json:"enabled,omitempty"`
 }
 
 type ContentSynchronisationSource struct {
-	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection"`
+	OriginAbsenceDetection bool `hcl:"source_origin_absence_detection" json:"originAbsenceDetection,omitempty"`
 }
 
 type vcsAPIModel struct {
