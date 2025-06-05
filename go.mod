@@ -19,7 +19,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.19.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.0
-	github.com/jfrog/terraform-provider-shared v1.30.0
+	github.com/jfrog/terraform-provider-shared v1.30.1
 	github.com/samber/lo v1.50.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.10.0

@@ -387,6 +387,27 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 	return skipTest, nil
 }
 
+func CompareAcessVersions(t *testing.T, instanceVersions string) (bool, error) {
+	fixedVersion, err := version.NewVersion(instanceVersions)
+	if err != nil {
+		return false, err
+	}
+
+	client := GetTestResty(t)
+	accessVersion, err := util.GetAccessVersion(client)
+
+	runtimeVersion, err := version.NewVersion(accessVersion)
+	if err != nil {
+		return false, err
+	}
+
+	skipTest := runtimeVersion.GreaterThanOrEqual(fixedVersion)
+	if skipTest {
+		t.Skipf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String())
+	}
+	return skipTest, nil
+}
+
 func SkipIfNotSupportedVersion(t *testing.T, supportedVersion string) error {
 	supported, err := version.NewVersion(supportedVersion)
 	if err != nil {

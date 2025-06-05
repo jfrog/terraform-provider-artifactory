@@ -45,7 +45,7 @@ func TestAccRemotePyPIRepository_migrate_from_SDKv2(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						Source:            "jfrog/artifactory",
-						VersionConstraint: "12.8.1",
+						VersionConstraint: "12.8.3",
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
