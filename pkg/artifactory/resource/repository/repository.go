@@ -697,8 +697,8 @@ var AlpinePrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
 	},
 }
 
-var HexPrimaryKeyPairRefSDKv2 = map[string]*sdkv2_schema.Schema{
-	"primary_keypair_ref": {
+var HexPrimaryKeyPair = map[string]*sdkv2_schema.Schema{
+	"hex_primary_keypair_ref": {
 		Type:        sdkv2_schema.TypeString,
 		Required:    true,
 		Description: "Reference to the RSA key pair used to sign Hex repository index files. ",
@@ -729,10 +729,6 @@ type PrimaryKeyPairRefParam struct {
 
 type SecondaryKeyPairRefParam struct {
 	SecondaryKeyPairRefSDKv2 string `hcl:"secondary_keypair_ref" json:"secondaryKeyPairRef"`
-}
-
-type HexLocalRepositoryParams struct {
-	PrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }
 
 type ReadFunc func(d *sdkv2_schema.ResourceData, m interface{}) error

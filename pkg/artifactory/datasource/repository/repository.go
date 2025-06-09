@@ -31,6 +31,7 @@ var validPackageTypes = []string{
 	repository.GoPackageType,
 	repository.GradlePackageType,
 	repository.HelmPackageType,
+	repository.HexPackageType,
 	repository.HuggingFacePackageType,
 	repository.IvyPackageType,
 	repository.MavenPackageType,

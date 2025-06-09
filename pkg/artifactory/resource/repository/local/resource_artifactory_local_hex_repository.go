@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/samber/lo"
 )
@@ -21,10 +22,6 @@ func NewHexLocalRepositoryResource() resource.Resource {
 			reflect.TypeFor[LocalHexAPIModel](),
 		),
 	}
-}
-
-type localHexResource struct {
-	localResource
 }
 
 type LocalHexResourceModel struct {
@@ -80,7 +77,7 @@ func (r LocalHexResourceModel) ToAPIModel(ctx context.Context, packageType strin
 
 	return LocalHexAPIModel{
 		LocalAPIModel:     localAPIModel,
-		PrimaryKeyPairRef: r.PrimaryKeyPairRef.ValueString(),
+		HexPrimaryKeyPair: r.PrimaryKeyPairRef.ValueString(),
 	}, diags
 }
 
@@ -92,27 +89,29 @@ func (r *LocalHexResourceModel) FromAPIModel(ctx context.Context, apiModel inter
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
-	r.PrimaryKeyPairRef = types.StringValue(model.PrimaryKeyPairRef)
+	r.PrimaryKeyPairRef = types.StringValue(model.HexPrimaryKeyPair)
 	return diags
+}
+
+type localHexResource struct {
+	localResource
 }
 
 type LocalHexAPIModel struct {
 	LocalAPIModel
-	PrimaryKeyPairRef string `json:"primaryKeyPairRef"`
-}
-
-var HexPrimaryKeyPairRefAttribute = map[string]schema.Attribute{
-	"primary_keypair_ref": schema.StringAttribute{
-		Required:            true,
-		MarkdownDescription: "Reference to the RSA key pair used to sign Hex repository index files. ",
-	},
+	HexPrimaryKeyPair string `json:"primaryKeyPair"`
 }
 
 func (r *localHexResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attributes := lo.Assign(
 		LocalAttributes,
 		repository.RepoLayoutRefAttribute(r.Rclass, r.PackageType),
-		HexPrimaryKeyPairRefAttribute,
+		map[string]schema.Attribute{
+			"hex_primary_keypair_ref": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Reference to the RSA key pair used to sign Hex repository index files. ",
+			},
+		},
 	)
 
 	resp.Schema = schema.Schema{
@@ -123,14 +122,19 @@ func (r *localHexResource) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 var hexSchema = lo.Assign(
+	map[string]*sdkv2_schema.Schema{
+		"hex_primary_keypair_ref": {
+			Type:        sdkv2_schema.TypeString,
+			Required:    true,
+			Description: "Reference to the RSA key pair used to sign Hex repository index files. ",
+		},
+	},
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HexPackageType),
-	repository.HexPrimaryKeyPairRefSDKv2,
-	repository.CompressionFormatsSDKv2,
 )
 
 var HexLocalSchemas = GetSchemas(hexSchema)
 
 type HexLocalRepositoryParams struct {
 	RepositoryBaseParams
-	repository.HexLocalRepositoryParams
+	HexPrimaryKeyPair string `hcl:"hex_primary_keypair_ref" json:"primaryKeyPair"`
 }
