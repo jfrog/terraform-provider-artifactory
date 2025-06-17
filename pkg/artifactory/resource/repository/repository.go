@@ -512,13 +512,9 @@ var BaseAttributes = map[string]schema.Attribute{
 		Computed:    true,
 		Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
 		Validators: []validator.Set{
-			setvalidator.SizeBetween(0, 2),
+			setvalidator.SizeAtLeast(0),
 		},
-		MarkdownDescription: "Project environment for assigning this repository to. Allow values: \"DEV\", \"PROD\", or one of custom environment. " +
-			"Before Artifactory 7.53.1, up to 2 values (\"DEV\" and \"PROD\") are allowed. From 7.53.1 onward, only one value is allowed. " +
-			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
-			"the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create " +
-			"state drift during the update.",
+		MarkdownDescription: "Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 to 7.107.1, only one value is allowed. From 7.107.1, multiple values are allowed.",
 	},
 	"description": schema.StringAttribute{
 		Optional:            true,

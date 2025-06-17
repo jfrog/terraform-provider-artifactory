@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * GNUmakefile : Enhanced ARM64 Build Process with Dynamic GOARM64 Detection. PR: [1282](https://github.com/jfrog/terraform-provider-artifactory/pull/1282)
 
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
+
 ## 12.9.5 (June 3, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
 
 BUG FIXES:

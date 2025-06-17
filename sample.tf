@@ -364,14 +364,30 @@ resource "artifactory_remote_ivy_repository" "ivy-remote" {
   reject_invalid_jars             = true
 }
 
+resource "artifactory_global_environment" "staging" {
+  name = "STAGING"
+}
+
+resource "artifactory_global_environment" "uat" {
+  name = "UAT"
+}
+
 resource "artifactory_remote_maven_repository" "maven-remote" {
-  key                                = "maven-remote-foo"
-  url                                = "https://repo1.maven.org/maven2/"
-  fetch_jars_eagerly                 = true
-  fetch_sources_eagerly              = false
-  suppress_pom_consistency_checks    = false
-  reject_invalid_jars                = true
+  key                             = "maven-remote"
+  xray_index                      = true
+  url                             = "https://repo1.maven.org/maven2/"
+  fetch_jars_eagerly              = true
+  fetch_sources_eagerly           = false
+  suppress_pom_consistency_checks = false
+  reject_invalid_jars             = true
   metadata_retrieval_timeout_secs = 120
+  project_environments            = ["DEV", "UAT", "PROD", "STAGING"]
+
+  lifecycle {
+    ignore_changes = [
+      project_key
+    ]
+  }
 }
 
 resource "artifactory_remote_npm_repository" "thing" {
