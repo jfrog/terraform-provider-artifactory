@@ -1,4 +1,4 @@
-## 12.9.6 (June 17, 2025).
+## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:
 
