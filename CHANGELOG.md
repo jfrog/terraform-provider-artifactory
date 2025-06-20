@@ -1,3 +1,9 @@
+## 12.9.7 (June 20, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
+
+FEATURES:
+
+**New Resource:** `artifactory_local_hex_repository` to support local Hex repository. PR: [#1278](https://github.com/jfrog/terraform-provider-artifactory/pull/1278)
+
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:

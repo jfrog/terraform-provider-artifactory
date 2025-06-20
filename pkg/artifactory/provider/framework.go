@@ -277,6 +277,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewDockerV1LocalRepositoryResource,
 			local.NewHelmLocalRepositoryResource,
 			local.NewHelmOCILocalRepositoryResource,
+			local.NewHexLocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
 			local.NewNugetLocalRepositoryResource,
 			local.NewOCILocalRepositoryResource,
