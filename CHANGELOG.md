@@ -1,9 +1,36 @@
-## 12.9.3 (April 14, 2025).
+## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
+
+NOTES:
+
+If you are upgrading from a version earlier than 12.8.3, please upgrade to 12.8.3 first. Then proceed to the latest version to avoid state drift in the content_synchronisation attribute of remote repositories.
+
+IMPROVEMENTS:
+
+* GNUmakefile : Enhanced ARM64 Build Process with Dynamic GOARM64 Detection. PR: [1282](https://github.com/jfrog/terraform-provider-artifactory/pull/1282)
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Fix state drift handling for content_synchronisation attribute in remote repo's. Issue: [#1250](https://github.com/jfrog/terraform-provider-artifactory/issues/1250). PR: [#1274](https://github.com/jfrog/terraform-provider-artifactory/pull/1274)
+
+## 12.9.5 (June 3, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
+
+BUG FIXES:
+
+* resource/artifactory_package_cleanup_policy : Fix the cron expression validation failure for "0 0 2 ? * SAT" (run every Saturday at 2am). Issue: [#1247](https://github.com/jfrog/terraform-provider-artifactory/issues/1247). PR: [#1272](https://github.com/jfrog/terraform-provider-artifactory/pull/1272)
+
+## 12.9.4 (May 19, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
+
+FEATURES:
+
+**New Resource:** `artifactory_release_bundle_v2_cleanup_policy` to support release bundle v2 cleanup policy. PR: [#1161](https://github.com/jfrog/terraform-provider-artifactory/pull/1266)
+
+## 12.9.3 (May 15, 2025). Tested on Artifactory 7.111.4 with Terraform 1.11.3 and OpenTofu 1.9.0
 
 BUG FIXES:
 
 * resource/artifactory_property_set : Fix to remove the enforcement of artificial requirements on predefined_value. It is now only mandatory when closed_predefined_values or multiple_choice is set to true. Issue: [#1214](https://github.com/jfrog/terraform-provider-artifactory/issues/1214) PR: [#1240](https://github.com/jfrog/terraform-provider-artifactory/pull/1240)
 * resource/resource_artifactory_scoped_token : Fix #Validation of scope when creating tokens doesn't include all valid options. Issue: [#1235](https://github.com/jfrog/terraform-provider-artifactory/issues/1235) PR: [#1241](https://github.com/jfrog/terraform-provider-artifactory/pull/1241)
+* resource/artifactory_*_repository: Fix to enable multiple project environments for repositories in Artifactory 7.107.1 and later.
 
 ## 12.9.2 (April 2, 2025). Tested on Artifactory 7.104.14 with Terraform 1.11.3 and OpenTofu 1.9.0
 

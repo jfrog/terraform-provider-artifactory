@@ -118,6 +118,8 @@ func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel i
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 
+	r.ExternalDependenciesPatterns = types.ListNull(types.StringType)
+
 	if r.ExternalDependenciesEnabled.ValueBool() == true {
 		externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
 		if d != nil {

@@ -309,7 +309,7 @@ func GetTestResty(t *testing.T) *resty.Client {
 		InsecureSkipVerify: true,
 	}
 	restyClient.SetTLSClientConfig(tlsConfig)
-
+	restyClient.SetRetryCount(5)
 	accessToken := testutil.GetEnvVarWithFallback(t, "JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN")
 	restyClient, err = client.AddAuth(restyClient, "", accessToken)
 	if err != nil {
@@ -376,6 +376,27 @@ func CompareArtifactoryVersions(t *testing.T, instanceVersions string) (bool, er
 	artifactoryVersion, err := util.GetArtifactoryVersion(client)
 
 	runtimeVersion, err := version.NewVersion(artifactoryVersion)
+	if err != nil {
+		return false, err
+	}
+
+	skipTest := runtimeVersion.GreaterThanOrEqual(fixedVersion)
+	if skipTest {
+		t.Skipf("Test skip because: runtime version %s is same or later than %s\n", runtimeVersion.String(), fixedVersion.String())
+	}
+	return skipTest, nil
+}
+
+func CompareAcessVersions(t *testing.T, instanceVersions string) (bool, error) {
+	fixedVersion, err := version.NewVersion(instanceVersions)
+	if err != nil {
+		return false, err
+	}
+
+	client := GetTestResty(t)
+	accessVersion, err := util.GetAccessVersion(client)
+
+	runtimeVersion, err := version.NewVersion(accessVersion)
 	if err != nil {
 		return false, err
 	}

@@ -1,0 +1,3 @@
+terraform import artifactory_release_bundle_v2_cleanup_policy.my-cleanup-policy my-policy
+
+terraform import artifactory_release_bundle_v2_cleanup_policy.my-cleanup-policy my-policy:myproj
