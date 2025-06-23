@@ -44,7 +44,7 @@ func TestAccRemoteRepositoryReplication_UpgradeFromSDKv2(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"artifactory": {
 						Source:            "jfrog/artifactory",
-						VersionConstraint: "11.7.0",
+						VersionConstraint: "12.8.3",
 					},
 				},
 				Config: config,

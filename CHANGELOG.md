@@ -1,3 +1,17 @@
+## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
+
+NOTES:
+
+If you are upgrading from a version earlier than 12.8.3, please upgrade to 12.8.3 first. Then proceed to the latest version to avoid state drift in the content_synchronisation attribute of remote repositories.
+
+IMPROVEMENTS:
+
+* GNUmakefile : Enhanced ARM64 Build Process with Dynamic GOARM64 Detection. PR: [1282](https://github.com/jfrog/terraform-provider-artifactory/pull/1282)
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Fix state drift handling for content_synchronisation attribute in remote repo's. Issue: [#1250](https://github.com/jfrog/terraform-provider-artifactory/issues/1250). PR: [#1274](https://github.com/jfrog/terraform-provider-artifactory/pull/1274)
+
 ## 12.9.5 (June 3, 2025). Tested on Artifactory 7.111.8 with Terraform 1.12.0 and OpenTofu 1.9.1
 
 BUG FIXES:

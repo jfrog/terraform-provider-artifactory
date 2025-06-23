@@ -10,6 +10,11 @@ GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOAMD64)
 LINUX_GORELEASER_ARCH:=${LINUX_GORELEASER_ARCH}_$(shell go env GOAMD64)
 endif
 
+ifeq ($(GO_ARCH), arm64)
+GORELEASER_ARCH=${TARGET_ARCH}_$(shell go env GOARM64)
+LINUX_GORELEASER_ARCH:=${LINUX_GORELEASER_ARCH}_$(shell go env GOARM64)
+endif
+
 PKG_NAME=pkg/artifactory
 # if this path ever changes, you need to also update the 'ldflags' value in .goreleaser.yml
 PROVIDER_VERSION?=$(shell git describe --tags --abbrev=0 | sed  -n 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1.\2.\3/p')
