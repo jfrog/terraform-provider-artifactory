@@ -253,6 +253,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			security.NewUserLockPolicyResource,
 			security.NewVaultConfigurationResource,
 			configuration.NewArchivePolicyResource,
+			configuration.NewResourceBundleCleanupPolicyV2Resource,
 			configuration.NewLdapSettingResource,
 			configuration.NewLdapGroupSettingResource,
 			configuration.NewBackupResource,

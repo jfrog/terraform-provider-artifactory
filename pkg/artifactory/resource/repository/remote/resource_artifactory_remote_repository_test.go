@@ -73,10 +73,24 @@ func TestAccRemoteUpgradeFromVersionWithNoDisableProxyAttr(t *testing.T) {
 				},
 			},
 			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.8.3",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
 				// Plugin Framework UpgradeState is not implemented in remoteResource for schema v2 to v3
 				// due to Golang/Terraform type complexity.
 				// Instead user/practitioner should upgrade from v8 to v12.8.0 (last version in SDKv2 with state upgrade) first
-				// then upgrade to >12.8.1
+				// then upgrade to 12.8.3 and then upgrade to >12.8.3
 				ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 				Config:                   config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

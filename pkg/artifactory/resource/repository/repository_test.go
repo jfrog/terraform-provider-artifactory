@@ -273,7 +273,7 @@ func TestAccRepository_invalid_project_environments_before_7_53_1(t *testing.T) 
 	})
 }
 
-func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
+func TestAccRepository_invalid_project_environments_after_7_53_1_before_7_107_1(t *testing.T) {
 	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
 	repoName := fmt.Sprintf("%s-generic-local", projectKey)
 
@@ -318,11 +318,71 @@ func TestAccRepository_invalid_project_environments_after_7_53_1(t *testing.T) {
 			{
 				SkipFunc: func() (bool, error) {
 					meta := acctest.Provider.Meta().(util.ProviderMetadata)
-					isSupported, err := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
-					return !isSupported, err
+					isSupported, _ := util.CheckVersion(meta.ArtifactoryVersion, repository.CustomProjectEnvironmentSupportedVersion)
+					multiSupported, _ := util.CheckVersion(meta.ArtifactoryVersion, repository.MultipleEnvironmentsSupportedVersion)
+					return !(isSupported && !multiSupported), nil
 				},
 				Config:      localRepositoryBasic,
-				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory %s or later, only one environment can be assigned to a\n.*repository.*", repository.CustomProjectEnvironmentSupportedVersion)),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(".*for Artifactory versions %s to %s, only one environment.*", repository.CustomProjectEnvironmentSupportedVersion, repository.MultipleEnvironmentsSupportedVersion)),
+			},
+		},
+	})
+}
+
+func TestAccRepository_can_set_two_project_environments_after_7_107_1(t *testing.T) {
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":       name,
+		"projectKey": projectKey,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_key          = project.{{ .projectKey }}.key
+	 	  project_environments = ["DEV", "PROD"]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				SkipFunc: func() (bool, error) {
+					meta := acctest.Provider.Meta().(util.ProviderMetadata)
+					multiSupport, err := util.CheckVersion(meta.ArtifactoryVersion, repository.MultipleEnvironmentsSupportedVersion)
+					return !multiSupport, err
+				},
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", "DEV"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.1", "PROD"),
+				),
 			},
 		},
 	})
