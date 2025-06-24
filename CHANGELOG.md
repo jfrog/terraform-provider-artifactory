@@ -1,3 +1,10 @@
+## 12.9.7 (June 24, 2025). 
+
+IMPROVEMENTS:
+
+* Webhook Creation: Improvements to make the Provider behave more like UI and API. PR: [1213](https://github.com/jfrog/terraform-provider-artifactory/pull/1213)
+
+
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:
