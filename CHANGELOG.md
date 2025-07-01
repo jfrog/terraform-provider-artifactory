@@ -1,3 +1,9 @@
+### 12.9.7 (July 1, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
+
+IMPROVEMENTS:
+
+* Introduced a new attribute disable_proxy for single replication. This allows users to explicitly disable the use of a proxy when configuring single replication in the Artifactory Terraform provider. PR: [1284](https://github.com/jfrog/terraform-provider-artifactory/pull/1284)
+
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:
