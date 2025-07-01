@@ -53,6 +53,7 @@ type LocalRepositorySingleReplicationResourceModel struct {
 	SyncStatistics                  types.Bool   `tfsdk:"sync_statistics"`
 	RepoKey                         types.String `tfsdk:"repo_key"`
 	Proxy                           types.String `tfsdk:"proxy"`
+	DisableProxy                    types.Bool   `tfsdk:"disable_proxy"`
 	ReplicationKey                  types.String `tfsdk:"replication_key"`
 	IncludePathPrefixPattern        types.String `tfsdk:"include_path_prefix_pattern"`
 	ExcludePathPrefixPattern        types.String `tfsdk:"exclude_path_prefix_pattern"`
@@ -77,7 +78,8 @@ func (m LocalRepositorySingleReplicationResourceModel) toAPIModel(_ context.Cont
 			ExcludePathPrefixPattern:        m.ExcludePathPrefixPattern.ValueString(),
 			CheckBinaryExistenceInFilestore: m.CheckBinaryExistenceInFilestore.ValueBool(),
 		},
-		Proxy: m.Proxy.ValueString(),
+		Proxy:        m.Proxy.ValueString(),
+		DisableProxy: m.DisableProxy.ValueBool(),
 	}
 
 	return
@@ -104,6 +106,7 @@ func (m *LocalRepositorySingleReplicationResourceModel) fromAPIModel(_ context.C
 	m.ExcludePathPrefixPattern = types.StringValue(apiModel.ExcludePathPrefixPattern)
 	m.CheckBinaryExistenceInFilestore = types.BoolValue(apiModel.CheckBinaryExistenceInFilestore)
 	m.Proxy = types.StringValue(apiModel.ProxyRef)
+	m.DisableProxy = types.BoolValue(apiModel.DisableProxy)
 	m.ReplicationKey = types.StringValue(apiModel.ReplicationKey)
 
 	return
@@ -130,11 +133,13 @@ type LocalSingleReplicationGetAPIModel struct {
 	LocalSingleReplicationAPIModel
 	ProxyRef       string `json:"proxyRef"`
 	ReplicationKey string `json:"replicationKey"`
+	DisableProxy   bool   `json:"disableProxy"`
 }
 
 type LocalSingleReplicationUpdateAPIModel struct {
 	LocalSingleReplicationAPIModel
-	Proxy string `json:"proxy"`
+	Proxy        string `json:"proxy"`
+	DisableProxy bool   `json:"disableProxy"`
 }
 
 func (r *LocalRepositorySingleReplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -252,6 +257,12 @@ func (r *LocalRepositorySingleReplicationResource) Schema(ctx context.Context, r
 					stringvalidator.LengthAtLeast(1),
 				},
 				Description: "A proxy configuration to use when communicating with the remote instance.",
+			},
+			"disable_proxy": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "When set to `true`, the `proxy` attribute will be ignored (from version 7.41.7). The default value is `false`.",
 			},
 			"replication_key": schema.StringAttribute{
 				Computed:    true,
