@@ -253,8 +253,8 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 	r.ClientTLSCertificate = types.StringValue(apiModel.ClientTLSCertificate)
 
 	contentSynchronisationList := types.ListNull(contentSynchronisationAttrType)
-	if apiModel.ContentSynchronisation.Enabled {
-		if apiModel.ContentSynchronisation != nil {
+	if apiModel.ContentSynchronisation != nil {
+		if apiModel.ContentSynchronisation.Enabled {
 			cs := apiModel.ContentSynchronisation
 			contentSynchronisation, ds := types.ObjectValue(
 				contentSynchronisationAttrTypes,
