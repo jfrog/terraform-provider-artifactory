@@ -361,7 +361,7 @@ func TestAccRepository_can_set_multi_project_environments_after_7_107_1(t *testi
 		  key                  = "{{ .name }}"
 	 	  project_key          = project.{{ .projectKey }}.key
 	 	  project_environments = ["DEV", "PROD", "STAGING"]
-		  depends_on           = [artifactory_global_environment.staging]
+		  depends_on           = [artifactory_global_environment.staging, project.{{ .projectKey }}]
 		}
 	`, params)
 
@@ -387,6 +387,42 @@ func TestAccRepository_can_set_multi_project_environments_after_7_107_1(t *testi
 					resource.TestCheckResourceAttr(fqrn, "project_environments.0", "DEV"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.1", "PROD"),
 					resource.TestCheckResourceAttr(fqrn, "project_environments.2", "STAGING"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRepository_can_set_empty_project_environments_after_7_107_1(t *testing.T) {
+	repoName := fmt.Sprintf("test-generic-local-%d", testutil.RandomInt())
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	localRepositoryWithEmptyEnvironments := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+		  key                  = "{{ .name }}"
+	 	  project_environments = []
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				SkipFunc: func() (bool, error) {
+					meta := acctest.Provider.Meta().(util.ProviderMetadata)
+					multiSupport, err := util.CheckVersion(meta.ArtifactoryVersion, repository.MultipleEnvironmentsSupportedVersion)
+					return !multiSupport, err
+				},
+				Config: localRepositoryWithEmptyEnvironments,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "0"),
 				),
 			},
 		},
