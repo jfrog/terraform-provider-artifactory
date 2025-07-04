@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -511,9 +510,6 @@ var BaseAttributes = map[string]schema.Attribute{
 		Optional:    true,
 		Computed:    true,
 		Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
-		Validators: []validator.Set{
-			setvalidator.SizeAtLeast(1),
-		},
 		MarkdownDescription: "Before Artifactory 7.53.1, up to 2 values (`DEV` and `PROD`) are allowed. From 7.53.1 to 7.107.1, " +
 			"only one value is allowed. From 7.107.1, multiple values are allowed." +
 			"The attribute should only be used if the repository is already assigned to the existing project. If not, " +
