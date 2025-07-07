@@ -1,3 +1,9 @@
+## 12.9.7 (June 19, 2025). Tested on Artifactory 7.111.11 with Terraform 1.12.2 and OpenTofu 1.10.2
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
+
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:
