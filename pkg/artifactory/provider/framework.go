@@ -297,6 +297,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			remote.NewGradleRemoteRepositoryResource,
 			remote.NewHelmRemoteRepositoryResource,
 			remote.NewHelmOCIRemoteRepositoryResource,
+			remote.NewHexRemoteRepositoryResource,
 			remote.NewHuggingFaceMLRemoteRepositoryResource,
 			remote.NewJavaRemoteRepositoryResource(repository.IvyPackageType, true),
 			remote.NewMavenRemoteRepositoryResource,

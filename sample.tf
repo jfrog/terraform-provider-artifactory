@@ -444,6 +444,14 @@ resource "artifactory_remote_vcs_repository" "my-remote-vcs" {
   max_unique_snapshots = 5
 }
 
+
+resource "artifactory_remote_hex_repository" "hex-remote" {
+  key = "hex-remote"
+  url = "https://www.hex.pm/"
+  public_key_ref = file("samples/hex_public_key")
+  hex_primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
+}
+
 resource "artifactory_virtual_alpine_repository" "foo-alpine" {
   key              = "foo-alpine"
   repositories     = []
