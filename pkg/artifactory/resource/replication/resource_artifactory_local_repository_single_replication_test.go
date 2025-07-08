@@ -188,10 +188,11 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-local-single-replication", "artifactory_local_repository_single_replication")
 
 	params := map[string]string{
-		"url":       acctest.GetArtifactoryUrl(t),
-		"username":  acctest.RtDefaultUser,
-		"proxy":     "test-proxy",
-		"repo_name": name,
+		"url":          acctest.GetArtifactoryUrl(t),
+		"username":     acctest.RtDefaultUser,
+		"proxy":        "test-proxy",
+		"disableProxy": "false",
+		"repo_name":    name,
 	}
 
 	config := util.ExecuteTemplate("TestAccPushReplication", `
@@ -213,6 +214,7 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
  			username 							= "{{ .username }}"
 			password 							= "Passw0rd!"
 			proxy 								= artifactory_proxy.{{ .proxy }}.key
+			disable_proxy 						= {{ .disableProxy }}
 			socket_timeout_millis 				= 16000
 			enabled 							= true
 			sync_deletes 						= true
@@ -269,6 +271,7 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", params["url"]),
 					resource.TestCheckResourceAttr(fqrn, "username", params["username"]),
 					resource.TestCheckResourceAttr(fqrn, "proxy", params["proxy"]),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", params["disableProxy"]),
 					resource.TestCheckResourceAttr(fqrn, "socket_timeout_millis", "16000"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "true"),
@@ -288,6 +291,7 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "url", params["url"]),
 					resource.TestCheckResourceAttr(fqrn, "username", params["username"]),
 					resource.TestCheckResourceAttr(fqrn, "proxy", params["proxy"]),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", params["disableProxy"]),
 					resource.TestCheckResourceAttr(fqrn, "socket_timeout_millis", "17000"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
 					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "false"),
@@ -303,6 +307,76 @@ func TestAccLocalSingleReplication_full(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccLocalSingleReplicationDisableProxy(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-local-single-replication-disable-proxy", "artifactory_local_repository_single_replication")
+
+	params := map[string]string{
+		"url":       acctest.GetArtifactoryUrl(t),
+		"username":  acctest.RtDefaultUser,
+		"repo_name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccLocalSingleReplicationDisableProxy", `
+		resource "artifactory_local_maven_repository" "{{ .repo_name }}" {
+			key = "{{ .repo_name }}"
+		}
+
+		resource "artifactory_local_repository_single_replication" "{{ .repo_name }}" {
+			repo_key 							= artifactory_local_maven_repository.{{ .repo_name }}.key
+			cron_exp 							= "0 0 * * * ?"
+			enable_event_replication 			= true
+			url 								= "{{ .url }}"
+ 			username 							= "{{ .username }}"
+			password 							= "Passw0rd!"
+			disable_proxy 						= true
+			socket_timeout_millis 				= 16000
+			enabled 							= true
+			sync_deletes 						= true
+			sync_properties 					= true
+			sync_statistics 					= true
+			include_path_prefix_pattern 		= "/some-repo/"
+			exclude_path_prefix_pattern 		= "/some-other-repo/"
+			check_binary_existence_in_filestore = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy: func() func(*terraform.State) error {
+			return testAccCheckPushReplicationDestroy(fqrn)
+		}(),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "repo_key", name),
+					resource.TestCheckResourceAttr(fqrn, "proxy", ""),
+					resource.TestCheckResourceAttr(fqrn, "disable_proxy", "true"),
+					resource.TestCheckResourceAttr(fqrn, "cron_exp", "0 0 * * * ?"),
+					resource.TestCheckResourceAttr(fqrn, "enable_event_replication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "url", params["url"]),
+					resource.TestCheckResourceAttr(fqrn, "username", params["username"]),
+					resource.TestCheckResourceAttr(fqrn, "socket_timeout_millis", "16000"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_deletes", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_properties", "true"),
+					resource.TestCheckResourceAttr(fqrn, "sync_statistics", "true"),
+					resource.TestCheckResourceAttr(fqrn, "include_path_prefix_pattern", "/some-repo/"),
+					resource.TestCheckResourceAttr(fqrn, "exclude_path_prefix_pattern", "/some-other-repo/"),
+					resource.TestCheckResourceAttr(fqrn, "check_binary_existence_in_filestore", "true"),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "replication_key"},
 			},
 		},
 	})
