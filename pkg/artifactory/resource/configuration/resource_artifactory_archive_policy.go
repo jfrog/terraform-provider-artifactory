@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -27,12 +25,198 @@ import (
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
 )
 
+// Custom validator for search_criteria to enforce validation rules
+type searchCriteriaValidator struct{}
+
+func (v searchCriteriaValidator) Description(ctx context.Context) string {
+	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+}
+
+func (v searchCriteriaValidator) MarkdownDescription(ctx context.Context) string {
+	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+}
+
+func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	// Get the object value
+	obj := req.ConfigValue
+
+	// If the object is null or unknown, skip validation
+	if obj.IsNull() || obj.IsUnknown() {
+		return
+	}
+
+	// Get the attributes
+	attrs := obj.Attributes()
+
+	// Helper function to get int64 value
+	getInt64 := func(key string) types.Int64 {
+		if v, ok := attrs[key]; ok && !v.IsNull() && !v.IsUnknown() {
+			if val, ok := v.(types.Int64); ok {
+				return val
+			}
+		}
+		return types.Int64Null()
+	}
+
+	// Check for time-based conditions (days) - for Artifactory 7.111.2+
+	createdBeforeInDays := getInt64("created_before_in_days")
+	lastDownloadedBeforeInDays := getInt64("last_downloaded_before_in_days")
+
+	// Check for time-based conditions (months) - for Artifactory < 7.111.2
+	createdBeforeInMonths := getInt64("created_before_in_months")
+	lastDownloadedBeforeInMonths := getInt64("last_downloaded_before_in_months")
+
+	// Version-based condition (available in both versions)
+	keepLastNVersions := getInt64("keep_last_n_versions")
+
+	// Helper function to check if properties are set
+	checkPropertiesSet := func(key string) bool {
+		if v, ok := attrs[key]; ok && !v.IsNull() && !v.IsUnknown() {
+			if m, ok := v.(types.Map); ok {
+				return len(m.Elements()) > 0
+			}
+		}
+		return false
+	}
+
+	// Check if days attributes are set (7.111.2+)
+	createdDaysSet := !createdBeforeInDays.IsNull() && !createdBeforeInDays.IsUnknown() && createdBeforeInDays.ValueInt64() > 0
+	downloadedDaysSet := !lastDownloadedBeforeInDays.IsNull() && !lastDownloadedBeforeInDays.IsUnknown() && lastDownloadedBeforeInDays.ValueInt64() > 0
+	timeBasedDaysSet := createdDaysSet || downloadedDaysSet
+
+	// Check if months attributes are set (< 7.111.2)
+	createdMonthsSet := !createdBeforeInMonths.IsNull() && !createdBeforeInMonths.IsUnknown() && createdBeforeInMonths.ValueInt64() > 0
+	downloadedMonthsSet := !lastDownloadedBeforeInMonths.IsNull() && !lastDownloadedBeforeInMonths.IsUnknown() && lastDownloadedBeforeInMonths.ValueInt64() > 0
+	timeBasedMonthsSet := createdMonthsSet || downloadedMonthsSet
+
+	// Version-based condition
+	keepSet := !keepLastNVersions.IsNull() && !keepLastNVersions.IsUnknown() && keepLastNVersions.ValueInt64() > 0
+
+	// Check for zero values in time-based conditions
+	if (!createdBeforeInDays.IsNull() && !createdBeforeInDays.IsUnknown() && createdBeforeInDays.ValueInt64() == 0) ||
+		(!lastDownloadedBeforeInDays.IsNull() && !lastDownloadedBeforeInDays.IsUnknown() && lastDownloadedBeforeInDays.ValueInt64() == 0) ||
+		(!createdBeforeInMonths.IsNull() && !createdBeforeInMonths.IsUnknown() && createdBeforeInMonths.ValueInt64() == 0) ||
+		(!lastDownloadedBeforeInMonths.IsNull() && !lastDownloadedBeforeInMonths.IsUnknown() && lastDownloadedBeforeInMonths.ValueInt64() == 0) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Policy Configuration",
+			"Time-based conditions must have a value greater than 0. Zero values are not allowed for `created_before_in_days`, `last_downloaded_before_in_days`, `created_before_in_months`, or `last_downloaded_before_in_months`.",
+		)
+		return
+	}
+
+	// Check for zero values in version-based condition
+	if !keepLastNVersions.IsNull() && !keepLastNVersions.IsUnknown() && keepLastNVersions.ValueInt64() == 0 {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Policy Configuration",
+			"Version-based condition (keep_last_n_versions) must have a value greater than 0. Zero values are not allowed.",
+		)
+		return
+	}
+
+	// Properties-based conditions (only included_properties)
+	includedPropertiesSet := checkPropertiesSet("included_properties")
+	propertiesBasedSet := includedPropertiesSet
+
+	// Check for mixed usage of days and months (invalid)
+	if timeBasedDaysSet && timeBasedMonthsSet {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Policy Configuration",
+			"Cannot use both days-based conditions (`created_before_in_days`, `last_downloaded_before_in_days`) and months-based conditions (`created_before_in_months`, `last_downloaded_before_in_months`) together. Use either days-based or months-based conditions based on your Artifactory version.",
+		)
+		return
+	}
+
+	// Check for time-based conditions (either days or months)
+	timeBasedSet := timeBasedDaysSet || timeBasedMonthsSet
+
+	// Count how many different condition types are set
+	conditionTypes := 0
+	if timeBasedSet {
+		conditionTypes++
+	}
+	if keepSet {
+		conditionTypes++
+	}
+	if propertiesBasedSet {
+		conditionTypes++
+	}
+
+	// Must specify at least one condition
+	if conditionTypes == 0 {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Policy Configuration",
+			"A policy must use exactly one of the following condition types: time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+		)
+		return
+	}
+
+	// Cannot use multiple condition types together
+	if conditionTypes > 1 {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Policy Configuration",
+			"A policy can only use one type of condition: either time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+		)
+		return
+	}
+}
+
+type singleKeySingleValueMapValidator struct{}
+
+func (v singleKeySingleValueMapValidator) Description(ctx context.Context) string {
+	return "Must have exactly one key and that key must have exactly one string value"
+}
+
+func (v singleKeySingleValueMapValidator) MarkdownDescription(ctx context.Context) string {
+	return "Must have exactly one key and that key must have exactly one string value"
+}
+
+func (v singleKeySingleValueMapValidator) ValidateMap(ctx context.Context, req validator.MapRequest, resp *validator.MapResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	m := req.ConfigValue.Elements()
+	if len(m) != 1 {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Properties",
+			"Properties-based conditions must have exactly one key.",
+		)
+		return
+	}
+
+	for _, v := range m {
+		if v.IsNull() || v.IsUnknown() {
+			continue
+		}
+		if l, ok := v.(types.List); ok {
+			if len(l.Elements()) != 1 {
+				resp.Diagnostics.AddAttributeError(
+					req.Path,
+					"Invalid Properties",
+					"The property value must be a list with exactly one string value.",
+				)
+			}
+		}
+	}
+}
+
 var yumPolicyPackageType = "yum" // Only used by cleanup and archive policies as RPM
 
 var archivePolicySupportedPackageType = []string{
+	repository.AlpinePackageType,
+	repository.AnsiblePackageType,
 	repository.CargoPackageType,
+	repository.ChefPackageType,
 	repository.CocoapodsPackageType,
+	repository.ComposerPackageType,
 	repository.ConanPackageType,
+	repository.CondaPackageType,
 	repository.DebianPackageType,
 	repository.DockerPackageType,
 	repository.GemsPackageType,
@@ -42,12 +226,20 @@ var archivePolicySupportedPackageType = []string{
 	repository.HelmPackageType,
 	repository.HelmOCIPackageType,
 	repository.HuggingFacePackageType,
+	repository.MachineLearningType,
 	repository.MavenPackageType,
 	repository.NPMPackageType,
 	repository.NugetPackageType,
 	repository.OCIPackageType,
+	repository.OpkgPackageType,
+	repository.PuppetPackageType,
 	repository.PyPiPackageType,
+	repository.SBTPackageType,
+	repository.SwiftPackageType,
 	repository.TerraformPackageType,
+	repository.TerraformBackendPackageType,
+	repository.VagrantPackageType,
+	repository.RPMPackageType,
 	yumPolicyPackageType,
 }
 
@@ -62,9 +254,12 @@ func NewArchivePolicyResource() resource.Resource {
 	}
 }
 
+var _ resource.Resource = (*ArchivePolicyResource)(nil)
+
 type ArchivePolicyResource struct {
 	util.JFrogResource
 	EnablementEndpoint string
+	ProviderData       util.ProviderMetadata
 }
 
 type ArchivePolicyResourceModel struct {
@@ -82,11 +277,24 @@ func (r ArchivePolicyResourceModel) toAPIModel(ctx context.Context, apiModel *Ar
 	diags := diag.Diagnostics{}
 
 	attrs := r.SearchCriteria.Attributes()
+
+	// Helper function to safely get int64 pointer
+	getInt64Pointer := func(key string) *int64 {
+		if v, ok := attrs[key]; ok && !v.IsNull() && !v.IsUnknown() {
+			if val, ok := v.(types.Int64); ok {
+				return val.ValueInt64Pointer()
+			}
+		}
+		return nil
+	}
+
 	searchCriteria := ArchivePolicySearchCriteriaAPIModel{
 		IncludeAllProjects:           attrs["include_all_projects"].(types.Bool).ValueBoolPointer(),
-		CreatedBeforeInMonths:        attrs["created_before_in_months"].(types.Int64).ValueInt64Pointer(),
-		LastDownloadedBeforeInMonths: attrs["last_downloaded_before_in_months"].(types.Int64).ValueInt64Pointer(),
-		KeepLastNVerions:             attrs["keep_last_n_versions"].(types.Int64).ValueInt64Pointer(),
+		CreatedBeforeInMonths:        getInt64Pointer("created_before_in_months"),
+		LastDownloadedBeforeInMonths: getInt64Pointer("last_downloaded_before_in_months"),
+		CreatedBeforeInDays:          getInt64Pointer("created_before_in_days"),
+		LastDownloadedBeforeInDays:   getInt64Pointer("last_downloaded_before_in_days"),
+		KeepLastNVersions:            getInt64Pointer("keep_last_n_versions"),
 	}
 
 	diags.Append(attrs["package_types"].(types.Set).ElementsAs(ctx, &searchCriteria.PackageTypes, false)...)
@@ -95,6 +303,39 @@ func (r ArchivePolicyResourceModel) toAPIModel(ctx context.Context, apiModel *Ar
 	diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
 	diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
 	diags.Append(attrs["included_projects"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedProjects, false)...)
+
+	if v, ok := attrs["included_properties"]; ok && !v.IsNull() && !v.IsUnknown() {
+		if m, ok := v.(types.Map); ok {
+			searchCriteria.IncludedProperties = make(map[string][]string)
+			for k, val := range m.Elements() {
+				if l, ok := val.(types.List); ok && !l.IsNull() && !l.IsUnknown() {
+					var values []string
+					for _, lv := range l.Elements() {
+						if s, ok := lv.(types.String); ok && !s.IsNull() && !s.IsUnknown() {
+							values = append(values, s.ValueString())
+						}
+					}
+					searchCriteria.IncludedProperties[k] = values
+				}
+			}
+		}
+	}
+	if v, ok := attrs["excluded_properties"]; ok && !v.IsNull() && !v.IsUnknown() {
+		if m, ok := v.(types.Map); ok {
+			searchCriteria.ExcludedProperties = make(map[string][]string)
+			for k, val := range m.Elements() {
+				if l, ok := val.(types.List); ok && !l.IsNull() && !l.IsUnknown() {
+					var values []string
+					for _, lv := range l.Elements() {
+						if s, ok := lv.(types.String); ok && !s.IsNull() && !s.IsUnknown() {
+							values = append(values, s.ValueString())
+						}
+					}
+					searchCriteria.ExcludedProperties[k] = values
+				}
+			}
+		}
+	}
 
 	*apiModel = ArchivePolicyAPIModel{
 		Key:               r.Key.ValueString(),
@@ -157,6 +398,59 @@ func (r *ArchivePolicyResourceModel) fromAPIModel(ctx context.Context, apiModel 
 		diags.Append(ds...)
 	}
 
+	includedProperties := types.MapNull(types.ListType{ElemType: types.StringType})
+	if apiModel.SearchCriteria.IncludedProperties != nil {
+		m := map[string]attr.Value{}
+		for k, v := range apiModel.SearchCriteria.IncludedProperties {
+			lv, ds := types.ListValueFrom(ctx, types.StringType, v)
+			if ds.HasError() {
+				diags.Append(ds...)
+			}
+			m[k] = lv
+		}
+		includedProperties, _ = types.MapValue(types.ListType{ElemType: types.StringType}, m)
+	}
+
+	excludedProperties := types.MapNull(types.ListType{ElemType: types.StringType})
+	if apiModel.SearchCriteria.ExcludedProperties != nil {
+		m := map[string]attr.Value{}
+		for k, v := range apiModel.SearchCriteria.ExcludedProperties {
+			lv, ds := types.ListValueFrom(ctx, types.StringType, v)
+			if ds.HasError() {
+				diags.Append(ds...)
+			}
+			m[k] = lv
+		}
+		excludedProperties, _ = types.MapValue(types.ListType{ElemType: types.StringType}, m)
+	}
+
+	// Handle time-based attributes with proper null checking
+	createdBeforeInMonths := types.Int64Null()
+	if apiModel.SearchCriteria.CreatedBeforeInMonths != nil {
+		createdBeforeInMonths = types.Int64PointerValue(apiModel.SearchCriteria.CreatedBeforeInMonths)
+	}
+
+	lastDownloadedBeforeInMonths := types.Int64Null()
+	if apiModel.SearchCriteria.LastDownloadedBeforeInMonths != nil {
+		lastDownloadedBeforeInMonths = types.Int64PointerValue(apiModel.SearchCriteria.LastDownloadedBeforeInMonths)
+	}
+
+	// Always set day-based attributes to ensure they are known values
+	createdBeforeInDays := types.Int64Null()
+	if apiModel.SearchCriteria.CreatedBeforeInDays != nil {
+		createdBeforeInDays = types.Int64PointerValue(apiModel.SearchCriteria.CreatedBeforeInDays)
+	}
+
+	lastDownloadedBeforeInDays := types.Int64Null()
+	if apiModel.SearchCriteria.LastDownloadedBeforeInDays != nil {
+		lastDownloadedBeforeInDays = types.Int64PointerValue(apiModel.SearchCriteria.LastDownloadedBeforeInDays)
+	}
+
+	keepLastNVersions := types.Int64Null()
+	if apiModel.SearchCriteria.KeepLastNVersions != nil {
+		keepLastNVersions = types.Int64PointerValue(apiModel.SearchCriteria.KeepLastNVersions)
+	}
+
 	searchCriteria, ds := types.ObjectValue(
 		map[string]attr.Type{
 			"package_types":                    types.SetType{ElemType: types.StringType},
@@ -168,7 +462,11 @@ func (r *ArchivePolicyResourceModel) fromAPIModel(ctx context.Context, apiModel 
 			"included_projects":                types.SetType{ElemType: types.StringType},
 			"created_before_in_months":         types.Int64Type,
 			"last_downloaded_before_in_months": types.Int64Type,
+			"created_before_in_days":           types.Int64Type,
+			"last_downloaded_before_in_days":   types.Int64Type,
 			"keep_last_n_versions":             types.Int64Type,
+			"included_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+			"excluded_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
 		},
 		map[string]attr.Value{
 			"package_types":                    packageTypes,
@@ -178,9 +476,13 @@ func (r *ArchivePolicyResourceModel) fromAPIModel(ctx context.Context, apiModel 
 			"excluded_packages":                excludedPackages,
 			"include_all_projects":             types.BoolPointerValue(apiModel.SearchCriteria.IncludeAllProjects),
 			"included_projects":                includedProjects,
-			"created_before_in_months":         types.Int64PointerValue(apiModel.SearchCriteria.CreatedBeforeInMonths),
-			"last_downloaded_before_in_months": types.Int64PointerValue(apiModel.SearchCriteria.LastDownloadedBeforeInMonths),
-			"keep_last_n_versions":             types.Int64PointerValue(apiModel.SearchCriteria.KeepLastNVerions),
+			"created_before_in_months":         createdBeforeInMonths,
+			"last_downloaded_before_in_months": lastDownloadedBeforeInMonths,
+			"created_before_in_days":           createdBeforeInDays,
+			"last_downloaded_before_in_days":   lastDownloadedBeforeInDays,
+			"keep_last_n_versions":             keepLastNVersions,
+			"included_properties":              includedProperties,
+			"excluded_properties":              excludedProperties,
 		},
 	)
 	if ds.HasError() {
@@ -204,16 +506,20 @@ type ArchivePolicyAPIModel struct {
 }
 
 type ArchivePolicySearchCriteriaAPIModel struct {
-	PackageTypes                 []string  `json:"packageTypes"`
-	Repos                        []string  `json:"repos"`
-	ExcludedRepos                *[]string `json:"excludedRepos,omitempty"`
-	IncludedPackages             []string  `json:"includedPackages"`
-	ExcludedPackages             *[]string `json:"excludedPackages,omitempty"`
-	IncludeAllProjects           *bool     `json:"includeAllProjects,omitempty"`
-	IncludedProjects             *[]string `json:"includedProjects,omitempty"`
-	CreatedBeforeInMonths        *int64    `json:"createdBeforeInMonths,omitempty"`
-	LastDownloadedBeforeInMonths *int64    `json:"lastDownloadedBeforeInMonths,omitempty"`
-	KeepLastNVerions             *int64    `json:"keepLastNVerions,omitempty"`
+	PackageTypes                 []string            `json:"packageTypes"`
+	Repos                        []string            `json:"repos"`
+	ExcludedRepos                *[]string           `json:"excludedRepos,omitempty"`
+	IncludedPackages             []string            `json:"includedPackages"`
+	ExcludedPackages             *[]string           `json:"excludedPackages,omitempty"`
+	IncludeAllProjects           *bool               `json:"includeAllProjects,omitempty"`
+	IncludedProjects             *[]string           `json:"includedProjects,omitempty"`
+	CreatedBeforeInMonths        *int64              `json:"createdBeforeInMonths,omitempty"`
+	LastDownloadedBeforeInMonths *int64              `json:"lastDownloadedBeforeInMonths,omitempty"`
+	CreatedBeforeInDays          *int64              `json:"createdBeforeInDays,omitempty"`
+	LastDownloadedBeforeInDays   *int64              `json:"lastDownloadedBeforeInDays,omitempty"`
+	KeepLastNVersions            *int64              `json:"keepLastNVersions,omitempty"`
+	ExcludedProperties           map[string][]string `json:"excludedProperties,omitempty"`
+	IncludedProperties           map[string][]string `json:"includedProperties,omitempty"`
 }
 
 type ArchivePolicyEnablementAPIModel struct {
@@ -246,6 +552,7 @@ func (r *ArchivePolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"duration_in_minutes": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "The maximum duration (in minutes) for policy execution, after which the policy will stop running even if not completed. While setting a maximum run duration for a policy is useful for adhering to a strict archive V2 schedule, it can cause the policy to stop before completion.",
 			},
 			"enabled": schema.BoolAttribute{
@@ -322,58 +629,78 @@ func (r *ArchivePolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 					"included_projects": schema.SetAttribute{
 						ElementType: types.StringType,
-						Optional:    true,
+						Required:    true,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(0),
+						},
 						MarkdownDescription: "List of projects on which you want this policy to run. To include repositories that are not assigned to any project, enter the project key `default`.\n\n" +
 							"~>This setting is relevant only on the global level, for Platform Admins.",
 					},
 					"created_before_in_months": schema.Int64Attribute{
-						Optional: true,
-						Computed: true,
-						Default:  int64default.StaticInt64(24),
-						Validators: []validator.Int64{
-							int64validator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("last_downloaded_before_in_months")),
-							int64validator.ConflictsWith(
-								path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
-							),
-							int64validator.AtLeast(0),
-						},
+						Optional:            true,
+						Computed:            true,
 						MarkdownDescription: "The archive policy will archive packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 months ago will be archived as part of the policy.",
+						DeprecationMessage:  "Use `created_before_in_days` instead of `created_before_in_months`. Renamed to `created_before_in_days` starting in version 7.111.2.",
 					},
 					"last_downloaded_before_in_months": schema.Int64Attribute{
 						Optional: true,
 						Computed: true,
-						Default:  int64default.StaticInt64(24),
-						Validators: []validator.Int64{
-							int64validator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("created_before_in_months")),
-							int64validator.ConflictsWith(
-								path.MatchRelative().AtParent().AtName("keep_last_n_versions"),
-							),
-							int64validator.AtLeast(0),
-						},
 						MarkdownDescription: "The archive policy will archive packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 months ago will be archived as part of the policy.\n\n" +
 							"~>JFrog recommends using the `last_downloaded_before_in_months` condition to ensure that packages currently in use are not archived.",
+						DeprecationMessage: "Use `last_downloaded_before_in_days` instead of `last_downloaded_before_in_months`. Renamed to `last_downloaded_before_in_days` starting in version 7.111.2.",
+					},
+					"created_before_in_days": schema.Int64Attribute{
+						Optional:            true,
+						Computed:            true,
+						MarkdownDescription: "The archive policy will archive packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 days ago will be archived as part of the policy.",
+					},
+					"last_downloaded_before_in_days": schema.Int64Attribute{
+						Optional: true,
+						Computed: true,
+						MarkdownDescription: "The archive policy will archive packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 days ago will be archived as part of the policy.\n\n" +
+							"~>JFrog recommends using the `last_downloaded_before_in_days` condition to ensure that packages currently in use are not archived.",
 					},
 					"keep_last_n_versions": schema.Int64Attribute{
 						Optional: true,
-						Validators: []validator.Int64{
-							int64validator.ConflictsWith(
-								path.MatchRelative().AtParent().AtName("created_before_in_months"),
-								path.MatchRelative().AtParent().AtName("last_downloaded_before_in_months"),
-							),
-							int64validator.AtLeast(1),
-						},
+						Computed: true,
 						MarkdownDescription: "Set a value for the number of latest versions to keep. The archive policy will remove all versions before the number you select here. The latest version is always excluded.\n\n" +
 							"~>Versions are determined by creation date.\n\n" +
 							"~>Not all package types support this condition. If you include a package type in your policy that is not compatible with this condition, a validation error (400) is returned. For information on which package types support this condition, see [here]().",
 					},
+					"excluded_properties": schema.MapAttribute{
+						ElementType: types.ListType{ElemType: types.StringType},
+						Optional:    true,
+						Validators: []validator.Map{
+							singleKeySingleValueMapValidator{},
+						},
+						MarkdownDescription: "A key-value pair applied to the lead artifact of a package. Packages with this property will be excluded from archival.",
+					},
+					"included_properties": schema.MapAttribute{
+						ElementType: types.ListType{ElemType: types.StringType},
+						Optional:    true,
+						Validators: []validator.Map{
+							singleKeySingleValueMapValidator{},
+						},
+						MarkdownDescription: "A key-value pair applied to the lead artifact of a package. Packages with this property will be archived.",
+					},
 				},
 				Required: true,
+				Validators: []validator.Object{
+					searchCriteriaValidator{},
+				},
 			},
 		},
 		Description: "Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. " +
-			"See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n" +
-			"~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.",
+			"See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.\n\n",
 	}
+}
+
+func (r *ArchivePolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
 func (r ArchivePolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
@@ -384,30 +711,8 @@ func (r ArchivePolicyResource) ValidateConfig(ctx context.Context, req resource.
 		return
 	}
 
-	// If search_criteria is not configured, return without warning.
-	if data.SearchCriteria.IsNull() || data.SearchCriteria.IsUnknown() {
-		return
-	}
-
-	searchCriteriaAttrs := data.SearchCriteria.Attributes()
-	createdBeforeInMonths := searchCriteriaAttrs["created_before_in_months"].(types.Int64)
-	lastDownloadedBeforeInMonths := searchCriteriaAttrs["last_downloaded_before_in_months"].(types.Int64)
-
-	if createdBeforeInMonths.IsNull() || createdBeforeInMonths.IsUnknown() {
-		return
-	}
-
-	if lastDownloadedBeforeInMonths.IsNull() || lastDownloadedBeforeInMonths.IsUnknown() {
-		return
-	}
-
-	if createdBeforeInMonths.ValueInt64() == 0 && lastDownloadedBeforeInMonths.ValueInt64() == 0 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("search_criteria").AtName("created_before_in_months"),
-			"Invalid Attribute Configuration",
-			"Both created_before_in_months and last_downloaded_before_in_months cannot be zero at the same time.",
-		)
-	}
+	// Schema-level validation handles the condition validation rules
+	// This function can be used for additional validation if needed in the future
 }
 
 func (r *ArchivePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -465,6 +770,30 @@ func (r *ArchivePolicyResource) Create(ctx context.Context, req resource.CreateR
 			utilfw.UnableToCreateResourceError(resp, jfrogErrors.String())
 			return
 		}
+	}
+
+	// Read the created resource to get the actual values from the API
+	var createdPolicy ArchivePolicyAPIModel
+	readResponse, readErr := r.ProviderData.Client.R().
+		SetPathParam("policyKey", plan.Key.ValueString()).
+		SetResult(&createdPolicy).
+		SetError(&jfrogErrors).
+		Get(r.DocumentEndpoint)
+
+	if readErr != nil {
+		utilfw.UnableToCreateResourceError(resp, readErr.Error())
+		return
+	}
+
+	if readResponse.IsError() {
+		utilfw.UnableToCreateResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	// Convert from the API data model to the Terraform data model
+	resp.Diagnostics.Append(plan.fromAPIModel(ctx, createdPolicy)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Save data into Terraform state
@@ -589,6 +918,30 @@ func (r *ArchivePolicyResource) Update(ctx context.Context, req resource.UpdateR
 			utilfw.UnableToUpdateResourceError(resp, jfrogErrors.String())
 			return
 		}
+	}
+
+	// Read the updated resource to get the actual values from the API
+	var updatedPolicy ArchivePolicyAPIModel
+	readResponse, readErr := r.ProviderData.Client.R().
+		SetPathParam("policyKey", plan.Key.ValueString()).
+		SetResult(&updatedPolicy).
+		SetError(&jfrogErrors).
+		Get(r.DocumentEndpoint)
+
+	if readErr != nil {
+		utilfw.UnableToUpdateResourceError(resp, readErr.Error())
+		return
+	}
+
+	if readResponse.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, jfrogErrors.String())
+		return
+	}
+
+	// Convert from the API data model to the Terraform data model
+	resp.Diagnostics.Append(plan.fromAPIModel(ctx, updatedPolicy)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Save data into Terraform state
