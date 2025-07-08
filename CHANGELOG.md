@@ -1,4 +1,4 @@
-### 12.10.1 (Aug 7, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
+### 12.10.1 (Sep 30, 2025).
 
 BUG FIXES:
 
@@ -7,6 +7,8 @@ BUG FIXES:
 
 * resource/artifactory_package_cleanup_policy: Fix re-add project_key for artifactory_package_cleanup_policy. Issue: [#1301](https://github.com/jfrog/terraform-provider-artifactory/issues/1301). PR: [#1302](https://github.com/jfrog/terraform-provider-artifactory/pull/1302)
 * resource/artifactory_package_cleanup_policy: Fix state inconsistency error for duration_in_minutes field by adding Computed: true to the schema attribute. This resolves the "Provider produced inconsistent result after apply" error when the Artifactory API returns a default value of 0 for duration_in_minutes. PR: [#1315](https://github.com/jfrog/terraform-provider-artifactory/pull/1315)
+
+* resource/artifactory_archive_policy: Fix validation for time-based and version-based and property-based conditions, added included_properties and excluded_properties attributes. PR: [#1291](https://github.com/jfrog/terraform-provider-artifactory/pull/1291)
 
 ### 12.10.0 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
 
