@@ -20,7 +20,7 @@ import (
 func TestAccUnmanagedUser_UpgradeFromSDKv2(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-unmanaged-user-upgrade-", "artifactory_unmanaged_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":  name,

@@ -4,16 +4,87 @@ page_title: "artifactory_archive_policy Resource - terraform-provider-artifactor
 subcategory: "Configuration"
 description: |-
   Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See Retention Policies https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies for more details.
-  ~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.
 ---
 
 # artifactory_archive_policy (Resource)
 
-Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies) for more details.
-
-~>Currently in beta and not yet globally available. A full rollout is scheduled for Q1 2025.
+Provides an Artifactory Archive Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Retention Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/archive) for more details.
 
 ## Example Usage
+
+### Time-based Archive Policy (Days)
+
+```terraform
+resource "artifactory_archive_policy" "my-archive-policy" {
+  key = "my-archive-policy"
+  description = "My archive policy"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    created_before_in_days = 30
+    last_downloaded_before_in_days = 60
+  }
+}
+```
+
+### Version-based Archive Policy
+
+```terraform
+resource "artifactory_archive_policy" "my-version-policy" {
+  key = "my-version-policy"
+  description = "Keep only latest versions"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    keep_last_n_versions = 5
+  }
+}
+```
+
+### Properties-based Archive Policy
+
+```terraform
+resource "artifactory_archive_policy" "my-properties-policy" {
+  key = "my-properties-policy"
+  description = "Archive based on properties"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    included_properties = {
+      "build.name" = ["my-app"]
+    }
+  }
+}
+```
+
+### Project-level Archive Policy
 
 ```terraform
 resource "artifactory_local_docker_v2_repository" "my-docker-local" {
@@ -55,23 +126,43 @@ resource "artifactory_archive_policy" "my-archive-policy" {
   project_key = project_repository.myproj-my-docker-local.project_key
   
   search_criteria = {
-    package_types = [
-      "docker",
-    ]
-    repos = [
-      project_repository.myproj-my-docker-local.key,
-    ]
-    excluded_repos = ["gradle-global"]
+    package_types = ["docker"]
+    repos = [project_repository.myproj-my-docker-local.key]
     include_all_projects = false
     included_projects = [project.myproj.key]
-    included_packages = ["com/jfrog"]
+    included_packages = ["**"]
     excluded_packages = ["com/jfrog/latest"]
-    created_before_in_months = 1
-    last_downloaded_before_in_months = 6
-    keep_last_n_versions = 0
+    created_before_in_days = 30
   }
 }
 ```
+
+## Validation Rules
+
+The archive policy resource enforces the following validation rules:
+
+1. **Condition Types**: A policy must use exactly one of the following condition types:
+   - Time-based conditions (`days-based`)
+   - Version-based condition (`keep_last_n_versions`)
+   - Properties-based condition (`included_properties`)
+
+2. **Mutual Exclusivity**: Cannot use multiple condition types together.
+
+3. **Zero Values**: Time-based and version-based conditions must have values greater than 0.
+
+4. **Days vs Months**: Cannot use both days-based conditions (`created_before_in_days`, `last_downloaded_before_in_days`) and months-based conditions (`created_before_in_months`, `last_downloaded_before_in_months`) together.
+
+5. **Properties Validation**: Properties-based conditions must have exactly one key with exactly one string value.
+
+6. **Project Configuration**: When `include_all_projects` is set to `true`, the `included_projects` field can be empty array. When `include_all_projects` is `false`, `included_projects` must contain at least one project key.
+
+## Supported Package Types
+
+The following package types are supported: alpine, ansible, cargo, chef, cocoapods, composer, conan, conda, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, maven, npm, nuget, oci, opkg, puppet, pypi, sbt, swift, terraform, terraformbackend, vagrant, yum.
+
+## Version Compatibility
+
+- The `created_before_in_days` and `last_downloaded_before_in_days` attributes are only supported in Artifactory 7.111.2 and later. For earlier versions, use `created_before_in_months` and `last_downloaded_before_in_months`.
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
@@ -98,28 +189,40 @@ resource "artifactory_archive_policy" "my-archive-policy" {
 Required:
 
 - `included_packages` (Set of String) Specify a pattern for a package name or an explicit package name. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example: `included_packages = ["**"]`
-- `package_types` (Set of String) The package types that are archived by the policy. Support: cargo, cocoapods, conan, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, maven, npm, nuget, oci, pypi, terraform, yum.
+- `package_types` (Set of String) The package types that are archived by the policy. Support: alpine, ansible, cargo, chef, cocoapods, composer, conan, conda, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, maven, npm, nuget, oci, opkg, puppet, pypi, sbt, swift, terraform, terraformbackend, vagrant, yum.
 - `repos` (Set of String) Specify one or more patterns for the repository name(s) on which you want the archive policy to run. You can also specify explicit repository names. Specifying at least one pattern or explicit name is required. Only packages in repositories that match the pattern or explicit name will be archived. For including all repos use `**`. Example: `repos = ["**"]`
+- `included_projects` (Set of String) List of projects on which you want this policy to run. To include repositories that are not assigned to any project, enter the project key `default`. Can be empty when `include_all_projects` is set to `true`.
+~>This setting is relevant only on the global level, for Platform Admins.
 
 Optional:
 
+- `created_before_in_days` (Number) The archive policy will archive packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 days ago will be archived as part of the policy.
+  > **Requires Artifactory 7.111.2 or later.**
+~>JFrog recommends using the `created_before_in_days` condition to ensure that packages currently in use are not archived.
+
+- `last_downloaded_before_in_days` (Number) The archive policy will archive packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 days ago will be archived as part of the policy.
+  > **Requires Artifactory 7.111.2 or later.**
+~>JFrog recommends using the `last_downloaded_before_in_days` condition to ensure that packages currently in use are not archived.
+
 - `created_before_in_months` (Number) The archive policy will archive packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 months ago will be archived as part of the policy.
-- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only Name explicit names (and not patterns) are accepted.
-- `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the archive policy.
-- `include_all_projects` (Boolean) Set this value to `true` if you want the policy to run on all Artifactory projects. The default value is `false`.
 
-~>This attribute is relevant only on the global level, for Platform Admins.
-- `included_projects` (Set of String) List of projects on which you want this policy to run. To include repositories that are not assigned to any project, enter the project key `default`.
-
-~>This setting is relevant only on the global level, for Platform Admins.
-- `keep_last_n_versions` (Number) Set a value for the number of latest versions to keep. The archive policy will remove all versions before the number you select here. The latest version is always excluded.
-
-~>Versions are determined by creation date.
-
-~>Not all package types support this condition. If you include a package type in your policy that is not compatible with this condition, a validation error (400) is returned. For information on which package types support this condition, see [here]().
 - `last_downloaded_before_in_months` (Number) The archive policy will archive packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 months ago will be archived as part of the policy.
 
-~>JFrog recommends using the `last_downloaded_before_in_months` condition to ensure that packages currently in use are not archived.
+~>**Deprecated**: Use `created_before_in_days` instead of `created_before_in_months`. Renamed to `created_before_in_days` starting in version 7.111.2.
+
+~>**Deprecated**: Use `last_downloaded_before_in_days` instead of `last_downloaded_before_in_months`. Renamed to `last_downloaded_before_in_days` starting in version 7.111.2.
+
+- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only Name explicit names (and not patterns) are accepted.
+- `excluded_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be excluded from archival. Must have exactly one key with exactly one string value.
+- `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the archive policy.
+- `include_all_projects` (Boolean) Set this value to `true` if you want the policy to run on all Artifactory projects. The default value is `false`.
+~>This setting is relevant only on the global level, for Platform Admins.
+
+- `included_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be archived. Must have exactly one key with exactly one string value.
+- `keep_last_n_versions` (Number) Set a value for the number of latest versions to keep. The archive policy will remove all versions before the number you select here. The latest version is always excluded.
+~>Versions are determined by creation date.
+
+~>Not all package types support this condition. If you include a package type in your policy that is not compatible with this condition, a validation error (400) is returned. For information on which package types support this condition, see [here](https://jfrog.com/help/r/jfrog-platform-administration-documentation/smart-archiving-supported-packages).
 
 ## Import
 
