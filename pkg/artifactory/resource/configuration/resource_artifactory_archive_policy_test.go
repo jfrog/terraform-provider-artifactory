@@ -47,13 +47,14 @@ func TestAccArchivePolicy_invalid_key(t *testing.T) {
 				description = "Test policy"
 				cron_expression = "0 0 2 ? * MON-SAT *"
 				duration_in_minutes = 60
-				enabled = true
+				enabled = false
 				skip_trashcan = false
 				
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
 					include_all_projects = true
+					included_projects = []
 					included_packages = ["**"]
 					excluded_packages = ["com/jfrog/latest"]
 					created_before_in_months = 1
@@ -106,13 +107,14 @@ func TestAccArchivePolicy_invalid_conditions(t *testing.T) {
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 60
-		enabled = true
+		enabled = false
 		skip_trashcan = false
 		
 		search_criteria = {
 			repos = ["**"]
 			package_types = ["docker"]
 			include_all_projects = true
+			included_projects = []
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			created_before_in_months = 0
@@ -134,7 +136,97 @@ func TestAccArchivePolicy_invalid_conditions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile(".*Both created_before_in_months and last_downloaded_before_in_months cannot be\n.*zero at the same time.*"),
+				ExpectError: regexp.MustCompile(".*Time-based conditions must have a value greater than 0.*"),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_zero_values(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.101.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-zero-values", "artifactory_archive_policy")
+
+	// Test zero value for time-based days condition
+	tempDays := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_days = 0
+		}
+	}`
+
+	// Test zero value for version-based condition
+	tempVersion := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			keep_last_n_versions = 0
+		}
+	}`
+
+	configDays := util.ExecuteTemplate(
+		policyName,
+		tempDays,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	configVersion := util.ExecuteTemplate(
+		policyName,
+		tempVersion,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      configDays,
+				ExpectError: regexp.MustCompile("Invalid Policy Configuration"),
+			},
+			{
+				Config:      configVersion,
+				ExpectError: regexp.MustCompile("Invalid Policy Configuration"),
 			},
 		},
 	})
@@ -189,13 +281,14 @@ func TestAccArchivePolicy_full(t *testing.T) {
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 60
-		enabled = true
+		enabled = false
 		skip_trashcan = false
 		
 		search_criteria = {
 			package_types = ["docker"]
 			repos = [artifactory_local_docker_v2_repository.{{ .repoName }}.key]
 			included_projects = [project.{{ .projectKey }}.key]
+			include_all_projects = false
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			created_before_in_months = 0
@@ -224,6 +317,7 @@ func TestAccArchivePolicy_full(t *testing.T) {
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			include_all_projects = true
+			included_projects = []
 			created_before_in_months = 12
 			last_downloaded_before_in_months = 0
 		}
@@ -389,7 +483,7 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 60
-		enabled = true
+		enabled = false
 		skip_trashcan = false
 		project_key = project_repository.{{ .projectKey }}-{{ .repoName }}.project_key
 		
@@ -528,6 +622,1192 @@ func TestAccArchivePolicy_with_project_key(t *testing.T) {
 				ResourceName:                         fqrn,
 				ImportState:                          true,
 				ImportStateId:                        fmt.Sprintf("%s-%s:%s", projectKey, policyName, projectKey),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_validation_scenarios(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.101.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
+	}
+
+	testCases := []struct {
+		name        string
+		config      string
+		expectError bool
+		errorRegex  string
+	}{
+		// Valid scenarios
+		{
+			name: "valid time-based days",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-days"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid time-based months",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-months"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_months = 6
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid version-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-version"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 10
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid properties-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-properties"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = ["my-app"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid multiple time-based days",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-multiple-days"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					last_downloaded_before_in_days = 60
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid multiple time-based months",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-valid-multiple-months"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_months = 6
+					last_downloaded_before_in_months = 12
+				}
+			}`,
+			expectError: false,
+		},
+
+		// Invalid scenarios
+		{
+			name: "no conditions set",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-no-conditions"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+		},
+		{
+			name: "mixed days and months",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-mixed-days-months"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					created_before_in_months = 6
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Cannot use both days-based conditions.*",
+		},
+		{
+			name: "time-based and version-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-time-version"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					keep_last_n_versions = 10
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy can only use one type of condition.*",
+		},
+		{
+			name: "time-based and properties-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-time-properties"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					included_properties = {
+						"test" = ["value"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy can only use one type of condition.*",
+		},
+		{
+			name: "version-based and properties-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-version-properties"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 10
+					included_properties = {
+						"test" = ["value"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy can only use one type of condition.*",
+		},
+		{
+			name: "all three condition types",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-all-three"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					keep_last_n_versions = 10
+					included_properties = {
+						"test" = ["value"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy can only use one type of condition.*",
+		},
+		{
+			name: "zero value for time-based days",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-zero-days"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 0
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Time-based conditions must have a value greater than 0.*",
+		},
+		{
+			name: "zero value for time-based months",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-zero-months"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_months = 0
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Time-based conditions must have a value greater than 0.*",
+		},
+		{
+			name: "zero value for version-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-zero-version"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 0
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Version-based condition \\(keep_last_n_versions\\) must have a value greater than\\s+0\\. Zero values are not allowed.*",
+		},
+		{
+			name: "negative value for time-based days",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-negative-days"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = -30
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+		},
+		{
+			name: "negative value for version-based",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-negative-version"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = -10
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+		},
+		{
+			name: "all supported package types",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-all-package-types"
+				description = "Test policy with all supported package types"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["alpine", "ansible", "cargo", "chef", "cocoapods", "composer", "conan", "conda", "debian", "docker", "gems", "generic", "go", "gradle", "helm", "helmoci", "huggingfaceml", "maven", "npm", "nuget", "oci", "opkg", "puppet", "pypi", "sbt", "swift", "terraform", "terraformbackend", "vagrant", "yum"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid included_properties only",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-included-properties"
+				description = "Test policy with included_properties only"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = ["my-app"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "valid included_properties and excluded_properties together",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-both-properties"
+				description = "Test policy with both included_properties and excluded_properties"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = ["my-app"]
+					}
+					excluded_properties = {
+						"team" = ["deprecated"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "invalid included_properties multiple keys",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-included-multiple-keys"
+				description = "Test policy with invalid included_properties multiple keys"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = ["my-app"]
+						"build.number" = ["123"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Properties-based conditions must have exactly one key.*",
+		},
+		{
+			name: "invalid excluded_properties multiple keys",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-excluded-multiple-keys"
+				description = "Test policy with invalid excluded_properties multiple keys"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 10
+					excluded_properties = {
+						"build.name" = ["legacy-app"]
+						"team" = ["deprecated"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*Properties-based conditions must have exactly one key.*",
+		},
+		{
+			name: "invalid included_properties multiple values",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-included-multiple-values"
+				description = "Test policy with invalid included_properties multiple values"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = ["my-app", "my-service"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*The property value must be a list with exactly one string value.*",
+		},
+		{
+			name: "invalid excluded_properties multiple values",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-excluded-multiple-values"
+				description = "Test policy with invalid excluded_properties multiple values"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 10
+					excluded_properties = {
+						"build.name" = ["legacy-app", "old-app"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*The property value must be a list with exactly one string value.*",
+		},
+		{
+			name: "invalid included_properties empty list",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-included-empty-list"
+				description = "Test policy with invalid included_properties empty list"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {
+						"build.name" = []
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*The property value must be a list with exactly one string value.*",
+		},
+		{
+			name: "invalid excluded_properties empty list",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-excluded-empty-list"
+				description = "Test policy with invalid excluded_properties empty list"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					keep_last_n_versions = 10
+					excluded_properties = {
+						"build.name" = []
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*The property value must be a list with exactly one string value.*",
+		},
+		{
+			name: "invalid included_properties no keys",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-invalid-included-no-keys"
+				description = "Test policy with invalid included_properties no keys"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					included_properties = {}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+		},
+		{
+			name: "included_properties with time-based condition",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-included-properties-time"
+				description = "Test policy with included_properties and time-based condition"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					included_properties = {
+						"build.name" = ["my-app"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  ".*A policy can only use one type of condition: either time-based conditions*",
+		},
+		{
+			name: "excluded_properties with time-based condition - valid",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-excluded-properties-time"
+				description = "Test policy with excluded_properties and time-based condition"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_days = 30
+					excluded_properties = {
+						"build.name" = ["legacy-app"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			name: "excluded_properties with months-based time condition - valid",
+			config: `
+			resource "artifactory_archive_policy" "test" {
+				key = "test-excluded-properties-months"
+				description = "Test policy with excluded_properties and months-based time condition"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_months = 6
+					excluded_properties = {
+						"build.name" = ["legacy-app"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var expectError *regexp.Regexp
+			if tc.expectError {
+				expectError = regexp.MustCompile(tc.errorRegex)
+			}
+
+			resource.Test(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:      tc.config,
+						ExpectError: expectError,
+						// Only use PlanOnly for error cases to avoid issues with computed attributes
+						PlanOnly: tc.expectError,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccArchivePolicy_all_package_types(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.101.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-all-package-types", "artifactory_archive_policy")
+
+	// All supported package types as defined in the resource
+	// Note: "rpm" is not valid for archive policies, use "yum" instead
+	allPackageTypes := []string{
+		"alpine", "ansible", "cargo", "chef", "cocoapods", "composer", "conan", "conda",
+		"debian", "docker", "gems", "generic", "go", "gradle", "helm", "helmoci",
+		"huggingfaceml", "maven", "npm", "nuget", "oci", "opkg", "puppet", "pypi",
+		"sbt", "swift", "terraform", "terraformbackend", "vagrant", "yum",
+	}
+
+	// Create package types string for the config
+	packageTypesStr := `["` + strings.Join(allPackageTypes, `", "`) + `"]`
+
+	temp := fmt.Sprintf(`
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with all supported package types"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = %s
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_days = 30
+		}
+	}`, packageTypesStr)
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with all supported package types"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "30"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_days", "30"),
+					// Check that all package types are present
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "alpine"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "ansible"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "cargo"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "chef"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "cocoapods"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "composer"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "conan"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "conda"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "debian"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "docker"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gems"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "generic"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "go"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "gradle"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "helm"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "helmoci"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "huggingfaceml"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "maven"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "npm"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "nuget"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "oci"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "opkg"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "puppet"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "pypi"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "sbt"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "swift"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "terraform"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "terraformbackend"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "vagrant"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.package_types.*", "yum"),
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        policyName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_properties_conditions(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.101.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-properties-policy", "artifactory_archive_policy")
+
+	// Test included_properties only
+	tempIncluded := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with included_properties only"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			included_properties = {
+				"build.name" = ["my-app"]
+			}
+		}
+	}`
+
+	configIncluded := util.ExecuteTemplate(
+		policyName,
+		tempIncluded,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	// Test excluded_properties only
+	tempExcluded := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with excluded_properties only"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			excluded_properties = {
+				"build.name" = ["legacy-app"]
+			}
+		}
+	}`
+
+	configExcluded := util.ExecuteTemplate(
+		policyName,
+		tempExcluded,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: configIncluded,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with included_properties only"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					// Check included_properties
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_properties.build.name.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_properties.build.name.*", "my-app"),
+				),
+			},
+			{
+				Config: configExcluded,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with excluded_properties only"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					// Check excluded_properties
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_properties.build.name.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.excluded_properties.build.name.*", "legacy-app"),
+				),
+			},
+
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        policyName,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_properties_conditions_actual_resources(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.101.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.101.0", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-properties-actual", "artifactory_archive_policy")
+
+	// Test included_properties only - creates actual resource
+	tempIncluded := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with included_properties only - actual resource"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			included_properties = {
+				"build.name" = ["my-app"]
+			}
+		}
+	}`
+
+	configIncluded := util.ExecuteTemplate(
+		policyName,
+		tempIncluded,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	// Test excluded_properties only - creates actual resource
+	tempExcluded := `
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with excluded_properties only - actual resource"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			repos = ["**"]
+			package_types = ["docker"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			excluded_properties = {
+				"build.name" = ["legacy-app"]
+			}
+		}
+	}`
+
+	configExcluded := util.ExecuteTemplate(
+		policyName,
+		tempExcluded,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: configIncluded,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with included_properties only - actual resource"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					// Check included_properties
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_properties.build.name.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_properties.build.name.*", "my-app"),
+				),
+			},
+			{
+				Config: configExcluded,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with excluded_properties only - actual resource"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "false"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					// Check excluded_properties
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_properties.build.name.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.excluded_properties.build.name.*", "legacy-app"),
+				),
+			},
+
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        policyName,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "key",
 			},
