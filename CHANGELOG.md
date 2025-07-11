@@ -1,3 +1,13 @@
+
+### 12.9.7 (July 8, 2025). Tested on Artifactory 7.111.11 with Terraform 1.12.2 and OpenTofu 1.10.2
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_repository_single_replication: Introduced a new attribute disable_proxy for single replication. This allows users to explicitly disable the use of a proxy when configuring single replication in the Artifactory Terraform provider. Issue: [#1255](https://github.com/jfrog/terraform-provider-artifactory/issues/1255). PR: [#1284](https://github.com/jfrog/terraform-provider-artifactory/pull/1284)
+
+* resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
+
+
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
 NOTES:
@@ -6,7 +16,7 @@ If you are upgrading from a version earlier than 12.8.3, please upgrade to 12.8.
 
 IMPROVEMENTS:
 
-* GNUmakefile : Enhanced ARM64 Build Process with Dynamic GOARM64 Detection. PR: [1282](https://github.com/jfrog/terraform-provider-artifactory/pull/1282)
+* GNUmakefile : Enhanced ARM64 Build Process with Dynamic GOARM64 Detection. PR: [#1282](https://github.com/jfrog/terraform-provider-artifactory/pull/1282)
 
 BUG FIXES:
 
