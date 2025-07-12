@@ -1,5 +1,5 @@
 
-### 12.9.7 (July 8, 2025). Tested on Artifactory 7.111.11 with Terraform 1.12.2 and OpenTofu 1.10.2
+### 12.9.7 (July 12, 2025).
 
 IMPROVEMENTS:
 
@@ -7,6 +7,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
 
+* resource/artifactory_package_cleanup_policy: Fix validation for time-based and version-based and property-based conditions, added included_properties and excluded_properties attributes. Issue: [#1285](https://github.com/jfrog/terraform-provider-artifactory/issues/1285). Issue: [#1289](https://github.com/jfrog/terraform-provider-artifactory/issues/1289), Issue: [#1290](https://github.com/jfrog/terraform-provider-artifactory/issues/1290) PR: [#1293](https://github.com/jfrog/terraform-provider-artifactory/pull/1293)
 
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
