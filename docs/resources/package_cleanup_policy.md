@@ -4,93 +4,257 @@ page_title: "artifactory_package_cleanup_policy Resource - terraform-provider-ar
 subcategory: "Configuration"
 description: |-
   Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See Cleanup Policies https://jfrog.com/help/r/jfrog-platform-administration-documentation/cleanup-policies for more details.
-  ~>Currently in beta and will be globally available in v7.98.x.
 ---
 
 # artifactory_package_cleanup_policy (Resource)
 
-Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. See [Cleanup Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/cleanup-policies) for more details.
-
-~>Currently in beta and will be globally available in v7.98.x.
+Provides an Artifactory Package Cleanup Policy resource. This resource enable system administrators to define and customize policies based on specific criteria for removing unused binaries from across their JFrog platform. Package cleanup policies are supported on the Cloud (7.98.2) and Self-Hosted (7.98.7) platforms, with an Enterprise+ license. See [Cleanup Policies](https://jfrog.com/help/r/jfrog-platform-administration-documentation/cleanup-policies) for more details.
 
 ## Example Usage
 
+### Time-based Cleanup Policy (Days)
+
 ```terraform
 resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
-  key = "my-policy"
-  description = "My package cleanup policy"
+  key = "my-cleanup-policy"
+  description = "My cleanup policy"
   cron_expression = "0 0 2 ? * MON-SAT *"
   duration_in_minutes = 60
   enabled = true
   skip_trashcan = false
-  project_key = "myprojkey"
   
   search_criteria = {
-    package_types = [
-      "docker",
-      "gradle",
-      "maven",
-    ]
-    repos = [
-      "my-docker-local",
-      "my-maven-local",
-    ]
-    excluded_repos = ["gradle-global"]
-    include_all_projects = false
+    package_types = ["docker", "gradle", "maven",]
+    repos = ["**"]
+    include_all_projects = true
     included_projects = []
-    included_packages = ["com/jfrog/**"]
-    excluded_packages = ["com/jfrog/latest/**"]
-    created_before_in_months = 1
-    last_downloaded_before_in_months = 6
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    created_before_in_days = 30
+    last_downloaded_before_in_days = 60
   }
 }
 ```
+
+### Version-based Cleanup Policy
+
+```terraform
+resource "artifactory_package_cleanup_policy" "my-version-policy" {
+  key = "my-version-policy"
+  description = "Keep only latest versions"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["maven"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    keep_last_n_versions = 5
+  }
+}
+```
+
+### Properties-based Cleanup Policy
+
+```terraform
+resource "artifactory_package_cleanup_policy" "my-properties-policy" {
+  key = "my-properties-policy"
+  description = "Cleanup based on properties"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    included_properties = {
+      "build.name" = ["my-app"]
+    }
+  }
+}
+```
+
+### Project-level Cleanup Policy
+
+```terraform
+resource "artifactory_local_docker_v2_repository" "my-docker-local" {
+  key             = "my-docker-local"
+  tag_retention   = 3
+  max_unique_tags = 5
+
+  lifecycle {
+    ignore_changes = ["project_key"]
+  }
+}
+
+resource "project" "myproj" {
+  key = "myproj"
+  display_name = "Test Project"
+  description  = "Test Project"
+  admin_privileges {
+    manage_members   = true
+    manage_resources = true
+    index_resources  = true
+  }
+  max_storage_in_gibibytes   = 10
+  block_deployments_on_limit = false
+  email_notification         = true
+}
+
+resource "project_repository" "myproj-my-docker-local" {
+  project_key = project.myproj.key
+  key = artifactory_local_docker_v2_repository.my-docker-local.key
+}
+
+resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
+  key = "my-cleanup-policy"
+  description = "My cleanup policy"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker"]
+    repos = [project_repository.myproj-my-docker-local.key]
+    include_all_projects = false
+    included_projects = [project.myproj.key]
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    created_before_in_days = 30
+  }
+}
+```
+
+## Validation Rules
+
+The cleanup policy resource enforces the following validation rules:
+
+1. **Condition Types**: A policy must use exactly one of the following condition types:
+   - Time-based conditions (`days-based`)
+   - Version-based condition (`keep_last_n_versions`)
+   - Properties-based condition (`included_properties`)
+
+2. **Mutual Exclusivity**: Cannot use multiple condition types together.
+
+3. **Zero Values**: Time-based and version-based conditions must have values greater than 0.
+
+4. **Days vs Months**: Cannot use both days-based conditions (`created_before_in_days`, `last_downloaded_before_in_days`) and months-based conditions (`created_before_in_months`, `last_downloaded_before_in_months`) together.
+
+5. **Properties Validation**: Properties-based conditions must have exactly one key with exactly one string value.
+
+6. **Project Configuration**: When `include_all_projects` is set to `true`, the `included_projects` field can be empty array. When `include_all_projects` is `false`, `included_projects` must contain at least one project key.
+
+## Supported Package Types
+
+The following package types are supported for cleanup policies with their respective minimum Artifactory versions:
+
+- **alpine** - Alpine Linux packages (supported from 7.108.0)
+- **ansible** - Ansible collections and roles (supported from 7.104.2)
+- **cargo** - Rust Cargo packages (supported from 7.102.0)
+- **chef** - Chef cookbooks (supported from 7.112.0)
+- **cocoapods** - CocoaPods packages (supported from 7.99.1)
+- **composer** - PHP Composer packages (supported from 7.116.0)
+- **conan** - Conan C/C++ packages (supported from 7.98.2)
+- **conda** - Conda packages (supported from 7.105.2)
+- **debian** - Debian packages (supported from 7.98.2)
+- **docker** - Docker images (supported from 7.98.2, version-based condition (keep_last_n_versions) from 7.115.1)
+- **gems** - Ruby gems (supported from 7.96.3)
+- **generic** - Generic packages (supported from 7.98.2, version-based conditions is not supported)
+- **go** - Go modules (supported from 7.98.2)
+- **gradle** - Gradle packages (supported from 7.98.2)
+- **helm** - Helm charts (supported from 7.98.2)
+- **helmoci** - Helm OCI charts (supported from 7.102.0, version-based conditions (keep_last_n_versions) from 7.115.1)
+- **huggingfaceml** - Hugging Face ML models (supported from 7.100.0)
+- **machinelearning** - Machine learning models (supported from 7.104.2)
+- **maven** - Maven packages (supported from 7.98.2)
+- **npm** - Node.js packages (supported from 7.98.2)
+- **nuget** - .NET NuGet packages (supported from 7.98.2)
+- **oci** - OCI images (supported from 7.90.1, version-based conditions (keep_last_n_versions) from 7.115.1)
+- **puppet** - Puppet modules (supported from 7.112.0)
+- **pypi** - Python packages (supported from 7.98.2)
+- **rpm|yum** - RPM packages (supported from 7.98.2)
+- **sbt** - Scala SBT packages (supported from 7.108.0)
+- **swift** - Swift packages
+- **terraform** - Terraform modules (supported from 7.99.1)
+- **terraformbackend** - Terraform backend configurations (supported from 7.103.0)
+
+## Version Compatibility
+
+- The `created_before_in_days` and `last_downloaded_before_in_days` attributes are only supported in Artifactory 7.111.2 and later. For earlier versions, use `created_before_in_months` and `last_downloaded_before_in_months`.
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
 
 ### Required
 
-- `key` (String) Policy key. It has to be unique. It should not be used for other policies and configuration entities like archive policies, key pairs, repo layouts, property sets, backups, proxies, reverse proxies etc. A minimum of three characters is required and can include letters, numbers, underscore and hyphen.
+- `key` (String) An ID that is used to identify the cleanup policy. A minimum of three characters is required and can include letters, numbers, underscore and hyphen.
 - `search_criteria` (Attributes) (see [below for nested schema](#nestedatt--search_criteria))
 
 ### Optional
 
-- `cron_expression` (String) The Cron expression that sets the schedule of policy execution. For example, `0 0 2 * * ?` executes the policy every day at 02:00 AM. The minimum recurrent time for policy execution is 6 hours.
+- `cron_expression` (String) The cron expression that determines when the policy is run, However if left empty the policy will not run automatically and can only be triggered manually.
 - `description` (String)
-- `duration_in_minutes` (Number) Enable and select the maximum duration for policy execution. Note: using this setting can cause the policy to stop before completion.
-- `enabled` (Boolean) Enables or disabled the package cleanup policy. This allows the user to run the policy manually. If a policy has a valid cron expression, then it will be scheduled for execution based on it. If a policy is disabled, its future executions will be unscheduled. Defaults to `true`
-- `project_key` (String) This attribute is used only for project-level cleanup policies, it is not used for global-level policies.
-- `skip_trashcan` (Boolean) Enabling this setting results in packages being permanently deleted from Artifactory after the cleanup policy is executed instead of going to the Trash Can repository. Defaults to `false`.
+- `duration_in_minutes` (Number) The maximum duration (in minutes) for policy execution, after which the policy will stop running even if not completed. While setting a maximum run duration for a policy is useful for adhering to a strict cleanup schedule, it can cause the policy to stop before completion.
+- `enabled` (Boolean) A cleanup policy must be created inactive. But if used it must be set to `false`. If set to `true` when calling this API, the API call will fail and an error message is received. Defaults to `true`
+- `skip_trashcan` (Boolean) A true value means that when this policy is executed, packages will be permanently deleted. false means that when the policy is executed packages will be deleted to the Trash Can. Defaults to `false`.
 
-~>The Global Trash Can setting must be enabled if you want deleted items to be transferred to the Trash Can. For information on enabling global Trash Can settings, see [Trash Can Settings](https://jfrog.com/help/r/jfrog-artifactory-documentation/trash-can-settings).
+~>The Global Trash Can setting must be enabled if you want deleted items to be transferred to the Trash Can, see [Trash Can Settings](https://jfrog.com/help/r/jfrog-artifactory-documentation/trash-can-settings).
 
 <a id="nestedatt--search_criteria"></a>
 ### Nested Schema for `search_criteria`
 
 Required:
 
-- `included_packages` (Set of String) Specify a pattern for a package name or an explicit package name. It accept only single element which can be specific package or pattern, and for including all packages use `**`. Example: `included_packages = ["**"]`
-- `package_types` (Set of String) Types of packages to be removed. Support: cargo, cocoapods, conan, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, maven, npm, nuget, oci, pypi, terraform, yum.
-- `repos` (Set of String) Specify patterns for repository names or explicit repository names. For including all repos use `**`. Example: `repos = ["**"]`
+- `included_packages` (Set of String) Specify a pattern for a package name or an explicit package name on which you want the cleanup policy to run. Only one pattern or explicit name can be entered. To include all packages, use `**`. Example: `included_packages = ["**"]`
+- `package_types` (Set of String) The package types that are cleaned up by the policy. Support: alpine, ansible, cargo, chef, cocoapods, composer, conan, conda, debian, docker, gems, generic, go, gradle, helm, helmoci, huggingfaceml, machinelearning, maven, npm, nuget, oci, puppet, pypi, sbt, swift, terraform, terraformbackend, yum.
+- `repos` (Set of String) Specify one or more patterns for the repository name(s) on which you want the cleanup policy to run. You can also specify explicit repository names. Specifying at least one pattern or explicit name is mandatory. Only packages in repositories that match the pattern or explicit name will be deleted. For including all repos use `**`. Example: `repos = ["**"]`
+- `included_projects` (Set of String) Enter the project keys for the projects on which you want the policy to run. To include repositories that are not assigned to any project, enter the project key `default`. Can be empty when `include_all_projects` is set to `true`.
+
+~>This parameter is relevant only on the global level, for Platform Admins.
 
 Optional:
 
-- `created_before_in_months` (Number) Remove packages based on when they were created. For example, remove packages that were created more than a year ago. The default value is to remove packages created more than 2 years ago.
-- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only Name explicit names (and not patterns) are accepted.
+- `created_before_in_days` (Number) The cleanup policy will delete packages based on how long ago they were created. For example, if this parameter is 5 then packages created more than 5 days ago will be deleted as part of the policy.
+  > **Requires Artifactory 7.111.2 or later.**
+~>JFrog recommends using the `created_before_in_days` condition to ensure that packages currently in use are not deleted.
+
+- `last_downloaded_before_in_days` (Number) The cleanup policy will delete packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 days ago will be deleted as part of the policy.
+  > **Requires Artifactory 7.111.2 or later.**
+~>JFrog recommends using the `last_downloaded_before_in_days` condition to ensure that packages currently in use are not deleted.
+
+- `created_before_in_months` (Number) The cleanup policy will delete packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 months ago will be deleted as part of the policy.
+
+- `last_downloaded_before_in_months` (Number) The cleanup policy will delete packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 months ago will be deleted as part of the policy.
+
+~>**Deprecated:** Use `created_before_in_days` instead of `created_before_in_months`. Renamed to `created_before_in_days` starting in version 7.111.2.
+
+~>**Deprecated:** Use `last_downloaded_before_in_days` instead of `last_downloaded_before_in_months`. Renamed to `last_downloaded_before_in_days` starting in version 7.111.2.
+
+- `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only explicit names (and not patterns) are accepted.
+- `excluded_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be excluded from deletion. Must have exactly one key with exactly one string value.
 - `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the cleanup policy.
-- `include_all_projects` (Boolean) Set this to `true` if you want the policy to run on all projects on the platform.
-- `included_projects` (Set of String) List of projects on which you want this policy to run. To include repositories that are not assigned to any project, enter the project key `default`.
+- `include_all_projects` (Boolean) Set this value to `true` if you want the policy to run on all Artifactory projects. The default value is `false`.
 
-~>This setting is relevant only on the global level, for Platform Admins.
-- `keep_last_n_versions` (Number) Select the number of latest versions to keep. The cleanup policy will remove all versions prior to the number you select here. The latest version is always excluded. Versions are determined by creation date.
+~>This parameter is relevant only on the global level, for Platform Admins.
 
-~>Not all package types support this condition. For information on which package types support this condition, [learn more](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies/package-types-coverage).
-- `last_downloaded_before_in_months` (Number) Removes packages based on when they were last downloaded. For example, removes packages that were not downloaded in the past year. The default value is to remove packages that were downloaded more than 2 years ago.
+- `included_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be deleted. Must have exactly one key with exactly one string value.
+- `keep_last_n_versions` (Number) Set a value for the number of latest versions to keep. The cleanup policy will remove all versions prior to the number you select here. The latest version is always excluded.
 
-~>If a package was never downloaded, the policy will remove it based only on the age-condition (`created_before_in_months`).
+~>Versions are determined by creation date.
 
-~>JFrog recommends using the `last_downloaded_before_in_months` condition to ensure that packages currently in use are not deleted.
+~>Not all package types support this condition. If you include a package type in your policy that is not compatible with this condition, a validation error (400) is returned. For information on which package types support this condition, see [here](https://jfrog.com/help/r/jfrog-platform-administration-documentation/retention-policies/package-types-coverage).
+
 
 ## Import
 

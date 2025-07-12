@@ -1,15 +1,14 @@
-
-### 12.9.7 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
+### 12.9.7 (July 17, 2025).
 
 IMPROVEMENTS:
 
 * resource/artifactory_local_repository_single_replication: Introduced a new attribute disable_proxy for single replication. This allows users to explicitly disable the use of a proxy when configuring single replication in the Artifactory Terraform provider. Issue: [#1255](https://github.com/jfrog/terraform-provider-artifactory/issues/1255). PR: [#1284](https://github.com/jfrog/terraform-provider-artifactory/pull/1284)
-
 * resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
 
 BUG FIXES:
 
 * resource/artifactory_\*\_repository: Fix prevent content_synchronisation block state drift in remote repositories PR: [#1295](https://github.com/jfrog/terraform-provider-artifactory/pull/1295)
+* resource/artifactory_package_cleanup_policy: Fix validation for time-based and version-based and property-based conditions, added included_properties and excluded_properties attributes. Issue: [#1285](https://github.com/jfrog/terraform-provider-artifactory/issues/1285). Issue: [#1289](https://github.com/jfrog/terraform-provider-artifactory/issues/1289), Issue: [#1290](https://github.com/jfrog/terraform-provider-artifactory/issues/1290) PR: [#1293](https://github.com/jfrog/terraform-provider-artifactory/pull/1293)
 
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
