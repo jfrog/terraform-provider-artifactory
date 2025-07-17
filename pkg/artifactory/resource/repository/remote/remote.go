@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -182,31 +180,26 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		DisableURLNormalization:           r.DisableURLNormalization.ValueBool(),
 	}
 
-	elems := r.ContentSynchronisation.Elements()
-	if len(elems) > 0 {
-		attrs := elems[0].(types.Object).Attributes()
-		contentSynchronisation := ContentSynchronisation{
-			Enabled: attrs["enabled"].(types.Bool).ValueBool(),
-			Statistics: ContentSynchronisationStatistics{
-				Enabled: attrs["statistics_enabled"].(types.Bool).ValueBool(),
-			},
-			Properties: ContentSynchronisationProperties{
-				Enabled: attrs["properties_enabled"].(types.Bool).ValueBool(),
-			},
-			Source: ContentSynchronisationSource{
-				OriginAbsenceDetection: attrs["source_origin_absence_detection"].(types.Bool).ValueBool(),
-			},
+	// Only include contentSynchronisation if the user provided it
+	if !r.ContentSynchronisation.IsNull() && !r.ContentSynchronisation.IsUnknown() {
+		if len(r.ContentSynchronisation.Elements()) > 0 {
+			// Extract the first element (since we only allow 1 block)
+			contentSyncObj := r.ContentSynchronisation.Elements()[0]
+			if contentSyncMap, ok := contentSyncObj.(types.Object); ok {
+				apiModel.ContentSynchronisation = &ContentSynchronisation{
+					Enabled: contentSyncMap.Attributes()["enabled"].(types.Bool).ValueBool(),
+					Statistics: ContentSynchronisationStatistics{
+						Enabled: contentSyncMap.Attributes()["statistics_enabled"].(types.Bool).ValueBool(),
+					},
+					Properties: ContentSynchronisationProperties{
+						Enabled: contentSyncMap.Attributes()["properties_enabled"].(types.Bool).ValueBool(),
+					},
+					Source: ContentSynchronisationSource{
+						OriginAbsenceDetection: contentSyncMap.Attributes()["source_origin_absence_detection"].(types.Bool).ValueBool(),
+					},
+				}
+			}
 		}
-		apiModel.ContentSynchronisation = &contentSynchronisation
-	} else {
-		// Set all attributes to their zero values (null)
-		contentSynchronisation := ContentSynchronisation{
-			Enabled:    false,
-			Statistics: ContentSynchronisationStatistics{Enabled: false},
-			Properties: ContentSynchronisationProperties{Enabled: false},
-			Source:     ContentSynchronisationSource{OriginAbsenceDetection: false},
-		}
-		apiModel.ContentSynchronisation = &contentSynchronisation
 	}
 
 	return apiModel, diags
@@ -252,8 +245,10 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 	r.BypassHeadRequests = types.BoolPointerValue(apiModel.BypassHeadRequests)
 	r.ClientTLSCertificate = types.StringValue(apiModel.ClientTLSCertificate)
 
-	contentSynchronisationList := types.ListNull(contentSynchronisationAttrType)
-	if apiModel.ContentSynchronisation.Enabled {
+	// Only populate contentSynchronisation if the user originally provided it
+	// This prevents state drift when the API returns the block but user didn't specify it
+	if !r.ContentSynchronisation.IsNull() && !r.ContentSynchronisation.IsUnknown() {
+		contentSynchronisationList := types.ListNull(contentSynchronisationAttrType)
 		if apiModel.ContentSynchronisation != nil {
 			cs := apiModel.ContentSynchronisation
 			contentSynchronisation, ds := types.ObjectValue(
@@ -275,8 +270,8 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 			if ds != nil {
 				diags = append(diags, ds...)
 			}
+			r.ContentSynchronisation = contentSynchronisationList
 		}
-		r.ContentSynchronisation = contentSynchronisationList
 	}
 
 	r.MismatchingMimeTypeOverrideList = types.StringValue(apiModel.MismatchingMimeTypeOverrideList)
@@ -604,9 +599,6 @@ var remoteBlocks = map[string]schema.Block{
 		},
 		Validators: []validator.List{
 			listvalidator.SizeBetween(0, 1),
-		},
-		PlanModifiers: []planmodifier.List{
-			listplanmodifier.UseStateForUnknown(),
 		},
 	},
 }
