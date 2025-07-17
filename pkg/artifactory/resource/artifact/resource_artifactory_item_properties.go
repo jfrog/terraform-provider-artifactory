@@ -157,7 +157,7 @@ func (r *ItemPropertiesResource) Schema(ctx context.Context, req resource.Schema
 					mapvalidator.KeysAre(
 						stringvalidator.LengthBetween(1, 255),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z].*`), "must begin with a letter"),
-						validatorfw_string.RegexNotMatches(regexp.MustCompile(`[)(}{\]\[\-*+^$/~\x60!@#%&<>;=,±§\s]+`), "must not contain the following special characters: )(}{][-*+^$\\/~`!@#%&<>;=,±§ and the space character"),
+						validatorfw_string.RegexNotMatches(regexp.MustCompile(`[)(}{\]\[*+^$/~\x60!@#%&<>;=,±§\s]+`), "must not contain the following special characters: )(}{][*+^$\\/~`!@#%&<>;=,±§ and the space character"),
 					),
 					mapvalidator.ValueSetsAre(
 						setvalidator.SizeAtLeast(1),
