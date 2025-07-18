@@ -1,5 +1,5 @@
 
-### 12.9.7 (July 8, 2025). Tested on Artifactory 7.111.11 with Terraform 1.12.2 and OpenTofu 1.10.2
+### 12.9.7 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
 
 IMPROVEMENTS:
 
@@ -7,6 +7,9 @@ IMPROVEMENTS:
 
 * resource/artifactory_\*\_repository: Remove static set size validator for `project_environments`. Issue: [#1276](https://github.com/jfrog/terraform-provider-artifactory/issues/1276) PR: [#1283](https://github.com/jfrog/terraform-provider-artifactory/pull/1283)
 
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Fix prevent content_synchronisation block state drift in remote repositories PR: [#1295](https://github.com/jfrog/terraform-provider-artifactory/pull/1295)
 
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
