@@ -9,7 +9,7 @@ terraform {
 
 provider "artifactory" {
   //  supply ARTIFACTORY_ACCESS_TOKEN / JFROG_ACCESS_TOKEN / ARTIFACTORY_API_KEY and ARTIFACTORY_URL / JFROG_URL as env vars
-}
+  }
 
 resource "artifactory_user" "new_user" {
   name   = "new_user"
@@ -250,6 +250,12 @@ resource "artifactory_local_alpine_repository" "terraform-local-test-repo-basic1
   depends_on          = [artifactory_keypair.some-keypairRSA]
 }
 
+resource "artifactory_local_hex_repository" "hex-local" {
+  key                     = "hex-local"
+  hex_primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
+  depends_on              = [artifactory_keypair.some-keypairRSA]
+}
+
 resource "artifactory_remote_alpine_repository" "my-remote-alpine" {
   key = "my-remote-alpine"
   url = "http://dl-cdn.alpinelinux.org/alpine"
@@ -442,6 +448,15 @@ resource "artifactory_remote_vcs_repository" "my-remote-vcs" {
   url                  = "https://github.com/"
   vcs_git_provider     = "GITHUB"
   max_unique_snapshots = 5
+}
+
+
+resource "artifactory_remote_hex_repository" "hex-remote" {
+  key = "hex-remote"
+	url = "https://www.hex.pm/"
+  public_key_ref = file("samples/hex_public_key")
+  hex_primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
+  depends_on              = [artifactory_keypair.some-keypairRSA]
 }
 
 resource "artifactory_virtual_alpine_repository" "foo-alpine" {
@@ -690,7 +705,7 @@ resource "artifactory_virtual_sbt_repository" "foo-sbt" {
 }
 
 resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
-  key              = "terraform-remote"
+  key              = "terraform-virtual"
   repositories     = []
   description      = "A test virtual repo"
   notes            = "Internal description"
@@ -698,6 +713,11 @@ resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
   excludes_pattern = "com/google/**"
 }
 
+resource "artifactory_virtual_hex_repository" "foo-hex" {
+  key          = "foo-hex"
+  repositories = [artifactory_local_hex_repository.hex-local.key]
+  hex_primary_keypair_ref = artifactory_keypair.some-keypairRSA.pair_name
+}
 
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"
