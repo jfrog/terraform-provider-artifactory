@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/artifact"
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/artifact"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
@@ -341,6 +342,7 @@ func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource
 	return []func() datasource.DataSource{
 		datasource_repository.NewRepositoriesDataSource,
 		datasource_artifact.NewFileListDataSource,
+		datasource_local.NewHexLocalRepositoryDataSource,
 	}
 }
 

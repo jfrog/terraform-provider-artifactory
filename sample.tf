@@ -732,3 +732,19 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
     enabled = true
   }
 }
+
+# Hex Datasource Examples
+
+# Local Hex Repository Datasource
+data "artifactory_local_hex_repository" "hex-local-datasource" {
+  key = artifactory_local_hex_repository.hex-local.key
+}
+
+# Output examples for the datasources
+output "hex-local-datasource-info" {
+  value = {
+    key = data.artifactory_local_hex_repository.hex-local-datasource.key
+    description = data.artifactory_local_hex_repository.hex-local-datasource.description
+    hex_primary_keypair_ref = data.artifactory_local_hex_repository.hex-local-datasource.hex_primary_keypair_ref
+  }
+}
