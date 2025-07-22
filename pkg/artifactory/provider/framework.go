@@ -24,6 +24,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
@@ -333,6 +334,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			webhook.NewReleaseBundleV2PromotionCustomWebhookResource,
 			webhook.NewUserWebhookResource,
 			webhook.NewUserCustomWebhookResource,
+			virtual.NewHexVirtualRepositoryResource,
 		}...,
 	)
 }

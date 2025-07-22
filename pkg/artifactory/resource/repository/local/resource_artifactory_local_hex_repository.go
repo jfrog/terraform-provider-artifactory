@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/samber/lo"
 )
@@ -119,22 +118,4 @@ func (r *localHexResource) Schema(ctx context.Context, req resource.SchemaReques
 		Attributes:  attributes,
 		Description: r.Description,
 	}
-}
-
-var hexSchema = lo.Assign(
-	map[string]*sdkv2_schema.Schema{
-		"hex_primary_keypair_ref": {
-			Type:        sdkv2_schema.TypeString,
-			Required:    true,
-			Description: "Reference to the RSA key pair used to sign Hex repository index files. ",
-		},
-	},
-	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.HexPackageType),
-)
-
-var HexLocalSchemas = GetSchemas(hexSchema)
-
-type HexLocalRepositoryParams struct {
-	RepositoryBaseParams
-	HexPrimaryKeyPairRef string `hcl:"hex_primary_keypair_ref" json:"primaryKeyPairRef"`
 }
