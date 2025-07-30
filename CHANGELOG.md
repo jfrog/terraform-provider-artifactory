@@ -1,4 +1,12 @@
+## 12.9.8 (July 30, 2025). 
+
+
+IMPROVEMENTS:
+
+* resource/webhook/resource_artifactory_webhook_release_bundle: Improvements to make the Provider behave more like UI and API. PR: [#1213](https://github.com/jfrog/terraform-provider-artifactory/pull/1213)
+
 ### 12.9.7 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
+
 
 IMPROVEMENTS:
 
@@ -9,6 +17,7 @@ BUG FIXES:
 
 * resource/artifactory_\*\_repository: Fix prevent content_synchronisation block state drift in remote repositories PR: [#1295](https://github.com/jfrog/terraform-provider-artifactory/pull/1295)
 * resource/artifactory_package_cleanup_policy: Fix validation for time-based and version-based and property-based conditions, added included_properties and excluded_properties attributes. Issue: [#1285](https://github.com/jfrog/terraform-provider-artifactory/issues/1285). Issue: [#1289](https://github.com/jfrog/terraform-provider-artifactory/issues/1289), Issue: [#1290](https://github.com/jfrog/terraform-provider-artifactory/issues/1290) PR: [#1293](https://github.com/jfrog/terraform-provider-artifactory/pull/1293)
+
 
 ## 12.9.6 (June 17, 2025). Tested on Artifactory 7.111.10 with Terraform 1.12.2 and OpenTofu 1.9.1
 
