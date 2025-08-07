@@ -275,6 +275,7 @@ type PackageCleanupPolicyResourceModelV0 struct {
 
 type PackageCleanupPolicyResourceModelV1 struct {
 	PackageCleanupPolicyResourceModelV0
+	ProjectKey types.String `tfsdk:"project_key"`
 }
 
 func (r PackageCleanupPolicyResourceModelV1) toAPIModel(ctx context.Context, apiModel *PackageCleanupPolicyAPIModel) diag.Diagnostics {
@@ -347,6 +348,7 @@ func (r PackageCleanupPolicyResourceModelV1) toAPIModel(ctx context.Context, api
 		CronExpression:    r.CronExpression.ValueString(),
 		DurationInMinutes: r.DurationInMinutes.ValueInt64(),
 		SkipTrashcan:      r.SkipTrashcan.ValueBool(),
+		ProjectKey:        r.ProjectKey.ValueString(),
 		SearchCriteria:    searchCriteria,
 	}
 
@@ -504,6 +506,7 @@ type PackageCleanupPolicyAPIModel struct {
 	DurationInMinutes int64                                      `json:"durationInMinutes"`
 	Enabled           bool                                       `json:"enabled,omitempty"`
 	SkipTrashcan      bool                                       `json:"skipTrashcan"`
+	ProjectKey        string                                     `json:"projectKey"`
 	SearchCriteria    PackageCleanupPolicySearchCriteriaAPIModel `json:"searchCriteria"`
 }
 
@@ -679,6 +682,16 @@ var cleanupPolicySchemaV1 = lo.Assign(
 			},
 			Description: "An ID that is used to identify the cleanup policy. A minimum of three characters is required and can include letters, numbers, underscore and hyphen.",
 		},
+		"project_key": schema.StringAttribute{
+			Optional: true,
+			Validators: []validator.String{
+				validatorfw_string.ProjectKey(),
+			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+			Description: "This attribute is used only for project-level cleanup policies, it is not used for global-level policies.",
+		},
 		"skip_trashcan": schema.BoolAttribute{
 			Optional: true,
 			Computed: true,
@@ -830,6 +843,7 @@ func (r *PackageCleanupPolicyResource) UpgradeState(ctx context.Context) map[int
 
 				upgradedStateData := PackageCleanupPolicyResourceModelV1{
 					PackageCleanupPolicyResourceModelV0: priorStateData,
+					ProjectKey:                          types.StringNull(),
 				}
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
@@ -854,8 +868,48 @@ func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req re
 		return
 	}
 
+	// Validate project_key constraints for project-level policies
+	if !data.ProjectKey.IsNull() && !data.ProjectKey.IsUnknown() && data.ProjectKey.ValueString() != "" {
+		// When project_key is specified, this is a project-level policy
+		projectKey := data.ProjectKey.ValueString()
+		policyKey := data.Key.ValueString()
+
+		// Check that policy key starts with project key prefix
+		expectedPrefix := projectKey + "-"
+		if !strings.HasPrefix(policyKey, expectedPrefix) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("key"),
+				"Invalid Project-Level Policy Key",
+				fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
+			)
+		}
+
+		attrs := data.SearchCriteria.Attributes()
+
+		// Check include_all_projects - must be false for project-level policies
+		if includeAllProjects, ok := attrs["include_all_projects"]; ok && !includeAllProjects.IsNull() && !includeAllProjects.IsUnknown() {
+			if includeAllProjectsBool, ok := includeAllProjects.(types.Bool); ok && includeAllProjectsBool.ValueBool() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("search_criteria").AtName("include_all_projects"),
+					"Invalid Project-Level Policy Configuration",
+					"Project-level policies (when `project_key` is specified) cannot include all projects. Set `include_all_projects` to `false`.",
+				)
+			}
+		}
+
+		// Check included_projects - should be empty for project-level policies
+		if includedProjects, ok := attrs["included_projects"]; ok && !includedProjects.IsNull() && !includedProjects.IsUnknown() {
+			if includedProjectsSet, ok := includedProjects.(types.Set); ok && len(includedProjectsSet.Elements()) > 0 {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("search_criteria").AtName("included_projects"),
+					"Invalid Project-Level Policy Configuration",
+					"Project-level policies (when `project_key` is specified) should have an empty `included_projects` array `[]`. The policy will automatically apply to the specified project.",
+				)
+			}
+		}
+	}
+
 	// Schema-level validation handles the condition validation rules
-	// This function can be used for additional validation if needed in the future
 }
 
 func (r *PackageCleanupPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -1127,5 +1181,9 @@ func (r *PackageCleanupPolicyResource) ImportState(ctx context.Context, req reso
 
 	if len(parts) > 0 && parts[0] != "" {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("key"), parts[0])...)
+	}
+
+	if len(parts) == 2 && parts[1] != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_key"), parts[1])...)
 	}
 }
