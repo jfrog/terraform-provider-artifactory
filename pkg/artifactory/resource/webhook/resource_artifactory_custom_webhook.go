@@ -45,8 +45,8 @@ var customHandlerBlock = schema.SetNestedBlock{
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.Map{
-					mapvalidator.ValueStringsAre(
-						stringvalidator.RegexMatches(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'\""),
+					mapvalidator.KeysAre(
+						stringvalidator.RegexMatches(regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$"), "Secret name must match '^[a-zA-Z_][a-zA-Z0-9_]*$'"),
 					),
 				},
 				Description: "A set of sensitive values that will be injected in the request (headers and/or payload), comprise of key/value pair.",
