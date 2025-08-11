@@ -20,6 +20,70 @@ func TestAccCustomWebhook_CriteriaValidation(t *testing.T) {
 	}
 }
 
+func TestAccCustomWebhook_SecretNameValidation(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-secret-validation", "artifactory_user_custom_webhook")
+
+	params := map[string]interface{}{
+		"webhookName": name,
+	}
+
+	// Test with invalid secret name (starts with number)
+	invalidConfig := util.ExecuteTemplate("TestAccCustomWebhook_SecretNameValidation_Invalid", `
+		resource "artifactory_user_custom_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["locked"]
+			handler {
+				url = "https://google.com"
+				secrets = {
+					"1invalid" = "1value1"
+				}
+				http_headers = {
+					header-1 = "value-1"
+				}
+				payload = "{ \"ref\": \"main\" }"
+			}
+		}
+	`, params)
+
+	// Test with valid secret name
+	validConfig := util.ExecuteTemplate("TestAccCustomWebhook_SecretNameValidation_Valid", `
+		resource "artifactory_user_custom_webhook" "{{ .webhookName }}" {
+			key         = "{{ .webhookName }}"
+			description = "test description"
+			event_types = ["locked"]
+			handler {
+				url = "https://google.com"
+				secrets = {
+					valid_secret = "1value1"
+					token = "value2"
+				}
+				http_headers = {
+					header-1 = "value-1"
+				}
+				payload = "{ \"ref\": \"main\" }"
+			}
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      invalidConfig,
+				ExpectError: regexp.MustCompile("Secret name must match"),
+			},
+			{
+				Config: validConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.valid_secret", "1value1"),
+					resource.TestCheckResourceAttr(fqrn, "handler.0.secrets.token", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func customWebhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testing.T, resource.TestCase) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("webhook-%d", id)
