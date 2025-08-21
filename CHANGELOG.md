@@ -3,14 +3,13 @@
 BUG FIXES:
 
 * resource/artifactory_\*\_custom_webhook: Fix secret name validation to validate keys instead of values in the secrets map. The validation now correctly checks that secret names follow the pattern `^[a-zA-Z_][a-zA-Z0-9_]*$` instead of validating the secret values. Issue: [#1297](https://github.com/jfrog/terraform-provider-artifactory/issues/1297). PR: [#1298](https://github.com/jfrog/terraform-provider-artifactory/pull/1298)
+* resource/artifactory_package_cleanup_policy: Fix re-add project_key for artifactory_package_cleanup_policy. Issue: [#1301](https://github.com/jfrog/terraform-provider-artifactory/issues/1301). PR: [#1302](https://github.com/jfrog/terraform-provider-artifactory/pull/1302)
 
 IMPROVEMENTS:
 
 * resource/webhook/resource_artifactory_webhook_release_bundle: Improvements to make the Provider behave more like UI and API. PR: [#1213](https://github.com/jfrog/terraform-provider-artifactory/pull/1213)
 
-
-### 12.9.7 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
-
+### 12.10.0 (July 17, 2025). Tested on Artifactory 7.111.12 with Terraform 1.12.2 and OpenTofu 1.10.3
 
 IMPROVEMENTS:
 
