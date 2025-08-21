@@ -22,7 +22,7 @@ func TestAccManagedUser_UpgradeFromSDKv2(t *testing.T) {
 
 	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_managed_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":  name,
@@ -398,7 +398,7 @@ func TestAccManagedUser_basic(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_managed_user")
 	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]string{
 		"name":      name,
@@ -485,7 +485,7 @@ func TestAccManagedUser_name_change(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-user-", "artifactory_managed_user")
 	_, _, groupName := testutil.MkNames("test-group-", "artifactory_group")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]string{
 		"name":      name,

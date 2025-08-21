@@ -26,7 +26,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 
 	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":  name,
@@ -75,7 +75,7 @@ func TestAccUser_UpgradeFromSDKv2(t *testing.T) {
 func TestAccUser_UpgradeFrom10_7_0(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("test-user-upgrade-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":  name,
@@ -213,7 +213,7 @@ func TestAccUser_full_groups(t *testing.T) {
 func TestAccUser_no_password(t *testing.T) {
 	id, fqrn, _ := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":     fmt.Sprintf("foobar-%d", id),
@@ -266,7 +266,7 @@ func TestAccUser_no_password(t *testing.T) {
 func TestAccUser_no_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":     fmt.Sprintf("foobar-%d", id),
@@ -308,7 +308,7 @@ func TestAccUser_no_groups(t *testing.T) {
 func TestAccUser_internal_password_disabled_changed_error(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":     name,
@@ -359,7 +359,7 @@ func TestAccUser_internal_password_disabled_changed_error(t *testing.T) {
 func TestAccUser_internal_password_disabled_changed_with_password(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":     name,
@@ -415,7 +415,7 @@ func TestAccUser_internal_password_disabled_changed_with_password(t *testing.T) 
 func TestAccUser_empty_groups(t *testing.T) {
 	id, fqrn, name := testutil.MkNames("foobar-", "artifactory_user")
 	username := fmt.Sprintf("dummy_user%d", id)
-	email := fmt.Sprintf(username + "@test.com")
+	email := username + "@test.com"
 
 	params := map[string]interface{}{
 		"name":     fmt.Sprintf("foobar-%d", id),
