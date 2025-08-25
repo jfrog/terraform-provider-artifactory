@@ -19,29 +19,12 @@ var domainValidationErrorMessageLookup = map[string]string{
 	"artifact_property":          `repo_keys cannot be empty when any_local, any_remote, and any_federated are\s*false`,
 	"docker":                     `repo_keys cannot be empty when any_local, any_remote, and any_federated are\s*false`,
 	"build":                      `selected_builds or include_patterns cannot be empty when any_build is false`,
-	"release_bundle":             `registered_release_bundle_names and include_patterns cannot be both empty\s*when any_release_bundle is\s*false`,
-	"destination":                `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
-	"distribution":               `registered_release_bundle_names and include_patterns cannot be both empty\s*when any_release_bundle is\s*false`,
-	"artifactory_release_bundle": `registered_release_bundle_names cannot be empty\s*when any_release_bundle is\s*false`,
+	"release_bundle":             `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
+	"distribution":               `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
+	"artifactory_release_bundle": `registered_release_bundle_names cannot be empty when any_release_bundle is\s*false`,
 }
 
-var sourceReleaseBundleTemplate = `
-	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
-		key         = "{{ .webhookName }}"
-		description = "test description"
-		event_types = [{{ range $index, $eventType := .eventTypes}}{{if $index}},{{end}}"{{$eventType}}"{{end}}]
-		criteria {
-			any_release_bundle = false
-			include_patterns = []
-			registered_release_bundle_names = []
-		}
-		handler {
-			url = "https://google.com"
-		}
-	}
-`
-
-var targetReleaseBundleTemplate = `
+var releaseBundleTemplate = `
 	resource "artifactory_{{ .webhookType }}_webhook" "{{ .webhookName }}" {
 		key         = "{{ .webhookName }}"
 		description = "test description"
@@ -90,10 +73,8 @@ func webhookCriteriaValidationTestCase(webhookType string, t *testing.T) (*testi
 		template = repoTemplate
 	case "build":
 		template = buildTemplate
-	case "release_bundle", "distribution":
-		template = sourceReleaseBundleTemplate
-	case "artifactory_release_bundle", "destination":
-		template = targetReleaseBundleTemplate
+	case "release_bundle", "distribution", "artifactory_release_bundle", "destination":
+		template = releaseBundleTemplate
 	case "release_bundle_v2":
 		template = releaseBundleV2Template
 	}
@@ -309,90 +290,6 @@ func TestAccWebhook_GH476WebHookChangeBearerSet0(t *testing.T) {
 				ImportStateId:                        name,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "key",
-			},
-		},
-	})
-}
-
-func TestAccWebhook_ReleaseBundle_ByPattern(t *testing.T) {
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("webhook-%d", id)
-	fqrn := fmt.Sprintf("artifactory_release_bundle_webhook.%s", name)
-
-	params := map[string]interface{}{
-		"webhookName": name,
-	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookReleaseBundleByPattern", `
-		resource "artifactory_release_bundle_webhook" "{{ .webhookName }}" {
-			key         = "{{ .webhookName }}"
-			description = "test description"
-			event_types = ["created", "signed", "deleted"]
-
-			criteria {
-				any_release_bundle              = false
-				include_patterns                = ["tst-*/**"]
-			}
-			handler {
-				url = "https://google.com"
-			}
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
-		Steps: []resource.TestStep{
-			{
-				Config: webhookConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "event_types.#", "3"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.any_release_bundle", "false"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "tst-*/**"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccWebhook_Distribution_ByPattern(t *testing.T) {
-	id := testutil.RandomInt()
-	name := fmt.Sprintf("webhook-%d", id)
-	fqrn := fmt.Sprintf("artifactory_distribution_webhook.%s", name)
-
-	params := map[string]interface{}{
-		"webhookName": name,
-	}
-	webhookConfig := util.ExecuteTemplate("TestAccWebhookDistributionByPattern", `
-		resource "artifactory_distribution_webhook" "{{ .webhookName }}" {
-			key         = "{{ .webhookName }}"
-			description = "test description"
-			event_types = ["distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"]
-
-			criteria {
-				any_release_bundle              = false
-				include_patterns                = ["tst-*/**"]
-			}
-			handler {
-				url = "https://google.com"
-			}
-		}
-	`, params)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", testCheckWebhook),
-		Steps: []resource.TestStep{
-			{
-				Config: webhookConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "event_types.#", "7"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.any_release_bundle", "false"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.#", "1"),
-					resource.TestCheckResourceAttr(fqrn, "criteria.0.include_patterns.0", "tst-*/**"),
-				),
 			},
 		},
 	})
