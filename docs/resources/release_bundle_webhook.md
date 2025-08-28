@@ -45,7 +45,7 @@ The following arguments are supported:
 * `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: `created`, `signed`, `deleted`.
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_release_bundle` - (Required) Trigger on any release bundle.
-  * `registered_release_bundle_names` - (Required) Trigger on this list of release bundle names.
+  * `registered_release_bundle_names` - (Optional) Trigger on this list of release bundle names.
   * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: "org/apache/**".
   * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: "org/apache/**".
 * `handler` - (Required) At least one is required.

@@ -93,13 +93,13 @@ resource "artifactory_local_docker_v2_repository" "my-docker-local" {
   max_unique_tags = 5
 
   lifecycle {
-    ignore_changes = ["project_key"]
+    ignore_changes = ["project_key", "project_environments"]
   }
 }
 
 resource "project" "myproj" {
   key = "myproj"
-  display_name = "Test Project"
+  display_name = "myproj"
   description  = "Test Project"
   admin_privileges {
     manage_members   = true
@@ -116,9 +116,10 @@ resource "project_repository" "myproj-my-docker-local" {
   key = artifactory_local_docker_v2_repository.my-docker-local.key
 }
 
-resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
-  key = "my-cleanup-policy"
-  description = "My cleanup policy"
+resource "artifactory_package_cleanup_policy" "my-project-cleanup-policy" {
+  key = "myproj-cleanup-policy"
+  project_key = project.myproj.key
+  description = "My project-level cleanup policy"
   cron_expression = "0 0 2 ? * MON-SAT *"
   duration_in_minutes = 60
   enabled = true
@@ -128,7 +129,7 @@ resource "artifactory_package_cleanup_policy" "my-cleanup-policy" {
     package_types = ["docker"]
     repos = [project_repository.myproj-my-docker-local.key]
     include_all_projects = false
-    included_projects = [project.myproj.key]
+    included_projects = []
     included_packages = ["**"]
     excluded_packages = ["com/jfrog/latest"]
     created_before_in_days = 30
@@ -154,6 +155,14 @@ The cleanup policy resource enforces the following validation rules:
 5. **Properties Validation**: Properties-based conditions must have exactly one key with exactly one string value.
 
 6. **Project Configuration**: When `include_all_projects` is set to `true`, the `included_projects` field can be empty array. When `include_all_projects` is `false`, `included_projects` must contain at least one project key.
+
+7. **Project-level Policy Constraints**: When `project_key` is specified (project-level policy):
+   - `include_all_projects` must be set to `false`
+   - `included_projects` should be empty array `[]`
+   - Policy `key` must start with the project key value as a prefix followed by a hyphen
+     - ✅ Valid: `project_key = "myproj"` → `key = "myproj-cleanup-policy"`
+     - ❌ Invalid: `project_key = "myproj"` → `key = "cleanup-policy"` (missing prefix)
+     - ❌ Invalid: `project_key = "myproj"` → `key = "other-cleanup-policy"` (wrong prefix)
 
 ## Supported Package Types
 
@@ -207,6 +216,7 @@ The following package types are supported for cleanup policies with their respec
 - `description` (String)
 - `duration_in_minutes` (Number) The maximum duration (in minutes) for policy execution, after which the policy will stop running even if not completed. While setting a maximum run duration for a policy is useful for adhering to a strict cleanup schedule, it can cause the policy to stop before completion.
 - `enabled` (Boolean) A cleanup policy must be created inactive. But if used it must be set to `false`. If set to `true` when calling this API, the API call will fail and an error message is received. Defaults to `true`
+- `project_key` (String) This attribute is used only for project-level cleanup policies, it is not used for global-level policies. When specified, the policy will be scoped to the specified project. Note: The policy `key` must start with this project key value as a prefix (e.g., if `project_key` is `"myproj"`, the `key` should be `"myproj-policy-name"`).
 - `skip_trashcan` (Boolean) A true value means that when this policy is executed, packages will be permanently deleted. false means that when the policy is executed packages will be deleted to the Trash Can. Defaults to `false`.
 
 ~>The Global Trash Can setting must be enabled if you want deleted items to be transferred to the Trash Can, see [Trash Can Settings](https://jfrog.com/help/r/jfrog-artifactory-documentation/trash-can-settings).

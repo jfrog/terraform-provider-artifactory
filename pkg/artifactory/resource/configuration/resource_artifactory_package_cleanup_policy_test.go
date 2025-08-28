@@ -1001,7 +1001,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 	temp := `
 	resource "project" "{{ .projectKey }}" {
 		key = "{{ .projectKey }}"
-		display_name = "Test Project"
+		display_name = "{{ .projectKey }}"
 		description  = "Test Project"
 		admin_privileges {
 			manage_members   = true
@@ -1022,7 +1022,8 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 	}
 
 	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
-		key = "{{ .policyName }}"
+		key = "{{ .projectKey }}-cleanup-policy"
+		project_key = project.{{ .projectKey }}.key
 		description = "Test policy"
 		cron_expression = "0 0 2 ? * MON-SAT *"
 		duration_in_minutes = 60
@@ -1034,7 +1035,7 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 			included_packages = ["**"]
 			excluded_packages = ["com/jfrog/latest"]
 			include_all_projects = false
-			included_projects = [ project.{{ .projectKey }}.key ]
+			included_projects = []
 			created_before_in_months = 1
 			last_downloaded_before_in_months = 6
 		}
@@ -1063,7 +1064,8 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "key", projectKey+"-cleanup-policy"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
 					resource.TestCheckResourceAttr(fqrn, "description", "Test policy"),
 					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
@@ -1078,10 +1080,88 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.0", "com/jfrog/latest"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "false"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "0"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_months", "6"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccPackageCleanupPolicy_import_with_project_key(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-cleanup-policy", "artifactory_package_cleanup_policy")
+	_, _, projectKey := testutil.MkNames("testproj", "project")
+
+	config := fmt.Sprintf(`
+	resource "project" "%s" {
+		key = "%s"
+		display_name = "%s"
+		description  = "Test Project"
+		admin_privileges {
+			manage_members   = true
+			manage_resources = true
+			index_resources  = true
+		}
+		max_storage_in_gibibytes   = 10
+		block_deployments_on_limit = false
+		email_notification         = true
+	}
+
+	resource "artifactory_package_cleanup_policy" "%s" {
+		key = "%s-import-policy"
+		project_key = project.%s.key
+		description = "Test import policy"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 0
+		enabled = false
+		
+		search_criteria = {
+			package_types = ["docker"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = []
+			included_packages = ["**"]
+			created_before_in_months = 6
+		}
+	}`, projectKey, projectKey, projectKey, policyName, projectKey, projectKey)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		CheckDestroy: testAccCleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", projectKey+"-import-policy"),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        fmt.Sprintf("%s-import-policy:%s", projectKey, projectKey),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "project_key",
 			},
 		},
 	})
