@@ -554,6 +554,7 @@ var cleanupPolicySchemaV0 = map[string]schema.Attribute{
 	},
 	"duration_in_minutes": schema.Int64Attribute{
 		Optional:            true,
+		Computed:            true,
 		MarkdownDescription: "The maximum duration (in minutes) for policy execution, after which the policy will stop running even if not completed. While setting a maximum run duration for a policy is useful for adhering to a strict cleanup schedule, it can cause the policy to stop before completion.",
 	},
 	"enabled": schema.BoolAttribute{
