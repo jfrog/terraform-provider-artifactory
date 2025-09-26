@@ -1167,6 +1167,74 @@ func TestAccPackageCleanupPolicy_import_with_project_key(t *testing.T) {
 	})
 }
 
+func TestAccPackageCleanupPolicy_default_duration_in_minutes(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with default duration"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		enabled = true
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker"]
+			repos = ["**"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			created_before_in_months = 1
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with default duration"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "0"),
+					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "skip_trashcan", "false"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.0", "docker"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.repos.0", "**"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCleanupPolicyDestroy(id string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
